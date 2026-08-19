@@ -8,9 +8,9 @@ metadata:
   version: 1.1.0
 ---
 
-## Pre-flight: Autoload guidelines (MANDATORY)
+## Pre-flight: Autoload guidelines
 
-Do NOT proceed with any modification (create, modify, rename, migrate, prefix-add) until the guidelines below are loaded into the working context. Missing-file handling is strict — see Step 0.5.
+Load the guidelines below into the working context when they exist in the project. **Missing files degrade gracefully** — see Step 0.5. This skill is self-contained: the essential Quality Checklist is embedded in Step 6, so a project without the reference files can still scaffold valid agents.
 
 ### Step 0.1 — Identify scenario
 
@@ -18,24 +18,24 @@ Classify the requested operation as exactly one of:
 
 - `create` — new agent at `.opencode/agents/<name>.md` (no prior file exists)
 - `modify` — existing OpenCode agent being edited; the current `<name>.md` exists at the path
-- `migrate` — copying an agent from `.claude/agents/<name>.md` to `.opencode/agents/<name>.md`
+- `migrate` — copying an agent from another harness's agent directory to `.opencode/agents/<name>.md`
 - `rename` / `add-prefix` — net effect is create + delete; treat as `modify` of the source plus `create` of the target
 
-### Step 0.2 — Always read (regardless of scenario)
+### Step 0.2 — Read when present (regardless of scenario)
 
-| File | Why |
-|---|---|
-| `knowledge/agents.md` | Roster ownership table (per-agent rule boundaries) |
-| `knowledge/skill-migration-reference.md` | Field deltas, body renames, `metadata.author/version` defaults (shared with skill creator) |
-| `knowledge/skills.md` | Inventory + uniqueness check + adjacent skill state (helps decide prefix vs rename) |
-| `.opencode/agents/vault.md` (Quality Checklist section, line 186+) | 23 Core + per-harness augmentations; OC-1/OC-2 for OpenCode |
+| File | Why | If absent |
+|---|---|---|
+| `knowledge/agents.md` | Roster ownership table (per-agent rule boundaries) | Skip; use the roster in this project's docs |
+| `knowledge/skill-migration-reference.md` | Field deltas, body renames, metadata defaults | Skip; use the embedded rules in this skill |
+| `knowledge/skills.md` | Inventory + uniqueness check + adjacent skill state | Skip; uniqueness checked against the agent directory on disk |
+| `.opencode/agents/vault.md` (Quality Checklist section) | 23 Core + per-harness augmentations; OC-1/OC-2 for OpenCode | Skip; the checklist is embedded in Step 6 |
 
 ### Step 0.3 — Conditionally read
 
 | Trigger | File | Why |
 |---|---|---|
 | Scenario = `modify` | `.opencode/agents/<name>.md` | Surface current spec before rewriting; preserve tone/structure unless explicitly changing |
-| Scenario = `migrate` | `.claude/agents/<name>.md` (and `agents/<name>/profile.md`) | Source of truth for the conversion; persona CV preserved separately by Marshal 🎖️ |
+| Scenario = `migrate` | The source agent's file (and `agents/<name>/profile.md`) | Source of truth for the conversion; persona CV preserved separately by Marshal 🎖️ |
 | Agent will have specific permission keys | another existing agent as live reference (consulted at write-time) | Permission-key semantics reference |
 
 ### Step 0.4 — Acknowledge each loaded file
@@ -44,24 +44,16 @@ After loading, the agent MUST emit one line per file:
 
 ```
 guidelines loaded:
-- knowledge/agents.md: loaded
-- knowledge/skill-migration-reference.md: loaded
-- knowledge/skills.md: loaded
-- .opencode/agents/vault.md (QC section): loaded
+- knowledge/agents.md: loaded | skipped (not present)
+- knowledge/skill-migration-reference.md: loaded | skipped (not present)
+- knowledge/skills.md: loaded | skipped (not present)
+- .opencode/agents/vault.md (QC section): loaded | skipped (not present)
 - <conditional file>: loaded | skipped (scenario=<X>, not applicable)
 ```
 
-If any line is missing, the autoload is incomplete and the agent must re-attempt Step 0.2 / 0.3 before continuing to Step 1.
+### Step 0.5 — Missing-file handling (degraded mode)
 
-### Step 0.5 — Missing-file guard
-
-If a mandatory file (Step 0.2) cannot be read:
-
-1. STOP all agent-modification activity.
-2. Use the `question` tool (per `knowledge/conventions.md` § "Question-tool convention for all clarifications") to ask:
-   - **A.** Continue without the missing file (degraded mode — record the gap in the post-edit audit section)
-   - **B.** Abort the modification
-3. Do NOT silently skip. Do NOT proceed past this gate without an explicit user choice.
+If any Step 0.2 file is absent, proceed in **degraded mode**: rely on the embedded Quality Checklist (Step 6) and the rules in this skill. Note the gap in the post-edit audit section. Do NOT stop and block on a missing reference file — this skill must be usable in any project that ships it.
 
 ---
 
@@ -342,7 +334,7 @@ Use this when the user has an existing Claude Code agent spec at `.claude/agents
 
 ## Troubleshooting
 
-- **Pre-flight file autoload failed (mandatory guidelines):** the autoload step (Step 0) is mandatory; if any of `knowledge/agents.md`, `knowledge/skill-migration-reference.md`, `knowledge/skills.md`, or the Vault Quality Checklist source cannot be read, the agent MUST stop and surface the gap to the user via `question` (continue-degraded vs abort). Silent skip is FORBIDDEN.
+- **Pre-flight file autoload degraded:** the autoload step (Step 0) is conditional — reference files are loaded when present; if any are absent, proceed in degraded mode using the embedded Quality Checklist (Step 6) and note the gap in the post-edit audit section. Silent skip of a present-but-unread file is FORBIDDEN.
 - **Agent does not show up after creation**: verify the file is at `.opencode/agents/{name}.md` (not `.opencode/agents/{name}/`), frontmatter has `description` and a valid `mode`, the file name matches the `name` convention, and `opencode.json` permissions are not set to `deny`.
 - **Name rejected**: check for uppercase letters, underscores, leading/trailing hyphens, or double hyphens.
 - **Description rejected**: ensure it is between 1 and 1024 characters.

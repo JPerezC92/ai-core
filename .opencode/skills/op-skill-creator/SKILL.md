@@ -9,9 +9,9 @@ metadata:
   source: opencode-docs-skills
 ---
 
-## Pre-flight: Autoload guidelines (MANDATORY)
+## Pre-flight: Autoload guidelines
 
-Do NOT proceed with any modification (create, modify, rename, migrate, prefix-add) until the guidelines below are loaded into the working context. Missing-file handling is strict — see Step 0.5.
+Load the guidelines below into the working context when they exist in the project. **Missing files degrade gracefully** — see Step 0.5. This skill is self-contained: the essential Quality Checklist is embedded in Step 10, so a project without the reference files can still scaffold valid skills.
 
 ### Step 0.1 — Identify scenario
 
@@ -19,25 +19,24 @@ Classify the requested operation as exactly one of:
 
 - `create` — new skill at `.opencode/skills/<name>/SKILL.md` (no prior file exists)
 - `modify` — existing OpenCode skill being edited; the current `SKILL.md` exists at the path
-- `migrate` — copying a skill from `.claude/skills/<name>/SKILL.md` to `.opencode/skills/<name>/SKILL.md`
+- `migrate` — copying a skill from another harness's skill directory to `.opencode/skills/<name>/SKILL.md`
 - `rename` / `add-prefix` — net effect is create + delete; treat as `modify` of the source plus `create` of the target
 
-### Step 0.2 — Always read (regardless of scenario)
+### Step 0.2 — Read when present (regardless of scenario)
 
-| File | Why |
-|---|---|
-| `knowledge/skill-migration-reference.md` | Field deltas, body renames, `metadata.author/version` defaults |
-| `knowledge/skills.md` | Inventory + uniqueness check + current `state` per skill |
-| `.opencode/agents/vault.md` (Quality Checklist section, line 186+) | 23 Core + per-harness augmentations; OC-1/OC-2 for OpenCode |
+| File | Why | If absent |
+|---|---|---|
+| `knowledge/skill-migration-reference.md` | Field deltas, body renames, metadata defaults | Skip; use the embedded rules in this skill |
+| `knowledge/skills.md` | Inventory + uniqueness check + current `state` per skill | Skip; uniqueness checked against the skill directory on disk |
+| `.opencode/agents/vault.md` (Quality Checklist section) | 23 Core + per-harness augmentations; OC-1/OC-2 for OpenCode | Skip; the checklist is embedded in Step 10 |
 
 ### Step 0.3 — Conditionally read
 
 | Trigger | File | Why |
 |---|---|---|
 | Scenario = `modify` | `.opencode/skills/<name>/SKILL.md` | Surface current spec before rewriting; preserve tone/structure unless explicitly changing |
-| Scenario = `migrate` | `.claude/skills/<name>/SKILL.md` (and any `references/`, `scripts/` subdirs) | Source of truth for the conversion |
-| Skill will have `## Arguments` section | `knowledge/conventions.md` (form-fill convention section) | Question-tool form schema for skill-arg use case |
-| Scenario = `create` and skill relates to an Activo | `knowledge/activos.md` + `knowledge/modulos.md` | Module catalog validity |
+| Scenario = `migrate` | The source skill's `SKILL.md` (and any `references/`, `scripts/` subdirs) | Source of truth for the conversion |
+| Skill will have `## Arguments` section | `knowledge/conventions.md` (form-fill convention section), if present | Question-tool form schema for skill-arg use case |
 
 ### Step 0.4 — Acknowledge each loaded file
 
@@ -45,23 +44,15 @@ After loading, the agent MUST emit one line per file:
 
 ```
 guidelines loaded:
-- knowledge/skill-migration-reference.md: loaded
-- knowledge/skills.md: loaded
-- .opencode/agents/vault.md (QC section): loaded
+- knowledge/skill-migration-reference.md: loaded | skipped (not present)
+- knowledge/skills.md: loaded | skipped (not present)
+- .opencode/agents/vault.md (QC section): loaded | skipped (not present)
 - <conditional file>: loaded | skipped (scenario=<X>, not applicable)
 ```
 
-If any line is missing, the autoload is incomplete and the agent must re-attempt Step 0.2 / 0.3 before continuing to Step 1.
+### Step 0.5 — Missing-file handling (degraded mode)
 
-### Step 0.5 — Missing-file guard
-
-If a mandatory file (Step 0.2) cannot be read:
-
-1. STOP all skill-modification activity.
-2. Use the `question` tool (per `knowledge/conventions.md` § "Question-tool convention for all clarifications") to ask:
-   - **A.** Continue without the missing file (degraded mode — record the gap in the post-edit audit section)
-   - **B.** Abort the modification
-3. Do NOT silently skip. Do NOT proceed past this gate without an explicit user choice.
+If any Step 0.2 file is absent, proceed in **degraded mode**: rely on the embedded Quality Checklist (Step 10) and the rules in this skill. Note the gap in the post-edit audit section. Do NOT stop and block on a missing reference file — this skill must be usable in any project that ships it.
 
 ---
 
@@ -73,7 +64,7 @@ Create a new OpenCode-native skill under `.opencode/skills/{name}/SKILL.md`.
 
 - User wants to create a new OpenCode skill.
 - User wants to rewrite, rename, or migrate an existing skill.
-- User wants to add a prefix to a skill name (e.g., turn `reservas-fuera-de-rango` into `prol-reservas-fuera-de-rango`).
+- User wants to add a prefix to a skill name (e.g., turn `reservas-fuera-de-rango` into `reservas-fuera-de-rango-v2`).
 
 ## Steps
 
@@ -89,7 +80,7 @@ Create a new OpenCode-native skill under `.opencode/skills/{name}/SKILL.md`.
 4. Validate `description` immediately:
    - 1–1024 characters
 5. Ask for optional `license` (free-form string), `compatibility` (default `opencode`), and `metadata` key/value pairs (strings only).
-   - **tismart-support project defaults** — when scaffolding for this project, pre-fill the `metadata` block with `author: Philip Perez Castro` and `version: 1.0.0` unless the user explicitly overrides. Other projects (or generic scaffolding) should leave these blank and let the user fill them in.
+   - **Project metadata defaults** — when scaffolding, pre-fill the `metadata` block with the project's default author and `version: 1.0.0` (check `knowledge/skills.md` or the project's conventions for the default author; generic scaffolding leaves `author` blank for the user to fill).
 6. Validate optional fields if provided:
    - `license` is a string.
    - `compatibility` is a string.
@@ -174,9 +165,9 @@ Use this when the user asks to rewrite, rename, migrate, or add a prefix to an e
 
 ## Troubleshooting
 
-- **Pre-flight file autoload failed (mandatory guidelines):** the autoload step (Step 0) is mandatory; if any of `knowledge/skill-migration-reference.md`, `knowledge/skills.md`, or the Vault Quality Checklist source cannot be read, the skill MUST stop and surface the gap to the user via `question` (continue-degraded vs abort). Silent skip is FORBIDDEN.
+- **Pre-flight file autoload degraded:** the autoload step (Step 0) is conditional — reference files are loaded when present; if any are absent, proceed in degraded mode using the embedded Quality Checklist (Step 10) and note the gap in the post-edit audit section. Silent skip of a present-but-unread file is FORBIDDEN.
 - Skill does not show up after creation: verify `SKILL.md` is all caps, frontmatter has `name` and `description`, the name is unique, and permissions in `opencode.json` / `opencode.jsonc` are not set to `deny`.
 - Name rejected: check for uppercase letters, underscores, leading/trailing hyphens, or double hyphens.
 - Description rejected: ensure it is between 1 and 1024 characters.
 - Description / `## When to use me` do not match body capabilities: add the missing capability (e.g., rewrite/migrate) to both sections before writing.
-- Missing `metadata.author` or `metadata.version` (tismart-support): add `author: Philip Perez Castro` and `version: 1.1.0` to the `metadata` block unless the user explicitly overrode. See the project defaults note in Step 5.
+- Missing `metadata.author` or `metadata.version`: add the project's default author and `version: 1.0.0` to the `metadata` block unless the user explicitly overrode. See the project-defaults note in Step 5.

@@ -69,7 +69,7 @@ The subfolder pattern is the **default**. Single-file is an **exception**, allow
 1. **1 owner agent total** — no cross-agent handoffs
 2. **≤ 30 lines of total instructions** — fits without phase isolation
 3. **No phase IO contracts** — no phase's output is another phase's input
-4. **No external state mutation** — no SDP writes, no DB writes, no git operations beyond a single commit
+4. **No external state mutation** — no ticket-system writes, no DB writes, no git operations beyond a single commit
 5. **No risk of agent improvisation** — instructions fit a single shell command or single file edit
 
 **Minimal section list for a single-file body** (use these exact sections, in order):

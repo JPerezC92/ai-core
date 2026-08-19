@@ -4,13 +4,13 @@
 > **Title:** <short human title — mirrors the `title` column in `user-stories/index.md`>
 > **Status:** <draft | active | superseded — mirrors the `status` column in `user-stories/index.md`>
 > **Epic:** <epic-slug> (optional — leave empty when no epic)
-> **Affected areas:** <matching handle, e.g. `src/`, `.opencode/skills/plan-enforce/`, `mcp-servers/`>
+> **Affected areas:** <matching handle, e.g. `src/`, `.opencode/skills/plan-enforce/`, a backend tooling path>
 
 ## Persona
 
 > Who is the feature for? One actor, with their role in context.
 
-- <persona, e.g. "L2 analyst who triages SDP tickets">
+- <persona, e.g. "an analyst who triages support tickets">
 
 ## Goal
 

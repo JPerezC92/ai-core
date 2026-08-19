@@ -37,7 +37,7 @@ None. The skill reads the current branch state directly from git.
 2. If the diff stat is small (under 20 files), run `git diff origin/main...HEAD` for the full diff. Otherwise, read the most relevant changed files selectively — reading the full diff on a large changeset wastes context; sample the highest-signal files instead. `git diff --cached --check` is a whitespace diagnostic only and is never PR scope evidence.
 3. Check for a plan or ticket file that explains the motivation — the PR Summary should explain the *why*, which usually lives in the plan/ticket Context, not the diff:
    - Look for `plans/*.md` with `Status: active` or `Status: completed`
-   - Look for `tickets/` subdirs matching recent commit refs
+   - Look for ticket folders matching recent commit refs
    - If found, read the **Context** section for the why
 4. Determine the PR title and body following the format below.
 5. Ensure `pr-draft.md` is in `.gitignore` — if not, add it immediately before writing.
@@ -71,7 +71,7 @@ type(scope): concise summary under 70 characters
 - **Test plan**: at least 2 concrete, executable steps a reviewer can follow. Each item names the action and the observable expected result.
 - **Test plan format is mandatory** — every item MUST be a `- [ ]` checkbox (un-ticked in the draft). Herald 📯 converts prose items to checkboxes only when forced; the skill produces checkboxes from the start.
 - **Test-plan draft boundary** — include only unchecked executable test-plan items. Do not include `[x]` items, test results, passing claims, or evidence claimed as executed.
-- **Test evidence quality** — a checkbox is ticked ONLY after a real run with recorded literal input→observed output evidence (per the Test-Evidence-Before-Done gate in `CLAUDE.md`). A "logic trace", "it should work", or an UNROUTABLE-but-plausible reading is NOT execution.
+- **Test evidence quality** — a checkbox is ticked ONLY after a real run with recorded literal input→observed output evidence (per the project's Test-Evidence-Before-Done gate). A "logic trace", "it should work", or an UNROUTABLE-but-plausible reading is NOT execution.
 - Keep the body under 20 lines total
 
 ### Post-PR evidence contract

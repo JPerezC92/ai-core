@@ -178,7 +178,7 @@ Every subagent dispatch prompt carries the complete context the subagent needs. 
 
 Choose the plan template before creating files; the choice is confirmed in the goals-confirmation gate.
 
-- **Auto-detect programming:** a plan is a programming plan when ANY phase writes code — any write path under `src/`, `mcp-servers/`, `scripts/`, `.opencode/skills/**/scripts/`, or `tickets/*.py`. Detection is path-based, not subject-based.
+- **Auto-detect programming:** a plan is a programming plan when ANY phase writes code — any write path under the application source tree (e.g. `src/`), backend tooling paths, `scripts/`, `.opencode/skills/**/scripts/`, or the project's ticket tooling. Detection is path-based, not subject-based.
 - **Programming plan** → `references/_template-programming.md` (goals with `Done when:` criteria, Current state, Behavior change, Design decisions, Goals column per phase, per-phase Verify commands).
 - **Non-programming plan** → `references/_template.md` (base template).
 - **Confirm:** the detected type is confirmed in the same `question` call as the goals (see **Goal lifecycle** → Confirm). Never silently pick a template.
@@ -199,7 +199,7 @@ User stories are the durable per-feature registry — one file per feature, `use
 
 Which plans carry a user story?
 
-- **Programming plans ALWAYS carry a story** for every feature they touch (any write path under `src/`, `mcp-servers/`, `scripts/`, `.opencode/skills/**/scripts/`, or `tickets/*.py`).
+- **Programming plans ALWAYS carry a story** for every feature they touch (any write path under the application source tree, backend tooling paths, `scripts/`, `.opencode/skills/**/scripts/`, or the project's ticket tooling).
 - **Non-programming plans that change feature-visible behavior** are flagged at the goals gate (see **Goal lifecycle** → Confirm) and confirmed with the user: does the behavior change need a story?
 - **Pure docs / process / tooling plans skip** — the plan's `## Context` / `## Goals` block is the record; no story is created.
 

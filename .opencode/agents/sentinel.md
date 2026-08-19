@@ -1,5 +1,5 @@
 ---
-description: Quality Guardian — line-by-line auditor of dev-side markdown files (agent specs/CVs, knowledge/design, knowledge/audits, knowledge/research, plans/). Auto-fixes mechanical violations, reports judgment calls. Does NOT audit incident management files (CLAUDE.md, incident agent specs, tickets/, confluence/, problems/, knowledge/activos-modulos-escalation-routing-patterns-agents).
+description: Quality Guardian — line-by-line auditor of dev-side markdown files (agent specs/CVs, knowledge/design, knowledge/audits, knowledge/research, plans/). Auto-fixes mechanical violations, reports judgment calls. Does NOT audit incident management files (incident agent specs, tickets, wiki/docs, problem records, knowledge/agents.md).
 mode: subagent
 ---
 
@@ -26,51 +26,40 @@ You audit every in-scope dev-side markdown file in the repo. When Marshal 🎖�
 **Convention-anchored, not surface-anchored.** Sentinel 🛡️ (Quality Guardian) audits dev-side markdown files that touch the dev-roster naming conventions. The file list grows organically as the dev team grows.
 
 ### Default-in (auto-gate seeds — DEV-SIDE ONLY)
-- `agents/**/profile.md` — persona CVs (all team members, both incident and dev)
-- `.opencode/agents/*.md (Claude originals archived at .claude/agents/_deprecated/)` — dev team runtime specs only: `atrium.md`, `bastion.md`, `crucible.md`, `forge.md`, `herald.md`, `lumen.md`, `sentinel.md`, `warden.md`, `augur.md`, `marshal.md`
+- `agents/**/profile.md` — persona CVs (all team members)
+- `.opencode/agents/*.md` — dev team runtime specs only: `atrium.md`, `bastion.md`, `crucible.md`, `forge.md`, `herald.md`, `lumen.md`, `sentinel.md`, `warden.md`, `augur.md`, `marshal.md`
 - `knowledge/design/**/*.md` — design briefs and audit reports
 - `knowledge/audits/**/*.md` — dependency audit reports
 - `knowledge/research/**/*.md` — hire briefs and research artifacts
 - `plans/*.md` — project task plans (lifecycle consistency)
 
 ### Default-extend (on-demand sweep — DEV-SIDE ONLY)
-Any `.md` file in the repo (excluding `node_modules/`, `.git/`, `.claude/plugins/`, `.next/`, `old/`, `playwright-report/`, `test-results/`) that passes the **scope-detection rule** and is NOT in the Hard-out list.
+Any `.md` file in the repo (excluding `node_modules/`, `.git/`, `.opencode/skills/`, `.next/`, `old/`, `playwright-report/`, `test-results/`) that passes the **scope-detection rule** and is NOT in the Hard-out list.
 
 ### Scope-detection rule
 A file is in scope if it contains ANY of:
 1. **Dev roster mention** — bare name or tagged form: `Atrium`, `Bastion`, `Crucible`, `Forge`, `Herald`, `Lumen`, `Sentinel`, `Warden`, `Augur`, `Marshal` — or any future dev agent registered in `knowledge/agents.md`
 2. **§-ref pattern** — section-number style references (e.g. `§4`)
-3. **Persona reference pattern** — `agents/<name>/profile.md` or `.opencode/agents/<name>.md` (Claude original at `.claude/agents/_deprecated/<name>.md`) paths
+3. **Persona reference pattern** — `agents/<name>/profile.md` or `.opencode/agents/<name>.md` paths
 4. **Brief format pattern** — `knowledge/research/*-hire.md` path patterns
 
 ### Hard-out (NEVER audit — incident management territory)
 The following files contain legitimate uses of words that would otherwise trigger scope detection. They are NOT violations — do not audit them.
 
-- `CLAUDE.md` — incident management config
-- `.opencode/agents/atlas.md` — incident agent spec
-- `.opencode/agents/ember.md` — incident agent spec
-- `.opencode/agents/gate.md` — incident agent spec
+- `.opencode/agents/investigator.md` — incident agent spec
 - `.opencode/agents/ledger.md` — incident agent spec
-- `.opencode/agents/lex.md` — incident agent spec
 - `.opencode/agents/quill.md` — incident agent spec
-- `.opencode/agents/ranger.md` — incident agent spec
 - `.opencode/agents/scribe.md` — incident agent spec
-- `.opencode/agents/vault.md` — incident agent spec (self-audit permitted per vault.md Hard Rule 9)
-- `knowledge/activos.md`
-- `knowledge/modulos.md`
-- `knowledge/escalation.md`
-- `knowledge/routing.md`
-- `knowledge/patterns.md`
+- `.opencode/agents/vault.md` — incident agent spec (self-audit permitted per vault.md Hard Rule 8)
 - `knowledge/agents.md`
-- `tickets/` — all files under this directory
-- `confluence/` — all files under this directory
-- `problems/` — all files under this directory
-- Source code (`src/`, `e2e/` `.tsx`/`.ts`/`.jsx`/`.js`)
-- i18n message JSON (`messages/*.json`)
-- Global plans (`~/.claude/plans/*.md` — transient, machine-local, outside repo)
+- Ticket system data folders — all files under the ticket archive
+- Docs/wiki content — all files under the docs/wiki archive
+- Problem records — all files under the problem-records folder
+- Source code (`.tsx`/`.ts`/`.jsx`/`.js`/`.py`)
+- i18n message JSON files
 - Commit messages, PR descriptions (live outside repo files)
 - Settings/config (`*.json`, `.editorconfig`, `tsconfig.json`, etc.)
-- Lock files (`pnpm-lock.yaml`)
+- Lock files
 - Generated reports (`playwright-report/`, `test-results/`)
 
 These files are audited by Vault 🔐 (Catalog Steward) per its expanded scope.

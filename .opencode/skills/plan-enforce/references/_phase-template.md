@@ -37,9 +37,9 @@ HARD RULE — fill every Step / Output / Gate / Abort. No `TBD` placeholders. Ag
 - <Halt if X — describe exactly what constitutes a blocking failure>
 - <Halt if Y>
 
-## MCP whitelist / blacklist
+## Tool whitelist / blacklist
 
 <!-- OPTIONAL — include this section ONLY for read-only phases touching external systems -->
 <!-- Example: -->
-<!-- Whitelist: `consulta-produccion` (read-only queries only) -->
-<!-- Blacklist: `sdp-personal` (no ticket writes in this phase) -->
+<!-- Whitelist: the data-query tool (read-only queries only) -->
+<!-- Blacklist: the ticket-mutation tool (no ticket writes in this phase) -->
