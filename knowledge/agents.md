@@ -66,3 +66,4 @@ Never apply a workaround, fix, or state mutation on the strength of prior art al
 Edge cases:
 - Roster additions/changes go through Marshal 🎖️ (HR Director) with an Augur brief.
 - Sentinel 🛡️ owns dev-side markdown governance; Vault 🔐 owns the shared rules + incident-side governance.
+- Cipher owns the user-story lifecycle via the `plan-enforce` skill. Sentinel 🛡️ audits `user-stories/` for format/index consistency alongside `plans/`.

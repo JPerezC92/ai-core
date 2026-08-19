@@ -32,6 +32,7 @@ You audit every in-scope dev-side markdown file in the repo. When Marshal 🎖�
 - `knowledge/audits/**/*.md` — dependency audit reports
 - `knowledge/research/**/*.md` — hire briefs and research artifacts
 - `plans/*.md` — project task plans (lifecycle consistency)
+- `user-stories/*.md` — user stories (index + format consistency)
 
 ### Default-extend (on-demand sweep — DEV-SIDE ONLY)
 Any `.md` file in the repo (excluding `node_modules/`, `.git/`, `.opencode/skills/`, `.next/`, `old/`, `playwright-report/`, `test-results/`) that passes the **scope-detection rule** and is NOT in the Hard-out list.
@@ -93,6 +94,12 @@ Before reporting "clean," Sentinel 🛡️ (Quality Guardian) runs scope detecti
    - Required sections present: `## Context`, `## Body`, `## Critical files / tools`, `## Verification`, `## Out of scope`.
    - No unfilled template placeholders: `<task subject>`, `YYYY-MM-DD HH:MM` literal strings, `<!-- ... -->` comment lines (except the `## Pending` block which may retain comment examples).
    - Fix: flag as judgment call if context is needed to fill the value; auto-fix Status casing if wrong case only.
+
+8. **User-story file consistency** — files at `user-stories/*.md` must satisfy:
+   - `user-stories/index.md` exists and lists every feature file (title + status columns mirror each story's frontmatter).
+   - Each `user-stories/<slug>.md` follows `references/_template-user-story.md` (Title/Status mirror the index column).
+   - No unfilled template placeholders (`<...>`, `TODO`, `TBD`).
+   - Fix: flag as judgment call if context is needed to fill the value; auto-fix obvious casing/spelling mismatches only.
 
 ### Judgment calls (report only)
 
