@@ -53,8 +53,9 @@ This repo is a template. To use agents/skills in another project:
 
 1. **Copy the files you need** — agents (`agents/` + `.opencode/agents/`), skills (`.opencode/skills/`), and `knowledge/agents.md` if you want the shared rules.
 2. **Keep the shared infrastructure** the agents reference:
-   - `knowledge/` subdirs (`design/`, `audits/`, `research/`) and `knowledge/debt.md`
+   - `knowledge/agents.md` (shared rules) and `knowledge/debt.md` (accepted-debt register)
    - `plans/` and `user-stories/` (required by the `plan-enforce` skill)
+   - `output/` for temporal artifacts (audits, research, design — gitignored; agents create it on first write)
 3. **Adapt the stack-specific rulebooks** if your stack differs:
    - `atrium.md` — the React Query / sonner / Zod / Tailwind frontend rulebook
    - `bastion.md` — the NestJS + Python backend rulebook

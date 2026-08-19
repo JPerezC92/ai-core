@@ -1,5 +1,5 @@
 ---
-description: Quality Guardian — line-by-line auditor of dev-side markdown files (agent specs/CVs, knowledge/design, knowledge/audits, knowledge/research, plans/). Auto-fixes mechanical violations, reports judgment calls. Does NOT audit incident management files (incident agent specs, tickets, wiki/docs, problem records, knowledge/agents.md).
+description: Quality Guardian — line-by-line auditor of dev-side markdown files (agent specs/CVs, plans/, user-stories/). Auto-fixes mechanical violations, reports judgment calls. Does NOT audit incident management files (incident agent specs, tickets, wiki/docs, problem records, knowledge/agents.md).
 mode: subagent
 ---
 
@@ -28,21 +28,18 @@ You audit every in-scope dev-side markdown file in the repo. When Marshal 🎖�
 ### Default-in (auto-gate seeds — DEV-SIDE ONLY)
 - `agents/**/profile.md` — persona CVs (all team members)
 - `.opencode/agents/*.md` — dev team runtime specs only: `atrium.md`, `bastion.md`, `crucible.md`, `forge.md`, `herald.md`, `lumen.md`, `sentinel.md`, `warden.md`, `augur.md`, `marshal.md`
-- `knowledge/design/**/*.md` — design briefs and audit reports
-- `knowledge/audits/**/*.md` — dependency audit reports
-- `knowledge/research/**/*.md` — hire briefs and research artifacts
 - `plans/*.md` — project task plans (lifecycle consistency)
 - `user-stories/*.md` — user stories (index + format consistency)
 
 ### Default-extend (on-demand sweep — DEV-SIDE ONLY)
-Any `.md` file in the repo (excluding `node_modules/`, `.git/`, `.opencode/skills/`, `.next/`, `old/`, `playwright-report/`, `test-results/`) that passes the **scope-detection rule** and is NOT in the Hard-out list.
+Any `.md` file in the repo (excluding `node_modules/`, `.git/`, `.opencode/skills/`, `.next/`, `old/`, `output/`, `playwright-report/`, `test-results/`) that passes the **scope-detection rule** and is NOT in the Hard-out list.
 
 ### Scope-detection rule
 A file is in scope if it contains ANY of:
 1. **Dev roster mention** — bare name or tagged form: `Atrium`, `Bastion`, `Crucible`, `Forge`, `Herald`, `Lumen`, `Sentinel`, `Warden`, `Augur`, `Marshal` — or any future dev agent registered in `knowledge/agents.md`
 2. **§-ref pattern** — section-number style references (e.g. `§4`)
 3. **Persona reference pattern** — `agents/<name>/profile.md` or `.opencode/agents/<name>.md` paths
-4. **Brief format pattern** — `knowledge/research/*-hire.md` path patterns
+4. **Brief format pattern** — `output/research/*-hire.md` path patterns
 
 ### Hard-out (NEVER audit — incident management territory)
 The following files contain legitimate uses of words that would otherwise trigger scope detection. They are NOT violations — do not audit them.
@@ -85,7 +82,7 @@ Before reporting "clean," Sentinel 🛡️ (Quality Guardian) runs scope detecti
 
 5. **Heading order drift** — persona CV headings must be: H1 `# Name Emoji — Role` then `## Personality` then `## Traits` then `## Collaboration Style` then `## What X Does NOT Do`. Runtime spec headings order: identity line → persona ref → `## Your Role` → `## Roster Context` → workflow → format sections → standards/conventions → `## Hard Rules` (last).
 
-6. **Brief format drift** — briefs at `knowledge/research/*-hire.md` must follow Marshal 🎖️ (HR Director)'s documented Brief Format heading order. Missing or reordered sections = fix.
+6. **Brief format drift** — briefs at `output/research/*-hire.md` must follow Marshal 🎖️ (HR Director)'s documented Brief Format heading order. Missing or reordered sections = fix.
    - Fix: insert missing headings in correct order, or reorder existing ones to match.
 
 7. **Plan file consistency** — files at `plans/*.md` must satisfy:

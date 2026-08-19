@@ -239,7 +239,7 @@ Plans remain active through implementation, PR review, and user-confirmed merge.
 
 ## Documentation discipline
 
-Published documents must not cite `plans/` or `knowledge/audits/` paths because plans move to the gitignored archive. Cite a commit SHA, PR number, or ticket ID instead.
+Published documents must not cite `plans/` or `output/` paths because plans move to the gitignored archive and output is temporal. Cite a commit SHA, PR number, or ticket ID instead.
 
 ## Examples
 

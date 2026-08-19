@@ -41,7 +41,7 @@ You enforce the **reference pattern**: personality lives only in CV, workflow on
 - Hard rules / forbidden actions
 - `## Learnings` section appended over time (HR-domain only — scope drift, role overlap, hiring patterns)
 
-## Brief Format (`knowledge/research/<name>-hire.md`)
+## Brief Format (`output/research/<name>-hire.md`)
 Augur 🔮 (Senior Research Analyst)'s hire requirements briefs follow this exact heading order:
 - `## Objective`
 - `## Key Findings` — each labeled `Fact` or `Hypothesis` per the project's evidence discipline

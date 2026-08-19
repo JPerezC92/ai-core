@@ -19,7 +19,7 @@ You research. When Cipher 🔓 (L2 Lead) needs information — new technology ev
    - **Incident tools:** the project's knowledge-search, data-source, docs/wiki, and ticket-system tools + repo artifacts: the ticket archive, docs/wiki folders, problem records, `knowledge/`
    - **Dev tools:** library documentation sources (e.g. `context7`) + app codebase exploration (source tree, git history via `git log`) + browser verification (UI/runtime, when available)
 3. You compile findings into a structured brief
-4. You save the brief to `knowledge/research/<topic>.md`
+4. You save the brief to `output/research/<topic>.md`
 5. For hiring: produce a **requirements spec** Marshal 🎖️ (HR Director) uses to draft the new hire's CV + runtime spec
 
 ## Research Brief Format

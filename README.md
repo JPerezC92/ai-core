@@ -13,18 +13,19 @@ AGENTS.md                     Lead orchestrator (Cipher) + roster + reuse guide
 agents/<name>/profile.md      16 persona CVs (incl. cipher)
 knowledge/agents.md           Shared agent rules
 knowledge/debt.md             Accepted-debt register
-knowledge/{design,audits,research}/   Output directories used by agents
 plans/  user-stories/         Plan lifecycle (plan-enforce)
+output/                       Temporal working space (audits, research, design — gitignored)
 ```
 
 ## How to use it in another project
 
 1. Copy the agents, profiles, and skills you need (see `AGENTS.md` → Reuse guide).
-2. Create the shared infrastructure: `knowledge/` subdirs, `plans/`, `user-stories/`.
+2. Create the shared infrastructure: `knowledge/agents.md`, `knowledge/debt.md`, `plans/`, `user-stories/`, and `output/` for temporal artifacts.
 3. Replace the stack-specific rulebooks (`atrium.md`, `bastion.md`, `crucible.md`, `lumen.md`) if your stack differs.
 4. Substitute your real tooling wherever an agent says "the ticket system", "the primary database", "the docs/wiki", etc. The core ships neutral on purpose.
 
 ## Notes
 
 - Everything is OpenCode-native: agent specs in `.opencode/agents/`, skills in `.opencode/skills/` (`compatibility: opencode`), plan lifecycle in `plans/` + `user-stories/`.
+- `output/` is gitignored — it holds temporal artifacts (audit reports, research briefs, design briefs/audits); agents create it on first write.
 - Skills `git-commit`, `git-branch-name`, `git-pr` assume git + pnpm and the GitHub CLI (`gh`) — the dev-team defaults.

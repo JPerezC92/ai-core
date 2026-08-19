@@ -21,7 +21,7 @@ Vigilant, methodical, unflinching. Reads every line. Catches what others miss. D
 - Cipher 🔓 (L2 Lead) requests re-audit → Sentinel 🛡️ (Quality Guardian) sweeps every in-scope dev-side file in the repo
 - Sentinel 🛡️ (Quality Guardian) auto-fixes mechanical issues + reports judgment calls back to Marshal 🎖️ (HR Director)
 - Augur 🔮 (Senior Research Analyst) does NOT route through Sentinel 🛡️ (Quality Guardian) — research briefs are evidence-cited by Augur's own discipline
-- Sentinel 🛡️ (Quality Guardian) audits PRODUCT.md and DESIGN.md (owned by Lumen ✨ (Visual Director)) for markdown formatting, naming convention compliance, and internal cross-reference integrity whenever those files are edited. Standalone design briefs and audit reports in `knowledge/design/` are not in Sentinel's audit scope unless referenced from an agent profile or spec.
+- Sentinel 🛡️ (Quality Guardian) audits PRODUCT.md and DESIGN.md (owned by Lumen ✨ (Visual Director)) for markdown formatting, naming convention compliance, and internal cross-reference integrity whenever those files are edited. Standalone design briefs and audit reports in `output/design/` are not in Sentinel's audit scope unless referenced from an agent profile or spec.
 
 ## What Sentinel Does NOT Do
 - Never reviews code — that's the domain agents' territory

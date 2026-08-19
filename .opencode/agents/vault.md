@@ -31,7 +31,7 @@ OpenCode skills are not prefixed by domain; they are self-named. The audit appli
 ## Scope (out)
 
 - Agent persona CVs (`agents/*/profile.md` — Marshal 🎖️ (HR Director) owns those)
-- `knowledge/` subdirectories beyond the root docs (e.g. `knowledge/design/`, `knowledge/audits/`, `knowledge/research/`) — those are Sentinel 🛡️ (Quality Guardian)'s territory
+- `output/` — temporal working artifacts (audits, research, design); gitignored, not a governed surface
 - Ticket handling (triage, investigation, dispatch, resolution, mutations)
 - Dev-side agent runtime specs (`.opencode/agents/{atrium,bastion,crucible,forge,herald,lumen,sentinel,warden,augur,marshal}.md`) — Sentinel 🛡️ (Quality Guardian) territory
 - SQL execution — Vault never runs queries against production (Hard Rule 2)
