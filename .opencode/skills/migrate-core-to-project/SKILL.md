@@ -27,7 +27,7 @@ Do NOT use me to create or edit skills or agents themselves — those are `op-sk
 From the user's request, extract:
 
 - **target** — path to the destination project (required).
-- **scope** — coarse Kind-prefilter narrowing the selection step. One of `all` (default), `skills`, `agents`, `infra`. `all` = no prefilter; `skills`/`agents`/`infra` limit the multi-select to that Kind group. Config merge targets are not a scope value — they are always merged in step 4, never selectable. Fine-grained selection happens in step 2, not here.
+- **scope** — coarse Kind-prefilter narrowing the selection step. Derived from the Kind column, never hand-written: `all` (default), or the plural of any selectable Kind (`skill`→`skills`, `agent`→`agents`, `infra`→`infra`). `config` has no scope value — it is a merge target, never selectable. Fine-grained selection happens in step 2, not here.
 - **stack hints** — optional notes about the target (backend? ticket system?) that assist marker detection.
 
 ### Argument collection form
@@ -35,7 +35,7 @@ From the user's request, extract:
 | name | type | validation | trigger |
 |---|---|---|---|
 | `target` | text | non-empty, points to a directory | not provided |
-| `scope` | choice | one of all / skills / agents / infra | not provided |
+| `scope` | choice | all / skills / agents / infra (derived from selectable Kinds) | not provided |
 
 Use one `question` call per missing argument. Do not add a manual "Other" option.
 
@@ -107,6 +107,23 @@ Run against the UNION = the already-present set + the newly selected set. After 
 - **Roster count** — AGENTS.md, knowledge/agents.md, and sentinel audit lists must name exactly the installed roster.
 - **Frontmatter** — every spec has `name` = basename, `description`, `mode: subagent`.
 - **Build** — run the target's build command (`pnpm build` or equivalent) — must pass.
+
+## Kind vocabulary
+
+Kind is a closed set of 4 values:
+
+| Kind | Meaning | Selectable? |
+|---|---|---|
+| `skill` | a skill directory under `.opencode/skills/` | yes |
+| `agent` | a roster member — `.opencode/agents/<name>.md` and/or `agents/<name>/profile.md` | yes |
+| `infra` | a shared-infra file or dir (`knowledge/`, `plans/`, `user-stories/`) | yes |
+| `config` | a merge target (`AGENTS.md`, `opencode.jsonc`, `.gitignore`) | no — merge-only, step 4 |
+
+Hard corollaries:
+
+- File count lives in the **Source** column, never in a new Kind. `investigator` (spec-only) and `cipher` (CV-only) are Kind `agent`; their reduced file set is expressed by Source.
+- `config` has **no `scope` value** because it is not selectable.
+- **No 5th Kind.** Any future special case is encoded via Source + Include-rule, not a new Kind value.
 
 ## Core manifest
 

@@ -42,6 +42,7 @@
 | 3 | Union pass + re-diff verify | Vault 🔐 | `phase-03-vault.md` | `SKILL.md` (steps 5-6 + examples) |
 | 4 | Arguments + description rewrite | Vault 🔐 | `phase-04-vault.md` | `SKILL.md` (description + Arguments) |
 | 5 | Merge symptom pair into atomic item | Vault 🔐 | `phase-05-vault.md` | `SKILL.md` (manifest row + presence rule + selection/copy) |
+| 6 | Derive scope from Kind | Vault 🔐 | `phase-06-vault.md` | `SKILL.md` (Kind vocabulary + scope derivation) |
 
 ## Critical files / tools
 
@@ -55,6 +56,7 @@
 - ⬜ Phase 3 gate passed (union consistency pass; re-diff verify fail-closed; incremental example)
 - ✅ Phase 4 gate passed (scope redefined as Kind-prefilter; old enum values gone; description mentions incremental)
 - ✅ Phase 5 gate passed (symptom-problem-register atomic item; separate symptoms/problems rows gone; multi-file presence rule; no Requires column)
+- ✅ Phase 6 gate passed (Kind vocabulary block; scope derived from Kind; config excluded from scope; no 5th Kind)
 - ✅ All gates in each phase runbook passed
 
 ## Out of scope
@@ -78,3 +80,4 @@
 - 2026-08-20 — `scope` redefined from the old coarse enum (`skills-only`/`skills+infra`/`roster`/`named-agents`) to a Kind-prefilter (`all`/`skills`/`agents`/`infra`/`config`) so the new multi-select does fine-grained selection; added phase 4 to rewrite the orphaned Arguments section + frontmatter description.
 - 2026-08-20 — double-check correction: `config` removed from the `scope` enum (it is a merge target, never selectable — a `config` scope value would have produced an empty multi-select); "What I do" body reworded to match the new deterministic flow (was stale "propose applicable subset / preview manifest / adapt").
 - 2026-08-20 — symptom pair (`knowledge/symptoms.md` + `knowledge/problems.md`) are ONE feature and must never be separated. Modeled as a single atomic manifest item named `symptom-problem-register` (two files, one row — same pattern as an agent's spec+CV), NOT two rows with a `Requires` dependency column. Atomicity is structural; the existing `partial` (fail-closed) handling covers the "one file present" failure for free. Only the symptom pair is merged; `plans/` + `user-stories/` stay separate (directories, not cross-referencing content files).
+- 2026-08-20 — terminology standardization: Inquisitor found the `scope` enum and the manifest `Kind` column were two hand-maintained surfaces that drifted (`config` crept into scope; `cipher` got an invented 5th Kind `cv`). Fix: add a closed `## Kind vocabulary` block (4 Kinds: skill/agent/infra/config) and derive `scope` from the Kind column (`all` + plural of each selectable Kind) so the drift class is structurally impossible. `config` is merge-only → no scope value; file-count special cases (`investigator` spec-only, `cipher` CV-only) live in the Source column, never a new Kind.
