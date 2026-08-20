@@ -16,9 +16,9 @@ HARD RULE — fill every Step / Output / Gate / Abort. No `TBD` placeholders. Ag
 
 2. Rewrite the `## Arguments` section and `### Argument collection form`:
    - `target` — path to the destination project (required).
-   - `scope` — coarse Kind-prefilter narrowing the selection step. One of `all` (default), `skills`, `agents`, `infra`, `config`. `all` = no prefilter; `skills`/`agents`/`infra`/`config` limit the multi-select to that Kind group. This is NOT the old `skills-only`/`roster`/`named-agents` enum — fine-grained selection now happens in step 2.
+   - `scope` — coarse Kind-prefilter narrowing the selection step. One of `all` (default), `skills`, `agents`, `infra`. `all` = no prefilter; `skills`/`agents`/`infra` limit the multi-select to that Kind group. Config merge targets are not a scope value — they are always merged in step 4. Fine-grained selection happens in step 2, not here.
    - `stack hints` — optional notes about the target that assist marker detection (backend? ticket system?).
-   - Update the collection-form table: `scope` validation becomes `one of all / skills / agents / infra / config`.
+   - Update the collection-form table: `scope` validation becomes `one of all / skills / agents / infra`.
    - Keep "Use one `question` call per missing argument. Do not add a manual 'Other' option."
 
 3. Do not touch the `## What I do` / `## When to use me` sections beyond what is already correct; if they mention the old scope enum, align them to the new prefilter wording.
@@ -26,12 +26,12 @@ HARD RULE — fill every Step / Output / Gate / Abort. No `TBD` placeholders. Ag
 ## Output
 
 - **Artifact:** `.opencode/skills/migrate-core-to-project/SKILL.md` (edited)
-- **Schema / shape:** description mentions incremental + deterministic + selectable list; scope is a Kind-prefilter enum `all/skills/agents/infra/config`; old enum values (`skills-only`, `skills+infra`, `roster`, `named-agents`) gone.
+- **Schema / shape:** description mentions incremental + deterministic + selectable list; scope is a Kind-prefilter enum `all/skills/agents/infra`; old enum values (`skills-only`, `skills+infra`, `roster`, `named-agents`) gone.
 
 ## Gate
 
 - ⬜ `grep -c 'Kind-prefilter' .opencode/skills/migrate-core-to-project/SKILL.md` → >=1.
-- ⬜ `grep -c 'all / skills / agents / infra / config' .opencode/skills/migrate-core-to-project/SKILL.md` → >=1.
+- ⬜ `grep -c 'all / skills / agents / infra' .opencode/skills/migrate-core-to-project/SKILL.md` → >=1.
 - ⬜ `grep -c 'selectable list' .opencode/skills/migrate-core-to-project/SKILL.md` → >=1 (description).
 - ⬜ Old enum gone: `grep -cE 'skills-only|skills\+infra|named-agents|roster \(subagents' .opencode/skills/migrate-core-to-project/SKILL.md` → 0.
 

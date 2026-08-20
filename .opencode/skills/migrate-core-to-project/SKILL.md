@@ -48,8 +48,7 @@ Read the target's structure to set the two markers mechanically: **backend marke
 Loop the manifest table. For every item, check destination presence:
 
 - skill → `<target>/.opencode/skills/<name>/SKILL.md` exists?
-- agent → `<target>/.opencode/agents/<name>.md` AND `<target>/agents/<name>/profile.md` both exist?
-- cv-only (cipher) → `<target>/agents/cipher/profile.md` exists?
+- agent → every file in the item's Source exists? A normal agent has 2 files (spec + CV); `investigator` is spec-only (1 file); `cipher` is CV-only (1 file). present when ALL its files exist, partial when exactly one does, missing when none do.
 - infra → each file in the item's Source exists? A multi-file item (e.g. symptom-problem-register) is present when ALL its files exist, partial when exactly one does, missing when none do.
 - config → treated as merge targets (always eligible for the merge check), not presence-diffed.
 
@@ -137,7 +136,7 @@ Run against the UNION = the already-present set + the newly selected set. After 
 | `sentinel` | agent | `.opencode/agents/sentinel.md` + `agents/sentinel/profile.md` | `<target>/.opencode/agents/sentinel.md` + `<target>/agents/sentinel/profile.md` | always |
 | `vault` | agent | `.opencode/agents/vault.md` + `agents/vault/profile.md` | `<target>/.opencode/agents/vault.md` + `<target>/agents/vault/profile.md` | always |
 | `warden` | agent | `.opencode/agents/warden.md` + `agents/warden/profile.md` | `<target>/.opencode/agents/warden.md` + `<target>/agents/warden/profile.md` | always |
-| `cipher` | cv | `agents/cipher/profile.md` | `<target>/agents/cipher/profile.md` | always (CV-only, no runtime spec) |
+| `cipher` | agent | `agents/cipher/profile.md` | `<target>/agents/cipher/profile.md` | always (CV-only, no runtime spec) |
 | `knowledge/agents.md` | infra | `knowledge/agents.md` | `<target>/knowledge/agents.md` | always |
 | `knowledge/debt.md` | infra | `knowledge/debt.md` | `<target>/knowledge/debt.md` | always |
 | `symptom-problem-register` | infra | `knowledge/symptoms.md` + `knowledge/problems.md` | `<target>/knowledge/symptoms.md` + `<target>/knowledge/problems.md` | always |
@@ -162,7 +161,7 @@ Target: a Next.js frontend project, no backend, no ticket system. Scope: `all`.
 Target: any project that wants the git/planning workflows without the agent roster. Scope: `all` — in step 2, select the 7 applicable skills plus the infra files, leaving agents unselected.
 
 - Copy the 7 applicable skills + `knowledge/agents.md`, `knowledge/debt.md`, the `symptom-problem-register` item (`knowledge/symptoms.md` + `knowledge/problems.md`), `plans/`, `user-stories/`
-- Adapt `.gitignore` and `opencode.jsonc`; no AGENTS.md roster, no subagents
+- Merge `.gitignore` and `opencode.jsonc`; no AGENTS.md roster, no subagents
 
 ### Example 3 — incremental migration
 
