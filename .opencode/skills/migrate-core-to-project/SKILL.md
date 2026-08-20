@@ -1,6 +1,6 @@
 ---
 name: migrate-core-to-project
-description: Migrate the AICore reusable core (skills, subagents, persona CVs, and shared infrastructure) into a target project, including the consistency pass that trims broken references and aligns roster lists. Use when the user wants to install or migrate the agent core into another project, copy agents or skills from AICore, or scaffold a project with the core tooling.
+description: Migrate the AICore reusable core (skills, subagents, persona CVs, and shared infrastructure) into a target project — deterministically. Computes an installed-set inventory from a structured manifest, presents a selectable list of only the missing eligible items, copies idempotently, merges config, and runs a union consistency pass with a re-diff verification. Use when the user wants to install or migrate the agent core into another project, migrate just the remaining missing items incrementally, copy agents or skills from AICore, or scaffold a project with the core tooling.
 license: MIT
 compatibility: opencode
 metadata:
@@ -11,7 +11,7 @@ metadata:
 
 ## What I do
 
-Migrate AICore's reusable, agnostic core into a target project. I analyze the target's stack, propose the applicable subset of skills/subagents/infra, preview the exact write manifest, then copy, adapt, and verify — ending with a consistency pass that removes broken references to agents that were not installed. I never run git; shipping (branch/commit/PR) happens separately.
+Migrate AICore's reusable, agnostic core into a target project — deterministically. I compute an installed-set inventory from a structured manifest, present a selectable list of only the missing eligible items, copy idempotently, merge config, and run a union consistency pass with a re-diff verification that fails closed on any still-missing item. I never run git; shipping (branch/commit/PR) happens separately.
 
 ## When to use me
 
@@ -27,82 +27,141 @@ Do NOT use me to create or edit skills or agents themselves — those are `op-sk
 From the user's request, extract:
 
 - **target** — path to the destination project (required).
-- **scope** — what to migrate. One of `skills-only`, `skills+infra`, `roster` (subagents + CVs), `named-agents` (specific agents), or `all` (default). If absent, default to `all`.
-- **stack hints** — optional notes about the target (backend? incident/ticket system?) that influence what to include.
+- **scope** — coarse Kind-prefilter narrowing the selection step. Derived from the Kind column, never hand-written: `all` (default), or the plural of any selectable Kind (`skill`→`skills`, `agent`→`agents`, `infra`→`infra`). `config` has no scope value — it is a merge target, never selectable. Fine-grained selection happens in step 2, not here.
+- **stack hints** — optional notes about the target (backend? ticket system?) that assist marker detection.
 
 ### Argument collection form
 
 | name | type | validation | trigger |
 |---|---|---|---|
 | `target` | text | non-empty, points to a directory | not provided |
-| `scope` | choice | one of skills-only / skills+infra / roster / named-agents / all | not provided |
+| `scope` | choice | all / skills / agents / infra (derived from selectable Kinds) | not provided |
 
 Use one `question` call per missing argument. Do not add a manual "Other" option.
 
 ## Steps
 
-### 1. Scope discovery (read-first)
+### 1. Inventory (deterministic)
 
-Read the target project:
-- Identify the stack (frontend-only, full-stack, etc.) from its manifest files
-- Check for an existing `.opencode/` directory and any existing agents/skills
-- Check whether the target has an incident/ticket system (ticket folders, support workflows)
+Read the target's structure to set the two markers mechanically: **backend marker** (target has a backend manifest, e.g. `nest-cli.json`, `pyproject.toml`, `requirements.txt`, or a backend source dir) and **ticket marker** (target has a ticket/support folder or workflow). Markers are concrete existence checks, not judgments.
 
-Decide the applicable subset:
+Loop the manifest table. For every item, check destination presence:
 
-- **Skills** — always applicable: `git-branch-name`, `git-commit`, `git-pr`, `op-model`, `op-skill-creator`, `op-agent-creator`, `plan-enforce`. Skip `ticket-runbook` unless the target has an incident/ticket system.
-- **Subagents + persona CVs** — pick by relevance:
-  - Dev team (always relevant): `atrium`, `crucible`, `forge`, `herald`, `lumen`, `sentinel`, `warden`, `inquisitor`
-  - Cross-cutting (relevant): `augur`, `marshal`
-  - Backend: `bastion` — only if the target has backend code
-  - Lead: Cipher — persona CV only, defined via `AGENTS.md` (no runtime spec)
-  - Incident team (only with a ticket system): `investigator`, `ledger`, `quill`, `scribe`, `vault`
-- **Infra** — always: `knowledge/agents.md`, `knowledge/debt.md`, `knowledge/symptoms.md`, `knowledge/problems.md`, `plans/`, `user-stories/`
-- **Config** — `opencode.jsonc` permission gates (extract the permission block; do NOT copy model overrides), `AGENTS.md` (lead + installed roster)
+- skill → `<target>/.opencode/skills/<name>/SKILL.md` exists?
+- agent → every file in the item's Source exists? A normal agent has 2 files (spec + CV); `investigator` is spec-only (1 file); `cipher` is CV-only (1 file). present when ALL its files exist, partial when exactly one does, missing when none do.
+- infra → each file in the item's Source exists? A multi-file item (e.g. symptom-problem-register) is present when ALL its files exist, partial when exactly one does, missing when none do.
+- config → treated as merge targets (always eligible for the merge check), not presence-diffed.
 
-### 2. Preview manifest (confirm before write)
+Output three lists: `present` (skip), `missing` (eligible), `partial` (a present item with a missing pair-half, e.g. spec present but CV absent).
 
-Build the complete write manifest in memory: every file to copy, every file to edit. Present it to the user and confirm before any write. This is a mutation skill — never write without confirmation.
+`partial` FAILS CLOSED: report it, do NOT auto-migrate or auto-repair it; ask the user how to proceed.
 
-### 3. Copy
+Apply the include-rules to filter `missing` down to `eligible`: skip `bastion` unless backend marker, skip ticket-team agents + `ticket-runbook` unless ticket marker.
 
-- Skills: copy `.opencode/skills/<name>` directories (only the selected set)
-- Subagent specs: `.opencode/agents/<name>.md`
-- Persona CVs: `agents/<name>/profile.md` — every spec references its CV with a single line; copy them as pairs
-- Infra: `knowledge/agents.md`, `knowledge/debt.md`, `knowledge/symptoms.md`, `knowledge/problems.md`, `plans/.gitkeep`, `user-stories/.gitkeep`
+### 2. Select items
 
-### 4. Adapt
+Present a multi-select list via the `question` tool with `multiple: true`, listing ONLY the `missing` eligible items from step 1, grouped by Kind:
 
-- **AGENTS.md** — write a lead-orchestrator form (Cipher identity → roster → shared rules → what's installed → conventions → reuse guide). List only the installed agents.
-- **opencode.jsonc** — copy the permission safety gates only (destructive command denies, stash safety). Do NOT copy the source project's model overrides.
-- **.gitignore** — add `commit.txt`, `pr-draft.md`, `output/`, `plans/.completed/`.
+- **skills** — each missing eligible skill
+- **agents** — each missing eligible agent (`investigator` listed as spec-only, `cipher` as CV-only)
+- **infra** — each missing infra file
+  - a multi-file infra item (symptom-problem-register) is listed as ONE option, not one per file.
+
+Config merge targets (`AGENTS.md`, `opencode.jsonc`, `.gitignore`) are NOT listed — they are always handled in step 4, never selectable.
+
+- The first option is **"Migrate all missing eligible items"** (default).
+- Each option's label is the manifest Item name; its description cites the Destination path from the manifest (never re-invented).
+- Map the selection 1:1 to manifest entries → derive the exact write manifest from the selection. Never invent an item that is not in the manifest.
+
+### 3. Copy (idempotent)
+
+Copy ONLY the selected items. Never write beyond the derived write manifest.
+
+- **`present` items are NEVER touched.** Re-copying an already-present item requires the user to explicitly override — never silent.
+- **Agents copy as pairs:** `.opencode/agents/<name>.md` + `agents/<name>/profile.md`. Exceptions: `investigator` copies spec only; `cipher` copies CV only.
+- **Skills:** copy `.opencode/skills/<name>/` directories.
+- **Infra:** copy every file in the item's Source (a multi-file item copies all its files as one unit).
+
+### 4. Merge adapts
+
+- **AGENTS.md** — if `<target>/AGENTS.md` exists, MERGE new roster lines into the existing file (append lines for newly selected agents; do NOT regenerate from scratch). If absent, write fresh.
+- **opencode.jsonc** — append only the missing permission gates: grep for an existing gate before adding; never duplicate.
+- **.gitignore** — append-if-missing entries `commit.txt`, `pr-draft.md`, `output/`, `plans/.completed/`.
 - **Build approvals** — if the target uses pnpm ≥ 11, approve native build scripts (`sharp`, `@swc/core`, `agent-browser`, `@parcel/watcher`, `unrs-resolver`) via `pnpm approve-builds`.
 
-### 5. Consistency pass (mandatory)
+### 5. Consistency pass (union)
 
-After every copy, verify and fix cross-references. Verbatim copies are never internally consistent.
+Run against the UNION = the already-present set + the newly selected set. After every copy, verify and fix cross-references. Verbatim copies are never internally consistent.
 
-1. **Broken file pointers** — grep every copied spec for `.opencode/agents/<name>.md` and `agents/<name>/profile.md` references; any reference to an agent that was not installed must be removed or trimmed (e.g. `forge.md` reading `bastion.md` when bastion is not copied).
-2. **Roster lists** — align every roster list (AGENTS.md, knowledge/agents.md ownership table, sentinel audit-scope lists, per-spec Roster Context) to the installed set. Stale lists are the most common bug.
+1. **Broken file pointers** — grep every copied spec for `.opencode/agents/<name>.md` and `agents/<name>/profile.md` references; trim a reference ONLY to an agent that is NEITHER `present` NOR `selected` this run. A reference to an already-installed agent is valid and must NOT be trimmed (e.g. `forge.md` reading `bastion.md` when bastion was not copied this run but was already installed).
+2. **Roster lists** — align every roster list (AGENTS.md, knowledge/agents.md ownership table, sentinel audit-scope lists, per-spec Roster Context) to the union (existing + new), merging new entries in rather than regenerating from scratch. Stale lists are the most common bug.
 3. **Non-installed team references** — de-reference the non-installed team from copied specs/CVs (e.g. incident-team mentions in `augur.md`/`marshal.md` roster context, Cipher CV delegation lines).
 4. **Frontmatter** — every spec must have `name` (matching the filename), `description`, and `mode: subagent`. Missing `name` is a common verbatim-copy defect.
 5. **CV ↔ spec reconciliation** — persona CVs and runtime specs must agree (e.g. if the spec forbids posting GitHub comments, the CV must not claim it posts them).
 6. **Grammar/emoji** — persona CV H1 headings use `# Name Emoji — Role`; fix "a agent" → "an agent".
 
-### 6. Verify
+### 6. Verify (re-diff)
 
+- **Re-diff** — re-run the step-1 inventory diff. Every selected item must now be `present`; present-count = previous-present + selected-count. If any selected item is still `missing`, or any item is now `partial`, **FAIL** — do not report success.
 - **Pointer sweep** — loop `.opencode/agents/*.md` and `agents/*/profile.md` references; none may point to a non-installed agent.
 - **Roster count** — AGENTS.md, knowledge/agents.md, and sentinel audit lists must name exactly the installed roster.
 - **Frontmatter** — every spec has `name` = basename, `description`, `mode: subagent`.
 - **Build** — run the target's build command (`pnpm build` or equivalent) — must pass.
 
-## Core manifest (what AICore contains)
+## Kind vocabulary
 
-- **Skills to migrate** (8): `git-branch-name`, `git-commit`, `git-pr`, `op-agent-creator`, `op-model`, `op-skill-creator`, `plan-enforce`, `ticket-runbook`. The `migrate-core-to-project` skill itself stays in the source project — it is not copied into the target.
-- **Subagent specs** (16): `atrium`, `augur`, `bastion`, `crucible`, `forge`, `herald`, `inquisitor`, `investigator`, `ledger`, `lumen`, `marshal`, `quill`, `scribe`, `sentinel`, `vault`, `warden`
-- **Persona CVs** (16): the subagent set minus `investigator`, plus `cipher` (lead, CV-only)
-- **Infra**: `knowledge/agents.md`, `knowledge/debt.md`, `knowledge/symptoms.md`, `knowledge/problems.md`, `plans/`, `user-stories/`
-- **Config**: `AGENTS.md` (lead orchestrator), `opencode.jsonc` (permission gates)
+Kind is a closed set of 4 values:
+
+| Kind | Meaning | Selectable? |
+|---|---|---|
+| `skill` | a skill directory under `.opencode/skills/` | yes |
+| `agent` | a roster member — `.opencode/agents/<name>.md` and/or `agents/<name>/profile.md` | yes |
+| `infra` | a shared-infra file or dir (`knowledge/`, `plans/`, `user-stories/`) | yes |
+| `config` | a merge target (`AGENTS.md`, `opencode.jsonc`, `.gitignore`) | no — merge-only, step 4 |
+
+Hard corollaries:
+
+- File count lives in the **Source** column, never in a new Kind. `investigator` (spec-only) and `cipher` (CV-only) are Kind `agent`; their reduced file set is expressed by Source.
+- `config` has **no `scope` value** because it is not selectable.
+- **No 5th Kind.** Any future special case is encoded via Source + Include-rule, not a new Kind value.
+
+## Core manifest
+
+| Item | Kind | Source | Destination | Include-rule |
+|---|---|---|---|---|
+| `git-branch-name` | skill | `.opencode/skills/git-branch-name/` | `<target>/.opencode/skills/git-branch-name/` | always |
+| `git-commit` | skill | `.opencode/skills/git-commit/` | `<target>/.opencode/skills/git-commit/` | always |
+| `git-pr` | skill | `.opencode/skills/git-pr/` | `<target>/.opencode/skills/git-pr/` | always |
+| `op-agent-creator` | skill | `.opencode/skills/op-agent-creator/` | `<target>/.opencode/skills/op-agent-creator/` | always |
+| `op-model` | skill | `.opencode/skills/op-model/` | `<target>/.opencode/skills/op-model/` | always |
+| `op-skill-creator` | skill | `.opencode/skills/op-skill-creator/` | `<target>/.opencode/skills/op-skill-creator/` | always |
+| `plan-enforce` | skill | `.opencode/skills/plan-enforce/` | `<target>/.opencode/skills/plan-enforce/` | always |
+| `ticket-runbook` | skill | `.opencode/skills/ticket-runbook/` | `<target>/.opencode/skills/ticket-runbook/` | only if ticket marker |
+| `atrium` | agent | `.opencode/agents/atrium.md` + `agents/atrium/profile.md` | `<target>/.opencode/agents/atrium.md` + `<target>/agents/atrium/profile.md` | always |
+| `augur` | agent | `.opencode/agents/augur.md` + `agents/augur/profile.md` | `<target>/.opencode/agents/augur.md` + `<target>/agents/augur/profile.md` | always |
+| `bastion` | agent | `.opencode/agents/bastion.md` + `agents/bastion/profile.md` | `<target>/.opencode/agents/bastion.md` + `<target>/agents/bastion/profile.md` | only if backend marker |
+| `crucible` | agent | `.opencode/agents/crucible.md` + `agents/crucible/profile.md` | `<target>/.opencode/agents/crucible.md` + `<target>/agents/crucible/profile.md` | always |
+| `forge` | agent | `.opencode/agents/forge.md` + `agents/forge/profile.md` | `<target>/.opencode/agents/forge.md` + `<target>/agents/forge/profile.md` | always |
+| `herald` | agent | `.opencode/agents/herald.md` + `agents/herald/profile.md` | `<target>/.opencode/agents/herald.md` + `<target>/agents/herald/profile.md` | always |
+| `inquisitor` | agent | `.opencode/agents/inquisitor.md` + `agents/inquisitor/profile.md` | `<target>/.opencode/agents/inquisitor.md` + `<target>/agents/inquisitor/profile.md` | always |
+| `investigator` | agent | `.opencode/agents/investigator.md` | `<target>/.opencode/agents/investigator.md` | only if ticket marker |
+| `ledger` | agent | `.opencode/agents/ledger.md` + `agents/ledger/profile.md` | `<target>/.opencode/agents/ledger.md` + `<target>/agents/ledger/profile.md` | only if ticket marker |
+| `lumen` | agent | `.opencode/agents/lumen.md` + `agents/lumen/profile.md` | `<target>/.opencode/agents/lumen.md` + `<target>/agents/lumen/profile.md` | always |
+| `marshal` | agent | `.opencode/agents/marshal.md` + `agents/marshal/profile.md` | `<target>/.opencode/agents/marshal.md` + `<target>/agents/marshal/profile.md` | always |
+| `quill` | agent | `.opencode/agents/quill.md` + `agents/quill/profile.md` | `<target>/.opencode/agents/quill.md` + `<target>/agents/quill/profile.md` | only if ticket marker |
+| `scribe` | agent | `.opencode/agents/scribe.md` + `agents/scribe/profile.md` | `<target>/.opencode/agents/scribe.md` + `<target>/agents/scribe/profile.md` | only if ticket marker |
+| `sentinel` | agent | `.opencode/agents/sentinel.md` + `agents/sentinel/profile.md` | `<target>/.opencode/agents/sentinel.md` + `<target>/agents/sentinel/profile.md` | always |
+| `vault` | agent | `.opencode/agents/vault.md` + `agents/vault/profile.md` | `<target>/.opencode/agents/vault.md` + `<target>/agents/vault/profile.md` | always |
+| `warden` | agent | `.opencode/agents/warden.md` + `agents/warden/profile.md` | `<target>/.opencode/agents/warden.md` + `<target>/agents/warden/profile.md` | always |
+| `cipher` | agent | `agents/cipher/profile.md` | `<target>/agents/cipher/profile.md` | always (CV-only, no runtime spec) |
+| `knowledge/agents.md` | infra | `knowledge/agents.md` | `<target>/knowledge/agents.md` | always |
+| `knowledge/debt.md` | infra | `knowledge/debt.md` | `<target>/knowledge/debt.md` | always |
+| `symptom-problem-register` | infra | `knowledge/symptoms.md` + `knowledge/problems.md` | `<target>/knowledge/symptoms.md` + `<target>/knowledge/problems.md` | always |
+| `plans/` | infra | `plans/.gitkeep` | `<target>/plans/.gitkeep` | always |
+| `user-stories/` | infra | `user-stories/.gitkeep` | `<target>/user-stories/.gitkeep` | always |
+| `AGENTS.md` | config | (generated) | `<target>/AGENTS.md` | merge, not copy |
+| `opencode.jsonc` | config | (permission block) | `<target>/opencode.jsonc` | merge, not copy |
+| `.gitignore` | config | (entries) | `<target>/.gitignore` | merge, not copy |
 
 ## Examples
 
@@ -111,15 +170,23 @@ After every copy, verify and fix cross-references. Verbatim copies are never int
 Target: a Next.js frontend project, no backend, no ticket system. Scope: `all`.
 
 - Skills: all except `ticket-runbook`
-- Agents: `atrium`, `crucible`, `forge`, `herald`, `lumen`, `sentinel`, `warden`, `inquisitor`, `augur`, `marshal`, `bastion` (deferred until a backend grows), plus Cipher lead
-- Consistency pass removes: `bastion.md` reads in `forge.md`, incident-team references in `augur.md`/`marshal.md`/Cipher CV, sentinel audit lists trimmed to installed agents, missing `name:` frontmatter added
+- Agents: `atrium`, `crucible`, `forge`, `herald`, `lumen`, `sentinel`, `warden`, `inquisitor`, `augur`, `marshal`, plus Cipher lead (`bastion` is filtered out — no backend marker)
+- Consistency pass removes: `forge.md` reads `bastion.md`, incident-team references in `augur.md`/`marshal.md`/Cipher CV, sentinel audit lists trimmed to installed agents, missing `name:` frontmatter added
 
-### Example 2 — skills-only install
+### Example 2 — skills and infra install
 
-Target: any project that wants the git/planning workflows without the agent roster. Scope: `skills+infra`.
+Target: any project that wants the git/planning workflows without the agent roster. Scope: `all` — in step 2, select the 7 applicable skills plus the infra files, leaving agents unselected.
 
-- Copy the 7 applicable skills + `knowledge/agents.md`, `knowledge/debt.md`, `knowledge/symptoms.md`, `knowledge/problems.md`, `plans/`, `user-stories/`
-- Adapt `.gitignore` and `opencode.jsonc`; no AGENTS.md roster, no subagents
+- Copy the 7 applicable skills + `knowledge/agents.md`, `knowledge/debt.md`, the `symptom-problem-register` item (`knowledge/symptoms.md` + `knowledge/problems.md`), `plans/`, `user-stories/`
+- Merge `.gitignore` and `opencode.jsonc`; no AGENTS.md roster, no subagents
+
+### Example 3 — incremental migration
+
+Target already has 12 agents + 6 skills (from a prior migration). User runs the skill.
+
+- Inventory shows 2 missing eligible items (`op-model` skill, `warden` agent) and 1 `partial` (spec present, CV missing).
+- The partial is reported and blocked. User selects only `op-model`.
+- Result: only `op-model` copies; AGENTS.md/appends unchanged (no new agent); consistency pass runs on the union; re-diff shows present-count +1 and `op-model` now present → PASS. The remaining 1 missing item stays missing (deferred).
 
 ## Troubleshooting
 
@@ -128,3 +195,6 @@ Target: any project that wants the git/planning workflows without the agent rost
 - **Spec is missing `name:` frontmatter** — Cause: the source project shipped the spec without it. Fix: add lowercase `name` matching the filename, plus `description` and `mode: subagent`.
 - **CV and runtime spec disagree** — e.g. the CV claims the agent posts GitHub comments, the spec forbids it. Cause: separate files drifting. Fix: align the CV to the spec's Hard Rules.
 - **`pnpm build` fails after install** — Cause: native build scripts ignored by pnpm 11. Fix: run `pnpm approve-builds` and rebuild.
+- **Item present but partial** — spec exists, CV missing (or vice versa). Cause: interrupted or manual prior copy. Fix: fail closed; ask the user whether to re-copy the pair or leave it; never auto-repair.
+- **Item present but from an older core** — destination copy is stale vs current AICore. Cause: prior migration of an earlier core. Fix: offer explicit re-copy (user override), never silent overwrite.
+- **Target has a custom item with a core name** — destination has its own `SKILL.md`/spec under a manifest name but it is not a core item. Cause: name collision. Fix: the manifest whitelist governs; the target's file is treated as `present` and skipped, reported to the user.
