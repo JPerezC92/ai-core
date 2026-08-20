@@ -113,8 +113,8 @@ After the runbook scaffolds and validates:
 
 - User says: `#191800`
 - Ticket: domain W, module V, region U, period T
-- Prior-art: problem record — match on module + symptom keywords (identifier collision)
-- Verdict: `Replay-candidate: yes` — source: <problem record path>; matched fields: module, issue_type, symptom
+- Prior-art: known-problem register — match on Symptom (S-xx) + Domain + Problem (identifier collision)
+- Verdict: `Replay-candidate: yes` — source: `knowledge/problems.md` (P-NNN); matched fields: Symptom, Domain, Problem
 - Result: no runbook scaffolded; finding block returned to Cipher; Quill 🪶 (note drafter) dispatched from the finding.
 
 ## Troubleshooting
