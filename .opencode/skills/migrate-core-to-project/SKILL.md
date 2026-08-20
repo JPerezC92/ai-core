@@ -57,7 +57,7 @@ Decide the applicable subset:
   - Backend: `bastion` — only if the target has backend code
   - Lead: Cipher — persona CV only, defined via `AGENTS.md` (no runtime spec)
   - Incident team (only with a ticket system): `investigator`, `ledger`, `quill`, `scribe`, `vault`
-- **Infra** — always: `knowledge/agents.md`, `knowledge/debt.md`, `plans/`, `user-stories/`
+- **Infra** — always: `knowledge/agents.md`, `knowledge/debt.md`, `knowledge/symptoms.md`, `knowledge/problems.md`, `plans/`, `user-stories/`
 - **Config** — `opencode.jsonc` permission gates (extract the permission block; do NOT copy model overrides), `AGENTS.md` (lead + installed roster)
 
 ### 2. Preview manifest (confirm before write)
@@ -69,7 +69,7 @@ Build the complete write manifest in memory: every file to copy, every file to e
 - Skills: copy `.opencode/skills/<name>` directories (only the selected set)
 - Subagent specs: `.opencode/agents/<name>.md`
 - Persona CVs: `agents/<name>/profile.md` — every spec references its CV with a single line; copy them as pairs
-- Infra: `knowledge/agents.md`, `knowledge/debt.md`, `plans/.gitkeep`, `user-stories/.gitkeep`
+- Infra: `knowledge/agents.md`, `knowledge/debt.md`, `knowledge/symptoms.md`, `knowledge/problems.md`, `plans/.gitkeep`, `user-stories/.gitkeep`
 
 ### 4. Adapt
 
@@ -101,7 +101,7 @@ After every copy, verify and fix cross-references. Verbatim copies are never int
 - **Skills to migrate** (8): `git-branch-name`, `git-commit`, `git-pr`, `op-agent-creator`, `op-model`, `op-skill-creator`, `plan-enforce`, `ticket-runbook`. The `migrate-core-to-project` skill itself stays in the source project — it is not copied into the target.
 - **Subagent specs** (16): `atrium`, `augur`, `bastion`, `crucible`, `forge`, `herald`, `inquisitor`, `investigator`, `ledger`, `lumen`, `marshal`, `quill`, `scribe`, `sentinel`, `vault`, `warden`
 - **Persona CVs** (16): the subagent set minus `investigator`, plus `cipher` (lead, CV-only)
-- **Infra**: `knowledge/agents.md`, `knowledge/debt.md`, `plans/`, `user-stories/`
+- **Infra**: `knowledge/agents.md`, `knowledge/debt.md`, `knowledge/symptoms.md`, `knowledge/problems.md`, `plans/`, `user-stories/`
 - **Config**: `AGENTS.md` (lead orchestrator), `opencode.jsonc` (permission gates)
 
 ## Examples
@@ -118,7 +118,7 @@ Target: a Next.js frontend project, no backend, no ticket system. Scope: `all`.
 
 Target: any project that wants the git/planning workflows without the agent roster. Scope: `skills+infra`.
 
-- Copy the 7 applicable skills + `knowledge/agents.md`/`debt.md`, `plans/`, `user-stories/`
+- Copy the 7 applicable skills + `knowledge/agents.md`, `knowledge/debt.md`, `knowledge/symptoms.md`, `knowledge/problems.md`, `plans/`, `user-stories/`
 - Adapt `.gitignore` and `opencode.jsonc`; no AGENTS.md roster, no subagents
 
 ## Troubleshooting

@@ -1,6 +1,6 @@
 ---
 name: ticket-runbook
-description: Scaffold a runbook subfolder for an incident ticket using the project's runbook template. Decides whether a ticket needs a full runbook based on prior-art search (problem catalog, resolved tickets, patterns register, KBA/RCA catalogs, knowledge search). Use when starting analysis on a new incident ticket.
+description: Scaffold a runbook subfolder for an incident ticket using the project's runbook template. Decides whether a ticket needs a full runbook based on prior-art search (known-problem register, resolved tickets, patterns register, KBA/RCA catalogs, knowledge search). Use when starting analysis on a new incident ticket.
 license: MIT
 compatibility: opencode
 metadata:
@@ -45,13 +45,14 @@ Hold these values for later sections.
 
 Run in order. Stop as soon as a replay-candidate verdict can be issued.
 
-1. **Problem catalog** — Glob the problem records for the domain. For each record, compare symptom + module from the ticket against the record's `module` field, `titulo` field, description section, and reproduction section. Match criterion: ≥2 of (system, module, issue_type, symptom keywords) align. Note the file path and matched fields.
+0. **Symptom-first diagnostic** — match the ticket's error signature against `knowledge/symptoms.md`; if a class matches, note the S-xx and its canonical diagnostic, then use the S-xx as a filter over `knowledge/problems.md` in the next step.
+1. **Known-problem register** — read `knowledge/problems.md`. For each record, compare the ticket's symptom + module against the record's `Symptom` (S-xx), `Domain`, `Problem`, and `Evidence` fields. Match criterion: ≥2 of (system, module, issue_type, symptom keywords) align AND the record's `Team` field is `incident`. Note the record ID (P-NNN) and matched fields.
 2. **Resolved ticket archive** — Grep the resolved-ticket archive on symptom keywords + module. Read each hit's summary, root cause, and frontmatter (module, related ticket, status). Same domain + module + failure mode:
    - same identifying values → `Replay-candidate: yes`
    - different values → `Replay-candidate: structural` (inherit hypothesis; VERIFY parent reference — do not copy blindly)
 3. **Patterns register** — read the project's patterns registry. A pattern match sets `Replay-candidate: pending` — confirm with step 4.
 4. **KBA/RCA catalogs** — Glob the knowledge-base and root-cause article folders. Scan for module + symptom keyword match. Note any matching file path.
-5. **Knowledge search fallback** — run only after steps 1–4 return no match. Surface only results with score **>=0.85**. Discard everything below threshold silently. Do not narrate the lookup.
+5. **Knowledge search fallback** — run only after steps 0–4 return no match. Surface only results with score **>=0.85**. Discard everything below threshold silently. Do not narrate the lookup.
 
 ### 3. Decide runbook scaffold
 
@@ -104,7 +105,7 @@ After the runbook scaffolds and validates:
 
 - User says: `#191700`
 - Ticket: domain X, module Y, region Z, period P
-- Prior-art: problem catalog — no match; KBA/RCA — no match; knowledge search 0.72 — below threshold, discarded
+- Prior-art: known-problem register — no match; KBA/RCA — no match; knowledge search 0.72 — below threshold, discarded
 - Verdict: `Replay-candidate: no`
 - Result: runbook scaffolded; validator exits 0; Cipher dispatches the investigator.
 
@@ -112,8 +113,8 @@ After the runbook scaffolds and validates:
 
 - User says: `#191800`
 - Ticket: domain W, module V, region U, period T
-- Prior-art: problem record — match on module + symptom keywords (identifier collision)
-- Verdict: `Replay-candidate: yes` — source: <problem record path>; matched fields: module, issue_type, symptom
+- Prior-art: known-problem register — match on Symptom (S-xx) + Domain + Problem (identifier collision)
+- Verdict: `Replay-candidate: yes` — source: `knowledge/problems.md` (P-NNN); matched fields: Symptom, Domain, Problem
 - Result: no runbook scaffolded; finding block returned to Cipher; Quill 🪶 (note drafter) dispatched from the finding.
 
 ## Troubleshooting
