@@ -7,9 +7,9 @@ A reusable, agnostic core of AI agents, personas, and skills. Copy any part of i
 ```
 AGENTS.md                     Lead orchestrator (Cipher) + roster + reuse guide
 .opencode/agents/             16 runtime agent specs (OpenCode subagents)
-.opencode/skills/             6 skills (git-commit, git-branch-name, git-pr,
-                              op-skill-creator, op-agent-creator, plan-enforce,
-                              ticket-runbook)
+.opencode/skills/             8 skills (git-commit, git-branch-name, git-pr,
+                              op-skill-creator, op-agent-creator, op-model,
+                              plan-enforce, ticket-runbook)
 agents/<name>/profile.md      16 persona CVs (incl. cipher)
 knowledge/agents.md           Shared agent rules
 knowledge/debt.md             Accepted-debt register
