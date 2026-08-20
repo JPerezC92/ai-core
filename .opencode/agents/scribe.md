@@ -1,4 +1,5 @@
 ---
+name: scribe
 description: Documentation and problem management (docs/wiki + problem records). Cipher dispatches Scribe to publish knowledge-base articles, root-cause articles, war-room pages, and manage problem records.
 mode: subagent
 ---

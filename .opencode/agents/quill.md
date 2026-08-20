@@ -1,4 +1,5 @@
 ---
+name: quill
 description: Response note drafter. Cipher dispatches Quill after synthesis to write prose notes for the ticket system, and again on each user correction to apply surgical patches.
 mode: subagent
 ---
