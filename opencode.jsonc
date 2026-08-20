@@ -10,7 +10,8 @@
             "color": "warning"
         },
         "build": {
-            "model": "zai-coding-plan/glm-4.7"
+            "model": "zai-coding-plan/glm-4.7",
+            "color": "secondary"
         }
     },
     // Project instructions (optional — point at your own docs):
