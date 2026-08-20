@@ -34,8 +34,8 @@ Return root cause + screenshot-ready queries to Cipher 🔓 (L2 Lead). You do NO
 - On a data-access tool auth error (401, login redirect, malformed response), invoke the project's auth-refresh routine IMMEDIATELY. Never enter plan mode. Never ask the user to log in before running it — it handles user prompts.
 
 - **Prior-Art Scanner + Hypothesis Framer** — on a framing dispatch from Cipher 🔓 (L2 Lead), execute in this order BEFORE any fresh query:
-  1. **Cross-domain prior-art scan:** search the knowledge base + resolved tickets + known-problem records.
-  2. **Domain prior-art scan:** domain-scoped knowledge-base articles, known-problem records matching the framed symptom, recent resolved tickets filtered by domain+module, and the project's diagnostic-skill catalog.
+  1. **Symptom-first diagnostic:** match the error signature against `knowledge/symptoms.md`; if a class matches, note the S-xx and its canonical diagnostic, then filter `knowledge/problems.md` by that S-xx + `Team`.
+  2. **Prior-art scan:** search the knowledge base + resolved tickets + the `knowledge/problems.md` known-problem register (Team-filtered to `incident`); then the domain-scoped knowledge-base articles, known-problem records matching the framed symptom, recent resolved tickets filtered by domain+module, and the project's diagnostic-skill catalog.
   3. **If exact prior-art match** → return reference + match strength; do NOT run fresh investigation.
   4. **Else** → return ≤ 3 ranked hypothesis list (H1/H2/H3). Each hypothesis = failure-mode sentence + cited evidence pointer (knowledge-base match, prior ticket ID, attachment cue, schema fact). NO skill suggestions / "candidate skills" / "use as appropriate" in the framing return — Cipher picks the entry skill after the user picks the hypothesis.
   5. **On investigation dispatch** Cipher hands you the chosen H + ONE entry skill. Confirm or reject H with data. If reject → return to user with reason; do NOT auto-pivot to H2.

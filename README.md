@@ -13,6 +13,8 @@ AGENTS.md                     Lead orchestrator (Cipher) + roster + reuse guide
 agents/<name>/profile.md      16 persona CVs (incl. cipher)
 knowledge/agents.md           Shared agent rules
 knowledge/debt.md             Accepted-debt register
+knowledge/symptoms.md         Symptom-class catalog
+knowledge/problems.md         Known-problem register
 plans/  user-stories/         Plan lifecycle (plan-enforce)
 output/                       Temporal working space (audits, research, design — gitignored)
 ```
@@ -20,7 +22,7 @@ output/                       Temporal working space (audits, research, design �
 ## How to use it in another project
 
 1. Copy the agents, profiles, and skills you need (see `AGENTS.md` → Reuse guide).
-2. Create the shared infrastructure: `knowledge/agents.md`, `knowledge/debt.md`, `plans/`, `user-stories/`, and `output/` for temporal artifacts.
+2. Create the shared infrastructure: `knowledge/agents.md`, `knowledge/debt.md`, `knowledge/symptoms.md`, `knowledge/problems.md`, `plans/`, `user-stories/`, and `output/` for temporal artifacts.
 3. Replace the stack-specific rulebooks (`atrium.md`, `bastion.md`, `crucible.md`, `lumen.md`) if your stack differs.
 4. Substitute your real tooling wherever an agent says "the ticket system", "the primary database", "the docs/wiki", etc. The core ships neutral on purpose.
 

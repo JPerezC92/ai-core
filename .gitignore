@@ -5,3 +5,4 @@ node_modules/
 __pycache__/
 output/
 pr-draft.md
+commit.txt
