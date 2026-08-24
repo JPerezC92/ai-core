@@ -1,8 +1,4 @@
-<!--
-HARD RULE — fill every Step / Output / Gate / Abort. No `TBD` placeholders. Agent improvisation forbidden.
--->
-
-# Phase 5 — Merge symptom pair into atomic item
+# Phase 5 — Vault 🔐 (Catalog Steward): merge symptom pair into atomic item
 
 > **Owner:** Vault 🔐 (Catalog Steward)
 > **Pre:** Phase 4 gate passed.

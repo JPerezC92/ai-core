@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.4.1
+  version: 1.5.0
 ---
 
 ## What I do
@@ -224,12 +224,26 @@ Before planning work that touches features, read `user-stories/index.md` first, 
 9. Create `plans/<task-slug>-YYYYMMDD/plan.md` from the selected template and one `phase-NN-<owner>.md` from `references/_phase-template.md` per phase.
 10. Fill each phase's Owner, Pre, Reads, Writes, Steps, Output, Gate, and Abort conditions. Do not leave `TBD` in Steps, Output, Gate, or Abort.
 11. Add one verification checkbox per phase output and confirm every checkbox traces to a phase output.
-12. Render the plan through `ExitPlanMode` before dispatching Forge 🔨 (Implementation Agent).
+12. Run the post-write self-verification loop (below) on every written file.
+13. Render the plan through `ExitPlanMode` before dispatching Forge 🔨 (Implementation Agent).
+
+## Post-write self-verification loop
+
+Run after every file write (`plan.md`, each phase file, story create/update, index update), and after every Forge dispatch that mutates plan artifacts. Iterate until a full pass finds zero violations:
+
+1. **Re-read** every file just written: `plan.md`, each `phase-NN-<owner>.md`, `user-stories/<slug>.md`, `user-stories/index.md`.
+2. **Mechanical pass** — for an active subfolder plan that creates or modifies a user story or `user-stories/index.md`, run `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan-dir> --stories user-stories` so index mirroring runs. For a no-stories path, run `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan-dir>` without `--stories`; use `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan.md> --single-file` for the single-file layout. It enforces the repetitive subset: Status enum, `Completed:` line, required sections, phase sections/labels, unfilled `<...>`/`TBD`/date placeholders, index mirroring. Fix anything it reports.
+3. **Analysis pass** — re-read each file against `references/_consistency-checklist.md`. Verify every value matches evidence: goals match the confirmed list, every phase traces to ≥1 goal and references an existing phase file, verification checkboxes trace to phase outputs, `## Writes` matches the manifest, story title/status mirror the index. Never invent a value to satisfy a check — stop and ask.
+4. **Repeat** until a clean pass, then report the pass count.
+5. **Cap (S-07):** after 3 iterations, or the same violation persisting twice unchanged, stop-and-ask instead of looping.
+
+`scripts/validate_plan.py` is a helper, not the authority — it catches repetitive mechanical drift; semantic correctness is the analysis pass.
 
 ## Plan lifecycle rules
 
 | Event | Required action |
 |---|---|
+| Any plan/phase/story/index file write | Run the post-write self-verification loop (mechanical + analysis) until clean. |
 | Phase completes | Mark its verification item complete in `plan.md`. |
 | Scope changes | Stop; notify the user with evidence of the drift and wait for their call; then update `## Goals` and append a dated line to `## Resolved decisions`; re-derive the manifest and re-run the collision check. |
 | Forge dispatch | Run both stash-gate parts and require an active plan before dispatch. |

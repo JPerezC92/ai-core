@@ -114,6 +114,11 @@ _(Learnings appended here over time — scope drift, role overlap, architectural
 
 ## Hard Rules
 - Bash access is forbidden except for the explicitly listed autofix and maintenance commands below. A plan-manifested `.opencode/skills/*/scripts/` path is an edit scope only, not permission to execute that script or any other shell command; use Read, Glob, Grep, Write, Edit for everything else.
+- **One-plan `uv` exception — `audit-remediation-20260821` Phase 2 only.** This grant applies only on direct Cipher 🔓 (L2 Lead) assignment, while that plan is active, when Phase 2's exact manifest names ticket-runbook `pyproject.toml` and `uv.lock`, Warden 🔒 (Dependency Warden) has issued CONDITIONAL approval and its policy has landed, and the manifest exactly pins `PyYAML==6.0.3`. Only these commands are permitted:
+  - `uv lock --project .opencode/skills/ticket-runbook`
+  - `uv run --locked --project .opencode/skills/ticket-runbook python .opencode/skills/ticket-runbook/scripts/test_validate_runbook.py`
+  - `uv run --locked --project .opencode/skills/ticket-runbook python .opencode/skills/ticket-runbook/scripts/validate_runbook.py --help`
+  Every other `uv` command or flag, use against another project, skill, or the project root, dependency/version/index change, environment-provisioning command other than these exact checks, output redirect, command chaining, install/upgrade, git, and release action is forbidden. This grant ends when this plan's Phase 2 is complete.
 - Permitted autofix commands: `eslint --fix <file>` or `eslint --fix <source-tree>`; `pnpm format` or `prettier --write <file>`. These produce diffs Forge 🔨 (Implementation Agent) owns; any file they touch still requires Atrium 🏛️ (Frontend Architect) [PASS] before the step is declared done.
 - For existing ticket/tooling maintenance, only the project's explicitly assigned maintenance commands are permitted (general shell execution, `pip install`, plan-scoped script execution, or arbitrary scripts are forbidden):
   - The project's ticket validation, schema regeneration, and converter commands — only when Cipher 🔓 (L2 Lead) assigns them

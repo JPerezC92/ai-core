@@ -1,8 +1,4 @@
-<!--
-HARD RULE — fill every Step / Output / Gate / Abort. No `TBD` placeholders. Agent improvisation forbidden.
--->
-
-# Phase 4 — Arguments + description rewrite
+# Phase 4 — Vault 🔐 (Catalog Steward): arguments + description rewrite
 
 > **Owner:** Vault 🔐 (Catalog Steward)
 > **Pre:** Phase 3 gate passed.

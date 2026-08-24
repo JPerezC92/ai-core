@@ -21,7 +21,7 @@ Before re-investigating from scratch, scan the project's prior art:
 
 If an exact prior-art match exists, return the reference + match strength; do NOT run a fresh investigation. If partial, return a ranked hypothesis list with evidence pointers.
 
-**Symptom-first diagnostic:** On any unexpected tool error, match the error signature against `knowledge/symptoms.md`; apply the class's canonical diagnostic; then filter `knowledge/problems.md` by that S-xx + Team for a prior occurrence. Propose the known fix if found; file a new P-NNN under the class if the problem is novel (Scribe ✍️ owns the known-problem register). Execution of any fix still requires user approval per the User-Authority-Only rule below.
+**Symptom-first diagnostic:** On any unexpected tool error, match the error signature against `knowledge/symptoms.md`; apply the class's canonical diagnostic; then filter `knowledge/problems.md` by that S-xx + Team for a prior occurrence. Propose the known fix if found; file a new P-NNN under the class if the problem is novel (Scribe ✍️ (docs & problem management) owns the known-problem register). Execution of any fix still requires user approval per the User-Authority-Only rule below.
 
 **Version-first rule (S-01/2-class errors):** before any workaround, check for a newer supported version of the offending tool and upgrade first; re-verify.
 
@@ -41,7 +41,7 @@ If an exact prior-art match exists, return the reference + match strength; do NO
 
 ## Tag forbidden field names
 
-Agents that feed evidence to Quill (note drafter) MUST tag any field name or internal identifier that must NOT appear in the user-visible note. Quill writes from your evidence; your tags protect the note surface.
+Agents that feed evidence to Quill 🪶 (note drafter) MUST tag any field name or internal identifier that must NOT appear in the user-visible note. Quill 🪶 (note drafter) writes from your evidence; your tags protect the note surface.
 
 ## User-Authority-Only rule
 
@@ -51,25 +51,27 @@ Never apply a workaround, fix, or state mutation on the strength of prior art al
 
 | Agent | Role | Team |
 |---|---|---|
-| Cipher 🔓 | Lead Orchestrator | Both |
-| Investigator | Incident root-cause analysis | Incident |
-| Quill 🪶 | Note drafter | Incident |
-| Ledger 📒 | Record-keeper / archive sync | Incident |
-| Scribe ✍️ | Docs & problem management | Incident |
-| Augur 🔮 | Senior Research Analyst | Both |
-| Marshal 🎖️ | HR Director | Both |
-| Vault 🔐 | Catalog Steward | Both |
-| Atrium 🏛️ | Frontend Architect | Dev |
-| Bastion 🧱 | Backend Architect | Dev |
-| Crucible 🔥 | Test Architect | Dev |
-| Forge 🔨 | Implementation Agent | Dev |
-| Herald 📯 | Release Manager | Dev |
-| Inquisitor 🔎 | PR Reviewer | Dev |
-| Lumen ✨ | Visual Director | Dev |
-| Sentinel 🛡️ | Quality Guardian | Dev |
-| Warden 🔒 | Dependency Warden | Dev |
+| Cipher 🔓 (L2 Lead) | Lead Orchestrator | Both |
+| Investigator 🔍 (Incident Investigator) | Incident root-cause analysis | Incident |
+| Quill 🪶 (note drafter) | Note drafter | Incident |
+| Ledger 📒 (record-keeper) | Record-keeper / archive sync | Incident |
+| Scribe ✍️ (docs & problem management) | Docs & problem management | Incident |
+| Augur 🔮 (Senior Research Analyst) | Senior Research Analyst | Both |
+| Marshal 🎖️ (HR Director) | HR Director | Both |
+| Vault 🔐 (Catalog Steward) | Catalog Steward | Both |
+| Atrium 🏛️ (Frontend Architect) | Frontend Architect | Dev |
+| Bastion 🧱 (Backend Architect) | Backend Architect | Dev |
+| Crucible 🔥 (Test Architect) | Test Architect | Dev |
+| Forge 🔨 (Implementation Agent) | Implementation Agent | Dev |
+| Herald 📯 (Release Manager) | Release Manager | Dev |
+| Inquisitor 🔎 (PR Reviewer) | PR Reviewer | Dev |
+| Lumen ✨ (Visual Director) | Visual Director | Dev |
+| Sentinel 🛡️ (Quality Guardian) | Quality Guardian | Both |
+| Warden 🔒 (Dependency Warden) | Dependency Warden | Dev |
 
 Edge cases:
-- Roster additions/changes go through Marshal 🎖️ (HR Director) with an Augur brief.
-- Sentinel 🛡️ owns dev-side markdown governance; Vault 🔐 owns the shared rules + incident-side governance.
-- Cipher owns the user-story lifecycle via the `plan-enforce` skill. Sentinel 🛡️ audits `user-stories/` for format/index consistency alongside `plans/`.
+- Roster additions/changes go through Marshal 🎖️ (HR Director) with Augur's brief.
+- Sentinel 🛡️ (Quality Guardian) audits all agent documents: runtime specs and persona CVs for both teams, plus `AGENTS.md`, `plans/`, `user-stories/`, and shared rules.
+- Vault 🔐 (Catalog Steward) governs the complete skills catalog across both teams and all harnesses for skill quality and lifecycle.
+- Warden 🔒 (Dependency Warden) governs skill and package security.
+- Cipher 🔓 (L2 Lead) owns the user-story lifecycle via the `plan-enforce` skill. Sentinel 🛡️ audits `user-stories/` for format/index consistency alongside `plans/`.

@@ -1,8 +1,4 @@
-<!--
-HARD RULE — fill every Step / Output / Gate / Abort. No `TBD` placeholders. Agent improvisation forbidden.
--->
-
-# Phase 3 — Union consistency pass + re-diff verify + examples
+# Phase 3 — Vault 🔐 (Catalog Steward): union consistency pass + re-diff verify + examples
 
 > **Owner:** Vault 🔐 (Catalog Steward)
 > **Pre:** Phase 2 gate passed (selection + copy + merge steps in place).
