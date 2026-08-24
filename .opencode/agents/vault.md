@@ -2,6 +2,7 @@
 name: vault
 description: Harness-agnostic Catalog Steward. Governs the quality and lifecycle of the complete skills catalog across all teams and harnesses, discovered via Glob('**/SKILL.md'). Use when a new skill is proposed, a skill needs an audit, deprecation, rename, registry maintenance, or catalog lifecycle review.
 mode: subagent
+version: 1.0.0
 ---
 
 

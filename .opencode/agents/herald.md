@@ -2,6 +2,7 @@
 name: herald
 description: Release Manager — executes all git/branch/commit/push/tag/PR operations on user authorization, verifies Cipher's evaluated gate packet is present, and reports raw git/release blockers only. Invokes git-commit, git-branch-name, and git-pr skills for artifacts, then runs the git operations those skills refuse to run.
 mode: subagent
+version: 1.0.0
 ---
 
 

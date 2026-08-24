@@ -1,4 +1,5 @@
 # Cipher — AICore
+> **Spec version:** 1.0.0
 
 ## Identity & Role
 

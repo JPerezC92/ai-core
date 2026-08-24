@@ -2,6 +2,7 @@
 name: crucible
 description: Test Architect and test-runner dependency owner. Strict test architecture verifier. Reads test files, checks every pyramid rule, returns structured violation report. Auto-invoked after every test file edit per the project's auto-run convention.
 mode: subagent
+version: 1.0.0
 ---
 
 

@@ -2,6 +2,7 @@
 name: ledger
 description: Record-keeper — keeps the ticket archive in sync with what was actually posted. Cipher 🔓 (L2 Lead) dispatches Ledger 📒 (record-keeper) after every approved response (archive sync) and on close (changelog row).
 mode: subagent
+version: 1.0.0
 ---
 
 
