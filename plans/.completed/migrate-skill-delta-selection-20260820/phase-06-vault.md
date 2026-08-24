@@ -1,8 +1,4 @@
-<!--
-HARD RULE — fill every Step / Output / Gate / Abort. No `TBD` placeholders. Agent improvisation forbidden.
--->
-
-# Phase 6 — Derive scope from Kind
+# Phase 6 — Vault 🔐 (Catalog Steward): derive scope from Kind
 
 > **Owner:** Vault 🔐 (Catalog Steward)
 > **Pre:** Phase 5 gate passed.

@@ -1,16 +1,16 @@
 ---
 name: ticket-runbook
-description: Scaffold a runbook subfolder for an incident ticket using the project's runbook template. Decides whether a ticket needs a full runbook based on prior-art search (known-problem register, resolved tickets, patterns register, KBA/RCA catalogs, knowledge search). Use when starting analysis on a new incident ticket.
+description: Scaffold a runbook subfolder for an incident ticket using its bundled runbook template. Decides whether a ticket needs a full runbook based on prior-art search (known-problem register, resolved tickets, patterns register, KBA/RCA catalogs, knowledge search). Use when starting analysis on a new incident ticket.
 license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.0.0
+  version: 1.1.0
 ---
 
 ## What I do
 
-Scaffold a per-ticket `runbook/` subfolder from the project's runbook template and populate its header fields. Includes a prior-art gate: if a replay-candidate is found, skip runbook ceremony and apply the known solution directly.
+Scaffold a per-ticket `runbook/` subfolder from `references/runbook/` and populate its header fields. Includes a prior-art gate: if a replay-candidate is found, skip runbook ceremony and apply the known solution directly.
 
 ## When to use me
 
@@ -73,9 +73,9 @@ Run in order. Stop as soon as a replay-candidate verdict can be issued.
 
 Execute when `Replay-candidate: no` (full scaffold) OR `Replay-candidate: structural` (scaffold with hypothesis and synthesis skipped — uses prior queries from the referenced ticket). Skip entirely when `Replay-candidate: yes`.
 
-1. Copy the runbook template from the project's template folder to the ticket folder.
-2. If the ticket folder does not exist, create it first: ticket folder + `screenshots/` + `validations/` + ticket record + `response-draft.md`.
-3. Initialize `runbook.md` header fields: `Phase` (`01`), `SLA-due` (from ticket), `Updated` (current timestamp), `Hypotheses-outstanding` (`3/3`), `Query-budget` (`6/6`), `Replay-candidate`, `Same-query-reruns` (`0/2`).
+1. Copy the runbook template from `references/runbook/` (`runbook.md` + `phase-01-triage.md` … `phase-06-respond.md`) into the ticket folder's `runbook/` subfolder.
+2. If the ticket folder does not exist, create it first: ticket folder + `screenshots/` + `validations/` + ticket record (from `references/ticket-template.md`) + `response-draft.md` (from `references/response-draft-template.md`).
+3. Initialize `runbook.md` header fields: `Phase` (`01`), `SLA-due` (from ticket), `Updated` (current timestamp), `Hypotheses-outstanding` (`3/3`), `Query-budget` (`0/6`, used/limit; `6/6` is exhausted), `Replay-candidate`, `Same-query-reruns` (`0/2`).
 4. Initialize the phase-01 triage file with ticket-specific context in its Pre block. Leave all Step / Gate / Abort sections as-is from the template.
 
 **Screenshot naming convention:** files placed in `screenshots/` must follow the project's `NN_<source>_<entity>[_<distinguisher>].png` convention (zero-padded NN matches ImagenN order; no campaign/entity ID/region in filename). Forbidden initial names: `image1.png`, `screenshot.png`, any name without the `NN_` prefix. Investigator + Quill dispatch prompts MUST reference final filenames; renaming at close-out is a process violation.
@@ -84,11 +84,11 @@ Execute when `Replay-candidate: no` (full scaffold) OR `Replay-candidate: struct
 
 ### 5. Validate
 
-After scaffolding, run the project's runbook validator. Exit 0 → proceed. Non-zero exit → read the error output, fix the offending field, re-run. Do NOT continue until the validator passes.
+Immediately after scaffolding, run `uv run --locked --project .opencode/skills/ticket-runbook python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder>/runbook --scaffold`. Exit 0 → proceed. Non-zero exit → read the error output, fix the offending field, re-run. Do NOT continue until the validator passes.
 
 > Evidence discipline applies: if the validator reports a field value violation, fix the value to match actual evidence — never invent a value to satisfy the validator.
 
-**Per-phase validator invocation (HARD RULE):** after each phase advance, run the validator. Abort if exit ≠ 0. Do NOT advance the `Phase:` field until the validator exits clean.
+**Per-phase validator invocation (HARD RULE):** before advancing the completed phase `NN`, run `uv run --locked --project .opencode/skills/ticket-runbook python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir> --phase NN`. Abort if exit ≠ 0. Do NOT advance the `Phase:` field until the validator exits clean. After the header advances, reserve default full validation — `uv run --locked --project .opencode/skills/ticket-runbook python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir>` — for checking every completed phase through the `Phase:` header.
 
 ### 6. Dispatch first agent
 
@@ -98,6 +98,18 @@ After the runbook scaffolds and validates:
 2. Otherwise: notify Cipher 🔓 (L2 Lead) that the runbook is ready with the exact domain classified in phase-01.
 
 **HARD RULE — dispatch enforcement:** Cipher MUST dispatch the investigator to execute the prior-art phase. Cipher MUST NOT execute that phase inline. Cipher owns all dispatch decisions. This skill does NOT dispatch agents directly.
+
+## Post-write self-verification loop
+
+Run immediately after scaffolding, before each phase-header advance, and after every advance. Iterate until a full pass finds zero violations:
+
+1. **Re-read** the written set: `runbook/runbook.md`, each written `phase-NN-*.md`, and the ticket folder structure.
+2. **Mechanical pass** — immediately after scaffolding, run `uv run --locked --project .opencode/skills/ticket-runbook python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir> --scaffold`; it verifies the header plus the copied phase structure while later template bodies remain intentional. Before advancing completed phase `NN`, run `uv run --locked --project .opencode/skills/ticket-runbook python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir> --phase NN`; a completed phase must contain no unfilled tokens. After the header advances, reserve default full validation — `uv run --locked --project .opencode/skills/ticket-runbook python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir>` — for all completed phases through the header. Fix anything it reports.
+3. **Analysis pass** — re-read each file against `references/_consistency-checklist.md`: at scaffold time, verify phase-01 `Pre` has this ticket's context while later template bodies intentionally remain unfilled; after completion, verify no completed phase has unfilled tokens. In every mode, verify header values match evidence (`SLA-due`, `Replay-candidate` vs prior-art, kill-switch counters reflect actual consumption), folder structure complete (`screenshots/`, `validations/`, ticket record, `response-draft.md`), and screenshot `NN_` naming. Never invent a value to satisfy a check — stop and ask.
+4. **Repeat** until a clean pass, then report the pass count.
+5. **Cap (S-07):** after 3 iterations, or the same violation persisting twice unchanged, stop-and-ask instead of looping.
+
+`scripts/validate_runbook.py` is a helper, not the authority — it catches repetitive mechanical drift; semantic correctness is the analysis pass.
 
 ## Examples
 
@@ -120,7 +132,7 @@ After the runbook scaffolds and validates:
 ## Troubleshooting
 
 **Runbook template missing:**
-- Cause: the runbook template directory does not exist in the project.
+- Cause: the `references/runbook/` template directory does not exist in this skill.
 - Fix: halt; report to Cipher — the template precondition is not met. Do not scaffold manually.
 
 **Validator exits non-zero:**

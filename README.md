@@ -5,12 +5,12 @@ A reusable, agnostic core of AI agents, personas, and skills. Copy any part of i
 ## What's inside
 
 ```
-AGENTS.md                     Lead orchestrator (Cipher) + roster + reuse guide
+AGENTS.md                     Lead orchestrator (Cipher 🔓 (L2 Lead)) + roster + reuse guide
 .opencode/agents/             16 runtime agent specs (OpenCode subagents)
-.opencode/skills/             8 skills (git-commit, git-branch-name, git-pr,
-                              op-skill-creator, op-agent-creator, op-model,
+.opencode/skills/             9 skills (git-commit, git-branch-name, git-pr,
+                              migrate-core-to-project, op-skill-creator, op-agent-creator, op-model,
                               plan-enforce, ticket-runbook)
-agents/<name>/profile.md      16 persona CVs (incl. cipher)
+agents/<name>/profile.md      17 persona CVs (incl. cipher)
 knowledge/agents.md           Shared agent rules
 knowledge/debt.md             Accepted-debt register
 knowledge/symptoms.md         Symptom-class catalog

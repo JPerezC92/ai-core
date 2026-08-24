@@ -1,7 +1,8 @@
 # Plan — Deterministic delta redesign of migrate-core-to-project
 
-> **Status:** active
+> **Status:** completed
 > **Started:** 2026-08-20 13:19
+> **Completed:** 2026-08-20 15:05
 > **Subject:** Make `migrate-core-to-project` deterministic and incremental — structured manifest, filesystem-diff inventory, derived selectable list, idempotent merge-aware copy/pass, re-diff verification
 > **Layout:** subfolder pattern
 
@@ -13,10 +14,11 @@
 
 ## Goals
 
-- ⬜ **G1:** `SKILL.md` ships a structured machine-readable manifest (Item | Kind | Source | Destination | Include-rule) replacing the prose core manifest.- ⬜ **G2:** step 1 does a deterministic installed-set inventory against the manifest, yielding `present` / `missing` / `partial`, with `partial` failing closed.
-- ⬜ **G3:** step 2 presents a selectable multi-select of only the missing eligible items; step 3 copies idempotently (present never touched; CV+spec always paired).
-- ⬜ **G4:** step 4 merges (append-if-missing) instead of regenerating `AGENTS.md` / `opencode.jsonc` / `.gitignore`.
-- ⬜ **G5:** step 5 runs the consistency pass on the union (existing + new); step 6 verifies by re-diff, fail-closed on any selected item still missing.
+- ✅ **G1:** `SKILL.md` ships a structured machine-readable manifest (Item | Kind | Source | Destination | Include-rule) replacing the prose core manifest.
+- ✅ **G2:** step 1 does a deterministic installed-set inventory against the manifest, yielding `present` / `missing` / `partial`, with `partial` failing closed.
+- ✅ **G3:** step 2 presents a selectable multi-select of only the missing eligible items; step 3 copies idempotently (present never touched; CV+spec always paired).
+- ✅ **G4:** step 4 merges (append-if-missing) instead of regenerating `AGENTS.md` / `opencode.jsonc` / `.gitignore`.
+- ✅ **G5:** step 5 runs the consistency pass on the union (existing + new); step 6 verifies by re-diff, fail-closed on any selected item still missing.
 
 ## Body
 
@@ -37,12 +39,12 @@
 
 | # | Phase | Owner | Runbook | Output |
 |---|---|---|---|---|
-| 1 | Manifest + inventory | Vault 🔐 | `phase-01-vault.md` | `SKILL.md` (manifest + step 1) |
-| 2 | Selection + copy + merge | Vault 🔐 | `phase-02-vault.md` | `SKILL.md` (steps 2-4) |
-| 3 | Union pass + re-diff verify | Vault 🔐 | `phase-03-vault.md` | `SKILL.md` (steps 5-6 + examples) |
-| 4 | Arguments + description rewrite | Vault 🔐 | `phase-04-vault.md` | `SKILL.md` (description + Arguments) |
-| 5 | Merge symptom pair into atomic item | Vault 🔐 | `phase-05-vault.md` | `SKILL.md` (manifest row + presence rule + selection/copy) |
-| 6 | Derive scope from Kind | Vault 🔐 | `phase-06-vault.md` | `SKILL.md` (Kind vocabulary + scope derivation) |
+| 1 | Manifest + inventory | Vault 🔐 (Catalog Steward) | `phase-01-vault.md` | `SKILL.md` (manifest + step 1) |
+| 2 | Selection + copy + merge | Vault 🔐 (Catalog Steward) | `phase-02-vault.md` | `SKILL.md` (steps 2-4) |
+| 3 | Union pass + re-diff verify | Vault 🔐 (Catalog Steward) | `phase-03-vault.md` | `SKILL.md` (steps 5-6 + examples) |
+| 4 | Arguments + description rewrite | Vault 🔐 (Catalog Steward) | `phase-04-vault.md` | `SKILL.md` (description + Arguments) |
+| 5 | Merge symptom pair into atomic item | Vault 🔐 (Catalog Steward) | `phase-05-vault.md` | `SKILL.md` (manifest row + presence rule + selection/copy) |
+| 6 | Derive scope from Kind | Vault 🔐 (Catalog Steward) | `phase-06-vault.md` | `SKILL.md` (Kind vocabulary + scope derivation) |
 
 ## Critical files / tools
 
@@ -51,9 +53,9 @@
 
 ## Verification
 
-- ⬜ Phase 1 gate passed (manifest table present; inventory step references manifest with present/missing/partial; partial fails closed)
-- ⬜ Phase 2 gate passed (multi-select of missing items; idempotent copy; merge not regenerate)
-- ⬜ Phase 3 gate passed (union consistency pass; re-diff verify fail-closed; incremental example)
+- ✅ Phase 1 gate passed (manifest table present; inventory step references manifest with present/missing/partial; partial fails closed)
+- ✅ Phase 2 gate passed (multi-select of missing items; idempotent copy; merge not regenerate)
+- ✅ Phase 3 gate passed (union consistency pass; re-diff verify fail-closed; incremental example)
 - ✅ Phase 4 gate passed (scope redefined as Kind-prefilter; old enum values gone; description mentions incremental)
 - ✅ Phase 5 gate passed (symptom-problem-register atomic item; separate symptoms/problems rows gone; multi-file presence rule; no Requires column)
 - ✅ Phase 6 gate passed (Kind vocabulary block; scope derived from Kind; config excluded from scope; no 5th Kind)
@@ -71,6 +73,16 @@
 
 (none)
 
+## Outcome
+
+- ✅ **G1** — `SKILL.md` ships a structured 33-row manifest (Item | Kind | Source | Destination | Include-rule) replacing the prose core manifest.
+- ✅ **G2** — step 1 does a deterministic installed-set inventory (`present`/`missing`/`partial`, partial fails closed); runtime-verified against a scratch partial target.
+- ✅ **G3** — step 2 presents a selectable multi-select of only missing eligible items; step 3 copies idempotently (present untouched; CV+spec paired); `symptom-problem-register` is one atomic item.
+- ✅ **G4** — step 4 merges (append-if-missing) instead of regenerating AGENTS.md / opencode.jsonc / .gitignore.
+- ✅ **G5** — step 5 consistency pass on the union; step 6 re-diff verify fail-closed.
+- Bonus: closed `## Kind vocabulary` + `scope` derived from the Kind column (phases 5-6) — structurally prevents the `config`/`cv` terminology drift Inquisitor 🔎 (PR Reviewer) flagged.
+- Delivered via PR #3 (merge `b59c508`, head `f28894e`). 17 files, 568 insertions / 436 deletions. Inquisitor 🔎 (PR Reviewer) ADVISORY (no blockers); all advisory findings fixed and re-committed.
+
 ## Resolved decisions
 
 - 2026-08-20 — deterministic mechanics for repetitive tasks, analysis retained for stack/relevance/consistency judgment (user: "the deterministic way is to avoid repetitive task but your analysis is important too").
@@ -80,4 +92,4 @@
 - 2026-08-20 — `scope` redefined from the old coarse enum (`skills-only`/`skills+infra`/`roster`/`named-agents`) to a Kind-prefilter (`all`/`skills`/`agents`/`infra`/`config`) so the new multi-select does fine-grained selection; added phase 4 to rewrite the orphaned Arguments section + frontmatter description.
 - 2026-08-20 — double-check correction: `config` removed from the `scope` enum (it is a merge target, never selectable — a `config` scope value would have produced an empty multi-select); "What I do" body reworded to match the new deterministic flow (was stale "propose applicable subset / preview manifest / adapt").
 - 2026-08-20 — symptom pair (`knowledge/symptoms.md` + `knowledge/problems.md`) are ONE feature and must never be separated. Modeled as a single atomic manifest item named `symptom-problem-register` (two files, one row — same pattern as an agent's spec+CV), NOT two rows with a `Requires` dependency column. Atomicity is structural; the existing `partial` (fail-closed) handling covers the "one file present" failure for free. Only the symptom pair is merged; `plans/` + `user-stories/` stay separate (directories, not cross-referencing content files).
-- 2026-08-20 — terminology standardization: Inquisitor found the `scope` enum and the manifest `Kind` column were two hand-maintained surfaces that drifted (`config` crept into scope; `cipher` got an invented 5th Kind `cv`). Fix: add a closed `## Kind vocabulary` block (4 Kinds: skill/agent/infra/config) and derive `scope` from the Kind column (`all` + plural of each selectable Kind) so the drift class is structurally impossible. `config` is merge-only → no scope value; file-count special cases (`investigator` spec-only, `cipher` CV-only) live in the Source column, never a new Kind.
+- 2026-08-20 — terminology standardization: Inquisitor 🔎 (PR Reviewer) found the `scope` enum and the manifest `Kind` column were two hand-maintained surfaces that drifted (`config` crept into scope; `cipher` got an invented 5th Kind `cv`). Fix: add a closed `## Kind vocabulary` block (4 Kinds: skill/agent/infra/config) and derive `scope` from the Kind column (`all` + plural of each selectable Kind) so the drift class is structurally impossible. `config` is merge-only → no scope value; file-count special cases (`investigator` spec-only, `cipher` CV-only) live in the Source column, never a new Kind.

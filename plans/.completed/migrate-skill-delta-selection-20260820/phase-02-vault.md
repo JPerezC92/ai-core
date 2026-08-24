@@ -1,8 +1,4 @@
-<!--
-HARD RULE — fill every Step / Output / Gate / Abort. No `TBD` placeholders. Agent improvisation forbidden.
--->
-
-# Phase 2 — Selectable list + idempotent copy + merge adapts
+# Phase 2 — Vault 🔐 (Catalog Steward): selectable list + idempotent copy + merge adapts
 
 > **Owner:** Vault 🔐 (Catalog Steward)
 > **Pre:** Phase 1 gate passed (structured manifest + inventory step in place).

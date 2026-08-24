@@ -1,8 +1,4 @@
-<!--
-HARD RULE — fill every Step / Output / Gate / Abort. No `TBD` placeholders. Agent improvisation forbidden.
--->
-
-# Phase 1 — Structured manifest + deterministic inventory
+# Phase 1 — Vault 🔐 (Catalog Steward): structured manifest + deterministic inventory
 
 > **Owner:** Vault 🔐 (Catalog Steward)
 > **Pre:** plan.md confirmed; `.opencode/skills/migrate-core-to-project/SKILL.md` exists and is the current prose-manifest version.
