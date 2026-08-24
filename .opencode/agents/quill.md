@@ -2,6 +2,7 @@
 name: quill
 description: Response note drafter. Cipher 🔓 (L2 Lead) dispatches Quill 🪶 (note drafter) after synthesis to write prose notes for the ticket system, and again on each user correction to apply surgical patches.
 mode: subagent
+version: 1.0.0
 ---
 
 

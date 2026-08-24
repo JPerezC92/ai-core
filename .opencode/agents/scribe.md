@@ -2,6 +2,7 @@
 name: scribe
 description: Documentation and problem management (docs/wiki + problem records). Cipher 🔓 (L2 Lead) dispatches Scribe ✍️ (docs & problem management) to publish knowledge-base articles, root-cause articles, war-room pages, and manage problem records.
 mode: subagent
+version: 1.0.0
 ---
 
 

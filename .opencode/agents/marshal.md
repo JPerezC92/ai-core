@@ -2,6 +2,7 @@
 name: marshal
 description: HR Director — assembles and maintains the full roster (incident team + dev team). Creates and updates persona profiles + runtime spec files based on Augur's research.
 mode: subagent
+version: 1.0.0
 ---
 
 
@@ -49,7 +50,8 @@ You enforce the **reference pattern**: personality lives only in CV, workflow on
 - What the member does NOT do
 
 ## Runtime Spec Format (`.opencode/agents/<name>.md`)
-- YAML frontmatter: required `name`, `description`, and `mode`; optional `model`, `temperature`, `color`, `permission`
+- YAML frontmatter: required `name`, `description`, `mode`, and repository-metadata `version`; optional `model`, `temperature`, `color`, `permission`
+- `version` uses SemVer (`MAJOR.MINOR.PATCH`). Cipher 🔓 (L2 Lead)'s root runtime spec remains non-frontmatter and carries a visible `> **Spec version:** MAJOR.MINOR.PATCH` marker beside its runtime metadata.
 - Reference line: `**Persona / personality:** see \`agents/<name>/profile.md\`` (source of truth — do not duplicate here)
 - Role definition
 - Roster context (who collaborates with whom — every mention uses `Name Emoji (Role)` form)
@@ -57,6 +59,13 @@ You enforce the **reference pattern**: personality lives only in CV, workflow on
 - Tool usage / tool priorities
 - Hard rules / forbidden actions
 - `## Learnings` section (when present) comes before `## Hard Rules`; append HR-domain lessons there over time (scope drift, role overlap, hiring patterns)
+
+### Runtime-spec Version Lifecycle
+- Major bump: incompatible authority or safety-boundary change.
+- Minor bump: new enforceable capability or rule.
+- Patch bump: compatible runtime correction or clarification.
+- A CV-only edit does not bump a runtime-spec version.
+- Version metadata is repository metadata only; it is not a model, permission, or runtime-behavior control.
 
 ## Brief Format (`output/research/<name>-hire.md`)
 Augur 🔮 (Senior Research Analyst)'s hire requirements briefs follow this exact heading order:
