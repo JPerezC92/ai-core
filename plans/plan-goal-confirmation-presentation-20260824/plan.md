@@ -56,3 +56,4 @@
 - 2026-08-25 — The goal list is presented in Markdown before the question control; the control itself asks only whether to proceed or revise.
 - 2026-08-25 — This remains a one-question pre-file gate; plan type, user-story scope, and goal-bloat information are presented separately rather than omitted.
 - 2026-08-25 — Vault PASS and the validator results support DEBT-001 closure; the record cites those literal outcomes.
+- 2026-08-25 — Explicit lifecycle exception (user-authorized): the stale duplicate plan `plans/git-convention-alignment-20260824/` — both the `Status: active` copy and the incomplete archive copy under `plans/.completed/` — was deleted verbatim on the user's direct instruction ("delete all") after the prior archive operation duplicated it. User authority overrides the never-delete-plan rule for this reconciliation only; no future deletion may cite this entry as precedent.
