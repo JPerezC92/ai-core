@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.0.0
+  version: 1.1.0
   domain: git
 ---
 
@@ -20,6 +20,7 @@ Analyze the current branch's divergence from `origin/main` and write a PR title 
 - User says "draft a PR description" or asks for a PR summary
 - User asks for a PR title, even without explicitly saying "pull request"
 - After `/git-commit` produces a commit, the natural next step is `/git-pr`
+- For a convention-compliant branch, `/git-branch-name` is the start of the branch-to-commit-to-PR naming chain
 
 Do NOT use this skill to run `gh pr create` or any git command that mutates state — it only writes the draft file.
 
@@ -34,15 +35,17 @@ None. The skill reads the current branch state directly from git.
     - `git log --oneline origin/main...HEAD`
     - `git diff origin/main...HEAD --stat`
     - `git log --oneline -5` (recent style reference)
+    - `git branch --show-current`
 2. If the diff stat is small (under 20 files), run `git diff origin/main...HEAD` for the full diff. Otherwise, read the most relevant changed files selectively — reading the full diff on a large changeset wastes context; sample the highest-signal files instead. `git diff --cached --check` is a whitespace diagnostic only and is never PR scope evidence.
 3. Check for a plan or ticket file that explains the motivation — the PR Summary should explain the *why*, which usually lives in the plan/ticket Context, not the diff:
    - Look for `plans/*.md` with `Status: active` or `Status: completed`
    - Look for ticket folders matching recent commit refs
    - If found, read the **Context** section for the why
-4. Determine the PR title and body following the format below.
-5. Ensure `pr-draft.md` is in `.gitignore` — if not, add it immediately before writing.
-6. Write the output to `pr-draft.md` at the repository root.
-7. Print the ready-to-run `gh pr create` command with the draft content inlined.
+4. Determine the PR title and body from the diff following the format below.
+5. If the current branch matches `type/scope/description` with a supported type, compare its `type/scope` with the diff-derived PR title. When they differ, keep the diff-derived title and print an explicit warning that shows both values; a branch is evidence of intent, not authority over the diff.
+6. Ensure `pr-draft.md` is in `.gitignore` — if not, add it immediately before writing.
+7. Write the output to `pr-draft.md` at the repository root.
+8. Print the ready-to-run `gh pr create` command with the draft content inlined.
 
 ## Format
 
@@ -52,7 +55,15 @@ None. The skill reads the current branch state directly from git.
 type(scope): concise summary under 70 characters
 ```
 
-- Same `type` and `scope` conventions as conventional commits
+- **type**: `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `revert`, `style`, or `test`; `style` means code formatting, not CSS or UI design
+- **scope**: one lowercase, kebab-case token.
+  - **Single repo**: use the affected module, feature, or layer, such as `auth`, `api`, `ui`, or `config`.
+  - **Shared system core or package**: use its package name, such as `core` or `ui-kit`.
+  - **Independent app**: use its app name, such as `cli`.
+  - **Backend-only product app**: use `<app>-api`, such as `billing-api`.
+  - **Frontend-only product app**: use `<app>-web`, such as `billing-web`.
+  - **App with both backend and frontend**: use `<app>-api` or `<app>-web` when one side changes; use `<app>` only when one change spans both sides.
+  - **Cross-cutting work**: use the responsible shared concern, such as `deps`, `ci`, or `repo`.
 - Imperative mood, lowercase after the colon
 - No trailing period
 
@@ -139,6 +150,7 @@ Title: <title here>
 - **Do NOT run `gh pr create`** or any git command that mutates state — only write the draft file.
 - **Do NOT stage, commit, or push** anything.
 - **Do NOT tick test plan checkboxes** in the draft. Ticking happens later, in the PR body, after each item has been executed with live evidence.
+- **Do NOT force a PR title to match its branch.** A matching branch is a consistency check; the diff-derived title wins on mismatch and the mismatch must be reported.
 - **Do NOT use prose test items** ("Verify the X works"). Use `- [ ] <actionable item>` form. Herald 📯 converts prose → checkboxes only if forced; the skill must produce checkboxes from the start.
 - **Do NOT claim unexecuted evidence** in the draft or PR body. A checkbox remains unchecked until its complete post-PR evidence row is persisted and re-read.
 - **Do NOT use `git diff --cached --check` as scope evidence.** Use `git diff origin/main...HEAD` before PR creation and `git diff origin/main...<head-sha>` after the immutable PR head is known.
@@ -162,7 +174,7 @@ Title: <title here>
 
 **`.gitignore` does not list `pr-draft.md`**:
 - Cause: the file would otherwise be tracked and pollute the diff.
-- Fix: add `pr-draft.md` to `.gitignore` BEFORE writing the draft (step 5). Verify with `git check-ignore -v pr-draft.md`.
+- Fix: add `pr-draft.md` to `.gitignore` BEFORE writing the draft (step 6). Verify with `git check-ignore -v pr-draft.md`.
 
 **PR body test plan was prose instead of `- [ ]` checkboxes**:
 - Cause: the draft used bullet sentences, not checkboxes.
