@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.5.0
+  version: 1.6.0
 ---
 
 ## What I do
@@ -118,16 +118,24 @@ Extract the goals from the task description before writing any plan file:
 3. Programming goals (see **Template selection**) additionally carry a `Done when:` criterion (see Persist).
 4. More than 5 goals triggers the soft goal-bloat flag (see **Simplicity discipline**) — report it in the confirmation gate; do not silently proceed.
 
+### Present (pre-file gate)
+
+Before invoking the `question` tool, send one regular Markdown message that visibly separates the decision inputs:
+
+1. Under `**Goals**`, render every detected `G1..Gn` goal as its own Markdown bullet with its full observable condition.
+2. Under `**Plan classification**`, render the detected plan type, user-story scope (create, update, or skipped with reason), and goal-bloat status (`none` or the triggered soft flag).
+3. Do not place the full goal list, plan type, user-story scope, or goal-bloat detail in the `question` text. The user must be able to scan them outside the compact question control.
+
 ### Confirm (pre-file gate)
 
-Before creating ANY plan file, run one `question` call that confirms, in a single round:
+Before creating ANY plan file, run exactly one short `question` call that asks whether to proceed with or revise the already displayed goals and classification. The answer confirms, in a single round:
 
 1. The detected goal list — `G1..Gn` with their conditions.
 2. The detected plan type (see **Template selection**).
 3. The soft goal-bloat flag, when triggered.
 4. The user-story scope, when the plan is programming OR changes feature-visible behavior (see **User-story scope**) — confirm whether a story must be created/updated.
 
-Do not create `plan.md` or any `phase-*.md` until the user confirms all four. Skipping or paraphrasing any part of the confirmation is a violation.
+Do not create `plan.md` or any `phase-*.md` until the user confirms all four. Skipping the Markdown presentation, adding a second question round, or paraphrasing any part of the confirmation is a violation.
 
 ### Persist
 
@@ -161,7 +169,7 @@ Every plan artifact is challenged for removability before it is rendered.
 - **Phase-to-goal trace:** every phase in the dispatch table traces to ≥1 goal ID. A phase with no goal is speculative — remove it or merge it into another phase.
 - **Reduction pass before render:** before presenting a plan, phase, step, or new file, challenge it: "removable or mergeable while meeting the goals?" If yes, remove or merge it. Programming plans record the reduction outcome in `## Design decisions` (what was cut or merged, and why).
 - **Speculative artifacts forbidden:** do not plan files, phases, or steps that no goal and no explicit user request demands. "Might be useful later" is not a goal.
-- **Soft goal-bloat flag:** more than 5 goals, or any goal that is not a single observable condition, triggers the soft flag. Report it in the goals-confirmation `question` call; the user decides whether to trim, split, or accept. The flag is a notification, not a hard limit.
+- **Soft goal-bloat flag:** more than 5 goals, or any goal that is not a single observable condition, triggers the soft flag. Report it in the Markdown presentation before the concise confirmation question; the user decides whether to trim, split, or accept. The flag is a notification, not a hard limit.
 
 ## Dispatch bundle contract
 
@@ -217,7 +225,7 @@ Before planning work that touches features, read `user-stories/index.md` first, 
 2. Choose subfolder layout unless the task has one owner, one file edit, no phase handoff, no external mutation, and at most 30 instruction lines.
 3. Derive the task slug, phase list, and full write/delete manifest in memory.
 4. Detect the goals from the task description: numbered `G1..Gn`, each stating what must be true when the plan is done (see **Goal lifecycle** → Detect).
-5. Run the goals-confirmation gate: one `question` call confirming the goal list, the detected plan type (see **Template selection**), the soft goal-bloat flag, and the user-story scope (see **User-story scope**), BEFORE any file creation (see **Goal lifecycle** → Confirm).
+5. Run the goals-confirmation gate: first present the goals and classification in Markdown (see **Goal lifecycle** → Present), then run one short `question` call confirming them BEFORE any file creation (see **Goal lifecycle** → Confirm).
 6. Select the template: `references/_template-programming.md` for programming plans, `references/_template.md` otherwise (see **Template selection**).
 7. Run the user-story gate: read `user-stories/index.md`, identify the touched features, and for each run CREATE / UPDATE / COLLIDE (see **User stories** + **User-story collision gate**). On collision, stop before creating any plan file and ask the user. If the plan skips stories (see **User-story scope**), record that in the plan's Context.
 8. Run the post-scope collision check. Stop on overlap; do not create files.
@@ -263,7 +271,7 @@ Published documents must not cite `plans/` or `output/` paths because plans move
 
 **Stale non-overlapping stash:** offer the user reconciliation options (e.g. `git stash apply` in their terminal) or leaving the stash untouched; never erase or replay it in the caller repository.
 
-**Goals lifecycle trace (confirm → drift → resume):** the user describes a task; goals are detected (`G1..Gn`), confirmed in one `question` call together with the detected plan type and the soft-bloat flag, then persisted as `## Goals` checkboxes. Mid-plan, a scope change drifts from a confirmed goal — work stops, the user is notified with evidence, and on their call the goal is updated with a dated line in `## Resolved decisions`. At completion the goals resume is presented in chat (`✅`/`❌` per goal) and `## Outcome` is written into `plan.md` before the archive move.
+**Goals lifecycle trace (present → confirm → drift → resume):** the user describes a task; goals are detected (`G1..Gn`), displayed as a readable Markdown goal list with a separate plan classification, then confirmed by one short `question` call. The confirmed goals are persisted as `## Goals` checkboxes. Mid-plan, a scope change drifts from a confirmed goal — work stops, the user is notified with evidence, and on their call the goal is updated with a dated line in `## Resolved decisions`. At completion the goals resume is presented in chat (`✅`/`❌` per goal) and `## Outcome` is written into `plan.md` before the archive move.
 
 ## Troubleshooting
 
