@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.0.0
+  version: 1.1.0
   domain: git
 ---
 
@@ -17,24 +17,25 @@ Analyze the current git changes and write a conventional commit message to `comm
 
 - User wants to commit, write a commit message, or prepare staged changes
 - User says "commit this", "make a commit", "what should my commit say", or "I'm ready to push" — even without explicitly saying "commit message"
-- Before `/git-branch-name` or after `/git-pr` produces an artifact, the natural next step is `/git-commit`
+- After `/git-branch-name` or before `/git-pr`, the natural next step is `/git-commit`
 
 Do NOT use this skill to run `git commit` or any git command that mutates state — it only writes the message file.
 
 ## Steps
 
-1. Run `git status`, `git diff --stat`, `git diff --cached --stat`, and `git log --oneline -10` in parallel.
+1. Run `git status`, `git diff --stat`, `git diff --cached --stat`, `git log --oneline -10`, and `git branch --show-current` in parallel.
 2. If the diff stat is small (under 20 files), run `git diff` and `git diff --cached` for the full diff. Otherwise, selectively read the most relevant changed files.
 3. Detect if the repo is a monorepo (look for `pnpm-workspace.yaml`, `turbo.json`, `lerna.json`, `go.work`, or `[workspace]` in `Cargo.toml`).
 4. Check if there are staged changes. If yes, write the message for staged changes only. If nothing is staged, write the message for all unstaged changes.
 5. Analyze the commit log from step 1 to detect the existing commit message style (title format, body grouping, naming conventions). Match that style in the new message.
-6. Ensure `commit.txt` is in `.gitignore` — if not, add it immediately before writing the file.
-7. Write the commit message to `commit.txt` at the repository root.
-8. Tell the user the commit message was written to `commit.txt`.
+6. If the current branch matches `type/scope/description` with a type below, default the commit prefix to `type(scope):`; derive the prose description from the diff, not from the hyphenated branch description. If the diff contradicts the branch type or scope, use the diff-derived prefix and tell the user about the mismatch.
+7. Ensure `commit.txt` is in `.gitignore` — if not, add it immediately before writing the file.
+8. Write the commit message to `commit.txt` at the repository root.
+9. Tell the user the commit message was written to `commit.txt`.
 
 ## Commit Format
 
-Default to **conventional commits** format. If the existing commit log uses a different style, match that style instead.
+Default to **conventional commits** format. If the existing commit log uses a different style, match that style unless a matching convention-compliant branch supplies the default prefix.
 
 ### Title
 
@@ -42,10 +43,30 @@ Default to **conventional commits** format. If the existing commit log uses a di
 type(scope): concise summary under 72 characters
 ```
 
-- **type**: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `ci`, `perf`
-- **scope**: required — derived from where the changes live
-  - **Monorepo**: use the app/package directory name or a cross-cutting concern if changes span multiple packages
-  - **Single repo**: use the module, feature, or layer affected (e.g., `auth`, `api`, `ui`, `config`)
+- **type**: use the commitlint conventional type set below.
+
+| Type | When to use |
+|------|-------------|
+| `build` | Build system or external dependency changes |
+| `chore` | Maintenance or tooling work outside source, tests, docs, build, and CI |
+| `ci` | Continuous-integration configuration or scripts |
+| `docs` | Documentation only |
+| `feat` | New feature or capability |
+| `fix` | Bug fix, including an urgent production fix |
+| `perf` | Performance improvement |
+| `refactor` | Code restructuring without behavior change |
+| `revert` | Revert a previous commit or PR |
+| `style` | Code formatting only, not CSS or UI design |
+| `test` | Adding or updating tests only |
+
+- **scope**: required — use the same single lowercase, kebab-case token as a convention-compliant branch.
+  - **Single repo**: use the module, feature, or layer affected, such as `auth`, `api`, `ui`, or `config`.
+  - **Shared system core or package**: use its package name, such as `core` or `ui-kit`.
+  - **Independent app**: use its app name, such as `cli`.
+  - **Backend-only product app**: use `<app>-api`, such as `billing-api`.
+  - **Frontend-only product app**: use `<app>-web`, such as `billing-web`.
+  - **App with both backend and frontend**: use `<app>-api` or `<app>-web` when one side changes; use `<app>` only when one change spans both sides.
+  - **Cross-cutting work**: use the responsible shared concern, such as `deps`, `ci`, or `repo`.
 - Description starts with a lowercase verb
 - For breaking changes, add `!` after scope: `feat(api)!: remove deprecated endpoint`
 
@@ -102,9 +123,10 @@ feat(auth): add JWT validation middleware
 - Do NOT run `git commit` — only write the message to the file.
 - Do NOT stage or unstage any files.
 - Do NOT push to remote.
+- A matching branch supplies a default prefix only; the diff is authoritative when branch and changes disagree.
 - If there are no changes, inform the user instead of writing an empty file.
 
 ## Troubleshooting
 
 - **No changes to commit** — `git status` is clean. Inform the user there is nothing to commit; do not write an empty `commit.txt`.
-- **`commit.txt` not in `.gitignore`** — the file would be tracked on the next `git add .` and pollute the diff. Fix: add `commit.txt` to `.gitignore` BEFORE writing the file (step 6). Verify with `git check-ignore -v commit.txt`.
+- **`commit.txt` not in `.gitignore`** — the file would be tracked on the next `git add .` and pollute the diff. Fix: add `commit.txt` to `.gitignore` BEFORE writing the file (step 7). Verify with `git check-ignore -v commit.txt`.

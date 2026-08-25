@@ -21,4 +21,10 @@ Each entry MUST include:
 
 ## Register
 
-(no entries yet)
+### DEBT-001 — Plan-goal confirmation presentation
+
+- **Date** — 2026-08-24
+- **Description** — The plan-enforce goal-confirmation prompt rendered all metadata and goals as one dense, unscannable paragraph in the question UI.
+- **Direct evidence** — User-provided screenshot and correction on 2026-08-24 show the confirmation text wrapping as a single block, obscuring individual goals and their acceptance conditions.
+- **Resolution criteria** — Update the plan-enforce confirmation flow so goals are presented as a readable Markdown `G1`...`Gn` list before a short question-tool confirmation; keep plan type and user-story scope visually separate.
+- **Explicit deferral decision** — User directed Cipher to record this presentation defect as debt on 2026-08-24; it is outside the approved git-convention alignment scope.
