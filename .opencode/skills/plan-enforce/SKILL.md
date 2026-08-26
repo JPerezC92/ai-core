@@ -5,12 +5,12 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.6.0
+  version: 1.7.0
 ---
 
 ## What I do
 
-Create or resume a plan before non-trivial implementation work, then enforce its scope, phase gates, and post-merge archive lifecycle.
+Create or resume a plan before non-trivial implementation work, then enforce its scope, phase gates, and pre-release completion lifecycle.
 
 ## When to use me
 
@@ -156,10 +156,11 @@ Watch for goal drift on every phase close, every scope change, and every collate
 
 ### Resume (completion)
 
-When the plan is complete (user-confirmed merge):
+When the plan's work is done and its audits have passed — before the release PR is built:
 
 - Present the goals resume in chat: one line per goal, `✅` when met, `❌` when not, each with a 1-line evidence note.
 - Write `## Outcome` into `plan.md` — what the plan produced, per goal — BEFORE moving the plan to `plans/.completed/`.
+- Set `Status: completed`, append `Completed: YYYY-MM-DD HH:MM`, and move the plan to `plans/.completed/` (folder or file per layout). All of this happens pre-release; the merged PR number or merge SHA may be appended to the local archive copy afterwards as free metadata.
 - A plan archived without `## Outcome` is a lifecycle violation: restore it, write the section, then archive again.
 
 ## Simplicity discipline
@@ -255,9 +256,13 @@ Run after every file write (`plan.md`, each phase file, story create/update, ind
 | Phase completes | Mark its verification item complete in `plan.md`. |
 | Scope changes | Stop; notify the user with evidence of the drift and wait for their call; then update `## Goals` and append a dated line to `## Resolved decisions`; re-derive the manifest and re-run the collision check. |
 | Forge dispatch | Run both stash-gate parts and require an active plan before dispatch. |
-| User confirms PR merge | Run both stash-gate parts, verify `git diff origin/main <branch>` is empty, present the goals resume in chat (`✅`/`❌` per goal with evidence), write `## Outcome` into `plan.md`, set `Status: completed`, append `Completed: YYYY-MM-DD HH:MM`, then move the plan to `plans/.completed/`. |
+| Audits pass, release PR requested | Present the goals resume in chat (`✅`/`❌` per goal with evidence), write `## Outcome`, set `Status: completed`, append `Completed: YYYY-MM-DD HH:MM`, and move the plan to `plans/.completed/` — all BEFORE the release PR is built. |
+| Plan was tracked mid-work | Stage the plan-file deletions into the completing PR; never stage a completed plan's content. |
+| PR review demands rework | Restore the plan folder from `plans/.completed/` per the reopen rule, resume, re-complete pre-release, and re-stage the deletions. |
+| Plan cancelled | Complete it as cancelled: `## Outcome` records the cancellation; a tracked cancelled plan retires through the next PR's deletions. |
+| User confirms PR merge | Run both stash-gate parts, verify `git diff origin/main <branch>` is empty, pull main, clean up branches. No post-merge archive step exists; optionally append the merge SHA / PR number to the local archive copy. |
 
-Plans remain active through implementation, PR review, and user-confirmed merge. Never delete a plan, create an archive commit, invoke a merge command, or mutate a stash during archival.
+Git tracks only incomplete plans. Stage plan artifacts only while their plan is incomplete; a plan tracked mid-work leaves git through file deletions staged in its own completing PR; a single-session plan is never committed anywhere. Plans remain active through implementation and audit — completion and archive happen pre-release. Never delete a plan, create an archive commit, invoke a merge command, or mutate a stash during archival.
 
 ## Documentation discipline
 
@@ -271,7 +276,7 @@ Published documents must not cite `plans/` or `output/` paths because plans move
 
 **Stale non-overlapping stash:** offer the user reconciliation options (e.g. `git stash apply` in their terminal) or leaving the stash untouched; never erase or replay it in the caller repository.
 
-**Goals lifecycle trace (present → confirm → drift → resume):** the user describes a task; goals are detected (`G1..Gn`), displayed as a readable Markdown goal list with a separate plan classification, then confirmed by one short `question` call. The confirmed goals are persisted as `## Goals` checkboxes. Mid-plan, a scope change drifts from a confirmed goal — work stops, the user is notified with evidence, and on their call the goal is updated with a dated line in `## Resolved decisions`. At completion the goals resume is presented in chat (`✅`/`❌` per goal) and `## Outcome` is written into `plan.md` before the archive move.
+**Goals lifecycle trace (present → confirm → drift → resume):** the user describes a task; goals are detected (`G1..Gn`), displayed as a readable Markdown goal list with a separate plan classification, then confirmed by one short `question` call. The confirmed goals are persisted as `## Goals` checkboxes. Mid-plan, a scope change drifts from a confirmed goal — work stops, the user is notified with evidence, and on their call the goal is updated with a dated line in `## Resolved decisions`. At completion — pre-release, after audits pass — the goals resume is presented in chat (`✅`/`❌` per goal), `## Outcome` is written, the plan is archived locally, and when the plan was ever tracked its deletions ride the completing PR. No post-merge archive step exists.
 
 ## Troubleshooting
 
