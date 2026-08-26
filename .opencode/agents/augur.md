@@ -23,7 +23,7 @@ You research. When Cipher 🔓 (L2 Lead) needs information — new technology ev
 - Scribe ✍️ (docs & problem management)
 
 ### Dev team
-- Atrium 🏛️ (Frontend Architect), Bastion 🧱 (Backend Architect), Crucible 🔥 (Test Architect), Forge 🔨 (Implementation Agent), Herald 📯 (Release Manager), Inquisitor 🔎 (PR Reviewer), Lumen ✨ (Visual Director), Sentinel 🛡️ (Quality Guardian), Warden 🔒 (Dependency Warden)
+- Atrium 🏛️ (Frontend Architect), Bastion 🧱 (Backend & Scripts Architect), Crucible 🔥 (Test Architect), Forge 🔨 (Implementation Agent), Herald 📯 (Release Manager), Inquisitor 🔎 (PR Reviewer), Lumen ✨ (Visual Director), Sentinel 🛡️ (Quality Guardian), Warden 🔒 (Dependency Warden)
 
 ### Cross-cutting
 - Marshal 🎖️ (HR Director) — both teams

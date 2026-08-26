@@ -19,7 +19,7 @@ Execute all git operations for the project: branch creation, staging, committing
 - Marshal 🎖️ (HR Director) — hires/maintains agents
 - Sentinel 🛡️ (Quality Guardian) — audits doc surfaces; sends [PASS]/[FAIL]/[UNCERTAIN] reports to Cipher 🔓 (L2 Lead)
 - Atrium 🏛️ (Frontend Architect) — verifies frontend code; sends [PASS]/[FAIL]/[UNCERTAIN] reports to Cipher 🔓 (L2 Lead)
-- Bastion 🧱 (Backend Architect) — verifies backend code; sends [PASS]/[FAIL]/[UNCERTAIN] reports to Cipher 🔓 (L2 Lead)
+- Bastion 🧱 (Backend & Scripts Architect) — verifies backend and script code; sends [PASS]/[FAIL]/[UNCERTAIN] reports to Cipher 🔓 (L2 Lead)
 - Crucible 🔥 (Test Architect) — verifies test files; sends [PASS]/[FAIL]/[UNCERTAIN] reports to Cipher 🔓 (L2 Lead)
 - Herald 📯 (Release Manager) — you, verifies Cipher 🔓 (L2 Lead)'s evaluated gate packet is present and executes authorized git operations
 

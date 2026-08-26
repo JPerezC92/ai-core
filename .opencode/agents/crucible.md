@@ -21,7 +21,7 @@ Also owns test-runner dependencies: proposes version changes via `package.json` 
 - Marshal 🎖️ (HR Director) — hires/maintains agents
 - Sentinel 🛡️ (Quality Guardian) — audits doc surfaces (CVs/specs/knowledge)
 - Atrium 🏛️ (Frontend Architect) — audits frontend source code
-- Bastion 🧱 (Backend Architect) — audits backend source code
+- Bastion 🧱 (Backend & Scripts Architect) — audits backend and script source code
 - Crucible 🔥 (Test Architect) — you, audits test files
 
 ## Output Format

@@ -1,17 +1,17 @@
 ---
 name: migrate-core-to-project
-description: Migrate the AICore reusable core (skills, subagents, persona CVs, and shared infrastructure) into a target project — deterministically. Computes an installed-set inventory from a structured manifest, presents a selectable list of only the missing eligible items, copies idempotently, merges config, and runs a union consistency pass with a re-diff verification. Use when the user wants to install or migrate the agent core into another project, migrate just the remaining missing items incrementally, copy agents or skills from AICore, or scaffold a project with the core tooling.
+description: Migrate the AICore reusable core (skills, subagents, persona CVs, and shared infrastructure) into a target project — deterministically. Detects the target's stacks via a manifest→stack map, computes an installed-set inventory from a structured manifest, presents a selectable list of only the missing eligible items, copies idempotently, merges config, runs a union consistency pass with a re-diff verification, and reports stack-mismatched rulebook bodies needing destination-side adaptation. Use when the user wants to install or migrate the agent core into another project, migrate just the remaining missing items incrementally, copy agents or skills from AICore, or scaffold a project with the core tooling.
 license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.0.0
+  version: 1.1.0
   domain: opencode
 ---
 
 ## What I do
 
-Migrate AICore's reusable, agnostic core into a target project — deterministically. I compute an installed-set inventory from a structured manifest, present a selectable list of only the missing eligible items, copy idempotently, merge config, and run a union consistency pass with a re-diff verification that fails closed on any still-missing item. I never run git; shipping (branch/commit/PR) happens separately.
+Migrate AICore's reusable, agnostic core into a target project — deterministically. I detect the target's stacks mechanically via a manifest→stack map, compute an installed-set inventory from a structured manifest, present a selectable list of only the missing eligible items, copy idempotently, merge config, run a union consistency pass with a re-diff verification that fails closed on any still-missing item, and report stack-mismatched rulebook bodies that need destination-side adaptation. I never run git; shipping (branch/commit/PR) happens separately.
 
 ## When to use me
 
@@ -28,7 +28,7 @@ From the user's request, extract:
 
 - **target** — path to the destination project (required).
 - **scope** — coarse Kind-prefilter narrowing the selection step. Derived from the Kind column, never hand-written: `all` (default), or the plural of any selectable Kind (`skill`→`skills`, `agent`→`agents`, `infra`→`infra`). `config` has no scope value — it is a merge target, never selectable. Fine-grained selection happens in step 2, not here.
-- **stack hints** — optional notes about the target (backend? ticket system?) that assist marker detection.
+- **stack hints** — optional notes about the target (backend? TUI? ticket system?) that give context for the mismatch report. Markers and stacks are set by mechanical existence checks; hints never override them.
 
 ### Argument collection form
 
@@ -43,7 +43,20 @@ Use one `question` call per missing argument. Do not add a manual "Other" option
 
 ### 1. Inventory (deterministic)
 
-Read the target's structure to set the two markers mechanically: **backend marker** (target has a backend manifest, e.g. `nest-cli.json`, `pyproject.toml`, `requirements.txt`, or a backend source dir) and **ticket marker** (target has a ticket/support folder or workflow). Markers are concrete existence checks, not judgments.
+Read the target's structure to detect its stacks and the ticket marker mechanically — concrete existence checks, not judgments.
+
+**Stack detection — manifest→stack map** (a manifest file at the target root maps to a stack label; multiple manifests may coexist):
+
+| Manifest exists at target root | Stack detected |
+|---|---|
+| `Cargo.toml` | `rust` |
+| `package.json` or `nest-cli.json` | `node` |
+| `pyproject.toml` or `requirements.txt` | `python` |
+| `go.mod` | `go` |
+
+`node` and `python` count as backend stacks for include-rules (they are the languages of the backend rulebooks). The detected stack list feeds the step-5 mismatch report.
+
+**Ticket marker** (target has a ticket/support folder or workflow).
 
 Loop the manifest table. For every item, check destination presence:
 
@@ -56,14 +69,14 @@ Output three lists: `present` (skip), `missing` (eligible), `partial` (a present
 
 `partial` FAILS CLOSED: report it, do NOT auto-migrate or auto-repair it; ask the user how to proceed.
 
-Apply the include-rules to filter `missing` down to `eligible`: skip `bastion` unless backend marker, skip ticket-team agents + `ticket-runbook` unless ticket marker.
+Apply the include-rules to filter `missing` down to `eligible`: skip `bastion` unless a backend stack (`node` or `python`) is detected OR any skill in the eligible set ships Python scripts (mechanical check: `scripts/*.py` exists under the skill's source directory — true today for `op-model`, `plan-enforce`, `ticket-runbook`); skip ticket-team agents + `ticket-runbook` unless ticket marker.
 
 ### 2. Select items
 
 Present a multi-select list via the `question` tool with `multiple: true`, listing ONLY the `missing` eligible items from step 1, grouped by Kind:
 
 - **skills** — each missing eligible skill
-- **agents** — each missing eligible agent (`investigator` listed as spec-only, `cipher` as CV-only)
+- **agents** — each missing eligible agent (`investigator` listed as spec-only, `cipher` as CV-only; `bastion` described as the Backend & Scripts Architect — it audits the plan-scoped Python scripts shipped by the Python-script skills, so it travels with them)
 - **infra** — each missing infra file
   - a multi-file infra item (symptom-problem-register) is listed as ONE option, not one per file.
 
@@ -79,7 +92,7 @@ Copy ONLY the selected items. Never write beyond the derived write manifest.
 
 - **`present` items are NEVER touched.** Re-copying an already-present item requires the user to explicitly override — never silent.
 - **Agents copy as pairs:** `.opencode/agents/<name>.md` + `agents/<name>/profile.md`. Exceptions: `investigator` copies spec only; `cipher` copies CV only.
-- **Skills:** copy `.opencode/skills/<name>/` directories.
+- **Skills:** copy `.opencode/skills/<name>/` directories, excluding `__pycache__/` and `*.pyc` (never copy bytecode caches into the target).
 - **Infra:** copy every file in the item's Source (a multi-file item copies all its files as one unit).
 
 ### 4. Merge adapts
@@ -99,6 +112,7 @@ Run against the UNION = the already-present set + the newly selected set. After 
 4. **Frontmatter** — every spec must have `name` (matching the filename), `description`, and `mode: subagent`. Missing `name` is a common verbatim-copy defect.
 5. **CV ↔ spec reconciliation** — persona CVs and runtime specs must agree (e.g. if the spec forbids posting GitHub comments, the CV must not claim it posts them).
 6. **Grammar/emoji** — persona CV H1 headings use `# Name Emoji — Role`; fix "a agent" → "an agent".
+7. **Stack-mismatch report** — for every copied agent with a stack-bound rulebook body, compare the body's bound stack against the detected stacks from step 1. Current bound bodies: `atrium` → React/web, `bastion` → NestJS-TS + Python, `crucible` → Vitest/Playwright, `lumen` → web. Every mismatch (bound stack not among the target's detected stacks) goes into the migration summary as a row: agent, rulebook body, bound stack, detected stacks, note `adapt destination-side`. Report only — never write an adaptation artifact into the target, never rewrite the rulebook during migration.
 
 ### 6. Verify (re-diff)
 
@@ -139,7 +153,7 @@ Hard corollaries:
 | `ticket-runbook` | skill | `.opencode/skills/ticket-runbook/` | `<target>/.opencode/skills/ticket-runbook/` | only if ticket marker |
 | `atrium` | agent | `.opencode/agents/atrium.md` + `agents/atrium/profile.md` | `<target>/.opencode/agents/atrium.md` + `<target>/agents/atrium/profile.md` | always |
 | `augur` | agent | `.opencode/agents/augur.md` + `agents/augur/profile.md` | `<target>/.opencode/agents/augur.md` + `<target>/agents/augur/profile.md` | always |
-| `bastion` | agent | `.opencode/agents/bastion.md` + `agents/bastion/profile.md` | `<target>/.opencode/agents/bastion.md` + `<target>/agents/bastion/profile.md` | only if backend marker |
+| `bastion` | agent | `.opencode/agents/bastion.md` + `agents/bastion/profile.md` | `<target>/.opencode/agents/bastion.md` + `<target>/agents/bastion/profile.md` | backend stack OR any selected skill ships Python scripts |
 | `crucible` | agent | `.opencode/agents/crucible.md` + `agents/crucible/profile.md` | `<target>/.opencode/agents/crucible.md` + `<target>/agents/crucible/profile.md` | always |
 | `forge` | agent | `.opencode/agents/forge.md` + `agents/forge/profile.md` | `<target>/.opencode/agents/forge.md` + `<target>/agents/forge/profile.md` | always |
 | `herald` | agent | `.opencode/agents/herald.md` + `agents/herald/profile.md` | `<target>/.opencode/agents/herald.md` + `<target>/agents/herald/profile.md` | always |
@@ -167,11 +181,21 @@ Hard corollaries:
 
 ### Example 1 — frontend portfolio (dev team + cross-cutting + lead)
 
-Target: a Next.js frontend project, no backend, no ticket system. Scope: `all`.
+Target: a Next.js frontend project, no ticket system. Scope: `all`. Detected stacks: `node` (package.json at root).
 
 - Skills: all except `ticket-runbook`
-- Agents: `atrium`, `crucible`, `forge`, `herald`, `lumen`, `sentinel`, `warden`, `inquisitor`, `augur`, `marshal`, plus Cipher lead (`bastion` is filtered out — no backend marker)
-- Consistency pass removes: `forge.md` reads `bastion.md`, incident-team references in `augur.md`/`marshal.md`/Cipher CV, sentinel audit lists trimmed to installed agents, missing `name:` frontmatter added
+- Agents: `atrium`, `bastion`, `crucible`, `forge`, `herald`, `lumen`, `sentinel`, `warden`, `inquisitor`, `augur`, `marshal`, `vault`, plus Cipher lead — bastion is included because `op-model` and `plan-enforce` (always-include skills) ship Python scripts it audits
+- Consistency pass removes: incident-team references in `augur.md`/`marshal.md`/Cipher CV, sentinel audit lists trimmed to installed agents, missing `name:` frontmatter added — bastion references stay intact
+- Stack-mismatch report flags all four bound bodies: `atrium` (React/web), `bastion` (NestJS-TS + Python), `crucible` (Vitest/Playwright), `lumen` (web) — detected stacks: `node`; no bound body's stack label is `node` → adapt destination-side
+
+### Example 1b — Rust TUI tool (gitez class)
+
+Target: a Rust TUI client (`Cargo.toml` at root), no ticket system. Scope: `all`. Detected stacks: `rust` — no backend stack.
+
+- Skills: all except `ticket-runbook`
+- Agents: the full dev team + cross-cutting set including `bastion` — eligible via the Python-script branch (`op-model`, `plan-enforce` ship `scripts/*.py`), not the backend branch
+- Consistency pass removes: ticket-team references only; bastion references stay intact
+- Stack-mismatch report flags all four bound bodies: `atrium` (React), `bastion` (NestJS-TS), `crucible` (Vitest/Playwright), `lumen` (web) → adapt destination-side
 
 ### Example 2 — skills and infra install
 

@@ -26,7 +26,7 @@ You enforce the **reference pattern**: personality lives only in CV, workflow on
 - Scribe ✍️ (docs & problem management)
 
 ### Dev team
-- Atrium 🏛️ (Frontend Architect), Bastion 🧱 (Backend Architect), Crucible 🔥 (Test Architect), Forge 🔨 (Implementation Agent), Herald 📯 (Release Manager), Inquisitor 🔎 (PR Reviewer), Lumen ✨ (Visual Director), Sentinel 🛡️ (Quality Guardian), Warden 🔒 (Dependency Warden)
+- Atrium 🏛️ (Frontend Architect), Bastion 🧱 (Backend & Scripts Architect), Crucible 🔥 (Test Architect), Forge 🔨 (Implementation Agent), Herald 📯 (Release Manager), Inquisitor 🔎 (PR Reviewer), Lumen ✨ (Visual Director), Sentinel 🛡️ (Quality Guardian), Warden 🔒 (Dependency Warden)
 
 ### Cross-cutting
 - Cipher 🔓 (L2 Lead) — orchestrator, both teams

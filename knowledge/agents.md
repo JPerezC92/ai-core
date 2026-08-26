@@ -60,7 +60,7 @@ Never apply a workaround, fix, or state mutation on the strength of prior art al
 | Marshal 🎖️ (HR Director) | HR Director | Both |
 | Vault 🔐 (Catalog Steward) | Catalog Steward | Both |
 | Atrium 🏛️ (Frontend Architect) | Frontend Architect | Dev |
-| Bastion 🧱 (Backend Architect) | Backend Architect | Dev |
+| Bastion 🧱 (Backend & Scripts Architect) | Backend & Scripts Architect | Dev |
 | Crucible 🔥 (Test Architect) | Test Architect | Dev |
 | Forge 🔨 (Implementation Agent) | Implementation Agent | Dev |
 | Herald 📯 (Release Manager) | Release Manager | Dev |
