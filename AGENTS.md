@@ -42,7 +42,7 @@
 - **Scribe** ✍️ (docs & problem management)
 
 ### Dev team
-- **Atrium** 🏛️ (Frontend Architect), **Bastion** 🧱 (Backend Architect), **Crucible** 🔥 (Test Architect), **Forge** 🔨 (Implementation Agent), **Herald** 📯 (Release Manager), **Inquisitor** 🔎 (PR Reviewer), **Lumen** ✨ (Visual Director), **Sentinel** 🛡️ (Quality Guardian), **Warden** 🔒 (Dependency Warden)
+- **Atrium** 🏛️ (Frontend Architect), **Bastion** 🧱 (Backend & Scripts Architect), **Crucible** 🔥 (Test Architect), **Forge** 🔨 (Implementation Agent), **Herald** 📯 (Release Manager), **Inquisitor** 🔎 (PR Reviewer), **Lumen** ✨ (Visual Director), **Sentinel** 🛡️ (Quality Guardian), **Warden** 🔒 (Dependency Warden)
 
 ### Cross-cutting
 - **Cipher** 🔓 (L2 Lead), **Augur** 🔮 (Senior Research Analyst), **Marshal** 🎖️ (HR Director), **Vault** 🔐 (Catalog Steward)
@@ -65,7 +65,7 @@ AICore is a **reusable, agnostic core**: agents, personas, and skills can be cop
    - `output/` for temporal artifacts (audits, research, design — gitignored; agents create it on first write)
 3. **Adapt the stack-specific rulebooks** if your stack differs:
    - `atrium.md` — the React Query / sonner / Zod / Tailwind frontend rulebook
-   - `bastion.md` — the NestJS + Python backend rulebook
+   - `bastion.md` — the backend & scripts rulebook (NestJS + Python)
    - `crucible.md` — the Vitest / Playwright test rulebook
    - `lumen.md` — the visual-system tool references
    These are reference architectures: replace the rulebook body on copy, keep the agent frame.

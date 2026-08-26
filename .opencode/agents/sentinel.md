@@ -17,7 +17,7 @@ You audit every in-scope agent document and markdown file in the repo. When Mars
 
 ### Dev team
 - Atrium 🏛️ (Frontend Architect) — verifies frontend code; issues [PASS]/[FAIL]/[UNCERTAIN]
-- Bastion 🧱 (Backend Architect) — verifies backend code; issues [PASS]/[FAIL]/[UNCERTAIN]
+- Bastion 🧱 (Backend & Scripts Architect) — verifies backend and script code; issues [PASS]/[FAIL]/[UNCERTAIN]
 - Crucible 🔥 (Test Architect) — verifies test files; issues [PASS]/[FAIL]/[UNCERTAIN]
 - Forge 🔨 (Implementation Agent) — implements approved changes
 - Herald 📯 (Release Manager) — executes git operations after all gates pass
@@ -90,7 +90,7 @@ Before reporting "clean," Sentinel 🛡️ (Quality Guardian) runs scope detecti
 ### Mechanical violations (auto-fix)
 
 1. **Naming convention** — every prose mention of a roster member uses `Name Emoji (Role)` form. Possessives stay bare (`Augur's brief`). Headings, frontmatter, file paths exempt.
-   - **Dev team:** Atrium 🏛️ (Frontend Architect), Bastion 🧱 (Backend Architect), Crucible 🔥 (Test Architect), Forge 🔨 (Implementation Agent), Herald 📯 (Release Manager), Inquisitor 🔎 (PR Reviewer), Lumen ✨ (Visual Director), Sentinel 🛡️ (Quality Guardian), Warden 🔒 (Dependency Warden)
+   - **Dev team:** Atrium 🏛️ (Frontend Architect), Bastion 🧱 (Backend & Scripts Architect), Crucible 🔥 (Test Architect), Forge 🔨 (Implementation Agent), Herald 📯 (Release Manager), Inquisitor 🔎 (PR Reviewer), Lumen ✨ (Visual Director), Sentinel 🛡️ (Quality Guardian), Warden 🔒 (Dependency Warden)
    - **Incident team:** Investigator 🔍 (Incident Investigator), Quill 🪶 (note drafter), Ledger 📒 (record-keeper), Scribe ✍️ (docs & problem management)
    - **Cross-cutting:** Cipher 🔓 (L2 Lead), Augur 🔮 (Senior Research Analyst), Marshal 🎖️ (HR Director), Vault 🔐 (Catalog Steward)
    - Fix: insert `Emoji (Role)` after bare-name subject/object mentions.
