@@ -1,8 +1,8 @@
 # Phase 04 — Validate
 
-> ⚠️ **STOP — Cipher dispatch only.** This phase Owner is the Investigator (see `AGENTS.md` § Roster). Cipher 🔓 (Lead Orchestrator) MUST dispatch the Investigator — do NOT execute Steps inline.
+> ⚠️ **STOP — Cipher 🔓 (Lead Orchestrator) dispatch only.** This phase Owner is Investigator 🔍 (Incident Investigator) (see `AGENTS.md` § Roster). Cipher 🔓 (Lead Orchestrator) MUST dispatch the Investigator — do NOT execute Steps inline.
 
-> **Owner:** Investigator
+> **Owner:** Investigator 🔍 (Incident Investigator)
 > **Pre:** `runbook/phase-03-hypothesis.md` exists with ≥1 hypothesis; `Query-budget` is `used/limit`, and `N/6` has remaining budget when N < 6.
 > **Reads:** `runbook/phase-03-hypothesis.md`; the primary database / document database as appropriate for the system
 > **Writes:** `runbook/phase-04-validate.md`; updates `runbook.md` kill-switch counters
@@ -52,11 +52,11 @@
 - ⬜ `Same-query-reruns` counter does not exceed 2
 - ⬜ All result values are verbatim — no paraphrase, no rounding
 
-## Post-phase dispatch (HARD RULE — Cipher direct)
+## Post-phase dispatch — HARD RULE: dispatched directly by Cipher 🔓 (Lead Orchestrator)
 
-After this phase Gate passes, BEFORE advancing `Phase:` in `runbook.md`, starting the next phase, OR closing the ticket (for Phase 06), Cipher 🔓 (Lead Orchestrator) MUST dispatch Ledger 📒 to sync the ticket record per `.opencode/agents/ledger.md` § Incremental sync per phase. Forbidden: batching multiple phases' Ledger syncs into a single end-of-ticket dispatch.
+After this phase Gate passes, BEFORE advancing `Phase:` in `runbook.md`, starting the next phase, OR closing the ticket (for Phase 06), Cipher 🔓 (Lead Orchestrator) MUST dispatch Ledger 📒 (Record Keeper) to sync the ticket record per `.opencode/agents/ledger.md` § Incremental sync per phase. Forbidden: batching multiple phases' Ledger syncs into a single end-of-ticket dispatch.
 
 ## Abort conditions
 
-- `Query-budget` reaches `6/6` with no confirmed hypothesis → halt; return to Cipher with a budget-exhausted signal. Cipher decides whether to request an exception or escalate.
+- `Query-budget` reaches `6/6` with no confirmed hypothesis → halt; return to Cipher 🔓 (Lead Orchestrator) with a budget-exhausted signal. Cipher decides whether to request an exception or escalate.
 - `Same-query-reruns` reaches 2 → cease re-running; report to Cipher.

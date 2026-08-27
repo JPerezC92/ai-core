@@ -58,8 +58,8 @@ Run in order. Stop as soon as a replay-candidate verdict can be issued.
 
 | Verdict | Action |
 |---|---|
-| `Replay-candidate: yes` | Do NOT scaffold. Report the matching source, cite the workaround, recommend the derivation path. Signal Cipher — no phase files needed. |
-| `Replay-candidate: structural` | Scaffold runbook (phase files needed for validation). Hypothesis inherited from prior. The investigator executes validation with adapted queries. |
+| `Replay-candidate: yes` | Do NOT scaffold. Report the matching source, cite the workaround, recommend the derivation path. Signal Cipher 🔓 (Lead Orchestrator) — no phase files needed. |
+| `Replay-candidate: structural` | Scaffold runbook (phase files needed for validation). Hypothesis inherited from prior. Investigator 🔍 (Incident Investigator) executes validation with adapted queries. |
 | `Replay-candidate: no` | Proceed to step 4: scaffold the runbook. Full investigation phases. |
 
 **Choosing between `yes` and `structural`:**
@@ -78,7 +78,7 @@ Execute when `Replay-candidate: no` (full scaffold) OR `Replay-candidate: struct
 3. Initialize `runbook.md` header fields: `Phase` (`01`), `SLA-due` (from ticket), `Updated` (current timestamp), `Hypotheses-outstanding` (`3/3`), `Query-budget` (`0/6`, used/limit; `6/6` is exhausted), `Replay-candidate`, `Same-query-reruns` (`0/2`).
 4. Initialize the phase-01 triage file with ticket-specific context in its Pre block. Leave all Step / Gate / Abort sections as-is from the template.
 
-**Screenshot naming convention:** files placed in `screenshots/` must follow the project's `NN_<source>_<entity>[_<distinguisher>].png` convention (zero-padded NN matches ImagenN order; no campaign/entity ID/region in filename). Forbidden initial names: `image1.png`, `screenshot.png`, any name without the `NN_` prefix. Investigator + Quill dispatch prompts MUST reference final filenames; renaming at close-out is a process violation.
+**Screenshot naming convention:** files placed in `screenshots/` must follow the project's `NN_<source>_<entity>[_<distinguisher>].png` convention (zero-padded NN matches ImagenN order; no campaign/entity ID/region in filename). Forbidden initial names: `image1.png`, `screenshot.png`, any name without the `NN_` prefix. Investigator 🔍 (Incident Investigator) + Quill 🪶 (Note Drafter) dispatch prompts MUST reference final filenames; renaming at close-out is a process violation.
 
 **Pre-stage rule:** ALL screenshots (query images and browser captures) MUST exist on disk in `screenshots/` BEFORE Quill 🪶 (Note Drafter) is dispatched for the response phase. Dispatching Quill against not-yet-created image paths causes a guaranteed self-audit FAIL (`image_path_invalid`).
 
@@ -94,10 +94,10 @@ Immediately after scaffolding, run `uv run --locked --project .opencode/skills/t
 
 After the runbook scaffolds and validates:
 
-1. If prior-art search (step 2) already completed the prior-art phase logic: mark that phase complete in `runbook.md` and notify Cipher to skip to the hypothesis phase.
+1. If prior-art search (step 2) already completed the prior-art phase logic: mark that phase complete in `runbook.md` and notify Cipher 🔓 (Lead Orchestrator) to skip to the hypothesis phase.
 2. Otherwise: notify Cipher 🔓 (Lead Orchestrator) that the runbook is ready with the exact domain classified in phase-01.
 
-**HARD RULE — dispatch enforcement:** Cipher MUST dispatch the investigator to execute the prior-art phase. Cipher MUST NOT execute that phase inline. Cipher owns all dispatch decisions. This skill does NOT dispatch agents directly.
+**HARD RULE — dispatch enforcement:** Cipher MUST dispatch Investigator 🔍 (Incident Investigator) to execute the prior-art phase. Cipher MUST NOT execute that phase inline. Cipher owns all dispatch decisions. This skill does NOT dispatch agents directly.
 
 ## Post-write self-verification loop
 
@@ -119,7 +119,7 @@ Run immediately after scaffolding, before each phase-header advance, and after e
 - Ticket: domain X, module Y, region Z, period P
 - Prior-art: known-problem register — no match; KBA/RCA — no match; knowledge search 0.72 — below threshold, discarded
 - Verdict: `Replay-candidate: no`
-- Result: runbook scaffolded; validator exits 0; Cipher dispatches the investigator.
+- Result: runbook scaffolded; validator exits 0; Cipher 🔓 (Lead Orchestrator) dispatches Investigator 🔍 (Incident Investigator).
 
 **Example 2 — replay-candidate, no runbook**
 
@@ -127,13 +127,13 @@ Run immediately after scaffolding, before each phase-header advance, and after e
 - Ticket: domain W, module V, region U, period T
 - Prior-art: known-problem register — match on Symptom (S-xx) + Domain + Problem (identifier collision)
 - Verdict: `Replay-candidate: yes` — source: `knowledge/problems.md` (P-NNN); matched fields: Symptom, Domain, Problem
-- Result: no runbook scaffolded; finding block returned to Cipher; Quill 🪶 (Note Drafter) dispatched from the finding.
+- Result: no runbook scaffolded; finding block returned to Cipher 🔓 (Lead Orchestrator); Quill 🪶 (Note Drafter) dispatched from the finding.
 
 ## Troubleshooting
 
 **Runbook template missing:**
 - Cause: the `references/runbook/` template directory does not exist in this skill.
-- Fix: halt; report to Cipher — the template precondition is not met. Do not scaffold manually.
+- Fix: halt; report to Cipher 🔓 (Lead Orchestrator) — the template precondition is not met. Do not scaffold manually.
 
 **Validator exits non-zero:**
 - Cause: missing or malformed header field in `runbook.md`.

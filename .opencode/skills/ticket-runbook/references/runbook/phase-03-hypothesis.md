@@ -1,8 +1,8 @@
 # Phase 03 — Hypothesis
 
-> ⚠️ **STOP — Cipher dispatch only.** This phase Owner is the Investigator (see `AGENTS.md` § Roster). Cipher 🔓 (Lead Orchestrator) MUST dispatch the Investigator — do NOT execute Steps inline.
+> ⚠️ **STOP — Cipher 🔓 (Lead Orchestrator) dispatch only.** This phase Owner is Investigator 🔍 (Incident Investigator) (see `AGENTS.md` § Roster). Cipher 🔓 (Lead Orchestrator) MUST dispatch the Investigator — do NOT execute Steps inline.
 
-> **Owner:** Investigator
+> **Owner:** Investigator 🔍 (Incident Investigator)
 > **Pre:** `Replay-candidate: no` confirmed in `runbook.md`; `phase-02-priorart.md` exists.
 > **Reads:** `runbook/phase-01-triage.md`; `runbook/phase-02-priorart.md`; ticket description (already read in phase 01 — use from triage notes, do not re-read the ticket)
 > **Writes:** `runbook/phase-03-hypothesis.md`
@@ -51,10 +51,10 @@
 - ⬜ No skill names appear in the hypothesis list
 - ⬜ `Hypotheses-outstanding` in `runbook.md` is updated
 
-## Post-phase dispatch (HARD RULE — Cipher direct)
+## Post-phase dispatch — HARD RULE: dispatched directly by Cipher 🔓 (Lead Orchestrator)
 
-After this phase Gate passes, BEFORE advancing `Phase:` in `runbook.md`, starting the next phase, OR closing the ticket (for Phase 06), Cipher 🔓 (Lead Orchestrator) MUST dispatch Ledger 📒 to sync the ticket record per `.opencode/agents/ledger.md` § Incremental sync per phase. Forbidden: batching multiple phases' Ledger syncs into a single end-of-ticket dispatch.
+After this phase Gate passes, BEFORE advancing `Phase:` in `runbook.md`, starting the next phase, OR closing the ticket (for Phase 06), Cipher 🔓 (Lead Orchestrator) MUST dispatch Ledger 📒 (Record Keeper) to sync the ticket record per `.opencode/agents/ledger.md` § Incremental sync per phase. Forbidden: batching multiple phases' Ledger syncs into a single end-of-ticket dispatch.
 
 ## Abort conditions
 
-- Cannot frame even 1 evidence-backed hypothesis from ticket content → halt; return to Cipher with an "insufficient ticket data" finding. Do not invent hypotheses.
+- Cannot frame even 1 evidence-backed hypothesis from ticket content → halt; return to Cipher 🔓 (Lead Orchestrator) with an "insufficient ticket data" finding. Do not invent hypotheses.
