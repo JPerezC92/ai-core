@@ -15,7 +15,7 @@ Scaffold a per-ticket `runbook/` subfolder from `references/runbook/` and popula
 ## When to use me
 
 - User provides a ticket ID for a **new** incident ticket.
-- Cipher 🔓 (L2 Lead) dispatches this skill at the start of a new incident analysis.
+- Cipher 🔓 (Lead Orchestrator) dispatches this skill at the start of a new incident analysis.
 - Keywords: `runbook`, ticket ID when no existing runbook folder is present.
 
 ## Arguments
@@ -80,7 +80,7 @@ Execute when `Replay-candidate: no` (full scaffold) OR `Replay-candidate: struct
 
 **Screenshot naming convention:** files placed in `screenshots/` must follow the project's `NN_<source>_<entity>[_<distinguisher>].png` convention (zero-padded NN matches ImagenN order; no campaign/entity ID/region in filename). Forbidden initial names: `image1.png`, `screenshot.png`, any name without the `NN_` prefix. Investigator + Quill dispatch prompts MUST reference final filenames; renaming at close-out is a process violation.
 
-**Pre-stage rule:** ALL screenshots (query images and browser captures) MUST exist on disk in `screenshots/` BEFORE Quill 🪶 (note drafter) is dispatched for the response phase. Dispatching Quill against not-yet-created image paths causes a guaranteed self-audit FAIL (`image_path_invalid`).
+**Pre-stage rule:** ALL screenshots (query images and browser captures) MUST exist on disk in `screenshots/` BEFORE Quill 🪶 (Note Drafter) is dispatched for the response phase. Dispatching Quill against not-yet-created image paths causes a guaranteed self-audit FAIL (`image_path_invalid`).
 
 ### 5. Validate
 
@@ -95,7 +95,7 @@ Immediately after scaffolding, run `uv run --locked --project .opencode/skills/t
 After the runbook scaffolds and validates:
 
 1. If prior-art search (step 2) already completed the prior-art phase logic: mark that phase complete in `runbook.md` and notify Cipher to skip to the hypothesis phase.
-2. Otherwise: notify Cipher 🔓 (L2 Lead) that the runbook is ready with the exact domain classified in phase-01.
+2. Otherwise: notify Cipher 🔓 (Lead Orchestrator) that the runbook is ready with the exact domain classified in phase-01.
 
 **HARD RULE — dispatch enforcement:** Cipher MUST dispatch the investigator to execute the prior-art phase. Cipher MUST NOT execute that phase inline. Cipher owns all dispatch decisions. This skill does NOT dispatch agents directly.
 
@@ -127,7 +127,7 @@ Run immediately after scaffolding, before each phase-header advance, and after e
 - Ticket: domain W, module V, region U, period T
 - Prior-art: known-problem register — match on Symptom (S-xx) + Domain + Problem (identifier collision)
 - Verdict: `Replay-candidate: yes` — source: `knowledge/problems.md` (P-NNN); matched fields: Symptom, Domain, Problem
-- Result: no runbook scaffolded; finding block returned to Cipher; Quill 🪶 (note drafter) dispatched from the finding.
+- Result: no runbook scaffolded; finding block returned to Cipher; Quill 🪶 (Note Drafter) dispatched from the finding.
 
 ## Troubleshooting
 

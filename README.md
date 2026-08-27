@@ -5,7 +5,7 @@ A reusable, agnostic core of AI agents, personas, and skills. Copy any part of i
 ## What's inside
 
 ```
-AGENTS.md                     Lead orchestrator (Cipher 🔓 (L2 Lead)) + roster + reuse guide
+AGENTS.md                     Lead orchestrator (Cipher 🔓 (Lead Orchestrator)) + roster + reuse guide
 .opencode/agents/             16 runtime agent specs (OpenCode subagents)
 .opencode/skills/             9 skills (git-commit, git-branch-name, git-pr,
                               migrate-core-to-project, op-skill-creator, op-agent-creator, op-model,

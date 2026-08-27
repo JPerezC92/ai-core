@@ -1,8 +1,8 @@
 # Phase 06 — Respond
 
-> ⚠️ **STOP — Cipher dispatch only.** This phase Owner is Quill 🪶 (note drafter). Cipher 🔓 (L2 Lead) MUST dispatch Quill — do NOT draft prose inline. Quill's self-audit signature is required on the draft (see `.opencode/agents/quill.md`).
+> ⚠️ **STOP — Cipher dispatch only.** This phase Owner is Quill 🪶 (Note Drafter). Cipher 🔓 (Lead Orchestrator) MUST dispatch Quill — do NOT draft prose inline. Quill's self-audit signature is required on the draft (see `.opencode/agents/quill.md`).
 
-> **Owner:** Quill 🪶 (note drafter)
+> **Owner:** Quill 🪶 (Note Drafter)
 > **Pre:** `runbook/phase-05-synthesis.md` exists with a response surface; `response-draft.md` does not yet exist (or is empty).
 > **Reads:** `runbook/phase-05-synthesis.md`; `runbook/phase-04-validate.md` (verbatim evidence for citation)
 > **Writes:** `response-draft.md`
@@ -14,7 +14,7 @@
 3. Self-audit per Quill's hard rules: check every sentence for assumption-free language; check no internal DB field names exposed; check image ordering (collection data → user evidence → source validation); check all findings trace to phase-04 confirmed evidence.
 4. If the self-audit finds a violation: fix inline before writing to disk. Do NOT write a failing draft.
 5. Write the approved draft to `response-draft.md`.
-6. Signal Cipher 🔓 (L2 Lead) that the draft is ready for review and post via the response-post tool.
+6. Signal Cipher 🔓 (Lead Orchestrator) that the draft is ready for review and post via the response-post tool.
 
 ## Output
 
@@ -29,7 +29,7 @@
 
 ## Post-phase dispatch (HARD RULE — Cipher direct)
 
-After this phase Gate passes, BEFORE advancing `Phase:` in `runbook.md`, starting the next phase, OR closing the ticket (for Phase 06), Cipher 🔓 (L2 Lead) MUST dispatch Ledger 📒 to sync the ticket record per `.opencode/agents/ledger.md` § Incremental sync per phase. Forbidden: batching multiple phases' Ledger syncs into a single end-of-ticket dispatch.
+After this phase Gate passes, BEFORE advancing `Phase:` in `runbook.md`, starting the next phase, OR closing the ticket (for Phase 06), Cipher 🔓 (Lead Orchestrator) MUST dispatch Ledger 📒 to sync the ticket record per `.opencode/agents/ledger.md` § Incremental sync per phase. Forbidden: batching multiple phases' Ledger syncs into a single end-of-ticket dispatch.
 
 ## Abort conditions
 

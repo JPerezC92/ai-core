@@ -1,6 +1,6 @@
 # Phase 04 — Validate
 
-> ⚠️ **STOP — Cipher dispatch only.** This phase Owner is the Investigator (see `AGENTS.md` § Roster). Cipher 🔓 (L2 Lead) MUST dispatch the Investigator — do NOT execute Steps inline.
+> ⚠️ **STOP — Cipher dispatch only.** This phase Owner is the Investigator (see `AGENTS.md` § Roster). Cipher 🔓 (Lead Orchestrator) MUST dispatch the Investigator — do NOT execute Steps inline.
 
 > **Owner:** Investigator
 > **Pre:** `runbook/phase-03-hypothesis.md` exists with ≥1 hypothesis; `Query-budget` is `used/limit`, and `N/6` has remaining budget when N < 6.
@@ -54,7 +54,7 @@
 
 ## Post-phase dispatch (HARD RULE — Cipher direct)
 
-After this phase Gate passes, BEFORE advancing `Phase:` in `runbook.md`, starting the next phase, OR closing the ticket (for Phase 06), Cipher 🔓 (L2 Lead) MUST dispatch Ledger 📒 to sync the ticket record per `.opencode/agents/ledger.md` § Incremental sync per phase. Forbidden: batching multiple phases' Ledger syncs into a single end-of-ticket dispatch.
+After this phase Gate passes, BEFORE advancing `Phase:` in `runbook.md`, starting the next phase, OR closing the ticket (for Phase 06), Cipher 🔓 (Lead Orchestrator) MUST dispatch Ledger 📒 to sync the ticket record per `.opencode/agents/ledger.md` § Incremental sync per phase. Forbidden: batching multiple phases' Ledger syncs into a single end-of-ticket dispatch.
 
 ## Abort conditions
 

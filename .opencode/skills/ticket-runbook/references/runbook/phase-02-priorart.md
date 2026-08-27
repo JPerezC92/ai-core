@@ -1,6 +1,6 @@
 # Phase 02 — Prior Art
 
-> ⚠️ **STOP — Cipher dispatch only.** This phase Owner is the Investigator (see `AGENTS.md` § Roster). Cipher 🔓 (L2 Lead) MUST dispatch the Investigator — do NOT execute Steps inline.
+> ⚠️ **STOP — Cipher dispatch only.** This phase Owner is the Investigator (see `AGENTS.md` § Roster). Cipher 🔓 (Lead Orchestrator) MUST dispatch the Investigator — do NOT execute Steps inline.
 
 > **Owner:** Investigator
 > **Pre:** `runbook/phase-01-triage.md` exists and has a dispatch list; `Replay-candidate: pending` in the runbook header.
@@ -49,7 +49,7 @@
 
 ## Post-phase dispatch (HARD RULE — Cipher direct)
 
-After this phase Gate passes, BEFORE advancing `Phase:` in `runbook.md`, starting the next phase, OR closing the ticket (for Phase 06), Cipher 🔓 (L2 Lead) MUST dispatch Ledger 📒 to sync the ticket record per `.opencode/agents/ledger.md` § Incremental sync per phase. Forbidden: batching multiple phases' Ledger syncs into a single end-of-ticket dispatch.
+After this phase Gate passes, BEFORE advancing `Phase:` in `runbook.md`, starting the next phase, OR closing the ticket (for Phase 06), Cipher 🔓 (Lead Orchestrator) MUST dispatch Ledger 📒 to sync the ticket record per `.opencode/agents/ledger.md` § Incremental sync per phase. Forbidden: batching multiple phases' Ledger syncs into a single end-of-ticket dispatch.
 
 ## Abort conditions
 
