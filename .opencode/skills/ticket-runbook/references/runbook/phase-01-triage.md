@@ -1,6 +1,6 @@
 # Phase 01 — Triage
 
-> **Owner:** Cipher 🔓 (L2 Lead)
+> **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Pre:** Ticket ID available; ticket-read tool authenticated.
 > **Reads:** the ticket via the ticket-read tool (get_ticket + get_conversations); `knowledge/agents.md`; the symptom-class catalog (`knowledge/symptoms.md`)
 > **Writes:** `runbook/runbook.md` (header initialized); `runbook/phase-01-triage.md` (filled)
@@ -38,7 +38,7 @@
 
 ## Post-phase dispatch (HARD RULE — Cipher direct)
 
-After this phase Gate passes, BEFORE advancing `Phase:` in `runbook.md`, starting the next phase, OR closing the ticket (for Phase 06), Cipher 🔓 (L2 Lead) MUST dispatch Ledger 📒 to sync the ticket record per `.opencode/agents/ledger.md` § Incremental sync per phase. Forbidden: batching multiple phases' Ledger syncs into a single end-of-ticket dispatch.
+After this phase Gate passes, BEFORE advancing `Phase:` in `runbook.md`, starting the next phase, OR closing the ticket (for Phase 06), Cipher 🔓 (Lead Orchestrator) MUST dispatch Ledger 📒 to sync the ticket record per `.opencode/agents/ledger.md` § Incremental sync per phase. Forbidden: batching multiple phases' Ledger syncs into a single end-of-ticket dispatch.
 
 ## Abort conditions
 

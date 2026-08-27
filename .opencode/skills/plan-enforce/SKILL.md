@@ -15,7 +15,7 @@ Create or resume a plan before non-trivial implementation work, then enforce its
 ## When to use me
 
 - User types `/plan` or asks to create, resume, or show a plan.
-- Cipher 🔓 (L2 Lead) is about to dispatch Forge 🔨 (Implementation Agent).
+- Cipher 🔓 (Lead Orchestrator) is about to dispatch Forge 🔨 (Implementer).
 - A current task changes scope or requires a new implementation phase.
 
 ## Arguments
@@ -36,7 +36,7 @@ Use one `question` call. The first option is the parsed value when one is availa
 
 ## Stash safety gate
 
-This gate has two ordered parts: an initial read-only inventory and a post-scope collision check. It runs before new-plan creation, plan resumption, archive work, and every Forge 🔨 (Implementation Agent) dispatch. The gate never mutates the caller repository's stash or refs.
+This gate has two ordered parts: an initial read-only inventory and a post-scope collision check. It runs before new-plan creation, plan resumption, archive work, and every Forge 🔨 (Implementer) dispatch. The gate never mutates the caller repository's stash or refs.
 
 ### Initial read-only inventory
 
@@ -69,7 +69,7 @@ Derive the manifest before the collision check:
 - **Existing subfolder plan:** derive the manifest from every phase runbook's `## Writes` block.
 - **Existing single-file plan:** derive the manifest from its explicit write/delete instructions only.
 
-Read-only inputs are never manifest entries. The manifest must be complete before a new plan file is created or Forge 🔨 (Implementation Agent) is dispatched.
+Read-only inputs are never manifest entries. The manifest must be complete before a new plan file is created or Forge 🔨 (Implementer) is dispatched.
 
 ### Post-scope collision check
 
@@ -100,7 +100,7 @@ Verdict: ALL stash paths present in worktree status = applied; any missing = una
 1. Run the initial inventory.
 2. Scan `plans/*.md` (excluding `.completed/`) and `plans/*/plan.md`.
 3. Read candidate plan files and select those with `Status: active`.
-4. If one active plan exists, read it and its `phase-*.md` siblings, derive its manifest, and run the post-scope collision check before showing the plan or dispatching Forge 🔨 (Implementation Agent).
+4. If one active plan exists, read it and its `phase-*.md` siblings, derive its manifest, and run the post-scope collision check before showing the plan or dispatching Forge 🔨 (Implementer).
 5. If no active plan exists, continue to **Create new plan**. If multiple exist, stop and ask the user to select one.
 
 An archived plan is never resumed directly from `plans/.completed/`. Restore it to `plans/`, set `Status: active`, and append `Reopened: YYYY-MM-DD HH:MM` before resuming.
@@ -234,7 +234,7 @@ Before planning work that touches features, read `user-stories/index.md` first, 
 10. Fill each phase's Owner, Pre, Reads, Writes, Steps, Output, Gate, and Abort conditions. Do not leave `TBD` in Steps, Output, Gate, or Abort.
 11. Add one verification checkbox per phase output and confirm every checkbox traces to a phase output.
 12. Run the post-write self-verification loop (below) on every written file.
-13. Render the plan through `ExitPlanMode` before dispatching Forge 🔨 (Implementation Agent).
+13. Render the plan through `ExitPlanMode` before dispatching Forge 🔨 (Implementer).
 
 ## Post-write self-verification loop
 
