@@ -1,8 +1,8 @@
 # Phase 02 — Prior Art
 
-> ⚠️ **STOP — Cipher dispatch only.** This phase Owner is the Investigator (see `AGENTS.md` § Roster). Cipher 🔓 (Lead Orchestrator) MUST dispatch the Investigator — do NOT execute Steps inline.
+> ⚠️ **STOP — Cipher 🔓 (Lead Orchestrator) dispatch only.** This phase Owner is Investigator 🔍 (Incident Investigator) (see `AGENTS.md` § Roster). Cipher 🔓 (Lead Orchestrator) MUST dispatch the Investigator — do NOT execute Steps inline.
 
-> **Owner:** Investigator
+> **Owner:** Investigator 🔍 (Incident Investigator)
 > **Pre:** `runbook/phase-01-triage.md` exists and has a dispatch list; `Replay-candidate: pending` in the runbook header.
 > **Reads:** `knowledge/problems.md` (known-problem register, filtered by symptom class); the knowledge-base and root-cause article folders; the knowledge-search tool (threshold ≥0.85)
 > **Writes:** `runbook/phase-02-priorart.md` (filled); updates `runbook.md` `Replay-candidate` field
@@ -47,11 +47,11 @@
 - ⬜ If `yes`: source path cited; workaround block present
 - ⬜ If `structural`: prior source cited; inherited hypothesis stated; adapted query plan noted
 
-## Post-phase dispatch (HARD RULE — Cipher direct)
+## Post-phase dispatch — HARD RULE: dispatched directly by Cipher 🔓 (Lead Orchestrator)
 
-After this phase Gate passes, BEFORE advancing `Phase:` in `runbook.md`, starting the next phase, OR closing the ticket (for Phase 06), Cipher 🔓 (Lead Orchestrator) MUST dispatch Ledger 📒 to sync the ticket record per `.opencode/agents/ledger.md` § Incremental sync per phase. Forbidden: batching multiple phases' Ledger syncs into a single end-of-ticket dispatch.
+After this phase Gate passes, BEFORE advancing `Phase:` in `runbook.md`, starting the next phase, OR closing the ticket (for Phase 06), Cipher 🔓 (Lead Orchestrator) MUST dispatch Ledger 📒 (Record Keeper) to sync the ticket record per `.opencode/agents/ledger.md` § Incremental sync per phase. Forbidden: batching multiple phases' Ledger syncs into a single end-of-ticket dispatch.
 
 ## Abort conditions
 
-- `knowledge/problems.md` missing or empty → halt; prior-art primary source absent. Report to Cipher — cannot issue a replay verdict.
+- `knowledge/problems.md` missing or empty → halt; prior-art primary source absent. Report to Cipher 🔓 (Lead Orchestrator) — cannot issue a replay verdict.
 - Knowledge-search tool unavailable → continue with steps 1-3 only; note the skip in phase-02 output; do NOT block on the tool failure.

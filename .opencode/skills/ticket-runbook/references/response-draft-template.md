@@ -6,4 +6,4 @@ Hola, buen día.
 
 ## Self-audit
 
-<Quill writes PASS/FAIL block on every draft return>
+<Quill 🪶 (Note Drafter) writes PASS/FAIL block on every draft return>

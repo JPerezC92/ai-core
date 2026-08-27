@@ -75,7 +75,7 @@ Read-only inputs are never manifest entries. The manifest must be complete befor
 
 Intersect every stashed changed path from the initial inventory with the derived write/delete manifest:
 
-- Any intersection is `PLANNED_PATH_OVERLAP`: fail closed before plan-file creation or Forge dispatch.
+- Any intersection is `PLANNED_PATH_OVERLAP`: fail closed before plan-file creation or Forge 🔨 (Implementer) dispatch.
 - No intersection permits the plan flow to continue.
 - A stale, ahead, or diverged non-overlapping stash is a user-gated reconciliation candidate; current non-overlapping stashes are reported and retained.
 
@@ -238,7 +238,7 @@ Before planning work that touches features, read `user-stories/index.md` first, 
 
 ## Post-write self-verification loop
 
-Run after every file write (`plan.md`, each phase file, story create/update, index update), and after every Forge dispatch that mutates plan artifacts. Iterate until a full pass finds zero violations:
+Run after every file write (`plan.md`, each phase file, story create/update, index update), and after every Forge 🔨 (Implementer) dispatch that mutates plan artifacts. Iterate until a full pass finds zero violations:
 
 1. **Re-read** every file just written: `plan.md`, each `phase-NN-<owner>.md`, `user-stories/<slug>.md`, `user-stories/index.md`.
 2. **Mechanical pass** — for an active subfolder plan that creates or modifies a user story or `user-stories/index.md`, run `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan-dir> --stories user-stories` so index mirroring runs. For a no-stories path, run `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan-dir>` without `--stories`; use `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan.md> --single-file` for the single-file layout. It enforces the repetitive subset: Status enum, `Completed:` line, required sections, phase sections/labels, unfilled `<...>`/`TBD`/date placeholders, index mirroring. Fix anything it reports.
@@ -255,7 +255,7 @@ Run after every file write (`plan.md`, each phase file, story create/update, ind
 | Any plan/phase/story/index file write | Run the post-write self-verification loop (mechanical + analysis) until clean. |
 | Phase completes | Mark its verification item complete in `plan.md`. |
 | Scope changes | Stop; notify the user with evidence of the drift and wait for their call; then update `## Goals` and append a dated line to `## Resolved decisions`; re-derive the manifest and re-run the collision check. |
-| Forge dispatch | Run both stash-gate parts and require an active plan before dispatch. |
+| Forge 🔨 (Implementer) dispatch | Run both stash-gate parts and require an active plan before dispatch. |
 | Audits pass, release PR requested | Present the goals resume in chat (`✅`/`❌` per goal with evidence), write `## Outcome`, set `Status: completed`, append `Completed: YYYY-MM-DD HH:MM`, and move the plan to `plans/.completed/` — all BEFORE the release PR is built. |
 | Plan was tracked mid-work | Stage the plan-file deletions into the completing PR; never stage a completed plan's content. |
 | PR review demands rework | Restore the plan folder from `plans/.completed/` per the reopen rule, resume, re-complete pre-release, and re-stage the deletions. |
@@ -272,7 +272,7 @@ Published documents must not cite `plans/` or `output/` paths because plans move
 
 **New multi-phase task:** derive all phase writes in memory, run the collision check, then create a subfolder plan and phase runbooks.
 
-**Existing plan before Forge dispatch:** read every phase `## Writes` block, compare it with the inventory, and dispatch only after no overlap is found.
+**Existing plan before Forge 🔨 (Implementer) dispatch:** read every phase `## Writes` block, compare it with the inventory, and dispatch only after no overlap is found.
 
 **Stale non-overlapping stash:** offer the user reconciliation options (e.g. `git stash apply` in their terminal) or leaving the stash untouched; never erase or replay it in the caller repository.
 

@@ -24,7 +24,7 @@ Same-query-reruns: "0/2"
 | Phase | File | Owner | Status |
 |---|---|---|---|
 | 01 — Triage | `phase-01-triage.md` | Cipher 🔓 (Lead Orchestrator) | ⬜ |
-| 02 — Prior art | `phase-02-priorart.md` | Investigator | ⬜ |
+| 02 — Prior art | `phase-02-priorart.md` | Investigator 🔍 (Incident Investigator) | ⬜ |
 | 03 — Hypothesis | `phase-03-hypothesis.md` | Investigator | ⬜ |
 | 04 — Validate | `phase-04-validate.md` | Investigator | ⬜ |
 | 05 — Synthesis | `phase-05-synthesis.md` | Cipher 🔓 (Lead Orchestrator) | ⬜ |
