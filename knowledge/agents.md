@@ -1,6 +1,6 @@
 # Shared Agent Rules
 
-Cross-cutting rules that apply to every agent in this roster. Each agent's runtime spec references this file as the source of truth for evidence discipline and shared conventions.
+Cross-cutting rules and cross-agent protocols that apply to the roster. Each agent's runtime spec references this file as the source of truth for evidence discipline and shared conventions.
 
 ## Evidence discipline (HARD RULE)
 
@@ -46,6 +46,24 @@ Agents that feed evidence to Quill 🪶 (Note Drafter) MUST tag any field name o
 ## User-Authority-Only rule
 
 Never apply a workaround, fix, or state mutation on the strength of prior art alone. Discovery → return to the Lead with evidence + recommended action. User approves → the Lead executes.
+
+## PR review findings (adjudication)
+
+When Inquisitor 🔎 (PR Reviewer) returns review findings, Cipher 🔓 (Lead Orchestrator) adjudicates every finding before remediation:
+
+| Finding | Disposition | Ask user? |
+|---|---|---|
+| Real defect, fix in scope | Route to the owning agent (Forge 🔨 (Implementer) for code, the responsible architect for docs); fix as a NEW commit — never amend; re-review | No — report |
+| Real defect, fix needs scope expansion | Stop; present options | **Yes** |
+| False finding — mechanically decidable (one command settles it) | Refute: persist the literal command + output as PR-body evidence, instruct re-instrumentation, re-review | No — report prominently |
+| False finding — judgment-dependent | Present both readings with their evidence | **Yes** |
+| ADVISORY / INFO judgment call | Accept-cheap fix, decline-logged, or defer-to-debt; record in plan `Resolved decisions` | No — report |
+| Fix requires destructive or irreversible action | User-Authority-Only rule applies | **Yes** |
+| Same finding survives 2 remediation rounds, or 3 total review rounds | Loop cap — stop | **Yes** |
+
+**Round summary (delivered to the user after every review round):** verdict line + findings table (finding → severity → disposition → action taken) + PR state + `needs your call: none | <items>`.
+
+Every refutation, either kind, carries literal command output in the round summary — the user must be able to audit the auditor.
 
 ## Roster ownership table
 

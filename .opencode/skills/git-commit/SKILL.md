@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.1.0
+  version: 1.2.0
   domain: git
 ---
 
@@ -21,6 +21,8 @@ Analyze the current git changes and write a conventional commit message to `comm
 
 Do NOT use this skill to run `git commit` or any git command that mutates state — it only writes the message file.
 
+**Pipeline binding:** if this project has the agent roster installed (`.opencode/agents/herald.md` exists), the message file feeds Herald 📯 (Release Manager), who stages and runs the commit; the commit is not done until Herald executes it with its release gates.
+
 ## Steps
 
 1. Run `git status`, `git diff --stat`, `git diff --cached --stat`, `git log --oneline -10`, and `git branch --show-current` in parallel.
@@ -31,7 +33,7 @@ Do NOT use this skill to run `git commit` or any git command that mutates state 
 6. If the current branch matches `type/scope/description` with a type below, default the commit prefix to `type(scope):`; derive the prose description from the diff, not from the hyphenated branch description. If the diff contradicts the branch type or scope, use the diff-derived prefix and tell the user about the mismatch.
 7. Ensure `commit.txt` is in `.gitignore` — if not, add it immediately before writing the file.
 8. Write the commit message to `commit.txt` at the repository root.
-9. Tell the user the commit message was written to `commit.txt`.
+9. If `.opencode/agents/herald.md` exists in the project, report that `commit.txt` is ready for Herald 📯 (Release Manager) to stage and commit — do not print or suggest a direct `git commit -F commit.txt` invocation. Otherwise, tell the user the commit message was written to `commit.txt`.
 
 ## Commit Format
 
@@ -121,6 +123,7 @@ feat(auth): add JWT validation middleware
 ## Rules
 
 - Do NOT run `git commit` — only write the message to the file.
+- **Roster present → hand off.** When `.opencode/agents/herald.md` exists, end with the Herald 📯 (Release Manager) handoff; do not print or suggest a direct `git commit` command.
 - Do NOT stage or unstage any files.
 - Do NOT push to remote.
 - A matching branch supplies a default prefix only; the diff is authoritative when branch and changes disagree.
