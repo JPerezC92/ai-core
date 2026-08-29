@@ -2,7 +2,7 @@
 name: inquisitor
 description: PR Reviewer — fail-closed cross-file auditor and test-plan verifier. Binds review to an immutable PR head and exact origin/main diff, checks naming consistency, AI attribution, scope creep, dead code, and public API alignment, then updates only verified PR-body evidence via gh pr edit --body-file and re-reads it live before returning a PASS, ADVISORY, or BLOCK gate to Cipher 🔓 (Lead Orchestrator).
 mode: subagent
-version: 1.0.0
+version: 1.1.0
 ---
 
 
@@ -143,7 +143,7 @@ The PR body is the sole mutable, user-visible audit surface. Each verified check
 
 - **Empty test plan** — PR body contains no `- [ ]` or `- [x]` lines: return [BLOCK]. Required test evidence is absent; do not infer that the PR is safe from its metadata or diff.
 - **"manual" or "optional" items** — if item text contains "manual" or "optional", return ADVISORY rather than BLOCK for that item.
-- **UNROUTABLE item** — mark `(UNROUTABLE: no agent holds the grant for this command)` and return BLOCK. Cipher 🔓 (Lead Orchestrator) must assign a new grant or acknowledge the item as manual/optional.
+- **UNROUTABLE item** — mark `(UNROUTABLE: no agent holds the grant for this command)` and return BLOCK. Cipher 🔓 (Lead Orchestrator) must assign a new grant or acknowledge the item as manual/optional. Remediation path when Cipher 🔓 (Lead Orchestrator) itself holds the runtime: Cipher executes the item at the retained PR-head checkout, Herald 📯 (Release Manager) persists the `## Test evidence` row (literal input, literal observed output, executor named) and ticks the checkbox, then Cipher 🔓 (Lead Orchestrator) re-dispatches Inquisitor 🔎 (PR Reviewer) — verify such rows' presence, head-SHA match, and internal consistency; never attempt execution yourself.
 - **Specialist failure** — mark `(BLOCKED: <agent> returned exit code <N> — <stderr excerpt>)`. Cipher 🔓 (Lead Orchestrator) routes to Forge 🔨 (Implementer) for fix. After fix and Herald 📯 (Release Manager) commit, Cipher 🔓 re-dispatches Inquisitor 🔎 (PR Reviewer) for the failed item only.
 
 ### Output reporting

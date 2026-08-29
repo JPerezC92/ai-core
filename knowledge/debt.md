@@ -21,4 +21,18 @@ Each entry MUST include:
 
 ## Register
 
-No open debts.
+### DEBT-001 — PyYAML exact-pin retained; restricted-stdlib-parser option rejected
+
+- **Date:** 2026-08 (read-only dependency comparison)
+- **Description:** skill scripts keep exact-pinned PyYAML for YAML parsing; the alternative of a restricted stdlib-only parser was rejected, and no YAML library eliminating the PyPI Trusted-Publishing advisory is adopted.
+- **Direct evidence:** Aug 2026 read-only comparison found PyYAML 6.0.3, ruamel.yaml 0.19.1, and StrictYAML 1.7.3 all lack PyPI Trusted Publishing and PEP 740 provenance — switching libraries does not remove the advisory.
+- **Resolution criteria:** a YAML library ships both PyPI Trusted Publishing and PEP 740 provenance (then re-run the comparison and propose the switch), or the user explicitly reopens the rejected stdlib-parser option.
+- **Explicit deferral decision:** Cipher 🔓 (Lead Orchestrator) with user, 2026-08 — retain exact-pinned PyYAML unless either criterion is met.
+
+### DEBT-002 — Per-skill Python environments instead of a single root UV environment
+
+- **Date:** 2026-08-29
+- **Description:** skill runtime environments are per-skill (only `ticket-runbook` carries `pyproject.toml` + `uv.lock`); the evaluated improvement — one root UV environment with unified pins, migrations generating a destination root env from the dependency union of the selected skills — is deferred.
+- **Direct evidence:** full trade-off evaluation 2026-08-29 (user + Cipher 🔓 (Lead Orchestrator)): a root venv is viable and simpler at current scale (one dependency, one pin); dep-union migration is mechanical for the migration skill, which already computes structured per-skill inventories; residual risks manageable (version conflicts detectable at migration time; re-verifying all validators after any dep bump costs milliseconds).
+- **Resolution criteria:** root `pyproject.toml` + `uv.lock` in place; skills declare dependencies in a migration-readable location (SKILL.md metadata vs root manifest — open decision); `migrate-core-to-project` computes the dependency union with conflict check; validator/test commands run root-level `uv run --locked`; the ticket-runbook per-skill environment is removed; validator tests updated and green.
+- **Explicit deferral decision:** user, 2026-08-29 — deferred as too large for the active plan's scope.
