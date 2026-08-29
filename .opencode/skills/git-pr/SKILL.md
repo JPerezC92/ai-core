@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.1.0
+  version: 1.2.0
   domain: git
 ---
 
@@ -23,6 +23,8 @@ Analyze the current branch's divergence from `origin/main` and write a PR title 
 - For a convention-compliant branch, `/git-branch-name` is the start of the branch-to-commit-to-PR naming chain
 
 Do NOT use this skill to run `gh pr create` or any git command that mutates state — it only writes the draft file.
+
+**Pipeline binding:** if this project has the agent roster installed (`.opencode/agents/herald.md` exists), the draft feeds Herald 📯 (Release Manager), who creates the PR; PR creation is not completion — the PR is done only after Inquisitor 🔎 (PR Reviewer) reviews it at the immutable head.
 
 ## Arguments
 
@@ -45,7 +47,7 @@ None. The skill reads the current branch state directly from git.
 5. If the current branch matches `type/scope/description` with a supported type, compare its `type/scope` with the diff-derived PR title. When they differ, keep the diff-derived title and print an explicit warning that shows both values; a branch is evidence of intent, not authority over the diff.
 6. Ensure `pr-draft.md` is in `.gitignore` — if not, add it immediately before writing.
 7. Write the output to `pr-draft.md` at the repository root.
-8. Print the ready-to-run `gh pr create` command with the draft content inlined.
+8. If `.opencode/agents/herald.md` exists in the project, do NOT print a direct `gh pr create` command — report that `pr-draft.md` is ready for Herald 📯 (Release Manager), naming Inquisitor 🔎 (PR Reviewer) review at the immutable head as the completion condition. Otherwise, print the ready-to-run `gh pr create` command with the draft content inlined.
 
 ## Format
 
@@ -157,10 +159,11 @@ Title: <title here>
 - **Do NOT create, post, edit, identify, or delete GitHub comments or reviews.** Test evidence belongs only in the PR body.
 - **If on main/master with no diverging commits** — inform the user, no draft to write.
 - **If the branch has no commits ahead of main** — check for uncommitted changes and suggest running `/git-commit` first.
-- **After writing the file**, print the full ready-to-run command:
+- **After writing the file**: if the project has NO agent roster (no `.opencode/agents/herald.md`), print the full ready-to-run command:
   ```
   gh pr create --title "<title>" --body "$(cat pr-draft.md | tail -n +4)"
   ```
+  If the roster IS installed, hand off instead: report the draft ready for Herald 📯 (Release Manager) and do not print or run a direct PR-creation command.
 
 ## Troubleshooting
 
