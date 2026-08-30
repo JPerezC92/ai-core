@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.7.1
+  version: 1.8.0
 ---
 
 ## What I do
@@ -117,6 +117,7 @@ Extract the goals from the task description before writing any plan file:
 2. State each goal as what must be true when the plan is done — an observable condition, not an activity.
 3. Programming goals (see **Template selection**) additionally carry a `Done when:` criterion (see Persist).
 4. More than 5 goals triggers the soft goal-bloat flag (see **Simplicity discipline**) — report it in the confirmation gate; do not silently proceed.
+5. A goal whose done-condition references another document's state (a debt-register entry, a rule file, a checklist) MUST be drafted from that document's current text, read fresh at plan-creation — never from memory or a prior plan's phrasing. Quote the governing text in the goal or its verification line. A done-condition invented from recall inherits the recall error and every downstream gate verifies the assumption instead of the source (observed 2026-08-30: a "mark resolved in register" goal contradicted the register's own retirement rule).
 
 ### Present (pre-file gate)
 
