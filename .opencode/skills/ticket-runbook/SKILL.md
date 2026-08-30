@@ -5,7 +5,9 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.1.0
+  version: 1.1.1
+  dependencies:
+    - PyYAML==6.0.3
 ---
 
 ## What I do
@@ -84,11 +86,11 @@ Execute when `Replay-candidate: no` (full scaffold) OR `Replay-candidate: struct
 
 ### 5. Validate
 
-Immediately after scaffolding, run `uv run --locked --project .opencode/skills/ticket-runbook python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder>/runbook --scaffold`. Exit 0 → proceed. Non-zero exit → read the error output, fix the offending field, re-run. Do NOT continue until the validator passes.
+Immediately after scaffolding, run `uv run --locked python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder>/runbook --scaffold`. Exit 0 → proceed. Non-zero exit → read the error output, fix the offending field, re-run. Do NOT continue until the validator passes.
 
 > Evidence discipline applies: if the validator reports a field value violation, fix the value to match actual evidence — never invent a value to satisfy the validator.
 
-**Per-phase validator invocation (HARD RULE):** before advancing the completed phase `NN`, run `uv run --locked --project .opencode/skills/ticket-runbook python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir> --phase NN`. Abort if exit ≠ 0. Do NOT advance the `Phase:` field until the validator exits clean. After the header advances, reserve default full validation — `uv run --locked --project .opencode/skills/ticket-runbook python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir>` — for checking every completed phase through the `Phase:` header.
+**Per-phase validator invocation (HARD RULE):** before advancing the completed phase `NN`, run `uv run --locked python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir> --phase NN`. Abort if exit ≠ 0. Do NOT advance the `Phase:` field until the validator exits clean. After the header advances, reserve default full validation — `uv run --locked python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir>` — for checking every completed phase through the `Phase:` header.
 
 ### 6. Dispatch first agent
 
@@ -97,14 +99,14 @@ After the runbook scaffolds and validates:
 1. If prior-art search (step 2) already completed the prior-art phase logic: mark that phase complete in `runbook.md` and notify Cipher 🔓 (Lead Orchestrator) to skip to the hypothesis phase.
 2. Otherwise: notify Cipher 🔓 (Lead Orchestrator) that the runbook is ready with the exact domain classified in phase-01.
 
-**HARD RULE — dispatch enforcement:** Cipher MUST dispatch Investigator 🔍 (Incident Investigator) to execute the prior-art phase. Cipher MUST NOT execute that phase inline. Cipher owns all dispatch decisions. This skill does NOT dispatch agents directly.
+**HARD RULE — dispatch enforcement:** Cipher 🔓 (Lead Orchestrator) MUST dispatch Investigator 🔍 (Incident Investigator) to execute the prior-art phase. Cipher 🔓 (Lead Orchestrator) MUST NOT execute that phase inline. Cipher 🔓 (Lead Orchestrator) owns all dispatch decisions. This skill does NOT dispatch agents directly.
 
 ## Post-write self-verification loop
 
 Run immediately after scaffolding, before each phase-header advance, and after every advance. Iterate until a full pass finds zero violations:
 
 1. **Re-read** the written set: `runbook/runbook.md`, each written `phase-NN-*.md`, and the ticket folder structure.
-2. **Mechanical pass** — immediately after scaffolding, run `uv run --locked --project .opencode/skills/ticket-runbook python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir> --scaffold`; it verifies the header plus the copied phase structure while later template bodies remain intentional. Before advancing completed phase `NN`, run `uv run --locked --project .opencode/skills/ticket-runbook python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir> --phase NN`; a completed phase must contain no unfilled tokens. After the header advances, reserve default full validation — `uv run --locked --project .opencode/skills/ticket-runbook python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir>` — for all completed phases through the header. Fix anything it reports.
+2. **Mechanical pass** — immediately after scaffolding, run `uv run --locked python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir> --scaffold`; it verifies the header plus the copied phase structure while later template bodies remain intentional. Before advancing completed phase `NN`, run `uv run --locked python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir> --phase NN`; a completed phase must contain no unfilled tokens. After the header advances, reserve default full validation — `uv run --locked python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir>` — for all completed phases through the header. Fix anything it reports.
 3. **Analysis pass** — re-read each file against `references/_consistency-checklist.md`: at scaffold time, verify phase-01 `Pre` has this ticket's context while later template bodies intentionally remain unfilled; after completion, verify no completed phase has unfilled tokens. In every mode, verify header values match evidence (`SLA-due`, `Replay-candidate` vs prior-art, kill-switch counters reflect actual consumption), folder structure complete (`screenshots/`, `validations/`, ticket record, `response-draft.md`), and screenshot `NN_` naming. Never invent a value to satisfy a check — stop and ask.
 4. **Repeat** until a clean pass, then report the pass count.
 5. **Cap (S-07):** after 3 iterations, or the same violation persisting twice unchanged, stop-and-ask instead of looping.
@@ -141,7 +143,7 @@ Run immediately after scaffolding, before each phase-header advance, and after e
 
 **Ticket system auth error on read:**
 - Cause: tool token expired.
-- Fix: the ticket-read tool triggers the auth-refresh routine internally. If still failing after refresh, halt and report to Cipher.
+- Fix: the ticket-read tool triggers the auth-refresh routine internally. If still failing after refresh, halt and report to Cipher 🔓 (Lead Orchestrator).
 
 **Knowledge search unavailable:**
 - Cause: the knowledge-search tool is not reachable.

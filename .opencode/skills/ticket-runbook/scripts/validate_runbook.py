@@ -3,10 +3,10 @@ Validate a runbook directory: header fields, phase files, kill-switch budgets,
 SLA clock, and concurrent-session safety.
 
 Usage (from project root):
-    uv run --locked --project .opencode/skills/ticket-runbook python .opencode/skills/ticket-runbook/scripts/validate_runbook.py --help
-    uv run --locked --project .opencode/skills/ticket-runbook python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook_dir> --scaffold
-    uv run --locked --project .opencode/skills/ticket-runbook python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook_dir> --phase 03
-    uv run --locked --project .opencode/skills/ticket-runbook python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook_dir> --require-ledger-sync
+    uv run --locked python .opencode/skills/ticket-runbook/scripts/validate_runbook.py --help
+    uv run --locked python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook_dir> --scaffold
+    uv run --locked python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook_dir> --phase 03
+    uv run --locked python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook_dir> --require-ledger-sync
 
 Full validation:
     - Validates the runbook.md header (all 7 required fields).

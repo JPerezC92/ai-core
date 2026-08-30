@@ -86,14 +86,14 @@ Create a new OpenCode-native agent under `.opencode/agents/{name}.md`. The agent
      - **C.** Abort
 3. Ask: "Is this a **primary agent** or a **subagent**?" (default: **subagent** — more common case for new agents).
 4. Branch to the matching sub-flow (primary or subagent) — see sections below.
-5. **Step 5 — Consistency check.** Verify the agent's `description` frontmatter field covers every major capability declared in the body (system prompt). Cross-reference the Vault Quality Checklist (file loaded in Step 0.2) — specifically item QC-4 (description has WHAT + WHEN + "Use when …" — adapted for agents: WHAT the agent does + WHEN to dispatch it) and the agent body completeness rules. For example:
+5. **Step 5 — Consistency check.** Verify the agent's `description` frontmatter field covers every major capability declared in the body (system prompt). Cross-reference the Vault 🔐 (Catalog Steward) Quality Checklist (file loaded in Step 0.2) — specifically item QC-4 (description has WHAT + WHEN + "Use when …" — adapted for agents: WHAT the agent does + WHEN to dispatch it) and the agent body completeness rules. For example:
    - If the body says "I review pull requests" but the description says "I write docs" → mismatch.
    - If the body is restricted to read-only tools but the description says "I edit and run tests" → mismatch.
    - If a capability is missing from the description, stop and ask the user via multiple-choice question:
      - **A.** Auto-update the description with a recommended addition
      - **B.** Let the user edit manually
      - **C.** Ignore the mismatch and continue
-6. **Step 6 — Pre-validation (Quality Checklist subset).** Before writing, run these checks against the fully built agent definition. The file loaded Vault spec § "Quality Checklist" is authoritative; reference it for full text:
+6. **Step 6 — Pre-validation (Quality Checklist subset).** Before writing, run these checks against the fully built agent definition. The file loaded Vault 🔐 (Catalog Steward) spec § "Quality Checklist" is authoritative; reference it for full text:
 
    ```
    - [ ] Filename is `<name>.md` — QC-1 (adapted)
@@ -330,7 +330,7 @@ Use this when the user has an existing Claude Code agent spec at `.claude/agents
 | `customize-opencode` (built-in) | Edits or creates opencode config in `opencode.json` / `opencode.jsonc` and files under `.opencode/`, `~/.config/opencode/` | Broader config-ecosystem view; `op-agent-creator` is the focused, interactive, validated alternative for agent creation |
 | `op-agent-creator` (this skill) | Creates new OpenCode agents in `.opencode/agents/{name}.md` with interactive validation | Focused on agents only; does not touch `opencode.jsonc` (markdown agents are auto-discovered) |
 
-> The `op-agent-creator` does NOT modify `.claude/agents/*.md` (that is `Marshal` 🎖️ HR Director territory) and does NOT modify `opencode.jsonc` (markdown agents in `.opencode/agents/` are auto-discovered, no registration needed).
+> The `op-agent-creator` does NOT modify `.claude/agents/*.md` (that is Marshal 🎖️ (HR Director) territory) and does NOT modify `opencode.jsonc` (markdown agents in `.opencode/agents/` are auto-discovered, no registration needed).
 
 ## Troubleshooting
 

@@ -1,6 +1,6 @@
 # Phase 06 — Respond
 
-> ⚠️ **STOP — Cipher 🔓 (Lead Orchestrator) dispatch only.** This phase Owner is Quill 🪶 (Note Drafter). Cipher 🔓 (Lead Orchestrator) MUST dispatch Quill — do NOT draft prose inline. Quill's self-audit signature is required on the draft (see `.opencode/agents/quill.md`).
+> ⚠️ **STOP — Cipher 🔓 (Lead Orchestrator) dispatch only.** This phase Owner is Quill 🪶 (Note Drafter). Cipher 🔓 (Lead Orchestrator) MUST dispatch Quill 🪶 — do NOT draft prose inline. Quill's self-audit signature is required on the draft (see `.opencode/agents/quill.md`).
 
 > **Owner:** Quill 🪶 (Note Drafter)
 > **Pre:** `runbook/phase-05-synthesis.md` exists with a response surface; `response-draft.md` does not yet exist (or is empty).
@@ -34,4 +34,4 @@ After this phase Gate passes, BEFORE advancing `Phase:` in `runbook.md`, startin
 ## Abort conditions
 
 - Phase-05 synthesis has no response surface (escalation-only outcome) → skip phase 06; Cipher 🔓 (Lead Orchestrator) posts the derivation note directly.
-- Quill 🪶 (Note Drafter) self-audit FAILs after 2 revision cycles → halt; return the draft to Cipher with the audit failures listed.
+- Quill 🪶 (Note Drafter) self-audit FAILs after 2 revision cycles → halt; return the draft to Cipher 🔓 (Lead Orchestrator) with the audit failures listed.
