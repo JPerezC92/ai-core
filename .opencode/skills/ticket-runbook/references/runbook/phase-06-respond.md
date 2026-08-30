@@ -1,6 +1,6 @@
 # Phase 06 — Respond
 
-> ⚠️ **STOP — Cipher 🔓 (Lead Orchestrator) dispatch only.** This phase Owner is Quill 🪶 (Note Drafter). Cipher 🔓 (Lead Orchestrator) MUST dispatch Quill 🪶 — do NOT draft prose inline. Quill's self-audit signature is required on the draft (see `.opencode/agents/quill.md`).
+> ⚠️ **STOP — Cipher 🔓 (Lead Orchestrator) dispatch only.** This phase Owner is Quill 🪶 (Note Drafter). Cipher 🔓 (Lead Orchestrator) MUST dispatch Quill 🪶 (Note Drafter) — do NOT draft prose inline. Quill's self-audit signature is required on the draft (see `.opencode/agents/quill.md`).
 
 > **Owner:** Quill 🪶 (Note Drafter)
 > **Pre:** `runbook/phase-05-synthesis.md` exists with a response surface; `response-draft.md` does not yet exist (or is empty).

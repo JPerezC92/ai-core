@@ -1,6 +1,6 @@
 # Phase 04 — Validate
 
-> ⚠️ **STOP — Cipher 🔓 (Lead Orchestrator) dispatch only.** This phase Owner is Investigator 🔍 (Incident Investigator) (see `AGENTS.md` § Roster). Cipher 🔓 (Lead Orchestrator) MUST dispatch the Investigator 🔍 — do NOT execute Steps inline.
+> ⚠️ **STOP — Cipher 🔓 (Lead Orchestrator) dispatch only.** This phase Owner is Investigator 🔍 (Incident Investigator) (see `AGENTS.md` § Roster). Cipher 🔓 (Lead Orchestrator) MUST dispatch the Investigator 🔍 (Incident Investigator) — do NOT execute Steps inline.
 
 > **Owner:** Investigator 🔍 (Incident Investigator)
 > **Pre:** `runbook/phase-03-hypothesis.md` exists with ≥1 hypothesis; `Query-budget` is `used/limit`, and `N/6` has remaining budget when N < 6.
@@ -58,5 +58,5 @@ After this phase Gate passes, BEFORE advancing `Phase:` in `runbook.md`, startin
 
 ## Abort conditions
 
-- `Query-budget` reaches `6/6` with no confirmed hypothesis → halt; return to Cipher 🔓 (Lead Orchestrator) with a budget-exhausted signal. Cipher 🔓 decides whether to request an exception or escalate.
+- `Query-budget` reaches `6/6` with no confirmed hypothesis → halt; return to Cipher 🔓 (Lead Orchestrator) with a budget-exhausted signal. Cipher 🔓 (Lead Orchestrator) decides whether to request an exception or escalate.
 - `Same-query-reruns` reaches 2 → cease re-running; report to Cipher 🔓 (Lead Orchestrator).
