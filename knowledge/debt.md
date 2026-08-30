@@ -21,10 +21,4 @@ Each entry MUST include:
 
 ## Register
 
-### DEBT-001 — PyYAML exact-pin retained; restricted-stdlib-parser option rejected
-
-- **Date:** 2026-08 (read-only dependency comparison)
-- **Description:** skill scripts keep exact-pinned PyYAML for YAML parsing; the alternative of a restricted stdlib-only parser was rejected, and no YAML library eliminating the PyPI Trusted-Publishing advisory is adopted.
-- **Direct evidence:** Aug 2026 read-only comparison found PyYAML 6.0.3, ruamel.yaml 0.19.1, and StrictYAML 1.7.3 all lack PyPI Trusted Publishing and PEP 740 provenance — switching libraries does not remove the advisory. Re-checked 2026-08-30 (UTC; 2026-08-29 local) — plan `debt-resolution-20260830`, live PyPI per-file metadata: PyYAML 6.0.3 "Uploaded using Trusted Publishing? No" (twine/6.2.0); ruamel.yaml 0.19.1 No (twine/6.2.0, maintainer additionally warns of possible PEP 625 upload block); StrictYAML 1.7.3 No (twine/3.6.0). Retain decision stands.
-- **Resolution criteria:** a YAML library ships both PyPI Trusted Publishing and PEP 740 provenance (then re-run the comparison and propose the switch), or the user explicitly reopens the rejected stdlib-parser option.
-- **Explicit deferral decision:** Cipher 🔓 (Lead Orchestrator) with user, 2026-08 — retain exact-pinned PyYAML unless either criterion is met.
+(open debts: none)
