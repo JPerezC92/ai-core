@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.1.0
+  version: 1.2.0
   domain: opencode
 ---
 
@@ -80,7 +80,7 @@ Present a multi-select list via the `question` tool with `multiple: true`, listi
 - **infra** — each missing infra file
   - a multi-file infra item (symptom-problem-register) is listed as ONE option, not one per file.
 
-Config merge targets (`AGENTS.md`, `opencode.jsonc`, `.gitignore`) are NOT listed — they are always handled in step 4, never selectable.
+Config merge targets (`AGENTS.md`, `opencode.jsonc`, `.gitignore`) are NOT listed — they are always handled in step 5, never selectable.
 
 - The first option is **"Migrate all missing eligible items"** (default).
 - Each option's label is the manifest Item name; its description cites the Destination path from the manifest (never re-invented).
@@ -95,14 +95,25 @@ Copy ONLY the selected items. Never write beyond the derived write manifest.
 - **Skills:** copy `.opencode/skills/<name>/` directories, excluding `__pycache__/` and `*.pyc` (never copy bytecode caches into the target).
 - **Infra:** copy every file in the item's Source (a multi-file item copies all its files as one unit).
 
-### 4. Merge adapts
+### 4. Dependency union
+
+For each selected skill, read its `SKILL.md` frontmatter `metadata.dependencies` (if the key exists). Compute the union of all declared dependency strings across the selected set.
+
+**Conflict check:** if the same package name appears with different version pins across two or more selected skills, surface the conflict as a blocking mismatch to the user — list each conflicting name and the competing pins — and halt until the user resolves it. Never silently coalesce conflicting pins.
+
+**Union emission:**
+
+- **Non-empty union** — generate a `pyproject.toml` at the destination root using the same shape as AICore's: `[project]` table with `name` (destination project name), `version = "0.0.0"`, `requires-python = ">=3.9"`, and `dependencies` set to the union list; `[tool.uv]` table with `package = false`. Then print the lock instruction the user must run: `uv lock --project <target>`.
+- **Empty union** (no selected skill declares `metadata.dependencies`) — skip; no file is generated.
+
+### 5. Merge adapts
 
 - **AGENTS.md** — if `<target>/AGENTS.md` exists, MERGE new roster lines into the existing file (append lines for newly selected agents; do NOT regenerate from scratch). If absent, write fresh.
 - **opencode.jsonc** — append only the missing permission gates: grep for an existing gate before adding; never duplicate.
 - **.gitignore** — append-if-missing entries `commit.txt`, `pr-draft.md`, `output/`, `plans/.completed/`.
 - **Build approvals** — if the target uses pnpm ≥ 11, approve native build scripts (`sharp`, `@swc/core`, `agent-browser`, `@parcel/watcher`, `unrs-resolver`) via `pnpm approve-builds`.
 
-### 5. Consistency pass (union)
+### 6. Consistency pass (union)
 
 Run against the UNION = the already-present set + the newly selected set. After every copy, verify and fix cross-references. Verbatim copies are never internally consistent.
 
@@ -114,7 +125,7 @@ Run against the UNION = the already-present set + the newly selected set. After 
 6. **Grammar/emoji** — persona CV H1 headings use `# Name Emoji — Role`; fix "a agent" → "an agent".
 7. **Stack-mismatch report** — for every copied agent with a stack-bound rulebook body, compare the body's bound stack against the detected stacks from step 1. Current bound bodies: `atrium` → React/web, `bastion` → NestJS-TS + Python, `crucible` → Vitest/Playwright, `lumen` → web. Every mismatch (bound stack not among the target's detected stacks) goes into the migration summary as a row: agent, rulebook body, bound stack, detected stacks, note `adapt destination-side`. Report only — never write an adaptation artifact into the target, never rewrite the rulebook during migration.
 
-### 6. Verify (re-diff)
+### 7. Verify (re-diff)
 
 - **Re-diff** — re-run the step-1 inventory diff. Every selected item must now be `present`; present-count = previous-present + selected-count. If any selected item is still `missing`, or any item is now `partial`, **FAIL** — do not report success.
 - **Pointer sweep** — loop `.opencode/agents/*.md` and `agents/*/profile.md` references; none may point to a non-installed agent.
@@ -131,7 +142,7 @@ Kind is a closed set of 4 values:
 | `skill` | a skill directory under `.opencode/skills/` | yes |
 | `agent` | a roster member — `.opencode/agents/<name>.md` and/or `agents/<name>/profile.md` | yes |
 | `infra` | a shared-infra file or dir (`knowledge/`, `plans/`, `user-stories/`) | yes |
-| `config` | a merge target (`AGENTS.md`, `opencode.jsonc`, `.gitignore`) | no — merge-only, step 4 |
+| `config` | a merge target (`AGENTS.md`, `opencode.jsonc`, `.gitignore`) | no — merge-only, step 5 |
 
 Hard corollaries:
 
@@ -184,7 +195,7 @@ Hard corollaries:
 Target: a Next.js frontend project, no ticket system. Scope: `all`. Detected stacks: `node` (package.json at root).
 
 - Skills: all except `ticket-runbook`
-- Agents: `atrium`, `bastion`, `crucible`, `forge`, `herald`, `lumen`, `sentinel`, `warden`, `inquisitor`, `augur`, `marshal`, `vault`, plus Cipher lead — bastion is included because `op-model` and `plan-enforce` (always-include skills) ship Python scripts it audits
+- Agents: `atrium`, `bastion`, `crucible`, `forge`, `herald`, `lumen`, `sentinel`, `warden`, `inquisitor`, `augur`, `marshal`, `vault`, plus Cipher 🔓 (Lead Orchestrator) — bastion is included because `op-model` and `plan-enforce` (always-include skills) ship Python scripts it audits
 - Consistency pass removes: incident-team references in `augur.md`/`marshal.md`/Cipher CV, sentinel audit lists trimmed to installed agents, missing `name:` frontmatter added — bastion references stay intact
 - Stack-mismatch report flags all four bound bodies: `atrium` (React/web), `bastion` (NestJS-TS + Python), `crucible` (Vitest/Playwright), `lumen` (web) — detected stacks: `node`; no bound body's stack label is `node` → adapt destination-side
 
@@ -215,7 +226,7 @@ Target already has 12 agents + 6 skills (from a prior migration). User runs the 
 ## Troubleshooting
 
 - **Copied spec references an agent that was not installed** — e.g. `forge.md` reads `.opencode/agents/bastion.md`. Cause: verbatim copy of a spec written for the full roster. Fix: trim the reference (warmup read, gate, roster line) to the installed set.
-- **Roster list names agents that were not installed after a later agent addition** — Cause: a trim became stale when the roster grew. Fix: re-run step 5, align every roster list to the current installed set.
+- **Roster list names agents that were not installed after a later agent addition** — Cause: a trim became stale when the roster grew. Fix: re-run step 6, align every roster list to the current installed set.
 - **Spec is missing `name:` frontmatter** — Cause: the source project shipped the spec without it. Fix: add lowercase `name` matching the filename, plus `description` and `mode: subagent`.
 - **CV and runtime spec disagree** — e.g. the CV claims the agent posts GitHub comments, the spec forbids it. Cause: separate files drifting. Fix: align the CV to the spec's Hard Rules.
 - **`pnpm build` fails after install** — Cause: native build scripts ignored by pnpm 11. Fix: run `pnpm approve-builds` and rebuild.

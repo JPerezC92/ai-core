@@ -92,14 +92,14 @@ Create a new OpenCode-native skill under `.opencode/skills/{name}/SKILL.md`.
    - `## When to use me`
    - Optional extra sections if the user wants them
    - **If the user adds an `## Arguments` section**, scaffold it with the form-fill convention from `knowledge/conventions.md` § "Skill argument form-fill convention": include an `### Argument collection form` H3 subsection with a fields table (name, type, description, validation, options), trigger conditions table, and recipe. This ensures every new skill with arguments declares its `question`-tool form schema from the start.
-8. **Step 9 — Consistency check.** Verify that the `description` and `## When to use me` cover every major capability declared in the body sections. Cross-reference the Vault Quality Checklist (file loaded in Step 0.2) — specifically item QC-4 (description has WHAT + WHEN + "Use when …") and the relevant body-section completeness items. For example:
+8. **Step 9 — Consistency check.** Verify that the `description` and `## When to use me` cover every major capability declared in the body sections. Cross-reference the Vault 🔐 (Catalog Steward) Quality Checklist (file loaded in Step 0.2) — specifically item QC-4 (description has WHAT + WHEN + "Use when …") and the relevant body-section completeness items. For example:
    - If the body has a `## Rewrite or migrate...` section, the description and `## When to use me` must mention rewrite/migrate/rename.
    - If the body has an `## Arguments` section, the description or `## When to use me` should mention arguments or inputs.
    - If a capability is missing from the description/When to use me, stop and ask the user via a multiple-choice question:
      - **A.** Auto-update the description and/or `## When to use me` with a recommended addition.
      - **B.** Let the user edit manually.
      - **C.** Ignore the mismatch and continue.
-9. **Step 10 — Pre-validation (Quality Checklist subset).** Before writing, run these checks against the fully built skill definition. The file loaded Vault spec § "Quality Checklist" is authoritative; reference it for full text:
+9. **Step 10 — Pre-validation (Quality Checklist subset).** Before writing, run these checks against the fully built skill definition. The file loaded Vault 🔐 (Catalog Steward) spec § "Quality Checklist" is authoritative; reference it for full text:
 
    ```
    - [ ] Filename is `SKILL.md` — QC-1

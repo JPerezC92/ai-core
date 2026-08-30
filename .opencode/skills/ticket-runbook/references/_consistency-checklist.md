@@ -6,9 +6,9 @@
 
 Run every command from the project root. The validator enforces only the mechanical/repetitive subset; this checklist's evidence analysis remains the agent's responsibility.
 
-- **Fresh scaffold:** run `uv run --locked --project .opencode/skills/ticket-runbook python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir> --scaffold`. It requires the copied phase structure but intentionally permits template-body fill tokens. The analysis pass verifies phase-01 `Pre` contains this ticket's context; later phase bodies are intentionally still template content.
-- **Completed phase:** before advancing completed phase `NN`, run `uv run --locked --project .opencode/skills/ticket-runbook python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir> --phase NN`. That completed phase must have no unfilled tokens.
-- **Completed runbook state:** after the `Phase:` header advances, reserve `uv run --locked --project .opencode/skills/ticket-runbook python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir>` for full validation of all completed phases through that header.
+- **Fresh scaffold:** run `uv run --locked python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir> --scaffold`. It requires the copied phase structure but intentionally permits template-body fill tokens. The analysis pass verifies phase-01 `Pre` contains this ticket's context; later phase bodies are intentionally still template content.
+- **Completed phase:** before advancing completed phase `NN`, run `uv run --locked python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir> --phase NN`. That completed phase must have no unfilled tokens.
+- **Completed runbook state:** after the `Phase:` header advances, reserve `uv run --locked python .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir>` for full validation of all completed phases through that header.
 
 ## runbook/runbook.md
 
