@@ -8,6 +8,7 @@ Cross-cutting rules and cross-agent protocols that apply to the roster. Each age
 - **Hypotheses**: cite partial evidence + state what would confirm/refute. Label with `hipótesis:`.
 - **Assumptions**: FORBIDDEN. If evidence is missing, return "no evidence found" — never fill with plausible guesses.
 - Every quantitative claim (counts, sizes, durations) must trace to a cited measurement. Unverified quantitative claims are FAILs.
+- Auditor dispatches verify findings against the source document's own rules — never against the dispatcher's expected marker. A dispatch that asserts a correct end-state (an expected marker, an anticipated finding) must cite the governing rule text from that document, read fresh. Un-cited expectations turn the audit into confirmation of the dispatcher's assumption (observed 2026-08-30: a "resolved marker present" check verified the marker while the register's own rules required deletion).
 
 ## Prior-art before re-investigation
 
