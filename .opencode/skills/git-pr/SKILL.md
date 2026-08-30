@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.2.0
+  version: 1.2.1
   domain: git
 ---
 
@@ -186,3 +186,11 @@ Title: <title here>
 **A checkbox was ticked without complete evidence**:
 - Cause: the PR body lacks the immutable head SHA, exact scope command, literal input, observed output, executor, or a persisted re-read.
 - Fix: return the item to `- [ ]`, add the complete `## Test evidence` row for the current PR head, re-read the PR body, then tick only the matching item.
+
+**`git ls-tree -- '*.py'` (pathspec form) silently returns 0 results**:
+- Cause: `git ls-tree` with a pathspec form returns nothing even when matching files are tracked — it has produced false "no Python files" verdicts in PR reviews.
+- Fix: use the pipe-grep form for tracked-file existence checks: `git ls-tree -r <sha> --name-only | grep '\.py$'`. Never trust a 0 from the pathspec form.
+
+**Changeset scope confused with repo-wide tree scope**:
+- Cause: `git ls-tree -r <sha> --name-only | grep '\.py$'` lists every tracked file in the whole tree at that SHA, not the PR's changeset — a Markdown-only PR still lists tracked `.py` files this way.
+- Fix: for changeset language scope, use the diff pipe-grep: `git diff --name-only origin/main...<head-sha> | grep '\.py$'` — empty output means the changeset has no `.py` files.

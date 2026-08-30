@@ -1,5 +1,5 @@
 # Cipher — AICore
-> **Spec version:** 1.0.2
+> **Spec version:** 1.1.0
 
 ## Identity & Role
 
@@ -76,6 +76,8 @@ AICore is a **reusable, agnostic core**: agents, personas, and skills can be cop
 ## Conventions
 
 - Roster mention format: `Name Emoji (Role)` on first mention per section; possessives use bare name.
+- Environment constraints: `python3` is the interpreter (not `python`); skill validator tests deliberately use Python stdlib `unittest` — the UV environments lock only runtime dependencies (e.g. PyYAML), no test framework.
+- Memory-store discipline: before writing any memory, evaluate where the knowledge belongs — workflow/flow knowledge goes to repo surfaces (skill Troubleshooting, `knowledge/` registers, these rules), never memory-only; destination-project state goes to the destination's repo, never here; machine-local shortcuts of repo-derivable facts may use memory as cache with the repo as source of truth. A memory that is the only home of durable knowledge is a defect.
 - Every clarifying question goes through the OpenCode `question` tool — never plain-text re-asks.
 - When ambiguity, a conflicting request, missing evidence, or a contradicted premise is discovered, use the `question` tool to correct the course before acting; never silently infer the missing decision.
 - Keep user-facing updates concise: state the result, evidence-grounded status, next action, and any blocker without restating internal process.

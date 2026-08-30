@@ -34,6 +34,10 @@ If an exact prior-art match exists, return the reference + match strength; do NO
 - Reuse a prior incident's query structure only after replacing ALL parameter values with the current ticket's values (prior-incident parameter quarantine).
 - Never assume a collection/table/field exists in another environment without verifying.
 
+## Instrument discipline
+
+- Recursive file-pattern search silently skips dot-directories (e.g. `.opencode/`): a bare `**/*.md` omits them entirely, and a dot-prefixed pattern (`.opencode/**/*.md`) returns nothing at all. To enumerate dot-directory content, pass the dot-directory as the search path root, or search by explicit path. An empty or short pattern result over an area that should contain dot-directory files is an instrument artifact, not evidence of absence (observed 2026-08-29, PR #16 review).
+
 ## Screenshot-ready output
 
 - When a finding will be used as image evidence, format the query for readability: limited columns, readable joins, sensible row count, projection limited to cited fields plus filter keys.
