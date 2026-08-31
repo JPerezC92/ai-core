@@ -1,9 +1,6 @@
 {
     "$schema": "https://opencode.ai/config.json",
     "autoupdate": true,
-    "plugin": [
-        "@cortexkit/opencode-magic-context@latest"
-    ],
     "agent": {
         "plan": {
             "model": "deepseek/deepseek-v4-flash",
@@ -89,20 +86,24 @@
         }
     },
     "compaction": {
-        "auto": false,
-        "prune": false
+        "auto": true,
+        "prune": true
+    },
+    "mcp": {
+        "memories": {
+            "type": "local",
+            "command": ["npx", "-y", "@memories.sh/cli", "serve"]
+        }
     }
     // MCP servers (per-project — add your own here on copy). Example (generic):
-    // "mcp": {
-    //     "chrome-devtools": {
-    //         "type": "local",
-    //         "command": ["npx", "-y", "chrome-devtools-mcp@latest"]
-    //     },
-    //     "context7": {
-    //         "type": "remote",
-    //         "url": "https://mcp.context7.com/mcp",
-    //         "headers": { "CONTEXT7_API_KEY": "YOUR_API_KEY" },
-    //         "enabled": true
-    //     }
+    // "chrome-devtools": {
+    //     "type": "local",
+    //     "command": ["npx", "-y", "chrome-devtools-mcp@latest"]
+    // },
+    // "context7": {
+    //     "type": "remote",
+    //     "url": "https://mcp.context7.com/mcp",
+    //     "headers": { "CONTEXT7_API_KEY": "YOUR_API_KEY" },
+    //     "enabled": true
     // }
 }
