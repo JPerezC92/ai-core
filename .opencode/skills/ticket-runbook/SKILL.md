@@ -12,7 +12,7 @@ metadata:
 
 ## What I do
 
-Scaffold a per-ticket `runbook/` subfolder from `references/runbook/` and populate its header fields. Includes a prior-art gate: if a replay-candidate is found, skip runbook ceremony and apply the known solution directly.
+Scaffold a per-ticket `runbook/` subfolder from `references/runbook/` and populate its header fields. Includes a prior-art gate: if an exact replay-candidate is found, skip runbook ceremony, report the matched solution, and request user approval before applying it.
 
 ## When to use me
 

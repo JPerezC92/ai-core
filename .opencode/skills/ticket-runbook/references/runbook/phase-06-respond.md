@@ -14,7 +14,7 @@
 3. Self-audit per Quill's hard rules: check every sentence for assumption-free language; check no internal DB field names exposed; check image ordering (collection data → user evidence → source validation); check all findings trace to phase-04 confirmed evidence.
 4. If the self-audit finds a violation: fix inline before writing to disk. Do NOT write a failing draft.
 5. Write the approved draft to `response-draft.md`.
-6. Signal Cipher 🔓 (Lead Orchestrator) that the draft is ready for review and post via the response-post tool.
+6. Signal Cipher 🔓 (Lead Orchestrator) that the draft is ready for user review. Once user approval is recorded, Cipher 🔓 (Lead Orchestrator) posts via the response-post tool.
 
 ## Output
 
@@ -25,7 +25,7 @@
 
 - ⬜ `response-draft.md` exists and is non-empty
 - ⬜ Quill 🪶 (Note Drafter) self-audit PASS (no forbidden tokens, no assumptions, no orphan image refs)
-- ⬜ Cipher 🔓 (Lead Orchestrator) approval obtained before the response-post tool runs
+- ⬜ User approval recorded by Cipher 🔓 (Lead Orchestrator) before the response-post tool runs
 
 ## Post-phase dispatch — HARD RULE: dispatched directly by Cipher 🔓 (Lead Orchestrator)
 
@@ -33,5 +33,5 @@ After this phase Gate passes, BEFORE advancing `Phase:` in `runbook.md`, startin
 
 ## Abort conditions
 
-- Phase-05 synthesis has no response surface (escalation-only outcome) → skip phase 06; Cipher 🔓 (Lead Orchestrator) posts the derivation note directly.
+- Phase-05 synthesis has no response surface (escalation-only outcome) → skip phase 06; Cipher 🔓 (Lead Orchestrator) requests user approval, records it, then posts the derivation note.
 - Quill 🪶 (Note Drafter) self-audit FAILs after 2 revision cycles → halt; return the draft to Cipher 🔓 (Lead Orchestrator) with the audit failures listed.

@@ -24,7 +24,7 @@ If an exact prior-art match exists, return the reference + match strength; do NO
 
 **Symptom-first diagnostic:** On any unexpected tool error, match the error signature against `knowledge/symptoms.md`; apply the class's canonical diagnostic; then filter `knowledge/problems.md` by that S-xx + Team for a prior occurrence. Propose the known fix if found; file a new P-NNN under the class if the problem is novel (Scribe ✍️ (Docs & Problems Manager) owns the known-problem register). Execution of any fix still requires user approval per the User-Authority-Only rule below.
 
-**Version-first rule (S-01/2-class errors):** before any workaround, check for a newer supported version of the offending tool and upgrade first; re-verify.
+**Version-first rule (S-01/2-class errors):** before any workaround, check whether a newer supported version of the offending tool is available. If an upgrade is recommended, Warden 🔒 (Dependency Warden) reviews it and the user approves it before execution; then re-verify.
 
 **Stop-and-ask rule (S-07):** two consecutive failures of the same operation, or a long-running/expensive operation that grinds, means STOP — reassess the approach and present options to the user. Do not keep retrying.
 
