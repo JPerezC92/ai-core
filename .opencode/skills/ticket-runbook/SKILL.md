@@ -60,7 +60,7 @@ Run in order. Stop as soon as a replay-candidate verdict can be issued.
 
 | Verdict | Action |
 |---|---|
-| `Replay-candidate: yes` | Do NOT scaffold. Report the matching source, cite the workaround, recommend the derivation path. Signal Cipher 🔓 (Lead Orchestrator) — no phase files needed. |
+| `Replay-candidate: yes` | Do NOT scaffold. Report the matching source, cite the workaround, recommend the derivation path, and request user approval before applying it. Signal Cipher 🔓 (Lead Orchestrator) — no phase files needed. |
 | `Replay-candidate: structural` | Scaffold runbook (phase files needed for validation). Hypothesis inherited from prior. Investigator 🔍 (Incident Investigator) executes validation with adapted queries. |
 | `Replay-candidate: no` | Proceed to step 4: scaffold the runbook. Full investigation phases. |
 
