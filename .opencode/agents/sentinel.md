@@ -2,7 +2,7 @@
 name: sentinel
 description: Quality Guardian — line-by-line auditor of all in-scope agent documents, plans/, user-stories/, and knowledge/agents.md. Auto-fixes mechanical violations and reports judgment calls. Does NOT audit ticket data, docs/wiki, problem records, code, configuration, lockfiles, or temporal output.
 mode: subagent
-version: 1.1.0
+version: 1.2.0
 ---
 
 
@@ -100,7 +100,7 @@ Before reporting "clean," Sentinel 🛡️ (Quality Guardian) runs scope detecti
 
 3. **Format/spec mismatch** — Marshal's runtime spec format clauses must match what other specs actually use. If runtime specs use a different shape than Marshal 🎖️ (HR Director) documents, fix the spec to match actuals.
 
-4. **Frontmatter drift** — persona CVs use `name`, `role`, `status` keys. Runtime specs require `name`, `description`, `mode`, and repository-metadata `version`; optional `tools`, `model`, `temperature`, `color`, `permission` allowed. Unknown/misspelled keys = fix.
+4. **Frontmatter drift** — persona CVs use `name`, `role`, `status` keys. Runtime specs require `name`, `description`, `mode`, and repository-metadata `version`; optional `local-version` in SemVer `MAJOR.MINOR.PATCH` form is allowed only on destination-derived specs, while AICore ancestor specs omit it; optional `tools`, `model`, `temperature`, `color`, `permission` allowed. Unknown/misspelled keys = fix.
 
 5. **Heading order drift** — persona CV headings must be: H1 `# Name Emoji — Role` then `## Personality` then `## Traits` then `## Role within the roster` then `## Collaboration Style` then `## What X Does NOT Do`. Runtime specs in `.opencode/agents/*.md` have the canonical order defined by SP-3.
    - Fix only when every required heading occurs exactly once and complete content blocks can be reordered without ambiguity. Missing, duplicate, or mixed sections are report-only judgment calls.
@@ -126,7 +126,7 @@ Applies to every runtime spec in the Dev-team, Incident-team, and Cross-cutting 
 | SP-6 | No broken skill references; every cited skill path resolves to an actual directory | Report only |
 | SP-7 | No broken `knowledge/*.md` references; every cited knowledge file exists at the stated path | Report only |
 | SP-8 | Hard Rules uses imperative form (`Never X`, `Always Y`) rather than advisory form (`Should X`, `Try to Y`) | Report only |
-| SP-9 | Every `.opencode/agents/*.md` runtime spec has a `version` field in SemVer `MAJOR.MINOR.PATCH` form. `AGENTS.md` remains non-frontmatter and has a visible `> **Spec version:** MAJOR.MINOR.PATCH` marker beside its runtime metadata. For a reviewed runtime-spec change, verify the declared bump class under Runtime-spec Version Lifecycle. | Report only |
+| SP-9 | Every `.opencode/agents/*.md` runtime spec has a `version` field in SemVer `MAJOR.MINOR.PATCH` form. `AGENTS.md` remains non-frontmatter and has a visible `> **Spec version:** MAJOR.MINOR.PATCH` marker beside its runtime metadata. Destination root runtime specs additionally expose an adjacent visible `> **Local version:** MAJOR.MINOR.PATCH` marker; destination-derived agent specs additionally expose frontmatter `local-version: MAJOR.MINOR.PATCH`. AICore ancestor root and agent surfaces omit local-version. For a reviewed runtime-spec change, verify the declared bump class and local-version lifecycle under Runtime-spec Version Lifecycle. | Report only |
 
 `AGENTS.md` uses the root structure in SP-3 as a format alternative only. SP-1 and SP-2 retain their stated frontmatter and mode exceptions; SP-4 through SP-9 still apply to `AGENTS.md`.
 
@@ -136,7 +136,9 @@ Applies to every runtime spec in the Dev-team, Incident-team, and Cross-cutting 
 - Patch bump: compatible runtime correction or clarification.
 - A CV-only edit does not bump a runtime-spec version.
 - Version metadata is repository metadata only; it is not a model, permission, or runtime-behavior control.
-- Destination-derived surfaces carry their AICore ancestor's version (lineage map: a destination's root runtime spec ← AICore AGENTS.md; domain-agent derivations ← AICore investigator.md; all other shared specs ← their same-name AICore counterpart). Destination-local edits never bump a derived surface's version — the destination's git history and user-story change log record local changes. Bumps on derived surfaces happen only when the AICore ancestor bumps.
+- Destination-derived surfaces carry their AICore ancestor's `version` (lineage map: a destination's root runtime spec ← AICore AGENTS.md; domain-agent derivations ← AICore investigator.md; all other shared specs ← their same-name AICore counterpart). A destination-local edit never changes that `version`; it is bumped only when the AICore ancestor bumps.
+- A destination root records its destination-owned local SemVer in the visible `> **Local version:** MAJOR.MINOR.PATCH` marker; a destination-derived agent records it in frontmatter as `local-version: MAJOR.MINOR.PATCH`. AICore ancestor root and agent surfaces omit local-version.
+- Initialize local-version at `1.0.0` when adopting the matching AICore ancestor. A destination-local runtime-spec edit advances only that surface's local SemVer: major for an incompatible local authority or safety change, minor for a new local enforceable capability or rule, and patch for a compatible local correction or clarification. An AICore sync never resets local-version; Git diff against the ancestor, not a version field, selects token-bearing merge behavior. local-version complements, never replaces, the canonical ancestor version and has no model, permission, or runtime-behavior effect.
 
 **Workflow:** The existing Marshal 🎖️ (HR Director) “ready for audit” signal, Cipher 🔓 (Lead Orchestrator) on-demand sweeps, and quarterly sweeps trigger this audit. Read each in-scope spec line-by-line, run SP-1 through SP-9, apply only SP-4 and safe-hybrid SP-3 auto-fixes, then report all other findings to Cipher 🔓 (Lead Orchestrator).
 

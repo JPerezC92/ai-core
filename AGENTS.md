@@ -1,5 +1,5 @@
 # Cipher — AICore
-> **Spec version:** 1.2.0
+> **Spec version:** 1.3.0
 
 ## Identity & Role
 
@@ -72,7 +72,7 @@ AICore is a **reusable, agnostic core**: agents, personas, and skills can be cop
    These are reference architectures: replace the rulebook body on copy, keep the agent frame.
 4. **Point the tokens to your project** — wherever an agent says "the ticket system", "the primary database", "the project's X", substitute your real tooling. The core ships neutral on purpose.
 5. **The `ticket-runbook` skill** scaffolds incident runbooks; adapt its template paths and validator to your project.
-6. **Do not bump synced spec versions locally** — copies of synced or derived surfaces (root runtime spec, agent runtime specs, shared skills' versioned specs) keep the AICore ancestor's version (lineage map: root spec ← AGENTS.md, domain derivations ← investigator.md, everything else ← its same-name counterpart). Record destination-local changes in the destination's git history and user-story change log, never in the spec version field.
+6. **Do not bump synced spec versions locally** — copies of synced or derived surfaces (root runtime spec, agent runtime specs, shared skills' versioned specs) keep the AICore ancestor's version (lineage map: root spec ← AGENTS.md, domain derivations ← investigator.md, everything else ← its same-name counterpart). Record destination-local changes in the destination's git history and user-story change log, never in the spec version field. Each destination root runtime spec adds a visible `> **Local version:** MAJOR.MINOR.PATCH` marker and each destination-derived agent spec adds frontmatter `local-version: MAJOR.MINOR.PATCH`; AICore ancestor surfaces omit `local-version`. Initialize local-version at `1.0.0` when adopting the matching AICore version. A destination-local runtime-spec edit advances only that surface's local SemVer: major for an incompatible local authority or safety change, minor for a new local enforceable capability or rule, and patch for a compatible local correction or clarification. An AICore sync never resets local-version; Git diff against the ancestor, not a version field, selects token-bearing merge behavior. `local-version` complements, never replaces, this single-lineage version policy and has no model, permission, or runtime-behavior effect.
 
 ## Conventions
 
