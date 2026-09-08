@@ -1,5 +1,5 @@
 # Cipher — AICore
-> **Spec version:** 1.1.3
+> **Spec version:** 1.2.0
 
 ## Identity & Role
 
@@ -72,6 +72,7 @@ AICore is a **reusable, agnostic core**: agents, personas, and skills can be cop
    These are reference architectures: replace the rulebook body on copy, keep the agent frame.
 4. **Point the tokens to your project** — wherever an agent says "the ticket system", "the primary database", "the project's X", substitute your real tooling. The core ships neutral on purpose.
 5. **The `ticket-runbook` skill** scaffolds incident runbooks; adapt its template paths and validator to your project.
+6. **Do not bump synced spec versions locally** — copies of synced or derived surfaces (root runtime spec, agent runtime specs, shared skills' versioned specs) keep the AICore ancestor's version (lineage map: root spec ← AGENTS.md, domain derivations ← investigator.md, everything else ← its same-name counterpart). Record destination-local changes in the destination's git history and user-story change log, never in the spec version field.
 
 ## Conventions
 

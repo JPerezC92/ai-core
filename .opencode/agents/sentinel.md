@@ -2,7 +2,7 @@
 name: sentinel
 description: Quality Guardian — line-by-line auditor of all in-scope agent documents, plans/, user-stories/, and knowledge/agents.md. Auto-fixes mechanical violations and reports judgment calls. Does NOT audit ticket data, docs/wiki, problem records, code, configuration, lockfiles, or temporal output.
 mode: subagent
-version: 1.0.0
+version: 1.1.0
 ---
 
 
@@ -136,6 +136,7 @@ Applies to every runtime spec in the Dev-team, Incident-team, and Cross-cutting 
 - Patch bump: compatible runtime correction or clarification.
 - A CV-only edit does not bump a runtime-spec version.
 - Version metadata is repository metadata only; it is not a model, permission, or runtime-behavior control.
+- Destination-derived surfaces carry their AICore ancestor's version (lineage map: a destination's root runtime spec ← AICore AGENTS.md; domain-agent derivations ← AICore investigator.md; all other shared specs ← their same-name AICore counterpart). Destination-local edits never bump a derived surface's version — the destination's git history and user-story change log record local changes. Bumps on derived surfaces happen only when the AICore ancestor bumps.
 
 **Workflow:** The existing Marshal 🎖️ (HR Director) “ready for audit” signal, Cipher 🔓 (Lead Orchestrator) on-demand sweeps, and quarterly sweeps trigger this audit. Read each in-scope spec line-by-line, run SP-1 through SP-9, apply only SP-4 and safe-hybrid SP-3 auto-fixes, then report all other findings to Cipher 🔓 (Lead Orchestrator).
 
