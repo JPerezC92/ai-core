@@ -21,11 +21,4 @@ Each entry MUST include:
 
 ## Register
 
-### DEBT-002 — `migrate-core-to-project` manifest table exceeds the extraction threshold
-
-- **ID** — DEBT-002
-- **Date** — 2026-09-10
-- **Description** — The `migrate-core-to-project` `SKILL.md` "Core manifest" lookup table is ~37 lines, above the ~30-line QC-27 extraction threshold; it could move to `references/` and be referenced from `SKILL.md`.
-- **Direct evidence** — Vault 🔐 (Catalog Steward) release-gate audit (2026-09-10), finding F3: the table at `.opencode/skills/migrate-core-to-project/SKILL.md:155-191` is a static lookup above the threshold. Pre-existing: the query-verification/test-audit changeset added only two rows and introduced no part of this size.
-- **Resolution criteria** — Move the manifest table to a `references/` file and have `SKILL.md` reference it, then pass a Vault 🔐 (Catalog Steward) re-audit; or record a Vault-accepted in-place exception with the rationale.
-- **Explicit deferral decision** — Cipher 🔓 (Lead Orchestrator), 2026-09-10: deferred as out of scope for the query-verification and test-audit governance changeset.
+(open debts: none)
