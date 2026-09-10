@@ -61,6 +61,18 @@
 - ⬜ G1: `<command>` → <expected output>
 - ⬜ G2: `<command>` → <expected output>
 
+## Phase verify commands
+
+> REQUIRED in every phase runbook: one canonical `## Verify commands` table with exactly the `Executor` and `Command` columns, pairing each command with exactly one declared executor. The static validator enforces declared traceability only; phase review audits executor authority.
+
+<!-- Canonical table shape:
+| Executor | Command |
+|---|---|
+| <Name Emoji (Role)> | `<shell command>` |
+-->
+
+- Python stdlib `unittest` edits at an exact active-plan path: list the declared literal `python3` command for that exact file, obtain Bastion 🧱 (Backend & Scripts Architect) `[PASS]`, and require Crucible 🔥 (Test Architect) to return `[PASS]` or `[FAIL]` — `[UNCERTAIN]` is not acceptable for this scope. `pytest` is not introduced.
+
 ## Out of scope / Do-not-touch
 
 - <areas the plan must not modify>

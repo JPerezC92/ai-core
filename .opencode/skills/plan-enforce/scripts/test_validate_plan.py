@@ -64,6 +64,12 @@ VALID_PHASE = """# Phase 1 — sample
 
 - **Artifact:** `x`
 
+## Verify commands
+
+| Executor | Command |
+|---|---|
+| Test Executor | `python3 sample.py` |
+
 ## Gate
 
 - ⬜ done
@@ -80,19 +86,19 @@ class ValidatePlanTests(unittest.TestCase):
         p.write_text(content, encoding="utf-8")
         return p
 
-    def test_valid_subfolder_passes(self):
+    def test_valid_subfolder_passes(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             self._write(d, "plan.md", VALID_PLAN)
             self._write(d, "phase-01-owner.md", VALID_PHASE)
             self.assertEqual(vp.check_plan_file(Path(d) / "plan.md"), [])
             self.assertEqual(vp.check_phase_file(Path(d) / "phase-01-owner.md"), [])
 
-    def test_valid_single_file_passes(self):
+    def test_valid_single_file_passes(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             p = self._write(d, "plan.md", VALID_PLAN)
             self.assertEqual(vp.check_plan_file(p), [])
 
-    def test_validate_plan_dir_valid_fixture_outputs_success(self):
+    def test_validate_plan_dir_valid_fixture_outputs_success(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             self._write(d, "plan.md", VALID_PLAN)
             self._write(d, "phase-01-owner.md", VALID_PHASE)
@@ -103,7 +109,7 @@ class ValidatePlanTests(unittest.TestCase):
             self.assertEqual(result, 0)
             self.assertEqual(stdout.getvalue(), f"ok  plan: {d}  phases: 1\n")
 
-    def test_validate_plan_dir_missing_plan_outputs_exact_diagnostic(self):
+    def test_validate_plan_dir_missing_plan_outputs_exact_diagnostic(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             stderr = io.StringIO()
             with contextlib.redirect_stderr(stderr):
@@ -114,7 +120,7 @@ class ValidatePlanTests(unittest.TestCase):
                 stderr.getvalue(), f"MISSING-FILE: {Path(d) / 'plan.md'} not found\n"
             )
 
-    def test_validate_plan_dir_unfilled_date_outputs_exact_diagnostic(self):
+    def test_validate_plan_dir_unfilled_date_outputs_exact_diagnostic(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             self._write(
                 d,
@@ -128,7 +134,7 @@ class ValidatePlanTests(unittest.TestCase):
             self.assertEqual(result, 1)
             self.assertEqual(stderr.getvalue(), "UNFILLED-TOKEN: YYYY-MM-DD\n")
 
-    def test_validate_single_file_valid_fixture_outputs_success(self):
+    def test_validate_single_file_valid_fixture_outputs_success(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             plan_file = self._write(d, "plan.md", VALID_PLAN)
             stdout = io.StringIO()
@@ -140,7 +146,7 @@ class ValidatePlanTests(unittest.TestCase):
                 stdout.getvalue(), f"ok  single-file plan: {plan_file}\n"
             )
 
-    def test_validate_single_file_invalid_fixture_outputs_diagnostic(self):
+    def test_validate_single_file_invalid_fixture_outputs_diagnostic(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             plan_file = self._write(
                 d,
@@ -158,7 +164,7 @@ class ValidatePlanTests(unittest.TestCase):
                 "(['active', 'completed'])\n",
             )
 
-    def test_missing_phase_file_returns_exact_diagnostic(self):
+    def test_missing_phase_file_returns_exact_diagnostic(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             phase_file = Path(d) / "phase-01-owner.md"
             self.assertEqual(
@@ -166,7 +172,7 @@ class ValidatePlanTests(unittest.TestCase):
                 [f"MISSING-FILE: {phase_file} not found"],
             )
 
-    def test_validate_plan_dir_missing_story_index_outputs_exact_diagnostic(self):
+    def test_validate_plan_dir_missing_story_index_outputs_exact_diagnostic(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             self._write(d, "plan.md", VALID_PLAN)
             stories_dir = Path(d) / "user-stories"
@@ -186,7 +192,7 @@ class ValidatePlanTests(unittest.TestCase):
                 f"MISSING-INDEX: {stories_dir / 'index.md'} not found but story files exist\n",
             )
 
-    def test_validate_plan_dir_story_status_mismatch_outputs_exact_diagnostic(self):
+    def test_validate_plan_dir_story_status_mismatch_outputs_exact_diagnostic(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             self._write(d, "plan.md", VALID_PLAN)
             stories_dir = Path(d) / "user-stories"
@@ -212,7 +218,7 @@ class ValidatePlanTests(unittest.TestCase):
                 "in index.md\n",
             )
 
-    def test_bad_status_flagged(self):
+    def test_bad_status_flagged(self) -> None:
         bad = VALID_PLAN.replace("> **Status:** active", "> **Status:** bogus")
         meta = vp.parse_plan_metadata(bad)
         self.assertEqual(
@@ -220,7 +226,7 @@ class ValidatePlanTests(unittest.TestCase):
             ["STATUS: Status value 'bogus' not in allowed set (['active', 'completed'])"],
         )
 
-    def test_completed_requires_line(self):
+    def test_completed_requires_line(self) -> None:
         bad = VALID_PLAN.replace("> **Status:** active", "> **Status:** completed")
         meta = vp.parse_plan_metadata(bad)
         self.assertEqual(
@@ -228,14 +234,14 @@ class ValidatePlanTests(unittest.TestCase):
             ["COMPLETED-LINE: Status is completed but no `Completed:` line in metadata"],
         )
 
-    def test_missing_section_flagged(self):
+    def test_missing_section_flagged(self) -> None:
         bad = VALID_PLAN.replace("## Verification", "## Not Verification")
         self.assertEqual(
             vp.check_required_sections(bad),
             ["MISSING-SECTION: plan.md is missing ## Verification"],
         )
 
-    def test_missing_body_alternative_flagged(self):
+    def test_missing_body_alternative_flagged(self) -> None:
         bad = VALID_PLAN.replace("## Current state", "## Something Else")
         self.assertEqual(
             vp.check_required_sections(bad),
@@ -245,19 +251,19 @@ class ValidatePlanTests(unittest.TestCase):
             ],
         )
 
-    def test_unfilled_angle_token_flagged(self):
+    def test_unfilled_angle_token_flagged(self) -> None:
         bad = VALID_PLAN.replace("- Prompted by: test", "- Prompted by: <task subject>")
         self.assertEqual(vp.check_placeholders(bad), ["UNFILLED-TOKEN: <task subject>"])
 
-    def test_unfilled_tbd_flagged(self):
+    def test_unfilled_tbd_flagged(self) -> None:
         bad = VALID_PLAN.replace("## Out of scope\n\n-", "## Out of scope\n\n- TBD")
         self.assertEqual(vp.check_placeholders(bad), ["UNFILLED-TOKEN: TBD"])
 
-    def test_stray_comment_flagged(self):
+    def test_stray_comment_flagged(self) -> None:
         bad = VALID_PLAN.replace("## Goals", "<!-- fixture comment -->\n## Goals")
         self.assertEqual(vp.check_placeholders(bad), ["STRAY-COMMENT: <!-- ... -->"])
 
-    def test_multiline_comment_masks_placeholders_but_not_real_tokens(self):
+    def test_multiline_comment_masks_placeholders_but_not_real_tokens(self) -> None:
         content = "<!-- fixture comment\n<ignored-placeholder>\n-->\n<real-placeholder>"
         self.assertEqual(
             vp.check_placeholders(content),
@@ -267,7 +273,7 @@ class ValidatePlanTests(unittest.TestCase):
             ],
         )
 
-    def test_missing_phase_section_flagged(self):
+    def test_missing_phase_section_flagged(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             p = self._write(d, "phase-01-x.md", VALID_PHASE.replace("## Gate", "## Not Gate"))
             self.assertEqual(
@@ -275,7 +281,7 @@ class ValidatePlanTests(unittest.TestCase):
                 ["MISSING-SECTION: phase-01-x.md is missing ## Gate"],
             )
 
-    def test_missing_phase_label_flagged(self):
+    def test_missing_phase_label_flagged(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             p = self._write(d, "phase-01-x.md", VALID_PHASE.replace("> **Owner:**", "> **NotOwner:**"))
             self.assertEqual(
@@ -283,7 +289,120 @@ class ValidatePlanTests(unittest.TestCase):
                 ["MISSING-LABEL: phase-01-x.md is missing **Owner:**"],
             )
 
-    def test_index_missing_slug_flagged(self):
+    def test_valid_phase_verify_table_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            p = self._write(d, "phase-01-x.md", VALID_PHASE)
+            self.assertEqual(vp.check_phase_file(p), [])
+
+    def test_missing_verify_commands_section_flagged(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            p = self._write(
+                d,
+                "phase-01-x.md",
+                VALID_PHASE.replace("## Verify commands", "## Not Verify"),
+            )
+            self.assertEqual(
+                vp.check_phase_file(p),
+                [
+                    "MISSING-SECTION: phase-01-x.md is missing ## Verify commands",
+                    "VERIFY-TABLE: phase-01-x.md is missing the ## Verify commands section",
+                ],
+            )
+
+    def test_verify_table_absent_flagged(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            p = self._write(
+                d,
+                "phase-01-x.md",
+                VALID_PHASE.replace(
+                    "| Executor | Command |\n"
+                    "|---|---|\n"
+                    "| Test Executor | `python3 sample.py` |\n",
+                    "",
+                ),
+            )
+            self.assertEqual(
+                vp.check_phase_file(p),
+                ["VERIFY-TABLE: phase-01-x.md has no Executor/Command table"],
+            )
+
+    def test_verify_table_wrong_header_flagged(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            p = self._write(
+                d,
+                "phase-01-x.md",
+                VALID_PHASE.replace("| Executor | Command |", "| Runner | Command |"),
+            )
+            self.assertEqual(
+                vp.check_phase_file(p),
+                [
+                    "VERIFY-TABLE: phase-01-x.md table header must be exactly "
+                    "`Executor` then `Command`"
+                ],
+            )
+
+    def test_verify_table_extra_column_flagged(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            p = self._write(
+                d,
+                "phase-01-x.md",
+                VALID_PHASE.replace(
+                    "| Executor | Command |", "| Executor | Command | Notes |"
+                ),
+            )
+            self.assertEqual(
+                vp.check_phase_file(p),
+                [
+                    "VERIFY-TABLE: phase-01-x.md table header must be exactly "
+                    "`Executor` then `Command`"
+                ],
+            )
+
+    def test_verify_table_header_only_flagged(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            p = self._write(
+                d,
+                "phase-01-x.md",
+                VALID_PHASE.replace(
+                    "| Test Executor | `python3 sample.py` |\n", ""
+                ),
+            )
+            self.assertEqual(
+                vp.check_phase_file(p),
+                ["VERIFY-TABLE: phase-01-x.md table has no data rows"],
+            )
+
+    def test_verify_table_empty_executor_flagged(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            p = self._write(
+                d,
+                "phase-01-x.md",
+                VALID_PHASE.replace(
+                    "| Test Executor | `python3 sample.py` |",
+                    "|  | `python3 sample.py` |",
+                ),
+            )
+            self.assertEqual(
+                vp.check_phase_file(p),
+                ["VERIFY-TABLE: phase-01-x.md data row 1 has an empty `Executor` cell"],
+            )
+
+    def test_verify_table_empty_command_flagged(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            p = self._write(
+                d,
+                "phase-01-x.md",
+                VALID_PHASE.replace(
+                    "| Test Executor | `python3 sample.py` |",
+                    "| Test Executor |  |",
+                ),
+            )
+            self.assertEqual(
+                vp.check_phase_file(p),
+                ["VERIFY-TABLE: phase-01-x.md data row 1 has an empty `Command` cell"],
+            )
+
+    def test_index_missing_slug_flagged(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             self._write(d, "index.md", "# Index\n\n| Title | Status |\n|---|---|\n| other | active |\n")
             self._write(d, "my-feature.md", "# User story — my-feature\n\n> **Status:** active\n")

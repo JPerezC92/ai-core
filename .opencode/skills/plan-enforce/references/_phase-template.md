@@ -22,15 +22,19 @@ HARD RULE — fill every Step / Output / Gate / Abort. No `TBD` placeholders. Ag
 
 ## Verify commands
 
-<!-- OPTIONAL — include this section ONLY for programming phases. Runnable command + expected output per gate condition. -->
-<!-- Example: -->
-<!-- - ⬜ Gate 1: `npx tsc --noEmit` → exit 0, no type errors -->
-<!-- - ⬜ Gate 2: `pnpm format` → no files modified (no diff output) -->
+<!-- REQUIRED. One canonical table with exactly these two columns. Each command is paired with exactly one declared executor; the validator enforces declared traceability and phase review audits executor authority. -->
+
+| Executor | Command |
+|---|---|
+| <Name Emoji (Role)> | `<shell command>` |
+
+- Python stdlib `unittest` edits at an exact active-plan path: declare the literal `python3` command for that exact file, record Bastion 🧱 (Backend & Scripts Architect) `[PASS]`, and require Crucible 🔥 (Test Architect) to return `[PASS]` or `[FAIL]` — `[UNCERTAIN]` is not acceptable for this scope. `pytest` is not introduced.
 
 ## Gate
 
 - ⬜ <Condition that must be true before next phase begins>
 - ⬜ <Second condition if applicable>
+- Python stdlib `unittest` phases: the gate passes only when the exact file's declared `python3` command ran, Bastion 🧱 (Backend & Scripts Architect) returned `[PASS]`, and Crucible 🔥 (Test Architect) returned `[PASS]` or `[FAIL]`; a recorded `[UNCERTAIN]` does not satisfy this gate.
 
 ## Abort conditions
 

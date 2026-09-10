@@ -20,6 +20,9 @@
 - No `TBD` in `Steps`, `Output`, `Gate`, or `Abort conditions`.
 - `## Writes` paths match the derived write/delete manifest.
 - No unfilled `<...>` placeholder tokens.
+- `## Verify commands` is a non-empty canonical table with exactly the `Executor` and `Command` columns; every row pairs one non-empty executor with one non-empty command.
+- Executor authority is a phase-review item: the reviewer confirms the declared executor holds the role and tool authority to run the command. The validator checks declared traceability only and never inspects permission models.
+- A phase editing an exact active-plan Python stdlib `unittest` file lists the declared literal `python3` command and records Bastion 🧱 (Backend & Scripts Architect) `[PASS]`; Crucible 🔥 (Test Architect) is dispatched for the test-file edit and must return `[PASS]` or `[FAIL]` — `[UNCERTAIN]` is not acceptable for this scope and does not satisfy the gate. `pytest` is not introduced.
 
 ## user-stories
 
@@ -30,4 +33,4 @@
 
 ## Loop rule
 
-Analysis items (everything above) are the skill's responsibility — a value must match evidence, never be invented to satisfy a check. `scripts/validate_plan.py` enforces only the mechanical/repetitive subset (enum values, section presence, placeholder/TBD detection, index mirroring); it is a helper, not the authority.
+Analysis items (everything above) are the skill's responsibility — a value must match evidence, never be invented to satisfy a check. `scripts/validate_plan.py` enforces only the mechanical/repetitive subset (enum values, section presence, placeholder/TBD detection, index mirroring, and the presence/shape of each phase's executor-command table); it is a helper, not the authority. Executor authority is an analysis item, never a mechanical pass.

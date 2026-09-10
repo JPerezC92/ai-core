@@ -8,10 +8,11 @@ Usage (from project root):
     python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan_dir> --stories <dir>
 
 Mechanical/repetitive subset only: Status enum, Completed line, required
-sections, phase-file sections + blockquote labels, unfilled <...>/TBD/date
-placeholders, and user-stories index mirroring. Semantic correctness (values
-match evidence, verdict/naming consistency) is the skill loop's analysis job —
-this script is a helper, not the authority.
+sections, phase-file sections + blockquote labels, the canonical phase
+executor-command table shape, unfilled <...>/TBD/date placeholders, and
+user-stories index mirroring. Semantic correctness (values match evidence,
+verdict/naming consistency, executor authority) is the skill loop's analysis
+job — this script is a helper, not the authority.
 
 Exit codes:
     0 — all checks pass (warnings do not affect exit code)
@@ -41,8 +42,17 @@ BODY_ALTERNATIVES = ["## Body", "## Current state"]
 OUT_OF_SCOPE_PREFIX = "## Out of scope"
 
 # Every phase file must carry these ## headings and these blockquote labels.
-PHASE_REQUIRED_SECTIONS = ["## Steps", "## Output", "## Gate", "## Abort conditions"]
+PHASE_REQUIRED_SECTIONS = [
+    "## Steps",
+    "## Output",
+    "## Verify commands",
+    "## Gate",
+    "## Abort conditions",
+]
 PHASE_REQUIRED_LABELS = ["Owner", "Pre", "Reads", "Writes"]
+
+# Canonical column order for a phase `## Verify commands` table.
+VERIFY_TABLE_HEADER = ("Executor", "Command")
 
 _BACKTICK_RE = re.compile(r"`[^`]*`")
 _ANGLE_RE = re.compile(r"<[^>]+>")
@@ -50,6 +60,7 @@ _TBD_RE = re.compile(r"\bTBD\b")
 _DATE_RE = re.compile(r"YYYY-MM-DD")
 _COMMENT_RE = re.compile(r"<!--")
 _HTML_COMMENT_BLOCK_RE = re.compile(r"<!--.*?-->", re.DOTALL)
+_TABLE_SEPARATOR_CELL_RE = re.compile(r"^:?-+:?$")
 
 
 class PlanMetadata(TypedDict, total=False):
@@ -243,6 +254,95 @@ def check_phase_file(phase_path: Path) -> list[str]:
     return check_phase_snapshot(snapshot)
 
 
+def _extract_section_lines(content: str, heading: str) -> Optional[list[str]]:
+    """Return the body lines under a level-2 heading, or None when absent."""
+    lines = content.splitlines()
+    start: Optional[int] = None
+    for index, line in enumerate(lines):
+        if line.strip() == heading:
+            start = index + 1
+            break
+    if start is None:
+        return None
+    for index in range(start, len(lines)):
+        if lines[index].startswith("##"):
+            return lines[start:index]
+    return lines[start:]
+
+
+def _split_table_row(line: str) -> list[str]:
+    """Split a Markdown table row into trimmed cells."""
+    stripped = line.strip()
+    if stripped.startswith("|"):
+        stripped = stripped[1:]
+    if stripped.endswith("|"):
+        stripped = stripped[:-1]
+    return [cell.strip() for cell in stripped.split("|")]
+
+
+def _is_table_separator(cells: list[str]) -> bool:
+    """Return True for a Markdown separator row such as ``|---|---|``."""
+    return bool(cells) and all(_TABLE_SEPARATOR_CELL_RE.match(cell) for cell in cells)
+
+
+def _extract_table_block(section_lines: list[str]) -> list[str]:
+    """Return the first contiguous Markdown table block in a section body."""
+    block: list[str] = []
+    for line in section_lines:
+        if line.strip().startswith("|"):
+            block.append(line)
+        elif block:
+            break
+    return block
+
+
+def check_phase_verify_table(phase_name: str, content: str) -> list[str]:
+    """Validate a phase's canonical ``## Verify commands`` Executor/Command table.
+
+    Declared traceability only: it confirms a non-empty table pairs each command
+    with a non-empty executor. It never parses or inspects agent permissions.
+    """
+    section_lines = _extract_section_lines(content, "## Verify commands")
+    if section_lines is None:
+        return [f"VERIFY-TABLE: {phase_name} is missing the ## Verify commands section"]
+
+    block = _extract_table_block(section_lines)
+    if not block:
+        return [f"VERIFY-TABLE: {phase_name} has no Executor/Command table"]
+
+    header = _split_table_row(block[0])
+    if tuple(header) != VERIFY_TABLE_HEADER:
+        return [
+            f"VERIFY-TABLE: {phase_name} table header must be exactly "
+            "`Executor` then `Command`"
+        ]
+
+    data_rows = [
+        row for row in block[1:] if not _is_table_separator(_split_table_row(row))
+    ]
+    if not data_rows:
+        return [f"VERIFY-TABLE: {phase_name} table has no data rows"]
+
+    findings: list[str] = []
+    for index, row in enumerate(data_rows, start=1):
+        cells = _split_table_row(row)
+        if len(cells) != 2:
+            findings.append(
+                f"VERIFY-TABLE: {phase_name} data row {index} must have exactly "
+                "two cells (`Executor`, `Command`)"
+            )
+            continue
+        if not cells[0]:
+            findings.append(
+                f"VERIFY-TABLE: {phase_name} data row {index} has an empty `Executor` cell"
+            )
+        if not cells[1]:
+            findings.append(
+                f"VERIFY-TABLE: {phase_name} data row {index} has an empty `Command` cell"
+            )
+    return findings
+
+
 def check_phase_snapshot(snapshot: PhaseSnapshot) -> list[str]:
     """Evaluate an already-loaded phase snapshot without file IO."""
     content = snapshot["content"]
@@ -262,6 +362,7 @@ def check_phase_snapshot(snapshot: PhaseSnapshot) -> list[str]:
     for label in PHASE_REQUIRED_LABELS:
         if label not in labels:
             findings.append(f"MISSING-LABEL: {phase_name} is missing **{label}:**")
+    findings.extend(check_phase_verify_table(phase_name, content))
     findings.extend(f"{phase_name}: {f}" for f in check_placeholders(content))
     return findings
 

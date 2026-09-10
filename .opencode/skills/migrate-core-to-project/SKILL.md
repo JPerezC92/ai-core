@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.2.0
+  version: 1.2.1
   domain: opencode
 ---
 
@@ -69,7 +69,7 @@ Output three lists: `present` (skip), `missing` (eligible), `partial` (a present
 
 `partial` FAILS CLOSED: report it, do NOT auto-migrate or auto-repair it; ask the user how to proceed.
 
-Apply the include-rules to filter `missing` down to `eligible`: skip `bastion` unless a backend stack (`node` or `python`) is detected OR any skill in the eligible set ships Python scripts (mechanical check: `scripts/*.py` exists under the skill's source directory — true today for `op-model`, `plan-enforce`, `ticket-runbook`); skip ticket-team agents + `ticket-runbook` unless ticket marker.
+Apply the include-rules to filter `missing` down to `eligible`: skip `bastion` unless a backend stack (`node` or `python`) is detected OR any skill in the eligible set ships Python scripts (mechanical check: `scripts/*.py` exists under the skill's source directory — true today for `op-model`, `plan-enforce`, `query-verification`, `ticket-runbook`); skip ticket-team agents + `ticket-runbook` unless ticket marker.
 
 ### 2. Select items
 
@@ -161,6 +161,7 @@ Hard corollaries:
 | `op-model` | skill | `.opencode/skills/op-model/` | `<target>/.opencode/skills/op-model/` | always |
 | `op-skill-creator` | skill | `.opencode/skills/op-skill-creator/` | `<target>/.opencode/skills/op-skill-creator/` | always |
 | `plan-enforce` | skill | `.opencode/skills/plan-enforce/` | `<target>/.opencode/skills/plan-enforce/` | always |
+| `query-verification` | skill | `.opencode/skills/query-verification/` | `<target>/.opencode/skills/query-verification/` | only if ticket marker |
 | `ticket-runbook` | skill | `.opencode/skills/ticket-runbook/` | `<target>/.opencode/skills/ticket-runbook/` | only if ticket marker |
 | `atrium` | agent | `.opencode/agents/atrium.md` + `agents/atrium/profile.md` | `<target>/.opencode/agents/atrium.md` + `<target>/agents/atrium/profile.md` | always |
 | `augur` | agent | `.opencode/agents/augur.md` + `agents/augur/profile.md` | `<target>/.opencode/agents/augur.md` + `<target>/agents/augur/profile.md` | always |
@@ -182,6 +183,7 @@ Hard corollaries:
 | `knowledge/agents.md` | infra | `knowledge/agents.md` | `<target>/knowledge/agents.md` | always |
 | `knowledge/debt.md` | infra | `knowledge/debt.md` | `<target>/knowledge/debt.md` | always |
 | `symptom-problem-register` | infra | `knowledge/symptoms.md` + `knowledge/problems.md` | `<target>/knowledge/symptoms.md` + `<target>/knowledge/problems.md` | always |
+| `query-verification-design` | infra | `knowledge/query-verification-design.md` | `<target>/knowledge/query-verification-design.md` | only if ticket marker |
 | `plans/` | infra | `plans/.gitkeep` | `<target>/plans/.gitkeep` | always |
 | `user-stories/` | infra | `user-stories/.gitkeep` | `<target>/user-stories/.gitkeep` | always |
 | `AGENTS.md` | config | (generated) | `<target>/AGENTS.md` | merge, not copy |
@@ -194,7 +196,7 @@ Hard corollaries:
 
 Target: a Next.js frontend project, no ticket system. Scope: `all`. Detected stacks: `node` (package.json at root).
 
-- Skills: all except `ticket-runbook`
+- Skills: all except `ticket-runbook` and `query-verification`
 - Agents: `atrium`, `bastion`, `crucible`, `forge`, `herald`, `lumen`, `sentinel`, `warden`, `inquisitor`, `augur`, `marshal`, `vault`, plus Cipher 🔓 (Lead Orchestrator) — bastion is included because `op-model` and `plan-enforce` (always-include skills) ship Python scripts it audits
 - Consistency pass removes: incident-team references in `augur.md`/`marshal.md`/Cipher CV, sentinel audit lists trimmed to installed agents, missing `name:` frontmatter added — bastion references stay intact
 - Stack-mismatch report flags all four bound bodies: `atrium` (React/web), `bastion` (NestJS-TS + Python), `crucible` (Vitest/Playwright), `lumen` (web) — detected stacks: `node`; no bound body's stack label is `node` → adapt destination-side
@@ -203,7 +205,7 @@ Target: a Next.js frontend project, no ticket system. Scope: `all`. Detected sta
 
 Target: a Rust TUI client (`Cargo.toml` at root), no ticket system. Scope: `all`. Detected stacks: `rust` — no backend stack.
 
-- Skills: all except `ticket-runbook`
+- Skills: all except `ticket-runbook` and `query-verification`
 - Agents: the full dev team + cross-cutting set including `bastion` — eligible via the Python-script branch (`op-model`, `plan-enforce` ship `scripts/*.py`), not the backend branch
 - Consistency pass removes: ticket-team references only; bastion references stay intact
 - Stack-mismatch report flags all four bound bodies: `atrium` (React), `bastion` (NestJS-TS), `crucible` (Vitest/Playwright), `lumen` (web) → adapt destination-side

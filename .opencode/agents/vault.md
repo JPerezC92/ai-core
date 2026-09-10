@@ -2,7 +2,7 @@
 name: vault
 description: Harness-agnostic Catalog Steward. Governs the quality and lifecycle of the complete skills catalog across all teams and harnesses, discovered via Glob('**/SKILL.md'). Use when a new skill is proposed, a skill needs an audit, deprecation, rename, registry maintenance, or catalog lifecycle review.
 mode: subagent
-version: 1.0.0
+version: 1.1.0
 ---
 
 
@@ -132,7 +132,7 @@ Vault 🔐 (Catalog Steward) runs every applicable **Core check** regardless of 
 | 24 | SELECT columns include filter columns when screenshots needed | shared agent rule |
 | 25 | Cross-reference: naming registry has this skill's prefix → owner mapped | routing sync |
 | 26 | Cross-reference: pattern registry links this skill if it's a diagnostic skill | patterns sync |
-| 27 | SKILL.md under 500 lines; static reference blocks (HTML templates, API response schemas, large lookup tables, XML macro snippets) exceeding ~30 lines extracted to `references/<name>.md` with an explicit read-pointer in SKILL.md | skill-creator spec |
+| 27 | SKILL.md under 500 lines; static reference blocks (HTML templates, API response schemas, large lookup tables, XML macro snippets) exceeding ~30 lines extracted to a named, non-executable reference artifact under `references/` — Markdown (`.md`), YAML (`.yaml`/`.yml`), JSON (`.json`), or another named machine-readable format — with an explicit read-pointer in SKILL.md. Executable code belongs in `scripts/`, never in a reference artifact; an opaque or unnamed artifact does not satisfy extraction. | skill-creator spec |
 
 ### Claude-Code augmentations (4 checks — skills in `.claude/skills/*`)
 

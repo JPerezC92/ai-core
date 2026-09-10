@@ -1,6 +1,6 @@
-# Symptom Knowledge Base
+# Diagnostic Symptom Catalog
 
-This catalog is the fixed, durable index of error-signature classes shared by incident and dev teams; each class carries the canonical diagnostic and fix routing.
+This catalog is the fixed, durable index of error-signature classes shared by incident and dev work; each class carries the canonical diagnostic and fix routing.
 
 ## Symptom classes
 

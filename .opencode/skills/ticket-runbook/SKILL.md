@@ -5,14 +5,14 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.1.1
+  version: 1.2.0
   dependencies:
     - PyYAML==6.0.3
 ---
 
 ## What I do
 
-Scaffold a per-ticket `runbook/` subfolder from `references/runbook/` and populate its header fields. Includes a prior-art gate: if an exact replay-candidate is found, skip runbook ceremony, report the matched solution, and request user approval before applying it.
+Scaffold a per-ticket `runbook/` subfolder from `references/runbook/` and populate its header fields. Includes a prior-art gate: if an exact replay-candidate is found, skip runbook ceremony, report the matched solution, and request user approval before applying it. Phase 04 also documents an optional, incident-only verifier route (the `query-verification` skill) that consumes one existing query-budget slot; it never adds automatic query execution and never changes the runbook header schema.
 
 ## When to use me
 
@@ -100,6 +100,18 @@ After the runbook scaffolds and validates:
 2. Otherwise: notify Cipher 🔓 (Lead Orchestrator) that the runbook is ready with the exact domain classified in phase-01.
 
 **HARD RULE — dispatch enforcement:** Cipher 🔓 (Lead Orchestrator) MUST dispatch Investigator 🔍 (Incident Investigator) to execute the prior-art phase. Cipher 🔓 (Lead Orchestrator) MUST NOT execute that phase inline. Cipher 🔓 (Lead Orchestrator) owns all dispatch decisions. This skill does NOT dispatch agents directly.
+
+## Optional verifier route (Incident Phase 04)
+
+The Phase 04 template documents an optional, incident-only verifier route. It is off by default; the manual per-hypothesis query path in Steps 1–5 of `phase-04-validate.md` is unchanged and remains the default.
+
+- The `query-verification` skill validates an incident-owned, sidecar-defined SQL verifier against an invocation-time query root and evaluates the destination-owned adapter's normalized output offline. AICore never executes the query, holds credentials, or invokes the adapter.
+- Exactly one adapter execution consumes exactly one existing Query-budget slot. The `6/6` cap, the `Same-query-reruns` cap of 2, and the normal per-hypothesis query path are unchanged; no new header field, counter, or budget is introduced.
+- The redacted case-evidence record is written under the ticket's existing session-specific `validations/` folder with the verifier ID as the filename stem.
+- Runbook and ticket evidence record only the verifier ID, the three-state verdict, the source/definition/evidence digests, and the redacted case-evidence path. Credentials, raw adapter output, rendered SQL, rendered parameter values, and unredacted configured identifiers are never retained.
+- A `verified` verdict is symptom evidence only; it never establishes root-cause equivalence or authorizes a fix.
+
+The normative contract lives in `.opencode/skills/query-verification/SKILL.md` and `.opencode/skills/query-verification/references/protocol-v1.md`; the optional block and the synthesis restriction live in `references/runbook/phase-04-validate.md` and `references/runbook/phase-05-synthesis.md`.
 
 ## Post-write self-verification loop
 

@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.8.0
+  version: 1.10.0
 ---
 
 ## What I do
@@ -194,6 +194,24 @@ Choose the plan template before creating files; the choice is confirmed in the g
 - **Non-programming plan** → `references/_template.md` (base template).
 - **Confirm:** the detected type is confirmed in the same `question` call as the goals (see **Goal lifecycle** → Confirm). Never silently pick a template.
 
+## Verification command executors
+
+Every phase runbook's `## Verify commands` section is one canonical Markdown table with exactly two columns — `Executor` and `Command`:
+
+| Executor | Command |
+|---|---|
+| <Name Emoji (Role)> | `<shell command>` |
+
+- Each command is paired with exactly one declared executor. An empty table, a missing or extra column, or a row with a missing executor or command is invalid.
+- The static validator (`scripts/validate_plan.py`) enforces declared traceability only — that a non-empty `Executor`/`Command` table exists with each command paired to an executor. It never parses or inspects an agent permission model.
+- Phase review audits executor authority: the reviewer confirms the declared executor holds the role and tool authority to run the command. Authority is a review judgment, not a mechanical check.
+
+### Non-TypeScript test files
+
+- A plan that edits an exact active-plan Python stdlib `unittest` file must list the declared literal `python3` command for that exact file, obtain Bastion 🧱 (Backend & Scripts Architect) `[PASS]` on the edit, and dispatch Crucible 🔥 (Test Architect) for the test-file edit.
+- Crucible 🔥 (Test Architect) must return `[PASS]` or `[FAIL]` for that Python test file. `[UNCERTAIN]` is not acceptable for an exact active-plan Python test path; a recorded `[UNCERTAIN]` does not satisfy this gate.
+- No test framework is added: `pytest` is not required or introduced for stdlib `unittest` files. This does not change the existing TypeScript / Atrium 🏛️ (Frontend Architect) and Crucible 🔥 (Test Architect) test-file gates.
+
 ## User stories
 
 User stories are the durable per-feature registry — one file per feature, `user-stories/<feature-slug>.md`, built from `references/_template-user-story.md`. Plans are temporal and never carry the durable definition; the story does.
@@ -233,7 +251,7 @@ Before planning work that touches features, read `user-stories/index.md` first, 
 7. Run the user-story gate: read `user-stories/index.md`, identify the touched features, and for each run CREATE / UPDATE / COLLIDE (see **User stories** + **User-story collision gate**). On collision, stop before creating any plan file and ask the user. If the plan skips stories (see **User-story scope**), record that in the plan's Context.
 8. Run the post-scope collision check. Stop on overlap; do not create files.
 9. Create `plans/<task-slug>-YYYYMMDD/plan.md` from the selected template and one `phase-NN-<owner>.md` from `references/_phase-template.md` per phase.
-10. Fill each phase's Owner, Pre, Reads, Writes, Steps, Output, Gate, and Abort conditions. Do not leave `TBD` in Steps, Output, Gate, or Abort.
+10. Fill each phase's Owner, Pre, Reads, Writes, Steps, Output, Verify commands, Gate, and Abort conditions. Do not leave `TBD` in Steps, Output, Gate, or Abort.
 11. Add one verification checkbox per phase output and confirm every checkbox traces to a phase output.
 12. Run the post-write self-verification loop (below) on every written file.
 13. Render the plan through `ExitPlanMode` before dispatching Forge 🔨 (Implementer).
@@ -243,7 +261,7 @@ Before planning work that touches features, read `user-stories/index.md` first, 
 Run after every file write (`plan.md`, each phase file, story create/update, index update), and after every Forge 🔨 (Implementer) dispatch that mutates plan artifacts. Iterate until a full pass finds zero violations:
 
 1. **Re-read** every file just written: `plan.md`, each `phase-NN-<owner>.md`, `user-stories/<slug>.md`, `user-stories/index.md`.
-2. **Mechanical pass** — for an active subfolder plan that creates or modifies a user story or `user-stories/index.md`, run `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan-dir> --stories user-stories` so index mirroring runs. For a no-stories path, run `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan-dir>` without `--stories`; use `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan.md> --single-file` for the single-file layout. It enforces the repetitive subset: Status enum, `Completed:` line, required sections, phase sections/labels, unfilled `<...>`/`TBD`/date placeholders, index mirroring. Fix anything it reports.
+2. **Mechanical pass** — for an active subfolder plan that creates or modifies a user story or `user-stories/index.md`, run `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan-dir> --stories user-stories` so index mirroring runs. For a no-stories path, run `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan-dir>` without `--stories`; use `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan.md> --single-file` for the single-file layout. It enforces the repetitive subset: Status enum, `Completed:` line, required sections, phase sections/labels, phase executor-command table presence/shape, unfilled `<...>`/`TBD`/date placeholders, index mirroring. Fix anything it reports.
 3. **Analysis pass** — re-read each file against `references/_consistency-checklist.md`. Verify every value matches evidence: goals match the confirmed list, every phase traces to ≥1 goal and references an existing phase file, verification checkboxes trace to phase outputs, `## Writes` matches the manifest, story title/status mirror the index. Never invent a value to satisfy a check — stop and ask.
 4. **Repeat** until a clean pass, then report the pass count.
 5. **Cap (S-07):** after 3 iterations, or the same violation persisting twice unchanged, stop-and-ask instead of looping.
