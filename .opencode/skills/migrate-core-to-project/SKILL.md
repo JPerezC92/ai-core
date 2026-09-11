@@ -1,6 +1,6 @@
 ---
 name: migrate-core-to-project
-description: Migrate the AICore reusable core (skills, subagents, persona CVs, and shared infrastructure) into a target project — deterministically. Detects the target's stacks via a manifest→stack map, computes an installed-set inventory from a structured manifest, presents a selectable list of only the missing eligible items, copies idempotently, merges config, runs a union consistency pass with a re-diff verification, and reports stack-mismatched rulebook bodies needing destination-side adaptation. Use when the user wants to install or migrate the agent core into another project, migrate just the remaining missing items incrementally, copy agents or skills from AICore, or scaffold a project with the core tooling.
+description: Migrate the AICore reusable core (skills, subagents, persona CVs, and shared infrastructure) into a target project — deterministically. Detects the target's stacks via a manifest→stack map, computes an installed-set inventory from the structured machine catalog, presents a selectable list of only the missing eligible items, copies idempotently, merges config, runs a union consistency pass with a re-diff verification, and reports stack-mismatched rulebook bodies needing destination-side adaptation. Use when the user wants to install or migrate the agent core into another project, migrate just the remaining missing items incrementally, copy agents or skills from AICore, or scaffold a project with the core tooling.
 license: MIT
 compatibility: opencode
 metadata:
@@ -11,7 +11,7 @@ metadata:
 
 ## What I do
 
-Migrate AICore's reusable, agnostic core into a target project — deterministically. I detect the target's stacks mechanically via a manifest→stack map, compute an installed-set inventory from a structured manifest, present a selectable list of only the missing eligible items, copy idempotently, merge config, run a union consistency pass with a re-diff verification that fails closed on any still-missing item, and report stack-mismatched rulebook bodies that need destination-side adaptation. I never run git; shipping (branch/commit/PR) happens separately.
+Migrate AICore's reusable, agnostic core into a target project — deterministically. I detect the target's stacks mechanically via a manifest→stack map, compute an installed-set inventory from the structured machine catalog, present a selectable list of only the missing eligible items, copy idempotently, merge config, run a union consistency pass with a re-diff verification that fails closed on any still-missing item, and report stack-mismatched rulebook bodies that need destination-side adaptation. I never run git; shipping (branch/commit/PR) happens separately.
 
 ## When to use me
 
