@@ -1443,6 +1443,107 @@ class SyncAdoptionTestBase(unittest.TestCase):
             ["u1"],
         )
 
+    def test_selected_retirement_drops_row_preserves_unrelated_and_remains_visible(self) -> None:
+        u1 = self.file_unit("u1", "m", "u1.txt", "u1.txt")
+        u2 = self.file_unit("u2", "m", "u2.txt", "u2.txt")
+        catalog = self.catalog_bytes([u1, u2])
+        accepted = self.make_upstream(
+            [{CATALOG: catalog, "u1.txt": b"A\n", "u2.txt": b"X\n"}]
+        )[0]
+        declaration = self.declaration(
+            [
+                self.declared_unit("u1", "mirror", [self.declared_member("m", "u1.txt")]),
+                self.declared_unit("u2", "mirror", [self.declared_member("m", "u2.txt")]),
+            ]
+        )
+        rev = self.prepare_adopter({"u1.txt": b"A\n", "u2.txt": b"X\n"}, declaration)
+        self.propose_and_write(accepted, adopter_revision=rev)
+        prior = self.read_lock()
+        prior_rows = {row["id"]: row for row in prior["units"]}
+
+        retired_raw = self.write_declaration(
+            self.declaration(
+                [self.declared_unit("u1", "mirror", [self.declared_member("m", "u1.txt")])]
+            )
+        )
+        candidate_text = self.propose(accepted, adopter_revision=rev, selected=["u2"])
+        candidate = yaml.safe_load(candidate_text)
+        self.assertEqual(["u1"], [row["id"] for row in candidate["units"]])
+        self.assertEqual(prior_rows["u1"], candidate["units"][0])
+        self.assertNotEqual(prior["declaration_digest"], candidate["declaration_digest"])
+        self.assertEqual(m.sha256_digest(retired_raw), candidate["declaration_digest"])
+
+        self.write_at(self.lock_path, candidate_text.encode("utf-8"))
+        report = self.check(accepted, adopter_revision=rev)
+        kept = self.find_unit(report, "u1")
+        self.assertEqual("current", kept.disposition)
+        retired = self.find_unit(report, "u2")
+        self.assertEqual("not_declared", retired.mode)
+        self.assertEqual("added", retired.upstream_delta)
+        self.assertEqual("not_applicable", retired.destination_delta)
+        self.assertEqual("adoption_available", retired.disposition)
+
+    def test_selected_retirement_after_upstream_unit_removal(self) -> None:
+        u1 = self.file_unit("u1", "m", "u1.txt", "u1.txt")
+        u2 = self.file_unit("u2", "m", "u2.txt", "u2.txt")
+        catalog0 = self.catalog_bytes([u1, u2])
+        catalog1 = self.catalog_bytes([u1])
+        accepted, current = self.make_upstream(
+            [
+                {CATALOG: catalog0, "u1.txt": b"A\n", "u2.txt": b"X\n"},
+                {CATALOG: catalog1, "u1.txt": b"A\n"},
+            ]
+        )
+        declaration = self.declaration(
+            [
+                self.declared_unit("u1", "mirror", [self.declared_member("m", "u1.txt")]),
+                self.declared_unit("u2", "mirror", [self.declared_member("m", "u2.txt")]),
+            ]
+        )
+        rev = self.prepare_adopter({"u1.txt": b"A\n", "u2.txt": b"X\n"}, declaration)
+        self.propose_and_write(accepted, adopter_revision=rev)
+
+        self.write_declaration(
+            self.declaration(
+                [self.declared_unit("u1", "mirror", [self.declared_member("m", "u1.txt")])]
+            )
+        )
+        candidate = yaml.safe_load(self.propose(current, adopter_revision=rev, selected=["u2"]))
+        self.assertEqual(["u1"], [row["id"] for row in candidate["units"]])
+
+    def test_invalid_retirement_selections_rejected(self) -> None:
+        u1 = self.file_unit("u1", "m", "u1.txt", "u1.txt")
+        u2 = self.file_unit("u2", "m", "u2.txt", "u2.txt")
+        u3 = self.file_unit("u3", "m", "u3.txt", "u3.txt")
+        catalog = self.catalog_bytes([u1, u2, u3])
+        accepted = self.make_upstream(
+            [{CATALOG: catalog, "u1.txt": b"A\n", "u2.txt": b"X\n", "u3.txt": b"Y\n"}]
+        )[0]
+        declaration = self.declaration(
+            [
+                self.declared_unit("u1", "mirror", [self.declared_member("m", "u1.txt")]),
+                self.declared_unit("u2", "mirror", [self.declared_member("m", "u2.txt")]),
+            ]
+        )
+        rev = self.prepare_adopter({"u1.txt": b"A\n", "u2.txt": b"X\n"}, declaration)
+        self.propose_and_write(accepted, adopter_revision=rev)
+        self.write_declaration(
+            self.declaration(
+                [self.declared_unit("u1", "mirror", [self.declared_member("m", "u1.txt")])]
+            )
+        )
+
+        cases = {
+            "unselected removal": ["u1"],
+            "current-catalog undeclared never-locked": ["u3"],
+            "wholly unknown": ["no-such-unit"],
+        }
+        for label, selection in cases.items():
+            with self.subTest(selection=label):
+                self.assert_sync_error(
+                    m.INVALID_SELECTION, self.propose, accepted, rev, False, selection
+                )
+
     # -- Bootstrap ----------------------------------------------------------
 
     def test_initial_bootstrap_requires_adopter_snapshot(self) -> None:
@@ -1552,6 +1653,33 @@ class SyncAdoptionTestBase(unittest.TestCase):
         self.assertEqual(0, check_result.returncode)
         self.assertEqual(before_check_files, self.snapshot_adopter())
         self.assertEqual(before_check_status, self.git_status())
+
+        # Retirement: remove the unit from the declaration and select its lock id.
+        self.write_declaration(self.declaration([]))
+        before_retire_files = self.snapshot_adopter()
+        before_retire_status = self.git_status()
+        before_retire_head = self.rev_head(self.adopter)
+
+        retire_result = self.run_script(
+            implementation,
+            "propose-lock",
+            "--upstream-repo",
+            str(self.upstream),
+            "--adopter-repo",
+            str(self.adopter),
+            "--current-revision",
+            accepted,
+            "--adopter-revision",
+            rev,
+            "--unit",
+            "mirror-file",
+        )
+        self.assertEqual(0, retire_result.returncode)
+        self.assertTrue(retire_result.stdout.endswith(b"\n"))
+        self.assertFalse(retire_result.stdout.endswith(b"\n\n"))
+        self.assertEqual(before_retire_files, self.snapshot_adopter())
+        self.assertEqual(before_retire_status, self.git_status())
+        self.assertEqual(before_retire_head, self.rev_head(self.adopter))
 
     def test_cli_surface(self) -> None:
         implementation = Path(m.__file__).resolve()

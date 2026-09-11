@@ -2,7 +2,9 @@
 #
 # Single authoritative machine inventory for BOTH initial adoption
 # (migrate-core-to-project) and recurring synchronization
-# (sync-aicore-adoption). Do not hand-edit adopter copies; edit here.
+# (sync-aicore-adoption). This file is the upstream source of truth: edit it
+# in AICore, and the management tools consume it read-only at an explicit
+# AICore revision.
 #
 # Ownership split:
 #   - This catalog is UPSTREAM-OWNED: unit identity, logical members,

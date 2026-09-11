@@ -41,7 +41,7 @@ From the request, extract:
   - **adopter-index** — read destination content from the staged adopter index only.
 - **declaration** — path to the adopter declaration (default `.aicore/adoption.yaml`).
 - **lock** — path to the adopted lock (default `.aicore/adoption.lock.yaml`).
-- **unit** — one or more declared unit ids to accept (repeatable; `propose-lock` update proposals only).
+- **unit** — one or more declared or locked unit ids to accept or retire (repeatable; `propose-lock` update proposals only).
 - **format** — `json` or `human` (default `human`).
 
 ### Argument collection form
@@ -53,7 +53,7 @@ From the request, extract:
 | `current-revision` | text | full 40-char commit in upstream | not provided |
 | `adopter-revision` | text | full 40-char commit in adopter, or `adopter-index` | neither snapshot provided |
 | `adopter-index` | choice | boolean | neither snapshot provided |
-| `unit` | text | one or more declared unit ids | update proposal without a selection |
+| `unit` | text | one or more declared or locked unit ids | update proposal without a selection |
 | `format` | choice | json / human | not provided |
 
 Use one `question` call per missing required argument. Do not add a manual "Other" option.
@@ -70,7 +70,7 @@ Use one `question` call per missing required argument. Do not add a manual "Othe
 ### Initial versus update proposals
 
 - **Initial proposal** (no existing lock): accepts every declared unit at the current catalog-bearing revision. `--unit` is rejected. The source revision must contain the catalog; a pre-catalog revision is not a valid formal baseline.
-- **Update proposal** (existing lock): requires one or more repeatable `--unit` selections. Selected rows are rebuilt at the current revision; every unselected row keeps its prior accepted source commit, catalog digest, intent digest, and content digests. Adding, removing, or remapping unselected intent is rejected.
+- **Update proposal** (existing lock): requires one or more repeatable `--unit` selections validated against the union of declared ids and existing lock ids. A selected declared+locked row is rebuilt at the current revision, a selected declared-only row is added, and a selected locked-only row is retired by omitting it from the candidate YAML. Every unselected row keeps its prior accepted source commit, catalog digest, intent digest, and content digests byte-for-byte. An id in neither set, a removed lock row left unselected, or an unselected added, removed, or remapped intent is rejected. Retirement needs no current-catalog row.
 - Older, pre-catalog history is optional adopter-owned documentation. It is never stored as machine-verified lock evidence.
 
 ## Comparison contract
@@ -115,7 +115,7 @@ Run `propose-lock --current-revision <sha> --adopter-revision <sha> --unit plan-
 - **`check` exits with `declaration_changed`** — the declaration's raw digest differs from the lock, or a declared unit's intent digest changed. Cause: the declaration changed after the lock was generated. Fix: review the change and regenerate the lock.
 - **Any command exits with `adopter_snapshot_unavailable`** — no snapshot, both snapshots, a malformed revision, or a revision that is not an adopter commit. Fix: provide exactly one full adopter commit (`--adopter-revision`) or `--adopter-index`.
 - **`check` exits with `repository_identity_mismatch`** — the catalog's `catalog.upstream_repository`, the declaration, and the lock disagree. Fix: correct the identity; it must be the declared AICore repository.
-- **`propose-lock` exits with `invalid_selection`** — an update proposal omitted `--unit`, selected an undeclared unit, or would add, remove, or remap an unselected unit. Fix: select exactly the units whose intent or baseline you accept.
+- **`propose-lock` exits with `invalid_selection`** — an update proposal omitted `--unit`, selected an id that is neither declared nor locked, left a removed lock row unselected, or would add, remove, or remap an unselected unit. Fix: select exactly the units whose intent, baseline, addition, or retirement you accept.
 - **A unit reports `not_declared`** — the catalog has a current unit the declaration does not mention. Fix: add a declaration row (choose a mode) or leave it reported as `unmanaged`.
 - **A replacement member reports `local_drift` / `review_required` / `conflict`** — the local replacement member changed independently of upstream, upstream changed while the local member did not, or both changed. Fix: review the member and select the unit when accepting a new baseline.
 - **`propose-lock` rejects a mapping** — the destination is absolute, contains `..`, escapes through a snapshot symlink, duplicates another destination, overlaps a file/tree owner, or targets `.git/**` or an adoption control file. Fix: correct the destination mapping.

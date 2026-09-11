@@ -10,7 +10,7 @@
 | `.aicore/adoption.yaml` (declaration) | Adopter | upstream repository identity, unit `mode`, destination-member mapping, replacement-member mapping | digests, accepted commit |
 | `.aicore/adoption.lock.yaml` (lock) | Generated | one row per declared unit with its accepted source commit, accepted catalog digest, unit intent digest, and accepted upstream and destination digests; one top-level declaration digest | intent, modes, hand-edited content |
 
-The declaration is intent. The lock is evidence. A maintainer edits the declaration, runs `propose-lock`, reviews the candidate, and commits it as the lock.
+The declaration is intent. The lock is evidence. A maintainer edits the declaration, runs `propose-lock`, reviews the candidate, and commits it as the lock. Removing a unit from the declaration expresses intent to retire it; the corresponding lock row is omitted from the candidate only when that unit's locked id is explicitly selected in an update proposal.
 
 The AICore management tools (`migrate-core-to-project` and `sync-aicore-adoption`) are upstream-only operator tools, invoked from an AICore checkout against runtime-supplied adopter paths. Neither is an adopted-content catalog unit, and neither the migration tool nor the catalog itself is copied as adopted content.
 
@@ -226,7 +226,7 @@ These abort the whole run; they are never per-unit deltas:
 | `unsupported_special_file` | a projected path is not regular, executable, or symlink |
 | `adopter_snapshot_unavailable` | missing, ambiguous, malformed, or non-commit adopter snapshot input |
 | `repository_identity_mismatch` | catalog/declaration/lock `upstream_repository` disagree |
-| `invalid_selection` | an update proposal has no `--unit`, selects an undeclared unit, or would add/remove/remap unselected intent |
+| `invalid_selection` | an update proposal has no `--unit`, selects an id absent from both the declaration and the existing lock, or would add/remove/remap unselected intent |
 | `unknown_key` | a document contains a key outside its schema version's closed key set |
 
 ## Section 11 — Formal bootstrap contract
@@ -234,16 +234,18 @@ These abort the whole run; they are never per-unit deltas:
 - The first lock is accepted only from a catalog-bearing source revision and an explicit adopter snapshot. If the catalog is missing at the accepted source, the run fails with `catalog_changed`; a formal accepted source without its catalog is always a fatal error.
 - An initial `propose-lock` (no existing lock) builds a row for every declared unit at the current catalog-bearing revision and rejects any `--unit` selection.
 - An existing pre-catalog adopter history is **optional adopter-owned documentation**. It is never represented as a machine-verified lock field, and the protocol does not fabricate a catalog over older revisions.
-- An update `propose-lock` requires the existing lock plus one or more explicit repeatable `--unit` selections. Unselected rows are preserved with their prior per-unit accepted source commit, catalog digest, intent digest, and content digests; added, removed, or remapped unselected intent is rejected as `invalid_selection`.
-- A later `check` still reports every current catalog unit, so pending changes remain visible after another unit is accepted.
+- An update `propose-lock` requires the existing lock plus one or more explicit repeatable `--unit` selections. A selected id is valid when it is currently declared or present in the existing lock (`declared_ids ∪ locked_ids`); any id in neither set is `invalid_selection`. The four outcomes are: rebuild a selected declared+locked row, add a selected declared-only row, retire a selected locked-only row by omitting it from the candidate YAML, and preserve every unselected row byte-for-byte with its prior per-unit accepted source commit, catalog digest, intent digest, and content digests. A lock row removed from the declaration must be selected to retire it; an unselected removed row, or added, removed, or remapped unselected intent, is rejected as `invalid_selection`. Retirement requires no current-catalog row and changes only the stdout candidate.
+- A later `check` still reports every current catalog unit, so pending changes remain visible after another unit is accepted. A retired unit that still exists in the current catalog is reported as `not_declared` with upstream delta `added` and disposition `adoption_available`.
 
 ## Section 12 — `propose-lock` contract
 
 - Reads the validated declaration, the current catalog-bearing revision, and the explicit adopter snapshot.
 - Enforces the mirror invariant: a `mirror` unit is rejected unless its accepted logical source and destination digests match.
+- An initial proposal (no existing lock) accepts every declared unit at the current catalog-bearing revision and rejects any `--unit` selection.
+- An update proposal validates each `--unit` id against the union of current declaration ids and existing lock ids. A selected declared+locked row is rebuilt, a selected declared-only row is added, and a selected locked-only row is retired by omitting it from the candidate YAML; an id in neither set is `invalid_selection`.
 - Emits candidate lock YAML plus exactly one trailing newline to **stdout**. Diagnostics go to **stderr**.
-- Performs no filesystem, worktree, index, ref, or network mutation.
+- Performs no filesystem, worktree, index, ref, or network mutation. A retirement changes candidate YAML only; the prior lock file is never edited in place.
 
 ## Section 13 — Read-only guarantee
 
-`check` writes nothing. `propose-lock` writes only to stdout. There is no apply, copy, merge, delete, fetch, or Git-mutation path in the skill. Tests assert the whole adopter worktree and Git state are byte-identical before and after each command, and that the adopter snapshot source is explicit.
+`check` writes nothing. `propose-lock` writes only to stdout. There is no apply, copy, merge, delete, fetch, or Git-mutation path in the skill. Tests assert the whole adopter worktree and Git state are byte-identical before and after each command, and that the adopter snapshot source is explicit. A retirement proposal is stdout-only candidate evidence: it omits the retired row from the emitted YAML and never deletes, edits, or tombstones the prior lock row in place.

@@ -66,7 +66,7 @@ Each lock row also carries its own `accepted_source_commit` and `accepted_catalo
 - `.aicore/adoption.yaml` (declaration) is **intent**: modes and destination mappings, hand-authored and reviewed.
 - `.aicore/adoption.lock.yaml` (lock) is **evidence**: per-unit accepted source commits, catalog digests, intent digests, and generated content digests, produced by `propose-lock` and committed after review.
 
-Maintainers never hand-author digests. `propose-lock` emits a candidate to stdout; the maintainer reviews and commits it. This keeps intent reviewable and evidence reproducible. An update proposal accepts only explicitly selected units and preserves every unselected row byte-for-byte, so acceptance can advance in safe batches without implicitly accepting unrelated divergence. A later `check` still reports every current catalog unit.
+Maintainers never hand-author digests. `propose-lock` emits a candidate to stdout; the maintainer reviews and commits it. This keeps intent reviewable and evidence reproducible. An update proposal accepts only explicitly selected units, where a selected id must be currently declared or already present in the existing lock. A selected declared+locked row is rebuilt, a selected declared-only row is added, and a selected locked-only row is retired by omitting it from the candidate. Every unselected row is preserved byte-for-byte, so acceptance can advance in safe batches without implicitly accepting unrelated divergence. A removed lock row must be selected to retire it, an id in neither set fails closed, and retirement never requires the retired unit to remain in the current catalog. A later `check` still reports every current catalog unit.
 
 Older, pre-catalog adopter history is optional adopter-owned documentation. It is never represented as a machine-verified lock field, so the protocol never claims a validation that did not exist at the historical revision. A formal accepted source that lacks the catalog is a fatal error.
 
@@ -82,4 +82,4 @@ Units that are generated merge fragments (`sync_projection: none`) are installer
 
 ## 8. Adopter configuration stays in the adopter repository
 
-AICore ships only neutral contracts and fixtures. A real project's declaration, lock, paths, and local roles live in that project's repository under its own plan and review. This preserves the reusable-core boundary and prevents one adopter's topology from leaking into every other adopter. Tests use neutral temporary repositories and neutral role names only.
+AICore ships only neutral contracts and fixtures. A real project's declaration, lock, paths, and local roles live in that project's repository under its own plan and review. This preserves the reusable-core boundary and prevents one adopter's topology from leaking into every other adopter. Tests use neutral temporary behavioral repositories plus one real repository-catalog boundary test, with neutral role names only.

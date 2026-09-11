@@ -12,6 +12,14 @@ Safety boundary: ``check`` is strictly read-only and writes nothing, while
 the adopter worktree, and neither mutates the filesystem, the Git index, refs,
 or the object database. There is no apply, copy, merge, delete, fetch,
 credential, or destination-adapter path.
+
+An update ``propose-lock`` accepts only explicitly selected units. A selected id
+is valid when it is currently declared or already present in the existing lock
+(``declared_ids | locked_ids``). The four outcomes are: rebuild a selected
+declared+locked row, add a selected declared-only row, retire a selected
+locked-only row by omitting it from the candidate, and preserve every unselected
+row byte-for-byte. An id in neither set, or a removed lock row left unselected,
+fails closed as ``invalid_selection``.
 """
 
 from __future__ import annotations
@@ -1196,7 +1204,7 @@ def _git(repo: Path, args: Sequence[str]) -> subprocess.CompletedProcess[bytes]:
         raise SyncError(BASELINE_UNAVAILABLE, f"unable to execute git: {exc}") from exc
 
 
-def git_resolve_commit(repo: Path, revision: str, error_code: str = BASELINE_UNAVAILABLE) -> str | None:
+def git_resolve_commit(repo: Path, revision: str) -> str | None:
     """Resolve a revision to a full 40-character commit id, or None."""
 
     result = _git(repo, ["rev-parse", "--verify", "--quiet", f"{revision}^{{commit}}"])
@@ -1362,7 +1370,7 @@ def parse_adopter_snapshot(
             ADOPTER_SNAPSHOT_UNAVAILABLE,
             f"--adopter-revision must be a full 40-character commit: {adopter_revision!r}",
         )
-    resolved = git_resolve_commit(adopter_repo, adopter_revision, ADOPTER_SNAPSHOT_UNAVAILABLE)
+    resolved = git_resolve_commit(adopter_repo, adopter_revision)
     if resolved is None:
         raise SyncError(
             ADOPTER_SNAPSHOT_UNAVAILABLE,
@@ -2184,9 +2192,17 @@ def propose_lock(
 
     An initial proposal (no existing lock) accepts every declared unit at the
     current catalog-bearing revision. An update proposal requires an existing
-    lock plus explicit unit selections, preserves every unselected row, and
-    rejects added, removed, or remapped unselected intent. Nothing is written
-    to the filesystem; the caller writes the returned text to stdout.
+    lock plus explicit unit selections, preserves every unselected row
+    byte-for-byte, and rejects added, removed, or remapped unselected intent.
+
+    Update selection is validated against the union of the current declaration
+    ids and the existing lock ids (``declared_ids | locked_ids``). A selected
+    declared+locked row is rebuilt, a selected declared-only row is added, and a
+    selected locked-only row is retired by omitting it from the candidate YAML.
+    An id in neither set, or a removed lock row left unselected, is a fatal
+    ``invalid_selection``. Retirement needs no current-catalog row and changes
+    only the returned candidate. Nothing is written to the filesystem; the
+    caller writes the returned text to stdout.
     """
 
     snapshot = parse_adopter_snapshot(adopter_repo, adopter_revision, adopter_index)
@@ -2232,18 +2248,23 @@ def propose_lock(
                 INVALID_SELECTION, "an update proposal requires at least one --unit selection"
             )
         selected_set = set(selected)
-        for unit_id in selected:
-            if unit_id not in declaration_by_id:
-                raise SyncError(INVALID_SELECTION, f"--unit {unit_id!r} is not declared")
+        declared_ids = set(declaration_by_id)
         locked_ids = {unit.id for unit in existing_lock.units}
         lock_by_id = {unit.id: unit for unit in existing_lock.units}
-        unselected = {unit.id for unit in declaration.units} - selected_set
+        selectable = declared_ids | locked_ids
+        for unit_id in selected:
+            if unit_id not in selectable:
+                raise SyncError(
+                    INVALID_SELECTION,
+                    f"--unit {unit_id!r} is neither declared nor locked; it cannot be selected",
+                )
+        unselected = declared_ids - selected_set
         for unit_id in sorted(unselected - locked_ids):
             raise SyncError(
                 INVALID_SELECTION,
                 f"unselected unit {unit_id!r} is newly declared; select it to add it",
             )
-        for unit_id in sorted((locked_ids - selected_set) - set(declaration_by_id)):
+        for unit_id in sorted((locked_ids - selected_set) - declared_ids):
             raise SyncError(
                 INVALID_SELECTION,
                 f"unselected lock unit {unit_id!r} was removed from the declaration; select it to retire it",
@@ -2463,7 +2484,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--unit",
         action="append",
         default=None,
-        help="Declared unit id to accept (repeatable; update proposals only).",
+        help="Declared or locked unit id to accept or retire (repeatable; update proposals only).",
     )
 
     return parser
