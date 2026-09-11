@@ -1,0 +1,380 @@
+# AICore core catalog (schema v1)
+#
+# Single authoritative machine inventory for BOTH initial adoption
+# (migrate-core-to-project) and recurring synchronization
+# (sync-aicore-adoption). Do not hand-edit adopter copies; edit here.
+#
+# Ownership split:
+#   - This catalog is UPSTREAM-OWNED: unit identity, logical members,
+#     real tracked source paths, default canonical destinations, eligibility,
+#     and install strategy.
+#   - Adopter-owned intent (mode, destination overrides, replacement mapping)
+#     lives ONLY in the adopter declaration (`.aicore/adoption.yaml`).
+#
+# sync_projection:
+#   file  - single tracked file projected for content synchronization
+#   tree  - directory of tracked files projected for content synchronization
+#   none  - installer-only; generated/merged fragment with no deterministic
+#           byte projection. Never appears in an adoption declaration or lock.
+schema_version: 1
+
+catalog:
+  version: 1.0.0
+  upstream_repository: JPerezC92/ai-core
+  digest_algorithm: sha256
+  digest_exclusions:
+    - "**/__pycache__/**"
+    - "**/*.pyc"
+  control_paths:
+    - ".git/**"
+    - ".aicore/adoption.yaml"
+    - ".aicore/adoption.lock.yaml"
+
+# kind: skill | agent | infra | config
+# install_strategy: copy | merge | preserve
+#   copy     - write members as-is (installer); present items are never touched
+#   merge    - merge roster/permission/ignore fragments into an existing file
+#   preserve - installer-only marker for a directory that must exist
+# include_rule text is the human eligibility clause; it is evaluated by the
+# installer using mechanical checks (stack markers, ticket marker, python
+# script presence) and is never overridden by adopter hints.
+units:
+  # ---------------------------------------------------------------- skills
+  - id: git-branch-name
+    kind: skill
+    include_rule: always
+    install_strategy: copy
+    sync_projection: tree
+    members:
+      - id: tree
+        source: .opencode/skills/git-branch-name
+        destination: .opencode/skills/git-branch-name
+
+  - id: git-commit
+    kind: skill
+    include_rule: always
+    install_strategy: copy
+    sync_projection: tree
+    members:
+      - id: tree
+        source: .opencode/skills/git-commit
+        destination: .opencode/skills/git-commit
+
+  - id: git-pr
+    kind: skill
+    include_rule: always
+    install_strategy: copy
+    sync_projection: tree
+    members:
+      - id: tree
+        source: .opencode/skills/git-pr
+        destination: .opencode/skills/git-pr
+
+  - id: op-agent-creator
+    kind: skill
+    include_rule: always
+    install_strategy: copy
+    sync_projection: tree
+    members:
+      - id: tree
+        source: .opencode/skills/op-agent-creator
+        destination: .opencode/skills/op-agent-creator
+
+  - id: op-model
+    kind: skill
+    include_rule: always
+    install_strategy: copy
+    sync_projection: tree
+    members:
+      - id: tree
+        source: .opencode/skills/op-model
+        destination: .opencode/skills/op-model
+
+  - id: op-skill-creator
+    kind: skill
+    include_rule: always
+    install_strategy: copy
+    sync_projection: tree
+    members:
+      - id: tree
+        source: .opencode/skills/op-skill-creator
+        destination: .opencode/skills/op-skill-creator
+
+  - id: plan-enforce
+    kind: skill
+    include_rule: always
+    install_strategy: copy
+    sync_projection: tree
+    members:
+      - id: tree
+        source: .opencode/skills/plan-enforce
+        destination: .opencode/skills/plan-enforce
+
+  - id: query-verification
+    kind: skill
+    include_rule: only if ticket marker
+    install_strategy: copy
+    sync_projection: tree
+    members:
+      - id: tree
+        source: .opencode/skills/query-verification
+        destination: .opencode/skills/query-verification
+
+  - id: ticket-runbook
+    kind: skill
+    include_rule: only if ticket marker
+    install_strategy: copy
+    sync_projection: tree
+    members:
+      - id: tree
+        source: .opencode/skills/ticket-runbook
+        destination: .opencode/skills/ticket-runbook
+
+  - id: sync-aicore-adoption
+    kind: skill
+    include_rule: always
+    install_strategy: copy
+    sync_projection: tree
+    members:
+      - id: tree
+        source: .opencode/skills/sync-aicore-adoption
+        destination: .opencode/skills/sync-aicore-adoption
+
+  # ---------------------------------------------------------------- agents
+  - id: atrium
+    kind: agent
+    include_rule: always
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: spec, source: .opencode/agents/atrium.md, destination: .opencode/agents/atrium.md }
+      - { id: profile, source: agents/atrium/profile.md, destination: agents/atrium/profile.md }
+
+  - id: augur
+    kind: agent
+    include_rule: always
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: spec, source: .opencode/agents/augur.md, destination: .opencode/agents/augur.md }
+      - { id: profile, source: agents/augur/profile.md, destination: agents/augur/profile.md }
+
+  - id: bastion
+    kind: agent
+    include_rule: backend stack OR any selected skill ships Python scripts
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: spec, source: .opencode/agents/bastion.md, destination: .opencode/agents/bastion.md }
+      - { id: profile, source: agents/bastion/profile.md, destination: agents/bastion/profile.md }
+
+  - id: crucible
+    kind: agent
+    include_rule: always
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: spec, source: .opencode/agents/crucible.md, destination: .opencode/agents/crucible.md }
+      - { id: profile, source: agents/crucible/profile.md, destination: agents/crucible/profile.md }
+
+  - id: forge
+    kind: agent
+    include_rule: always
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: spec, source: .opencode/agents/forge.md, destination: .opencode/agents/forge.md }
+      - { id: profile, source: agents/forge/profile.md, destination: agents/forge/profile.md }
+
+  - id: herald
+    kind: agent
+    include_rule: always
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: spec, source: .opencode/agents/herald.md, destination: .opencode/agents/herald.md }
+      - { id: profile, source: agents/herald/profile.md, destination: agents/herald/profile.md }
+
+  - id: inquisitor
+    kind: agent
+    include_rule: always
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: spec, source: .opencode/agents/inquisitor.md, destination: .opencode/agents/inquisitor.md }
+      - { id: profile, source: agents/inquisitor/profile.md, destination: agents/inquisitor/profile.md }
+
+  - id: investigator
+    kind: agent
+    include_rule: only if ticket marker
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: spec, source: .opencode/agents/investigator.md, destination: .opencode/agents/investigator.md }
+
+  - id: ledger
+    kind: agent
+    include_rule: only if ticket marker
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: spec, source: .opencode/agents/ledger.md, destination: .opencode/agents/ledger.md }
+      - { id: profile, source: agents/ledger/profile.md, destination: agents/ledger/profile.md }
+
+  - id: lumen
+    kind: agent
+    include_rule: always
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: spec, source: .opencode/agents/lumen.md, destination: .opencode/agents/lumen.md }
+      - { id: profile, source: agents/lumen/profile.md, destination: agents/lumen/profile.md }
+
+  - id: marshal
+    kind: agent
+    include_rule: always
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: spec, source: .opencode/agents/marshal.md, destination: .opencode/agents/marshal.md }
+      - { id: profile, source: agents/marshal/profile.md, destination: agents/marshal/profile.md }
+
+  - id: quill
+    kind: agent
+    include_rule: only if ticket marker
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: spec, source: .opencode/agents/quill.md, destination: .opencode/agents/quill.md }
+      - { id: profile, source: agents/quill/profile.md, destination: agents/quill/profile.md }
+
+  - id: scribe
+    kind: agent
+    include_rule: only if ticket marker
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: spec, source: .opencode/agents/scribe.md, destination: .opencode/agents/scribe.md }
+      - { id: profile, source: agents/scribe/profile.md, destination: agents/scribe/profile.md }
+
+  - id: sentinel
+    kind: agent
+    include_rule: always
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: spec, source: .opencode/agents/sentinel.md, destination: .opencode/agents/sentinel.md }
+      - { id: profile, source: agents/sentinel/profile.md, destination: agents/sentinel/profile.md }
+
+  - id: vault
+    kind: agent
+    include_rule: always
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: spec, source: .opencode/agents/vault.md, destination: .opencode/agents/vault.md }
+      - { id: profile, source: agents/vault/profile.md, destination: agents/vault/profile.md }
+
+  - id: warden
+    kind: agent
+    include_rule: always
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: spec, source: .opencode/agents/warden.md, destination: .opencode/agents/warden.md }
+      - { id: profile, source: agents/warden/profile.md, destination: agents/warden/profile.md }
+
+  - id: cipher
+    kind: agent
+    include_rule: always (CV-only, no runtime spec)
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: profile, source: agents/cipher/profile.md, destination: agents/cipher/profile.md }
+
+  # ----------------------------------------------------------------- infra
+  - id: knowledge-agents
+    kind: infra
+    include_rule: always
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: file, source: knowledge/agents.md, destination: knowledge/agents.md }
+
+  - id: knowledge-debt
+    kind: infra
+    include_rule: always
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: file, source: knowledge/debt.md, destination: knowledge/debt.md }
+
+  - id: symptom-problem-register
+    kind: infra
+    include_rule: always
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: symptoms, source: knowledge/symptoms.md, destination: knowledge/symptoms.md }
+      - { id: problems, source: knowledge/problems.md, destination: knowledge/problems.md }
+
+  - id: query-verification-design
+    kind: infra
+    include_rule: only if ticket marker
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: file, source: knowledge/query-verification-design.md, destination: knowledge/query-verification-design.md }
+
+  - id: plans
+    kind: infra
+    include_rule: always
+    install_strategy: preserve
+    sync_projection: file
+    members:
+      - { id: gitkeep, source: plans/.gitkeep, destination: plans/.gitkeep }
+
+  - id: user-stories
+    kind: infra
+    include_rule: always
+    install_strategy: preserve
+    sync_projection: file
+    members:
+      - { id: gitkeep, source: user-stories/.gitkeep, destination: user-stories/.gitkeep }
+
+  # ---------------------------------------------------------------- config
+  - id: root-runtime-spec
+    kind: config
+    include_rule: always
+    install_strategy: merge
+    sync_projection: file
+    members:
+      - { id: root, source: AGENTS.md, destination: AGENTS.md }
+    notes: >-
+      Installer merges new roster lines into an existing root file; an adopter
+      may map the logical `root` member to a differently named runtime spec
+      (e.g. CLAUDE.md) via its declaration.
+
+  - id: opencode-config
+    kind: config
+    include_rule: always
+    install_strategy: merge
+    sync_projection: none
+    members:
+      - { id: permissions, source: "(permission block)", destination: opencode.jsonc }
+    notes: >-
+      Installer-only. Appends missing permission gates by matching an existing
+      gate; never duplicated. Excluded from adoption declarations and locks
+      until a deterministic extractor exists.
+
+  - id: gitignore-config
+    kind: config
+    include_rule: always
+    install_strategy: merge
+    sync_projection: none
+    members:
+      - { id: entries, source: "(entries)", destination: .gitignore }
+    notes: >-
+      Installer-only. Appends-if-missing entries; `sync_projection: none`
+      because `.gitignore` is an adopter-owned merge fragment, not copied
+      content. Excluded from adoption declarations and locks.

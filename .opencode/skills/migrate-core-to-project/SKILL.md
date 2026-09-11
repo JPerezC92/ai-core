@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.2.2
+  version: 1.3.0
   domain: opencode
 ---
 
@@ -69,7 +69,7 @@ Output three lists: `present` (skip), `missing` (eligible), `partial` (a present
 
 `partial` FAILS CLOSED: report it, do NOT auto-migrate or auto-repair it; ask the user how to proceed.
 
-Apply the include-rules to filter `missing` down to `eligible`: skip `bastion` unless a backend stack (`node` or `python`) is detected OR any skill in the eligible set ships Python scripts (mechanical check: `scripts/*.py` exists under the skill's source directory — true today for `op-model`, `plan-enforce`, `query-verification`, `ticket-runbook`); skip ticket-team agents + `ticket-runbook` unless ticket marker.
+Apply the include-rules to filter `missing` down to `eligible`: skip `bastion` unless a backend stack (`node` or `python`) is detected OR any skill in the eligible set ships Python scripts (mechanical check: `scripts/*.py` exists under the skill's source directory — true today for `op-model`, `plan-enforce`, `query-verification`, `ticket-runbook`, `sync-aicore-adoption`); skip ticket-team agents + `ticket-runbook` unless ticket marker.
 
 ### 2. Select items
 
@@ -150,9 +150,13 @@ Hard corollaries:
 - `config` has **no `scope` value** because it is not selectable.
 - **No 5th Kind.** Any future special case is encoded via Source + Include-rule, not a new Kind value.
 
-## Core manifest
+## Core catalog
 
-Before starting step 1, read [`references/core-manifest.md`](references/core-manifest.md). It is the authoritative manifest table for the inventory, selection, copy, dependency-union, consistency-pass, and re-diff steps.
+Before starting step 1, read [`.aicore/core-catalog-v1.yaml`](../../../.aicore/core-catalog-v1.yaml). It is the authoritative machine catalog for the inventory, selection, copy, dependency-union, consistency-pass, and re-diff steps, and it is shared with the `sync-aicore-adoption` skill.
+
+- Each unit declares `kind`, `include_rule`, `install_strategy`, `sync_projection`, and one or more `members` (logical `id` + real `source` + canonical `destination`).
+- `sync_projection: file | tree` units are copyable content; `sync_projection: none` units are installer-only merge fragments (permission block, ignore entries) with no deterministic byte projection.
+- `migrate-core-to-project` itself is intentionally not a catalog unit (self-exclusion): the installer never copies itself.
 
 ## Examples
 
@@ -176,9 +180,9 @@ Target: a Rust TUI client (`Cargo.toml` at root), no ticket system. Scope: `all`
 
 ### Example 2 — skills and infra install
 
-Target: any project that wants the git/planning workflows without the agent roster. Scope: `all` — in step 2, select the 7 applicable skills plus the infra files, leaving agents unselected.
+Target: any project that wants the git/planning workflows without the agent roster. Scope: `all` — in step 2, select the 8 applicable skills plus the infra files, leaving agents unselected.
 
-- Copy the 7 applicable skills + `knowledge/agents.md`, `knowledge/debt.md`, the `symptom-problem-register` item (`knowledge/symptoms.md` + `knowledge/problems.md`), `plans/`, `user-stories/`
+- Copy the 8 applicable skills + `knowledge/agents.md`, `knowledge/debt.md`, the `symptom-problem-register` item (`knowledge/symptoms.md` + `knowledge/problems.md`), `plans/`, `user-stories/`
 - Merge `.gitignore` and `opencode.jsonc`; no AGENTS.md roster, no subagents
 
 ### Example 3 — incremental migration
