@@ -14,10 +14,12 @@
 5. Write `runbook/phase-05-synthesis.md`: root-cause block (Fact/Hypothesis labeled), derivation decision, response surface.
 6. Update `runbook.md`: `Phase: 05`, `Updated: <now>`.
 
+> **Verifier-evidence rule:** a `verified` verdict from the optional Phase 04 verifier route is symptom evidence only. It cannot by itself establish root-cause equivalence or authorize a fix. Any root cause it supports must still be labeled `Fact` or `Hypothesis` under Step 2 and meet the same evidence bar as any other hypothesis.
+
 ## Output
 
 - **Artifact:** `runbook/phase-05-synthesis.md`
-- **Schema:** root-cause block (≤3 bullets, each labeled Fact/Hypothesis), derivation target (named, not TBD), response surface (≤15 lines).
+- **Schema:** root-cause block (≤3 bullets, each labeled Fact/Hypothesis), derivation target (named, not TBD), response surface (≤15 lines). A Phase 04 verifier `verified` verdict is symptom evidence only and is never represented as root-cause proof or fix authorization.
 
 ## Root cause
 
@@ -40,6 +42,7 @@
 - ⬜ Root-cause bullets present and labeled Fact or Hypothesis
 - ⬜ Derivation target named (not "TBD")
 - ⬜ Response surface ≤15 lines
+- ⬜ A Phase 04 verifier `verified` verdict, if present, is treated as symptom evidence only — not as root-cause proof or fix authorization
 
 ## Post-phase dispatch — HARD RULE: dispatched directly by Cipher 🔓 (Lead Orchestrator)
 
@@ -48,3 +51,4 @@ After this phase Gate passes, BEFORE advancing `Phase:` in `runbook.md`, startin
 ## Abort conditions
 
 - All phase-04 verdicts are `inconclusive` AND no partial evidence is sufficient for a labeled hypothesis → halt; Cipher 🔓 (Lead Orchestrator) escalates without a response surface.
+- Halt if a verifier verdict would be represented as root-cause proof or a user-authorized fix.

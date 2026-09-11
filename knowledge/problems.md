@@ -1,6 +1,6 @@
-# Known-problem Register
+# Known Problem Pattern Register
 
-Chronological, evidence-backed incident records. Each row is a child instance of a symptom class in `knowledge/symptoms.md`; when a row references several classes, the primary symptom class comes first.
+Chronological, evidence-backed recurring problem patterns shared by incident and dev work. Each row is a child instance of a symptom class in `knowledge/symptoms.md`; when a row references several classes, the primary symptom class comes first.
 
 ## Entry format
 

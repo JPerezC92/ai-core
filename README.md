@@ -7,14 +7,15 @@ A reusable, agnostic core of AI agents, personas, and skills. Copy any part of i
 ```
 AGENTS.md                     Lead orchestrator (Cipher 🔓 (Lead Orchestrator)) + roster + reuse guide
 .opencode/agents/             16 runtime agent specs (OpenCode subagents)
-.opencode/skills/             9 skills (git-commit, git-branch-name, git-pr,
+.opencode/skills/             10 skills (git-commit, git-branch-name, git-pr,
                               migrate-core-to-project, op-skill-creator, op-agent-creator, op-model,
-                              plan-enforce, ticket-runbook)
+                              plan-enforce, query-verification, ticket-runbook)
 agents/<name>/profile.md      17 persona CVs (incl. cipher)
 knowledge/agents.md           Shared agent rules
 knowledge/debt.md             Accepted-debt register
-knowledge/symptoms.md         Symptom-class catalog
-knowledge/problems.md         Known-problem register
+knowledge/symptoms.md         Diagnostic Symptom Catalog
+knowledge/problems.md         Known Problem Pattern Register
+knowledge/query-verification-design.md  Query-verification living design (incident pilot v1 implemented; broader design deferred)
 plans/  user-stories/         Plan lifecycle (plan-enforce)
 output/                       Temporal working space (audits, research, design — gitignored)
 ```
@@ -31,3 +32,4 @@ output/                       Temporal working space (audits, research, design �
 - Everything is OpenCode-native: agent specs in `.opencode/agents/`, skills in `.opencode/skills/` (`compatibility: opencode`), plan lifecycle in `plans/` + `user-stories/`.
 - `output/` is gitignored — it holds temporal artifacts (audit reports, research briefs, design briefs/audits); agents create it on first write.
 - Skills `git-commit`, `git-branch-name`, `git-pr` assume git + pnpm and the GitHub CLI (`gh`) — the dev-team defaults.
+- The migration manifest in `.opencode/skills/migrate-core-to-project/SKILL.md` intentionally excludes `migrate-core-to-project` itself, so its skill rows number 9 — one lower than the 10 skills inventoried above.
