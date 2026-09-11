@@ -6,8 +6,8 @@ Procedural data layer for the `op-model` skill. Runs `opencode models
 emits structured records.
 
 Usage:
-  python .opencode/skills/op-model/scripts/models.py                list all available models, grouped by provider
-  python .opencode/skills/op-model/scripts/models.py "<query>"      list matching records only (JSON lines)
+  python3 .opencode/skills/op-model/scripts/models.py                list all available models, grouped by provider
+  python3 .opencode/skills/op-model/scripts/models.py "<query>"      list matching records only (JSON lines)
 
 Output record fields:
   config      full config name, e.g. deepseek/deepseek-v4-flash
@@ -116,7 +116,7 @@ def main() -> None:
     if not hits:
         sys.exit(
             f"No match for {query!r} in `opencode models`. "
-            "Run `python .opencode/skills/op-model/scripts/models.py` to see all available models."
+            "Run `python3 .opencode/skills/op-model/scripts/models.py` to see all available models."
         )
 
 

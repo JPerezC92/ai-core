@@ -1,7 +1,7 @@
 """Tests for validate_runbook.py — proves it catches each violation class and
 validates well-formed, phase-aware runbooks.
 
-Run: uv run --locked python .opencode/skills/ticket-runbook/scripts/test_validate_runbook.py
+Run: uv run --locked python3 .opencode/skills/ticket-runbook/scripts/test_validate_runbook.py
 """
 
 import os

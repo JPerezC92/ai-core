@@ -42,7 +42,7 @@ Use one `question` call when both are missing, or per-missing-field otherwise. T
 
 1. **Parse arguments.** Extract `agent` (default `plan`) and `model query`. Collect missing values via the `question` tool (see Argument collection form).
 
-2. **Authoritative lookup (delegated to the script).** Run `python .opencode/skills/op-model/scripts/models.py "<model query>"`. The script runs `opencode models --verbose`, parses the provider/model blocks, and emits structured JSON records (config, id, provider, name, cost). This is the ONLY source of candidate model names — it already reflects the user's active subscriptions and credentials. NEVER invent, recall from memory, or copy model names from anywhere else (docs, prior sessions, chat examples).
+2. **Authoritative lookup (delegated to the script).** Run `python3 .opencode/skills/op-model/scripts/models.py "<model query>"`. The script runs `opencode models --verbose`, parses the provider/model blocks, and emits structured JSON records (config, id, provider, name, cost). This is the ONLY source of candidate model names — it already reflects the user's active subscriptions and credentials. NEVER invent, recall from memory, or copy model names from anywhere else (docs, prior sessions, chat examples).
 
 3. **Read the records.** The script returns one JSON line per match (or prints all models grouped by provider when no query was given). Work from those records:
    - **No query and no agent target** → show the grouped listing and ask which model to set.
@@ -60,7 +60,7 @@ Use one `question` call when both are missing, or per-missing-field otherwise. T
 
 6. **Verify.**
    - JSON5-parse the edited file (strip line comments and trailing commas, then strict-parse) — must succeed.
-   - Re-run `python .opencode/skills/op-model/scripts/models.py "<model query>"` and confirm the chosen `provider/model` is still present in the output.
+   - Re-run `python3 .opencode/skills/op-model/scripts/models.py "<model query>"` and confirm the chosen `provider/model` is still present in the output.
    - Re-read the config file and confirm the `model` value matches exactly.
 
 7. **Report.** State `<agent> → <provider/model> (<human name>). Restart the opencode TUI to apply.` Do NOT commit unless the user explicitly asks.
@@ -69,7 +69,7 @@ Use one `question` call when both are missing, or per-missing-field otherwise. T
 
 **Ambiguous query → question tool (worked case):** user says "set plan to deepseek v4 flash".
 
-1. `python .opencode/skills/op-model/scripts/models.py "deepseek v4 flash"` returns three records:
+1. `python3 .opencode/skills/op-model/scripts/models.py "deepseek v4 flash"` returns three records:
    - `deepseek/deepseek-v4-flash` — DeepSeek V4 Flash
    - `opencode-go/deepseek-v4-flash` — DeepSeek V4 Flash
    - `opencode/deepseek-v4-flash-free` — DeepSeek V4 Flash Free
@@ -79,11 +79,11 @@ Use one `question` call when both are missing, or per-missing-field otherwise. T
 5. Verifies JSON5 + re-runs the script to confirm the chosen name still appears.
 6. Reports: "plan → deepseek/deepseek-v4-flash (DeepSeek V4 Flash). Restart the opencode TUI to apply."
 
-**Single match:** user says "make build use glm-4.7". `python .opencode/skills/op-model/scripts/models.py "glm-4.7"` returns exactly `zai-coding-plan/glm-4.7` — one match, no question needed. Edit `agent.build.model`, verify, report.
+**Single match:** user says "make build use glm-4.7". `python3 .opencode/skills/op-model/scripts/models.py "glm-4.7"` returns exactly `zai-coding-plan/glm-4.7` — one match, no question needed. Edit `agent.build.model`, verify, report.
 
 **No match:** user says "set plan to gpt-4o". The script returns "No match" and exits non-zero — `gpt-4o` is not covered by any authenticated provider (filtered out by subscription). Report no match + suggest the closest available config names. Do NOT edit.
 
-**Available-models question:** user asks "what models can I use?". Run `python .opencode/skills/op-model/scripts/models.py` (no query) → grouped-by-provider listing, and offer to set one for an agent if the user wants.
+**Available-models question:** user asks "what models can I use?". Run `python3 .opencode/skills/op-model/scripts/models.py` (no query) → grouped-by-provider listing, and offer to set one for an agent if the user wants.
 
 ## Troubleshooting
 
