@@ -2,14 +2,16 @@
 
 This module implements the ``sync-aicore-adoption`` protocol v1. It parses the
 machine catalog, the adopter declaration, and the generated adoption lock;
-reads accepted and current upstream content from Git objects; projects logical
-member content from Git objects and the adopter worktree; and reports
-orthogonal mode, upstream delta, destination delta, and disposition per unit.
+reads upstream content from Git objects; reads adopter destination content from
+exactly one explicit snapshot (a full adopter commit or the staged Git index);
+and reports orthogonal mode, upstream delta, destination delta, and disposition
+per unit.
 
 Safety boundary: ``check`` is strictly read-only and writes nothing, while
-``propose-lock`` writes only a candidate lock to stdout. Neither command
-mutates the filesystem, the Git index, refs, or the worktree, and there is no
-apply, copy, merge, delete, fetch, credential, or destination-adapter path.
+``propose-lock`` writes only a candidate lock to stdout. Neither command reads
+the adopter worktree, and neither mutates the filesystem, the Git index, refs,
+or the object database. There is no apply, copy, merge, delete, fetch,
+credential, or destination-adapter path.
 """
 
 from __future__ import annotations
@@ -18,13 +20,12 @@ import argparse
 import functools
 import hashlib
 import json
-import os
 import re
 import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Iterable, Mapping, Sequence, TypedDict, cast
 
 import yaml
 
@@ -43,6 +44,7 @@ DEFAULT_CONTROL_PATHS: tuple[str, ...] = (
 )
 
 FILE_MODES: tuple[str, ...] = ("100644", "100755", "120000")
+PROJECTIONS: tuple[str, ...] = ("file", "tree")
 
 DECLARED_MODES: tuple[str, ...] = ("mirror", "adapted", "replacement", "destination_owned")
 REPORT_MODES: tuple[str, ...] = DECLARED_MODES + ("not_declared",)
@@ -55,12 +57,148 @@ CATALOG_CHANGED = "catalog_changed"
 INVALID_MAPPING = "invalid_mapping"
 UNSUPPORTED_PROJECTION = "unsupported_projection"
 UNSUPPORTED_SPECIAL_FILE = "unsupported_special_file"
+ADOPTER_SNAPSHOT_UNAVAILABLE = "adopter_snapshot_unavailable"
+REPOSITORY_IDENTITY_MISMATCH = "repository_identity_mismatch"
+INVALID_SELECTION = "invalid_selection"
+UNKNOWN_KEY = "unknown_key"
 
 COMMIT_RE = re.compile(r"[0-9a-f]{40}\Z")
 DIGEST_RE = re.compile(r"sha256:[0-9a-f]{64}\Z")
 
 GOLDEN_FILE_DIGEST = "sha256:cf41078b082e3740168bd7ad534ba1b70b12489c7ab43c6fb53743b0f3527887"
 GOLDEN_TREE_DIGEST = "sha256:4b49b94b71240c8933269684873b2eecf0f53de69ed8ded25eda1e172d3637d7"
+
+# Closed key sets per schema version. Any other key is a fatal ``unknown_key``.
+CATALOG_ROOT_KEYS: tuple[str, ...] = ("schema_version", "catalog", "units")
+CATALOG_BLOCK_KEYS: tuple[str, ...] = (
+    "version",
+    "upstream_repository",
+    "digest_algorithm",
+    "digest_exclusions",
+    "control_paths",
+)
+CATALOG_UNIT_KEYS: tuple[str, ...] = (
+    "id",
+    "kind",
+    "include_rule",
+    "install_strategy",
+    "sync_projection",
+    "members",
+    "notes",
+)
+CATALOG_MEMBER_KEYS: tuple[str, ...] = ("id", "source", "destination")
+
+DECLARATION_ROOT_KEYS: tuple[str, ...] = ("schema_version", "upstream_repository", "units")
+DECLARATION_UNIT_KEYS: tuple[str, ...] = ("id", "mode", "members", "replacement_members")
+DECLARATION_MEMBER_KEYS: tuple[str, ...] = ("id", "destination")
+DECLARATION_REPLACEMENT_KEYS: tuple[str, ...] = ("id", "destination", "projection")
+
+LOCK_ROOT_KEYS: tuple[str, ...] = (
+    "schema_version",
+    "upstream_repository",
+    "declaration_digest",
+    "units",
+)
+LOCK_UNIT_KEYS: tuple[str, ...] = (
+    "id",
+    "mode",
+    "accepted_source_commit",
+    "accepted_catalog_digest",
+    "declaration_unit_digest",
+    "accepted_upstream_digest",
+    "members",
+    "replacement_members",
+)
+LOCK_MEMBER_KEYS: tuple[str, ...] = (
+    "id",
+    "destination",
+    "accepted_upstream_digest",
+    "accepted_destination_digest",
+)
+LOCK_REPLACEMENT_KEYS: tuple[str, ...] = (
+    "id",
+    "destination",
+    "projection",
+    "accepted_destination_digest",
+)
+
+
+# --------------------------------------------------------------------------- #
+# Emitted document TypedDicts (nested emitted/parsed document shapes)
+# --------------------------------------------------------------------------- #
+
+
+class LockMemberDocument(TypedDict):
+    """An emitted lock member row."""
+
+    id: str
+    destination: str
+    accepted_upstream_digest: str
+    accepted_destination_digest: str
+
+
+class LockReplacementMemberDocument(TypedDict):
+    """An emitted lock replacement-member row."""
+
+    id: str
+    destination: str
+    projection: str
+    accepted_destination_digest: str
+
+
+class LockUnitDocument(TypedDict, total=False):
+    """An emitted lock unit row; projection-specific keys are set exclusively."""
+
+    id: str
+    mode: str
+    accepted_source_commit: str
+    accepted_catalog_digest: str
+    declaration_unit_digest: str
+    accepted_upstream_digest: str
+    members: list[LockMemberDocument]
+    replacement_members: list[LockReplacementMemberDocument]
+
+
+class LockDocument(TypedDict):
+    """The emitted candidate adoption lock document."""
+
+    schema_version: int
+    upstream_repository: str
+    declaration_digest: str
+    units: list[LockUnitDocument]
+
+
+class CheckMemberDocument(TypedDict):
+    """An emitted per-member check report row."""
+
+    id: str
+    destination: str | None
+    projection: str | None
+    upstream_delta: str
+    destination_delta: str
+    accepted_upstream_digest: str
+    current_upstream_digest: str
+    accepted_destination_digest: str
+    current_destination_digest: str
+
+
+class CheckUnitDocument(TypedDict):
+    """An emitted per-unit check report row."""
+
+    id: str
+    mode: str
+    upstream_delta: str
+    destination_delta: str
+    disposition: str
+    members: list[CheckMemberDocument]
+
+
+class CheckDocument(TypedDict):
+    """The emitted top-level check report document."""
+
+    status: str
+    error: str | None
+    units: list[CheckUnitDocument]
 
 
 # --------------------------------------------------------------------------- #
@@ -84,7 +222,7 @@ class SyncError(Exception):
 
 @dataclass(frozen=True)
 class TreeEntry:
-    """One parsed entry from ``git ls-tree``."""
+    """One parsed entry from ``git ls-tree`` or the staged index."""
 
     mode: str
     object_type: str
@@ -123,6 +261,7 @@ class CatalogUnit:
 class Catalog:
     """The parsed AICore machine catalog."""
 
+    upstream_repository: str
     digest_exclusions: tuple[str, ...]
     control_paths: tuple[str, ...]
     units: tuple[CatalogUnit, ...]
@@ -137,13 +276,22 @@ class DeclarationMember:
 
 
 @dataclass(frozen=True)
+class ReplacementMember:
+    """A declaration replacement member: local id, destination, and projection."""
+
+    id: str
+    destination: str
+    projection: str
+
+
+@dataclass(frozen=True)
 class DeclarationUnit:
-    """A declaration unit: adopter-intended mode plus destination mapping."""
+    """A declaration unit: adopter-intended mode plus its destination mapping."""
 
     id: str
     mode: str
     members: tuple[DeclarationMember, ...]
-    replacement_destinations: tuple[str, ...]
+    replacement_members: tuple[ReplacementMember, ...]
 
 
 @dataclass(frozen=True)
@@ -165,15 +313,27 @@ class LockMember:
 
 
 @dataclass(frozen=True)
+class LockReplacementMember:
+    """A lock replacement member: local id, projection, and accepted digest."""
+
+    id: str
+    destination: str
+    projection: str
+    accepted_destination_digest: str
+
+
+@dataclass(frozen=True)
 class LockUnit:
-    """A lock unit: accepted evidence for one declared unit."""
+    """A lock unit: per-unit accepted source, catalog, intent, and content evidence."""
 
     id: str
     mode: str
-    members: tuple[LockMember, ...]
-    replacement_destinations: tuple[str, ...]
+    accepted_source_commit: str
+    accepted_catalog_digest: str
+    declaration_unit_digest: str
     accepted_upstream_digest: str
-    accepted_destination_digest: str
+    members: tuple[LockMember, ...]
+    replacement_members: tuple[LockReplacementMember, ...]
 
 
 @dataclass(frozen=True)
@@ -181,10 +341,26 @@ class Lock:
     """The parsed generated adoption lock."""
 
     upstream_repository: str
-    accepted_source_commit: str
-    catalog_digest: str
     declaration_digest: str
     units: tuple[LockUnit, ...]
+
+
+@dataclass(frozen=True)
+class AcceptedEvidence:
+    """Independently reproduced accepted evidence for one lock unit row."""
+
+    unit: CatalogUnit
+    commit: str
+    member_digests: Mapping[str, str]
+
+
+@dataclass(frozen=True)
+class AdopterSnapshot:
+    """An explicit adopter content source: a full commit or the staged index."""
+
+    repo: Path
+    kind: str
+    revision: str | None
 
 
 @dataclass(frozen=True)
@@ -193,6 +369,7 @@ class MemberReport:
 
     id: str
     destination: str | None
+    projection: str | None
     upstream_delta: str
     destination_delta: str
     accepted_upstream_digest: str
@@ -211,7 +388,6 @@ class UnitReport:
     destination_delta: str
     disposition: str
     members: tuple[MemberReport, ...]
-    replacement_destinations: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -268,6 +444,32 @@ def digest_unit_from_members(members: Sequence[tuple[str, str]]) -> str:
         hasher.update(b"member\n")
         hasher.update(b"id:" + _path_bytes(member_id) + b"\n")
         hasher.update(b"digest:" + member_digest.encode("ascii") + b"\n")
+    return "sha256:" + hasher.hexdigest()
+
+
+def declaration_unit_intent_digest(unit: DeclarationUnit) -> str:
+    """Compute a deterministic digest of one declaration unit's intent.
+
+    Members and replacement members are ordered by local id so a pure reorder of
+    the declaration does not change the intent digest. Destinations are
+    normalized so an equivalent mapping yields an equivalent digest.
+    """
+
+    hasher = hashlib.sha256()
+    hasher.update(b"mode:" + unit.mode.encode("ascii") + b"\n")
+    for member in sorted(unit.members, key=lambda item: _path_bytes(item.id)):
+        hasher.update(b"member\n")
+        hasher.update(b"id:" + _path_bytes(member.id) + b"\n")
+        hasher.update(
+            b"destination:" + _path_bytes(normalize_destination(member.destination)) + b"\n"
+        )
+    for replacement in sorted(unit.replacement_members, key=lambda item: _path_bytes(item.id)):
+        hasher.update(b"replacement\n")
+        hasher.update(b"id:" + _path_bytes(replacement.id) + b"\n")
+        hasher.update(
+            b"destination:" + _path_bytes(normalize_destination(replacement.destination)) + b"\n"
+        )
+        hasher.update(b"projection:" + replacement.projection.encode("ascii") + b"\n")
     return "sha256:" + hasher.hexdigest()
 
 
@@ -384,6 +586,18 @@ def _require_mapping(value: object, context: str, error_code: str) -> dict[str, 
     return value
 
 
+def _reject_unknown_keys(
+    mapping: Mapping[str, object],
+    allowed: Sequence[str],
+    context: str,
+) -> None:
+    """Reject any key outside the schema version's closed key set."""
+
+    unknown = sorted(str(key) for key in mapping if key not in allowed)
+    if unknown:
+        raise SyncError(UNKNOWN_KEY, f"{context}: unknown key(s) {', '.join(unknown)}")
+
+
 def _require_str(mapping: dict[str, object], key: str, context: str, error_code: str) -> str:
     """Require a non-empty string field from a mapping."""
 
@@ -432,6 +646,7 @@ def _parse_catalog_member(value: object, unit_id: str) -> CatalogMember:
     """Parse one catalog member mapping."""
 
     mapping = _require_mapping(value, f"catalog unit {unit_id} member", CATALOG_CHANGED)
+    _reject_unknown_keys(mapping, CATALOG_MEMBER_KEYS, f"catalog unit {unit_id} member")
     member_id = _require_str(mapping, "id", f"catalog unit {unit_id} member", CATALOG_CHANGED)
     source = _require_str(mapping, "source", f"catalog member {unit_id}.{member_id}", CATALOG_CHANGED)
     destination = _require_str(
@@ -444,6 +659,7 @@ def _parse_catalog_unit(value: object) -> CatalogUnit:
     """Parse one catalog unit mapping."""
 
     mapping = _require_mapping(value, "catalog unit", CATALOG_CHANGED)
+    _reject_unknown_keys(mapping, CATALOG_UNIT_KEYS, "catalog unit")
     unit_id = _require_str(mapping, "id", "catalog unit", CATALOG_CHANGED)
     projection = _require_str(mapping, "sync_projection", f"catalog unit {unit_id}", CATALOG_CHANGED)
     if projection not in ("file", "tree", "none"):
@@ -465,10 +681,13 @@ def parse_catalog(raw: bytes, source: str) -> Catalog:
     """Parse the machine catalog from raw file bytes."""
 
     root = _require_mapping(_load_yaml(raw, source, CATALOG_CHANGED), "catalog document", CATALOG_CHANGED)
+    _reject_unknown_keys(root, CATALOG_ROOT_KEYS, "catalog document")
     version = root.get("schema_version")
     if version != SCHEMA_VERSION:
         raise SyncError(CATALOG_CHANGED, f"{source}: unsupported catalog schema_version {version!r}")
     block = _require_mapping(root.get("catalog"), "catalog", CATALOG_CHANGED)
+    _reject_unknown_keys(block, CATALOG_BLOCK_KEYS, "catalog")
+    upstream = _require_str(block, "upstream_repository", "catalog", CATALOG_CHANGED)
     exclusions = _string_list(
         block.get("digest_exclusions"), DEFAULT_EXCLUSIONS, "catalog.digest_exclusions", CATALOG_CHANGED
     )
@@ -480,13 +699,19 @@ def parse_catalog(raw: bytes, source: str) -> Catalog:
         raise SyncError(CATALOG_CHANGED, f"{source}: units must be a non-empty list")
     units = tuple(_parse_catalog_unit(item) for item in units_raw)
     _reject_duplicate_ids((unit.id for unit in units), "catalog units", CATALOG_CHANGED)
-    return Catalog(digest_exclusions=exclusions, control_paths=controls, units=units)
+    return Catalog(
+        upstream_repository=upstream,
+        digest_exclusions=exclusions,
+        control_paths=controls,
+        units=units,
+    )
 
 
 def _parse_declaration_member(value: object, unit_id: str) -> DeclarationMember:
     """Parse one declaration member mapping."""
 
     mapping = _require_mapping(value, f"declaration unit {unit_id} member", INVALID_MAPPING)
+    _reject_unknown_keys(mapping, DECLARATION_MEMBER_KEYS, f"declaration unit {unit_id} member")
     member_id = _require_str(mapping, "id", f"declaration unit {unit_id} member", INVALID_MAPPING)
     destination = _require_str(
         mapping, "destination", f"declaration unit {unit_id} member {member_id}", INVALID_MAPPING
@@ -494,36 +719,69 @@ def _parse_declaration_member(value: object, unit_id: str) -> DeclarationMember:
     return DeclarationMember(id=member_id, destination=destination)
 
 
+def _parse_replacement_member(value: object, unit_id: str) -> ReplacementMember:
+    """Parse one declaration replacement-member mapping."""
+
+    mapping = _require_mapping(value, f"declaration unit {unit_id} replacement member", INVALID_MAPPING)
+    _reject_unknown_keys(
+        mapping, DECLARATION_REPLACEMENT_KEYS, f"declaration unit {unit_id} replacement member"
+    )
+    member_id = _require_str(
+        mapping, "id", f"declaration unit {unit_id} replacement member", INVALID_MAPPING
+    )
+    destination = _require_str(
+        mapping,
+        "destination",
+        f"declaration unit {unit_id} replacement member {member_id}",
+        INVALID_MAPPING,
+    )
+    projection = _require_str(
+        mapping,
+        "projection",
+        f"declaration unit {unit_id} replacement member {member_id}",
+        INVALID_MAPPING,
+    )
+    if projection not in PROJECTIONS:
+        raise SyncError(
+            UNSUPPORTED_PROJECTION,
+            f"declaration unit {unit_id!r} replacement member {member_id!r}: "
+            f"unknown projection {projection!r}",
+        )
+    return ReplacementMember(id=member_id, destination=destination, projection=projection)
+
+
 def _parse_declaration_unit(value: object) -> DeclarationUnit:
     """Parse one declaration unit mapping."""
 
     mapping = _require_mapping(value, "declaration unit", INVALID_MAPPING)
+    _reject_unknown_keys(mapping, DECLARATION_UNIT_KEYS, "declaration unit")
     unit_id = _require_str(mapping, "id", "declaration unit", INVALID_MAPPING)
     mode = _require_str(mapping, "mode", f"declaration unit {unit_id}", INVALID_MAPPING)
     if mode not in DECLARED_MODES:
         raise SyncError(INVALID_MAPPING, f"declaration unit {unit_id!r}: unknown mode {mode!r}")
 
     if mode == "replacement":
-        raw_destinations = mapping.get("replacement_destinations")
-        if not isinstance(raw_destinations, list) or not raw_destinations:
+        raw_members = mapping.get("replacement_members")
+        if not isinstance(raw_members, list) or not raw_members:
             raise SyncError(
                 INVALID_MAPPING,
-                f"declaration unit {unit_id!r}: replacement_destinations must be a non-empty list",
+                f"declaration unit {unit_id!r}: replacement_members must be a non-empty list",
             )
-        destinations: list[str] = []
-        for destination in raw_destinations:
-            if not isinstance(destination, str) or destination == "":
-                raise SyncError(
-                    INVALID_MAPPING,
-                    f"declaration unit {unit_id!r}: replacement destinations must be non-empty strings",
-                )
-            destinations.append(destination)
+        replacement_members = tuple(_parse_replacement_member(item, unit_id) for item in raw_members)
+        _reject_duplicate_ids(
+            (member.id for member in replacement_members),
+            f"declaration unit {unit_id!r} replacement members",
+            INVALID_MAPPING,
+        )
         if mapping.get("members") not in (None, []):
             raise SyncError(
                 INVALID_MAPPING, f"declaration unit {unit_id!r}: replacement must not declare members"
             )
         return DeclarationUnit(
-            id=unit_id, mode=mode, members=(), replacement_destinations=tuple(destinations)
+            id=unit_id,
+            mode=mode,
+            members=(),
+            replacement_members=replacement_members,
         )
 
     members_raw = mapping.get("members")
@@ -533,18 +791,19 @@ def _parse_declaration_unit(value: object) -> DeclarationUnit:
     _reject_duplicate_ids(
         (member.id for member in members), f"declaration unit {unit_id!r} members", INVALID_MAPPING
     )
-    if mapping.get("replacement_destinations") not in (None, []):
+    if mapping.get("replacement_members") not in (None, []):
         raise SyncError(
             INVALID_MAPPING,
-            f"declaration unit {unit_id!r}: non-replacement must not declare replacement_destinations",
+            f"declaration unit {unit_id!r}: non-replacement must not declare replacement_members",
         )
-    return DeclarationUnit(id=unit_id, mode=mode, members=members, replacement_destinations=())
+    return DeclarationUnit(id=unit_id, mode=mode, members=members, replacement_members=())
 
 
 def parse_declaration(raw: bytes, source: str) -> Declaration:
     """Parse the adopter declaration from raw file bytes."""
 
     root = _require_mapping(_load_yaml(raw, source, INVALID_MAPPING), "declaration", INVALID_MAPPING)
+    _reject_unknown_keys(root, DECLARATION_ROOT_KEYS, "declaration")
     version = root.get("schema_version")
     if version != SCHEMA_VERSION:
         raise SyncError(INVALID_MAPPING, f"{source}: unsupported declaration schema_version {version!r}")
@@ -561,6 +820,7 @@ def _parse_lock_member(value: object, unit_id: str) -> LockMember:
     """Parse one lock member mapping."""
 
     mapping = _require_mapping(value, f"lock unit {unit_id} member", INVALID_LOCK)
+    _reject_unknown_keys(mapping, LOCK_MEMBER_KEYS, f"lock unit {unit_id} member")
     member_id = _require_str(mapping, "id", f"lock unit {unit_id} member", INVALID_LOCK)
     destination = _require_str(mapping, "destination", f"lock unit {unit_id} member {member_id}", INVALID_LOCK)
     accepted_upstream = _require_str(
@@ -581,50 +841,113 @@ def _parse_lock_member(value: object, unit_id: str) -> LockMember:
     )
 
 
+def _parse_lock_replacement_member(value: object, unit_id: str) -> LockReplacementMember:
+    """Parse one lock replacement-member mapping."""
+
+    mapping = _require_mapping(value, f"lock unit {unit_id} replacement member", INVALID_LOCK)
+    _reject_unknown_keys(mapping, LOCK_REPLACEMENT_KEYS, f"lock unit {unit_id} replacement member")
+    member_id = _require_str(mapping, "id", f"lock unit {unit_id} replacement member", INVALID_LOCK)
+    destination = _require_str(
+        mapping, "destination", f"lock unit {unit_id} replacement member {member_id}", INVALID_LOCK
+    )
+    projection = _require_str(
+        mapping, "projection", f"lock unit {unit_id} replacement member {member_id}", INVALID_LOCK
+    )
+    if projection not in PROJECTIONS:
+        raise SyncError(
+            UNSUPPORTED_PROJECTION,
+            f"lock unit {unit_id!r} replacement member {member_id!r}: unknown projection {projection!r}",
+        )
+    accepted_destination = _require_str(
+        mapping,
+        "accepted_destination_digest",
+        f"lock unit {unit_id} replacement member {member_id}",
+        INVALID_LOCK,
+    )
+    if not DIGEST_RE.fullmatch(accepted_destination):
+        raise SyncError(
+            INVALID_LOCK,
+            f"lock unit {unit_id!r} replacement member {member_id!r}: invalid destination digest",
+        )
+    return LockReplacementMember(
+        id=member_id,
+        destination=destination,
+        projection=projection,
+        accepted_destination_digest=accepted_destination,
+    )
+
+
+def _require_unit_evidence(
+    mapping: dict[str, object], unit_id: str
+) -> tuple[str, str, str, str]:
+    """Require the per-unit accepted source, catalog, intent, and upstream fields."""
+
+    accepted_source = _require_str(
+        mapping, "accepted_source_commit", f"lock unit {unit_id}", INVALID_LOCK
+    )
+    if not COMMIT_RE.fullmatch(accepted_source):
+        raise SyncError(
+            INVALID_LOCK, f"lock unit {unit_id!r}: accepted_source_commit must be a full 40-character sha"
+        )
+    accepted_catalog = _require_str(
+        mapping, "accepted_catalog_digest", f"lock unit {unit_id}", INVALID_LOCK
+    )
+    if not DIGEST_RE.fullmatch(accepted_catalog):
+        raise SyncError(INVALID_LOCK, f"lock unit {unit_id!r}: accepted_catalog_digest must be a sha256 digest")
+    intent_digest = _require_str(
+        mapping, "declaration_unit_digest", f"lock unit {unit_id}", INVALID_LOCK
+    )
+    if not DIGEST_RE.fullmatch(intent_digest):
+        raise SyncError(
+            INVALID_LOCK, f"lock unit {unit_id!r}: declaration_unit_digest must be a sha256 digest"
+        )
+    accepted_upstream = _require_str(
+        mapping, "accepted_upstream_digest", f"lock unit {unit_id}", INVALID_LOCK
+    )
+    if not DIGEST_RE.fullmatch(accepted_upstream):
+        raise SyncError(
+            INVALID_LOCK, f"lock unit {unit_id!r}: accepted_upstream_digest must be a sha256 digest"
+        )
+    return accepted_source, accepted_catalog, intent_digest, accepted_upstream
+
+
 def _parse_lock_unit(value: object) -> LockUnit:
     """Parse one lock unit mapping."""
 
     mapping = _require_mapping(value, "lock unit", INVALID_LOCK)
+    _reject_unknown_keys(mapping, LOCK_UNIT_KEYS, "lock unit")
     unit_id = _require_str(mapping, "id", "lock unit", INVALID_LOCK)
     mode = _require_str(mapping, "mode", f"lock unit {unit_id}", INVALID_LOCK)
     if mode not in DECLARED_MODES:
         raise SyncError(INVALID_LOCK, f"lock unit {unit_id!r}: unknown mode {mode!r}")
+    accepted_source, accepted_catalog, intent_digest, accepted_upstream = _require_unit_evidence(
+        mapping, unit_id
+    )
 
     if mode == "replacement":
-        raw_destinations = mapping.get("replacement_destinations")
-        if not isinstance(raw_destinations, list) or not raw_destinations:
+        raw_members = mapping.get("replacement_members")
+        if not isinstance(raw_members, list) or not raw_members:
             raise SyncError(
                 INVALID_LOCK,
-                f"lock unit {unit_id!r}: replacement_destinations must be a non-empty list",
+                f"lock unit {unit_id!r}: replacement_members must be a non-empty list",
             )
-        destinations: list[str] = []
-        for destination in raw_destinations:
-            if not isinstance(destination, str) or destination == "":
-                raise SyncError(
-                    INVALID_LOCK,
-                    f"lock unit {unit_id!r}: replacement destinations must be non-empty strings",
-                )
-            destinations.append(destination)
-        accepted_upstream = _require_str(mapping, "accepted_upstream_digest", f"lock unit {unit_id}", INVALID_LOCK)
-        accepted_destination = _require_str(
-            mapping, "accepted_destination_digest", f"lock unit {unit_id}", INVALID_LOCK
+        replacement_members = tuple(_parse_lock_replacement_member(item, unit_id) for item in raw_members)
+        _reject_duplicate_ids(
+            (member.id for member in replacement_members),
+            f"lock unit {unit_id!r} replacement members",
+            INVALID_LOCK,
         )
-        if not DIGEST_RE.fullmatch(accepted_upstream):
-            raise SyncError(INVALID_LOCK, f"lock unit {unit_id!r}: invalid accepted_upstream_digest")
-        if accepted_destination != "not_applicable":
-            raise SyncError(
-                INVALID_LOCK,
-                f"lock unit {unit_id!r}: replacement accepted_destination_digest must be not_applicable",
-            )
         if mapping.get("members") not in (None, []):
             raise SyncError(INVALID_LOCK, f"lock unit {unit_id!r}: replacement must not declare members")
         return LockUnit(
             id=unit_id,
             mode=mode,
-            members=(),
-            replacement_destinations=tuple(destinations),
+            accepted_source_commit=accepted_source,
+            accepted_catalog_digest=accepted_catalog,
+            declaration_unit_digest=intent_digest,
             accepted_upstream_digest=accepted_upstream,
-            accepted_destination_digest=accepted_destination,
+            members=(),
+            replacement_members=replacement_members,
         )
 
     members_raw = mapping.get("members")
@@ -632,13 +955,19 @@ def _parse_lock_unit(value: object) -> LockUnit:
         raise SyncError(INVALID_LOCK, f"lock unit {unit_id!r}: members must be a non-empty list")
     members = tuple(_parse_lock_member(item, unit_id) for item in members_raw)
     _reject_duplicate_ids((member.id for member in members), f"lock unit {unit_id!r} members", INVALID_LOCK)
+    if mapping.get("replacement_members") not in (None, []):
+        raise SyncError(
+            INVALID_LOCK, f"lock unit {unit_id!r}: non-replacement must not declare replacement_members"
+        )
     return LockUnit(
         id=unit_id,
         mode=mode,
+        accepted_source_commit=accepted_source,
+        accepted_catalog_digest=accepted_catalog,
+        declaration_unit_digest=intent_digest,
+        accepted_upstream_digest=accepted_upstream,
         members=members,
-        replacement_destinations=(),
-        accepted_upstream_digest="",
-        accepted_destination_digest="",
+        replacement_members=(),
     )
 
 
@@ -646,16 +975,11 @@ def parse_lock(raw: bytes, source: str) -> Lock:
     """Parse the generated adoption lock from raw file bytes."""
 
     root = _require_mapping(_load_yaml(raw, source, INVALID_LOCK), "lock", INVALID_LOCK)
+    _reject_unknown_keys(root, LOCK_ROOT_KEYS, "lock")
     version = root.get("schema_version")
     if version != SCHEMA_VERSION:
         raise SyncError(INVALID_LOCK, f"{source}: unsupported lock schema_version {version!r}")
     upstream = _require_str(root, "upstream_repository", "lock", INVALID_LOCK)
-    commit = _require_str(root, "accepted_source_commit", "lock", INVALID_LOCK)
-    if not COMMIT_RE.fullmatch(commit):
-        raise SyncError(INVALID_LOCK, "accepted_source_commit must be a full 40-character sha")
-    catalog_digest = _require_str(root, "catalog_digest", "lock", INVALID_LOCK)
-    if not DIGEST_RE.fullmatch(catalog_digest):
-        raise SyncError(INVALID_LOCK, "catalog_digest must be a sha256 digest")
     declaration_digest = _require_str(root, "declaration_digest", "lock", INVALID_LOCK)
     if not DIGEST_RE.fullmatch(declaration_digest):
         raise SyncError(INVALID_LOCK, "declaration_digest must be a sha256 digest")
@@ -666,16 +990,27 @@ def parse_lock(raw: bytes, source: str) -> Lock:
     _reject_duplicate_ids((unit.id for unit in units), "lock units", INVALID_LOCK)
     return Lock(
         upstream_repository=upstream,
-        accepted_source_commit=commit,
-        catalog_digest=catalog_digest,
         declaration_digest=declaration_digest,
         units=units,
     )
 
 
 # --------------------------------------------------------------------------- #
-# Declaration and mapping validation (protocol-v1 Section 6)
+# Identity and declaration/mapping validation (protocol-v1 Sections 5-6)
 # --------------------------------------------------------------------------- #
+
+
+def require_repository_identity(*identities: str) -> str:
+    """Require every repository identity to be equal, returning the shared value."""
+
+    reference = identities[0]
+    for value in identities[1:]:
+        if value != reference:
+            raise SyncError(
+                REPOSITORY_IDENTITY_MISMATCH,
+                f"upstream_repository mismatch: {value!r} does not equal {reference!r}",
+            )
+    return reference
 
 
 def validate_destination_mappings(
@@ -716,16 +1051,16 @@ def validate_destination_mappings(
 
 def validate_declaration(
     declaration: Declaration,
-    accepted_units: dict[str, CatalogUnit],
-    current_units: dict[str, CatalogUnit],
+    accepted_units: Mapping[str, CatalogUnit],
+    current_units: Mapping[str, CatalogUnit],
     control_paths: Sequence[str],
 ) -> tuple[tuple[str, str], ...]:
-    """Validate a declaration against the baseline catalog and protocol rules.
+    """Validate a declaration against its baseline and current catalog views.
 
-    The member mapping is checked against the accepted (baseline) catalog when
+    A declared unit is resolved against its accepted (baseline) catalog when
     available so an unchanged declaration remains valid even when upstream adds
     or removes members. Returns the normalized ``(destination, kind)`` ownership
-    list for the filesystem symlink-escape check.
+    list for the snapshot symlink-escape check.
     """
 
     owned: list[tuple[str, str]] = []
@@ -742,7 +1077,7 @@ def validate_declaration(
                     UNSUPPORTED_PROJECTION,
                     f"declaration unit {unit.id!r} references an installer-only sync_projection: none unit",
                 )
-            if candidate.sync_projection not in ("file", "tree"):
+            if candidate.sync_projection not in PROJECTIONS:
                 raise SyncError(
                     UNSUPPORTED_PROJECTION,
                     f"declaration unit {unit.id!r} has unsupported sync_projection {candidate.sync_projection!r}",
@@ -755,10 +1090,10 @@ def validate_declaration(
         if unit.mode == "replacement":
             if unit.members:
                 raise SyncError(INVALID_MAPPING, f"replacement unit {unit.id!r} must not declare members")
-            if not unit.replacement_destinations:
-                raise SyncError(INVALID_MAPPING, f"replacement unit {unit.id!r} needs replacement_destinations")
-            for destination in unit.replacement_destinations:
-                owned.append((destination, "file"))
+            if not unit.replacement_members:
+                raise SyncError(INVALID_MAPPING, f"replacement unit {unit.id!r} needs replacement_members")
+            for replacement in unit.replacement_members:
+                owned.append((replacement.destination, replacement.projection))
             continue
 
         reference_ids = sorted(member.id for member in reference.members)
@@ -788,18 +1123,35 @@ def validate_lock_matches_declaration(
             raise SyncError(INVALID_LOCK, f"lock is missing declared unit {unit.id!r}")
         if lock_unit.mode != unit.mode:
             raise SyncError(INVALID_LOCK, f"lock unit {unit.id!r} mode does not match the declaration")
+        if lock_unit.declaration_unit_digest != declaration_unit_intent_digest(unit):
+            raise SyncError(
+                INVALID_LOCK,
+                f"lock unit {unit.id!r} declaration_unit_digest does not match the declaration",
+            )
         if unit.mode == "replacement":
-            lock_destinations = tuple(
-                normalize_destination(destination) for destination in lock_unit.replacement_destinations
-            )
-            declared_destinations = tuple(
-                normalize_destination(destination) for destination in unit.replacement_destinations
-            )
-            if lock_destinations != declared_destinations:
+            lock_members = {member.id: member for member in lock_unit.replacement_members}
+            if len(lock_members) != len(unit.replacement_members):
                 raise SyncError(
-                    INVALID_LOCK,
-                    f"lock unit {unit.id!r} replacement destinations do not match the declaration",
+                    INVALID_LOCK, f"lock unit {unit.id!r} replacement member set does not match the declaration"
                 )
+            for member in unit.replacement_members:
+                lock_member = lock_members.get(member.id)
+                if lock_member is None:
+                    raise SyncError(
+                        INVALID_LOCK, f"lock unit {unit.id!r} is missing replacement member {member.id!r}"
+                    )
+                if lock_member.projection != member.projection:
+                    raise SyncError(
+                        INVALID_LOCK,
+                        f"lock unit {unit.id!r} replacement member {member.id!r} projection mismatch",
+                    )
+                if normalize_destination(lock_member.destination) != normalize_destination(
+                    member.destination
+                ):
+                    raise SyncError(
+                        INVALID_LOCK,
+                        f"lock unit {unit.id!r} replacement member {member.id!r} destination mismatch",
+                    )
             continue
         lock_members = {member.id: member for member in lock_unit.members}
         if len(lock_members) != len(unit.members):
@@ -826,23 +1178,8 @@ def validate_lock_matches_declaration(
             raise SyncError(INVALID_LOCK, f"lock contains undeclared unit {lock_unit.id!r}")
 
 
-def assert_no_symlink_escape(adopter_repo: Path, owned: Sequence[tuple[str, str]]) -> None:
-    """Reject any destination that escapes the adopter repository through a symlink."""
-
-    root = adopter_repo.resolve()
-    for destination, _kind in owned:
-        resolved = (adopter_repo / destination).resolve()
-        try:
-            resolved.relative_to(root)
-        except ValueError as exc:
-            raise SyncError(
-                INVALID_MAPPING,
-                f"destination {destination!r} escapes the repository root through a symlink",
-            ) from exc
-
-
 # --------------------------------------------------------------------------- #
-# IO helpers: subprocess Git reads and filesystem reads
+# IO helpers: subprocess Git reads and explicit snapshot projection
 # --------------------------------------------------------------------------- #
 
 
@@ -859,7 +1196,7 @@ def _git(repo: Path, args: Sequence[str]) -> subprocess.CompletedProcess[bytes]:
         raise SyncError(BASELINE_UNAVAILABLE, f"unable to execute git: {exc}") from exc
 
 
-def git_resolve_commit(repo: Path, revision: str) -> str | None:
+def git_resolve_commit(repo: Path, revision: str, error_code: str = BASELINE_UNAVAILABLE) -> str | None:
     """Resolve a revision to a full 40-character commit id, or None."""
 
     result = _git(repo, ["rev-parse", "--verify", "--quiet", f"{revision}^{{commit}}"])
@@ -936,6 +1273,46 @@ def git_ls_tree(repo: Path, revision: str, path: str, recursive: bool) -> tuple[
     return _parse_ls_tree(result.stdout)
 
 
+def _parse_index_entries(data: bytes) -> tuple[TreeEntry, ...]:
+    """Parse NUL-delimited ``git ls-files --stage -z`` output.
+
+    Only stage-0 entries are returned; unmerged stages 1-3 are not a coherent
+    staged snapshot and are ignored so projection stays deterministic.
+    """
+
+    entries: list[TreeEntry] = []
+    for record in data.split(b"\x00"):
+        if not record:
+            continue
+        meta, _, path_bytes = record.partition(b"\t")
+        fields = meta.split(b" ")
+        if len(fields) < 3 or fields[2] != b"0":
+            continue
+        mode = fields[0].decode("ascii", "replace")
+        object_type = "commit" if mode == "160000" else "blob"
+        entries.append(
+            TreeEntry(
+                mode=mode,
+                object_type=object_type,
+                object_id=fields[1].decode("ascii", "replace"),
+                path=path_bytes.decode("utf-8", "surrogateescape"),
+            )
+        )
+    return tuple(entries)
+
+
+def _index_entries(repo: Path, prefix: str | None) -> tuple[TreeEntry, ...]:
+    """List staged index entries, optionally restricted to a path prefix."""
+
+    args = ["ls-files", "--stage", "-z"]
+    if prefix is not None:
+        args.extend(["--", prefix])
+    result = _git(repo, args)
+    if result.returncode != 0:
+        return ()
+    return _parse_index_entries(result.stdout)
+
+
 def read_file_bytes(path: Path, error_code: str, label: str) -> bytes:
     """Read a filesystem file as raw bytes, raising a protocol error on failure."""
 
@@ -946,7 +1323,193 @@ def read_file_bytes(path: Path, error_code: str, label: str) -> bytes:
 
 
 # --------------------------------------------------------------------------- #
-# Content projection
+# Explicit adopter snapshot parsing and projection
+# --------------------------------------------------------------------------- #
+
+
+def parse_adopter_snapshot(
+    adopter_repo: Path,
+    adopter_revision: str | None,
+    adopter_index: bool,
+) -> AdopterSnapshot:
+    """Require exactly one explicit adopter snapshot and validate it.
+
+    A missing, ambiguous, malformed, or non-commit revision input is rejected
+    before any report or candidate lock is produced, and no worktree, index,
+    ref, object-database, or network state is written.
+    """
+
+    if adopter_index and adopter_revision is not None:
+        raise SyncError(
+            ADOPTER_SNAPSHOT_UNAVAILABLE,
+            "provide exactly one of --adopter-revision or --adopter-index, not both",
+        )
+    if not adopter_index and adopter_revision is None:
+        raise SyncError(
+            ADOPTER_SNAPSHOT_UNAVAILABLE,
+            "an explicit adopter snapshot is required: provide --adopter-revision or --adopter-index",
+        )
+    if adopter_index:
+        probe = _git(adopter_repo, ["rev-parse", "--git-dir"])
+        if probe.returncode != 0:
+            raise SyncError(
+                ADOPTER_SNAPSHOT_UNAVAILABLE,
+                f"adopter repository {adopter_repo} is not a Git repository",
+            )
+        return AdopterSnapshot(repo=adopter_repo, kind="index", revision=None)
+    if not isinstance(adopter_revision, str) or not COMMIT_RE.fullmatch(adopter_revision):
+        raise SyncError(
+            ADOPTER_SNAPSHOT_UNAVAILABLE,
+            f"--adopter-revision must be a full 40-character commit: {adopter_revision!r}",
+        )
+    resolved = git_resolve_commit(adopter_repo, adopter_revision, ADOPTER_SNAPSHOT_UNAVAILABLE)
+    if resolved is None:
+        raise SyncError(
+            ADOPTER_SNAPSHOT_UNAVAILABLE,
+            f"adopter revision {adopter_revision!r} is not a commit in {adopter_repo}",
+        )
+    return AdopterSnapshot(repo=adopter_repo, kind="revision", revision=resolved)
+
+
+def snapshot_lookup_entry(snapshot: AdopterSnapshot, path: str) -> TreeEntry | None:
+    """Return the exact snapshot entry at a path, or None when absent."""
+
+    if path == "":
+        return None
+    if snapshot.kind == "revision":
+        assert snapshot.revision is not None
+        entries = git_ls_tree(snapshot.repo, snapshot.revision, path, recursive=False)
+        if not entries:
+            return None
+        return entries[0]
+    for entry in _index_entries(snapshot.repo, path):
+        if entry.path == path:
+            return entry
+    return None
+
+
+def snapshot_list_tree(snapshot: AdopterSnapshot, destination: str) -> tuple[TreeEntry, ...]:
+    """List member-relative entries beneath a snapshot tree destination."""
+
+    if snapshot.kind == "revision":
+        assert snapshot.revision is not None
+        entries = git_ls_tree(snapshot.repo, snapshot.revision, destination, recursive=True)
+        return entries if entries is not None else ()
+    prefix = destination + "/"
+    listed: list[TreeEntry] = []
+    for entry in _index_entries(snapshot.repo, destination):
+        if entry.path == destination:
+            continue
+        if entry.path.startswith(prefix):
+            listed.append(
+                TreeEntry(
+                    mode=entry.mode,
+                    object_type=entry.object_type,
+                    object_id=entry.object_id,
+                    path=entry.path[len(prefix):],
+                )
+            )
+    return tuple(listed)
+
+
+def snapshot_has_children(snapshot: AdopterSnapshot, destination: str) -> bool:
+    """Return True when a snapshot destination prefix contains child entries."""
+
+    return bool(snapshot_list_tree(snapshot, destination))
+
+
+def snapshot_project_file(
+    snapshot: AdopterSnapshot,
+    destination: str,
+    error_code: str,
+    label: str,
+) -> tuple[ProjectedEntry, ...]:
+    """Project one explicit snapshot file destination into a logical ``""`` entry."""
+
+    entry = snapshot_lookup_entry(snapshot, destination)
+    if entry is None:
+        if snapshot_has_children(snapshot, destination):
+            raise SyncError(
+                UNSUPPORTED_SPECIAL_FILE,
+                f"{label}: destination {destination!r} is a directory, not a file",
+            )
+        return ()
+    if entry.object_type != "blob" or entry.mode not in FILE_MODES:
+        raise SyncError(
+            UNSUPPORTED_SPECIAL_FILE,
+            f"{label}: destination {destination!r} is not a regular, executable, or symlink file",
+        )
+    content = git_read_blob_by_id(snapshot.repo, entry.object_id)
+    if content is None:
+        raise SyncError(error_code, f"{label}: unable to read blob for {destination!r}")
+    return (ProjectedEntry(path="", mode=entry.mode, content=content),)
+
+
+def snapshot_project_tree(
+    snapshot: AdopterSnapshot,
+    destination: str,
+    exclusions: Sequence[str],
+    error_code: str,
+    label: str,
+) -> tuple[ProjectedEntry, ...]:
+    """Project an explicit snapshot tree destination into member-relative entries."""
+
+    projected: list[ProjectedEntry] = []
+    for entry in snapshot_list_tree(snapshot, destination):
+        if is_excluded_path(entry.path, exclusions):
+            continue
+        if entry.object_type != "blob" or entry.mode not in FILE_MODES:
+            raise SyncError(
+                UNSUPPORTED_SPECIAL_FILE,
+                f"{label}: {entry.path!r} is not a regular, executable, or symlink file",
+            )
+        content = git_read_blob_by_id(snapshot.repo, entry.object_id)
+        if content is None:
+            raise SyncError(error_code, f"{label}: unable to read blob for {entry.path!r}")
+        projected.append(ProjectedEntry(path=entry.path, mode=entry.mode, content=content))
+    return tuple(projected)
+
+
+def snapshot_project(
+    snapshot: AdopterSnapshot,
+    destination: str,
+    projection: str,
+    exclusions: Sequence[str],
+    error_code: str,
+    label: str,
+) -> tuple[ProjectedEntry, ...]:
+    """Project an explicit snapshot destination as a file or tree."""
+
+    if projection == "file":
+        return snapshot_project_file(snapshot, destination, error_code, label)
+    if projection == "tree":
+        return snapshot_project_tree(snapshot, destination, exclusions, error_code, label)
+    raise SyncError(
+        UNSUPPORTED_PROJECTION,
+        f"destination {destination!r} has unsupported projection {projection!r}",
+    )
+
+
+def snapshot_assert_no_symlink_escape(
+    snapshot: AdopterSnapshot,
+    owned: Sequence[tuple[str, str]],
+) -> None:
+    """Reject any destination whose ancestor path is a snapshot symlink."""
+
+    for destination, _kind in owned:
+        parts = destination.split("/")
+        for index in range(1, len(parts)):
+            ancestor = "/".join(parts[:index])
+            entry = snapshot_lookup_entry(snapshot, ancestor)
+            if entry is not None and entry.mode == "120000":
+                raise SyncError(
+                    INVALID_MAPPING,
+                    f"destination {destination!r} escapes the repository root through a symlink",
+                )
+
+
+# --------------------------------------------------------------------------- #
+# Upstream content projection
 # --------------------------------------------------------------------------- #
 
 
@@ -1005,84 +1568,6 @@ def project_tree_source(
     return tuple(projected)
 
 
-def project_file_path(path: Path) -> tuple[ProjectedEntry, ...]:
-    """Project an adopter filesystem file (or symlink) into one entry."""
-
-    if path.is_symlink():
-        target = os.readlink(path)
-        return (ProjectedEntry(path="", mode="120000", content=os.fsencode(target)),)
-    if not path.exists():
-        return ()
-    if not path.is_file():
-        raise SyncError(UNSUPPORTED_SPECIAL_FILE, f"{path} is not a regular, executable, or symlink file")
-    content = path.read_bytes()
-    mode = "100755" if (path.stat().st_mode & 0o111) else "100644"
-    return (ProjectedEntry(path="", mode=mode, content=content),)
-
-
-def _walk_tree(
-    directory: Path,
-    relative: str,
-    exclusions: Sequence[str],
-    out: list[ProjectedEntry],
-) -> None:
-    """Recursively project an adopter directory into logical tree entries."""
-
-    try:
-        with os.scandir(directory) as scanner:
-            scanned = sorted(scanner, key=lambda entry: entry.name)
-    except FileNotFoundError:
-        return
-    for entry in scanned:
-        child = entry.name if relative == "" else f"{relative}/{entry.name}"
-        if is_excluded_path(child, exclusions):
-            continue
-        if entry.is_symlink():
-            target = os.readlink(entry.path)
-            out.append(ProjectedEntry(path=child, mode="120000", content=os.fsencode(target)))
-        elif entry.is_dir(follow_symlinks=False):
-            _walk_tree(Path(entry.path), child, exclusions, out)
-        elif entry.is_file(follow_symlinks=False):
-            stat = entry.stat(follow_symlinks=False)
-            mode = "100755" if (stat.st_mode & 0o111) else "100644"
-            out.append(ProjectedEntry(path=child, mode=mode, content=Path(entry.path).read_bytes()))
-        else:
-            raise SyncError(
-                UNSUPPORTED_SPECIAL_FILE, f"{entry.path} is not a regular, executable, or symlink file"
-            )
-
-
-def project_tree_path(root: Path, exclusions: Sequence[str]) -> tuple[ProjectedEntry, ...]:
-    """Project an adopter filesystem tree into member-relative POSIX entries."""
-
-    if root.is_symlink():
-        raise SyncError(UNSUPPORTED_SPECIAL_FILE, f"{root} is a symlink, not a directory")
-    if not root.is_dir():
-        return ()
-    out: list[ProjectedEntry] = []
-    _walk_tree(root, "", exclusions, out)
-    return tuple(out)
-
-
-def project_destination(
-    adopter_repo: Path,
-    destination: str,
-    projection: str,
-    exclusions: Sequence[str],
-) -> tuple[ProjectedEntry, ...]:
-    """Project an adopter destination as a file or tree according to projection."""
-
-    path = adopter_repo / destination
-    if projection == "file":
-        return project_file_path(path)
-    if projection == "tree":
-        return project_tree_path(path, exclusions)
-    raise SyncError(
-        UNSUPPORTED_PROJECTION,
-        f"destination {destination!r} has unsupported projection {projection!r}",
-    )
-
-
 def digest_entries(entries: Sequence[ProjectedEntry]) -> str | None:
     """Digest a projected entry set, returning None when the destination is absent."""
 
@@ -1129,7 +1614,7 @@ def unit_member_digests(
     return digests
 
 
-def unit_content_digest(unit: CatalogUnit, member_digests: dict[str, str]) -> str:
+def unit_content_digest(unit: CatalogUnit, member_digests: Mapping[str, str]) -> str:
     """Compute a unit digest from its per-member digest map in catalog order."""
 
     return digest_unit_from_members(tuple((member.id, member_digests[member.id]) for member in unit.members))
@@ -1177,7 +1662,17 @@ def _base_disposition(mode: str, delta_upstream: str, delta_destination: str) ->
     """Derive the protocol-v1 Section 7 disposition for a mode and both deltas."""
 
     if mode == "replacement":
-        return "review_required"
+        if delta_upstream == "removed":
+            return "retirement_available"
+        destination_changed = delta_destination in ("modified", "added", "removed")
+        upstream_changed = delta_upstream in ("modified", "added")
+        if not upstream_changed and not destination_changed:
+            return "current"
+        if not upstream_changed and destination_changed:
+            return "local_drift"
+        if upstream_changed and not destination_changed:
+            return "review_required"
+        return "conflict"
     if mode == "destination_owned":
         return "unmanaged" if delta_upstream == "unchanged" else "retirement_available"
     if delta_upstream == "removed":
@@ -1197,11 +1692,7 @@ def disposition_for(mode: str, delta_upstream: str, delta_destination: str, base
     """Derive the full disposition including undeclared and baseline-advance cases."""
 
     if mode == "not_declared":
-        if delta_upstream == "added":
-            return "adoption_available"
-        if delta_upstream == "removed":
-            return "retirement_available"
-        return "unmanaged"
+        return "adoption_available"
     base = _base_disposition(mode, delta_upstream, delta_destination)
     if base == "current" and baseline_behind:
         return "baseline_advance_required"
@@ -1209,73 +1700,141 @@ def disposition_for(mode: str, delta_upstream: str, delta_destination: str, base
 
 
 # --------------------------------------------------------------------------- #
+# Accepted evidence verification
+# --------------------------------------------------------------------------- #
+
+
+def _parse_catalog_at(
+    repo: Path,
+    commit: str,
+    expected_digest: str,
+    expected_identity: str,
+) -> Catalog:
+    """Read, digest-check, identity-check, and parse the catalog at a commit."""
+
+    raw = git_read_object(repo, commit, CATALOG_PATH)
+    if raw is None:
+        raise SyncError(CATALOG_CHANGED, f"catalog {CATALOG_PATH} is missing at {commit}")
+    if sha256_digest(raw) != expected_digest:
+        raise SyncError(CATALOG_CHANGED, f"catalog raw digest differs from the lock at {commit}")
+    catalog = parse_catalog(raw, f"{CATALOG_PATH}@{commit}")
+    require_repository_identity(expected_identity, catalog.upstream_repository)
+    return catalog
+
+
+def verify_lock_evidence(
+    upstream_repo: Path,
+    lock: Lock,
+    current_commit: str,
+) -> dict[str, AcceptedEvidence]:
+    """Reproduce every accepted upstream/member/unit digest from its row commit.
+
+    A missing commit, non-ancestor commit, unreadable catalog, mismatched catalog
+    digest, or mismatched member/unit digest fails closed as a top-level error.
+    """
+
+    evidence: dict[str, AcceptedEvidence] = {}
+    for row in lock.units:
+        commit = git_resolve_commit(upstream_repo, row.accepted_source_commit)
+        if commit is None:
+            raise SyncError(
+                BASELINE_UNAVAILABLE,
+                f"accepted commit {row.accepted_source_commit!r} is missing or is not a commit",
+            )
+        if not git_is_ancestor(upstream_repo, commit, current_commit):
+            raise SyncError(
+                BASELINE_UNAVAILABLE,
+                f"accepted commit {commit} is not an ancestor of {current_commit}",
+            )
+        catalog = _parse_catalog_at(
+            upstream_repo, commit, row.accepted_catalog_digest, lock.upstream_repository
+        )
+        unit = {candidate.id: candidate for candidate in catalog.units}.get(row.id)
+        if unit is None or unit.sync_projection not in PROJECTIONS:
+            raise SyncError(
+                INVALID_LOCK,
+                f"lock unit {row.id!r}: accepted catalog at {commit} has no synchronizable unit",
+            )
+        member_digests = unit_member_digests(
+            upstream_repo,
+            commit,
+            unit,
+            catalog.digest_exclusions,
+            CATALOG_CHANGED,
+            f"accepted unit {row.id!r}",
+        )
+        unit_digest = unit_content_digest(unit, member_digests)
+        if unit_digest != row.accepted_upstream_digest:
+            raise SyncError(
+                INVALID_LOCK,
+                f"lock unit {row.id!r}: accepted_upstream_digest does not reproduce from {commit}",
+            )
+        for member in row.members:
+            expected = member_digests.get(member.id)
+            if expected is None or expected != member.accepted_upstream_digest:
+                raise SyncError(
+                    INVALID_LOCK,
+                    f"lock unit {row.id!r} member {member.id!r}: accepted upstream digest does not reproduce",
+                )
+        evidence[row.id] = AcceptedEvidence(unit=unit, commit=commit, member_digests=member_digests)
+    return evidence
+
+
+# --------------------------------------------------------------------------- #
 # Report builders
 # --------------------------------------------------------------------------- #
 
 
-def _upstream_member_reports(
-    accepted_unit: CatalogUnit | None,
-    current_unit: CatalogUnit | None,
-    accepted_digests: dict[str, str],
-    current_digests: dict[str, str],
-) -> tuple[MemberReport, ...]:
-    """Build member reports for a unit without a destination mapping."""
+def _catalog_only_member_reports(unit: CatalogUnit) -> tuple[MemberReport, ...]:
+    """Build report rows for a unit with no declaration mapping."""
 
-    ordered_ids: list[str] = []
-    for source in (accepted_unit, current_unit):
-        if source is None:
-            continue
-        for member in source.members:
-            if member.id not in ordered_ids:
-                ordered_ids.append(member.id)
-    reports: list[MemberReport] = []
-    for member_id in ordered_ids:
-        accepted_digest = accepted_digests.get(member_id)
-        current_digest = current_digests.get(member_id)
-        reports.append(
-            MemberReport(
-                id=member_id,
-                destination=None,
-                upstream_delta=upstream_delta(accepted_digest, current_digest),
-                destination_delta="not_applicable",
-                accepted_upstream_digest=accepted_digest if accepted_digest is not None else "not_applicable",
-                current_upstream_digest=current_digest if current_digest is not None else "not_applicable",
-                accepted_destination_digest="not_applicable",
-                current_destination_digest="not_applicable",
-            )
+    return tuple(
+        MemberReport(
+            id=member.id,
+            destination=None,
+            projection=unit.sync_projection,
+            upstream_delta="not_applicable",
+            destination_delta="not_applicable",
+            accepted_upstream_digest="not_applicable",
+            current_upstream_digest="not_applicable",
+            accepted_destination_digest="not_applicable",
+            current_destination_digest="not_applicable",
         )
-    return tuple(reports)
+        for member in unit.members
+    )
 
 
 def _declared_member_reports(
     unit: DeclarationUnit,
     lock_unit: LockUnit,
-    accepted_unit: CatalogUnit | None,
+    accepted_unit: CatalogUnit,
     current_unit: CatalogUnit | None,
-    accepted_digests: dict[str, str],
-    current_digests: dict[str, str],
-    adopter_repo: Path,
+    evidence: AcceptedEvidence,
+    snapshot: AdopterSnapshot,
+    current_digests: Mapping[str, str],
     exclusions: Sequence[str],
 ) -> tuple[MemberReport, ...]:
     """Build member reports for a declared mirror/adapted/destination_owned unit."""
 
     lock_members = {member.id: member for member in lock_unit.members}
     reference = current_unit if current_unit is not None else accepted_unit
-    if reference is None:  # pragma: no cover - validated earlier
-        raise SyncError(INVALID_LOCK, f"declared unit {unit.id!r} has no catalog reference")
     projection = reference.sync_projection
+    current_digests = current_digests if current_unit is not None else {}
     reports: list[MemberReport] = []
     for member in unit.members:
         lock_member = lock_members[member.id]
         destination = normalize_destination(member.destination)
-        current_entries = project_destination(adopter_repo, destination, projection, exclusions)
+        current_entries = snapshot_project(
+            snapshot, destination, projection, exclusions, INVALID_MAPPING, f"unit {unit.id!r} member {member.id!r}"
+        )
         current_destination_digest = digest_entries(current_entries)
-        accepted_digest = accepted_digests.get(member.id)
+        accepted_digest = evidence.member_digests.get(member.id)
         current_digest = current_digests.get(member.id)
         reports.append(
             MemberReport(
                 id=member.id,
                 destination=destination,
+                projection=projection,
                 upstream_delta=upstream_delta(accepted_digest, current_digest),
                 destination_delta=member_destination_delta(
                     lock_member.accepted_destination_digest, current_destination_digest
@@ -1293,107 +1852,134 @@ def _declared_member_reports(
     return tuple(reports)
 
 
+def _replacement_member_reports(
+    unit: DeclarationUnit,
+    lock_unit: LockUnit,
+    snapshot: AdopterSnapshot,
+    exclusions: Sequence[str],
+) -> tuple[MemberReport, ...]:
+    """Build member reports for a declared replacement unit's local members."""
+
+    lock_members = {member.id: member for member in lock_unit.replacement_members}
+    reports: list[MemberReport] = []
+    for member in unit.replacement_members:
+        lock_member = lock_members[member.id]
+        destination = normalize_destination(member.destination)
+        current_entries = snapshot_project(
+            snapshot,
+            destination,
+            member.projection,
+            exclusions,
+            INVALID_MAPPING,
+            f"replacement unit {unit.id!r} member {member.id!r}",
+        )
+        current_destination_digest = digest_entries(current_entries)
+        reports.append(
+            MemberReport(
+                id=member.id,
+                destination=destination,
+                projection=member.projection,
+                upstream_delta="not_applicable",
+                destination_delta=member_destination_delta(
+                    lock_member.accepted_destination_digest, current_destination_digest
+                ),
+                accepted_upstream_digest="not_applicable",
+                current_upstream_digest="not_applicable",
+                accepted_destination_digest=lock_member.accepted_destination_digest,
+                current_destination_digest=(
+                    current_destination_digest if current_destination_digest is not None else "not_applicable"
+                ),
+            )
+        )
+    return tuple(reports)
+
+
 def build_check_reports(
     declaration: Declaration,
     lock: Lock,
-    accepted_catalog: Catalog,
+    evidence: Mapping[str, AcceptedEvidence],
     current_catalog: Catalog,
     upstream_repo: Path,
-    adopter_repo: Path,
-    accepted_commit: str,
     current_commit: str,
+    snapshot: AdopterSnapshot,
 ) -> tuple[UnitReport, ...]:
-    """Reconcile accepted and current catalogs into orthogonal unit reports."""
+    """Reconcile accepted per-unit evidence and the current catalog into reports."""
 
-    accepted_by_id = {unit.id: unit for unit in accepted_catalog.units}
     current_by_id = {unit.id: unit for unit in current_catalog.units}
     declaration_by_id = {unit.id: unit for unit in declaration.units}
     lock_by_id = {unit.id: unit for unit in lock.units}
-    baseline_behind = accepted_commit != current_commit
+    exclusions = current_catalog.digest_exclusions
 
-    all_ids = sorted(set(accepted_by_id) | set(current_by_id))
+    all_ids = sorted(set(current_by_id) | set(declaration_by_id) | set(lock_by_id))
     reports: list[UnitReport] = []
     for unit_id in all_ids:
-        accepted_unit = accepted_by_id.get(unit_id)
         current_unit = current_by_id.get(unit_id)
         declaration_unit = declaration_by_id.get(unit_id)
+        lock_unit = lock_by_id.get(unit_id)
 
-        accepted_present = accepted_unit is not None and accepted_unit.sync_projection in ("file", "tree")
-        current_present = current_unit is not None and current_unit.sync_projection in ("file", "tree")
-        if not accepted_present and not current_present:
+        if declaration_unit is None:
+            if current_unit is None:
+                continue
+            reports.append(
+                UnitReport(
+                    id=unit_id,
+                    mode="not_declared",
+                    upstream_delta="added",
+                    destination_delta="not_applicable",
+                    disposition=disposition_for("not_declared", "added", "not_applicable", False),
+                    members=_catalog_only_member_reports(current_unit),
+                )
+            )
             continue
 
-        accepted_digests: dict[str, str] = {}
+        if lock_unit is None or unit_id not in evidence:  # pragma: no cover - validated earlier
+            raise SyncError(INVALID_LOCK, f"declared unit {unit_id!r} has no verified lock evidence")
+        accepted_unit = evidence[unit_id].unit
+        baseline_behind = evidence[unit_id].commit != current_commit
         current_digests: dict[str, str] = {}
-        accepted_unit_digest: str | None = None
         current_unit_digest: str | None = None
-        if accepted_present and accepted_unit is not None:
-            accepted_digests = unit_member_digests(
-                upstream_repo,
-                accepted_commit,
-                accepted_unit,
-                accepted_catalog.digest_exclusions,
-                CATALOG_CHANGED,
-                f"accepted unit {unit_id!r}",
-            )
-            accepted_unit_digest = unit_content_digest(accepted_unit, accepted_digests)
-        if current_present and current_unit is not None:
+        if current_unit is not None and current_unit.sync_projection in PROJECTIONS:
             current_digests = unit_member_digests(
                 upstream_repo,
                 current_commit,
                 current_unit,
-                current_catalog.digest_exclusions,
+                exclusions,
                 CATALOG_CHANGED,
                 f"current unit {unit_id!r}",
             )
             current_unit_digest = unit_content_digest(current_unit, current_digests)
 
+        accepted_unit_digest = unit_content_digest(accepted_unit, evidence[unit_id].member_digests)
         delta_upstream = upstream_delta(accepted_unit_digest, current_unit_digest)
 
-        if declaration_unit is None:
-            members = _upstream_member_reports(accepted_unit, current_unit, accepted_digests, current_digests)
-            reports.append(
-                UnitReport(
-                    id=unit_id,
-                    mode="not_declared",
-                    upstream_delta=delta_upstream,
-                    destination_delta="not_applicable",
-                    disposition=disposition_for(
-                        "not_declared", delta_upstream, "not_applicable", baseline_behind
-                    ),
-                    members=members,
-                    replacement_destinations=(),
-                )
-            )
-            continue
-
         if declaration_unit.mode == "replacement":
-            members = _upstream_member_reports(accepted_unit, current_unit, accepted_digests, current_digests)
+            members = _replacement_member_reports(declaration_unit, lock_unit, snapshot, exclusions)
+            delta_destination = aggregate_destination_delta(
+                tuple(member.destination_delta for member in members)
+            )
             reports.append(
                 UnitReport(
                     id=unit_id,
                     mode="replacement",
                     upstream_delta=delta_upstream,
-                    destination_delta="not_applicable",
+                    destination_delta=delta_destination,
                     disposition=disposition_for(
-                        "replacement", delta_upstream, "not_applicable", baseline_behind
+                        "replacement", delta_upstream, delta_destination, baseline_behind
                     ),
                     members=members,
-                    replacement_destinations=declaration_unit.replacement_destinations,
                 )
             )
             continue
 
-        lock_unit = lock_by_id[unit_id]
         members = _declared_member_reports(
             declaration_unit,
             lock_unit,
             accepted_unit,
             current_unit,
-            accepted_digests,
+            evidence[unit_id],
+            snapshot,
             current_digests,
-            adopter_repo,
-            accepted_catalog.digest_exclusions,
+            exclusions,
         )
         delta_destination = aggregate_destination_delta(tuple(member.destination_delta for member in members))
         reports.append(
@@ -1406,7 +1992,6 @@ def build_check_reports(
                     declaration_unit.mode, delta_upstream, delta_destination, baseline_behind
                 ),
                 members=members,
-                replacement_destinations=(),
             )
         )
     return tuple(reports)
@@ -1421,17 +2006,20 @@ def check_adoption(
     upstream_repo: Path,
     adopter_repo: Path,
     current_revision: str,
+    adopter_revision: str | None,
+    adopter_index: bool,
     declaration_path: Path,
     lock_path: Path,
 ) -> CheckReport:
-    """Run the read-only dual-baseline comparison and return the report.
+    """Run the read-only per-unit comparison and return the report.
 
-    The accepted catalog and content come from the lock's accepted commit; the
-    current catalog and content come from the explicit current revision. The
-    declaration and lock are read from the adopter repository, and destination
-    content is read from the adopter worktree. No worktree is written.
+    The accepted catalog and content for each lock row come from that row's
+    accepted source commit; the current catalog and content come from the
+    explicit current revision. Destination content is read from exactly one
+    explicit adopter snapshot. Nothing is written.
     """
 
+    snapshot = parse_adopter_snapshot(adopter_repo, adopter_revision, adopter_index)
     current_revision = require_full_commit(current_revision)
     declaration_raw = read_file_bytes(declaration_path, INVALID_MAPPING, "adoption declaration")
     declaration = parse_declaration(declaration_raw, str(declaration_path))
@@ -1443,119 +2031,134 @@ def check_adoption(
             DECLARATION_CHANGED,
             "declaration raw digest differs from the lock's declaration_digest",
         )
-    if lock.upstream_repository != declaration.upstream_repository:
-        raise SyncError(INVALID_LOCK, "lock and declaration upstream_repository differ")
 
     current_commit = git_resolve_commit(upstream_repo, current_revision)
     if current_commit is None:
         raise SyncError(BASELINE_UNAVAILABLE, f"current revision {current_revision!r} is not a commit")
-    accepted_commit = git_resolve_commit(upstream_repo, lock.accepted_source_commit)
-    if accepted_commit is None:
-        raise SyncError(
-            BASELINE_UNAVAILABLE,
-            f"accepted commit {lock.accepted_source_commit!r} is missing or is not a commit",
-        )
-    if not git_is_ancestor(upstream_repo, accepted_commit, current_commit):
-        raise SyncError(
-            BASELINE_UNAVAILABLE,
-            f"accepted commit {accepted_commit} is not an ancestor of {current_commit}",
-        )
-
-    accepted_catalog_raw = git_read_object(upstream_repo, accepted_commit, CATALOG_PATH)
-    if accepted_catalog_raw is None:
-        raise SyncError(CATALOG_CHANGED, f"accepted catalog {CATALOG_PATH} is missing at {accepted_commit}")
-    if sha256_digest(accepted_catalog_raw) != lock.catalog_digest:
-        raise SyncError(
-            CATALOG_CHANGED,
-            "accepted catalog raw digest differs from the lock's catalog_digest",
-        )
-    accepted_catalog = parse_catalog(accepted_catalog_raw, f"{CATALOG_PATH}@{accepted_commit}")
 
     current_catalog_raw = git_read_object(upstream_repo, current_commit, CATALOG_PATH)
     if current_catalog_raw is None:
         raise SyncError(CATALOG_CHANGED, f"current catalog {CATALOG_PATH} is missing at {current_commit}")
     current_catalog = parse_catalog(current_catalog_raw, f"{CATALOG_PATH}@{current_commit}")
 
-    accepted_by_id = {unit.id: unit for unit in accepted_catalog.units}
-    current_by_id = {unit.id: unit for unit in current_catalog.units}
-    owned = validate_declaration(declaration, accepted_by_id, current_by_id, accepted_catalog.control_paths)
-    assert_no_symlink_escape(adopter_repo, owned)
+    require_repository_identity(
+        declaration.upstream_repository,
+        lock.upstream_repository,
+        current_catalog.upstream_repository,
+    )
+
+    evidence = verify_lock_evidence(upstream_repo, lock, current_commit)
+    accepted_units = {row_id: item.unit for row_id, item in evidence.items()}
+    current_units = {unit.id: unit for unit in current_catalog.units}
+    owned = validate_declaration(
+        declaration, accepted_units, current_units, current_catalog.control_paths
+    )
+    snapshot_assert_no_symlink_escape(snapshot, owned)
     validate_lock_matches_declaration(declaration, lock)
 
     units = build_check_reports(
         declaration,
         lock,
-        accepted_catalog,
+        evidence,
         current_catalog,
         upstream_repo,
-        adopter_repo,
-        accepted_commit,
         current_commit,
+        snapshot,
     )
     return CheckReport(status="ok", error=None, units=units)
+
+
+def _load_accepted_units_for_proposal(
+    upstream_repo: Path,
+    lock: Lock,
+) -> dict[str, CatalogUnit]:
+    """Load the synchronizable catalog units referenced by an existing lock."""
+
+    accepted: dict[str, CatalogUnit] = {}
+    for row in lock.units:
+        catalog = _parse_catalog_at(
+            upstream_repo, row.accepted_source_commit, row.accepted_catalog_digest, lock.upstream_repository
+        )
+        for unit in catalog.units:
+            if unit.sync_projection in PROJECTIONS:
+                accepted[unit.id] = unit
+    return accepted
 
 
 def _build_lock_unit_document(
     unit: DeclarationUnit,
     catalog_unit: CatalogUnit,
     upstream_repo: Path,
-    adopter_repo: Path,
-    revision: str,
+    snapshot: AdopterSnapshot,
+    commit: str,
+    catalog_digest: str,
     exclusions: Sequence[str],
-) -> dict[str, object]:
-    """Build one candidate lock unit document with accepted digests."""
+) -> LockUnitDocument:
+    """Build one candidate lock unit row with per-unit accepted evidence."""
+
+    member_digests = unit_member_digests(
+        upstream_repo, commit, catalog_unit, exclusions, CATALOG_CHANGED, f"unit {unit.id!r}"
+    )
+    document: LockUnitDocument = {
+        "id": unit.id,
+        "mode": unit.mode,
+        "accepted_source_commit": commit,
+        "accepted_catalog_digest": catalog_digest,
+        "declaration_unit_digest": declaration_unit_intent_digest(unit),
+        "accepted_upstream_digest": unit_content_digest(catalog_unit, member_digests),
+    }
 
     if unit.mode == "replacement":
-        member_digests = unit_member_digests(
-            upstream_repo, revision, catalog_unit, exclusions, CATALOG_CHANGED, f"unit {unit.id!r}"
-        )
-        return {
-            "id": unit.id,
-            "mode": "replacement",
-            "replacement_destinations": [
-                normalize_destination(destination) for destination in unit.replacement_destinations
-            ],
-            "accepted_upstream_digest": unit_content_digest(catalog_unit, member_digests),
-            "accepted_destination_digest": "not_applicable",
-        }
+        replacement_documents: list[LockReplacementMemberDocument] = []
+        for member in unit.replacement_members:
+            destination = normalize_destination(member.destination)
+            label = f"replacement unit {unit.id!r} member {member.id!r}"
+            entries = snapshot_project(
+                snapshot, destination, member.projection, exclusions, INVALID_MAPPING, label
+            )
+            destination_digest = digest_entries(entries)
+            if destination_digest is None:
+                raise SyncError(
+                    INVALID_MAPPING,
+                    f"declared destination {destination!r} is missing in the adopter snapshot",
+                )
+            replacement_documents.append(
+                {
+                    "id": member.id,
+                    "destination": destination,
+                    "projection": member.projection,
+                    "accepted_destination_digest": destination_digest,
+                }
+            )
+        document["replacement_members"] = replacement_documents
+        return document
 
     catalog_members = {member.id: member for member in catalog_unit.members}
-    lock_members: list[dict[str, str]] = []
+    member_documents: list[LockMemberDocument] = []
     for member in unit.members:
         catalog_member = catalog_members.get(member.id)
         if catalog_member is None:  # pragma: no cover - validated earlier
-            raise SyncError(INVALID_MAPPING, f"declaration unit {unit.id!r} member {member.id!r} is unknown")
-        member_label = f"unit {unit.id!r} member {member.id!r}"
-        if catalog_unit.sync_projection == "file":
-            entries = project_file_source(
-                upstream_repo, revision, catalog_member.source, CATALOG_CHANGED, member_label
+            raise SyncError(
+                INVALID_MAPPING, f"declaration unit {unit.id!r} member {member.id!r} is unknown"
             )
-        else:
-            entries = project_tree_source(
-                upstream_repo,
-                revision,
-                catalog_member.source,
-                exclusions,
-                CATALOG_CHANGED,
-                member_label,
-            )
-        upstream_digest = compute_member_digest(entries)
+        upstream_digest = member_digests[member.id]
         destination = normalize_destination(member.destination)
-        destination_entries = project_destination(
-            adopter_repo, destination, catalog_unit.sync_projection, exclusions
+        label = f"unit {unit.id!r} member {member.id!r}"
+        entries = snapshot_project(
+            snapshot, destination, catalog_unit.sync_projection, exclusions, INVALID_MAPPING, label
         )
-        destination_digest = digest_entries(destination_entries)
+        destination_digest = digest_entries(entries)
         if destination_digest is None:
             raise SyncError(
                 INVALID_MAPPING,
-                f"declared destination {destination!r} is missing in the adopter repository",
+                f"declared destination {destination!r} is missing in the adopter snapshot",
             )
         if unit.mode == "mirror" and upstream_digest != destination_digest:
             raise SyncError(
                 INVALID_LOCK,
                 f"mirror unit {unit.id!r} member {member.id!r} accepted source and destination digests differ",
             )
-        lock_members.append(
+        member_documents.append(
             {
                 "id": member.id,
                 "destination": destination,
@@ -1563,21 +2166,30 @@ def _build_lock_unit_document(
                 "accepted_destination_digest": destination_digest,
             }
         )
-    return {"id": unit.id, "mode": unit.mode, "members": lock_members}
+    document["members"] = member_documents
+    return document
 
 
 def propose_lock(
     upstream_repo: Path,
     adopter_repo: Path,
     current_revision: str,
+    adopter_revision: str | None,
+    adopter_index: bool,
     declaration_path: Path,
+    lock_path: Path,
+    selected_units: Sequence[str],
 ) -> str:
     """Build a candidate adoption lock and return candidate YAML text.
 
-    The candidate's accepted commit is the current revision. Nothing is written
+    An initial proposal (no existing lock) accepts every declared unit at the
+    current catalog-bearing revision. An update proposal requires an existing
+    lock plus explicit unit selections, preserves every unselected row, and
+    rejects added, removed, or remapped unselected intent. Nothing is written
     to the filesystem; the caller writes the returned text to stdout.
     """
 
+    snapshot = parse_adopter_snapshot(adopter_repo, adopter_revision, adopter_index)
     current_revision = require_full_commit(current_revision)
     declaration_raw = read_file_bytes(declaration_path, INVALID_MAPPING, "adoption declaration")
     declaration = parse_declaration(declaration_raw, str(declaration_path))
@@ -1585,34 +2197,119 @@ def propose_lock(
     current_commit = git_resolve_commit(upstream_repo, current_revision)
     if current_commit is None:
         raise SyncError(BASELINE_UNAVAILABLE, f"current revision {current_revision!r} is not a commit")
-
     catalog_raw = git_read_object(upstream_repo, current_commit, CATALOG_PATH)
     if catalog_raw is None:
         raise SyncError(CATALOG_CHANGED, f"catalog {CATALOG_PATH} is missing at {current_commit}")
     catalog = parse_catalog(catalog_raw, f"{CATALOG_PATH}@{current_commit}")
+    require_repository_identity(declaration.upstream_repository, catalog.upstream_repository)
+    catalog_digest = sha256_digest(catalog_raw)
     units_by_id = {unit.id: unit for unit in catalog.units}
+    declaration_by_id = {unit.id: unit for unit in declaration.units}
 
-    owned = validate_declaration(declaration, units_by_id, units_by_id, catalog.control_paths)
-    assert_no_symlink_escape(adopter_repo, owned)
-
-    lock_units = [
-        _build_lock_unit_document(
-            unit,
-            units_by_id[unit.id],
-            upstream_repo,
-            adopter_repo,
-            current_commit,
-            catalog.digest_exclusions,
+    selected = list(selected_units)
+    existing_lock: Lock | None = None
+    raw_lock_document: Mapping[str, object] | None = None
+    if lock_path.exists():
+        lock_raw = read_file_bytes(lock_path, INVALID_LOCK, "adoption lock")
+        existing_lock = parse_lock(lock_raw, str(lock_path))
+        require_repository_identity(declaration.upstream_repository, existing_lock.upstream_repository)
+        raw_lock_document = cast(
+            Mapping[str, object], _load_yaml(lock_raw, str(lock_path), INVALID_LOCK)
         )
-        for unit in declaration.units
-    ]
-    document: dict[str, object] = {
+
+    if existing_lock is None:
+        if selected:
+            raise SyncError(
+                INVALID_SELECTION,
+                "--unit may only be used when an adoption lock already exists",
+            )
+        selected_set = set(declaration_by_id)
+        accepted_units: dict[str, CatalogUnit] = dict(units_by_id)
+        output_order = [unit.id for unit in declaration.units]
+    else:
+        if not selected:
+            raise SyncError(
+                INVALID_SELECTION, "an update proposal requires at least one --unit selection"
+            )
+        selected_set = set(selected)
+        for unit_id in selected:
+            if unit_id not in declaration_by_id:
+                raise SyncError(INVALID_SELECTION, f"--unit {unit_id!r} is not declared")
+        locked_ids = {unit.id for unit in existing_lock.units}
+        lock_by_id = {unit.id: unit for unit in existing_lock.units}
+        unselected = {unit.id for unit in declaration.units} - selected_set
+        for unit_id in sorted(unselected - locked_ids):
+            raise SyncError(
+                INVALID_SELECTION,
+                f"unselected unit {unit_id!r} is newly declared; select it to add it",
+            )
+        for unit_id in sorted((locked_ids - selected_set) - set(declaration_by_id)):
+            raise SyncError(
+                INVALID_SELECTION,
+                f"unselected lock unit {unit_id!r} was removed from the declaration; select it to retire it",
+            )
+        for unit_id in sorted(unselected):
+            if (
+                declaration_unit_intent_digest(declaration_by_id[unit_id])
+                != lock_by_id[unit_id].declaration_unit_digest
+            ):
+                raise SyncError(
+                    INVALID_SELECTION,
+                    f"unselected unit {unit_id!r} intent changed; select it to accept the change",
+                )
+        accepted_units = _load_accepted_units_for_proposal(upstream_repo, existing_lock)
+        output_order = [unit.id for unit in existing_lock.units]
+        for unit in declaration.units:
+            if unit.id not in locked_ids and unit.id in selected_set:
+                output_order.append(unit.id)
+
+    owned = validate_declaration(declaration, accepted_units, units_by_id, catalog.control_paths)
+    snapshot_assert_no_symlink_escape(snapshot, owned)
+
+    raw_units_by_id: dict[str, LockUnitDocument] = {}
+    if raw_lock_document is not None:
+        raw_units = raw_lock_document.get("units")
+        if isinstance(raw_units, list):
+            for item in raw_units:
+                if isinstance(item, dict) and isinstance(item.get("id"), str):
+                    raw_units_by_id[cast(str, item["id"])] = cast(LockUnitDocument, item)
+
+    output_units: list[LockUnitDocument] = []
+    for unit_id in output_order:
+        if unit_id in selected_set:
+            declaration_unit = declaration_by_id.get(unit_id)
+            if declaration_unit is None:
+                continue  # a selected retirement drops the row
+            catalog_unit = units_by_id.get(unit_id)
+            if catalog_unit is None:
+                raise SyncError(
+                    INVALID_MAPPING,
+                    f"declaration unit {unit_id!r} is not present in the current catalog",
+                )
+            output_units.append(
+                _build_lock_unit_document(
+                    declaration_unit,
+                    catalog_unit,
+                    upstream_repo,
+                    snapshot,
+                    current_commit,
+                    catalog_digest,
+                    catalog.digest_exclusions,
+                )
+            )
+        else:
+            preserved = raw_units_by_id.get(unit_id)
+            if preserved is None:  # pragma: no cover - guarded by the unselected checks
+                raise SyncError(
+                    INVALID_SELECTION, f"unselected unit {unit_id!r} has no preserved lock row"
+                )
+            output_units.append(preserved)
+
+    document: LockDocument = {
         "schema_version": SCHEMA_VERSION,
         "upstream_repository": declaration.upstream_repository,
-        "accepted_source_commit": current_commit,
-        "catalog_digest": sha256_digest(catalog_raw),
         "declaration_digest": sha256_digest(declaration_raw),
-        "units": lock_units,
+        "units": output_units,
     }
     text = yaml.safe_dump(document, sort_keys=False, default_flow_style=False, allow_unicode=True)
     return text.rstrip("\n") + "\n"
@@ -1626,7 +2323,7 @@ def propose_lock(
 def render_check_json(report: CheckReport) -> str:
     """Render a ``check`` report as stable JSON text."""
 
-    document: dict[str, object] = {
+    document: CheckDocument = {
         "status": report.status,
         "error": report.error,
         "units": [
@@ -1640,6 +2337,7 @@ def render_check_json(report: CheckReport) -> str:
                     {
                         "id": member.id,
                         "destination": member.destination,
+                        "projection": member.projection,
                         "upstream_delta": member.upstream_delta,
                         "destination_delta": member.destination_delta,
                         "accepted_upstream_digest": member.accepted_upstream_digest,
@@ -1649,7 +2347,6 @@ def render_check_json(report: CheckReport) -> str:
                     }
                     for member in unit.members
                 ],
-                "replacement_destinations": list(unit.replacement_destinations),
             }
             for unit in report.units
         ],
@@ -1672,7 +2369,8 @@ def render_check_human(report: CheckReport) -> str:
         for member in unit.members:
             lines.append(
                 f"    member {member.id} | destination={member.destination} "
-                f"| upstream_delta={member.upstream_delta} | destination_delta={member.destination_delta}"
+                f"| projection={member.projection} | upstream_delta={member.upstream_delta} "
+                f"| destination_delta={member.destination_delta}"
             )
     return "\n".join(lines) + "\n"
 
@@ -1714,6 +2412,22 @@ def require_full_commit(revision: str) -> str:
     return revision
 
 
+def _add_snapshot_arguments(parser: argparse.ArgumentParser) -> None:
+    """Add the mutually exclusive explicit adopter snapshot options."""
+
+    snapshot = parser.add_mutually_exclusive_group(required=True)
+    snapshot.add_argument(
+        "--adopter-revision",
+        default=None,
+        help="Full 40-character adopter commit to read destination content from.",
+    )
+    snapshot.add_argument(
+        "--adopter-index",
+        action="store_true",
+        help="Read destination content from the staged adopter index.",
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the argument parser exposing only ``check`` and ``propose-lock``."""
 
@@ -1727,8 +2441,9 @@ def build_parser() -> argparse.ArgumentParser:
     check.add_argument("--upstream-repo", required=True, help="Path to the AICore upstream repository.")
     check.add_argument("--adopter-repo", required=True, help="Path to the adopter repository.")
     check.add_argument(
-        "--current-revision", required=True, help="Full 40-character commit to compare against."
+        "--current-revision", required=True, help="Full 40-character upstream commit to compare against."
     )
+    _add_snapshot_arguments(check)
     check.add_argument("--declaration", default=".aicore/adoption.yaml", help="Adopter declaration path.")
     check.add_argument("--lock", default=".aicore/adoption.lock.yaml", help="Adoption lock path.")
     check.add_argument("--format", choices=("json", "human"), default="human", help="Output format.")
@@ -1741,7 +2456,15 @@ def build_parser() -> argparse.ArgumentParser:
     propose.add_argument(
         "--current-revision", required=True, help="Full 40-character commit to accept as the baseline."
     )
+    _add_snapshot_arguments(propose)
     propose.add_argument("--declaration", default=".aicore/adoption.yaml", help="Adopter declaration path.")
+    propose.add_argument("--lock", default=".aicore/adoption.lock.yaml", help="Existing adoption lock path.")
+    propose.add_argument(
+        "--unit",
+        action="append",
+        default=None,
+        help="Declared unit id to accept (repeatable; update proposals only).",
+    )
 
     return parser
 
@@ -1757,6 +2480,8 @@ def _run_check(args: argparse.Namespace) -> int:
             Path(args.upstream_repo),
             adopter_repo,
             args.current_revision,
+            args.adopter_revision,
+            bool(args.adopter_index),
             declaration_path,
             lock_path,
         )
@@ -1774,12 +2499,17 @@ def _run_propose_lock(args: argparse.Namespace) -> int:
 
     adopter_repo = Path(args.adopter_repo)
     declaration_path = _resolve_adopter_path(adopter_repo, args.declaration)
+    lock_path = _resolve_adopter_path(adopter_repo, args.lock)
     try:
         output = propose_lock(
             Path(args.upstream_repo),
             adopter_repo,
             args.current_revision,
+            args.adopter_revision,
+            bool(args.adopter_index),
             declaration_path,
+            lock_path,
+            args.unit if args.unit is not None else [],
         )
     except SyncError as exc:
         sys.stderr.write(f"error: {exc.code}: {exc.message}\n")

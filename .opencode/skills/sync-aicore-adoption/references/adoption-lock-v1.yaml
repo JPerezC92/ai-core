@@ -1,31 +1,46 @@
 # Reference example (neutral, schema v1) of a generated adoption lock.
 # Produced by `propose-lock` from the example declaration; committed by the
-# adopter as `.aicore/adoption.lock.yaml`. Digest values are illustrative
-# fixtures for schema shape; regenerate from real content with `propose-lock`.
+# adopter as `.aicore/adoption.lock.yaml`.
+#
+# Every unit row carries its own accepted source commit, accepted catalog
+# digest, declaration-unit intent digest, and accepted upstream digest, so a
+# partial acceptance can advance one unit while preserving the others. Digest
+# and commit values are illustrative fixtures for schema shape; regenerate from
+# real content with `propose-lock`.
 schema_version: 1
 upstream_repository: JPerezC92/ai-core
-accepted_source_commit: abcdef0123456789abcdef0123456789abcdef01
-catalog_digest: sha256:652f55016243bf1b9f1bbea46d5749ef892dbe394e46de9d66ab1aacf0b4af57
 declaration_digest: sha256:abcd0ee1fc2cdf511d8a85bd020c5f2f18468d6c442f5506fec7d859b8fea335
 units:
   - id: git-commit
     mode: mirror
+    accepted_source_commit: abcdef0123456789abcdef0123456789abcdef01
+    accepted_catalog_digest: sha256:652f55016243bf1b9f1bbea46d5749ef892dbe394e46de9d66ab1aacf0b4af57
+    declaration_unit_digest: sha256:1111111111111111111111111111111111111111111111111111111111111111
+    accepted_upstream_digest: sha256:fdf2c6249aa09dd7ac4fb6f4fc38dc3eff9d3f6d9d1aab16e58da1132dc45b1e
     members:
       - id: tree
         destination: .opencode/skills/git-commit
         accepted_upstream_digest: sha256:fdf2c6249aa09dd7ac4fb6f4fc38dc3eff9d3f6d9d1aab16e58da1132dc45b1e
-        accepted_destination_digest: sha256:d91cc136dc01c6d738422866e912f20a609ea2e608abf54d68eebe5fad77dbb7
+        accepted_destination_digest: sha256:fdf2c6249aa09dd7ac4fb6f4fc38dc3eff9d3f6d9d1aab16e58da1132dc45b1e
 
   - id: plan-enforce
     mode: mirror
+    accepted_source_commit: abcdef0123456789abcdef0123456789abcdef01
+    accepted_catalog_digest: sha256:652f55016243bf1b9f1bbea46d5749ef892dbe394e46de9d66ab1aacf0b4af57
+    declaration_unit_digest: sha256:2222222222222222222222222222222222222222222222222222222222222222
+    accepted_upstream_digest: sha256:3b528b2a87b309815e1e90e96b024cfb9f1a7c355354591a5a60fe9394f2d5da
     members:
       - id: tree
         destination: .opencode/skills/plan-enforce
         accepted_upstream_digest: sha256:3b528b2a87b309815e1e90e96b024cfb9f1a7c355354591a5a60fe9394f2d5da
-        accepted_destination_digest: sha256:d5d5a290cb21f85fe8b9f6c1e42976ad4d4ffddf34e426233e94473d04b48f18
+        accepted_destination_digest: sha256:3b528b2a87b309815e1e90e96b024cfb9f1a7c355354591a5a60fe9394f2d5da
 
   - id: root-runtime-spec
     mode: adapted
+    accepted_source_commit: abcdef0123456789abcdef0123456789abcdef01
+    accepted_catalog_digest: sha256:652f55016243bf1b9f1bbea46d5749ef892dbe394e46de9d66ab1aacf0b4af57
+    declaration_unit_digest: sha256:3333333333333333333333333333333333333333333333333333333333333333
+    accepted_upstream_digest: sha256:e97b9e20730936bfca968775c51541734f035db33717eda2859ebefbc51d0c38
     members:
       - id: root
         destination: BASE-RULES.md
@@ -34,14 +49,26 @@ units:
 
   - id: investigator
     mode: replacement
-    replacement_destinations:
-      - agents/north/profile.md
-      - agents/south/profile.md
+    accepted_source_commit: abcdef0123456789abcdef0123456789abcdef01
+    accepted_catalog_digest: sha256:652f55016243bf1b9f1bbea46d5749ef892dbe394e46de9d66ab1aacf0b4af57
+    declaration_unit_digest: sha256:4444444444444444444444444444444444444444444444444444444444444444
     accepted_upstream_digest: sha256:8df89d538377fbe04dc53ac776052aa940234f19ffc080076f8eb6ad9ffbc2fa
-    accepted_destination_digest: not_applicable
+    replacement_members:
+      - id: role-a
+        destination: agents/role-a/profile.md
+        projection: file
+        accepted_destination_digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      - id: role-b
+        destination: agents/role-b/profile.md
+        projection: file
+        accepted_destination_digest: sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 
   - id: knowledge-debt
     mode: destination_owned
+    accepted_source_commit: abcdef0123456789abcdef0123456789abcdef01
+    accepted_catalog_digest: sha256:652f55016243bf1b9f1bbea46d5749ef892dbe394e46de9d66ab1aacf0b4af57
+    declaration_unit_digest: sha256:5555555555555555555555555555555555555555555555555555555555555555
+    accepted_upstream_digest: sha256:f2d10be41ac510b3e178d10653e70d1d7a3f6044e944b1299a83a9e6e67225d9
     members:
       - id: file
         destination: knowledge/debt.md

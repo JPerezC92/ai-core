@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.3.0
+  version: 1.3.1
   domain: opencode
 ---
 
@@ -69,7 +69,7 @@ Output three lists: `present` (skip), `missing` (eligible), `partial` (a present
 
 `partial` FAILS CLOSED: report it, do NOT auto-migrate or auto-repair it; ask the user how to proceed.
 
-Apply the include-rules to filter `missing` down to `eligible`: skip `bastion` unless a backend stack (`node` or `python`) is detected OR any skill in the eligible set ships Python scripts (mechanical check: `scripts/*.py` exists under the skill's source directory — true today for `op-model`, `plan-enforce`, `query-verification`, `ticket-runbook`, `sync-aicore-adoption`); skip ticket-team agents + `ticket-runbook` unless ticket marker.
+Apply the include-rules to filter `missing` down to `eligible`: skip `bastion` unless a backend stack (`node` or `python`) is detected OR any skill in the eligible set ships Python scripts (mechanical check: `scripts/*.py` exists under the skill's source directory — true today for `op-model`, `plan-enforce`, `query-verification`, `ticket-runbook`); skip ticket-team agents + `ticket-runbook` unless ticket marker.
 
 ### 2. Select items
 
@@ -152,11 +152,11 @@ Hard corollaries:
 
 ## Core catalog
 
-Before starting step 1, read [`.aicore/core-catalog-v1.yaml`](../../../.aicore/core-catalog-v1.yaml). It is the authoritative machine catalog for the inventory, selection, copy, dependency-union, consistency-pass, and re-diff steps, and it is shared with the `sync-aicore-adoption` skill.
+Before starting step 1, read [`.aicore/core-catalog-v1.yaml`](../../../.aicore/core-catalog-v1.yaml). It is the authoritative machine catalog of **adopted content** for the inventory, selection, copy, dependency-union, consistency-pass, and re-diff steps; the `sync-aicore-adoption` checker reads the same catalog for reconciliation.
 
 - Each unit declares `kind`, `include_rule`, `install_strategy`, `sync_projection`, and one or more `members` (logical `id` + real `source` + canonical `destination`).
 - `sync_projection: file | tree` units are copyable content; `sync_projection: none` units are installer-only merge fragments (permission block, ignore entries) with no deterministic byte projection.
-- `migrate-core-to-project` itself is intentionally not a catalog unit (self-exclusion): the installer never copies itself.
+- `migrate-core-to-project` and `sync-aicore-adoption` are upstream-only AICore management tools, invoked from an AICore checkout against runtime-supplied target paths. Neither is a catalog unit, and neither the migration tool, the synchronization tool, nor the catalog itself is copied as adopted content.
 
 ## Examples
 
@@ -169,7 +169,7 @@ Target: a Next.js frontend project, no ticket system. Scope: `all`. Detected sta
 - Consistency pass removes: incident-team references in `augur.md`/`marshal.md`/Cipher CV, sentinel audit lists trimmed to installed agents, missing `name:` frontmatter added — bastion references stay intact
 - Stack-mismatch report flags all four bound bodies: `atrium` (React/web), `bastion` (NestJS-TS + Python), `crucible` (Vitest/Playwright), `lumen` (web) — detected stacks: `node`; no bound body's stack label is `node` → adapt destination-side
 
-### Example 1b — Rust TUI tool (gitez class)
+### Example 1b — Rust TUI tool
 
 Target: a Rust TUI client (`Cargo.toml` at root), no ticket system. Scope: `all`. Detected stacks: `rust` — no backend stack.
 
@@ -180,9 +180,9 @@ Target: a Rust TUI client (`Cargo.toml` at root), no ticket system. Scope: `all`
 
 ### Example 2 — skills and infra install
 
-Target: any project that wants the git/planning workflows without the agent roster. Scope: `all` — in step 2, select the 8 applicable skills plus the infra files, leaving agents unselected.
+Target: any project that wants the git/planning workflows without the agent roster. Scope: `all` — in step 2, select the 7 applicable skills plus the infra files, leaving agents unselected.
 
-- Copy the 8 applicable skills + `knowledge/agents.md`, `knowledge/debt.md`, the `symptom-problem-register` item (`knowledge/symptoms.md` + `knowledge/problems.md`), `plans/`, `user-stories/`
+- Copy the 7 applicable skills + `knowledge/agents.md`, `knowledge/debt.md`, the `symptom-problem-register` item (`knowledge/symptoms.md` + `knowledge/problems.md`), `plans/`, `user-stories/`
 - Merge `.gitignore` and `opencode.jsonc`; no AGENTS.md roster, no subagents
 
 ### Example 3 — incremental migration
