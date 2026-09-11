@@ -1,0 +1,41 @@
+# Reference example (neutral, schema v1). Copy to an adopter repository as
+# `.aicore/adoption.yaml` and edit for that project. This example uses a
+# fictional adopter: no real project name, path, secret, or digest appears.
+#
+# Intent only: modes and destination mappings. Digests and the accepted
+# commit are generated into the lock by `propose-lock`, never written here.
+schema_version: 1
+upstream_repository: JPerezC92/ai-core
+units:
+  # Mirrored tree: the adopter must match AICore exactly.
+  - id: git-commit
+    mode: mirror
+    members:
+      - { id: tree, destination: .opencode/skills/git-commit }
+
+  - id: plan-enforce
+    mode: mirror
+    members:
+      - { id: tree, destination: .opencode/skills/plan-enforce }
+
+  # Adapted single file: the root runtime spec is renamed at the destination.
+  - id: root-runtime-spec
+    mode: adapted
+    members:
+      - { id: root, destination: BASE-RULES.md }
+
+  # Split-role replacement: one AICore unit is replaced by two local files.
+  - id: investigator
+    mode: replacement
+    replacement_destinations:
+      - agents/north/profile.md
+      - agents/south/profile.md
+
+  # Destination-owned catalog unit: kept locally, tracked against upstream.
+  - id: knowledge-debt
+    mode: destination_owned
+    members:
+      - { id: file, destination: knowledge/debt.md }
+
+# Any catalog unit omitted from `units` reports `not_declared` (for example,
+# `warden` is intentionally undeclared in this example).
