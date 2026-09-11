@@ -2,7 +2,9 @@
 #
 # Single authoritative machine inventory for BOTH initial adoption
 # (migrate-core-to-project) and recurring synchronization
-# (sync-aicore-adoption). Do not hand-edit adopter copies; edit here.
+# (sync-aicore-adoption). This file is the upstream source of truth: edit it
+# in AICore, and the management tools consume it read-only at an explicit
+# AICore revision.
 #
 # Ownership split:
 #   - This catalog is UPSTREAM-OWNED: unit identity, logical members,
@@ -10,6 +12,11 @@
 #     and install strategy.
 #   - Adopter-owned intent (mode, destination overrides, replacement mapping)
 #     lives ONLY in the adopter declaration (`.aicore/adoption.yaml`).
+#   - The AICore management tools (`migrate-core-to-project` and
+#     `sync-aicore-adoption`) are UPSTREAM-ONLY operator tools, invoked from an
+#     AICore checkout against runtime-supplied adopter paths. They are never
+#     adopted-content units, and neither the migration tool nor this catalog is
+#     a unit below.
 #
 # sync_projection:
 #   file  - single tracked file projected for content synchronization
@@ -129,16 +136,6 @@ units:
       - id: tree
         source: .opencode/skills/ticket-runbook
         destination: .opencode/skills/ticket-runbook
-
-  - id: sync-aicore-adoption
-    kind: skill
-    include_rule: always
-    install_strategy: copy
-    sync_projection: tree
-    members:
-      - id: tree
-        source: .opencode/skills/sync-aicore-adoption
-        destination: .opencode/skills/sync-aicore-adoption
 
   # ---------------------------------------------------------------- agents
   - id: atrium

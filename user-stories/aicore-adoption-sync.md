@@ -4,7 +4,7 @@
 > **Title:** AICore adoption synchronization
 > **Status:** active
 > **Epic:** core-governance
-> **Affected areas:** `.aicore/`, `.opencode/skills/sync-aicore-adoption/`, `.opencode/skills/migrate-core-to-project/`, `knowledge/`, `plans/`
+> **Affected areas:** `.aicore/`, `.opencode/skills/sync-aicore-adoption/`, `.opencode/skills/migrate-core-to-project/`, `knowledge/`, `README.md`, `plans/`
 
 ## Persona
 
@@ -12,33 +12,38 @@
 
 ## Goal
 
-- **G:** Compare AICore and an independent adopter repository through accepted upstream and destination baselines, reporting safe updates and explicit conflicts without writing adopter files.
-  - Done when: one upstream catalog, one adopter declaration, and one generated adoption lock let the read-only checker distinguish upstream changes, accepted adaptation, later local drift, replacements, and conflicts deterministically.
+- **G:** Compare AICore and an independent adopter through independently verifiable upstream and destination evidence, reporting every update and explicit conflict without writing adopter files or embedding adopter details in AICore.
+  - Done when: one upstream catalog, one adopter declaration, and one generated adoption lock let the read-only checker validate source identity and accepted evidence, track complete replacements, preserve unresolved unit baselines, and distinguish upstream changes, local drift, and conflicts deterministically.
 
 ## Scenario
 
-- A maintainer has a newer committed AICore revision and an adopter project with accepted local adaptations. They run `check` and receive mode, upstream delta, destination delta, and disposition per unit; when initializing or accepting a baseline, `propose-lock` emits a candidate lock to stdout for review and commit in the adopter repository.
+- A maintainer has a newer committed AICore revision and an adopter project with accepted local adaptations. They run `check` against an explicit adopter Git snapshot and receive mode, upstream delta, destination delta, and disposition for every unit. When initializing, accepting, or retiring explicitly selected units, `propose-lock` emits a candidate lock to stdout while preserving every unresolved unit baseline for later review.
 
 ## Acceptance criteria
 
-- ✅ One versioned machine catalog defines upstream unit/member identity, real content projections, canonical destinations, eligibility, and install strategy for both adoption skills. Evidence: `.aicore/core-catalog-v1.yaml` (36 units: 10 skills / 17 agents / 6 infra / 3 config; closed `kind`, `install_strategy`, `sync_projection`) is read by `migrate-core-to-project` `1.3.0` and `sync-aicore-adoption`; the superseded human manifest was removed. Vault 🔐 (Catalog Steward) `[PASS]` (PR #29).
-- ✅ A versioned adopter declaration defines `mirror`, `adapted`, `replacement`, and `destination_owned` intent and destination mappings without storing generated digests. Evidence: `.opencode/skills/sync-aicore-adoption/references/adoption-declaration-v1.yaml` and protocol §2.
-- ✅ A generated adoption lock records the full accepted source commit, catalog/declaration digests, and accepted upstream and destination digests per declared unit. Evidence: `references/adoption-lock-v1.yaml` and protocol §3; `propose-lock` emits it to stdout only.
-- ✅ The checker reconciles accepted/current catalogs, compares accepted/current upstream and accepted/current destination states, and reports orthogonal declared-or-undeclared mode, delta, and disposition values; mirror baselines with unequal source/destination digests are invalid. Evidence: `sync_aicore_adoption.py`; protocol §§4-7; `test_rejected_mirror_mismatch`, `test_changed_catalogs_reconcile_by_id`, `test_renamed_adapted_root_convergence`.
-- ✅ `check` is read-only; `propose-lock` writes only to stdout; unavailable/non-ancestor baselines, malformed mappings, and unsupported projections fail closed. Evidence: `test_commands_write_nothing` (whole-worktree + `git status` equality), `test_unknown_accepted_commit_is_baseline_unavailable`, `test_non_ancestor_accepted_commit_is_baseline_unavailable`, `test_accepted_catalog_digest_binding`, `test_rejected_mappings`.
-- ✅ Hermetic temporary-repository tests cover mirror file/tree and invalid mirror baselines, renamed adapted root, split-role replacement, destination-owned catalog and undeclared units, catalog additions/removals, convergence, conflicts, control-path/mapping rejection, line endings, exclusions, a golden digest vector, and pre/post whole-worktree plus Git-state equality. Evidence: `test_sync_aicore_adoption.py` — `Ran 32 tests ... OK`.
+- ✅ One versioned machine catalog defines adopted unit/member identity, real content projections, canonical destinations, eligibility, and install strategy and is consumed by both upstream management skills. Evidence: `.aicore/core-catalog-v1.yaml` uses closed `kind`, `install_strategy`, and `sync_projection` values; the superseded human manifest was removed in PR #29.
+- ✅ The declaration and lock schemas bind every unit to independently reproducible source identity, accepted upstream evidence, explicit destination snapshot evidence, and closed typed fields; malformed, unknown, or falsified values fail closed. Evidence: `sync_aicore_adoption.py` `verify_lock_evidence`/`require_repository_identity`; `test_falsified_accepted_digests_rejected`, `test_wrong_repository_identity_rejected`; protocol §§1-10; Bastion 🧱 (Backend & Scripts Architect) `[PASS]`.
+- ✅ Replacement intent uses neutral named `file|tree` members and the checker reports independent accepted/current destination digests and deltas without claiming byte convergence with the upstream unit. Evidence: `replacement_members` schema in `references/`; `test_replacement_members_dispositions`, `test_missing_replacement_member_rejected`.
+- ✅ `check` reports every current catalog change while incremental `propose-lock` advances selected declared units, retires selected prior lock rows omitted from the declaration, preserves every unselected row byte-for-byte, and rejects unknown selections or unselected intent changes. Evidence: `test_selected_retirement_drops_row_preserves_unrelated_and_remains_visible`, `test_selected_retirement_after_upstream_unit_removal`, `test_invalid_retirement_selections_rejected`, `test_unselected_intent_change_rejected`; Bastion 🧱 (Backend & Scripts Architect) `[PASS]`.
+- ✅ Both commands read adopter content only from an explicit committed revision or staged index snapshot, never mutate either repository, and emit reports or candidate YAML only to stdout. Evidence: `--adopter-revision|--adopter-index`; `test_revision_and_index_snapshots_agree`, `test_unstaged_content_excluded_from_index`, `test_commands_write_nothing`.
+- ✅ Neutral fixtures cover the existing hardened contract plus selected retirement, retirement after upstream removal, invalid retirement selections, unrelated-row preservation, post-retirement visibility, and stdout-only behavior; behavioral fixtures remain temporary, with one repository-catalog boundary test. Evidence: `test_sync_aicore_adoption.py` — `Ran 43 tests ... OK`; Crucible 🔥 (Test Architect) `[PASS]`.
 - ✅ The skill uses the existing locked Python environment and stdlib `unittest`; no dependency or CI workflow is added. Evidence: `pyproject.toml`/`uv.lock` unchanged; `uv lock --check` passes; Crucible 🔥 (Test Architect) `[PASS]`; Bastion 🧱 (Backend & Scripts Architect) `[PASS]`; Warden 🔒 (Dependency Warden) `[PASS]`.
-- ✅ Neutral fixtures prove the shapes required for tismart without committing tismart-specific configuration to AICore. Evidence: `test_renamed_adapted_root_convergence`, `test_split_role_replacement`, `test_mirror_tree_dispositions`, and `test_destination_owned_unmanaged_and_retirement` cover the renamed-root, split-role, mirrored-tree, and destination-owned shapes; no tismart name/path/credential exists under `.aicore/` or the skill.
-- ⬜ Tismart Support commits its own `.aicore/adoption.yaml` and `.aicore/adoption.lock.yaml` and completes the first real adoption check after the AICore capability is merged. This destination-owned follow-up is intentionally deferred from the AICore implementation plan.
+- ✅ Migration and synchronization engines remain upstream-only AICore management tools, adopted-content catalog units exclude those engines, no named-adopter reference or mapping exists in AICore feature surfaces, and README truthfully reports 11 discoverable skills, 9 adopted skill units, and 2 excluded management tools. Evidence: `test_catalog_excludes_management_tools`; README literal assertions; Vault 🔐 (Catalog Steward) `[PASS]`.
 
 ## Change log
 
 - 2026-09-11 - aicore-adoption-sync-20260911: created the durable feature definition for baseline-aware upstream synchronization.
-- 2026-09-11 - aicore-adoption-sync-20260911: replaced the insufficient three-way model with declaration/lock separation and accepted upstream plus destination baselines; moved real tismart onboarding to a destination-owned follow-up.
+- 2026-09-11 - aicore-adoption-sync-20260911: replaced the insufficient three-way model with declaration/lock separation and accepted upstream plus destination baselines; moved real adopter onboarding to a destination-owned follow-up.
+- 2026-09-11 - aicore-adoption-sync-hardening-20260911: reopened the incomplete evidence contract for explicit destination snapshots, replacement drift, selected-unit acceptance, repository identity, and adopter-agnostic management-tool ownership.
+- 2026-09-11 - aicore-adoption-sync-hardening-20260911: implemented the hardened v1 contract, the 40-test neutral suite, and the management-tool catalog boundary; all feature acceptance criteria verified.
+- 2026-09-11 - aicore-adoption-sync-hardening-20260911: reopened after PR #30 review exposed an unreachable retirement path and a current README catalog-boundary mismatch.
+- 2026-09-11 - aicore-adoption-sync-hardening-20260911: implemented explicit selected lock-row retirement (declared∪locked selection), corrected the README catalog boundary, and extended the suite to 43 tests; all feature acceptance criteria verified.
 
 ## Resolved decisions
 
 - 2026-09-11 - AICore is the upstream reusable core; adopter repositories keep independent files rather than sharing a physical file.
 - 2026-09-11 - adopter intent lives in `.aicore/adoption.yaml`; generated acceptance evidence lives in `.aicore/adoption.lock.yaml`.
 - 2026-09-11 - the first capability is read-only; automatic apply/merge behavior is deferred.
-- 2026-09-11 - AICore contains only neutral fixtures; the first real tismart declaration and lock are created in tismart after the AICore source release.
+- 2026-09-11 - the user resolved the hardening collision by correcting this existing story instead of creating a competing feature story.
+- 2026-09-11 - AICore contains only neutral fixtures and management engines; every real declaration, lock, mapping, and historical record is created in its owning adopter after the AICore source release.
+- 2026-09-11 - explicit retirement selects a prior locked row omitted from the current declaration and removes only that row from candidate stdout; it does not delete adopter files or introduce a tombstone/schema change.

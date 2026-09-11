@@ -2,8 +2,9 @@
 # `.aicore/adoption.yaml` and edit for that project. This example uses a
 # fictional adopter: no real project name, path, secret, or digest appears.
 #
-# Intent only: modes and destination mappings. Digests and the accepted
-# commit are generated into the lock by `propose-lock`, never written here.
+# Intent only: modes and destination mappings. Digests, the accepted source
+# commit, and the per-unit intent digest are generated into the lock by
+# `propose-lock`, never written here.
 schema_version: 1
 upstream_repository: JPerezC92/ai-core
 units:
@@ -24,12 +25,13 @@ units:
     members:
       - { id: root, destination: BASE-RULES.md }
 
-  # Split-role replacement: one AICore unit is replaced by two local files.
+  # One-to-many replacement: one AICore unit is replaced by two local members,
+  # each with an explicit file|tree projection and a stable local id.
   - id: investigator
     mode: replacement
-    replacement_destinations:
-      - agents/north/profile.md
-      - agents/south/profile.md
+    replacement_members:
+      - { id: role-a, destination: agents/role-a/profile.md, projection: file }
+      - { id: role-b, destination: agents/role-b/profile.md, projection: file }
 
   # Destination-owned catalog unit: kept locally, tracked against upstream.
   - id: knowledge-debt

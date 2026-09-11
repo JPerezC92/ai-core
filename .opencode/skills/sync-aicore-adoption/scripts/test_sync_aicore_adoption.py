@@ -1,10 +1,12 @@
 """Hermetic stdlib-``unittest`` tests for the sync-aicore-adoption checker.
 
-Every test builds its own temporary upstream Git repository and adopter tree and
-never reads the real AICore repository, any checked-in fixture, or the network.
-Tests assert exact protocol enum strings against the implementation by importing
-the sibling module ``sync_aicore_adoption`` (running this file directly puts the
-scripts directory on ``sys.path``).
+Almost every test builds its own temporary upstream Git repository and adopter
+tree and never reads the real AICore repository, any checked-in fixture, or the
+network. The single exception is ``test_catalog_excludes_management_tools``,
+which reads the repository catalog to assert the management tools are not
+adopted-content units. Tests assert exact protocol enum strings against the
+implementation by importing the sibling module ``sync_aicore_adoption``
+(running this file directly puts the scripts directory on ``sys.path``).
 """
 
 from __future__ import annotations
@@ -22,9 +24,14 @@ import yaml
 
 import sync_aicore_adoption as m
 
+CATALOG = ".aicore/core-catalog-v1.yaml"
+
 
 class SyncAdoptionTestBase(unittest.TestCase):
     """Base case owning a temp dir, a hermetic upstream repo, and an adopter tree."""
+
+    UPSTREAM = "example-project/aicore"
+    UPSTREAM_IDENTITY = "JPerezC92/ai-core"
 
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()
@@ -112,14 +119,29 @@ class SyncAdoptionTestBase(unittest.TestCase):
         self.adopter.mkdir(parents=True, exist_ok=True)
         self.run_git(self.adopter, "init", "--quiet")
         self.declaration_path.parent.mkdir(parents=True, exist_ok=True)
-        self.declaration_path = self.adopter / ".aicore" / "adoption.yaml"
-        self.lock_path = self.adopter / ".aicore" / "adoption.lock.yaml"
 
-    def commit_adopter(self) -> None:
-        """Commit the current adopter worktree as a clean baseline."""
+    def commit_adopter(self, message: str = "adopter snapshot") -> str:
+        """Commit the current adopter worktree and return the new commit id."""
 
         self.run_git(self.adopter, "add", "-A")
-        self.run_git(self.adopter, "commit", "--quiet", "-m", "adopter baseline")
+        self.run_git(self.adopter, "commit", "--quiet", "-m", message)
+        return self.rev_head(self.adopter)
+
+    def prepare_adopter(
+        self,
+        destinations: dict[str, bytes],
+        declaration: dict[str, object],
+        commit: bool = True,
+    ) -> str:
+        """Create the adopter, write destinations and declaration, then commit."""
+
+        self.make_adopter()
+        for relative, content in destinations.items():
+            self.write_at(self.adopter / relative, content)
+        self.write_declaration(declaration)
+        if not commit:
+            return ""
+        return self.commit_adopter()
 
     def write_at(self, path: Path, content: bytes) -> None:
         """Write bytes to a path, creating any missing parent directories."""
@@ -129,10 +151,16 @@ class SyncAdoptionTestBase(unittest.TestCase):
 
     # -- Document builders --------------------------------------------------
 
-    def catalog_bytes(self, units: list[dict[str, object]]) -> bytes:
-        """Serialize a machine catalog with default exclusions and control paths."""
+    def catalog_bytes(
+        self, units: list[dict[str, object]], upstream: str | None = None
+    ) -> bytes:
+        """Serialize a machine catalog with an explicit upstream identity."""
 
-        document = {"schema_version": 1, "catalog": {}, "units": units}
+        document = {
+            "schema_version": 1,
+            "catalog": {"upstream_repository": upstream if upstream is not None else self.UPSTREAM},
+            "units": units,
+        }
         return yaml.safe_dump(document, sort_keys=False).encode("utf-8")
 
     def file_unit(
@@ -158,26 +186,30 @@ class SyncAdoptionTestBase(unittest.TestCase):
         }
 
     def declaration(
-        self, units: list[dict[str, object]], upstream: str = "owner/repo"
+        self, units: list[dict[str, object]], upstream: str | None = None
     ) -> dict[str, object]:
         """Build an adoption declaration document."""
 
-        return {"schema_version": 1, "upstream_repository": upstream, "units": units}
+        return {
+            "schema_version": 1,
+            "upstream_repository": upstream if upstream is not None else self.UPSTREAM,
+            "units": units,
+        }
 
     def declared_unit(
         self,
         unit_id: str,
         mode: str,
         members: list[dict[str, object]] | None = None,
-        replacement_destinations: list[str] | None = None,
+        replacement_members: list[dict[str, object]] | None = None,
     ) -> dict[str, object]:
         """Build one declaration unit row."""
 
         unit: dict[str, object] = {"id": unit_id, "mode": mode}
         if members is not None:
             unit["members"] = members
-        if replacement_destinations is not None:
-            unit["replacement_destinations"] = replacement_destinations
+        if replacement_members is not None:
+            unit["replacement_members"] = replacement_members
         return unit
 
     def declared_member(self, member_id: str, destination: str) -> dict[str, object]:
@@ -185,38 +217,12 @@ class SyncAdoptionTestBase(unittest.TestCase):
 
         return {"id": member_id, "destination": destination}
 
-    def lock_document(
-        self,
-        accepted_commit: str,
-        catalog_digest: str,
-        units: list[dict[str, object]],
-        upstream: str = "owner/repo",
+    def replacement_member(
+        self, member_id: str, destination: str, projection: str = "file"
     ) -> dict[str, object]:
-        """Build a lock document without its declaration digest."""
+        """Build one declaration replacement member."""
 
-        return {
-            "schema_version": 1,
-            "upstream_repository": upstream,
-            "accepted_source_commit": accepted_commit,
-            "catalog_digest": catalog_digest,
-            "units": units,
-        }
-
-    def lock_member(
-        self,
-        member_id: str,
-        destination: str,
-        upstream_digest: str,
-        destination_digest: str,
-    ) -> dict[str, object]:
-        """Build one lock member with accepted upstream and destination digests."""
-
-        return {
-            "id": member_id,
-            "destination": destination,
-            "accepted_upstream_digest": upstream_digest,
-            "accepted_destination_digest": destination_digest,
-        }
+        return {"id": member_id, "destination": destination, "projection": projection}
 
     def write_declaration(self, declaration: dict[str, object]) -> bytes:
         """Write the declaration and return its raw bytes."""
@@ -225,22 +231,37 @@ class SyncAdoptionTestBase(unittest.TestCase):
         self.write_at(self.declaration_path, raw)
         return raw
 
-    def write_lock(self, lock: dict[str, object]) -> bytes:
-        """Write the lock document and return its raw bytes."""
+    def write_lock_document(self, document: dict[str, object]) -> bytes:
+        """Write a lock document and return its raw bytes."""
 
-        raw = yaml.safe_dump(lock, sort_keys=False).encode("utf-8")
+        raw = yaml.safe_dump(document, sort_keys=False).encode("utf-8")
         self.write_at(self.lock_path, raw)
         return raw
 
-    def setup_adoption(
-        self, declaration: dict[str, object], lock: dict[str, object]
-    ) -> None:
-        """Write the declaration then the lock bound to its raw digest."""
+    def empty_lock(self, declaration: dict[str, object]) -> bytes:
+        """Write an empty lock bound to a declaration's raw digest."""
 
         declaration_raw = self.write_declaration(declaration)
-        bound = dict(lock)
-        bound["declaration_digest"] = m.sha256_digest(declaration_raw)
-        self.write_lock(bound)
+        document = {
+            "schema_version": 1,
+            "upstream_repository": self.UPSTREAM,
+            "declaration_digest": m.sha256_digest(declaration_raw),
+            "units": [],
+        }
+        return self.write_lock_document(document)
+
+    def read_lock(self) -> dict[str, object]:
+        """Read the lock file as a YAML document."""
+
+        return yaml.safe_load(self.lock_path.read_bytes().decode("utf-8"))
+
+    def mutate_lock(self, mutate: Callable[[dict[str, object]], None]) -> dict[str, object]:
+        """Apply a mutation to the lock document and rewrite it."""
+
+        document = self.read_lock()
+        mutate(document)
+        self.write_lock_document(document)
+        return document
 
     # -- Digest helpers -----------------------------------------------------
 
@@ -266,11 +287,44 @@ class SyncAdoptionTestBase(unittest.TestCase):
 
     # -- Execution helpers --------------------------------------------------
 
+    def propose(
+        self,
+        current_sha: str,
+        adopter_revision: str | None = None,
+        adopter_index: bool = False,
+        selected: list[str] | None = None,
+    ) -> str:
+        """Run ``propose_lock`` against the hermetic repos and return its text."""
+
+        return m.propose_lock(
+            self.upstream,
+            self.adopter,
+            current_sha,
+            adopter_revision,
+            adopter_index,
+            self.declaration_path,
+            self.lock_path,
+            selected if selected is not None else [],
+        )
+
+    def propose_and_write(
+        self,
+        current_sha: str,
+        adopter_revision: str | None = None,
+        adopter_index: bool = False,
+        selected: list[str] | None = None,
+    ) -> dict[str, object]:
+        """Run ``propose_lock`` and write the candidate lock into the adopter."""
+
+        text = self.propose(current_sha, adopter_revision, adopter_index, selected)
+        self.write_at(self.lock_path, text.encode("utf-8"))
+        return yaml.safe_load(text)
+
     def check(
         self,
         current_sha: str,
-        declaration_path: Path | None = None,
-        lock_path: Path | None = None,
+        adopter_revision: str | None = None,
+        adopter_index: bool = False,
     ) -> m.CheckReport:
         """Run ``check_adoption`` against the hermetic repos."""
 
@@ -278,8 +332,10 @@ class SyncAdoptionTestBase(unittest.TestCase):
             self.upstream,
             self.adopter,
             current_sha,
-            declaration_path if declaration_path is not None else self.declaration_path,
-            lock_path if lock_path is not None else self.lock_path,
+            adopter_revision,
+            adopter_index,
+            self.declaration_path,
+            self.lock_path,
         )
 
     def find_unit(self, report: m.CheckReport, unit_id: str) -> m.UnitReport:
@@ -326,7 +382,6 @@ class SyncAdoptionTestBase(unittest.TestCase):
             capture_output=True,
         )
 
-
     # -- Digest golden vectors ---------------------------------------------
 
     def test_golden_digest_vectors(self) -> None:
@@ -345,11 +400,10 @@ class SyncAdoptionTestBase(unittest.TestCase):
         catalog = self.catalog_bytes(units)
         accepted, modified = self.make_upstream(
             [
-                {".aicore/core-catalog-v1.yaml": catalog, "content.txt": b"A\n"},
-                {".aicore/core-catalog-v1.yaml": catalog, "content.txt": b"B\n"},
+                {CATALOG: catalog, "content.txt": b"A\n"},
+                {CATALOG: catalog, "content.txt": b"B\n"},
             ]
         )
-        self.make_adopter()
         declaration = self.declaration(
             [
                 self.declared_unit(
@@ -357,48 +411,30 @@ class SyncAdoptionTestBase(unittest.TestCase):
                 )
             ]
         )
-        lock = self.lock_document(
-            accepted,
-            m.sha256_digest(catalog),
-            [
-                {
-                    "id": "mirror-file",
-                    "mode": "mirror",
-                    "members": [
-                        self.lock_member(
-                            "main",
-                            "mirror/content.txt",
-                            self.file_digest(b"A\n"),
-                            self.file_digest(b"A\n"),
-                        )
-                    ],
-                }
-            ],
-        )
-        self.setup_adoption(declaration, lock)
-        target = self.adopter / "mirror" / "content.txt"
+        rev_a = self.prepare_adopter({"mirror/content.txt": b"A\n"}, declaration)
+        self.propose_and_write(accepted, adopter_revision=rev_a)
 
-        self.write_at(target, b"A\n")
-        unit = self.find_unit(self.check(accepted), "mirror-file")
+        unit = self.find_unit(self.check(accepted, adopter_revision=rev_a), "mirror-file")
         self.assertEqual("mirror", unit.mode)
         self.assertEqual("unchanged", unit.upstream_delta)
         self.assertEqual("unchanged", unit.destination_delta)
         self.assertEqual("current", unit.disposition)
 
-        self.write_at(target, b"A\n")
-        unit = self.find_unit(self.check(modified), "mirror-file")
+        unit = self.find_unit(self.check(modified, adopter_revision=rev_a), "mirror-file")
         self.assertEqual("modified", unit.upstream_delta)
         self.assertEqual("unchanged", unit.destination_delta)
         self.assertEqual("update_available", unit.disposition)
 
-        self.write_at(target, b"B\n")
-        unit = self.find_unit(self.check(accepted), "mirror-file")
+        self.write_at(self.adopter / "mirror" / "content.txt", b"B\n")
+        rev_b = self.commit_adopter()
+        unit = self.find_unit(self.check(accepted, adopter_revision=rev_b), "mirror-file")
         self.assertEqual("unchanged", unit.upstream_delta)
         self.assertEqual("modified", unit.destination_delta)
         self.assertEqual("local_drift", unit.disposition)
 
-        self.write_at(target, b"C\n")
-        unit = self.find_unit(self.check(modified), "mirror-file")
+        self.write_at(self.adopter / "mirror" / "content.txt", b"C\n")
+        rev_c = self.commit_adopter()
+        unit = self.find_unit(self.check(modified, adopter_revision=rev_c), "mirror-file")
         self.assertEqual("modified", unit.upstream_delta)
         self.assertEqual("modified", unit.destination_delta)
         self.assertEqual("conflict", unit.disposition)
@@ -409,18 +445,17 @@ class SyncAdoptionTestBase(unittest.TestCase):
         accepted, modified = self.make_upstream(
             [
                 {
-                    ".aicore/core-catalog-v1.yaml": catalog,
+                    CATALOG: catalog,
                     "templates/a.txt": b"alpha\n",
                     "templates/sub/b.txt": b"beta\n",
                 },
                 {
-                    ".aicore/core-catalog-v1.yaml": catalog,
+                    CATALOG: catalog,
                     "templates/a.txt": b"ALPHA\n",
                     "templates/sub/b.txt": b"beta\n",
                 },
             ]
         )
-        self.make_adopter()
         declaration = self.declaration(
             [
                 self.declared_unit(
@@ -428,54 +463,34 @@ class SyncAdoptionTestBase(unittest.TestCase):
                 )
             ]
         )
-        accepted_digest = self.tree_digest(
-            [("a.txt", "100644", b"alpha\n"), ("sub/b.txt", "100644", b"beta\n")]
+        rev_a = self.prepare_adopter(
+            {"mirror/templates/a.txt": b"alpha\n", "mirror/templates/sub/b.txt": b"beta\n"},
+            declaration,
         )
-        lock = self.lock_document(
-            accepted,
-            m.sha256_digest(catalog),
-            [
-                {
-                    "id": "mirror-tree",
-                    "mode": "mirror",
-                    "members": [
-                        self.lock_member(
-                            "tree", "mirror/templates", accepted_digest, accepted_digest
-                        )
-                    ],
-                }
-            ],
-        )
-        self.setup_adoption(declaration, lock)
-        tree = self.adopter / "mirror" / "templates"
+        self.propose_and_write(accepted, adopter_revision=rev_a)
 
-        def write_tree(a_content: bytes) -> None:
-            if tree.exists():
-                shutil.rmtree(tree)
-            (tree / "sub").mkdir(parents=True)
-            self.write_at(tree / "a.txt", a_content)
-            self.write_at(tree / "sub" / "b.txt", b"beta\n")
+        def rewrite(a_content: bytes) -> str:
+            self.write_at(self.adopter / "mirror" / "templates" / "a.txt", a_content)
+            return self.commit_adopter()
 
-        write_tree(b"alpha\n")
-        unit = self.find_unit(self.check(accepted), "mirror-tree")
+        unit = self.find_unit(self.check(accepted, adopter_revision=rev_a), "mirror-tree")
         self.assertEqual("unchanged", unit.upstream_delta)
         self.assertEqual("unchanged", unit.destination_delta)
         self.assertEqual("current", unit.disposition)
 
-        write_tree(b"alpha\n")
-        unit = self.find_unit(self.check(modified), "mirror-tree")
+        unit = self.find_unit(self.check(modified, adopter_revision=rev_a), "mirror-tree")
         self.assertEqual("modified", unit.upstream_delta)
         self.assertEqual("unchanged", unit.destination_delta)
         self.assertEqual("update_available", unit.disposition)
 
-        write_tree(b"beta\n")
-        unit = self.find_unit(self.check(accepted), "mirror-tree")
+        rev_b = rewrite(b"beta\n")
+        unit = self.find_unit(self.check(accepted, adopter_revision=rev_b), "mirror-tree")
         self.assertEqual("unchanged", unit.upstream_delta)
         self.assertEqual("modified", unit.destination_delta)
         self.assertEqual("local_drift", unit.disposition)
 
-        write_tree(b"gamma\n")
-        unit = self.find_unit(self.check(modified), "mirror-tree")
+        rev_c = rewrite(b"gamma\n")
+        unit = self.find_unit(self.check(modified, adopter_revision=rev_c), "mirror-tree")
         self.assertEqual("modified", unit.upstream_delta)
         self.assertEqual("modified", unit.destination_delta)
         self.assertEqual("conflict", unit.disposition)
@@ -485,10 +500,7 @@ class SyncAdoptionTestBase(unittest.TestCase):
     def test_rejected_mirror_mismatch(self) -> None:
         units = [self.file_unit("mirror-file", "main", "content.txt", "mirror/content.txt")]
         catalog = self.catalog_bytes(units)
-        accepted = self.make_upstream(
-            [{".aicore/core-catalog-v1.yaml": catalog, "content.txt": b"A\n"}]
-        )[0]
-        self.make_adopter()
+        accepted = self.make_upstream([{CATALOG: catalog, "content.txt": b"A\n"}])[0]
         declaration = self.declaration(
             [
                 self.declared_unit(
@@ -496,36 +508,14 @@ class SyncAdoptionTestBase(unittest.TestCase):
                 )
             ]
         )
-        self.write_at(self.adopter / "mirror" / "content.txt", b"A\n")
-        lock = self.lock_document(
-            accepted,
-            m.sha256_digest(catalog),
-            [
-                {
-                    "id": "mirror-file",
-                    "mode": "mirror",
-                    "members": [
-                        self.lock_member(
-                            "main",
-                            "mirror/content.txt",
-                            self.file_digest(b"A\n"),
-                            self.file_digest(b"DIFFERENT\n"),
-                        )
-                    ],
-                }
-            ],
-        )
-        self.setup_adoption(declaration, lock)
-        self.assert_sync_error(m.INVALID_LOCK, self.check, accepted)
-
-        self.write_at(self.adopter / "mirror" / "content.txt", b"DIFFERENT\n")
+        rev = self.prepare_adopter({"mirror/content.txt": b"DIFFERENT\n"}, declaration)
         self.assert_sync_error(
             m.INVALID_LOCK,
-            m.propose_lock,
-            self.upstream,
-            self.adopter,
+            self.propose,
             accepted,
-            self.declaration_path,
+            rev,
+            False,
+            [],
         )
 
     # -- Renamed adapted root -----------------------------------------------
@@ -535,11 +525,10 @@ class SyncAdoptionTestBase(unittest.TestCase):
         catalog = self.catalog_bytes(units)
         accepted, modified = self.make_upstream(
             [
-                {".aicore/core-catalog-v1.yaml": catalog, "AGENTS.md": b"V1\n"},
-                {".aicore/core-catalog-v1.yaml": catalog, "AGENTS.md": b"V2\n"},
+                {CATALOG: catalog, "AGENTS.md": b"V1\n"},
+                {CATALOG: catalog, "AGENTS.md": b"V2\n"},
             ]
         )
-        self.make_adopter()
         declaration = self.declaration(
             [
                 self.declared_unit(
@@ -547,94 +536,104 @@ class SyncAdoptionTestBase(unittest.TestCase):
                 )
             ]
         )
-        lock = self.lock_document(
-            accepted,
-            m.sha256_digest(catalog),
-            [
-                {
-                    "id": "root-runtime-spec",
-                    "mode": "adapted",
-                    "members": [
-                        self.lock_member(
-                            "root",
-                            "BASE-RULES.md",
-                            self.file_digest(b"V1\n"),
-                            self.file_digest(b"V1\n"),
-                        )
-                    ],
-                }
-            ],
-        )
-        self.setup_adoption(declaration, lock)
-        target = self.adopter / "BASE-RULES.md"
+        rev_a = self.prepare_adopter({"BASE-RULES.md": b"V1\n"}, declaration)
+        self.propose_and_write(accepted, adopter_revision=rev_a)
 
-        self.write_at(target, b"V1\n")
-        unit = self.find_unit(self.check(accepted), "root-runtime-spec")
-        self.assertEqual("adapted", unit.mode)
-        self.assertEqual("unchanged", unit.upstream_delta)
-        self.assertEqual("unchanged", unit.destination_delta)
+        unit = self.find_unit(self.check(accepted, adopter_revision=rev_a), "root-runtime-spec")
         self.assertEqual("current", unit.disposition)
 
-        self.write_at(target, b"V1\n")
-        unit = self.find_unit(self.check(modified), "root-runtime-spec")
+        unit = self.find_unit(self.check(modified, adopter_revision=rev_a), "root-runtime-spec")
         self.assertEqual("modified", unit.upstream_delta)
         self.assertEqual("unchanged", unit.destination_delta)
         self.assertEqual("update_available", unit.disposition)
 
-        self.write_at(target, b"LOCAL\n")
-        unit = self.find_unit(self.check(accepted), "root-runtime-spec")
-        self.assertEqual("unchanged", unit.upstream_delta)
-        self.assertEqual("modified", unit.destination_delta)
+        self.write_at(self.adopter / "BASE-RULES.md", b"LOCAL\n")
+        rev_b = self.commit_adopter()
+        unit = self.find_unit(self.check(accepted, adopter_revision=rev_b), "root-runtime-spec")
         self.assertEqual("local_drift", unit.disposition)
 
-        self.write_at(target, b"LOCAL\n")
-        unit = self.find_unit(self.check(modified), "root-runtime-spec")
-        self.assertEqual("modified", unit.upstream_delta)
-        self.assertEqual("modified", unit.destination_delta)
+        unit = self.find_unit(self.check(modified, adopter_revision=rev_b), "root-runtime-spec")
         self.assertEqual("review_required", unit.disposition)
 
-    # -- Split-role replacement ---------------------------------------------
+    # -- One-to-many replacements -------------------------------------------
 
-    def test_split_role_replacement(self) -> None:
-        units = [self.tree_unit("skill-doc", "tree", "skill", "skill")]
-        catalog = self.catalog_bytes(units)
-        accepted = self.make_upstream(
-            [{".aicore/core-catalog-v1.yaml": catalog, "skill/a.md": b"A\n"}]
-        )[0]
-        self.make_adopter()
+    def test_replacement_members_dispositions(self) -> None:
+        base = self.file_unit("base", "file", "base.txt", "base.txt")
+        skill = self.tree_unit("skill-doc", "tree", "skill", "skill")
+        catalog0 = self.catalog_bytes([skill, base])
+        catalog1 = self.catalog_bytes([skill, base])
+        catalog2 = self.catalog_bytes([base])
+        accepted, modified, retired = self.make_upstream(
+            [
+                {CATALOG: catalog0, "skill/a.md": b"A\n", "base.txt": b"BASE\n"},
+                {CATALOG: catalog1, "skill/a.md": b"B\n", "base.txt": b"BASE\n"},
+                {CATALOG: catalog2, "base.txt": b"BASE\n"},
+            ]
+        )
         declaration = self.declaration(
             [
                 {
                     "id": "skill-doc",
                     "mode": "replacement",
-                    "replacement_destinations": ["local/a.md", "local/b.md"],
+                    "replacement_members": [
+                        self.replacement_member("role-a", "local/a.md", "file"),
+                        self.replacement_member("role-b", "local/b.md", "file"),
+                    ],
                 }
             ]
         )
-        skill_digest = self.tree_digest([("a.md", "100644", b"A\n")])
-        lock = self.lock_document(
-            accepted,
-            m.sha256_digest(catalog),
+        rev = self.prepare_adopter(
+            {"local/a.md": b"A\n", "local/b.md": b"B\n"}, declaration
+        )
+        self.propose_and_write(accepted, adopter_revision=rev)
+
+        unit = self.find_unit(self.check(accepted, adopter_revision=rev), "skill-doc")
+        self.assertEqual("replacement", unit.mode)
+        self.assertEqual("unchanged", unit.upstream_delta)
+        self.assertEqual("unchanged", unit.destination_delta)
+        self.assertEqual("current", unit.disposition)
+        self.assertEqual(("role-a", "role-b"), tuple(member.id for member in unit.members))
+
+        self.write_at(self.adopter / "local" / "a.md", b"CHANGED\n")
+        rev_drift = self.commit_adopter()
+        unit = self.find_unit(self.check(accepted, adopter_revision=rev_drift), "skill-doc")
+        self.assertEqual("unchanged", unit.upstream_delta)
+        self.assertEqual("modified", unit.destination_delta)
+        self.assertEqual("local_drift", unit.disposition)
+
+        unit = self.find_unit(self.check(modified, adopter_revision=rev_drift), "skill-doc")
+        self.assertEqual("modified", unit.upstream_delta)
+        self.assertEqual("modified", unit.destination_delta)
+        self.assertEqual("conflict", unit.disposition)
+
+        self.write_at(self.adopter / "local" / "a.md", b"A\n")
+        rev_clean = self.commit_adopter()
+        unit = self.find_unit(self.check(modified, adopter_revision=rev_clean), "skill-doc")
+        self.assertEqual("modified", unit.upstream_delta)
+        self.assertEqual("unchanged", unit.destination_delta)
+        self.assertEqual("review_required", unit.disposition)
+
+        unit = self.find_unit(self.check(retired, adopter_revision=rev_clean), "skill-doc")
+        self.assertEqual("removed", unit.upstream_delta)
+        self.assertEqual("retirement_available", unit.disposition)
+
+    def test_missing_replacement_member_rejected(self) -> None:
+        units = [self.tree_unit("skill-doc", "tree", "skill", "skill")]
+        catalog = self.catalog_bytes(units)
+        accepted = self.make_upstream([{CATALOG: catalog, "skill/a.md": b"A\n"}])[0]
+        declaration = self.declaration(
             [
                 {
                     "id": "skill-doc",
                     "mode": "replacement",
-                    "replacement_destinations": ["local/a.md", "local/b.md"],
-                    "accepted_upstream_digest": skill_digest,
-                    "accepted_destination_digest": "not_applicable",
+                    "replacement_members": [
+                        self.replacement_member("role-a", "local/a.md", "file")
+                    ],
                 }
-            ],
+            ]
         )
-        self.setup_adoption(declaration, lock)
-        (self.adopter / "local").mkdir(parents=True)
-        self.write_at(self.adopter / "local" / "a.md", b"A\n")
-        self.write_at(self.adopter / "local" / "b.md", b"B\n")
-
-        unit = self.find_unit(self.check(accepted), "skill-doc")
-        self.assertEqual("replacement", unit.mode)
-        self.assertEqual("not_applicable", unit.destination_delta)
-        self.assertEqual("review_required", unit.disposition)
-        self.assertEqual(("local/a.md", "local/b.md"), unit.replacement_destinations)
+        rev = self.prepare_adopter({"local/b.md": b"B\n"}, declaration)
+        self.assert_sync_error(m.INVALID_MAPPING, self.propose, accepted, rev, False, [])
 
     # -- Destination-owned units --------------------------------------------
 
@@ -645,11 +644,10 @@ class SyncAdoptionTestBase(unittest.TestCase):
         catalog1 = self.catalog_bytes([base_unit])
         accepted, retired = self.make_upstream(
             [
-                {".aicore/core-catalog-v1.yaml": catalog0, "upstream.cfg": b"CFG\n", "base.txt": b"BASE\n"},
-                {".aicore/core-catalog-v1.yaml": catalog1, "base.txt": b"BASE\n"},
+                {CATALOG: catalog0, "upstream.cfg": b"CFG\n", "base.txt": b"BASE\n"},
+                {CATALOG: catalog1, "base.txt": b"BASE\n"},
             ]
         )
-        self.make_adopter()
         declaration = self.declaration(
             [
                 self.declared_unit(
@@ -662,56 +660,23 @@ class SyncAdoptionTestBase(unittest.TestCase):
                 ),
             ]
         )
-        lock = self.lock_document(
-            accepted,
-            m.sha256_digest(catalog0),
-            [
-                {
-                    "id": "local-config",
-                    "mode": "destination_owned",
-                    "members": [
-                        self.lock_member(
-                            "main",
-                            "local/config.cfg",
-                            self.file_digest(b"CFG\n"),
-                            self.file_digest(b"CFG\n"),
-                        )
-                    ],
-                },
-                {
-                    "id": "mirror-base",
-                    "mode": "mirror",
-                    "members": [
-                        self.lock_member(
-                            "main",
-                            "mirror/base.txt",
-                            self.file_digest(b"BASE\n"),
-                            self.file_digest(b"BASE\n"),
-                        )
-                    ],
-                },
-            ],
+        rev = self.prepare_adopter(
+            {"local/config.cfg": b"CFG\n", "mirror/base.txt": b"BASE\n"}, declaration
         )
-        self.setup_adoption(declaration, lock)
-        (self.adopter / "local").mkdir(parents=True)
-        self.write_at(self.adopter / "local" / "config.cfg", b"CFG\n")
-        (self.adopter / "mirror").mkdir(parents=True)
-        self.write_at(self.adopter / "mirror" / "base.txt", b"BASE\n")
+        self.propose_and_write(accepted, adopter_revision=rev)
 
-        unit = self.find_unit(self.check(accepted), "local-config")
+        unit = self.find_unit(self.check(accepted, adopter_revision=rev), "local-config")
         self.assertEqual("destination_owned", unit.mode)
         self.assertEqual("unmanaged", unit.disposition)
 
-        unit = self.find_unit(self.check(retired), "local-config")
+        unit = self.find_unit(self.check(retired, adopter_revision=rev), "local-config")
         self.assertEqual("removed", unit.upstream_delta)
         self.assertEqual("retirement_available", unit.disposition)
 
     def test_destination_owned_unknown_unit_rejected(self) -> None:
         units = [self.file_unit("known", "main", "known.txt", "known.txt")]
         catalog = self.catalog_bytes(units)
-        accepted = self.make_upstream(
-            [{".aicore/core-catalog-v1.yaml": catalog, "known.txt": b"K\n"}]
-        )[0]
+        accepted = self.make_upstream([{CATALOG: catalog, "known.txt": b"K\n"}])[0]
         self.make_adopter()
         declaration = self.declaration(
             [
@@ -720,11 +685,8 @@ class SyncAdoptionTestBase(unittest.TestCase):
                 )
             ]
         )
-        declaration_raw = self.write_declaration(declaration)
-        lock = self.lock_document(accepted, m.sha256_digest(catalog), [])
-        lock["declaration_digest"] = m.sha256_digest(declaration_raw)
-        self.write_lock(lock)
-        self.assert_sync_error(m.INVALID_MAPPING, self.check, accepted)
+        self.empty_lock(declaration)
+        self.assert_sync_error(m.INVALID_MAPPING, self.check, accepted, None, True)
 
     def test_destination_owned_none_projection_rejected(self) -> None:
         none_unit = {
@@ -734,7 +696,7 @@ class SyncAdoptionTestBase(unittest.TestCase):
         }
         catalog = self.catalog_bytes([none_unit])
         accepted = self.make_upstream(
-            [{".aicore/core-catalog-v1.yaml": catalog, "install.sh": b"echo\n"}]
+            [{CATALOG: catalog, "install.sh": b"echo\n"}]
         )[0]
         self.make_adopter()
         declaration = self.declaration(
@@ -746,13 +708,10 @@ class SyncAdoptionTestBase(unittest.TestCase):
                 )
             ]
         )
-        declaration_raw = self.write_declaration(declaration)
-        lock = self.lock_document(accepted, m.sha256_digest(catalog), [])
-        lock["declaration_digest"] = m.sha256_digest(declaration_raw)
-        self.write_lock(lock)
-        self.assert_sync_error(m.UNSUPPORTED_PROJECTION, self.check, accepted)
+        self.empty_lock(declaration)
+        self.assert_sync_error(m.UNSUPPORTED_PROJECTION, self.check, accepted, None, True)
 
-    # -- Undeclared upstream addition ---------------------------------------
+    # -- Undeclared and catalog boundary ------------------------------------
 
     def test_undeclared_upstream_addition(self) -> None:
         base = self.file_unit("base", "main", "base.txt", "base.txt")
@@ -761,80 +720,20 @@ class SyncAdoptionTestBase(unittest.TestCase):
         catalog1 = self.catalog_bytes([base, new])
         accepted, current = self.make_upstream(
             [
-                {".aicore/core-catalog-v1.yaml": catalog0, "base.txt": b"BASE\n"},
-                {
-                    ".aicore/core-catalog-v1.yaml": catalog1,
-                    "base.txt": b"BASE\n",
-                    "new.txt": b"NEW\n",
-                },
+                {CATALOG: catalog0, "base.txt": b"BASE\n"},
+                {CATALOG: catalog1, "base.txt": b"BASE\n", "new.txt": b"NEW\n"},
             ]
         )
         self.make_adopter()
         declaration = self.declaration([])
-        declaration_raw = self.write_declaration(declaration)
-        lock = self.lock_document(accepted, m.sha256_digest(catalog0), [])
-        lock["declaration_digest"] = m.sha256_digest(declaration_raw)
-        self.write_lock(lock)
+        self.empty_lock(declaration)
 
-        report = self.check(current)
-        self.assertEqual("ok", report.status)
+        report = self.check(current, None, True)
         unit = self.find_unit(report, "new-unit")
         self.assertEqual("not_declared", unit.mode)
         self.assertEqual("added", unit.upstream_delta)
         self.assertEqual("not_applicable", unit.destination_delta)
         self.assertEqual("adoption_available", unit.disposition)
-
-    # -- Upstream unit additions and removals -------------------------------
-
-    def test_upstream_unit_addition_mirror(self) -> None:
-        base = self.file_unit("base", "main", "base.txt", "base.txt")
-        added = self.file_unit("added", "main", "added.txt", "added.txt")
-        catalog0 = self.catalog_bytes([base])
-        catalog1 = self.catalog_bytes([base, added])
-        accepted, current = self.make_upstream(
-            [
-                {".aicore/core-catalog-v1.yaml": catalog0, "base.txt": b"B\n"},
-                {
-                    ".aicore/core-catalog-v1.yaml": catalog1,
-                    "base.txt": b"B\n",
-                    "added.txt": b"NEW\n",
-                },
-            ]
-        )
-        self.make_adopter()
-        declaration = self.declaration(
-            [
-                self.declared_unit(
-                    "added", "mirror", [self.declared_member("main", "added.txt")]
-                )
-            ]
-        )
-        lock = self.lock_document(
-            accepted,
-            m.sha256_digest(catalog0),
-            [
-                {
-                    "id": "added",
-                    "mode": "mirror",
-                    "members": [
-                        self.lock_member(
-                            "main",
-                            "added.txt",
-                            self.file_digest(b"NEW\n"),
-                            self.file_digest(b"NEW\n"),
-                        )
-                    ],
-                }
-            ],
-        )
-        self.setup_adoption(declaration, lock)
-        self.write_at(self.adopter / "added.txt", b"NEW\n")
-
-        unit = self.find_unit(self.check(current), "added")
-        self.assertEqual("mirror", unit.mode)
-        self.assertEqual("added", unit.upstream_delta)
-        self.assertEqual("unchanged", unit.destination_delta)
-        self.assertEqual("update_available", unit.disposition)
 
     def test_upstream_unit_removal_adapted(self) -> None:
         base = self.file_unit("base", "main", "base.txt", "base.txt")
@@ -843,15 +742,10 @@ class SyncAdoptionTestBase(unittest.TestCase):
         catalog1 = self.catalog_bytes([base])
         accepted, current = self.make_upstream(
             [
-                {
-                    ".aicore/core-catalog-v1.yaml": catalog0,
-                    "base.txt": b"B\n",
-                    "removed.txt": b"R\n",
-                },
-                {".aicore/core-catalog-v1.yaml": catalog1, "base.txt": b"B\n"},
+                {CATALOG: catalog0, "base.txt": b"B\n", "removed.txt": b"R\n"},
+                {CATALOG: catalog1, "base.txt": b"B\n"},
             ]
         )
-        self.make_adopter()
         declaration = self.declaration(
             [
                 self.declared_unit(
@@ -859,28 +753,10 @@ class SyncAdoptionTestBase(unittest.TestCase):
                 )
             ]
         )
-        lock = self.lock_document(
-            accepted,
-            m.sha256_digest(catalog0),
-            [
-                {
-                    "id": "removed",
-                    "mode": "adapted",
-                    "members": [
-                        self.lock_member(
-                            "main",
-                            "removed.txt",
-                            self.file_digest(b"R\n"),
-                            self.file_digest(b"R\n"),
-                        )
-                    ],
-                }
-            ],
-        )
-        self.setup_adoption(declaration, lock)
-        self.write_at(self.adopter / "removed.txt", b"R\n")
+        rev = self.prepare_adopter({"removed.txt": b"R\n"}, declaration)
+        self.propose_and_write(accepted, adopter_revision=rev)
 
-        unit = self.find_unit(self.check(current), "removed")
+        unit = self.find_unit(self.check(current, adopter_revision=rev), "removed")
         self.assertEqual("adapted", unit.mode)
         self.assertEqual("removed", unit.upstream_delta)
         self.assertEqual("retirement_available", unit.disposition)
@@ -892,13 +768,12 @@ class SyncAdoptionTestBase(unittest.TestCase):
         accepted = self.make_upstream(
             [
                 {
-                    ".aicore/core-catalog-v1.yaml": catalog,
+                    CATALOG: catalog,
                     "m.txt": b"M\n",
                     "a.txt": b"A\n",
                 }
             ]
         )[0]
-        self.make_adopter()
         declaration = self.declaration(
             [
                 self.declared_unit(
@@ -909,35 +784,13 @@ class SyncAdoptionTestBase(unittest.TestCase):
                 ),
             ]
         )
-        lock = self.lock_document(
-            accepted,
-            m.sha256_digest(catalog),
-            [
-                {
-                    "id": "mirror-u",
-                    "mode": "mirror",
-                    "members": [
-                        self.lock_member(
-                            "m", "mirror/m.txt", self.file_digest(b"M\n"), self.file_digest(b"M\n")
-                        )
-                    ],
-                },
-                {
-                    "id": "adapted-u",
-                    "mode": "adapted",
-                    "members": [
-                        self.lock_member(
-                            "m",
-                            "adapted/a.txt",
-                            self.file_digest(b"A\n"),
-                            self.file_digest(b"A\n"),
-                        )
-                    ],
-                },
-            ],
-        )
-        self.setup_adoption(declaration, lock)
-        report = self.check(accepted)
+        rev = self.prepare_adopter({"mirror/m.txt": b"M\n", "adapted/a.txt": b"A\n"}, declaration)
+        self.propose_and_write(accepted, adopter_revision=rev)
+
+        os.remove(self.adopter / "mirror" / "m.txt")
+        os.remove(self.adopter / "adapted" / "a.txt")
+        rev_removed = self.commit_adopter()
+        report = self.check(accepted, adopter_revision=rev_removed)
 
         mirror_report = self.find_unit(report, "mirror-u")
         self.assertEqual("removed", mirror_report.destination_delta)
@@ -954,11 +807,10 @@ class SyncAdoptionTestBase(unittest.TestCase):
         catalog = self.catalog_bytes(units)
         accepted, current = self.make_upstream(
             [
-                {".aicore/core-catalog-v1.yaml": catalog, "AGENTS.md": b"UP1\n"},
-                {".aicore/core-catalog-v1.yaml": catalog, "AGENTS.md": b"UP2\n"},
+                {CATALOG: catalog, "AGENTS.md": b"UP1\n"},
+                {CATALOG: catalog, "AGENTS.md": b"UP2\n"},
             ]
         )
-        self.make_adopter()
         declaration = self.declaration(
             [
                 self.declared_unit(
@@ -966,36 +818,15 @@ class SyncAdoptionTestBase(unittest.TestCase):
                 )
             ]
         )
-        lock = self.lock_document(
-            accepted,
-            m.sha256_digest(catalog),
-            [
-                {
-                    "id": "root-runtime-spec",
-                    "mode": "adapted",
-                    "members": [
-                        self.lock_member(
-                            "root",
-                            "LOCAL.md",
-                            self.file_digest(b"UP1\n"),
-                            self.file_digest(b"UP2\n"),
-                        )
-                    ],
-                }
-            ],
-        )
-        self.setup_adoption(declaration, lock)
-        self.write_at(self.adopter / "LOCAL.md", b"UP2\n")
+        rev = self.prepare_adopter({"LOCAL.md": b"UP2\n"}, declaration)
+        self.propose_and_write(accepted, adopter_revision=rev)
 
-        unit = self.find_unit(self.check(current), "root-runtime-spec")
+        unit = self.find_unit(self.check(current, adopter_revision=rev), "root-runtime-spec")
         self.assertEqual("modified", unit.upstream_delta)
         self.assertEqual("unchanged", unit.destination_delta)
         self.assertEqual("update_available", unit.disposition)
-        self.assertNotEqual("conflict", unit.disposition)
         member = unit.members[0]
         self.assertEqual(member.current_upstream_digest, member.current_destination_digest)
-
-    # -- Catalog and declaration change detection ---------------------------
 
     def test_changed_catalogs_reconcile_by_id(self) -> None:
         unit_u1 = self.file_unit("u1", "m1", "u1.txt", "u1.txt")
@@ -1005,84 +836,38 @@ class SyncAdoptionTestBase(unittest.TestCase):
         catalog1 = self.catalog_bytes([unit_u1, unit_u2])
         accepted, current = self.make_upstream(
             [
-                {
-                    ".aicore/core-catalog-v1.yaml": catalog0,
-                    "u1.txt": b"U1\n",
-                    "u3.txt": b"U3\n",
-                },
-                {
-                    ".aicore/core-catalog-v1.yaml": catalog1,
-                    "u1.txt": b"U1\n",
-                    "u2.txt": b"U2\n",
-                },
+                {CATALOG: catalog0, "u1.txt": b"U1\n", "u3.txt": b"U3\n"},
+                {CATALOG: catalog1, "u1.txt": b"U1\n", "u2.txt": b"U2\n"},
             ]
         )
-        self.make_adopter()
         declaration = self.declaration(
             [self.declared_unit("u1", "mirror", [self.declared_member("m1", "u1.txt")])]
         )
-        lock = self.lock_document(
-            accepted,
-            m.sha256_digest(catalog0),
-            [
-                {
-                    "id": "u1",
-                    "mode": "mirror",
-                    "members": [
-                        self.lock_member(
-                            "m1", "u1.txt", self.file_digest(b"U1\n"), self.file_digest(b"U1\n")
-                        )
-                    ],
-                }
-            ],
-        )
-        self.setup_adoption(declaration, lock)
-        self.write_at(self.adopter / "u1.txt", b"U1\n")
+        rev = self.prepare_adopter({"u1.txt": b"U1\n"}, declaration)
+        self.propose_and_write(accepted, adopter_revision=rev)
 
-        report = self.check(current)
+        report = self.check(current, adopter_revision=rev)
         self.assertEqual("ok", report.status)
         self.assertEqual("unchanged", self.find_unit(report, "u1").upstream_delta)
-
         added = self.find_unit(report, "u2")
         self.assertEqual("not_declared", added.mode)
-        self.assertEqual("added", added.upstream_delta)
         self.assertEqual("adoption_available", added.disposition)
-
-        removed = self.find_unit(report, "u3")
-        self.assertEqual("not_declared", removed.mode)
-        self.assertEqual("removed", removed.upstream_delta)
-        self.assertEqual("retirement_available", removed.disposition)
 
     def test_changed_declaration_detected(self) -> None:
         units = [self.file_unit("u", "m", "s.txt", "d.txt")]
         catalog = self.catalog_bytes(units)
-        accepted = self.make_upstream(
-            [{".aicore/core-catalog-v1.yaml": catalog, "s.txt": b"S\n"}]
-        )[0]
-        self.make_adopter()
+        accepted = self.make_upstream([{CATALOG: catalog, "s.txt": b"S\n"}])[0]
         declaration = self.declaration(
             [self.declared_unit("u", "adapted", [self.declared_member("m", "d.txt")])]
         )
-        self.write_at(self.adopter / "d.txt", b"S\n")
-        self.write_declaration(declaration)
-        lock = self.lock_document(
-            accepted,
-            m.sha256_digest(catalog),
-            [
-                {
-                    "id": "u",
-                    "mode": "adapted",
-                    "members": [
-                        self.lock_member(
-                            "m", "d.txt", self.file_digest(b"S\n"), self.file_digest(b"S\n")
-                        )
-                    ],
-                }
-            ],
+        rev = self.prepare_adopter({"d.txt": b"S\n"}, declaration)
+        self.propose_and_write(accepted, adopter_revision=rev)
+
+        changed = self.declaration(
+            [self.declared_unit("u", "adapted", [self.declared_member("m", "relocated.txt")])]
         )
-        lock["declaration_digest"] = m.sha256_digest(b"a different declaration")
-        self.write_lock(lock)
-        self.assert_sync_error(m.DECLARATION_CHANGED, self.check, accepted)
+        self.write_declaration(changed)
+        self.assert_sync_error(m.DECLARATION_CHANGED, self.check, accepted, rev, False)
 
     # -- Line-ending sensitivity --------------------------------------------
 
@@ -1090,9 +875,8 @@ class SyncAdoptionTestBase(unittest.TestCase):
         units = [self.file_unit("mirror-file", "main", "content.txt", "mirror/content.txt")]
         catalog = self.catalog_bytes(units)
         accepted = self.make_upstream(
-            [{".aicore/core-catalog-v1.yaml": catalog, "content.txt": b"line\n"}]
+            [{CATALOG: catalog, "content.txt": b"line\n"}]
         )[0]
-        self.make_adopter()
         declaration = self.declaration(
             [
                 self.declared_unit(
@@ -1100,28 +884,12 @@ class SyncAdoptionTestBase(unittest.TestCase):
                 )
             ]
         )
-        lock = self.lock_document(
-            accepted,
-            m.sha256_digest(catalog),
-            [
-                {
-                    "id": "mirror-file",
-                    "mode": "mirror",
-                    "members": [
-                        self.lock_member(
-                            "main",
-                            "mirror/content.txt",
-                            self.file_digest(b"line\n"),
-                            self.file_digest(b"line\n"),
-                        )
-                    ],
-                }
-            ],
-        )
-        self.setup_adoption(declaration, lock)
-        self.write_at(self.adopter / "mirror" / "content.txt", b"line\r\n")
+        rev = self.prepare_adopter({"mirror/content.txt": b"line\n"}, declaration)
+        self.propose_and_write(accepted, adopter_revision=rev)
 
-        unit = self.find_unit(self.check(accepted), "mirror-file")
+        self.write_at(self.adopter / "mirror" / "content.txt", b"line\r\n")
+        rev_crlf = self.commit_adopter()
+        unit = self.find_unit(self.check(accepted, adopter_revision=rev_crlf), "mirror-file")
         self.assertEqual("unchanged", unit.upstream_delta)
         self.assertEqual("modified", unit.destination_delta)
         self.assertEqual("local_drift", unit.disposition)
@@ -1138,7 +906,7 @@ class SyncAdoptionTestBase(unittest.TestCase):
         wrong_version = yaml.safe_dump(
             {
                 "schema_version": 9,
-                "catalog": {},
+                "catalog": {"upstream_repository": self.UPSTREAM},
                 "units": [
                     {
                         "id": "u",
@@ -1153,7 +921,7 @@ class SyncAdoptionTestBase(unittest.TestCase):
         wrong_projection = yaml.safe_dump(
             {
                 "schema_version": 1,
-                "catalog": {},
+                "catalog": {"upstream_repository": self.UPSTREAM},
                 "units": [
                     {
                         "id": "u",
@@ -1190,28 +958,28 @@ class SyncAdoptionTestBase(unittest.TestCase):
     def test_malformed_lock_schemas(self) -> None:
         digest = "sha256:" + "0" * 64
         self.assert_sync_error(m.INVALID_LOCK, m.parse_lock, b"schema_version: 1\nunits: [", "lock")
-        missing_commit = yaml.safe_dump(
+        missing_digest = yaml.safe_dump(
             {
                 "schema_version": 1,
                 "upstream_repository": "o/r",
-                "catalog_digest": digest,
-                "declaration_digest": digest,
                 "units": [],
             },
             sort_keys=False,
         ).encode("utf-8")
-        self.assert_sync_error(m.INVALID_LOCK, m.parse_lock, missing_commit, "lock")
+        self.assert_sync_error(m.INVALID_LOCK, m.parse_lock, missing_digest, "lock")
         wrong_mode = yaml.safe_dump(
             {
                 "schema_version": 1,
                 "upstream_repository": "o/r",
-                "accepted_source_commit": "a" * 40,
-                "catalog_digest": digest,
                 "declaration_digest": digest,
                 "units": [
                     {
                         "id": "u",
                         "mode": "bogus",
+                        "accepted_source_commit": "a" * 40,
+                        "accepted_catalog_digest": digest,
+                        "declaration_unit_digest": digest,
+                        "accepted_upstream_digest": digest,
                         "members": [
                             {
                                 "id": "m",
@@ -1227,6 +995,76 @@ class SyncAdoptionTestBase(unittest.TestCase):
         ).encode("utf-8")
         self.assert_sync_error(m.INVALID_LOCK, m.parse_lock, wrong_mode, "lock")
 
+    def test_unknown_keys_rejected(self) -> None:
+        digest = "sha256:" + "0" * 64
+        catalog_unknown = yaml.safe_dump(
+            {
+                "schema_version": 1,
+                "catalog": {"upstream_repository": "o/r", "bogus": True},
+                "units": [
+                    {
+                        "id": "u",
+                        "sync_projection": "file",
+                        "members": [{"id": "m", "source": "s", "destination": "d"}],
+                    }
+                ],
+            },
+            sort_keys=False,
+        ).encode("utf-8")
+        self.assert_sync_error(m.UNKNOWN_KEY, m.parse_catalog, catalog_unknown, "catalog")
+
+        declaration_unknown = yaml.safe_dump(
+            {
+                "schema_version": 1,
+                "upstream_repository": "o/r",
+                "units": [],
+                "bogus": True,
+            },
+            sort_keys=False,
+        ).encode("utf-8")
+        self.assert_sync_error(m.UNKNOWN_KEY, m.parse_declaration, declaration_unknown, "declaration")
+
+        lock_unknown = yaml.safe_dump(
+            {
+                "schema_version": 1,
+                "upstream_repository": "o/r",
+                "declaration_digest": digest,
+                "units": [],
+                "bogus": True,
+            },
+            sort_keys=False,
+        ).encode("utf-8")
+        self.assert_sync_error(m.UNKNOWN_KEY, m.parse_lock, lock_unknown, "lock")
+
+        lock_unit_unknown = yaml.safe_dump(
+            {
+                "schema_version": 1,
+                "upstream_repository": "o/r",
+                "declaration_digest": digest,
+                "units": [
+                    {
+                        "id": "u",
+                        "mode": "adapted",
+                        "accepted_source_commit": "a" * 40,
+                        "accepted_catalog_digest": digest,
+                        "declaration_unit_digest": digest,
+                        "accepted_upstream_digest": digest,
+                        "bogus": True,
+                        "members": [
+                            {
+                                "id": "m",
+                                "destination": "d",
+                                "accepted_upstream_digest": digest,
+                                "accepted_destination_digest": digest,
+                            }
+                        ],
+                    }
+                ],
+            },
+            sort_keys=False,
+        ).encode("utf-8")
+        self.assert_sync_error(m.UNKNOWN_KEY, m.parse_lock, lock_unit_unknown, "lock")
+
     # -- Missing catalog sources --------------------------------------------
 
     def test_missing_catalog_source_is_catalog_changed(self) -> None:
@@ -1234,11 +1072,10 @@ class SyncAdoptionTestBase(unittest.TestCase):
         catalog = self.catalog_bytes(units)
         accepted, current = self.make_upstream(
             [
-                {".aicore/core-catalog-v1.yaml": catalog, "unused.txt": b"1"},
-                {".aicore/core-catalog-v1.yaml": catalog, "unused.txt": b"2"},
+                {CATALOG: catalog, "does-not-exist.txt": b"1"},
+                {CATALOG: catalog, "unused.txt": b"2"},
             ]
         )
-        self.make_adopter()
         declaration = self.declaration(
             [
                 self.declared_unit(
@@ -1246,103 +1083,53 @@ class SyncAdoptionTestBase(unittest.TestCase):
                 )
             ]
         )
-        lock = self.lock_document(
-            accepted,
-            m.sha256_digest(catalog),
-            [
-                {
-                    "id": "missing",
-                    "mode": "adapted",
-                    "members": [
-                        self.lock_member(
-                            "main",
-                            "local/missing.txt",
-                            self.file_digest(b"x"),
-                            self.file_digest(b"y"),
-                        )
-                    ],
-                }
-            ],
-        )
-        self.setup_adoption(declaration, lock)
-        self.write_at(self.adopter / "local" / "missing.txt", b"y")
-        self.assert_sync_error(m.CATALOG_CHANGED, self.check, current)
+        rev = self.prepare_adopter({"local/missing.txt": b"y"}, declaration)
+        self.propose_and_write(accepted, adopter_revision=rev)
+        self.assert_sync_error(m.CATALOG_CHANGED, self.check, current, rev, False)
 
     # -- Baseline resolution failures ---------------------------------------
 
     def test_unknown_accepted_commit_is_baseline_unavailable(self) -> None:
         units = [self.file_unit("u", "m", "s.txt", "d.txt")]
         catalog = self.catalog_bytes(units)
-        accepted = self.make_upstream(
-            [{".aicore/core-catalog-v1.yaml": catalog, "s.txt": b"S\n"}]
-        )[0]
-        self.make_adopter()
+        accepted = self.make_upstream([{CATALOG: catalog, "s.txt": b"S\n"}])[0]
         declaration = self.declaration(
             [self.declared_unit("u", "adapted", [self.declared_member("m", "d.txt")])]
         )
-        self.write_at(self.adopter / "d.txt", b"S\n")
-        lock = self.lock_document(
-            "0" * 40,
-            m.sha256_digest(catalog),
-            [
-                {
-                    "id": "u",
-                    "mode": "adapted",
-                    "members": [
-                        self.lock_member(
-                            "m", "d.txt", self.file_digest(b"S\n"), self.file_digest(b"S\n")
-                        )
-                    ],
-                }
-            ],
-        )
-        self.setup_adoption(declaration, lock)
-        self.assert_sync_error(m.BASELINE_UNAVAILABLE, self.check, accepted)
+        rev = self.prepare_adopter({"d.txt": b"S\n"}, declaration)
+        self.propose_and_write(accepted, adopter_revision=rev)
+
+        def break_commit(document: dict[str, object]) -> None:
+            units_doc = document["units"]
+            assert isinstance(units_doc, list)
+            units_doc[0]["accepted_source_commit"] = "0" * 40  # type: ignore[index]
+
+        self.mutate_lock(break_commit)
+        self.assert_sync_error(m.BASELINE_UNAVAILABLE, self.check, accepted, rev, False)
 
     def test_non_ancestor_accepted_commit_is_baseline_unavailable(self) -> None:
         units = [self.file_unit("u", "m", "s.txt", "d.txt")]
         catalog = self.catalog_bytes(units)
-        first = self.make_upstream(
-            [{".aicore/core-catalog-v1.yaml": catalog, "s.txt": b"S\n"}]
-        )[0]
-        self.run_git(self.upstream, "checkout", "--orphan", "orphan")
-        self.write_snapshot(self.upstream, {".aicore/core-catalog-v1.yaml": catalog, "s.txt": b"S\n"})
-        self.run_git(self.upstream, "add", "-A")
-        self.run_git(self.upstream, "commit", "--quiet", "-m", "orphan")
-        orphan = self.rev_head(self.upstream)
-
-        self.make_adopter()
+        first = self.make_upstream([{CATALOG: catalog, "s.txt": b"S\n"}])[0]
         declaration = self.declaration(
             [self.declared_unit("u", "adapted", [self.declared_member("m", "d.txt")])]
         )
-        self.write_at(self.adopter / "d.txt", b"S\n")
-        lock = self.lock_document(
-            first,
-            m.sha256_digest(catalog),
-            [
-                {
-                    "id": "u",
-                    "mode": "adapted",
-                    "members": [
-                        self.lock_member(
-                            "m", "d.txt", self.file_digest(b"S\n"), self.file_digest(b"S\n")
-                        )
-                    ],
-                }
-            ],
-        )
-        self.setup_adoption(declaration, lock)
-        self.assert_sync_error(m.BASELINE_UNAVAILABLE, self.check, orphan)
+        rev = self.prepare_adopter({"d.txt": b"S\n"}, declaration)
+        self.propose_and_write(first, adopter_revision=rev)
+
+        self.run_git(self.upstream, "checkout", "--orphan", "orphan")
+        self.write_snapshot(self.upstream, {CATALOG: catalog, "s.txt": b"S\n"})
+        self.run_git(self.upstream, "add", "-A")
+        self.run_git(self.upstream, "commit", "--quiet", "-m", "orphan")
+        orphan = self.rev_head(self.upstream)
+        self.assert_sync_error(m.BASELINE_UNAVAILABLE, self.check, orphan, rev, False)
 
     # -- Excluded bytecode --------------------------------------------------
 
     def test_excluded_bytecode_paths_are_ignored(self) -> None:
         units = [self.tree_unit("mirror-tree", "tree", "templates", "mirror/templates")]
         catalog = self.catalog_bytes(units)
-        base_files: dict[str, bytes] = {
-            ".aicore/core-catalog-v1.yaml": catalog,
-            "templates/a.txt": b"alpha\n",
-        }
+        base_files: dict[str, bytes] = {CATALOG: catalog, "templates/a.txt": b"alpha\n"}
         commit0, commit1, commit2 = self.make_upstream(
             [
                 dict(base_files),
@@ -1350,7 +1137,6 @@ class SyncAdoptionTestBase(unittest.TestCase):
                 {**base_files, "templates/__pycache__/x.pyc": b"v2"},
             ]
         )
-        self.make_adopter()
         declaration = self.declaration(
             [
                 self.declared_unit(
@@ -1358,40 +1144,20 @@ class SyncAdoptionTestBase(unittest.TestCase):
                 )
             ]
         )
-        accepted_digest = self.tree_digest([("a.txt", "100644", b"alpha\n")])
-        lock = self.lock_document(
-            commit0,
-            m.sha256_digest(catalog),
-            [
-                {
-                    "id": "mirror-tree",
-                    "mode": "mirror",
-                    "members": [
-                        self.lock_member(
-                            "tree", "mirror/templates", accepted_digest, accepted_digest
-                        )
-                    ],
-                }
-            ],
-        )
-        self.setup_adoption(declaration, lock)
-        tree = self.adopter / "mirror" / "templates"
-        self.write_at(tree / "a.txt", b"alpha\n")
+        rev = self.prepare_adopter({"mirror/templates/a.txt": b"alpha\n"}, declaration)
+        self.propose_and_write(commit0, adopter_revision=rev)
 
-        unit1 = self.find_unit(self.check(commit1), "mirror-tree")
+        unit1 = self.find_unit(self.check(commit1, adopter_revision=rev), "mirror-tree")
         self.assertEqual("unchanged", unit1.upstream_delta)
         self.assertEqual("unchanged", unit1.destination_delta)
 
-        self.write_at(tree / "__pycache__" / "y.pyc", b"local")
-        unit2 = self.find_unit(self.check(commit2), "mirror-tree")
+        self.write_at(self.adopter / "mirror" / "templates" / "__pycache__" / "y.pyc", b"local")
+        rev_pyc = self.commit_adopter()
+        unit2 = self.find_unit(self.check(commit2, adopter_revision=rev_pyc), "mirror-tree")
         self.assertEqual("unchanged", unit2.upstream_delta)
         self.assertEqual("unchanged", unit2.destination_delta)
         self.assertEqual(
             unit1.members[0].current_upstream_digest, unit2.members[0].current_upstream_digest
-        )
-        self.assertEqual(
-            unit1.members[0].current_destination_digest,
-            unit2.members[0].current_destination_digest,
         )
 
     # -- Rejected mappings --------------------------------------------------
@@ -1435,28 +1201,41 @@ class SyncAdoptionTestBase(unittest.TestCase):
     def test_control_path_destination_rejected_end_to_end(self) -> None:
         units = [self.file_unit("u", "m", "s.txt", ".git/config")]
         catalog = self.catalog_bytes(units)
-        accepted = self.make_upstream(
-            [{".aicore/core-catalog-v1.yaml": catalog, "s.txt": b"S\n"}]
-        )[0]
-        self.make_adopter()
+        accepted = self.make_upstream([{CATALOG: catalog, "s.txt": b"S\n"}])[0]
         declaration = self.declaration(
             [self.declared_unit("u", "adapted", [self.declared_member("m", ".git/config")])]
         )
-        declaration_raw = self.write_declaration(declaration)
-        lock = self.lock_document(accepted, m.sha256_digest(catalog), [])
-        lock["declaration_digest"] = m.sha256_digest(declaration_raw)
-        self.write_lock(lock)
-        self.assert_sync_error(m.INVALID_MAPPING, self.check, accepted)
+        rev = self.prepare_adopter({".git-config-placeholder": b"S\n"}, declaration)
+        self.assert_sync_error(m.INVALID_MAPPING, self.propose, accepted, rev, False, [])
 
-    # -- Read-only guarantees and CLI surface -------------------------------
+    # -- Symlink escape -----------------------------------------------------
 
-    def test_commands_write_nothing(self) -> None:
+    def test_symlink_ancestor_escape_rejected(self) -> None:
+        units = [self.file_unit("u", "m", "s.txt", "escape/file.txt")]
+        catalog = self.catalog_bytes(units)
+        accepted = self.make_upstream([{CATALOG: catalog, "s.txt": b"S\n"}])[0]
+        self.make_adopter()
+        outside = self.root / "outside"
+        outside.mkdir()
+        os.symlink(outside, self.adopter / "escape")
+        declaration = self.declaration(
+            [self.declared_unit("u", "adapted", [self.declared_member("m", "escape/file.txt")])]
+        )
+        self.write_declaration(declaration)
+        rev = self.commit_adopter()
+        self.assert_sync_error(m.INVALID_MAPPING, self.propose, accepted, rev, False, [])
+
+    # -- Baseline advance ---------------------------------------------------
+
+    def test_baseline_advance_required_when_commit_advances(self) -> None:
         units = [self.file_unit("mirror-file", "main", "content.txt", "mirror/content.txt")]
         catalog = self.catalog_bytes(units)
-        accepted = self.make_upstream(
-            [{".aicore/core-catalog-v1.yaml": catalog, "content.txt": b"hello\n"}]
-        )[0]
-        self.make_adopter()
+        accepted, current = self.make_upstream(
+            [
+                {CATALOG: catalog, "content.txt": b"A\n", "notes.txt": b"1"},
+                {CATALOG: catalog, "content.txt": b"A\n", "notes.txt": b"2"},
+            ]
+        )
         declaration = self.declaration(
             [
                 self.declared_unit(
@@ -1464,39 +1243,376 @@ class SyncAdoptionTestBase(unittest.TestCase):
                 )
             ]
         )
-        self.write_at(self.adopter / "mirror" / "content.txt", b"hello\n")
-        digest = self.file_digest(b"hello\n")
-        lock = self.lock_document(
-            accepted,
-            m.sha256_digest(catalog),
+        rev = self.prepare_adopter({"mirror/content.txt": b"A\n"}, declaration)
+        self.propose_and_write(accepted, adopter_revision=rev)
+
+        unit = self.find_unit(self.check(current, adopter_revision=rev), "mirror-file")
+        self.assertNotEqual(accepted, current)
+        self.assertEqual("unchanged", unit.upstream_delta)
+        self.assertEqual("unchanged", unit.destination_delta)
+        self.assertEqual("baseline_advance_required", unit.disposition)
+
+    # -- Falsified evidence -------------------------------------------------
+
+    def test_falsified_accepted_digests_rejected(self) -> None:
+        units = [self.file_unit("mirror-file", "main", "content.txt", "mirror/content.txt")]
+        catalog = self.catalog_bytes(units)
+        accepted = self.make_upstream(
+            [{CATALOG: catalog, "content.txt": b"A\n"}]
+        )[0]
+        declaration = self.declaration(
             [
-                {
-                    "id": "mirror-file",
-                    "mode": "mirror",
-                    "members": [self.lock_member("main", "mirror/content.txt", digest, digest)],
-                }
-            ],
+                self.declared_unit(
+                    "mirror-file", "mirror", [self.declared_member("main", "mirror/content.txt")]
+                )
+            ]
         )
-        self.setup_adoption(declaration, lock)
-        self.commit_adopter()
+        rev = self.prepare_adopter({"mirror/content.txt": b"A\n"}, declaration)
+        self.propose_and_write(accepted, adopter_revision=rev)
+        valid = self.read_lock()
+
+        forged_member = "sha256:" + "1" * 64
+
+        def break_member(document: dict[str, object]) -> None:
+            units_doc = document["units"]
+            assert isinstance(units_doc, list)
+            members = units_doc[0]["members"]  # type: ignore[index]
+            assert isinstance(members, list)
+            members[0]["accepted_upstream_digest"] = forged_member
+
+        self.write_lock_document(valid)
+        self.mutate_lock(break_member)
+        self.assert_sync_error(m.INVALID_LOCK, self.check, accepted, rev, False)
+
+        self.write_lock_document(valid)
+
+        def break_unit(document: dict[str, object]) -> None:
+            units_doc = document["units"]
+            assert isinstance(units_doc, list)
+            units_doc[0]["accepted_upstream_digest"] = forged_member  # type: ignore[index]
+
+        self.mutate_lock(break_unit)
+        self.assert_sync_error(m.INVALID_LOCK, self.check, accepted, rev, False)
+
+        self.write_lock_document(valid)
+
+        def break_catalog(document: dict[str, object]) -> None:
+            units_doc = document["units"]
+            assert isinstance(units_doc, list)
+            units_doc[0]["accepted_catalog_digest"] = forged_member  # type: ignore[index]
+
+        self.mutate_lock(break_catalog)
+        self.assert_sync_error(m.CATALOG_CHANGED, self.check, accepted, rev, False)
+
+    def test_wrong_repository_identity_rejected(self) -> None:
+        units = [self.file_unit("u", "m", "s.txt", "d.txt")]
+        catalog = self.catalog_bytes(units)
+        wrong = self.catalog_bytes(units, upstream="some-other/adopter-core")
+        accepted, current = self.make_upstream(
+            [
+                {CATALOG: catalog, "s.txt": b"S\n"},
+                {CATALOG: wrong, "s.txt": b"S\n"},
+            ]
+        )
+        declaration = self.declaration(
+            [self.declared_unit("u", "adapted", [self.declared_member("m", "d.txt")])]
+        )
+        rev = self.prepare_adopter({"d.txt": b"S\n"}, declaration)
+        self.propose_and_write(accepted, adopter_revision=rev)
+        self.assert_sync_error(m.REPOSITORY_IDENTITY_MISMATCH, self.check, current, rev, False)
+
+    # -- Snapshot sources ---------------------------------------------------
+
+    def test_revision_and_index_snapshots_agree(self) -> None:
+        units = [self.file_unit("mirror-file", "main", "content.txt", "mirror/content.txt")]
+        catalog = self.catalog_bytes(units)
+        accepted = self.make_upstream([{CATALOG: catalog, "content.txt": b"A\n"}])[0]
+        declaration = self.declaration(
+            [
+                self.declared_unit(
+                    "mirror-file", "mirror", [self.declared_member("main", "mirror/content.txt")]
+                )
+            ]
+        )
+        rev = self.prepare_adopter({"mirror/content.txt": b"A\n"}, declaration)
+        self.propose_and_write(accepted, adopter_revision=rev)
+
+        revision_unit = self.find_unit(self.check(accepted, adopter_revision=rev), "mirror-file")
+        index_unit = self.find_unit(self.check(accepted, None, True), "mirror-file")
+        self.assertEqual(revision_unit.disposition, index_unit.disposition)
+        self.assertEqual(revision_unit.destination_delta, index_unit.destination_delta)
+
+    def test_unstaged_content_excluded_from_index(self) -> None:
+        units = [self.file_unit("mirror-file", "main", "content.txt", "mirror/content.txt")]
+        catalog = self.catalog_bytes(units)
+        accepted = self.make_upstream([{CATALOG: catalog, "content.txt": b"A\n"}])[0]
+        declaration = self.declaration(
+            [
+                self.declared_unit(
+                    "mirror-file", "mirror", [self.declared_member("main", "mirror/content.txt")]
+                )
+            ]
+        )
+        rev = self.prepare_adopter({"mirror/content.txt": b"A\n"}, declaration)
+        self.propose_and_write(accepted, adopter_index=True)
+
+        # An unstaged edit must not appear in the staged-index snapshot.
+        self.write_at(self.adopter / "mirror" / "content.txt", b"B\n")
+        unit = self.find_unit(self.check(accepted, None, True), "mirror-file")
+        self.assertEqual("unchanged", unit.destination_delta)
+        self.assertEqual("current", unit.disposition)
+
+        self.run_git(self.adopter, "add", "mirror/content.txt")
+        unit = self.find_unit(self.check(accepted, None, True), "mirror-file")
+        self.assertEqual("modified", unit.destination_delta)
+        self.assertEqual("local_drift", unit.disposition)
+        self.assertEqual(rev, self.rev_head(self.adopter))
+
+    # -- Incremental acceptance ---------------------------------------------
+
+    def test_selected_unit_lock_advancement_preserves_unselected(self) -> None:
+        u1 = self.file_unit("u1", "m", "u1.txt", "u1.txt")
+        u2 = self.file_unit("u2", "m", "u2.txt", "u2.txt")
+        catalog = self.catalog_bytes([u1, u2])
+        accepted, current = self.make_upstream(
+            [
+                {CATALOG: catalog, "u1.txt": b"A\n", "u2.txt": b"X\n"},
+                {CATALOG: catalog, "u1.txt": b"B\n", "u2.txt": b"X\n"},
+            ]
+        )
+        declaration = self.declaration(
+            [
+                self.declared_unit("u1", "mirror", [self.declared_member("m", "u1.txt")]),
+                self.declared_unit("u2", "mirror", [self.declared_member("m", "u2.txt")]),
+            ]
+        )
+        rev = self.prepare_adopter({"u1.txt": b"A\n", "u2.txt": b"X\n"}, declaration)
+        initial = self.propose_and_write(accepted, adopter_revision=rev)
+        initial_u2 = [row for row in initial["units"] if row["id"] == "u2"][0]  # type: ignore[index]
+
+        self.write_at(self.adopter / "u1.txt", b"B\n")
+        rev_updated = self.commit_adopter()
+        updated = self.propose_and_write(
+            current, adopter_revision=rev_updated, selected=["u1"]
+        )
+        rows = {row["id"]: row for row in updated["units"]}  # type: ignore[index]
+        self.assertEqual(current, rows["u1"]["accepted_source_commit"])
+        self.assertEqual(accepted, rows["u2"]["accepted_source_commit"])
+        self.assertEqual(initial_u2, rows["u2"])
+
+        unit = self.find_unit(self.check(current, adopter_revision=rev_updated), "u1")
+        self.assertEqual("unchanged", unit.upstream_delta)
+        self.assertEqual("unchanged", unit.destination_delta)
+        self.assertEqual("current", unit.disposition)
+
+        old = self.find_unit(self.check(current, adopter_revision=rev_updated), "u2")
+        self.assertEqual("baseline_advance_required", old.disposition)
+
+    def test_unselected_intent_change_rejected(self) -> None:
+        u1 = self.file_unit("u1", "m", "u1.txt", "u1.txt")
+        u2 = self.file_unit("u2", "m", "u2.txt", "u2.txt")
+        catalog = self.catalog_bytes([u1, u2])
+        accepted, current = self.make_upstream(
+            [
+                {CATALOG: catalog, "u1.txt": b"A\n", "u2.txt": b"X\n"},
+                {CATALOG: catalog, "u1.txt": b"B\n", "u2.txt": b"X\n"},
+            ]
+        )
+        declaration = self.declaration(
+            [
+                self.declared_unit("u1", "mirror", [self.declared_member("m", "u1.txt")]),
+                self.declared_unit("u2", "mirror", [self.declared_member("m", "u2.txt")]),
+            ]
+        )
+        rev = self.prepare_adopter({"u1.txt": b"A\n", "u2.txt": b"X\n"}, declaration)
+        self.propose_and_write(accepted, adopter_revision=rev)
+
+        remapped = self.declaration(
+            [
+                self.declared_unit("u1", "mirror", [self.declared_member("m", "u1.txt")]),
+                self.declared_unit("u2", "mirror", [self.declared_member("m", "relocated.txt")]),
+            ]
+        )
+        self.write_declaration(remapped)
+        self.assert_sync_error(
+            m.INVALID_SELECTION,
+            self.propose,
+            current,
+            rev,
+            False,
+            ["u1"],
+        )
+
+    def test_selected_retirement_drops_row_preserves_unrelated_and_remains_visible(self) -> None:
+        u1 = self.file_unit("u1", "m", "u1.txt", "u1.txt")
+        u2 = self.file_unit("u2", "m", "u2.txt", "u2.txt")
+        catalog = self.catalog_bytes([u1, u2])
+        accepted = self.make_upstream(
+            [{CATALOG: catalog, "u1.txt": b"A\n", "u2.txt": b"X\n"}]
+        )[0]
+        declaration = self.declaration(
+            [
+                self.declared_unit("u1", "mirror", [self.declared_member("m", "u1.txt")]),
+                self.declared_unit("u2", "mirror", [self.declared_member("m", "u2.txt")]),
+            ]
+        )
+        rev = self.prepare_adopter({"u1.txt": b"A\n", "u2.txt": b"X\n"}, declaration)
+        self.propose_and_write(accepted, adopter_revision=rev)
+        prior = self.read_lock()
+        prior_rows = {row["id"]: row for row in prior["units"]}
+
+        retired_raw = self.write_declaration(
+            self.declaration(
+                [self.declared_unit("u1", "mirror", [self.declared_member("m", "u1.txt")])]
+            )
+        )
+        candidate_text = self.propose(accepted, adopter_revision=rev, selected=["u2"])
+        candidate = yaml.safe_load(candidate_text)
+        self.assertEqual(["u1"], [row["id"] for row in candidate["units"]])
+        self.assertEqual(prior_rows["u1"], candidate["units"][0])
+        self.assertNotEqual(prior["declaration_digest"], candidate["declaration_digest"])
+        self.assertEqual(m.sha256_digest(retired_raw), candidate["declaration_digest"])
+
+        self.write_at(self.lock_path, candidate_text.encode("utf-8"))
+        report = self.check(accepted, adopter_revision=rev)
+        kept = self.find_unit(report, "u1")
+        self.assertEqual("current", kept.disposition)
+        retired = self.find_unit(report, "u2")
+        self.assertEqual("not_declared", retired.mode)
+        self.assertEqual("added", retired.upstream_delta)
+        self.assertEqual("not_applicable", retired.destination_delta)
+        self.assertEqual("adoption_available", retired.disposition)
+
+    def test_selected_retirement_after_upstream_unit_removal(self) -> None:
+        u1 = self.file_unit("u1", "m", "u1.txt", "u1.txt")
+        u2 = self.file_unit("u2", "m", "u2.txt", "u2.txt")
+        catalog0 = self.catalog_bytes([u1, u2])
+        catalog1 = self.catalog_bytes([u1])
+        accepted, current = self.make_upstream(
+            [
+                {CATALOG: catalog0, "u1.txt": b"A\n", "u2.txt": b"X\n"},
+                {CATALOG: catalog1, "u1.txt": b"A\n"},
+            ]
+        )
+        declaration = self.declaration(
+            [
+                self.declared_unit("u1", "mirror", [self.declared_member("m", "u1.txt")]),
+                self.declared_unit("u2", "mirror", [self.declared_member("m", "u2.txt")]),
+            ]
+        )
+        rev = self.prepare_adopter({"u1.txt": b"A\n", "u2.txt": b"X\n"}, declaration)
+        self.propose_and_write(accepted, adopter_revision=rev)
+
+        self.write_declaration(
+            self.declaration(
+                [self.declared_unit("u1", "mirror", [self.declared_member("m", "u1.txt")])]
+            )
+        )
+        candidate = yaml.safe_load(self.propose(current, adopter_revision=rev, selected=["u2"]))
+        self.assertEqual(["u1"], [row["id"] for row in candidate["units"]])
+
+    def test_invalid_retirement_selections_rejected(self) -> None:
+        u1 = self.file_unit("u1", "m", "u1.txt", "u1.txt")
+        u2 = self.file_unit("u2", "m", "u2.txt", "u2.txt")
+        u3 = self.file_unit("u3", "m", "u3.txt", "u3.txt")
+        catalog = self.catalog_bytes([u1, u2, u3])
+        accepted = self.make_upstream(
+            [{CATALOG: catalog, "u1.txt": b"A\n", "u2.txt": b"X\n", "u3.txt": b"Y\n"}]
+        )[0]
+        declaration = self.declaration(
+            [
+                self.declared_unit("u1", "mirror", [self.declared_member("m", "u1.txt")]),
+                self.declared_unit("u2", "mirror", [self.declared_member("m", "u2.txt")]),
+            ]
+        )
+        rev = self.prepare_adopter({"u1.txt": b"A\n", "u2.txt": b"X\n"}, declaration)
+        self.propose_and_write(accepted, adopter_revision=rev)
+        self.write_declaration(
+            self.declaration(
+                [self.declared_unit("u1", "mirror", [self.declared_member("m", "u1.txt")])]
+            )
+        )
+
+        cases = {
+            "unselected removal": ["u1"],
+            "current-catalog undeclared never-locked": ["u3"],
+            "wholly unknown": ["no-such-unit"],
+        }
+        for label, selection in cases.items():
+            with self.subTest(selection=label):
+                self.assert_sync_error(
+                    m.INVALID_SELECTION, self.propose, accepted, rev, False, selection
+                )
+
+    # -- Bootstrap ----------------------------------------------------------
+
+    def test_initial_bootstrap_requires_adopter_snapshot(self) -> None:
+        units = [self.file_unit("u", "m", "s.txt", "d.txt")]
+        catalog = self.catalog_bytes(units)
+        accepted = self.make_upstream([{CATALOG: catalog, "s.txt": b"S\n"}])[0]
+        declaration = self.declaration(
+            [self.declared_unit("u", "adapted", [self.declared_member("m", "d.txt")])]
+        )
+        rev = self.prepare_adopter({"d.txt": b"S\n"}, declaration)
+        self.assert_sync_error(m.ADOPTER_SNAPSHOT_UNAVAILABLE, self.propose, accepted, None, False, [])
+        self.assert_sync_error(
+            m.ADOPTER_SNAPSHOT_UNAVAILABLE, self.propose, accepted, rev, True, []
+        )
+        self.assert_sync_error(
+            m.ADOPTER_SNAPSHOT_UNAVAILABLE, self.propose, accepted, "HEAD", False, []
+        )
+
+    def test_initial_bootstrap_requires_catalog_bearing_source(self) -> None:
+        units = [self.file_unit("u", "m", "s.txt", "d.txt")]
+        catalog = self.catalog_bytes(units)
+        first, catalog_commit = self.make_upstream(
+            [
+                {"README.md": b"no catalog\n"},
+                {"README.md": b"no catalog\n", CATALOG: catalog, "s.txt": b"S\n"},
+            ]
+        )
+        declaration = self.declaration(
+            [self.declared_unit("u", "adapted", [self.declared_member("m", "d.txt")])]
+        )
+        rev = self.prepare_adopter({"d.txt": b"S\n"}, declaration)
+        self.assert_sync_error(
+            m.CATALOG_CHANGED, self.propose, first, rev, False, []
+        )
+        # A catalog-bearing revision is still accepted.
+        text = self.propose(catalog_commit, rev, False, [])
+        self.assertIn("units:", text)
+
+    # -- Management-tool boundary -------------------------------------------
+
+    def test_catalog_excludes_management_tools(self) -> None:
+        repo_root = Path(m.__file__).resolve().parents[4]
+        catalog_path = repo_root / CATALOG
+        catalog = m.parse_catalog(catalog_path.read_bytes(), str(catalog_path))
+        ids = {unit.id for unit in catalog.units}
+        self.assertNotIn("sync-aicore-adoption", ids)
+        self.assertNotIn("migrate-core-to-project", ids)
+        self.assertEqual(self.UPSTREAM_IDENTITY, catalog.upstream_repository)
+
+    # -- Read-only guarantees and CLI surface -------------------------------
+
+    def test_commands_write_nothing(self) -> None:
+        units = [self.file_unit("mirror-file", "main", "content.txt", "mirror/content.txt")]
+        catalog = self.catalog_bytes(units)
+        accepted = self.make_upstream(
+            [{CATALOG: catalog, "content.txt": b"hello\n"}]
+        )[0]
+        declaration = self.declaration(
+            [
+                self.declared_unit(
+                    "mirror-file", "mirror", [self.declared_member("main", "mirror/content.txt")]
+                )
+            ]
+        )
+        rev = self.prepare_adopter({"mirror/content.txt": b"hello\n"}, declaration)
 
         implementation = Path(m.__file__).resolve()
         before_files = self.snapshot_adopter()
         before_status = self.git_status()
-
-        check_result = self.run_script(
-            implementation,
-            "check",
-            "--upstream-repo",
-            str(self.upstream),
-            "--adopter-repo",
-            str(self.adopter),
-            "--current-revision",
-            accepted,
-        )
-        self.assertEqual(0, check_result.returncode)
-        self.assertEqual(before_files, self.snapshot_adopter())
-        self.assertEqual(before_status, self.git_status())
 
         propose_result = self.run_script(
             implementation,
@@ -1507,17 +1623,63 @@ class SyncAdoptionTestBase(unittest.TestCase):
             str(self.adopter),
             "--current-revision",
             accepted,
+            "--adopter-revision",
+            rev,
         )
         self.assertEqual(0, propose_result.returncode)
         stdout = propose_result.stdout
         self.assertTrue(stdout.endswith(b"\n"))
         self.assertFalse(stdout.endswith(b"\n\n"))
-        self.assertEqual(stdout.count(b"\n"), stdout.rstrip(b"\n").count(b"\n") + 1)
-        parsed = yaml.safe_load(stdout.decode("utf-8"))
-        self.assertEqual(1, parsed["schema_version"])
-        self.assertEqual(accepted, parsed["accepted_source_commit"])
         self.assertEqual(before_files, self.snapshot_adopter())
         self.assertEqual(before_status, self.git_status())
+
+        self.write_at(self.lock_path, stdout)
+        self.commit_adopter()
+        before_check_files = self.snapshot_adopter()
+        before_check_status = self.git_status()
+
+        check_result = self.run_script(
+            implementation,
+            "check",
+            "--upstream-repo",
+            str(self.upstream),
+            "--adopter-repo",
+            str(self.adopter),
+            "--current-revision",
+            accepted,
+            "--adopter-revision",
+            rev,
+        )
+        self.assertEqual(0, check_result.returncode)
+        self.assertEqual(before_check_files, self.snapshot_adopter())
+        self.assertEqual(before_check_status, self.git_status())
+
+        # Retirement: remove the unit from the declaration and select its lock id.
+        self.write_declaration(self.declaration([]))
+        before_retire_files = self.snapshot_adopter()
+        before_retire_status = self.git_status()
+        before_retire_head = self.rev_head(self.adopter)
+
+        retire_result = self.run_script(
+            implementation,
+            "propose-lock",
+            "--upstream-repo",
+            str(self.upstream),
+            "--adopter-repo",
+            str(self.adopter),
+            "--current-revision",
+            accepted,
+            "--adopter-revision",
+            rev,
+            "--unit",
+            "mirror-file",
+        )
+        self.assertEqual(0, retire_result.returncode)
+        self.assertTrue(retire_result.stdout.endswith(b"\n"))
+        self.assertFalse(retire_result.stdout.endswith(b"\n\n"))
+        self.assertEqual(before_retire_files, self.snapshot_adopter())
+        self.assertEqual(before_retire_status, self.git_status())
+        self.assertEqual(before_retire_head, self.rev_head(self.adopter))
 
     def test_cli_surface(self) -> None:
         implementation = Path(m.__file__).resolve()
@@ -1529,176 +1691,15 @@ class SyncAdoptionTestBase(unittest.TestCase):
             self.assertNotIn(forbidden, text.lower())
 
         check_help = self.run_script(implementation, "check", "--help")
-        self.assertIn("--format", check_help.stdout.decode("utf-8"))
+        check_text = check_help.stdout.decode("utf-8")
+        self.assertIn("--format", check_text)
+        self.assertIn("--adopter-revision", check_text)
+        self.assertIn("--adopter-index", check_text)
 
         propose_help = self.run_script(implementation, "propose-lock", "--help")
-        self.assertNotIn("--format", propose_help.stdout.decode("utf-8"))
-
-    # -- Symlink, baseline advance, special files, catalog binding ----------
-
-    def test_symlink_root_escape_rejected(self) -> None:
-        units = [self.file_unit("u", "m", "s.txt", "escape/file.txt")]
-        catalog = self.catalog_bytes(units)
-        accepted = self.make_upstream(
-            [{".aicore/core-catalog-v1.yaml": catalog, "s.txt": b"S\n"}]
-        )[0]
-        self.make_adopter()
-        outside = self.root / "outside"
-        outside.mkdir()
-        os.symlink(outside, self.adopter / "escape")
-
-        declaration = self.declaration(
-            [self.declared_unit("u", "adapted", [self.declared_member("m", "escape/file.txt")])]
-        )
-        declaration_raw = self.write_declaration(declaration)
-        lock = self.lock_document(
-            accepted,
-            m.sha256_digest(catalog),
-            [
-                {
-                    "id": "u",
-                    "mode": "adapted",
-                    "members": [
-                        self.lock_member(
-                            "m",
-                            "escape/file.txt",
-                            self.file_digest(b"S\n"),
-                            self.file_digest(b"S\n"),
-                        )
-                    ],
-                }
-            ],
-        )
-        lock["declaration_digest"] = m.sha256_digest(declaration_raw)
-        self.write_lock(lock)
-
-        self.assert_sync_error(m.INVALID_MAPPING, self.check, accepted)
-        self.assert_sync_error(
-            m.INVALID_MAPPING,
-            m.propose_lock,
-            self.upstream,
-            self.adopter,
-            accepted,
-            self.declaration_path,
-        )
-
-    def test_baseline_advance_required_when_commit_advances(self) -> None:
-        units = [self.file_unit("mirror-file", "main", "content.txt", "mirror/content.txt")]
-        catalog = self.catalog_bytes(units)
-        accepted, current = self.make_upstream(
-            [
-                {
-                    ".aicore/core-catalog-v1.yaml": catalog,
-                    "content.txt": b"A\n",
-                    "notes.txt": b"1",
-                },
-                {
-                    ".aicore/core-catalog-v1.yaml": catalog,
-                    "content.txt": b"A\n",
-                    "notes.txt": b"2",
-                },
-            ]
-        )
-        self.make_adopter()
-        declaration = self.declaration(
-            [
-                self.declared_unit(
-                    "mirror-file", "mirror", [self.declared_member("main", "mirror/content.txt")]
-                )
-            ]
-        )
-        lock = self.lock_document(
-            accepted,
-            m.sha256_digest(catalog),
-            [
-                {
-                    "id": "mirror-file",
-                    "mode": "mirror",
-                    "members": [
-                        self.lock_member(
-                            "main",
-                            "mirror/content.txt",
-                            self.file_digest(b"A\n"),
-                            self.file_digest(b"A\n"),
-                        )
-                    ],
-                }
-            ],
-        )
-        self.setup_adoption(declaration, lock)
-        self.write_at(self.adopter / "mirror" / "content.txt", b"A\n")
-
-        unit = self.find_unit(self.check(current), "mirror-file")
-        self.assertNotEqual(accepted, current)
-        self.assertEqual("unchanged", unit.upstream_delta)
-        self.assertEqual("unchanged", unit.destination_delta)
-        self.assertEqual("baseline_advance_required", unit.disposition)
-
-    @unittest.skipUnless(hasattr(os, "mkfifo"), "FIFOs are unavailable on this platform")
-    def test_unsupported_special_file_fifo(self) -> None:
-        units = [self.file_unit("u", "m", "s.txt", "special.fifo")]
-        catalog = self.catalog_bytes(units)
-        accepted = self.make_upstream(
-            [{".aicore/core-catalog-v1.yaml": catalog, "s.txt": b"S\n"}]
-        )[0]
-        self.make_adopter()
-        declaration = self.declaration(
-            [self.declared_unit("u", "adapted", [self.declared_member("m", "special.fifo")])]
-        )
-        lock = self.lock_document(
-            accepted,
-            m.sha256_digest(catalog),
-            [
-                {
-                    "id": "u",
-                    "mode": "adapted",
-                    "members": [
-                        self.lock_member(
-                            "m",
-                            "special.fifo",
-                            self.file_digest(b"S\n"),
-                            self.file_digest(b"S\n"),
-                        )
-                    ],
-                }
-            ],
-        )
-        self.setup_adoption(declaration, lock)
-        os.mkfifo(self.adopter / "special.fifo")
-
-        self.assert_sync_error(m.UNSUPPORTED_SPECIAL_FILE, self.check, accepted)
-
-    def test_accepted_catalog_digest_binding(self) -> None:
-        units = [self.file_unit("u", "m", "s.txt", "d.txt")]
-        catalog = self.catalog_bytes(units)
-        accepted = self.make_upstream(
-            [{".aicore/core-catalog-v1.yaml": catalog, "s.txt": b"S\n"}]
-        )[0]
-        self.make_adopter()
-        declaration = self.declaration(
-            [self.declared_unit("u", "adapted", [self.declared_member("m", "d.txt")])]
-        )
-        self.write_at(self.adopter / "d.txt", b"S\n")
-        declaration_raw = self.write_declaration(declaration)
-        lock = self.lock_document(
-            accepted,
-            "sha256:" + "0" * 64,
-            [
-                {
-                    "id": "u",
-                    "mode": "adapted",
-                    "members": [
-                        self.lock_member(
-                            "m", "d.txt", self.file_digest(b"S\n"), self.file_digest(b"S\n")
-                        )
-                    ],
-                }
-            ],
-        )
-        lock["declaration_digest"] = m.sha256_digest(declaration_raw)
-        self.write_lock(lock)
-
-        self.assert_sync_error(m.CATALOG_CHANGED, self.check, accepted)
+        propose_text = propose_help.stdout.decode("utf-8")
+        self.assertIn("--unit", propose_text)
+        self.assertNotIn("--format", propose_text)
 
 
 if __name__ == "__main__":
