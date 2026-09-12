@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.10.0
+  version: 1.11.0
 ---
 
 ## What I do
@@ -155,10 +155,21 @@ Watch for goal drift on every phase close, every scope change, and every collate
 3. **Wait** for the user's call — the user decides whether to update the goals, adjust the work, or abort. Never self-approve a goal change.
 4. On user approval, update the `## Goals` block and append a dated line to `## Resolved decisions` recording the change.
 
+### Acceptance-criterion reconciliation (fail-closed)
+
+A user story a plan touches may not carry undetermined criteria past plan completion. When the plan's work is done, every acceptance criterion in every story this plan created or updated must be dispositioned:
+
+- `✅` — the criterion is established by verified evidence (a completed goal's `Done when:`, a passing verify command, or a recorded outcome). No fulfilled criterion may remain `⬜`.
+- `❌` — the criterion is explicitly known to be unmet. A `❌` blocks plan completion and archival until the criterion is satisfied or removed.
+- Out-of-scope work is removed from the story's acceptance criteria (not left unchecked) and recorded as a dated change-log line, optionally pointing at a follow-up story.
+
+There is no "left as pending" state for a criterion in a touched story: an `⬜` after a touching plan completes is a stale-story defect. Release events (PR opened/reviewed/merged) are release history, not feature acceptance criteria; a feature criterion may state the release policy (e.g. "merge remains user-only") but never a specific PR/review/merge event.
+
 ### Resume (completion)
 
 When the plan's work is done and its audits have passed — before the release PR is built:
 
+- Run acceptance-criterion reconciliation (see `### Acceptance-criterion reconciliation`) over every touched story; block `## Outcome` and the archive move until no `⬜` criterion remains — each is `✅`, `❌`, or removed as out-of-scope.
 - Present the goals resume in chat: one line per goal, `✅` when met, `❌` when not, each with a 1-line evidence note.
 - Write `## Outcome` into `plan.md` — what the plan produced, per goal — BEFORE moving the plan to `plans/.completed/`.
 - Set `Status: completed`, append `Completed: YYYY-MM-DD HH:MM`, and move the plan to `plans/.completed/` (folder or file per layout). All of this happens pre-release; the merged PR number or merge SHA may be appended to the local archive copy afterwards as free metadata.
@@ -262,7 +273,7 @@ Run after every file write (`plan.md`, each phase file, story create/update, ind
 
 1. **Re-read** every file just written: `plan.md`, each `phase-NN-<owner>.md`, `user-stories/<slug>.md`, `user-stories/index.md`.
 2. **Mechanical pass** — for an active subfolder plan that creates or modifies a user story or `user-stories/index.md`, run `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan-dir> --stories user-stories` so index mirroring runs. For a no-stories path, run `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan-dir>` without `--stories`; use `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan.md> --single-file` for the single-file layout. It enforces the repetitive subset: Status enum, `Completed:` line, required sections, phase sections/labels, phase executor-command table presence/shape, unfilled `<...>`/`TBD`/date placeholders, index mirroring. Fix anything it reports.
-3. **Analysis pass** — re-read each file against `references/_consistency-checklist.md`. Verify every value matches evidence: goals match the confirmed list, every phase traces to ≥1 goal and references an existing phase file, verification checkboxes trace to phase outputs, `## Writes` matches the manifest, story title/status mirror the index. Never invent a value to satisfy a check — stop and ask.
+3. **Analysis pass** — re-read each file against `references/_consistency-checklist.md`. Verify every value matches evidence: goals match the confirmed list, every phase traces to ≥1 goal and references an existing phase file, verification checkboxes trace to phase outputs, `## Writes` matches the manifest, story title/status mirror the index, and touched stories carry no `⬜` acceptance criteria at completion (see `### Acceptance-criterion reconciliation`). Never invent a value to satisfy a check — stop and ask.
 4. **Repeat** until a clean pass, then report the pass count.
 5. **Cap (S-07):** after 3 iterations, or the same violation persisting twice unchanged, stop-and-ask instead of looping.
 
