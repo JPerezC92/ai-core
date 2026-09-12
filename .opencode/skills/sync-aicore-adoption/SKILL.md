@@ -1,11 +1,11 @@
 ---
 name: sync-aicore-adoption
-description: Compare an AICore adopter repository against its accepted AICore baseline and report safe updates, local drift, and conflicts without writing adopter files. Use when a project that adopted AICore needs to review upstream core changes, generate a candidate adoption lock, or detect undeclared drift in core-owned units. Read-only — `check` writes nothing and `propose-lock` writes only to stdout.
+description: Compare an atomic AICore adopter repository against the trusted AICore revision and report compliance without writing adopter files. Use when a project that adopted AICore must confirm every applicable core unit is current at one revision, generate a single-revision adoption lock, or verify all registered adopters. Read-only — `check` and `verify-all` write nothing and `propose-lock` writes only to stdout.
 license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.1.0
+  version: 2.0.0
   domain: opencode
   dependencies:
     - PyYAML==6.0.3
@@ -13,19 +13,21 @@ metadata:
 
 ## What I do
 
-I compare an independent adopter repository against the AICore revision its lock row last accepted. I reconcile the accepted and current core catalogs, project each declared unit's content in a logical-member namespace, and report orthogonal **mode**, **upstream delta**, **destination delta**, and **disposition** per unit. I never modify adopter files.
+I compare an independent adopter repository against the trusted AICore revision as one atomic transaction. I reconcile the accepted and current core catalogs, project each declared unit's content in a logical-member namespace, and report orthogonal **mode**, **upstream delta**, **destination delta**, and **disposition** per unit. I never modify adopter files.
+
+I enforce atomic adoption: a lock carries exactly one accepted source commit for the whole adopter, every catalog unit must be accounted for (adopted or explicitly `not_applicable` under a machine-checked applicability rule), and `check` exits 0 only when the whole adopter is complete, current, and resolved. Partial per-unit acceptance does not exist in v2.
 
 I am an **upstream-only AICore management tool**: run me from an AICore checkout against a runtime-supplied adopter path. I am not an adopted-content catalog unit, so I am never copied into an adopter repository. `migrate-core-to-project` is the same kind of upstream-only tool for initial installation.
 
-I read the accepted catalog and content from each lock row's accepted source commit, and the current catalog and content from an explicit current Git commit. I read adopter destination content from exactly one explicit snapshot — a full adopter commit or the staged Git index — never the working tree. I never guess when history or mappings are ambiguous; I fail closed with a top-level error.
+I read the accepted catalog and content from the lock's single accepted source commit, and the current catalog and content from the trusted upstream revision. I read adopter destination content from exactly one explicit snapshot — a full adopter commit or the staged Git index — never the working tree. I never guess when history or mappings are ambiguous; I fail closed.
 
 ## When to use me
 
-- A project adopted AICore and wants to know which upstream core units changed since it last accepted a baseline.
-- A maintainer needs to generate a candidate `.aicore/adoption.lock.yaml` after reviewing an `.aicore/adoption.yaml` declaration.
-- A maintainer wants to accept a specific unit while preserving every other unit's prior baseline.
-- A project suspects an undeclared edit to a core-owned (mirrored) unit, a replacement member, or a renamed adapted member.
-- You need a reproducible, read-only drift report for review or CI evidence.
+- A project adopted AICore and must confirm every applicable core unit is current at one revision.
+- A maintainer needs to generate a single-revision `.aicore/adoption.lock.yaml` after reviewing an `.aicore/adoption.yaml` declaration and `.aicore/adoption-review.yaml`.
+- A project suspects drift in a core-owned unit, a replacement member, an adapted member, or a merged config fragment.
+- The user wants to verify every adopter registered in `.aicore/adopters.yaml` against the trusted revision.
+- You need a reproducible, read-only compliance report for review evidence.
 
 Do NOT use me to perform the original installation (that is `migrate-core-to-project`), to apply or merge updates, or to author adopter-specific behavior.
 
@@ -34,14 +36,15 @@ Do NOT use me to perform the original installation (that is `migrate-core-to-pro
 From the request, extract:
 
 - **upstream-repo** — path or checkout of the AICore upstream repository (required).
-- **adopter-repo** — path to the adopter repository (required).
-- **current-revision** — full 40-character upstream commit to compare against (required; never a branch name or short SHA).
+- **adopter-repo** — path to the adopter repository (required for `check` and `propose-lock`).
 - **adopter snapshot** — exactly one of:
   - **adopter-revision** — full 40-character adopter commit whose tree holds destination content; or
   - **adopter-index** — read destination content from the staged adopter index only.
+- **diagnostic-revision** — full 40-character upstream commit to compare against for diagnosis (optional; never yields a compliance pass).
 - **declaration** — path to the adopter declaration (default `.aicore/adoption.yaml`).
+- **review** — path to the adopter review (default `.aicore/adoption-review.yaml`).
 - **lock** — path to the adopted lock (default `.aicore/adoption.lock.yaml`).
-- **unit** — one or more declared or locked unit ids to accept or retire (repeatable; `propose-lock` update proposals only).
+- **registry** — path to the upstream registry (default `.aicore/adopters.yaml`; `verify-all` only).
 - **format** — `json` or `human` (default `human`).
 
 ### Argument collection form
@@ -49,11 +52,10 @@ From the request, extract:
 | name | type | validation | trigger |
 |---|---|---|---|
 | `upstream-repo` | text | exists and is a Git repository | not provided |
-| `adopter-repo` | text | exists and contains the declaration | not provided |
-| `current-revision` | text | full 40-char commit in upstream | not provided |
+| `adopter-repo` | text | exists and contains the declaration | not provided for check/propose-lock |
 | `adopter-revision` | text | full 40-char commit in adopter, or `adopter-index` | neither snapshot provided |
 | `adopter-index` | choice | boolean | neither snapshot provided |
-| `unit` | text | one or more declared or locked unit ids | update proposal without a selection |
+| `diagnostic-revision` | text | full 40-char commit in upstream | optional |
 | `format` | choice | json / human | not provided |
 
 Use one `question` call per missing required argument. Do not add a manual "Other" option.
@@ -62,61 +64,69 @@ Use one `question` call per missing required argument. Do not add a manual "Othe
 
 | Command | Reads | Writes | Purpose |
 |---|---|---|---|
-| `check` | catalog at each row's accepted commit, declaration, lock, upstream Git objects, one explicit adopter snapshot | nothing | Emit mode/delta/disposition per unit as JSON or human text. |
-| `propose-lock` | catalog, declaration, accepted + current Git objects, one explicit adopter snapshot | stdout only | Emit candidate lock YAML plus one trailing newline. Diagnostics go to stderr. |
+| `check` | catalog, declaration, review, lock, upstream Git objects, one explicit adopter snapshot | nothing | Emit mode/delta/disposition per unit plus a compliance verdict; exit 0/1/2. |
+| `propose-lock` | catalog, declaration, review, current Git objects, one explicit adopter snapshot | stdout only | Emit a complete single-revision candidate lock YAML plus one trailing newline. Diagnostics to stderr. |
+| `verify-all` | `.aicore/adopters.yaml`, upstream Git objects, each registered adopter repository | nothing | Read-only checkout of each registered adopter and a compliance verdict per adopter; exit 0 only if all pass. |
 
-`check` and `propose-lock` perform no filesystem, worktree, index, or ref mutation. There is no apply, copy, merge, delete, or fetch command. Both are implemented in [`scripts/sync_aicore_adoption.py`](scripts/sync_aicore_adoption.py).
+All three perform no filesystem, worktree, index, or ref mutation of the upstream or adopter repositories. There is no apply, copy, merge, delete, or fetch-into-adopter command. They are implemented in [`scripts/sync_aicore_adoption.py`](scripts/sync_aicore_adoption.py).
 
-### Initial versus update proposals
+### Atomic proposals
 
-- **Initial proposal** (no existing lock): accepts every declared unit at the current catalog-bearing revision. `--unit` is rejected. The source revision must contain the catalog; a pre-catalog revision is not a valid formal baseline.
-- **Update proposal** (existing lock): requires one or more repeatable `--unit` selections validated against the union of declared ids and existing lock ids. A selected declared+locked row is rebuilt at the current revision, a selected declared-only row is added, and a selected locked-only row is retired by omitting it from the candidate YAML. Every unselected row keeps its prior accepted source commit, catalog digest, intent digest, and content digests byte-for-byte. An id in neither set, a removed lock row left unselected, or an unselected added, removed, or remapped intent is rejected. Retirement needs no current-catalog row.
-- Older, pre-catalog history is optional adopter-owned documentation. It is never stored as machine-verified lock evidence.
+- `propose-lock` rebuilds **every** declared unit at the one current revision. There is no `--unit` and no partial mode.
+- A changed non-mirror unit (`adapted`, `replacement`, `destination_owned`) requires a matching `.aicore/adoption-review.yaml` decision before the lock can be generated.
+- An incomplete declaration, an invalid applicability claim, an unsatisfied required assertion, or a missing review decision fails closed.
 
 ## Comparison contract
 
 I report four orthogonal fields with closed values:
 
-- **mode** (from the declaration): `mirror | adapted | replacement | destination_owned`. A catalog unit absent from the declaration reports `not_declared`.
-- **upstream delta**: `unchanged | added | modified | removed | not_applicable`.
-- **destination delta**: `unchanged | added | modified | removed | not_applicable`.
-- **disposition**: `current | adoption_available | update_available | local_drift | review_required | conflict | baseline_advance_required | retirement_available | unmanaged`.
+- **mode** (from the declaration): `mirror | adapted | replacement | destination_owned | not_applicable`.
+- **upstream delta**: `changed | unchanged` (a `not_applicable` unit reports `n/a`).
+- **destination delta**: `changed | unchanged` (a `not_applicable` unit reports `n/a`).
+- **disposition**: `current | not_applicable | update_available | local_drift | review_required | conflict | baseline_advance_required | unmanaged`.
 
-Replacements declare named `replacement_members` (local id, destination, `file|tree` projection). Each member carries its own accepted and current destination digest, so a split-role replacement reports which local member drifted or conflicted; it never claims byte convergence with the upstream unit.
+Assertion units (`opencode-config`, `gitignore-config`) behave as `mirror` rows over a normalized assertion-status map: a missing required permission gate or ignore entry is `local_drift` (or `conflict` if upstream also changed) and can never be `current`.
 
-Baseline, catalog, schema, mapping, snapshot, identity, and selection failures are **top-level fatal errors**, never content deltas: `baseline_unavailable`, `invalid_lock`, `declaration_changed`, `catalog_changed`, `invalid_mapping`, `adopter_snapshot_unavailable`, `repository_identity_mismatch`, `invalid_selection`, `unknown_key`.
+## Exit contract
 
-The exact schemas, digest framing, disposition table, and safety invariants are defined in [`references/protocol-v1.md`](references/protocol-v1.md). Reference examples: [`references/adoption-declaration-v1.yaml`](references/adoption-declaration-v1.yaml) and [`references/adoption-lock-v1.yaml`](references/adoption-lock-v1.yaml).
+| Exit | Meaning |
+|---:|---|
+| 0 | Compliance pass: complete declaration, every declared unit `current` or `not_applicable` (or the `unmanaged` `destination_owned` steady state), all changed non-mirror units reviewed, catalog current. |
+| 1 | Valid input but non-compliant (stale/`update_available`/`local_drift`/`conflict`/`review_required`/`baseline_advance_required`) or diagnostic mode. |
+| 2 | Fatal: schema/identity/mapping/snapshot/trust failure, `declaration_incomplete`, `invalid_applicability`, `invalid_lock`, `invalid_declaration`, `schema_upgrade_required`. |
+
+The trusted revision is the tip of the upstream repository's protected default branch. `--diagnostic-revision` compares against an explicit revision for diagnosis and can never exit 0.
+
+The exact schemas, digest framing, disposition table, and safety invariants are defined in [`references/protocol-v2.md`](references/protocol-v2.md). Reference examples: [`references/adoption-declaration-v2.yaml`](references/adoption-declaration-v2.yaml), [`references/adoption-lock-v2.yaml`](references/adoption-lock-v2.yaml), and [`references/adoption-review-v2.yaml`](references/adoption-review-v2.yaml). The previous `protocol-v1.md` is retained only as migration input.
 
 ## Examples
 
-### Example 1 — check an adopter against a newer core revision
+### Example 1 — check an adopter for compliance
 
-> "Check whether my project has drifted from the AICore core."
+> "Is my project fully current with AICore?"
 
-Run `check` for the adopter against the requested full upstream commit and an explicit adopter snapshot (`--adopter-revision <sha>` or `--adopter-index`). Output lists each unit with its mode, both deltas, and a disposition; mirrored units that changed only upstream report `update_available`, adapted units never report a byte convergence, a locally edited mirror reports `review_required`, and a split-role replacement reports which local member drifted.
+Run `check` with an explicit adopter snapshot (`--adopter-revision <sha>` or `--adopter-index`). Output lists each unit with its mode, both deltas, and a disposition plus a `compliance` verdict. Exit 0 means complete and current; exit 1 lists the blocking units (`update_available`, `baseline_advance_required`, `local_drift`, `review_required`, `conflict`); exit 2 means the inputs themselves are invalid.
 
-### Example 2 — propose an initial lock after adopting a baseline
+### Example 2 — propose a complete lock
 
-> "Generate the adoption lock for this declaration at the accepted upstream commit."
+> "Generate the adoption lock at the trusted revision."
 
-Run `propose-lock` with a catalog-bearing `--current-revision` and an explicit adopter snapshot, and no existing lock. It prints candidate YAML to stdout only. The maintainer reviews it, then commits it as `.aicore/adoption.lock.yaml`. `propose-lock` rejects a `mirror` unit whose accepted source and destination digests differ, and rejects any mapping into `.git/**` or the adoption control files.
+Run `propose-lock` with the trusted catalog-bearing revision and an explicit adopter snapshot. It prints one complete candidate lock to stdout. The maintainer reviews it, then commits it as `.aicore/adoption.lock.yaml`. A changed non-mirror unit without a review decision is rejected.
 
-### Example 3 — accept a single unit while preserving the rest
+### Example 3 — verify every registered adopter
 
-> "Accept the `plan-enforce` update, leave everything else where it was."
+> "Check that every AICore adopter is current."
 
-Run `propose-lock --current-revision <sha> --adopter-revision <sha> --unit plan-enforce` with the existing lock present. The selected row is rebuilt at the new revision; every unselected row is preserved with its prior accepted source commit. A later `check` still reports every current catalog unit, so pending changes remain visible.
+Run `verify-all`. It reads `.aicore/adopters.yaml`, checks each registered adopter at its default branch, and exits 0 only when every registered adopter passes. A missing, unreachable, stale, or unregistered adopter fails the run.
 
 ## Troubleshooting
 
-- **`check` exits with `baseline_unavailable`** — a lock row's accepted commit is missing from `upstream-repo`, is not a commit, is not an ancestor of the current revision, or `--current-revision` is malformed. Cause: shallow clone, rewritten history, or a wrong repository. Fix: fetch full history into `upstream-repo` and pass full commits; never shorten an accepted SHA.
-- **`check` exits with `invalid_lock`** — a lock row's accepted upstream/member/unit digest does not reproduce from its accepted source commit, or a `mirror` unit's accepted source and destination digests differ. Cause: hand-edited lock or mismatched mirror baseline. Fix: regenerate the lock with `propose-lock` and review it.
-- **`check` exits with `declaration_changed`** — the declaration's raw digest differs from the lock, or a declared unit's intent digest changed. Cause: the declaration changed after the lock was generated. Fix: review the change and regenerate the lock.
-- **Any command exits with `adopter_snapshot_unavailable`** — no snapshot, both snapshots, a malformed revision, or a revision that is not an adopter commit. Fix: provide exactly one full adopter commit (`--adopter-revision`) or `--adopter-index`.
-- **`check` exits with `repository_identity_mismatch`** — the catalog's `catalog.upstream_repository`, the declaration, and the lock disagree. Fix: correct the identity; it must be the declared AICore repository.
-- **`propose-lock` exits with `invalid_selection`** — an update proposal omitted `--unit`, selected an id that is neither declared nor locked, left a removed lock row unselected, or would add, remove, or remap an unselected unit. Fix: select exactly the units whose intent, baseline, addition, or retirement you accept.
-- **A unit reports `not_declared`** — the catalog has a current unit the declaration does not mention. Fix: add a declaration row (choose a mode) or leave it reported as `unmanaged`.
-- **A replacement member reports `local_drift` / `review_required` / `conflict`** — the local replacement member changed independently of upstream, upstream changed while the local member did not, or both changed. Fix: review the member and select the unit when accepting a new baseline.
-- **`propose-lock` rejects a mapping** — the destination is absolute, contains `..`, escapes through a snapshot symlink, duplicates another destination, overlaps a file/tree owner, or targets `.git/**` or an adoption control file. Fix: correct the destination mapping.
-- **`propose-lock` rejects an initial baseline** — the accepted source revision does not contain `.aicore/core-catalog-v1.yaml`. Fix: choose a catalog-bearing revision as the formal baseline; keep older history as adopter-owned notes.
+- **`check` exits 2 with `schema_upgrade_required`** — the adopter still uses a v1 declaration or lock. Fix: re-declare under v2 (add `profile`, cover every catalog unit including the former config `none` units), author the review, regenerate a v2 lock.
+- **`check` exits 2 with `declaration_incomplete`** — a catalog unit is missing from the declaration. Fix: add its row as a real mode or, when applicability allows, `not_applicable`.
+- **`check` exits 2 with `invalid_applicability`** — a required/always unit was marked `not_applicable`, or an applicable unit was. Fix: correct `profile` or the unit mode.
+- **`check` exits 1 with `baseline_advance_required`** — the accepted baseline is behind the trusted revision. Fix: regenerate the lock at the trusted revision after reviewing changed non-mirror units.
+- **`check` exits 2 with `baseline_unavailable`** — the accepted commit is missing, not a commit, or not an ancestor of the trusted revision. Fix: fetch full history into `upstream-repo`; never shorten an accepted SHA.
+- **`check` exits 2 with `invalid_lock`** — a row carries its own source commit (v1 shape) or its evidence does not reproduce from the single accepted commit. Fix: regenerate with `propose-lock`.
+- **A config unit reports `local_drift`** — a required permission gate or ignore entry is missing from `opencode.jsonc` or `.gitignore`. Fix: re-add the required gate/entry, then regenerate the lock.
+- **`verify-all` reports a missing or unreachable adopter** — the registry entry or repository access is wrong. Fix: correct `.aicore/adopters.yaml` or repository access; the run stays blocking until every registered adopter passes.
+- **A replacement member reports `local_drift` / `review_required` / `conflict`** — the local member changed, upstream changed, or both. Fix: record a review decision and regenerate the lock.

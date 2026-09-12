@@ -1,0 +1,16 @@
+# AICore adopter registry (schema v2)
+#
+# The single AICore surface allowed to name external adopter repositories.
+# `sync-aicore-adoption verify-all` checks every adopter listed here against the
+# trusted AICore revision and blocks if any is missing, unreachable, stale, or
+# not current. There is no `required` flag — every registered adopter is
+# mandatory. No credentials or machine-local paths.
+schema_version: 2
+upstream_repository: JPerezC92/ai-core
+adopters:
+  - id: tismart-support
+    repository: JPerezC92/tismart-support
+    default_branch: main
+    declaration_path: .aicore/adoption.yaml
+    lock_path: .aicore/adoption.lock.yaml
+    review_path: .aicore/adoption-review.yaml

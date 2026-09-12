@@ -1,0 +1,69 @@
+# Reference example (neutral, schema v2). Copy to an adopter repository as
+# `.aicore/adoption.yaml` and edit for that project. No real project name,
+# path, secret, or digest appears.
+#
+# Every catalog unit must appear exactly once: either with a real mode
+# (mirror / adapted / replacement / destination_owned) or, when the catalog
+# unit is not `always` and its applicability is false under `profile`,
+# `not_applicable`. A missing unit is `declaration_incomplete` (exit 2).
+#
+# Digests, the accepted source commit, and the intent digest are generated
+# into the lock by `propose-lock`, never written here.
+schema_version: 2
+upstream_repository: JPerezC92/ai-core
+profile:
+  backend_stack: false
+  python_scripts: true
+  ticket_system: false
+units:
+  # Mirrored tree: the adopter must match AICore exactly.
+  - id: git-commit
+    mode: mirror
+    members:
+      - { id: tree, destination: .opencode/skills/git-commit }
+
+  - id: plan-enforce
+    mode: mirror
+    members:
+      - { id: tree, destination: .opencode/skills/plan-enforce }
+
+  # Assertion unit: no members; presence of the required gates is checked.
+  - id: opencode-config
+    mode: mirror
+
+  - id: gitignore-config
+    mode: mirror
+
+  # Adapted single file: the root runtime spec is renamed at the destination.
+  - id: root-runtime-spec
+    mode: adapted
+    members:
+      - { id: root, destination: BASE-RULES.md }
+
+  # Adapted agent pair retained locally with reconciliation evidence.
+  - id: bastion
+    mode: adapted
+    members:
+      - { id: spec, destination: .opencode/agents/bastion.md }
+      - { id: profile, destination: agents/bastion/profile.md }
+
+  # One-to-many replacement: the generic investigator unit is replaced by two
+  # local members, each with an explicit file|tree projection and a local id.
+  - id: investigator
+    mode: replacement
+    replacement_members:
+      - { id: role-a, destination: agents/role-a/profile.md, projection: file }
+      - { id: role-b, destination: agents/role-b/profile.md, projection: file }
+
+  # Ticket-only unit excluded because `profile.ticket_system` is false.
+  - id: ledger
+    mode: not_applicable
+
+  # Destination-owned catalog unit: kept locally, tracked against upstream.
+  - id: knowledge-debt
+    mode: destination_owned
+    members:
+      - { id: file, destination: knowledge/debt.md }
+
+# ...every remaining catalog unit appears here as either a real mode or
+# `not_applicable`, so coverage is complete and auditable.
