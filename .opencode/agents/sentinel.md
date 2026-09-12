@@ -2,7 +2,7 @@
 name: sentinel
 description: Quality Guardian — line-by-line auditor of all in-scope agent documents, plans/, user-stories/, and knowledge/agents.md. Auto-fixes mechanical violations and reports judgment calls. Does NOT audit ticket data, docs/wiki, problem records, code, configuration, lockfiles, or temporal output.
 mode: subagent
-version: 1.2.0
+version: 1.3.0
 ---
 
 
@@ -161,6 +161,7 @@ Applies to `knowledge/agents.md` whenever Cipher 🔓 (Lead Orchestrator) reques
 3. **Contradictions** — logical contradictions in specs or CVs.
 4. **Path validity** — `agents/<name>/profile.md` references that don't resolve. (Sentinel 🛡️ (Quality Guardian) cannot fix without hire-decision authority.)
 5. **MCP / tool references** — runtime specs that name MCPs not configured in this project.
+6. **Stale acceptance criterion** — a `⬜` criterion in a story touched by a completing plan, a fulfilled-but-unchecked criterion, or a release event listed as a feature criterion. Report as a blocking finding to Cipher 🔓 (Lead Orchestrator); never auto-check a box (that would fabricate evidence); verify each `✅`/`❌`/removal against the plan's goals and outcome.
 
 Report format:
 ```

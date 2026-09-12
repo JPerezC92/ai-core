@@ -27,6 +27,13 @@
 
 ## Acceptance criteria
 
+<!-- Reconciliation (fail-closed): once a plan touching this story completes, no criterion may remain `⬜`.
+     ✅ = evidence-established (a completed goal's Done when:, a passing command, or a recorded outcome)
+     ❌ = explicitly unmet — blocks the touching plan's completion until satisfied or removed
+     ⬜ = not yet dispositioned — allowed only while no touching plan has completed
+     Out-of-scope work is removed from these criteria (not left unchecked) and recorded in the change log.
+     Release events (PR opened/reviewed/merged) are not acceptance criteria; record them in the change log. -->
+
 - ⬜ <criterion 1>
 - ⬜ <criterion 2>
 
