@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.11.0
+  version: 1.11.1
 ---
 
 ## What I do
@@ -169,7 +169,7 @@ There is no "left as pending" state for a criterion in a touched story: an `⬜`
 
 When the plan's work is done and its audits have passed — before the release PR is built:
 
-- Run acceptance-criterion reconciliation (see `### Acceptance-criterion reconciliation`) over every touched story; block `## Outcome` and the archive move until no `⬜` criterion remains — each is `✅`, `❌`, or removed as out-of-scope.
+- Run acceptance-criterion reconciliation (see `### Acceptance-criterion reconciliation`) over every touched story; block `## Outcome` and the archive move until no `⬜` or `❌` criterion remains — each is `✅` or removed as out-of-scope.
 - Present the goals resume in chat: one line per goal, `✅` when met, `❌` when not, each with a 1-line evidence note.
 - Write `## Outcome` into `plan.md` — what the plan produced, per goal — BEFORE moving the plan to `plans/.completed/`.
 - Set `Status: completed`, append `Completed: YYYY-MM-DD HH:MM`, and move the plan to `plans/.completed/` (folder or file per layout). All of this happens pre-release; the merged PR number or merge SHA may be appended to the local archive copy afterwards as free metadata.

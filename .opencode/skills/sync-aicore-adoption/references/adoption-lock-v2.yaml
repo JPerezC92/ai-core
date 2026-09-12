@@ -1,0 +1,71 @@
+# Reference example (neutral, schema v2) of a generated adoption lock.
+# Produced by `propose-lock` from the example declaration and review; the
+# adopter commits it as `.aicore/adoption.lock.yaml`.
+#
+# There is ONE accepted source commit for the whole lock. Per-unit source
+# commits do not exist in v2. Digest and commit values are illustrative
+# fixtures for schema shape; regenerate from real content with `propose-lock`.
+schema_version: 2
+upstream_repository: JPerezC92/ai-core
+accepted_source_commit: abcdef0123456789abcdef0123456789abcdef01
+accepted_catalog_digest: sha256:652f55016243bf1b9f1bbea46d5749ef892dbe394e46de9d66ab1aacf0b4af57
+declaration_digest: sha256:abcd0ee1fc2cdf511d8a85bd020c5f2f18468d6c442f5506fec7d859b8fea335
+review_digest: sha256:beef0ee1fc2cdf511d8a85bd020c5f2f18468d6c442f5506fec7d859b8fea999
+accepted_snapshot_digest: sha256:0000face0000face0000face0000face0000face0000face0000face0000face00
+units:
+  - id: git-commit
+    mode: mirror
+    declaration_unit_digest: sha256:1111111111111111111111111111111111111111111111111111111111111111
+    accepted_upstream_digest: sha256:fdf2c6249aa09dd7ac4fb6f4fc38dc3eff9d3f6d9d1aab16e58da1132dc45b1e
+    members:
+      - id: tree
+        destination: .opencode/skills/git-commit
+        accepted_upstream_digest: sha256:fdf2c6249aa09dd7ac4fb6f4fc38dc3eff9d3f6d9d1aab16e58da1132dc45b1e
+        accepted_destination_digest: sha256:fdf2c6249aa09dd7ac4fb6f4fc38dc3eff9d3f6d9d1aab16e58da1132dc45b1e
+
+  - id: opencode-config
+    mode: mirror
+    declaration_unit_digest: sha256:2222222222222222222222222222222222222222222222222222222222222222
+    accepted_upstream_digest: sha256:3b528b2a87b309815e1e90e96b024cfb9f1a7c355354591a5a60fe9394f2d5da
+    members:
+      - id: assertions
+        destination: opencode.jsonc
+        accepted_upstream_digest: sha256:3b528b2a87b309815e1e90e96b024cfb9f1a7c355354591a5a60fe9394f2d5da
+        accepted_destination_digest: sha256:3b528b2a87b309815e1e90e96b024cfb9f1a7c355354591a5a60fe9394f2d5da
+
+  - id: root-runtime-spec
+    mode: adapted
+    declaration_unit_digest: sha256:3333333333333333333333333333333333333333333333333333333333333333
+    accepted_upstream_digest: sha256:e97b9e20730936bfca968775c51541734f035db33717eda2859ebefbc51d0c38
+    members:
+      - id: root
+        destination: BASE-RULES.md
+        accepted_upstream_digest: sha256:e97b9e20730936bfca968775c51541734f035db33717eda2859ebefbc51d0c38
+        accepted_destination_digest: sha256:f64218ff3d46076f76cafe4bf61250826d9d89e234cc41b73e32aefbf35b29b4
+
+  - id: investigator
+    mode: replacement
+    declaration_unit_digest: sha256:4444444444444444444444444444444444444444444444444444444444444444
+    accepted_upstream_digest: sha256:8df89d538377fbe04dc53ac776052aa940234f19ffc080076f8eb6ad9ffbc2fa
+    replacement_members:
+      - id: role-a
+        destination: agents/role-a/profile.md
+        projection: file
+        accepted_destination_digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      - id: role-b
+        destination: agents/role-b/profile.md
+        projection: file
+        accepted_destination_digest: sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+
+  - id: ledger
+    mode: not_applicable
+
+  - id: knowledge-debt
+    mode: destination_owned
+    declaration_unit_digest: sha256:5555555555555555555555555555555555555555555555555555555555555555
+    accepted_upstream_digest: sha256:f2d10be41ac510b3e178d10653e70d1d7a3f6044e944b1299a83a9e6e67225d9
+    members:
+      - id: file
+        destination: knowledge/debt.md
+        accepted_upstream_digest: sha256:f2d10be41ac510b3e178d10653e70d1d7a3f6044e944b1299a83a9e6e67225d9
+        accepted_destination_digest: sha256:675836c9e2c44ec03b83449d484e8505a918ce0d3bab75b8659d77d9c2d0b2c8

@@ -30,7 +30,7 @@
 - Each story's `Title` and `Status` mirror the corresponding `index.md` columns.
 - No unfilled `<...>`, `TODO`, or `TBD` placeholders.
 - A dated `## Change log` entry is present for every plan that touched the story.
-- Acceptance-criterion reconciliation (fail-closed): a story touched by the plan carries no `⬜` criteria when the plan completes — each is `✅` (evidence-established) or `❌` (explicitly unmet, blocking); out-of-scope work is removed, never left unchecked. Release events (PR opened/reviewed/merged) are not acceptance criteria. This is semantic analysis (evidence-to-checkbox truth), never mechanical auto-checking.
+- Acceptance-criterion reconciliation (fail-closed): a story touched by the plan carries no `⬜` or `❌` criteria when the plan completes — each is `✅` (evidence-established) or removed as out-of-scope; `❌` (explicitly unmet) blocks completion until satisfied or removed. Out-of-scope work is removed, never left unchecked. Release events (PR opened/reviewed/merged) are not acceptance criteria. This is semantic analysis (evidence-to-checkbox truth), never mechanical auto-checking.
 
 ## Loop rule
 
