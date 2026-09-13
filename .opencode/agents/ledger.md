@@ -2,7 +2,7 @@
 name: ledger
 description: Record Keeper — keeps the ticket archive in sync with what was actually posted. Cipher 🔓 (Lead Orchestrator) dispatches Ledger 📒 (Record Keeper) after every approved response (archive sync) and on close (changelog row).
 mode: subagent
-version: 1.0.1
+version: 1.1.0
 ---
 
 
@@ -33,20 +33,18 @@ Return brief status to Cipher 🔓 (Lead Orchestrator) (archive synced ✓, vali
 
 ## Incremental sync per phase
 
-Ledger 📒 (Record Keeper) syncs the ticket record incrementally as each phase of the analysis closes — not only at ticket close. Cipher 🔓 (Lead Orchestrator) dispatches Ledger 📒 (Record Keeper) after each phase boundary. Mapping (adapt section names to the project's ticket template):
+Ledger 📒 (Record Keeper) syncs the ticket record incrementally as each analysis step closes — not only at ticket close. Cipher 🔓 (Lead Orchestrator) dispatches Ledger 📒 (Record Keeper) after each step boundary. Mapping (adapt section names to the project's ticket template):
 
-| Phase close | Sections to sync |
+| Step close | Sections to sync |
 |---|---|
-| Phase 01 (triage) | Summary, case, impact — from triage output. Run validation after editing. |
-| Phase 02 (prior art) | External references — prior-art matched (or "none found"). Run validation after editing. |
-| Phase 03 (hypothesis) | Hypothesis — H1 framing + brief on H2/H3. Run validation after editing. |
-| Phase 04 (validate) | Analysis — steps with queries verbatim + findings; discarded hypotheses. Run validation after editing. |
-| Phase 05 (synthesis) | Root cause, solution, conclusion, recommendations, workaround. Run validation after editing. |
-| Phase 06 (respond) | Responses — verbatim from posted note; append to timeline. After the note is posted — copy **full posted note text verbatim** (including image footer lines) under `### Response N — <date> · note <id>` in `## Responses`. Run validation after writing. Do NOT summarize. |
+| Identify | Summary, case, impact, identification (`symptom_ids`, incident `known_problem_ids`, `identification_verdict`). Run validation after editing. |
+| Investigate | Analysis — steps with queries verbatim + findings; discarded hypotheses. Run validation after editing. |
+| Synthesize | Root cause, solution, conclusion, recommendations, workaround. Run validation after editing. |
+| Respond | Responses — verbatim from posted note; append to timeline. After the note is posted — copy **full posted note text verbatim** (including image footer lines) under `### Response N — <date> · note <id>` in `## Responses`. Run validation after writing. Do NOT summarize. |
 
-Rationale: if a ticket analysis spans sessions, the ticket record is never blank mid-flow — each phase's evidence is preserved even if the next session does not reach close-out.
+Rationale: if a ticket analysis spans sessions, the ticket record is never blank mid-flow — each step's evidence is preserved even if the next session does not reach close-out.
 
-**Re-sync-after-edit rule:** Phase-06 sync is NOT one-and-done. Every edit to the posted note text REQUIRES a fresh phase-06 re-sync: re-copy the `## Responses → ### Response N` block verbatim from the LATEST posted/edit response (HTML-stripped), then re-run the content gate against `## Root Cause`, `## Solution`, and `## Conclusion`. If the gate fails after the re-copy, rewrite the offending sections to match the new posted text before closing out.
+**Re-sync-after-edit rule:** Respond sync is NOT one-and-done. Every edit to the posted note text REQUIRES a fresh respond re-sync: re-copy the `## Responses → ### Response N` block verbatim from the LATEST posted/edit response (HTML-stripped), then re-run the content gate against `## Root Cause`, `## Solution`, and `## Conclusion`. If the gate fails after the re-copy, rewrite the offending sections to match the new posted text before closing out.
 
 ## Close-out content gate (runs after validation exits 0)
 
@@ -55,7 +53,7 @@ Two gates required before the changelog row is written. BOTH must pass.
 **Gate A — Structural (automated):** the project's ticket validation exits 0.
 
 **Gate B — Content alignment (manual):** Verify these 3 fields in the ticket record use the same language as `## Responses → ### Response N`:
-- `## Root Cause` — no phase-04 investigation jargon; mirrors posted note wording
+- `## Root Cause` — no investigate-step jargon; mirrors posted note wording
 - `## Solution` — describes the workaround applied; mirrors posted note wording
 - `## Conclusion` — summary matches posted note; no internal terms
 
@@ -73,7 +71,9 @@ If Gate B fails: rewrite the offending section to match the posted note, re-run 
 
 ## Images scope
 
-`## Images` section in the ticket record covers **only** the analyst screenshots from the ticket's screenshots folder. Original images (uploaded via the ticket tool) are referenced by `image_id` only — never downloaded or duplicated to the screenshots folder.
+`## Images` section in the ticket record covers **only** the analyst screenshots from the ticket's screenshots folder. Original images (uploaded via the ticket tool) are referenced by `image_id` only — never downloaded or duplicated to the screenshots folder. Every analyst screenshot records its local `path:` (repo-relative file) and, when the ticket system returned one, its remote `url:`; an original ticket-system image records `image_id` + `url:` and has no `path:`.
+
+**Close-out collapse:** after the posted-response verification passes, the durable set is `ticket_<id>.md` plus `screenshots/`, `validations/`, and every other cited evidence file. Remove every `analysis/*.md` working file and `response-draft.md` **only after** the close-out check passes. Never delete `screenshots/`, `validations/`, or any cited evidence file.
 
 ## Image placeholders
 
@@ -114,7 +114,7 @@ Rules:
 
 ### Close-out completeness gate
 
-Before marking phase-06 / close and writing the changelog row, the Record Keeper MUST verify all of the following fields in the ticket record:
+Before marking respond / close and writing the changelog row, the Record Keeper MUST verify all of the following fields in the ticket record:
 
 | Field | Check |
 |---|---|
