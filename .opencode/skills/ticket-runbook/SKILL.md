@@ -1,32 +1,32 @@
 ---
 name: ticket-runbook
-description: Scaffold a runbook subfolder for an incident ticket using its bundled runbook template. Decides whether a ticket needs a full runbook based on prior-art search (known-problem register, resolved tickets, patterns register, KBA/RCA catalogs, knowledge search). Use when starting analysis on a new incident ticket.
+description: Scaffold a per-ticket working analysis (analysis/state.md + identify/investigate/synthesize) for an incident ticket, identify it register-first via S-xx → incident P-NNN, and collapse to one ticket_ID.md record at close. Use when starting analysis on a new incident ticket.
 license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.2.0
+  version: 2.0.0
   dependencies:
     - PyYAML==6.0.3
 ---
 
 ## What I do
 
-Scaffold a per-ticket `runbook/` subfolder from `references/runbook/` and populate its header fields. Includes a prior-art gate: if an exact replay-candidate is found, skip runbook ceremony, report the matched solution, and request user approval before applying it. Phase 04 also documents an optional, incident-only verifier route (the `query-verification` skill) that consumes one existing query-budget slot; it never adds automatic query execution and never changes the runbook header schema.
+Scaffold a per-ticket `analysis/` working set from `references/analysis/` (`state.md`, `01-identify.md`, `02-investigate.md`, `03-synthesize.md`) and run **register-first identification**: normalize the ticket, match an `S-xx` symptom class, then match at most one `Team: incident` `P-NNN` from `knowledge/problems.md` and issue a verdict of `exact`, `structural`, or `no_match`. The working analysis is always scaffolded, whatever the verdict. At close, the working analysis and `response-draft.md` collapse to one `ticket_<id>.md` record plus `screenshots/`, `validations/`, and the cited evidence.
+
+`01-identify.md` also documents an optional, incident-only verifier route (the `query-verification` skill) on the investigate step that consumes one existing Query-budget slot; it never adds automatic query execution and never changes the state header schema.
 
 ## When to use me
 
 - User provides a ticket ID for a **new** incident ticket.
 - Cipher 🔓 (Lead Orchestrator) dispatches this skill at the start of a new incident analysis.
-- Keywords: `runbook`, ticket ID when no existing runbook folder is present.
+- Keywords: `ticket-runbook`, `analysis/`, ticket ID when no existing working analysis is present.
 
 ## Arguments
 
 From the user's request, extract:
 
 - **ticket id** — the ticket number (e.g. `183700`). If not provided, ask the user.
-
-If not provided, ask the user.
 
 ## Steps
 
@@ -35,7 +35,7 @@ If not provided, ask the user.
 Delegate all ticket data extraction to the project's ticket-read tool. Do not read the ticket system directly here.
 
 Required outputs:
-- Domain (business area)
+- System (business area)
 - Module
 - Country/region + campaign/period (if applicable)
 - Symptom summary (1–2 sentences)
@@ -43,83 +43,89 @@ Required outputs:
 
 Hold these values for later sections.
 
-### 2. Prior-art search
+### 2. Identify — register-first (`S-xx` → incident `P-NNN`)
 
-Run in order. Stop as soon as a replay-candidate verdict can be issued.
+Run this order. Do not skip or reorder, and do not consult any other source for a verdict.
 
-0. **Symptom-first diagnostic** — match the ticket's error signature against `knowledge/symptoms.md`; if a class matches, note the S-xx and its canonical diagnostic, then use the S-xx as a filter over `knowledge/problems.md` in the next step.
-1. **Known-problem register** — read `knowledge/problems.md`. For each record, compare the ticket's symptom + module against the record's `Symptom` (S-xx), `Domain`, `Problem`, and `Evidence` fields. Match criterion: ≥2 of (system, module, issue_type, symptom keywords) align AND the record's `Team` field is `incident`. Note the record ID (P-NNN) and matched fields.
-2. **Resolved ticket archive** — Grep the resolved-ticket archive on symptom keywords + module. Read each hit's summary, root cause, and frontmatter (module, related ticket, status). Same domain + module + failure mode:
-   - same identifying values → `Replay-candidate: yes`
-   - different values → `Replay-candidate: structural` (inherit hypothesis; VERIFY parent reference — do not copy blindly)
-3. **Patterns register** — read the project's patterns registry. A pattern match sets `Replay-candidate: pending` — confirm with step 4.
-4. **KBA/RCA catalogs** — Glob the knowledge-base and root-cause article folders. Scan for module + symptom keyword match. Note any matching file path.
-5. **Knowledge search fallback** — run only after steps 0–4 return no match. Surface only results with score **>=0.85**. Discard everything below threshold silently. Do not narrate the lookup.
+1. **Normalize the ticket** — derive system, module, country, campaign, and the raw symptom/error text from step 1.
+2. **Match `S-xx`** — match the ticket's error signature against `knowledge/symptoms.md`. A class matches only when every **Required signal** is present and no **Exclusion** is present. Record the matching class (or "no class match"). One class is primary; note any secondary classes.
+3. **Filter incident `P-NNN`** — read `knowledge/problems.md` and select only rows where `Team: incident`, `Symptom` references the matched `S-xx`, `System` and `Module` align with the ticket, and `Lifecycle` is matchable (`candidate`, `active`, or `mitigated`; `resolved` and `retired` are never matched).
+4. **Evaluate discriminators and exclusions** — for each candidate row, every `Discriminators` `field=value` must be evaluated against the current ticket, and any `Exclusions` condition present disqualifies the row.
+5. **Issue the verdict** — `exact`, `structural`, or `no_match`, then write it to `identification_verdict` in `analysis/state.md`.
 
-### 3. Decide runbook scaffold
+**Verdict rules (HARD):**
 
-| Verdict | Action |
+| Verdict | Condition |
 |---|---|
-| `Replay-candidate: yes` | Do NOT scaffold. Report the matching source, cite the workaround, recommend the derivation path, and request user approval before applying it. Signal Cipher 🔓 (Lead Orchestrator) — no phase files needed. |
-| `Replay-candidate: structural` | Scaffold runbook (phase files needed for validation). Hypothesis inherited from prior. Investigator 🔍 (Incident Investigator) executes validation with adapted queries. |
-| `Replay-candidate: no` | Proceed to step 4: scaffold the runbook. Full investigation phases. |
+| `exact` | Exactly one `active` incident `P-NNN` with `Allow_exact: yes` remains, and **every** discriminator is already evidenced in the current ticket. |
+| `structural` | Exactly one `candidate` or `active` incident `P-NNN` remains; its hypothesis still requires current-ticket validation. |
+| `no_match` | No eligible incident `P-NNN` remains. **An empty `knowledge/problems.md` register always yields `no_match` — never halt on an empty register.** |
+| `pending` | Initial scaffold value only; replaced in this step. |
 
-**Choosing between `yes` and `structural`:**
-- Same values + same campaign → `yes` (exact replay)
-- Same module + same failure chain + DIFFERENT values → `structural`
-- When uncertain → `structural` (safer than `yes` — preserves validation step)
+- If more than one incident `P-NNN` remains eligible after every filter, do NOT choose. Record every candidate and return `no_match` with an ambiguity note for Cipher 🔓 (Lead Orchestrator).
+- **Verdict-source restriction (HARD RULE):** only `S-xx` → incident `P-NNN` can produce `exact` or `structural`. Resolved-ticket archives, patterns registers, KBA/RCA catalogs, and knowledge search are evidence/backfill sources only — they MUST NOT issue, upgrade, or echo an identification verdict. They may be consulted only after a `no_match`, and only as labeled investigation evidence.
+- A row does not need to exist for `no_match`; an empty register is the canonical `no_match` case.
 
-> **Parent-reference verification (HARD RULE):** when inheriting a parent/reference ticket from a prior sibling, VERIFY the reference still applies to THIS ticket (the prior may cite a different parent). Do not copy the parent number blindly — confirm with the user or re-derive.
+### 3. Scaffold the working analysis (always)
 
-### 4. Scaffold runbook
+Always scaffold, whatever the verdict — `exact`, `structural`, and `no_match` all get the same three working files.
 
-Execute when `Replay-candidate: no` (full scaffold) OR `Replay-candidate: structural` (scaffold with hypothesis and synthesis skipped — uses prior queries from the referenced ticket). Skip entirely when `Replay-candidate: yes`.
-
-1. Copy the runbook template from `references/runbook/` (`runbook.md` + `phase-01-triage.md` … `phase-06-respond.md`) into the ticket folder's `runbook/` subfolder.
-2. If the ticket folder does not exist, create it first: ticket folder + `screenshots/` + `validations/` + ticket record (from `references/ticket-template.md`) + `response-draft.md` (from `references/response-draft-template.md`).
-3. Initialize `runbook.md` header fields: `Phase` (`01`), `SLA-due` (from ticket), `Updated` (current timestamp), `Hypotheses-outstanding` (`3/3`), `Query-budget` (`0/6`, used/limit; `6/6` is exhausted), `Replay-candidate`, `Same-query-reruns` (`0/2`).
-4. Initialize the phase-01 triage file with ticket-specific context in its Pre block. Leave all Step / Gate / Abort sections as-is from the template.
+1. If the ticket folder does not exist, create it first: ticket folder + `screenshots/` + `validations/` + ticket record (from `references/ticket-template.md`) + `response-draft.md` (from `references/response-draft-template.md`).
+2. Copy the analysis template from `references/analysis/` into the ticket folder's `analysis/` subfolder: `state.md`, `01-identify.md`, `02-investigate.md`, `03-synthesize.md`.
+3. Initialize the `analysis/state.md` header: `Phase` (`identify`), `SLA-due` (from ticket), `Updated` (current timestamp), `Hypotheses-outstanding` (`3/3`), `Query-budget` (`0/6`, used/limit; `6/6` is exhausted), `identification_verdict` (`pending`), `Same-query-reruns` (`0/2`).
+4. Record the identification result in `01-identify.md`: system, module, matched `S-xx`, matched incident `P-NNN` (if any), discriminator/exclusion evaluation, verdict, and rationale.
 
 **Screenshot naming convention:** files placed in `screenshots/` must follow the project's `NN_<source>_<entity>[_<distinguisher>].png` convention (zero-padded NN matches ImagenN order; no campaign/entity ID/region in filename). Forbidden initial names: `image1.png`, `screenshot.png`, any name without the `NN_` prefix. Investigator 🔍 (Incident Investigator) + Quill 🪶 (Note Drafter) dispatch prompts MUST reference final filenames; renaming at close-out is a process violation.
 
 **Pre-stage rule:** ALL screenshots (query images and browser captures) MUST exist on disk in `screenshots/` BEFORE Quill 🪶 (Note Drafter) is dispatched for the response phase. Dispatching Quill against not-yet-created image paths causes a guaranteed self-audit FAIL (`image_path_invalid`).
 
-### 5. Validate
+**Imagen location rule:** every used image records its local `path:` (repo-relative file) and, when the ticket system returned one, its remote `url:` (ticket-system location). Never record a remote `url:` that does not exist, and never fabricate a local `path:`.
 
-Immediately after scaffolding, run `uv run --locked python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder>/runbook --scaffold`. Exit 0 → proceed. Non-zero exit → read the error output, fix the offending field, re-run. Do NOT continue until the validator passes.
+### 4. Validate
+
+Immediately after scaffolding, run `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder>/analysis --scaffold`. Exit 0 → proceed. Non-zero exit → read the error output, fix the offending field, re-run. Do NOT continue until the validator passes.
 
 > Evidence discipline applies: if the validator reports a field value violation, fix the value to match actual evidence — never invent a value to satisfy the validator.
 
-**Per-phase validator invocation (HARD RULE):** before advancing the completed phase `NN`, run `uv run --locked python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir> --phase NN`. Abort if exit ≠ 0. Do NOT advance the `Phase:` field until the validator exits clean. After the header advances, reserve default full validation — `uv run --locked python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir>` — for checking every completed phase through the `Phase:` header.
+**Per-step validator invocation (HARD RULE):** before advancing the completed step `NAME` (`identify`, `investigate`, `synthesize`), run `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis-dir> --step NAME`. Abort if exit ≠ 0. Do NOT advance the `Phase:` field until the validator exits clean. After the header advances, reserve default full validation — `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis-dir>` — for checking every completed step through the `Phase:` header.
 
-### 6. Dispatch first agent
+### 5. Dispatch the owning agent
 
-After the runbook scaffolds and validates:
+After the analysis scaffolds and validates:
 
-1. If prior-art search (step 2) already completed the prior-art phase logic: mark that phase complete in `runbook.md` and notify Cipher 🔓 (Lead Orchestrator) to skip to the hypothesis phase.
-2. Otherwise: notify Cipher 🔓 (Lead Orchestrator) that the runbook is ready with the exact domain classified in phase-01.
+1. If the verdict is `exact` or `structural`: notify Cipher 🔓 (Lead Orchestrator) of the matched `P-NNN` and verdict so it dispatches Investigator 🔍 (Incident Investigator) for the investigate step.
+2. If the verdict is `no_match`: notify Cipher 🔓 (Lead Orchestrator) that the register yielded no match and the investigate step starts from fresh hypotheses.
 
-**HARD RULE — dispatch enforcement:** Cipher 🔓 (Lead Orchestrator) MUST dispatch Investigator 🔍 (Incident Investigator) to execute the prior-art phase. Cipher 🔓 (Lead Orchestrator) MUST NOT execute that phase inline. Cipher 🔓 (Lead Orchestrator) owns all dispatch decisions. This skill does NOT dispatch agents directly.
+**HARD RULE — dispatch enforcement:** Cipher 🔓 (Lead Orchestrator) MUST dispatch Investigator 🔍 (Incident Investigator) to execute the investigate step. Cipher 🔓 (Lead Orchestrator) MUST NOT execute that step inline. Cipher 🔓 (Lead Orchestrator) owns all dispatch decisions. This skill does NOT dispatch agents directly.
 
-## Optional verifier route (Incident Phase 04)
+### 6. Close-out collapse
 
-The Phase 04 template documents an optional, incident-only verifier route. It is off by default; the manual per-hypothesis query path in Steps 1–5 of `phase-04-validate.md` is unchanged and remains the default.
+At close, after the posted response is verified:
+
+1. Run `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --close-out`.
+2. The durable set is `ticket_<id>.md` plus `screenshots/`, `validations/`, and every other cited evidence file.
+3. Remove `analysis/state.md` and every `analysis/*.md` working file, and remove `response-draft.md`, **only after** the close-out check passes.
+4. Never delete `screenshots/`, `validations/`, or any cited evidence file.
+
+## Optional verifier route (investigate step)
+
+The investigate step documents an optional, incident-only verifier route. It is off by default; the manual per-hypothesis query path is unchanged and remains the default.
 
 - The `query-verification` skill validates an incident-owned, sidecar-defined SQL verifier against an invocation-time query root and evaluates the destination-owned adapter's normalized output offline. AICore never executes the query, holds credentials, or invokes the adapter.
 - Exactly one adapter execution consumes exactly one existing Query-budget slot. The `6/6` cap, the `Same-query-reruns` cap of 2, and the normal per-hypothesis query path are unchanged; no new header field, counter, or budget is introduced.
 - The redacted case-evidence record is written under the ticket's existing session-specific `validations/` folder with the verifier ID as the filename stem.
-- Runbook and ticket evidence record only the verifier ID, the three-state verdict, the source/definition/evidence digests, and the redacted case-evidence path. Credentials, raw adapter output, rendered SQL, rendered parameter values, and unredacted configured identifiers are never retained.
+- The analysis and ticket evidence record only the verifier ID, the three-state verdict, the source/definition/evidence digests, and the redacted case-evidence path. Credentials, raw adapter output, rendered SQL, rendered parameter values, and unredacted configured identifiers are never retained.
 - A `verified` verdict is symptom evidence only; it never establishes root-cause equivalence or authorizes a fix.
 
-The normative contract lives in `.opencode/skills/query-verification/SKILL.md` and `.opencode/skills/query-verification/references/protocol-v1.md`; the optional block and the synthesis restriction live in `references/runbook/phase-04-validate.md` and `references/runbook/phase-05-synthesis.md`.
+The normative contract lives in `.opencode/skills/query-verification/SKILL.md` and `.opencode/skills/query-verification/references/protocol-v1.md`; the optional block and the synthesis restriction live in `references/analysis/02-investigate.md` and `references/analysis/03-synthesize.md`.
 
 ## Post-write self-verification loop
 
-Run immediately after scaffolding, before each phase-header advance, and after every advance. Iterate until a full pass finds zero violations:
+Run immediately after scaffolding, before each step-header advance, and after every advance. Iterate until a full pass finds zero violations:
 
-1. **Re-read** the written set: `runbook/runbook.md`, each written `phase-NN-*.md`, and the ticket folder structure.
-2. **Mechanical pass** — immediately after scaffolding, run `uv run --locked python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir> --scaffold`; it verifies the header plus the copied phase structure while later template bodies remain intentional. Before advancing completed phase `NN`, run `uv run --locked python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir> --phase NN`; a completed phase must contain no unfilled tokens. After the header advances, reserve default full validation — `uv run --locked python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <runbook-dir>` — for all completed phases through the header. Fix anything it reports.
-3. **Analysis pass** — re-read each file against `references/_consistency-checklist.md`: at scaffold time, verify phase-01 `Pre` has this ticket's context while later template bodies intentionally remain unfilled; after completion, verify no completed phase has unfilled tokens. In every mode, verify header values match evidence (`SLA-due`, `Replay-candidate` vs prior-art, kill-switch counters reflect actual consumption), folder structure complete (`screenshots/`, `validations/`, ticket record, `response-draft.md`), and screenshot `NN_` naming. Never invent a value to satisfy a check — stop and ask.
+1. **Re-read** the written set: `analysis/state.md`, each written `analysis/0N-*.md`, and the ticket folder structure.
+2. **Mechanical pass** — immediately after scaffolding, run `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis-dir> --scaffold`; it verifies the header plus the copied step structure while later template bodies remain intentional. Before advancing completed step `NAME`, run `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis-dir> --step NAME`; a completed step must contain no unfilled tokens. After the header advances, reserve default full validation — `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis-dir>` — for all completed steps through the header. Fix anything it reports.
+3. **Analysis pass** — re-read each file against `references/_consistency-checklist.md`: at scaffold time, verify `01-identify.md` `Pre` has this ticket's context while later template bodies intentionally remain unfilled; after completion, verify no completed step has unfilled tokens. In every mode, verify header values match evidence (`SLA-due`, `identification_verdict` vs the register match, kill-switch counters reflect actual consumption), folder structure complete (`screenshots/`, `validations/`, ticket record, `response-draft.md`), and screenshot `NN_` naming. Never invent a value to satisfy a check — stop and ask.
 4. **Repeat** until a clean pass, then report the pass count.
 5. **Cap (S-07):** after 3 iterations, or the same violation persisting twice unchanged, stop-and-ask instead of looping.
 
@@ -127,31 +133,42 @@ Run immediately after scaffolding, before each phase-header advance, and after e
 
 ## Examples
 
-**Example 1 — new casuistic, runbook scaffolded**
+**Example 1 — new casuistic, no register match**
 
 - User says: `#191700`
-- Ticket: domain X, module Y, region Z, period P
-- Prior-art: known-problem register — no match; KBA/RCA — no match; knowledge search 0.72 — below threshold, discarded
-- Verdict: `Replay-candidate: no`
-- Result: runbook scaffolded; validator exits 0; Cipher 🔓 (Lead Orchestrator) dispatches Investigator 🔍 (Incident Investigator).
+- Ticket: system X, module Y, region Z, period P; error matches `S-02`
+- Register: no incident `P-NNN` for `S-02` + system X + module Y (register empty)
+- Verdict: `identification_verdict: no_match`
+- Result: `analysis/` scaffolded; validator exits 0; Cipher 🔓 (Lead Orchestrator) dispatches Investigator 🔍 (Incident Investigator) to frame hypotheses.
 
-**Example 2 — replay-candidate, no runbook**
+**Example 2 — structural match**
 
 - User says: `#191800`
-- Ticket: domain W, module V, region U, period T
-- Prior-art: known-problem register — match on Symptom (S-xx) + Domain + Problem (identifier collision)
-- Verdict: `Replay-candidate: yes` — source: `knowledge/problems.md` (P-NNN); matched fields: Symptom, Domain, Problem
-- Result: no runbook scaffolded; finding block returned to Cipher 🔓 (Lead Orchestrator); Quill 🪶 (Note Drafter) dispatched from the finding.
+- Ticket: system W, module V, region U, period T; error matches `S-03`
+- Register: one `candidate` incident `P-NNN` on `Symptom` + `System` + `Module`; discriminators partially evidenced
+- Verdict: `identification_verdict: structural` — cited source: `knowledge/problems.md` (P-NNN)
+- Result: `analysis/` scaffolded; Investigator 🔍 (Incident Investigator) validates the inherited hypothesis against the current ticket.
+
+**Example 3 — exact match**
+
+- User says: `#191900`
+- Register: exactly one `active` incident `P-NNN` with `Allow_exact: yes`; every discriminator already evidenced in the ticket
+- Verdict: `identification_verdict: exact` — cited source: `knowledge/problems.md` (P-NNN)
+- Result: `analysis/` scaffolded; Cipher 🔓 (Lead Orchestrator) dispatches the recorded fix path through the normal approval flow.
 
 ## Troubleshooting
 
-**Runbook template missing:**
-- Cause: the `references/runbook/` template directory does not exist in this skill.
+**Analysis template missing:**
+- Cause: the `references/analysis/` template directory does not exist in this skill.
 - Fix: halt; report to Cipher 🔓 (Lead Orchestrator) — the template precondition is not met. Do not scaffold manually.
 
 **Validator exits non-zero:**
-- Cause: missing or malformed header field in `runbook.md`.
+- Cause: missing or malformed header field in `analysis/state.md`, or a malformed step file.
 - Fix: read the exact error line; edit only the offending field; re-run the validator.
+
+**Empty `knowledge/problems.md`:**
+- Cause: no incident `P-NNN` rows are registered yet.
+- Fix: none — this is the valid `no_match` case. Scaffold the working analysis and proceed without halting.
 
 **Ticket system auth error on read:**
 - Cause: tool token expired.
@@ -159,4 +176,4 @@ Run immediately after scaffolding, before each phase-header advance, and after e
 
 **Knowledge search unavailable:**
 - Cause: the knowledge-search tool is not reachable.
-- Fix: skip the fallback step only; continue with the earlier prior-art steps. Note the skip in output. Do NOT block on it.
+- Fix: do not block — knowledge search is a backfill source, never a verdict source. Skip it and proceed with the register-first identification.

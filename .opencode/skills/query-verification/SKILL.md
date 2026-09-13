@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.0.0
+  version: 1.0.1
   dependencies:
     - PyYAML==6.0.3
 ---
@@ -19,7 +19,7 @@ The contract is closed and incident-only. Exactly three verdicts exist: `verifie
 ## When to use me
 
 - An incident ticket has a known data symptom and a destination-owned, read-only SQL diagnostic query.
-- The investigator needs a three-state, redacted, digest-bound verification record for optional Incident Phase 04 evidence.
+- The investigator needs a three-state, redacted, digest-bound verification record for optional investigate-step evidence.
 - Cipher 🔓 (Lead Orchestrator) dispatches this skill after the ticket's symptom is classified and a root-relative verifier sidecar exists.
 - Keywords: `query verification`, `verifier sidecar`, `verification_verdict`, `query-verification`, `adapter output`.
 

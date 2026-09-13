@@ -160,10 +160,10 @@ This is a readable map of the current AICore definitions. It does not introduce 
 | Step | Current flow | Outcome |
 |---|---|---|
 | 1 | New incident ticket | Ticket is read through the destination ticket tool. |
-| 2 | Classify the observed issue | Match it to a symptom class in `knowledge/symptoms.md` when possible. |
-| 3 | Search incident prior art | Search `knowledge/problems.md` for a matching `Team: incident` record, then the ticket archive, patterns, and knowledge sources. |
-| 4A | Exact replay candidate | Cite the known solution and request approval before applying it. |
-| 4B | Structural or new case | Create a runbook and have Investigator 🔍 (Incident Investigator) validate the hypotheses. |
+| 2 | Classify the observed issue | Match it to a symptom class in `knowledge/symptoms.md` (Required signals present, no Exclusion). |
+| 3 | Identify register-first | Filter `knowledge/problems.md` to `Team: incident` rows by symptom + system + module + lifecycle, and evaluate every discriminator and exclusion. The ticket archive, patterns, KBA/RCA, and knowledge search are evidence-only, consulted after `no_match` — they never issue a verdict. |
+| 4A | Exact match | Cite the matched `active` `P-NNN` and the known solution; request approval before applying it. |
+| 4B | Structural or no match | Create the working analysis (`analysis/`) and have Investigator 🔍 (Incident Investigator) validate the inherited hypothesis (`structural`) or fresh hypotheses (`no_match`). |
 | 5 | Confirmed incident evidence | Ledger 📒 (Record Keeper) records the ticket evidence; Quill 🪶 (Note Drafter) prepares the response. |
 | 6 | New recurring problem | **Gap:** Scribe ✍️ (Docs & Problems Manager) owns the register by rule, but the complete Markdown `P-NNN` create/update and deduplication handoff is not defined. |
 | 7 | Confirmed product defect | **Gap:** no defined handoff starts the Dev plan and implementation flow. |
@@ -272,7 +272,7 @@ The pilot's post-implementation advisories are closed or recorded as verified no
 | 2026-09-09 | Added a current two-team workflow map and recorded the missing Dev-specific register lifecycle and Support-to-Dev handoff. | Proposed |
 | 2026-09-10 | Implemented the incident-only, sidecar-only SQL pilot: core validates and evaluates local artifacts; the destination adapter binds and executes; `--query-root` is invocation-time only. | Implemented (incident pilot) |
 | 2026-09-10 | Deferred Dev integration, external adapter execution, centralized discovery, non-SQL sources, multiple result sets, and general assertions. | Deferred |
-| 2026-09-10 | Integrated the optional Incident Phase 04 verifier-evidence route (one existing Query-budget slot) and published the pilot as a ticket-marker migration skill plus design document. | Implemented (incident pilot) |
+| 2026-09-10 | Integrated the optional incident investigate-step verifier-evidence route (one existing Query-budget slot) and published the pilot as a ticket-marker migration skill plus design document. | Implemented (incident pilot) |
 | 2026-09-10 | Closed the fixture-validity, QC-27 static-reference, README label/count, executor-traceability, and Python stdlib-test-gate advisories; recorded `__pycache__` and register-title attribution as verified no-action items. | Resolved |
 | 2026-09-10 | Crucible 🔥 (Test Architect) gained an additive Python stdlib `unittest` audit branch returning `[PASS]`/`[FAIL]` for exact active-plan Python test files; `plan-enforce` now requires both Bastion 🧱 (Backend & Scripts Architect) and Crucible 🔥 (Test Architect) verdicts. | Supersedes the earlier Bastion-only gate |
 | 2026-09-10 | The living design record retains no mechanical-fix count; no source artifact substantiates one. | No count retained |

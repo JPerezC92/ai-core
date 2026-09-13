@@ -17,14 +17,14 @@
 
 ## Scenario
 
-- An incident ticket has a known symptom and a destination-owned SQL diagnostic query. The investigator validates its sidecar definition, obtains normalized output from the destination's trusted adapter, and records the three-state verdict as Phase 04 evidence while consuming one existing query-budget slot.
+- An incident ticket has a known symptom and a destination-owned SQL diagnostic query. The investigator validates its sidecar definition, obtains normalized output from the destination's trusted adapter, and records the three-state verdict as investigate-step evidence while consuming one existing query-budget slot.
 
 ## Acceptance criteria
 
 - ✅ A sidecar verifier is accepted only when it is incident-owned, adjacent to its root-contained SQL source, read-only, bounded, and uses declared named bindings. Evidence: `test_query_verification.py` exits 0 with 73 tests, including `test_rejects_absolute_source`, `test_rejects_traversal_source`, and `test_rejects_mutating_source`; the closed contract is `references/protocol-v1.md` in the `query-verification` skill.
 - ✅ Unsafe SQL, path escapes, malformed metadata, untrusted output mismatches, and ambiguous result shapes produce a rejection or `inconclusive` verdict without query execution. Evidence: `test_rejects_mutating_source`, `test_rejects_unknown_sidecar_field`, `test_rejects_malformed_yaml_sidecar`, and the `test_evaluate_*_is_inconclusive` cases in `test_query_verification.py`; the suite exits 0 with 73 tests.
 - ✅ The evidence record redacts configured values, binds verifier/source/definition digests to the verdict, and does not retain raw adapter output or credentials. Evidence: `test_evaluate_verified_redacts_and_binds_digests` in `test_query_verification.py`; the redaction and digest rules are in `references/protocol-v1.md`.
-- ✅ The optional Incident Phase 04 path consumes one existing query-budget unit and never treats a verified symptom as automatic root-cause confirmation. Evidence: the implemented Incident Phase 04 verifier-evidence route is recorded in `knowledge/query-verification-design.md`, and `test_validate_runbook.py` exits 0.
+- ✅ The optional investigate-step verifier path consumes one existing query-budget unit and never treats a verified symptom as automatic root-cause confirmation. Evidence: the implemented investigate-step verifier-evidence route is recorded in `knowledge/query-verification-design.md`, and `test_validate_runbook.py` exits 0.
 - ✅ The skill, protocol, fixtures, and migration entry are available to ticket-enabled destination projects. Evidence: the `query-verification` skill ships `references/protocol-v1.md` and the valid fixture trio, and `knowledge/query-verification-design.md` records the skill and design document as `only if ticket marker` migration items.
 - ✅ The shipped valid adapter-output fixture is independently protocol-valid and its source digest is guarded against fixture/source drift.
 
@@ -49,6 +49,7 @@ Recorded 2026-09-10. Every outcome is evidence-backed; no dependency, lockfile, 
 - 2026-09-10 - advisory-fixes-plan-enforce-20260910: added standalone-valid fixture and digest-drift acceptance coverage; recorded the completed fixture, QC-27, README, executor, and stdlib-test-gate advisory dispositions and the Bastion-owned stdlib unittest governance decision.
 - 2026-09-10 - python-test-audit-governance-20260910: checked the five remaining acceptance criteria with evidence (the story remains active as the living feature registry); recorded the superseding Crucible 🔥 (Test Architect) Python-audit decision and dropped the unsupported fix-count claim.
 - 2026-09-12 - refresh-git-pr-evidence-contract-20260912: refreshed the current plan-enforce requirement citations to the shipped 1.11.1; no feature behavior or acceptance criteria changed.
+- 2026-09-12 - register-first-incident-identification-20260912: mapped the optional verifier route from Phase 04 wording to the investigate step; acceptance criteria unchanged.
 
 ## Resolved decisions
 
@@ -56,3 +57,4 @@ Recorded 2026-09-10. Every outcome is evidence-backed; no dependency, lockfile, 
 - 2026-09-10 - the pilot is incident-only and sidecar-only; Dev workflow integration and centralized catalogs are deferred.
 - 2026-09-10 - Python stdlib `unittest` test gating is owned by Bastion 🧱 (Backend & Scripts Architect); Crucible 🔥 (Test Architect) applicability results are recorded as-is and never relabeled PASS.
 - 2026-09-10 - superseding decision: Python stdlib `unittest` test architecture is owned by Crucible 🔥 (Test Architect) via its additive `## PYTHON STDLIB UNITTEST TESTS` branch, which returns [PASS]/[FAIL] for exact active-plan Python test files; [UNCERTAIN] is not acceptable for that scope. The earlier Bastion-only gate and its recorded [UNCERTAIN] applicability verdict remain historical and are not relabeled.
+- 2026-09-12 - register-first collision: this story keeps its completed verifier contract; ticket-runbook identification is redefined by `register-first-incident-identification`. The optional verifier remains symptom evidence only on the investigate step.

@@ -16,6 +16,9 @@ author: <author>
 escalated_to: null
 related_ticket: null
 problem_ticket: null
+symptom_ids: []
+known_problem_ids: []
+identification_verdict: pending
 analyses:
   - session: 1
     started: null
@@ -64,8 +67,22 @@ analyses:
 - <conclusion 1>
 - <conclusion 2>
 
+<!-- Imagen footer: when a response includes images, add one #### ImagenN sub-block
+     per image at the end of the ### Response N block. Record the local file and,
+     when the ticket system returned one, the remote location — both when both exist:
+       - **path:** tickets/<DATE> #<ID>/screenshots/NN_source_entity.png   (repo-relative local file)
+       - **url:** <ticket-system image URL>                                (remote ticket-system location)
+     The path MUST be a real repo-relative file; always record url: when the ticket
+     system returned one. Never fabricate either value. -->
+
 ## Responses
 
 ### Response 1 — 2099-01-01
 
 <text of the note sent to level-1 support>
+
+#### Imagen1
+
+- **path:** tickets/<DATE> #<ID>/screenshots/01_source_entity.png
+- **url:** <ticket-system image URL, when the ticket system returned one>
+- **Notes:** <what the image shows, when the user takes the screenshot>

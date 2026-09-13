@@ -10,19 +10,19 @@ Cross-cutting rules and cross-agent protocols that apply to the roster. Each age
 - Every quantitative claim (counts, sizes, durations) must trace to a cited measurement. Unverified quantitative claims are FAILs.
 - Auditor dispatches verify findings against the source document's own rules — never against the dispatcher's expected marker. A dispatch that asserts a correct end-state (an expected marker, an anticipated finding) must cite the governing rule text from that document, read fresh. Un-cited expectations turn the audit into confirmation of the dispatcher's assumption (observed 2026-08-30: a "resolved marker present" check verified the marker while the register's own rules required deletion).
 
-## Prior-art before re-investigation
+## Register-first identification (HARD RULE)
 
-Before re-investigating from scratch, scan the project's prior art:
+Incident identification is deterministic: ticket signal → `S-xx` → incident `P-NNN` → `exact | structural | no_match`.
 
-1. **Known-problem register** — the `knowledge/problems.md` register of known-recurring-pattern records, indexed by symptom class in `knowledge/symptoms.md`; match only records whose `Symptom` (S-xx) and `Team` fields align with the current case.
-2. **Resolved-ticket archive** — same domain + module + failure mode.
-3. **Patterns register** — recurring incident patterns, third-instance rule.
-4. **KBA/RCA catalogs** — knowledge-base and root-cause articles.
-5. **Knowledge search** — vector/retrieval fallback; surface only results above the project's relevance threshold.
+1. **Match the symptom** — match the error signature against `knowledge/symptoms.md`; a class matches only when every **Required signal** is present and no **Exclusion** is present.
+2. **Match the problem** — read `knowledge/problems.md`; keep only `Team: incident` rows whose `Symptom` references the matched `S-xx`, whose `System` and `Module` align, and whose `Lifecycle` is matchable (`candidate`, `active`, or `mitigated`; `resolved`/`retired` never match). Evaluate every `Discriminators` field and any `Exclusions` condition.
+3. **Verdict** — `exact` (exactly one `active` row with `Allow_exact: yes` and every discriminator already evidenced), `structural` (exactly one `candidate`/`active` row needing current-ticket validation), or `no_match` (no eligible row). An empty register is the canonical `no_match` — never halt on it.
 
-If an exact prior-art match exists, return the reference + match strength; do NOT run a fresh investigation. If partial, return a ranked hypothesis list with evidence pointers.
+Only `S-xx` → incident `P-NNN` may issue `exact` or `structural`. Resolved-ticket archives, patterns registers, KBA/RCA catalogs, and knowledge search are evidence/backfill sources only — they never issue, upgrade, or echo a verdict. Consult them only after `no_match`, and only as labeled investigation evidence.
 
-**Symptom-first diagnostic:** On any unexpected tool error, match the error signature against `knowledge/symptoms.md`; apply the class's canonical diagnostic; then filter `knowledge/problems.md` by that S-xx + Team for a prior occurrence. Propose the known fix if found; file a new P-NNN under the class if the problem is novel (Scribe ✍️ (Docs & Problems Manager) owns the known-problem register). Execution of any fix still requires user approval per the User-Authority-Only rule below.
+Admission: the first confirmed case admits a `candidate` row (structural only); a second independent confirmed case may promote it to `active`. Scribe ✍️ (Docs & Problems Manager) owns the register. Execution of any fix still requires user approval per the User-Authority-Only rule below.
+
+**Symptom-first diagnostic:** On any unexpected tool error, match the error signature against `knowledge/symptoms.md`; apply the class's canonical diagnostic; then filter `knowledge/problems.md` by that S-xx + Team for a prior occurrence. Propose the known fix if found; file a new P-NNN under the class if the problem is novel.
 
 **Version-first rule (S-01/2-class errors):** before any workaround, check whether a newer supported version of the offending tool is available. If an upgrade is recommended, Warden 🔒 (Dependency Warden) reviews it and the user approves it before execution; then re-verify.
 
