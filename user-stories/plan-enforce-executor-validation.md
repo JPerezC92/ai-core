@@ -21,9 +21,9 @@
 
 ## Acceptance criteria
 
-- ✅ Every phase verification command has one canonical executor-command table row with exactly the `Executor` and `Command` columns, and the validator rejects a missing, empty, or malformed table. Evidence: `validate_plan.py` and its 29-test suite enforce the canonical table, including 8 executor-command table cases (7 rejection + 1 acceptance); `plan-enforce` is `1.10.0`.
+- ✅ Every phase verification command has one canonical executor-command table row with exactly the `Executor` and `Command` columns, and the validator rejects a missing, empty, or malformed table. Evidence: `validate_plan.py` and its 29-test suite enforce the canonical table, including 8 executor-command table cases (7 rejection + 1 acceptance); `plan-enforce` is `1.11.1`.
 - ✅ The validator checks declared traceability only; phase review verifies executor authority against the relevant agent rulebook or permission model. Evidence: the validator enforces declared table shape and traceability only, and phase review audits authority against `.opencode/agents/bastion.md` `1.2.0` and `.opencode/agents/crucible.md` `1.1.0`.
-- ✅ Python stdlib unittest edits require the declared runnable `python3` command, Bastion 🧱 (Backend & Scripts Architect) [PASS], and Crucible 🔥 (Test Architect) [PASS]/[FAIL]. Evidence: `plan-enforce` `1.10.0` requires the declared literal `python3` command plus both the Bastion 🧱 (Backend & Scripts Architect) `1.2.0` and Crucible 🔥 (Test Architect) `1.1.0` verdicts.
+- ✅ Python stdlib unittest edits require the declared runnable `python3` command, Bastion 🧱 (Backend & Scripts Architect) [PASS], and Crucible 🔥 (Test Architect) [PASS]/[FAIL]. Evidence: `plan-enforce` `1.11.1` requires the declared literal `python3` command plus both the Bastion 🧱 (Backend & Scripts Architect) `1.2.0` and Crucible 🔥 (Test Architect) `1.1.0` verdicts.
 - ✅ Crucible 🔥 (Test Architect) is dispatched for test-file edits and returns [PASS] or [FAIL]; [UNCERTAIN] is no longer acceptable for exact active-plan Python stdlib unittest files. Evidence: Crucible 🔥 (Test Architect) `1.1.0` `## PYTHON STDLIB UNITTEST TESTS` returned `[PASS]` for all three suites — `test_query_verification.py` (73 tests), `test_validate_plan.py` (29 tests), and `test_validate_runbook.py` — each exit 0.
 - ✅ No pytest dependency, lockfile update, or test-framework migration is introduced. Evidence: no pytest import or test-framework dependency was added; `pyproject.toml` and `uv.lock` are unchanged.
 
@@ -31,6 +31,7 @@
 
 - 2026-09-10 - advisory-fixes-plan-enforce-20260910: created the durable executor-validation and stdlib unittest governance definition.
 - 2026-09-10 - python-test-audit-governance-20260910: superseded the recorded-applicability gate; Python stdlib unittest edits now require Crucible 🔥 (Test Architect) [PASS]/[FAIL], and [UNCERTAIN] is not acceptable for that scope.
+- 2026-09-12 - refresh-git-pr-evidence-contract-20260912: refreshed the current plan-enforce requirement citations to the shipped 1.11.1; no feature behavior or acceptance criteria changed.
 
 ## Resolved decisions
 

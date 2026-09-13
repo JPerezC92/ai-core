@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.2.1
+  version: 1.3.0
   domain: git
 ---
 
@@ -107,6 +107,7 @@ After the PR exists, retain the same PR body as the sole mutable description sur
 ````
 
 3. Re-read the persisted PR body with `gh pr view <number> --json body` and verify the PR number, immutable head SHA, exact scope command, literal input, observed output, executor, and matching evidence row before ticking the corresponding checkbox. Missing or partial evidence leaves the item unchecked.
+4. **Execution-ownership handoff.** When Cipher 🔓 (Lead Orchestrator) or another execution owner runs a test-plan item but does not own PR-body mutation, that owner must not report the PR complete. It must immediately dispatch Herald 📯 (Release Manager) to persist the complete evidence row, re-read the live PR body, and tick the exact matching checkbox. The item stays `- [ ]`, and no PR-complete report is made, until that handoff completes.
 
 ### Breaking changes
 
@@ -186,6 +187,10 @@ Title: <title here>
 **A checkbox was ticked without complete evidence**:
 - Cause: the PR body lacks the immutable head SHA, exact scope command, literal input, observed output, executor, or a persisted re-read.
 - Fix: return the item to `- [ ]`, add the complete `## Test evidence` row for the current PR head, re-read the PR body, then tick only the matching item.
+
+**Tests executed but test-plan boxes left unchecked**:
+- Cause: an execution owner ran the item but the PR-body persistence step was skipped, so no `## Test evidence` row was written and the matching checkbox was never ticked.
+- Fix: dispatch Herald 📯 (Release Manager) to persist the complete head-bound `## Test evidence` row, re-read the live PR body, then tick only the matching item.
 
 **`git ls-tree -- '*.py'` (pathspec form) silently returns 0 results**:
 - Cause: `git ls-tree` with a pathspec form returns nothing even when matching files are tracked — it has produced false "no Python files" verdicts in PR reviews.
