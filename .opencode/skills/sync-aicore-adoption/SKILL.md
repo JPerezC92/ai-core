@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.0.0
+  version: 2.1.0
   domain: opencode
   dependencies:
     - PyYAML==6.0.3
@@ -13,7 +13,7 @@ metadata:
 
 ## What I do
 
-I compare an independent adopter repository against the trusted AICore revision as one atomic transaction. I reconcile the accepted and current core catalogs, project each declared unit's content in a logical-member namespace, and report orthogonal **mode**, **upstream delta**, **destination delta**, and **disposition** per unit. I never modify adopter files.
+I compare an independent adopter repository against the trusted AICore revision as one atomic transaction. I reconcile the accepted and current core catalogs, project each declared unit's content in a logical-member namespace, and report orthogonal **mode**, **upstream delta**, **destination delta**, and **disposition** per unit. I also enforce the adopter root runtime's closed destination policy: a mapped root carrying AICore or upstream identity, or missing its destination markers, is a blocking `policy_violation`. I never modify adopter files.
 
 I enforce atomic adoption: a lock carries exactly one accepted source commit for the whole adopter, every catalog unit must be accounted for (adopted or explicitly `not_applicable` under a machine-checked applicability rule), and `check` exits 0 only when the whole adopter is complete, current, and resolved. Partial per-unit acceptance does not exist in v2.
 
@@ -74,7 +74,7 @@ All three perform no filesystem, worktree, index, or ref mutation of the upstrea
 
 - `propose-lock` rebuilds **every** declared unit at the one current revision. There is no `--unit` and no partial mode.
 - A changed non-mirror unit (`adapted`, `replacement`, `destination_owned`) requires a matching `.aicore/adoption-review.yaml` decision before the lock can be generated.
-- An incomplete declaration, an invalid applicability claim, an unsatisfied required assertion, or a missing review decision fails closed.
+- An incomplete declaration, an invalid applicability claim, an unsatisfied required assertion, a missing review decision, or a guarded root that violates its destination policy fails closed.
 
 ## Comparison contract
 
@@ -83,19 +83,28 @@ I report four orthogonal fields with closed values:
 - **mode** (from the declaration): `mirror | adapted | replacement | destination_owned | not_applicable`.
 - **upstream delta**: `changed | unchanged` (a `not_applicable` unit reports `n/a`).
 - **destination delta**: `changed | unchanged` (a `not_applicable` unit reports `n/a`).
-- **disposition**: `current | not_applicable | update_available | local_drift | review_required | conflict | baseline_advance_required | unmanaged`.
+- **disposition**: `current | not_applicable | update_available | local_drift | review_required | conflict | baseline_advance_required | policy_violation | unmanaged`.
 
 Assertion units (`opencode-config`, `gitignore-config`) behave as `mirror` rows over a normalized assertion-status map: a missing required permission gate or ignore entry is `local_drift` (or `conflict` if upstream also changed) and can never be `current`.
+
+A `guarded_file` unit (the adopter root runtime) carries a closed `destination_policy: adopter_root_runtime`. The mapped root is validated as UTF-8 text against the policy before any disposition is computed:
+
+- **Prohibited** (case-insensitive substrings): `aicore`, `ai-core`, `migrate-core-to-project`, `sync-aicore-adoption`, `.aicore/`, `upstream provenance`, `upstream lineage`, `reuse guide`.
+- **Required markers** (exact `> **…:**` lines): `Project identity`, `Spec version`, and `Local version`.
+
+A violating root is never `current`, even when its bytes match the accepted lock: `propose-lock` fails closed with stable code `policy_violation` (exit 2) and emits no YAML, and `check` reports the unit disposition `policy_violation`, adds it to the blocking reasons, and exits 1. The policy applies only to the adopter snapshot's mapped root; AICore's own upstream `AGENTS.md` keeps its reuse guide.
 
 ## Exit contract
 
 | Exit | Meaning |
 |---:|---|
 | 0 | Compliance pass: complete declaration, every declared unit `current` or `not_applicable` (or the `unmanaged` `destination_owned` steady state), all changed non-mirror units reviewed, catalog current. |
-| 1 | Valid input but non-compliant (stale/`update_available`/`local_drift`/`conflict`/`review_required`/`baseline_advance_required`) or diagnostic mode. |
+| 1 | Valid input but non-compliant (stale/`update_available`/`local_drift`/`conflict`/`review_required`/`baseline_advance_required`/`policy_violation`) or diagnostic mode. |
 | 2 | Fatal: schema/identity/mapping/snapshot/trust failure, `declaration_incomplete`, `invalid_applicability`, `invalid_lock`, `invalid_declaration`, `schema_upgrade_required`. |
 
 The trusted revision is the tip of the upstream repository's protected default branch. `--diagnostic-revision` compares against an explicit revision for diagnosis and can never exit 0.
+
+`propose-lock` fails closed with stable code `policy_violation` (exit 2) before emitting any candidate YAML when a guarded root violates the destination policy.
 
 The exact schemas, digest framing, disposition table, and safety invariants are defined in [`references/protocol-v2.md`](references/protocol-v2.md). Reference examples: [`references/adoption-declaration-v2.yaml`](references/adoption-declaration-v2.yaml), [`references/adoption-lock-v2.yaml`](references/adoption-lock-v2.yaml), and [`references/adoption-review-v2.yaml`](references/adoption-review-v2.yaml). The previous `protocol-v1.md` is retained only as migration input.
 
@@ -130,3 +139,5 @@ Run `verify-all`. It reads `.aicore/adopters.yaml`, checks each registered adopt
 - **A config unit reports `local_drift`** — a required permission gate or ignore entry is missing from `opencode.jsonc` or `.gitignore`. Fix: re-add the required gate/entry, then regenerate the lock.
 - **`verify-all` reports a missing or unreachable adopter** — the registry entry or repository access is wrong. Fix: correct `.aicore/adopters.yaml` or repository access; the run stays blocking until every registered adopter passes.
 - **A replacement member reports `local_drift` / `review_required` / `conflict`** — the local member changed, upstream changed, or both. Fix: record a review decision and regenerate the lock.
+- **`propose-lock` exits 2 with `policy_violation`** — the mapped adopter root contains a prohibited AICore/upstream/management-tool/reuse/lineage reference or is missing a required destination marker. Fix: rewrite the root to destination-only identity, then regenerate the lock.
+- **`check` exits 1 with `policy_violation`** — the explicit adopter snapshot's mapped root violates the destination policy, even when the locked bytes already match. Fix: correct the root, then regenerate the lock.

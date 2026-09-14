@@ -16,6 +16,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -30,7 +31,8 @@ PROFILE_MARKERS = ("backend_stack", "python_scripts", "ticket_system")
 DECLARATION_MODES = ("mirror", "adapted", "replacement", "destination_owned", "not_applicable")
 LOCK_MODES = DECLARATION_MODES
 PROJECTIONS = ("file", "tree")
-SYNC_PROJECTIONS = ("file", "tree", "assertions")
+SYNC_PROJECTIONS = ("file", "guarded_file", "tree", "assertions")
+DESTINATION_POLICIES = ("adopter_root_runtime",)
 REVIEW_DECISIONS = ("applied", "declined", "superseded")
 LOCK_DIGEST_FIELDS = (
     "accepted_catalog_digest",
@@ -180,6 +182,18 @@ def _catalog_unit(unit: object, where: str, seen: set[str]) -> None:
             "id",
             "source",
             "destination",
+        )
+    if projection == "guarded_file":
+        _need(
+            unit.get("destination_policy") in DESTINATION_POLICIES,
+            "invalid_mapping",
+            f"{where}.destination_policy must be one of {DESTINATION_POLICIES}",
+        )
+    else:
+        _need(
+            "destination_policy" not in unit,
+            "invalid_mapping",
+            f"{where}.destination_policy is valid only for guarded_file",
         )
 
 
@@ -535,6 +549,7 @@ def evaluate_applicability(catalog_unit: object, profile: Mapping[str, object]) 
 
 _BLOCKING_DISPOSITIONS = frozenset(
     {
+        "policy_violation",
         "update_available",
         "local_drift",
         "review_required",
@@ -783,7 +798,7 @@ def _snapshot_for(args: argparse.Namespace, adopter: _GitRepo) -> _Snapshot:
 
 
 def _member_digest_at(repo: _GitRepo, commit: str, source: str, projection: str) -> str:
-    if projection == "tree":
+    if _content_projection(projection) == "tree":
         return member_digest(repo.tree_entries(commit, source, "baseline_unavailable"))
     entry = repo.file_entry(commit, source, "baseline_unavailable")
     return member_digest([entry] if entry is not None else [])
@@ -809,7 +824,7 @@ def _unit_upstream_digest(
 def _snapshot_member_digest(
     snapshot: _Snapshot, destination: str, projection: str
 ) -> str:
-    if projection == "tree":
+    if _content_projection(projection) == "tree":
         return member_digest(snapshot.tree_entries(destination))
     entry = snapshot.file_entry(destination)
     return member_digest([entry] if entry is not None else [])
@@ -860,6 +875,86 @@ def _strip_comments(text: str) -> str:
 def _fragment(snapshot: _Snapshot, destination: str) -> str:
     entry = snapshot.file_entry(destination)
     return entry.content.decode("utf-8", "replace") if entry is not None else ""
+
+
+def _content_projection(projection: str) -> str:
+    """Normalize guarded files to ordinary file digest framing."""
+    return "file" if projection == "guarded_file" else projection
+
+
+_ADOPTER_ROOT_FORBIDDEN_REFERENCES = (
+    "aicore",
+    "ai-core",
+    "migrate-core-to-project",
+    "sync-aicore-adoption",
+    ".aicore/",
+    "upstream provenance",
+    "upstream lineage",
+    "reuse guide",
+)
+_ADOPTER_ROOT_REQUIRED_MARKERS = (
+    (
+        "Project identity",
+        re.compile(r"^> \*\*Project identity:\*\* \S.*$", re.MULTILINE),
+    ),
+    (
+        "Spec version",
+        re.compile(r"^> \*\*Spec version:\*\* \d+\.\d+\.\d+\s*$", re.MULTILINE),
+    ),
+    (
+        "Local version",
+        re.compile(r"^> \*\*Local version:\*\* \d+\.\d+\.\d+\s*$", re.MULTILINE),
+    ),
+)
+
+
+def _adopter_root_policy_violation(content: bytes) -> str | None:
+    """Return the first adopter-root policy violation, or ``None`` when valid."""
+    try:
+        text = content.decode("utf-8")
+    except UnicodeDecodeError:
+        return "mapped root must be UTF-8 text"
+    folded = text.casefold()
+    for forbidden in _ADOPTER_ROOT_FORBIDDEN_REFERENCES:
+        if forbidden in folded:
+            return f"mapped root contains prohibited reference {forbidden!r}"
+    for marker, pattern in _ADOPTER_ROOT_REQUIRED_MARKERS:
+        if pattern.search(text) is None:
+            return f"mapped root is missing required {marker!r} marker"
+    return None
+
+
+def _destination_policy_violation(
+    uid: str,
+    catalog_unit: Mapping[str, object],
+    decl_unit: Mapping[str, object],
+    snapshot: _Snapshot,
+) -> str | None:
+    """Evaluate a catalog unit's closed destination policy against its snapshot."""
+    if catalog_unit.get("sync_projection") != "guarded_file":
+        return None
+    policy = str(catalog_unit.get("destination_policy"))
+    _need(
+        policy in DESTINATION_POLICIES,
+        "invalid_mapping",
+        f"{uid}: unsupported destination policy {policy!r}",
+    )
+    if decl_unit.get("mode") == "replacement":
+        replacements = list(decl_unit.get("replacement_members", []) or [])
+        if len(replacements) != 1 or _content_projection(
+            str(replacements[0].get("projection"))
+        ) != "file":
+            return "guarded root replacement must map exactly one file"
+        destination = str(replacements[0].get("destination"))
+    else:
+        declared = _declared_members(catalog_unit, decl_unit, uid)
+        members = list(catalog_unit.get("members", []) or [])
+        if len(members) != 1:
+            return "guarded root must declare exactly one catalog member"
+        destination = declared[str(members[0].get("id"))]
+    entry = snapshot.file_entry(destination)
+    content = entry.content if entry is not None else b""
+    return _adopter_root_policy_violation(content)
 
 
 def _assertion_deltas(
@@ -1088,6 +1183,9 @@ def _check_report(
             continue
         projection = str(catalog_unit.get("sync_projection"))
         lock_row = lock_units[uid]
+        policy_violation = _destination_policy_violation(
+            uid, catalog_unit, decl_unit, snapshot
+        )
         if projection == "assertions":
             accepted_assertions = _catalog_assertions_at(
                 upstream, accepted, catalog_path, uid
@@ -1124,12 +1222,21 @@ def _check_report(
             destination_changed = _destination_changed(
                 decl_unit, lock_row, snapshot, projection
             )
-        if mode in _REVIEW_MODES and upstream_changed and uid not in decisions:
+        if (
+            policy_violation is None
+            and mode in _REVIEW_MODES
+            and upstream_changed
+            and uid not in decisions
+        ):
             _fail(
                 "review_changed",
                 f"{uid}: upstream changed but the review has no decision for it",
             )
-        disposition = _disposition(mode, upstream_changed, destination_changed)
+        disposition = (
+            "policy_violation"
+            if policy_violation is not None
+            else _disposition(mode, upstream_changed, destination_changed)
+        )
         if disposition == "current" and accepted != target:
             disposition = "baseline_advance_required"
         results.append(
@@ -1525,6 +1632,11 @@ def run_propose(args: argparse.Namespace) -> int:
         if mode == "not_applicable":
             rows.append({"id": uid, "mode": "not_applicable"})
             continue
+        policy_violation = _destination_policy_violation(
+            uid, catalog_unit, decl_unit, snapshot
+        )
+        if policy_violation is not None:
+            _fail("policy_violation", f"{uid}: {policy_violation}")
         if projection == "assertions":
             _need(
                 not decl_unit.get("members"),

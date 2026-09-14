@@ -1,5 +1,5 @@
 # Cipher — AICore
-> **Spec version:** 2.1.0
+> **Spec version:** 2.2.0
 
 ## Identity & Role
 
@@ -73,6 +73,8 @@ AICore is a **reusable, agnostic core**: another project adopts it as a complete
 4. **Point the tokens to your project** — wherever an agent says "the ticket system", "the primary database", "the project's X", substitute your real tooling. The core ships neutral on purpose.
 5. **The `ticket-runbook` skill** scaffolds a per-ticket working analysis and collapses it to one ticket record at close; adapt its template paths and validator to your project.
 6. **Do not bump synced spec versions locally** — copies of synced or derived surfaces (root runtime spec, agent runtime specs, shared skills' versioned specs) keep the AICore ancestor's version (lineage map: root spec ← AGENTS.md, domain derivations ← investigator.md, everything else ← its same-name counterpart). Record destination-local changes in the destination's git history and user-story change log, never in the spec version field. Each destination root runtime spec adds a visible `> **Local version:** MAJOR.MINOR.PATCH` marker and each destination-derived agent spec adds frontmatter `local-version: MAJOR.MINOR.PATCH`; AICore ancestor surfaces omit `local-version`. Initialize local-version at `1.0.0` when adopting the matching AICore version. A destination-local runtime-spec edit advances only that surface's local SemVer: major for an incompatible local authority or safety change, minor for a new local enforceable capability or rule, and patch for a compatible local correction or clarification. An AICore sync never resets local-version; Git diff against the ancestor, not a version field, selects token-bearing merge behavior. `local-version` complements, never replaces, this single-lineage version policy and has no model, permission, or runtime-behavior effect.
+
+A destination's **active runtime** carries destination-only identity: its root runtime spec names the destination project and its own version markers, with no AICore identity, repository, management-tool, reuse-guide, provenance, or lineage reference. Source identity stays authoritative in the adopter's `.aicore` controls (`adoption.yaml`, `adoption.lock.yaml`), which are the provenance record. This boundary applies to destination active runtimes only — AICore's own root runtime keeps this reuse guide.
 
 **Adopter registry.** `.aicore/adopters.yaml` is the single **shipped** AICore surface allowed to name external projects — the repositories `sync-aicore-adoption verify-all` checks. Every other shipped AICore surface stays neutral and names no adopter (local plans and gitignored temporal output are not shipped).
 

@@ -173,6 +173,65 @@ units:
     mode: mirror
 """
 
+GUARDED_ROOT_CATALOG = """schema_version: 2
+catalog:
+  version: 2.1.0
+  upstream_repository: example/upstream
+  digest_algorithm: sha256
+units:
+  - id: root-runtime-spec
+    kind: config
+    applicability: { always: true }
+    install_strategy: merge
+    sync_projection: guarded_file
+    destination_policy: adopter_root_runtime
+    members:
+      - { id: root, source: AGENTS.md, destination: AGENTS.md }
+"""
+
+GUARDED_ROOT_DECLARATION = """schema_version: 2
+upstream_repository: example/upstream
+profile: { backend_stack: false, python_scripts: false, ticket_system: false }
+units:
+  - id: root-runtime-spec
+    mode: adapted
+    members:
+      - { id: root, destination: AGENTS.md }
+"""
+
+UPSTREAM_ROOT = """# Cipher — AICore
+> **Spec version:** 2.1.0
+
+## Reuse guide (adopting this core)
+Run migrate-core-to-project to adopt AICore.
+"""
+
+CLEAN_DESTINATION_ROOT = """# Relay project runtime
+> **Project identity:** Relay
+> **Spec version:** 2.1.0
+> **Local version:** 1.0.0
+
+## Identity & Role
+Project-local orchestration rules.
+"""
+
+ORIGINAL_REUSE_GUIDE_ROOT = CLEAN_DESTINATION_ROOT + """
+## Reuse guide (adopting this core)
+Run migrate-core-to-project to install AICore and retain its operator guidance.
+"""
+
+VERBOSE_UPSTREAM_LINEAGE_ROOT = CLEAN_DESTINATION_ROOT + """
+## Upstream lineage
+Use migrate-core-to-project and sync-aicore-adoption for future updates.
+Retain upstream stack, token, and registry guidance in this runtime.
+"""
+
+MINIMAL_UPSTREAM_LINEAGE_ROOT = CLEAN_DESTINATION_ROOT + """
+> **Upstream provenance:** AICore (`JPerezC92/ai-core`)
+
+AICore (`JPerezC92/ai-core`) is upstream provenance only.
+"""
+
 EMPTY_REVIEW = """schema_version: 2
 upstream_repository: example/upstream
 decisions: []
@@ -349,6 +408,50 @@ def assertion_lock_document(
         "declaration_digest": sha256_text(declaration),
         "review_digest": sha256_text(review),
         "accepted_snapshot_digest": snapshot_digest(declaration, review, rows),
+        "units": rows,
+    }
+
+
+def guarded_root_lock_document(
+    accepted: str,
+    destination_root: str,
+    catalog: str = GUARDED_ROOT_CATALOG,
+    declaration: str = GUARDED_ROOT_DECLARATION,
+) -> dict:
+    upstream_member = member_file(UPSTREAM_ROOT)
+    destination_member = member_file(destination_root)
+    rows = [
+        {
+            "id": "root-runtime-spec",
+            "mode": "adapted",
+            "declaration_unit_digest": engine.declaration_unit_digest(
+                "adapted",
+                [{"id": "root", "destination": "AGENTS.md"}],
+                [],
+            ),
+            "accepted_upstream_digest": engine.unit_digest(
+                [("root", upstream_member)]
+            ),
+            "members": [
+                {
+                    "id": "root",
+                    "destination": "AGENTS.md",
+                    "accepted_upstream_digest": upstream_member,
+                    "accepted_destination_digest": destination_member,
+                }
+            ],
+        }
+    ]
+    return {
+        "schema_version": 2,
+        "upstream_repository": UPSTREAM_ID,
+        "accepted_source_commit": accepted,
+        "accepted_catalog_digest": sha256_text(catalog),
+        "declaration_digest": sha256_text(declaration),
+        "review_digest": sha256_text(EMPTY_REVIEW),
+        "accepted_snapshot_digest": snapshot_digest(
+            declaration, EMPTY_REVIEW, rows
+        ),
         "units": rows,
     }
 
@@ -625,6 +728,26 @@ class EngineTestCase(unittest.TestCase):
         adopter_rev = self.commit(self.adopter, "adopter")
         return self._fixture_dict(accepted, adopter_rev)
 
+    def build_guarded_root(self, destination_root: str) -> dict:
+        self.init_repo(self.upstream)
+        self.write(self.upstream, CATALOG_REL, GUARDED_ROOT_CATALOG)
+        self.write(self.upstream, "AGENTS.md", UPSTREAM_ROOT)
+        accepted = self.commit(self.upstream, "accepted")
+        self.init_repo(self.adopter)
+        self.write(
+            self.adopter, ".aicore/adoption.yaml", GUARDED_ROOT_DECLARATION
+        )
+        self.write(self.adopter, ".aicore/adoption-review.yaml", EMPTY_REVIEW)
+        self.write(self.adopter, "AGENTS.md", destination_root)
+        lock = guarded_root_lock_document(accepted, destination_root)
+        self.write(
+            self.adopter,
+            ".aicore/adoption.lock.yaml",
+            yaml.safe_dump(lock, sort_keys=False),
+        )
+        adopter_rev = self.commit(self.adopter, "adopter")
+        return self._fixture_dict(accepted, adopter_rev)
+
     # -- verify-all fixture -------------------------------------------------
 
     def _verify_adopter_repo(
@@ -792,6 +915,18 @@ class SchemaParsingTests(EngineTestCase):
             "--adopter-revision", fixture["adopter_rev"],
         ]
         self.assert_exit(self.run_cli(*args), 2, "schema_upgrade_required")
+
+    def test_unknown_projection_is_fatal(self) -> None:
+        catalog = self.write(
+            self.root,
+            "unknown-projection.yaml",
+            GREETING_CATALOG.replace(
+                "sync_projection: file", "sync_projection: mystery"
+            ),
+        )
+        with self.assertRaises(engine.SyncError) as caught:
+            engine.load_catalog(str(catalog))
+        self.assertEqual(caught.exception.code, "unsupported_projection")
 
 
 class LockValidityTests(EngineTestCase):
@@ -1048,6 +1183,127 @@ class AssertionTests(EngineTestCase):
         self.assert_exit(self._propose(fixture), 2, "local_drift")
 
 
+class GuardedRootPolicyTests(EngineTestCase):
+    def _check(self, fixture: dict) -> subprocess.CompletedProcess:
+        return self.run_cli(
+            "check",
+            *self.base_check_args(fixture),
+            "--adopter-revision", fixture["adopter_rev"],
+            "--format", "json",
+        )
+
+    def _propose(self, fixture: dict) -> subprocess.CompletedProcess:
+        return self.run_cli(
+            "propose-lock",
+            "--upstream-repo", str(fixture["upstream"]),
+            "--catalog", str(fixture["catalog"]),
+            "--declaration", str(fixture["declaration"]),
+            "--review", str(fixture["review"]),
+            "--lock", str(fixture["lock"]),
+            "--adopter-revision", fixture["adopter_rev"],
+        )
+
+    def assert_proposal_policy_violation(self, root: str) -> None:
+        fixture = self.build_guarded_root(root)
+        proc = self._propose(fixture)
+        self.assert_exit(proc, 2, "policy_violation")
+        self.assertEqual(proc.stdout, "", "a rejected proposal must emit no YAML")
+
+    def test_clean_destination_root_passes_with_unchanged_lock_shape(self) -> None:
+        fixture = self.build_guarded_root(CLEAN_DESTINATION_ROOT)
+        check = self._check(fixture)
+        self.assert_exit(check, 0)
+        report = json.loads(check.stdout)
+        self.assertTrue(report["compliance"])
+        self.assertEqual(report["units"][0]["disposition"], "current")
+        proposal = self._propose(fixture)
+        self.assert_exit(proposal, 0)
+        unit = yaml.safe_load(proposal.stdout)["units"][0]
+        member = unit["members"][0]
+        upstream_member = member_file(UPSTREAM_ROOT)
+        self.assertEqual(
+            unit["accepted_upstream_digest"],
+            engine.unit_digest([("root", upstream_member)]),
+        )
+        self.assertEqual(member["accepted_upstream_digest"], upstream_member)
+        self.assertEqual(
+            member["accepted_destination_digest"],
+            member_file(CLEAN_DESTINATION_ROOT),
+        )
+        self.assertEqual(
+            set(member),
+            {
+                "id",
+                "destination",
+                "accepted_upstream_digest",
+                "accepted_destination_digest",
+            },
+        )
+
+    def test_missing_required_destination_markers_rejects_proposal(self) -> None:
+        self.assert_proposal_policy_violation(
+            "# Relay project runtime\n> **Project identity:** Relay\n"
+        )
+
+    def test_each_required_destination_marker_is_enforced(self) -> None:
+        markers = (
+            "> **Project identity:** Relay\n",
+            "> **Spec version:** 2.1.0\n",
+            "> **Local version:** 1.0.0\n",
+        )
+        for marker in markers:
+            with self.subTest(marker=marker.strip()):
+                violation = engine._adopter_root_policy_violation(
+                    CLEAN_DESTINATION_ROOT.replace(marker, "").encode("utf-8")
+                )
+                self.assertIsNotNone(violation)
+
+    def test_all_forbidden_references_are_case_insensitive(self) -> None:
+        references = (
+            "AiCoRe",
+            "AI-CORE",
+            "MIGRATE-CORE-TO-PROJECT",
+            "SYNC-AICORE-ADOPTION",
+            ".AICORE/",
+            "UPSTREAM PROVENANCE",
+            "UPSTREAM LINEAGE",
+            "REUSE GUIDE",
+        )
+        for reference in references:
+            with self.subTest(reference=reference):
+                content = (CLEAN_DESTINATION_ROOT + "\n" + reference).encode("utf-8")
+                self.assertIsNotNone(engine._adopter_root_policy_violation(content))
+
+    def test_original_reuse_guide_rejects_proposal(self) -> None:
+        self.assert_proposal_policy_violation(ORIGINAL_REUSE_GUIDE_ROOT)
+
+    def test_renamed_verbose_upstream_lineage_rejects_proposal(self) -> None:
+        self.assert_proposal_policy_violation(VERBOSE_UPSTREAM_LINEAGE_ROOT)
+
+    def test_current_minimal_aicore_lineage_rejects_proposal(self) -> None:
+        self.assert_proposal_policy_violation(MINIMAL_UPSTREAM_LINEAGE_ROOT)
+
+    def test_locked_prohibited_root_is_policy_violation(self) -> None:
+        fixture = self.build_guarded_root(MINIMAL_UPSTREAM_LINEAGE_ROOT)
+        proc = self._check(fixture)
+        self.assert_exit(proc, 1)
+        report = json.loads(proc.stdout)
+        self.assertFalse(report["compliance"])
+        self.assertEqual(report["units"][0]["upstream_delta"], "unchanged")
+        self.assertEqual(report["units"][0]["destination_delta"], "unchanged")
+        self.assertEqual(report["units"][0]["disposition"], "policy_violation")
+        self.assertIn(
+            "root-runtime-spec: policy_violation", report["blocking_reasons"]
+        )
+
+    def test_non_utf8_destination_root_rejects_proposal(self) -> None:
+        fixture = self.build_guarded_root(CLEAN_DESTINATION_ROOT)
+        (fixture["adopter"] / "AGENTS.md").write_bytes(b"\xff\xfe")
+        fixture["adopter_rev"] = self.commit(fixture["adopter"], "non-utf8 root")
+        proc = self._propose(fixture)
+        self.assert_exit(proc, 2, "policy_violation")
+        self.assertEqual(proc.stdout, "")
+
 class ReviewEvidenceTests(EngineTestCase):
     def _propose(self, fixture: dict) -> subprocess.CompletedProcess:
         return self.run_cli(
@@ -1290,5 +1546,3 @@ class VerifyAllTests(EngineTestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
-
-

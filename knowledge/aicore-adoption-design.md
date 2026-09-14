@@ -59,3 +59,18 @@ The checker reads adopter content from exactly one explicit snapshot (a commit o
 ## 10. Migrating from v1
 
 v1 files are retained verbatim as migration input and are never amended. Any command reading a v1 declaration or lock fails with `schema_upgrade_required` (exit 2) and prints upgrade guidance. Upgrade is not a per-unit carry-forward: the adopter re-declares under v2, authors the review, and regenerates one fresh lock at one revision. AICore contains only neutral fixtures and the management engines; every real declaration, lock, review, and registry entry is created in its owning repository.
+
+## 11. The adopter runtime identity boundary
+
+Byte digests prove consistency, not identity separation. An adopter could pass migration, a human audit, and atomic compliance while its **active** root runtime still described AICore — the upstream core, its management tools, and its reuse guidance — as the running system. A lock can only confirm the bytes it was generated around; it cannot tell whether those bytes name the wrong project.
+
+The boundary is therefore machine-enforced at the root runtime. The catalog's `root-runtime-spec` is a `guarded_file` unit with the closed `destination_policy: adopter_root_runtime`. Before any disposition or lock is produced, the mapped destination root is decoded as UTF-8 text and must:
+
+- contain no case-insensitive AICore/upstream reference — `aicore`, `ai-core`, `migrate-core-to-project`, `sync-aicore-adoption`, `.aicore/`, `upstream provenance`, `upstream lineage`, or `reuse guide`; and
+- carry its own `Project identity`, `Spec version`, and `Local version` markers.
+
+A violating root can never be `current`. `propose-lock` fails closed with the stable code `policy_violation` (exit 2) and emits no candidate YAML, and `check` reports the blocking disposition `policy_violation` and exits 1 even when the root bytes already match the accepted lock. The policy is scoped to the adopter snapshot's mapped root only: AICore's own source root keeps its reuse guide, and machine provenance (`upstream_repository`, accepted commit, digests) remains authoritative in `.aicore/adoption.yaml`, `.aicore/adoption-review.yaml`, and `.aicore/adoption.lock.yaml`.
+
+The projection set stays closed so the guard fails closed on older engines too: an engine that predates `guarded_file` rejects the catalog with `unsupported_projection` (fatal) rather than ignoring the policy and blessing a non-conforming root. Lock and declaration schemas are unchanged — `guarded_file` normalizes to the `file` projection for digest framing.
+
+**Rollout consequence.** The guard is a compliance-tightening change: every existing adopter whose active root still carries AICore or upstream text becomes non-compliant the moment it is checked against the released guard, and stays blocking until the root is rewritten to destination-only identity and the lock is regenerated against the trusted revision. This is intentional fail-closed behavior — the previous run was compliant only because the defect could not be expressed. Downstream adopters are synchronized after the AICore release; this upstream plan neither edits an adopter repository nor registers one.
