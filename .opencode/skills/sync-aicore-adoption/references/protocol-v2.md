@@ -119,7 +119,9 @@ Rules:
 
 - `schema_version: 2`; `catalog.version` is SemVer and changes when any unit, member, applicability, or assertion changes.
 - `applicability` is one of `{ always: true }`, `{ requires: [marker, ...] }`, or `{ any_of: [marker, ...] }`.
-- `sync_projection` is `file`, `tree`, or `assertions`. There is no `none`.
+- `sync_projection` is `file`, `guarded_file`, `tree`, or `assertions`. There is no `none`.
+- `guarded_file` is a single tracked file with a closed `destination_policy`. The only defined policy is `adopter_root_runtime`; a `destination_policy` on any other projection, or an unknown policy value, is `invalid_mapping` (fatal). `guarded_file` normalizes to the `file` projection for all digest framing, so lock and declaration member shapes are unchanged.
+- The projection set is closed: an engine that does not understand `guarded_file` fails with `unsupported_projection` (fatal) instead of skipping the unit. A guarded root can therefore never be silently accepted by an older engine.
 - Assertion units declare a `destination` and an ordered `assertions` list of `{ id, contains }` required substrings.
 
 ## Section 6 — Applicability model
@@ -136,7 +138,7 @@ A unit that is applicable must be adopted with a real mode; a unit that is not a
 
 `sha256`, output `sha256:<lowercase hex>`.
 
-- `file` / `tree` member digests use the v1 framing (path/mode/size/content, ascending logical path, `__pycache__` and `*.pyc` excluded) — unchanged.
+- `file` / `guarded_file` / `tree` member digests use the v1 framing (path/mode/size/content, ascending logical path, `__pycache__` and `*.pyc` excluded) — unchanged.
 - Unit digest uses the v1 member framing — unchanged.
 - Declaration-unit intent digest is the v1 framing — unchanged.
 - Assertion-list digest: for each assertion in catalog order,
@@ -192,17 +194,21 @@ Missing, ambiguous, malformed, or non-commit inputs are `adopter_snapshot_unavai
 
 A delta is `changed` or `unchanged` (the engine does not distinguish added/removed/modified). Assertion units follow the `mirror` rows using their assertion-list delta (upstream) and assertion-status delta (destination). `replacement` never reports `update_available`.
 
+A `guarded_file` unit evaluates its `destination_policy` against the snapshot before any delta is reported. For `adopter_root_runtime`, the mapped root is decoded as UTF-8 text and must contain no case-insensitive prohibited reference (`aicore`, `ai-core`, `migrate-core-to-project`, `sync-aicore-adoption`, `.aicore/`, `upstream provenance`, `upstream lineage`, `reuse guide`) and must carry the `Project identity`, `Spec version`, and `Local version` markers. A violating root reports the disposition `policy_violation` regardless of upstream or destination delta, is always blocking, and can never be `current`. The policy applies to the adopter snapshot only; AICore's own upstream root is not subject to it.
+
 ## Section 12 — Exit contract
 
 | Exit | Meaning |
 |---:|---|
 | 0 | Compliance pass: complete declaration, all units `current` or `not_applicable` (or the `unmanaged` `destination_owned` steady state), all changed non-mirror units reviewed, catalog current. |
-| 1 | Valid input but non-compliant: any `baseline_advance_required`, `update_available`, `local_drift`, `review_required`, or `conflict` on any declared unit; diagnostic mode. `unmanaged` — a `destination_owned` unit whose upstream is unchanged — is the non-blocking steady state of an intentional local fork. |
+| 1 | Valid input but non-compliant: any `baseline_advance_required`, `update_available`, `local_drift`, `review_required`, `conflict`, or `policy_violation` on any declared unit; diagnostic mode. `unmanaged` — a `destination_owned` unit whose upstream is unchanged — is the non-blocking steady state of an intentional local fork. |
 | 2 | Fatal: schema/identity/mapping/snapshot/trust failure, `declaration_incomplete`, `invalid_applicability`, `invalid_lock`, `invalid_declaration`, `schema_upgrade_required`. |
 
 ## Section 13 — Top-level fatal errors
 
 `baseline_unavailable`, `invalid_lock`, `invalid_declaration`, `declaration_incomplete`, `invalid_applicability`, `declaration_changed`, `review_changed`, `catalog_changed`, `invalid_mapping`, `unsupported_projection`, `unsupported_special_file`, `adopter_snapshot_unavailable`, `repository_identity_mismatch`, `schema_upgrade_required`, `unknown_key`.
+
+`policy_violation` is the guard-specific code and is not a top-level parse failure: `propose-lock` emits it (exit 2) when a guarded root violates its `destination_policy`, and `check` reports it as a blocking disposition (exit 1).
 
 ## Section 14 — v1 migration
 
@@ -213,7 +219,7 @@ A delta is `changed` or `unchanged` (the engine does not distinguish added/remov
 
 - Inputs: validated declaration + review, catalog-bearing current revision, one explicit adopter snapshot.
 - Removes `--unit`: a proposal rebuilds every declared unit at the one current revision. There is no partial mode.
-- Rejects an incomplete declaration, a missing review decision for a changed non-mirror unit, an incomplete mirror subtree, a missing required assertion, or invalid applicability.
+- Rejects an incomplete declaration, a missing review decision for a changed non-mirror unit, an incomplete mirror subtree, a missing required assertion, invalid applicability, or a guarded root that violates its `destination_policy` (stable code `policy_violation`).
 - Emits candidate lock YAML plus one trailing newline to stdout only; diagnostics to stderr.
 
 ## Section 16 — `verify-all`

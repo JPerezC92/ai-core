@@ -13,15 +13,16 @@
 # applicability conditions are false under the adopter's declared profile.
 #
 # sync_projection:
-#   file       - single tracked file projected for content synchronization
-#   tree       - directory of tracked files projected for content synchronization
-#   assertions - deterministic required-substring assertions over a merged
-#                adopter-owned fragment (comment lines are ignored before
-#                matching). There is no `none`: every unit is checkable.
+#   file         - single tracked file projected for content synchronization
+#   guarded_file - single tracked file with a closed destination-content policy
+#   tree         - directory of tracked files projected for content synchronization
+#   assertions   - deterministic required-substring assertions over a merged
+#                  adopter-owned fragment (comment lines are ignored before
+#                  matching). There is no `none`: every unit is checkable.
 schema_version: 2
 
 catalog:
-  version: 2.0.0
+  version: 2.1.0
   upstream_repository: JPerezC92/ai-core
   digest_algorithm: sha256
   digest_exclusions:
@@ -318,7 +319,8 @@ units:
     kind: config
     applicability: { always: true }
     install_strategy: merge
-    sync_projection: file
+    sync_projection: guarded_file
+    destination_policy: adopter_root_runtime
     members:
       - { id: root, source: AGENTS.md, destination: AGENTS.md }
     notes: >-

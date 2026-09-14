@@ -5,13 +5,13 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.1.0
+  version: 2.2.0
   domain: opencode
 ---
 
 ## What I do
 
-Bootstrap AICore's reusable, agnostic core into a target project as one atomic enrollment. I detect the target's profile mechanically, confirm the destination project identity, read the machine catalog (`.aicore/core-catalog-v2.yaml`), enroll the **complete applicable unit set** at one AICore revision, merge the required config assertions, write the destination's root runtime as an `adapted` document that presents the destination as the active project with AICore recorded as upstream provenance, generate the adopter control surfaces (`.aicore/adoption.yaml`, `.aicore/adoption-review.yaml`), delegate lock generation and verification to `sync-aicore-adoption`, and report stack-mismatched rulebook bodies that need destination-side adaptation. I never run git; shipping (branch/commit/PR) happens separately.
+Bootstrap AICore's reusable, agnostic core into a target project as one atomic enrollment. I detect the target's profile mechanically, confirm the destination project identity, read the machine catalog (`.aicore/core-catalog-v2.yaml`), enroll the **complete applicable unit set** at one AICore revision, merge the required config assertions, write the destination's root runtime as an `adapted` document that presents the destination as the active project with destination-only identity (source provenance lives in the `.aicore` controls), generate the adopter control surfaces (`.aicore/adoption.yaml`, `.aicore/adoption-review.yaml`), delegate lock generation and verification to `sync-aicore-adoption`, and report stack-mismatched rulebook bodies that need destination-side adaptation. I never run git; shipping (branch/commit/PR) happens separately.
 
 There is no partial or selectable enrollment: applicable units install as a complete set at one revision, and inapplicable units are recorded as `not_applicable` under a machine-checked applicability rule. I fail closed on stale or partial content.
 
@@ -86,18 +86,17 @@ For each enrolled skill, read its `SKILL.md` frontmatter `metadata.dependencies`
 
 ### 5. Merge config (assertion units)
 
-- **`AGENTS.md` (`root-runtime-spec`)** — establish the destination as the active project and record AICore only as upstream lineage. Merge new roster lines into an existing root file; write fresh if absent. When written, the destination root runtime must carry:
+- **`AGENTS.md` (`root-runtime-spec`)** — establish the destination as the active project with destination-only identity. Merge new roster lines into an existing root file; write fresh if absent. When written, the destination root runtime must carry:
   - a `Project identity` marker naming the step-1 confirmed destination identity as the active project;
-  - an `Upstream provenance` marker naming AICore, its upstream repository, and the ancestor AICore spec version this adoption copies;
   - the ancestor AICore spec version in the copied spec's version field, plus a destination `Local version: 1.0.0` marker that advances only on destination-local edits, never on an AICore sync;
-  - destination-facing lineage guidance: rewrite inherited AICore reuse guidance so it states that AICore is the upstream core this project adopted, rather than presenting AICore as the active project.
+  - destination-only content: no AICore identity, upstream repository, management-tool, reuse-guide, provenance, or lineage reference, and no inherited AICore reuse guidance. The engine enforces this closed policy (`guarded_file` + `adopter_root_runtime`) at proposal and check; source identity and provenance live only in the adopter's `.aicore` controls.
 - **`opencode.jsonc` (`opencode-config`)** — append the required permission gates declared as catalog assertions (grep before adding; never duplicate): stash push/apply allows, stash pop/drop/clear/update-ref/reflog/gc/repack/prune/symbolic-ref denies, `sudo` / `rm -rf /*` / `git push --force` / `gh pr merge` / `gh repo delete` / root-redirect denies, and the `mv plans/*-*` allow.
 - **`.gitignore` (`gitignore-config`)** — append-if-missing `output/`, `pr-draft.md`, `commit.txt`, `plans/.completed/`.
 - **Build approvals** — if the target uses pnpm ≥ 11, approve native build scripts via `pnpm approve-builds`.
 
 ### 6. Bootstrap the adopter control surfaces
 
-1. Write `.aicore/adoption.yaml` (schema v2): the `profile` triple, and **one entry per catalog unit** — `mirror` for byte-identical copies, `adapted`/`replacement`/`destination_owned` only where the destination intentionally differs, and `not_applicable` for every inapplicable unit. Declare the `root-runtime-spec` unit as mode `adapted`: the destination root runtime carries its own `Project identity` and upstream lineage and is intentionally not a byte-identical mirror of the upstream `AGENTS.md`.
+1. Write `.aicore/adoption.yaml` (schema v2): the `profile` triple, and **one entry per catalog unit** — `mirror` for byte-identical copies, `adapted`/`replacement`/`destination_owned` only where the destination intentionally differs, and `not_applicable` for every inapplicable unit. Declare the `root-runtime-spec` unit as mode `adapted`: the destination root runtime carries its own destination-only `Project identity` and is intentionally not a byte-identical mirror of the upstream `AGENTS.md`.
 2. Write `.aicore/adoption-review.yaml` (schema v2): empty `decisions` initially; decisions are added when a non-mirror unit changes upstream.
 3. Do NOT hand-write the lock. Delegate lock generation to the sync engine:
    `python3 .opencode/skills/sync-aicore-adoption/scripts/sync_aicore_adoption.py propose-lock --upstream-repo <aicore> --adopter-repo <target> --declaration <target>/.aicore/adoption.yaml --review <target>/.aicore/adoption-review.yaml --adopter-index`
@@ -135,7 +134,7 @@ Do not report success until `check` exits 0. Run the target's build command as a
 
 ## Core catalog
 
-Read [`.aicore/core-catalog-v2.yaml`](../../../.aicore/core-catalog-v2.yaml) before step 1. It is the authoritative machine inventory of adopted content: `kind`, `applicability`, `install_strategy`, `sync_projection` (`file`/`tree`/`assertions`), and the declared members/assertions. `sync-aicore-adoption` reads the same catalog.
+Read [`.aicore/core-catalog-v2.yaml`](../../../.aicore/core-catalog-v2.yaml) before step 1. It is the authoritative machine inventory of adopted content: `kind`, `applicability`, `install_strategy`, `sync_projection` (`file`/`guarded_file`/`tree`/`assertions`), and the declared members/assertions. `sync-aicore-adoption` reads the same catalog.
 
 `migrate-core-to-project` and `sync-aicore-adoption` are upstream-only AICore management tools. Neither is a catalog unit, and neither the tools nor the catalog nor the registry is copied as adopted content.
 
@@ -164,3 +163,4 @@ Target: `Cargo.toml`. Profile: `backend_stack: false`, `python_scripts: true`, `
 - **`check` exits 1 with a config assertion failure** — a required permission gate or ignore entry is missing. Fix: merge it, then regenerate the lock.
 - **A present file differs from the source** — stale or customized content. Fix: explicit user override to re-copy, or declare the unit `adapted` with a review decision — never silent overwrite.
 - **`check` exits 2 with `schema_upgrade_required`** — the adopter still carries a v1 declaration or lock. Fix: re-declare under v2 and regenerate the lock.
+- **`propose-lock` exits 2 with `policy_violation`** — the destination root runtime carries an AICore/upstream/management-tool/reuse-guide/lineage reference or is missing a required `Project identity`/`Spec version`/`Local version` marker. Fix: rewrite the root to destination-only content, then regenerate the lock.
