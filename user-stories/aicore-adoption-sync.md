@@ -35,6 +35,7 @@
 
 ## Change log
 
+- 2026-09-14 - aicore-adopter-bootstrap-20260914: executed and staged a real adopter's complete applicable-set enrollment under the existing atomic migration scenario; application scaffolding and release operations remain outside the migration plan.
 - 2026-09-11 - aicore-adoption-sync-20260911: created the durable feature definition for baseline-aware upstream synchronization.
 - 2026-09-11 - aicore-adoption-sync-20260911: replaced the insufficient three-way model with declaration/lock separation and accepted upstream plus destination baselines; moved real adopter onboarding to a destination-owned follow-up.
 - 2026-09-11 - aicore-adoption-sync-hardening-20260911: reopened the incomplete evidence contract for explicit destination snapshots, replacement drift, selected-unit acceptance, repository identity, and adopter-agnostic management-tool ownership.
@@ -45,6 +46,7 @@
 
 ## Resolved decisions
 
+- 2026-09-14 - Real adopter onboarding reuses this story's existing migration scenario instead of creating a competing feature story; adopter identity remains confined to the local plan and the adopter-owned control files unless the upstream registry is separately authorized.
 - 2026-09-11 - AICore is the upstream reusable core; adopter repositories keep independent files rather than sharing a physical file.
 - 2026-09-11 - adopter intent lives in `.aicore/adoption.yaml`; generated acceptance evidence lives in `.aicore/adoption.lock.yaml`.
 - 2026-09-11 - the first capability is read-only; automatic apply/merge behavior is deferred.
