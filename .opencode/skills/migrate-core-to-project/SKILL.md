@@ -5,13 +5,13 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.0.0
+  version: 2.1.0
   domain: opencode
 ---
 
 ## What I do
 
-Bootstrap AICore's reusable, agnostic core into a target project as one atomic enrollment. I detect the target's profile mechanically, read the machine catalog (`.aicore/core-catalog-v2.yaml`), enroll the **complete applicable unit set** at one AICore revision, merge the required config assertions, generate the adopter control surfaces (`.aicore/adoption.yaml`, `.aicore/adoption-review.yaml`), delegate lock generation and verification to `sync-aicore-adoption`, and report stack-mismatched rulebook bodies that need destination-side adaptation. I never run git; shipping (branch/commit/PR) happens separately.
+Bootstrap AICore's reusable, agnostic core into a target project as one atomic enrollment. I detect the target's profile mechanically, confirm the destination project identity, read the machine catalog (`.aicore/core-catalog-v2.yaml`), enroll the **complete applicable unit set** at one AICore revision, merge the required config assertions, write the destination's root runtime as an `adapted` document that presents the destination as the active project with AICore recorded as upstream provenance, generate the adopter control surfaces (`.aicore/adoption.yaml`, `.aicore/adoption-review.yaml`), delegate lock generation and verification to `sync-aicore-adoption`, and report stack-mismatched rulebook bodies that need destination-side adaptation. I never run git; shipping (branch/commit/PR) happens separately.
 
 There is no partial or selectable enrollment: applicable units install as a complete set at one revision, and inapplicable units are recorded as `not_applicable` under a machine-checked applicability rule. I fail closed on stale or partial content.
 
@@ -53,7 +53,9 @@ Read the target root for mechanical markers, not judgments:
 - `python_scripts` — true when any applicable skill ships `scripts/*.py` (true today for `op-model`, `plan-enforce`, `sync-aicore-adoption`, `query-verification`, `ticket-runbook`).
 - `ticket_system` — true when the target has a ticket/support folder or workflow.
 
-Output the profile triple. The detected stack list also feeds the step-7 mismatch report.
+Derive the **destination identity** from the target's own declarative metadata, never from AICore: the `[project].name` in `pyproject.toml`, the `name` in `package.json`, the module name in `Cargo.toml`/`go.mod`, or the target directory name. When these disagree, ask via the `question` tool and confirm one identity before proceeding.
+
+Output the profile triple plus the confirmed destination identity. The detected stack list also feeds the step-7 mismatch report.
 
 ### 2. Compute the applicable set and confirm once
 
@@ -84,17 +86,21 @@ For each enrolled skill, read its `SKILL.md` frontmatter `metadata.dependencies`
 
 ### 5. Merge config (assertion units)
 
-- **`AGENTS.md` (`root-runtime-spec`)** — merge new roster lines into an existing root file; write fresh if absent.
+- **`AGENTS.md` (`root-runtime-spec`)** — establish the destination as the active project and record AICore only as upstream lineage. Merge new roster lines into an existing root file; write fresh if absent. When written, the destination root runtime must carry:
+  - a `Project identity` marker naming the step-1 confirmed destination identity as the active project;
+  - an `Upstream provenance` marker naming AICore, its upstream repository, and the ancestor AICore spec version this adoption copies;
+  - the ancestor AICore spec version in the copied spec's version field, plus a destination `Local version: 1.0.0` marker that advances only on destination-local edits, never on an AICore sync;
+  - destination-facing lineage guidance: rewrite inherited AICore reuse guidance so it states that AICore is the upstream core this project adopted, rather than presenting AICore as the active project.
 - **`opencode.jsonc` (`opencode-config`)** — append the required permission gates declared as catalog assertions (grep before adding; never duplicate): stash push/apply allows, stash pop/drop/clear/update-ref/reflog/gc/repack/prune/symbolic-ref denies, `sudo` / `rm -rf /*` / `git push --force` / `gh pr merge` / `gh repo delete` / root-redirect denies, and the `mv plans/*-*` allow.
 - **`.gitignore` (`gitignore-config`)** — append-if-missing `output/`, `pr-draft.md`, `commit.txt`, `plans/.completed/`.
 - **Build approvals** — if the target uses pnpm ≥ 11, approve native build scripts via `pnpm approve-builds`.
 
 ### 6. Bootstrap the adopter control surfaces
 
-1. Write `.aicore/adoption.yaml` (schema v2): the `profile` triple, and **one entry per catalog unit** — `mirror` for byte-identical copies, `adapted`/`replacement`/`destination_owned` only where the destination intentionally differs, and `not_applicable` for every inapplicable unit.
+1. Write `.aicore/adoption.yaml` (schema v2): the `profile` triple, and **one entry per catalog unit** — `mirror` for byte-identical copies, `adapted`/`replacement`/`destination_owned` only where the destination intentionally differs, and `not_applicable` for every inapplicable unit. Declare the `root-runtime-spec` unit as mode `adapted`: the destination root runtime carries its own `Project identity` and upstream lineage and is intentionally not a byte-identical mirror of the upstream `AGENTS.md`.
 2. Write `.aicore/adoption-review.yaml` (schema v2): empty `decisions` initially; decisions are added when a non-mirror unit changes upstream.
 3. Do NOT hand-write the lock. Delegate lock generation to the sync engine:
-   `python3 .opencode/skills/sync-aicore-adoption/scripts/sync_aicore_adoption.py propose-lock --upstream-repo <aicore> --adopter-repo <target> --adopter-index`
+   `python3 .opencode/skills/sync-aicore-adoption/scripts/sync_aicore_adoption.py propose-lock --upstream-repo <aicore> --adopter-repo <target> --declaration <target>/.aicore/adoption.yaml --review <target>/.aicore/adoption-review.yaml --adopter-index`
    and have the user commit the emitted candidate as `.aicore/adoption.lock.yaml`.
 
 ### 7. Consistency pass
@@ -115,7 +121,10 @@ Enrollment is complete only when the sync engine reports compliance:
 
 ```
 python3 .opencode/skills/sync-aicore-adoption/scripts/sync_aicore_adoption.py check \
-  --upstream-repo <aicore> --adopter-repo <target> --adopter-index
+  --upstream-repo <aicore> --adopter-repo <target> \
+  --declaration <target>/.aicore/adoption.yaml \
+  --review <target>/.aicore/adoption-review.yaml \
+  --lock <target>/.aicore/adoption.lock.yaml --adopter-index
 ```
 
 - Exit 0 — complete and current (every declared unit `current`/`not_applicable`, or the `unmanaged` `destination_owned` steady state); enrollment is done.
