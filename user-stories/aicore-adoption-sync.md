@@ -37,7 +37,8 @@
 
 ## Change log
 
-- 2026-09-14 - adopter-identity-neutralization-20260914: separated destination identity from AICore provenance in migration and made shared dependency-audit guidance repository-derived; verification remains pending while the plan is active.
+- 2026-09-14 - adopter-identity-neutralization-20260914: separated destination identity from AICore provenance in migration and made shared dependency-audit guidance repository-derived; verification remained pending while the plan was active.
+- 2026-09-14 - adopter-identity-neutralization-20260914: plan completed; both new criteria verified (Sentinel 🛡️ (Quality Guardian) and Vault 🔐 (Catalog Steward) `[PASS]`), and the migration skill's documented `propose-lock`/`check` invocations were corrected to pass the required flags.
 - 2026-09-14 - aicore-adopter-bootstrap-20260914: executed and staged a real adopter's complete applicable-set enrollment under the existing atomic migration scenario; application scaffolding and release operations remain outside the migration plan.
 - 2026-09-11 - aicore-adoption-sync-20260911: created the durable feature definition for baseline-aware upstream synchronization.
 - 2026-09-11 - aicore-adoption-sync-20260911: replaced the insufficient three-way model with declaration/lock separation and accepted upstream plus destination baselines; moved real adopter onboarding to a destination-owned follow-up.
