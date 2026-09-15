@@ -21,16 +21,17 @@
 
 ## Acceptance criteria
 
-- ✅ AICore's `plan-enforce` skill states the canonical fail-closed reconciliation invariant: no `⬜` or `❌` remains after a touching plan completes; each criterion is `✅` or removed as out-of-scope. Evidence: `.opencode/skills/plan-enforce/SKILL.md` `1.11.1`, section `### Acceptance-criterion reconciliation (fail-closed)`; `_consistency-checklist.md` `## user-stories` bullet.
-- ✅ `plan-enforce` blocks `## Outcome` and archival until every touched story is fully dispositioned. Evidence: completion bullet in `### Resume (completion)` and the analysis-pass clause in `## Post-write self-verification loop` (`SKILL.md` `1.11.1`).
-- ✅ Sentinel 🛡️ (Quality Guardian) reports a stale `⬜`, fulfilled-but-unchecked, or release-event criterion in a touched story as a blocking finding, and never auto-checks a box. Evidence: `.opencode/agents/sentinel.md` `1.3.0`, `### Judgment calls (report only)` item 6.
-- ✅ Release events are not feature acceptance criteria; release policy stays enforceable and actual events live in change-log/PR history. Evidence: `SKILL.md` `1.11.1` invariant sentence; `_consistency-checklist.md` bullet; `_template-user-story.md` `## Acceptance criteria` guidance.
+- ✅ AICore's `plan-enforce` skill states the canonical fail-closed reconciliation invariant: no `⬜` or `❌` remains after a touching plan completes; each criterion is `✅` or removed as out-of-scope. Evidence: `.opencode/skills/plan-enforce/SKILL.md` `1.12.1`, section `### Acceptance-criterion reconciliation (fail-closed)`; `_consistency-checklist.md` `## user-stories` bullet.
+- ✅ `plan-enforce` blocks `## Outcome` and archival until every touched story is fully dispositioned. Evidence: completion bullet in `### Resume (completion)` and the analysis-pass clause in `## Post-write self-verification loop` (`SKILL.md` `1.12.1`).
+- ✅ Sentinel 🛡️ (Quality Guardian) reports a stale `⬜`, fulfilled-but-unchecked, or release-event criterion in a touched story as a blocking finding, and never auto-checks a box. Evidence: `.opencode/agents/sentinel.md` `1.4.0`, `### Judgment calls (report only)` item 6.
+- ✅ Release events are not feature acceptance criteria; release policy stays enforceable and actual events live in change-log/PR history. Evidence: `SKILL.md` `1.12.1` invariant sentence; `_consistency-checklist.md` bullet; `_template-user-story.md` `## Acceptance criteria` guidance.
 - ✅ The story registry reflects this feature with a matching index row, and its own criteria are fully dispositioned under the new rule. Evidence: this file and `user-stories/index.md`.
 
 ## Change log
 
 - 2026-09-12 — story-acceptance-reconciliation-20260912: created the fail-closed story-acceptance reconciliation feature definition.
 - 2026-09-12 — atomic-adoption-v2-20260912: corrected the completion gate so any `⬜` or `❌` blocks `## Outcome` and archival (the Resume stop condition previously permitted `❌` as terminal); `plan-enforce` patched `1.11.0` → `1.11.1` per Vault 🔐 (Catalog Steward) `[BLOCK]`.
+- 2026-09-15 — debt-001-citation-currency-20260915: refreshed the current plan-enforce citations to the shipped `1.12.1`; no feature behavior or acceptance criteria changed.
 
 ## Resolved decisions
 

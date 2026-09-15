@@ -24,11 +24,12 @@
 - ✅ Goal trace, manifest equality, and verification parity are enforced with `GOAL-TRACE:`, `MANIFEST:`, and `VERIFICATION-PARITY:` findings. Evidence: `validate_plan.py` `check_goal_trace`/`check_manifest_equality`/`check_verification_parity`; tests `test_goal_trace_uncited_goal_flagged`, `test_manifest_missing_phase_path_flagged`, `test_verification_parity_mismatch_flagged`.
 - ✅ A completed plan requires `## Audit` with a non-empty `Auditor`, a `[PASS]` verdict, and a non-empty `Date`; unknown or `[FAIL]` verdicts fail. Evidence: `check_audit_gate`; tests `test_audit_gate_completed_without_audit_flagged`, `test_audit_gate_completed_fail_flagged`, `test_audit_gate_unknown_verdict_flagged`.
 - ✅ The skill documents the loop, the independent-audit gate before a ready report or Forge 🔨 (Implementer) dispatch, the fail-closed fallback, and the pass-count report; both templates carry a compliant `## Audit` block. Evidence: `SKILL.md` Post-write self-verification loop and Independent audit gate; `references/_template.md` and `_template-programming.md`.
-- ✅ The edits pass Bastion 🧱 (Backend & Scripts Architect) `[PASS]` and Crucible 🔥 (Test Architect) `[PASS]`, and the stdlib unittest suite is green at plan-enforce 1.12.0. Evidence: suite 50 tests OK; recorded gate verdicts.
+- ✅ The edits pass Bastion 🧱 (Backend & Scripts Architect) `[PASS]` and Crucible 🔥 (Test Architect) `[PASS]`, and the stdlib unittest suite is green at plan-enforce 1.12.1. Evidence: suite 50 tests OK; recorded gate verdicts.
 
 ## Change log
 
 - 2026-09-15 — plan-enforce-plan-audit-gate-20260915: replaced the rejected self-declared `## Self-verification` idea with enforced mechanical drift checks plus an independent audit gate; plan-enforce advanced to 1.12.0.
+- 2026-09-15 — debt-001-citation-currency-20260915: refreshed the current plan-enforce citation to the shipped `1.12.1` after the post-merge rule clarification; no feature behavior changed.
 
 ## Resolved decisions
 
