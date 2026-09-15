@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.11.1
+  version: 1.12.0
 ---
 
 ## What I do
@@ -169,6 +169,7 @@ There is no "left as pending" state for a criterion in a touched story: an `⬜`
 
 When the plan's work is done and its audits have passed — before the release PR is built:
 
+- Confirm `## Audit` records an independent auditor's `[PASS]` with `Auditor`, `Findings`, and `Date` (see `### Independent audit gate`); `[PENDING]`, `[FAIL]`, or a missing audit blocks completion.
 - Run acceptance-criterion reconciliation (see `### Acceptance-criterion reconciliation`) over every touched story; block `## Outcome` and the archive move until no `⬜` or `❌` criterion remains — each is `✅` or removed as out-of-scope.
 - Present the goals resume in chat: one line per goal, `✅` when met, `❌` when not, each with a 1-line evidence note.
 - Write `## Outcome` into `plan.md` — what the plan produced, per goal — BEFORE moving the plan to `plans/.completed/`.
@@ -272,12 +273,21 @@ Before planning work that touches features, read `user-stories/index.md` first, 
 Run after every file write (`plan.md`, each phase file, story create/update, index update), and after every Forge 🔨 (Implementer) dispatch that mutates plan artifacts. Iterate until a full pass finds zero violations:
 
 1. **Re-read** every file just written: `plan.md`, each `phase-NN-<owner>.md`, `user-stories/<slug>.md`, `user-stories/index.md`.
-2. **Mechanical pass** — for an active subfolder plan that creates or modifies a user story or `user-stories/index.md`, run `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan-dir> --stories user-stories` so index mirroring runs. For a no-stories path, run `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan-dir>` without `--stories`; use `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan.md> --single-file` for the single-file layout. It enforces the repetitive subset: Status enum, `Completed:` line, required sections, phase sections/labels, phase executor-command table presence/shape, unfilled `<...>`/`TBD`/date placeholders, index mirroring. Fix anything it reports.
+2. **Mechanical pass** — for an active subfolder plan that creates or modifies a user story or `user-stories/index.md`, run `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan-dir> --stories user-stories` so index mirroring runs. For a no-stories path, run `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan-dir>` without `--stories`; use `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan.md> --single-file` for the single-file layout. It enforces the repetitive subset: Status enum, `Completed:` line, required sections, phase sections/labels, phase executor-command table presence/shape, unfilled `<...>`/`TBD`/date placeholders, index mirroring, goal trace, manifest equality, verification parity, and the completed-plan audit gate. Fix anything it reports.
 3. **Analysis pass** — re-read each file against `references/_consistency-checklist.md`. Verify every value matches evidence: goals match the confirmed list, every phase traces to ≥1 goal and references an existing phase file, verification checkboxes trace to phase outputs, `## Writes` matches the manifest, story title/status mirror the index, and touched stories carry no `⬜` acceptance criteria at completion (see `### Acceptance-criterion reconciliation`). Never invent a value to satisfy a check — stop and ask.
-4. **Repeat** until a clean pass, then report the pass count.
+4. **Repeat** until a clean pass, then report the pass count in chat as `self-verification passes: N`.
 5. **Cap (S-07):** after 3 iterations, or the same violation persisting twice unchanged, stop-and-ask instead of looping.
 
 `scripts/validate_plan.py` is a helper, not the authority — it catches repetitive mechanical drift; semantic correctness is the analysis pass.
+
+### Independent audit gate
+
+A plan is never reported ready and Forge 🔨 (Implementer) is never dispatched on the writing agent's own word. Before a ready report or a Forge 🔨 (Implementer) dispatch, dispatch an independent auditor over the plan against `references/_consistency-checklist.md`:
+
+- **Auditor:** Sentinel 🛡️ (Quality Guardian) by default; Vault 🔐 (Catalog Steward) for catalog-heavy plans.
+- **Record:** write the outcome into `plan.md` under `## Audit` with `- Auditor:`, `- Verdict:`, `- Findings:`, and `- Date:`. The verdict is one of `[PENDING]`, `[PASS]`, `[FAIL]`.
+- **Gate:** the plan is not ready and Forge 🔨 (Implementer) is not dispatched until the verdict is `[PASS]` with a non-empty auditor and a date.
+- **Fail-closed:** if no auditor is available, the plan stays not-ready. A substitute auditor requires explicit user authorization, recorded in `## Audit`. Never self-audit, never invent a verdict, and never downgrade a `[FAIL]` to unblock dispatch.
 
 ## Plan lifecycle rules
 
@@ -286,7 +296,8 @@ Run after every file write (`plan.md`, each phase file, story create/update, ind
 | Any plan/phase/story/index file write | Run the post-write self-verification loop (mechanical + analysis) until clean. |
 | Phase completes | Mark its verification item complete in `plan.md`. |
 | Scope changes | Stop; notify the user with evidence of the drift and wait for their call; then update `## Goals` and append a dated line to `## Resolved decisions`; re-derive the manifest and re-run the collision check. |
-| Forge 🔨 (Implementer) dispatch | Run both stash-gate parts and require an active plan before dispatch. |
+| Forge 🔨 (Implementer) dispatch | Run both stash-gate parts, require an active plan, and require a recorded independent-audit `[PASS]` in `## Audit` before dispatch. |
+| Plan ready to report or resume | Require a recorded independent-audit `[PASS]` with auditor and date; an unavailable auditor leaves the plan not-ready (fail-closed). |
 | Audits pass, release PR requested | Present the goals resume in chat (`✅`/`❌` per goal with evidence), write `## Outcome`, set `Status: completed`, append `Completed: YYYY-MM-DD HH:MM`, and move the plan to `plans/.completed/` — all BEFORE the release PR is built. |
 | Plan was tracked mid-work | Stage the plan-file deletions into the completing PR; never stage a completed plan's content. |
 | PR review demands rework | Restore the plan folder from `plans/.completed/` per the reopen rule, resume, re-complete pre-release, and re-stage the deletions. |

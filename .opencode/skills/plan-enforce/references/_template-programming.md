@@ -73,6 +73,15 @@
 
 - Python stdlib `unittest` edits at an exact active-plan path: list the declared literal `python3` command for that exact file, obtain Bastion 🧱 (Backend & Scripts Architect) `[PASS]`, and require Crucible 🔥 (Test Architect) to return `[PASS]` or `[FAIL]` — `[UNCERTAIN]` is not acceptable for this scope. `pytest` is not introduced.
 
+## Audit
+
+> Filled by the independent auditor before the plan is reported ready or Forge 🔨 (Implementer) is dispatched. An unavailable auditor leaves the plan not-ready; a substitute requires explicit user authorization recorded here.
+
+- Auditor: not yet run
+- Verdict: [PENDING]
+- Findings: 0
+- Date: set when the independent audit runs
+
 ## Out of scope / Do-not-touch
 
 - <areas the plan must not modify>

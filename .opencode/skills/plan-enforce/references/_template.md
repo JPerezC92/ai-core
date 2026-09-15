@@ -43,6 +43,15 @@
 - ⬜ Phase 1 output artifact exists and is valid
 - ⬜ All gates in each phase runbook passed
 
+## Audit
+
+> Filled by the independent auditor before the plan is reported ready or Forge 🔨 (Implementer) is dispatched. An unavailable auditor leaves the plan not-ready; a substitute requires explicit user authorization recorded here.
+
+- Auditor: not yet run
+- Verdict: [PENDING]
+- Findings: 0
+- Date: set when the independent audit runs
+
 ## Out of scope
 
 -
