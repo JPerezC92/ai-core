@@ -11,13 +11,14 @@
 
 1. Branch on `identification_verdict`:
    - `exact` — record the cited `P-NNN`, restate its evidenced discriminators, and confirm the recorded root cause and fix still apply to the current ticket. No fresh hypothesis framing.
-   - `structural` — restate the one inherited hypothesis from the cited `P-NNN` and validate it against the current ticket with adapted queries.
+   - `structural` — restate the one inherited hypothesis from the cited `P-NNN`. If the row's Evidence carries a `diagnostic:` pointer, resolve that destination-relative sidecar path FIRST: validate the adjacent SQL/sidecar pair with `python3 .opencode/skills/query-verification/scripts/query_verification.py validate --query-root <sidecar-parent-dir> --sidecar <sidecar-path>`, let the destination-owned adapter bind current-ticket values (consumes one existing Query-budget slot), and evaluate the normalized output. Only then frame a new query — and only if the stored diagnostic is rejected, inapplicable, `not_verified`, or `inconclusive`. If the row has no `diagnostic:` pointer, validate the hypothesis with adapted queries as before.
    - `no_match` — frame ≤3 evidence-backed hypotheses (H1 most likely). Each hypothesis MUST have: statement, partial evidence, refutation criteria, and a proposed validation query. Do not suggest skills by name.
 2. Execute ONE query per hypothesis, in H1→H2→H3 order. Before each query: check `Query-budget` — if it is `6/6`, stop and report budget exhausted.
 3. After each query: write the result verbatim (exact counts, exact timestamps, exact field values). No paraphrase. Set `Confirmed: yes | no | inconclusive` for each hypothesis.
 4. After each same-query re-run (identical query re-executed): increment `Same-query-reruns`. If it reaches 2, stop re-running; flag in output.
 5. Write `02-investigate.md`: one block per hypothesis with Query / Result (verbatim) / Confirmed.
 6. Update `state.md`: decrement `Hypotheses-outstanding` per resolved hypothesis; update `Query-budget` as `used/limit`; update `Same-query-reruns`; set `Phase: investigate`, `Updated: <now>`.
+7. **Retention (before any collapse):** Every executed query block — manual `Query:` blocks and verifier-routed evidence alike — must be preserved verbatim in the durable ticket record: copy each block into `ticket_<id>.md` (Analysis section) or a cited artifact under `validations/` before close-out collapse deletes this file. Collapse is the deletion step; the durable copy is the retention mechanism. Only the confirming reusable query is additionally promoted to a verifier pair at the destination project's declared query-storage path.
 
 ## Optional verifier route (query-verification pilot)
 
@@ -98,6 +99,7 @@
 - ⬜ If the optional verifier route was used: the verifier-evidence block records the verifier ID, one of the three verdicts, the source/definition/evidence digests, and the redacted case-evidence path
 - ⬜ The verifier route consumed exactly one Query-budget slot; the `6/6` cap, `Same-query-reruns`, and the manual per-hypothesis path are unchanged
 - ⬜ A verifier verdict is recorded as symptom evidence only — not as root-cause proof or fix authorization
+- ⬜ Every executed query block has a durable verbatim copy in `ticket_<id>.md` or a cited `validations/` artifact
 
 ## Abort conditions
 
