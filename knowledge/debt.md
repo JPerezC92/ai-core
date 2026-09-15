@@ -21,4 +21,10 @@ Each entry MUST include:
 
 ## Register
 
-(open debts: none)
+### DEBT-001 — Stale plan-enforce version citations
+
+- **Date:** 2026-09-15
+- **Description:** `plan-enforce` advanced from `1.11.1` to `1.12.0`, but current-state citations still name `1.11.1` in `user-stories/plan-enforce-executor-validation.md`, `user-stories/plan-enforce-story-acceptance-reconciliation.md`, `user-stories/incident-query-verification-pilot.md`, and `knowledge/query-verification-design.md`.
+- **Direct evidence:** `grep -rn '1\.11\.1' --include=*.md .` includes those four files among its matches (it also matches `plans/**`, `output/**`, and this register), while the shipped skill frontmatter reads `1.12.0`; the four cited occurrences are current-state requirements, not historical changelog lines.
+- **Resolution criteria:** every current-state citation names the shipped `plan-enforce` version; historical changelog and resolved-decision lines may retain the old version.
+- **Explicit deferral decision:** Cipher 🔓 (Lead Orchestrator), 2026-09-15, during the PR #39 review — a citation-currency chore that is non-blocking for the audit-gate release.
