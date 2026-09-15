@@ -262,7 +262,7 @@ Before planning work that touches features, read `user-stories/index.md` first, 
 6. Select the template: `references/_template-programming.md` for programming plans, `references/_template.md` otherwise (see **Template selection**).
 7. Run the user-story gate: read `user-stories/index.md`, identify the touched features, and for each run CREATE / UPDATE / COLLIDE (see **User stories** + **User-story collision gate**). On collision, stop before creating any plan file and ask the user. If the plan skips stories (see **User-story scope**), record that in the plan's Context.
 8. Run the post-scope collision check. Stop on overlap; do not create files.
-9. Create `plans/<task-slug>-YYYYMMDD/plan.md` from the selected template and one `phase-NN-<owner>.md` from `references/_phase-template.md` per phase.
+9. Create `plans/<task-slug>-YYYYMMDD/plan.md` from the selected template and one `phase-NN-<owner>.md` from `references/_phase-template.md` per phase. Record the derived write/delete manifest in the plan's `## Write/delete manifest` section; its `Action`/`Path` rows must equal the union of the phases' `**Writes:**` paths, because the validator enforces that equality.
 10. Fill each phase's Owner, Pre, Reads, Writes, Steps, Output, Verify commands, Gate, and Abort conditions. Do not leave `TBD` in Steps, Output, Gate, or Abort.
 11. Add one verification checkbox per phase output and confirm every checkbox traces to a phase output.
 12. Run the post-write self-verification loop (below) on every written file.

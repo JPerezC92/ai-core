@@ -42,6 +42,14 @@
 
 - <decision 1> — <rationale> (simplest alternative considered: <alternative>, rejected because <reason>)
 
+## Write/delete manifest
+
+> One row per path this plan creates, changes, or deletes; `Action` is `Modify`, `Add`, or `Delete`, and `Path` is a single repo-relative path. The union of every phase runbook's `**Writes:**` paths must equal this set — the validator enforces it, so a `Delete` path is also listed in the deleting phase's `**Writes:**`.
+
+| Action | Path |
+|---|---|
+| Modify | `path/to/file` |
+
 ## Phase index — dispatch table
 
 | # | Phase | Owner | Runbook | Output | Goals |
