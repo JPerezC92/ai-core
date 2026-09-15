@@ -1,11 +1,11 @@
 ---
 name: plan-enforce
-description: Enforce plan-first discipline for non-trivial tasks. Creates or resumes a subfolder plan artifact in plans/ before code-writing work. Use when the user asks to plan work, types /plan, or Cipher is about to dispatch Forge for implementation.
+description: Enforce plan-first discipline for non-trivial tasks. Creates or resumes a subfolder plan artifact in plans/ before code-writing work, and verifies a user-confirmed PR merge before branch cleanup. Use when the user asks to plan work, types /plan, Cipher is about to dispatch Forge for implementation, or a user confirms a PR merge.
 license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.12.0
+  version: 1.12.1
 ---
 
 ## What I do
@@ -17,6 +17,7 @@ Create or resume a plan before non-trivial implementation work, then enforce its
 - User types `/plan` or asks to create, resume, or show a plan.
 - Cipher 🔓 (Lead Orchestrator) is about to dispatch Forge 🔨 (Implementer).
 - A current task changes scope or requires a new implementation phase.
+- A user confirms a PR merge and the merged branch needs verification before cleanup.
 
 ## Arguments
 
@@ -302,7 +303,7 @@ A plan is never reported ready and Forge 🔨 (Implementer) is never dispatched 
 | Plan was tracked mid-work | Stage the plan-file deletions into the completing PR; never stage a completed plan's content. |
 | PR review demands rework | Restore the plan folder from `plans/.completed/` per the reopen rule, resume, re-complete pre-release, and re-stage the deletions. |
 | Plan cancelled | Complete it as cancelled: `## Outcome` records the cancellation; a tracked cancelled plan retires through the next PR's deletions. |
-| User confirms PR merge | Run both stash-gate parts, verify `git diff origin/main <branch>` is empty, pull main, clean up branches. No post-merge archive step exists; optionally append the merge SHA / PR number to the local archive copy. |
+| User confirms PR merge | Run both stash-gate parts. Confirm the PR state is `MERGED` via `gh pr view "$PR_NUMBER" --json state,mergeCommit,headRefName,headRefOid`, then `git fetch origin main` and pin the immutable PR head `HEAD_REF_OID`. Require `git rev-parse "$BRANCH"` to equal `HEAD_REF_OID` (halt on mismatch). If `mergeCommit` is non-empty, require `git merge-base --is-ancestor "$MERGE_COMMIT" origin/main` to succeed. If `git merge-base --is-ancestor "$BRANCH" origin/main` succeeds (merge-commit or fast-forward), branch-tip ancestry proves the merge and `git branch -d` applies. Otherwise (squash or rebase merge) prove content parity on the immutable head: `MERGE_BASE="$(git merge-base origin/main "$HEAD_REF_OID")"`, then `git diff --name-only -z "$MERGE_BASE" "$HEAD_REF_OID" > "$PATHS_FILE"` while checking its status (an empty result is allowed), then load the NUL-delimited paths into `CHANGED_PATHS` with a read loop; the proof is `git diff --quiet --exit-code origin/main "$HEAD_REF_OID" -- "${CHANGED_PATHS[@]}"` exiting 0. Any metadata, fetch, head-mismatch, merge-base, extraction, ancestry, or diff error blocks deletion; only after that proof is `git branch -D` authorized. Never `-D` without a `MERGED` state plus a parity proof. Then fast-forward local main and delete the local branch plus the remote branch when it still exists. No post-merge archive step exists; user-only merge authority is unchanged. |
 
 Git tracks only incomplete plans. Stage plan artifacts only while their plan is incomplete; a plan tracked mid-work leaves git through file deletions staged in its own completing PR; a single-session plan is never committed anywhere. Plans remain active through implementation and audit — completion and archive happen pre-release. Never delete a plan, create an archive commit, invoke a merge command, or mutate a stash during archival.
 
@@ -318,6 +319,8 @@ Published documents must not cite `plans/` or `output/` paths because plans move
 
 **Stale non-overlapping stash:** offer the user reconciliation options (e.g. `git stash apply` in their terminal) or leaving the stash untouched; never erase or replay it in the caller repository.
 
+**Post-merge cleanup:** pass the user-confirmed `$PR_NUMBER` and `$BRANCH`, then run the `User confirms PR merge` row; `$HEAD_REF_OID`, `$MERGE_BASE`, `$PATHS_FILE`, and `$CHANGED_PATHS` are derived inside that sequence.
+
 **Goals lifecycle trace (present → confirm → drift → resume):** the user describes a task; goals are detected (`G1..Gn`), displayed as a readable Markdown goal list with a separate plan classification, then confirmed by one short `question` call. The confirmed goals are persisted as `## Goals` checkboxes. Mid-plan, a scope change drifts from a confirmed goal — work stops, the user is notified with evidence, and on their call the goal is updated with a dated line in `## Resolved decisions`. At completion — pre-release, after audits pass — the goals resume is presented in chat (`✅`/`❌` per goal), `## Outcome` is written, the plan is archived locally, and when the plan was ever tracked its deletions ride the completing PR. No post-merge archive step exists.
 
 ## Troubleshooting
@@ -325,5 +328,7 @@ Published documents must not cite `plans/` or `output/` paths because plans move
 **Live main SHA unavailable:** resolve the repository remote or authentication problem, then rerun the initial inventory. Do not proceed with a cached SHA.
 
 **Manifest overlaps a stash path:** change the planned write/delete scope or leave the plan blocked. The stash is never erased; the user may recover it later with `git stash apply` in their terminal.
+
+**Branch cleanup blocked:** a head/branch mismatch, an unchecked path extraction, or a non-empty parity diff means the branch is not proven merged — do not delete it; re-fetch and re-evaluate.
 
 **Permission denies stash inventory:** confirm `opencode.jsonc` retains targeted destructive-path denies followed by explicit read-only allows for `git stash list` and `git stash show -u`.

@@ -9,4 +9,5 @@
 | `plan-enforce-story-acceptance-reconciliation` | Plan-enforce story acceptance reconciliation | active | plan-governance | `.opencode/skills/plan-enforce/`, `.opencode/agents/sentinel.md`, `user-stories/` |
 | `aicore-adoption-sync` | AICore adoption synchronization | active | core-governance | `.aicore/`, `.aicore/adopters.yaml`, `.opencode/skills/sync-aicore-adoption/`, `.opencode/skills/migrate-core-to-project/`, `knowledge/`, `AGENTS.md`, `README.md`, `plans/` |
 | `git-pr-drafting` | Pull request draft generation | active | developer-tooling | `.opencode/skills/git-pr/`, `plans/`, `pr-draft.md` |
+| `post-merge-branch-cleanup` | Merge-style-aware post-merge branch cleanup | active | developer-tooling | `.opencode/skills/plan-enforce/`, `.opencode/agents/herald.md` |
 | `op-model-configuration` | OpenCode model configuration | active | developer-tooling | `.opencode/skills/op-model/`, `opencode.json`, `opencode.jsonc` |
