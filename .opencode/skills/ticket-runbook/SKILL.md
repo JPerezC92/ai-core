@@ -5,14 +5,14 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.0.0
+  version: 2.1.0
   dependencies:
     - PyYAML==6.0.3
 ---
 
 ## What I do
 
-Scaffold a per-ticket `analysis/` working set from `references/analysis/` (`state.md`, `01-identify.md`, `02-investigate.md`, `03-synthesize.md`) and run **register-first identification**: normalize the ticket, match an `S-xx` symptom class, then match at most one `Team: incident` `P-NNN` from `knowledge/problems.md` and issue a verdict of `exact`, `structural`, or `no_match`. The working analysis is always scaffolded, whatever the verdict. At close, the working analysis and `response-draft.md` collapse to one `ticket_<id>.md` record plus `screenshots/`, `validations/`, and the cited evidence.
+Scaffold a per-ticket `analysis/` working set from `references/analysis/` (`state.md`, `01-identify.md`, `02-investigate.md`, `03-synthesize.md`) and run **register-first identification**: normalize the ticket, match an `S-xx` symptom class, then match at most one `Team: incident` `P-NNN` from `knowledge/problems.md` and issue a verdict of `exact`, `structural`, or `no_match`. The working analysis is always scaffolded, whatever the verdict. When the root cause is confirmed, the runbook grows the symptom/problem registers immediately — before destructive collapse and never gated on it — preserving every executed query durably and, when the confirming query is reusable, a destination-relative verifier pair a later ticket can replay. At close, the working analysis and `response-draft.md` collapse to one `ticket_<id>.md` record plus `screenshots/`, `validations/`, and the cited evidence.
 
 `01-identify.md` also documents an optional, incident-only verifier route (the `query-verification` skill) on the investigate step that consumes one existing Query-budget slot; it never adds automatic query execution and never changes the state header schema.
 
@@ -98,14 +98,28 @@ After the analysis scaffolds and validates:
 
 **HARD RULE — dispatch enforcement:** Cipher 🔓 (Lead Orchestrator) MUST dispatch Investigator 🔍 (Incident Investigator) to execute the investigate step. Cipher 🔓 (Lead Orchestrator) MUST NOT execute that step inline. Cipher 🔓 (Lead Orchestrator) owns all dispatch decisions. This skill does NOT dispatch agents directly.
 
-### 6. Close-out collapse
+### 6. Register admission (confirmed root cause; non-destructive)
+
+Runs as soon as the root cause is confirmed — it does not wait for Close out now. Cipher 🔓 (Lead Orchestrator) dispatches Scribe ✍️ (Docs & Problems Manager) immediately; Scribe ✍️ (Docs & Problems Manager) performs the applicable register mutation:
+
+1. Create the missing `S-xx` symptom class in `knowledge/symptoms.md` when no class matches the confirmed failure signature.
+2. Admit a novel cause as a `candidate` `P-NNN` row in `knowledge/problems.md` when no eligible problem exists.
+3. Append the durable `case:` pointer for the current case to the existing `P-NNN` row's Evidence.
+4. Promote a `candidate` to `active` only after a second independent confirmed case.
+
+Register growth requires the durable case pointer but does not require a reusable diagnostic. When the confirming query is reusable, also persist it as parameterized SQL plus an adjacent `.verifier.yaml` sidecar at the destination project's declared query-storage path and record `diagnostic:<destination-relative-sidecar-path>` in the row's Evidence; if the destination has no declared path, ask for it — the `P-NNN` and case pointer are recorded first. This is symptom/problem register admission, not a patterns-catalog check.
+
+This step is not destructive and never gates on file deletion.
+
+### 7. Close-out collapse (destructive)
 
 At close, after the posted response is verified:
 
 1. Run `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --close-out`.
 2. The durable set is `ticket_<id>.md` plus `screenshots/`, `validations/`, and every other cited evidence file.
-3. Remove `analysis/state.md` and every `analysis/*.md` working file, and remove `response-draft.md`, **only after** the close-out check passes.
-4. Never delete `screenshots/`, `validations/`, or any cited evidence file.
+3. Before deleting any working file, confirm register admission (step 6) completed and every executed query was preserved durably (see the retention rule in `references/analysis/02-investigate.md`).
+4. Remove `analysis/state.md` and every `analysis/*.md` working file, and remove `response-draft.md`, **only after** the close-out check passes and with explicit user authorization (the phrase "Close out now").
+5. Never delete `screenshots/`, `validations/`, or any cited evidence file.
 
 ## Optional verifier route (investigate step)
 
@@ -140,6 +154,7 @@ Run immediately after scaffolding, before each step-header advance, and after ev
 - Register: no incident `P-NNN` for `S-02` + system X + module Y (register empty)
 - Verdict: `identification_verdict: no_match`
 - Result: `analysis/` scaffolded; validator exits 0; Cipher 🔓 (Lead Orchestrator) dispatches Investigator 🔍 (Incident Investigator) to frame hypotheses.
+- After the root cause is confirmed: Cipher 🔓 (Lead Orchestrator) dispatches Scribe ✍️ (Docs & Problems Manager), which admits a `candidate` `P-NNN` with the durable case pointer (and, when reusable, the verifier pair at the destination's declared path) — it does not wait for Close out now. Collapse waits for Close out now.
 
 **Example 2 — structural match**
 

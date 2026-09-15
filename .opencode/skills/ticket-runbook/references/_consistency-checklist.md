@@ -51,6 +51,13 @@ Run every command from the project root. The validator enforces only the mechani
 - Each used image records `url:` when the ticket system returned one, and never records a fabricated `url:`. *(analysis)*
 - `screenshots/`, `validations/`, and other cited evidence files are never deleted at close. *(delegated)*
 
+## Query retention and register admission (close-out)
+
+- Every executed query in `02-investigate.md` — manual `Query:` blocks and verifier-routed evidence — is preserved verbatim in `ticket_<id>.md` or a cited `validations/` artifact BEFORE collapse deletes the working file. *(analysis)*
+- When the confirming query is reusable, it is persisted as parameterized SQL plus an adjacent `.verifier.yaml` sidecar at the destination project's declared query-storage path; the row's Evidence records `diagnostic:<destination-relative-sidecar-path>`. AICore never defines the destination directory. *(analysis)*
+- A later `structural` ticket follows the `diagnostic:` pointer and replays the stored pair with current-ticket parameters (one existing Query-budget slot) before framing a new query. *(analysis)*
+- Register admission on a confirmed root cause happens before collapse and never waits for `Close out now`; collapse itself requires explicit user authorization. *(analysis)*
+
 ## Loop rule
 
 The validator enforces only the mechanical/repetitive subset (field presence, fraction/enum parse, section/label presence, unfilled tokens, kill-switch caps, cited-`P-NNN`/lifecycle consistency, and close-out file presence). Every value that must match evidence — SLA, discriminator evidence, verdict rationale, counters, naming, folder contents, and step context — is verified by the analysis pass against this checklist; a value is never invented to satisfy a check.

@@ -27,6 +27,7 @@
 - ✅ The optional investigate-step verifier path consumes one existing query-budget unit and never treats a verified symptom as automatic root-cause confirmation. Evidence: the implemented investigate-step verifier-evidence route is recorded in `knowledge/query-verification-design.md`, and `test_validate_runbook.py` exits 0.
 - ✅ The skill, protocol, fixtures, and migration entry are available to ticket-enabled destination projects. Evidence: the `query-verification` skill ships `references/protocol-v1.md` and the valid fixture trio, and `knowledge/query-verification-design.md` records the skill and design document as `only if ticket marker` migration items.
 - ✅ The shipped valid adapter-output fixture is independently protocol-valid and its source digest is guarded against fixture/source drift.
+- ✅ Reusable verifier persistence is destination-selected: the destination chooses its query-storage location, the problem row's Evidence records a `diagnostic:` pointer to the sidecar, and a later structural match replays the pair with current-ticket parameters under protocol-v1 (schema unchanged, one query-budget slot). Evidence: `knowledge/query-verification-design.md` Destination-chooses-storage; `knowledge/problems.md` Evidence format.
 
 ## Advisory dispositions
 
@@ -50,6 +51,7 @@ Recorded 2026-09-10. Every outcome is evidence-backed; no dependency, lockfile, 
 - 2026-09-10 - python-test-audit-governance-20260910: checked the five remaining acceptance criteria with evidence (the story remains active as the living feature registry); recorded the superseding Crucible 🔥 (Test Architect) Python-audit decision and dropped the unsupported fix-count claim.
 - 2026-09-12 - refresh-git-pr-evidence-contract-20260912: refreshed the current plan-enforce requirement citations to the shipped 1.11.1; no feature behavior or acceptance criteria changed.
 - 2026-09-12 - register-first-incident-identification-20260912: mapped the optional verifier route from Phase 04 wording to the investigate step; acceptance criteria unchanged.
+- 2026-09-15 - ticket-runbook-register-admission-20260914: recorded the approved lifecycle extension for destination-selected verifier storage and current-case replay; protocol-v1 remains unchanged and acceptance criteria update with implementation.
 
 ## Resolved decisions
 
@@ -58,3 +60,4 @@ Recorded 2026-09-10. Every outcome is evidence-backed; no dependency, lockfile, 
 - 2026-09-10 - Python stdlib `unittest` test gating is owned by Bastion 🧱 (Backend & Scripts Architect); Crucible 🔥 (Test Architect) applicability results are recorded as-is and never relabeled PASS.
 - 2026-09-10 - superseding decision: Python stdlib `unittest` test architecture is owned by Crucible 🔥 (Test Architect) via its additive `## PYTHON STDLIB UNITTEST TESTS` branch, which returns [PASS]/[FAIL] for exact active-plan Python test files; [UNCERTAIN] is not acceptable for that scope. The earlier Bastion-only gate and its recorded [UNCERTAIN] applicability verdict remain historical and are not relabeled.
 - 2026-09-12 - register-first collision: this story keeps its completed verifier contract; ticket-runbook identification is redefined by `register-first-incident-identification`. The optional verifier remains symptom evidence only on the investigate step.
+- 2026-09-15 - `ticket-runbook-register-admission-20260914` keeps the protocol-v1 verifier contract unchanged and adds lifecycle behavior only: the destination chooses storage, the problem row points to the sidecar when one exists, and a later structural match validates it with current-case parameters.

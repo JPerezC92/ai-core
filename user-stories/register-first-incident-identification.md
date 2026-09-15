@@ -27,13 +27,17 @@
 - ✅ Working analysis is `state.md` + `01-identify.md` + `02-investigate.md` + `03-synthesize.md`. Evidence: `.opencode/skills/ticket-runbook/references/analysis/`.
 - ✅ Close-out durable set is `ticket_ID.md` plus `screenshots/`, `validations/`, and other cited evidence; each used image records local `path:` and remote `url:` when both exist. Evidence: `ticket-runbook/SKILL.md:101-108`; `.opencode/agents/ledger.md` close-out collapse; `.opencode/agents/quill.md` image footer.
 - ✅ Optional query-verification remains symptom evidence only and consumes one existing query-budget slot on the investigate step. Evidence: `ticket-runbook/SKILL.md:110-120`; `references/analysis/02-investigate.md`.
+- ✅ After a confirmed root cause, register admission runs before destructive collapse — it does not wait for `Close out now` — creating or updating the `S-xx`/`P-NNN` row with a durable `case:` pointer. Evidence: `ticket-runbook` SKILL.md steps 6-7; `knowledge/agents.md` Proactive admission.
+- ✅ Every executed investigation query survives collapse verbatim in `ticket_<id>.md` or a cited `validations/` artifact; when the confirming query is reusable it is optionally persisted as SQL plus adjacent sidecar at a destination-declared path with a `diagnostic:` pointer in Evidence. Evidence: `ticket-runbook` `references/analysis/02-investigate.md` Step 7; `knowledge/problems.md` Evidence format.
 
 ## Change log
 
 - 2026-09-12 - register-first-incident-identification-20260912: created the feature definition for register-first identification and the 3-file working analysis / single-ticket close-out.
+- 2026-09-15 - ticket-runbook-register-admission-20260914: recorded the approved extension for proactive register growth, durable retention of every executed query, and optional destination-relative verifier replay; acceptance criteria update with implementation.
 
 ## Resolved decisions
 
 - 2026-09-12 — rewrite `ticket-runbook` in place; Increment 1 is AICore-only; tismart upgrade follows the AICore merge.
 - 2026-09-12 — working `analysis/` files collapse to `ticket_<id>.md` at close; keep screenshots, validations, and cited evidence; each image records local path and remote URL.
 - 2026-09-12 — collision with `incident-query-verification-pilot`: extend that story's scenario from Phase 04 to the investigate step; do not change its completed acceptance criteria.
+- 2026-09-15 — `ticket-runbook-register-admission-20260914` extends this feature after a confirmed root cause: register growth happens before destructive collapse, every executed query remains durable, and an optional reusable verifier is discovered through the destination-relative `P-NNN` pointer.

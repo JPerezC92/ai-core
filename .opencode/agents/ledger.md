@@ -73,7 +73,7 @@ If Gate B fails: rewrite the offending section to match the posted note, re-run 
 
 `## Images` section in the ticket record covers **only** the analyst screenshots from the ticket's screenshots folder. Original images (uploaded via the ticket tool) are referenced by `image_id` only — never downloaded or duplicated to the screenshots folder. Every analyst screenshot records its local `path:` (repo-relative file) and, when the ticket system returned one, its remote `url:`; an original ticket-system image records `image_id` + `url:` and has no `path:`.
 
-**Close-out collapse:** after the posted-response verification passes, the durable set is `ticket_<id>.md` plus `screenshots/`, `validations/`, and every other cited evidence file. Remove every `analysis/*.md` working file and `response-draft.md` **only after** the close-out check passes. Never delete `screenshots/`, `validations/`, or any cited evidence file.
+**Close-out collapse:** after the posted-response verification passes, the durable set is `ticket_<id>.md` plus `screenshots/`, `validations/`, and every other cited evidence file. Collapse is blocked until (a) register admission is complete — the `P-NNN` row records the current `case:` pointer and, when a reusable diagnostic exists, its `diagnostic:` sidecar pointer — and (b) Every executed query from `analysis/02-investigate.md` has a durable verbatim copy in `ticket_<id>.md` or a cited `validations/` artifact. Only then remove every `analysis/*.md` working file and `response-draft.md`, after the close-out check passes and with explicit user authorization (`Close out now`). Never delete `screenshots/`, `validations/`, or any cited evidence file.
 
 ## Image placeholders
 
@@ -143,3 +143,4 @@ If ANY field is null or template-default: Ledger 📒 (Record Keeper) fills from
 - Never change the ticket folder creation date or overwrite frontmatter `created` during re-analysis.
 - Never close a ticket with a required completeness-gate field null or template-default.
 - Never fall back to the draft when posted-note text cannot be retrieved; halt and report the blocker to Cipher 🔓 (Lead Orchestrator).
+- Never collapse a ticket whose register mutation or query-retention checks are incomplete; deletion requires explicit user authorization.

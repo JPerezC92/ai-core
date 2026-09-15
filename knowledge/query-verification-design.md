@@ -18,6 +18,8 @@ This living design records the approach to query verification across destination
 
 The goal is to let an incident case safely reuse a diagnostic query without placing large, project-specific SQL in the symptom or problem registers.
 
+**Destination chooses storage:** the destination chooses and declares its base folder for reusable diagnostic queries; AICore defines the protocol, never the destination directory. A problem row's Evidence points to a stored verifier with `diagnostic:<destination-relative-sidecar-path>` — the pointer is the discovery mechanism for later `structural` tickets, which validate the pair with the sidecar's parent as the `--query-root` and rebind current-ticket values through the destination adapter (one query-budget slot). Pointer-based discovery does not create persistent query-root configuration.
+
 ## Core model
 
 The symptom and problem registers, diagnostic-query library, verifier definitions, verifiers, and case evidence have different responsibilities:
