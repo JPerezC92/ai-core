@@ -10,6 +10,7 @@ Usage (from project root):
     python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis_dir> --scaffold
     python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis_dir> --step identify
     python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis_dir>
+    python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket_dir> --pre-close
     python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket_dir> --close-out
 
 Modes:
@@ -19,8 +20,12 @@ Modes:
                     intentionally ignore step-body fill tokens.
     - --step NAME : validate only the named step file (identify | investigate |
                     synthesize) plus the state header.
+    - --pre-close : validate the complete working and durable ticket set before
+                    collapse; every cited ``path:`` must resolve to a file
+                    inside the ticket folder.
     - --close-out : validate the durable ticket set after the working set is
-                    removed; every cited Imagen ``path:`` value must resolve.
+                    removed; every cited Imagen ``path:`` value must resolve
+                    to a file inside the ticket folder.
 
 Exit codes:
     0 — all checks pass (warnings do not affect the exit code)
@@ -170,15 +175,18 @@ class TicketIdentification(TypedDict):
 
 
 class CloseOutSnapshot(TypedDict):
-    """Filesystem values required to evaluate the close-out durable set."""
+    """Filesystem values required to evaluate pre-close and close-out sets."""
 
-    ticket_file_name: Optional[str]
+    ticket_file_names: list[str]
     ticket_content: Optional[str]
     working_analysis_files: list[str]
+    analysis_contents: dict[str, str]
     response_draft_present: bool
     screenshots_dir_present: bool
     validations_dir_present: bool
     missing_image_paths: list[str]
+    missing_ticket_paths: list[str]
+    unsafe_ticket_paths: list[str]
 
 
 # ── Pure-logic helpers ───────────────────────────────────────────────────────
@@ -832,54 +840,163 @@ def _cited_image_paths(content: str) -> list[str]:
     return paths
 
 
-def _resolve_cited_path(
-    value: str, ticket_dir: Path, repo_root: Path
-) -> Path:
-    """Resolve a cited ``path:`` against the ticket dir and the repo root."""
+def _resolve_ticket_path(value: str, ticket_dir: Path) -> tuple[Path, bool]:
+    """Resolve one cited ``path:`` value strictly inside the ticket folder.
+
+    The single resolver shared by ``--pre-close`` and ``--close-out``:
+    ``ticket_dir / value`` → ``resolve()`` → ``relative_to(ticket_dir.resolve())``.
+    There is no repo-root fallback and no accepted absolute spelling — both
+    count as outside the ticket folder.  Returns ``(resolved, inside)`` where
+    ``inside`` reports whether the resolved path stays within the ticket root.
+    """
+    ticket_root = ticket_dir.resolve()
     candidate = Path(value)
     if candidate.is_absolute():
-        return candidate
-    for base in (ticket_dir, repo_root):
-        resolved = base / candidate
-        if resolved.exists():
-            return resolved
-    return ticket_dir / candidate
+        return candidate.resolve(), False
+    resolved = (ticket_dir / candidate).resolve()
+    try:
+        resolved.relative_to(ticket_root)
+    except ValueError:
+        return resolved, False
+    return resolved, True
 
 
-def load_close_out_snapshot(
-    ticket_dir: Path, repo_root: Path
-) -> CloseOutSnapshot:
-    """Load the close-out filesystem values at the validator's IO boundary."""
+def load_close_out_snapshot(ticket_dir: Path) -> CloseOutSnapshot:
+    """Load pre-close/close-out filesystem values at the IO boundary."""
     analysis_dir = ticket_dir / "analysis"
     working_files = (
         sorted(p.name for p in analysis_dir.glob("*.md"))
         if analysis_dir.is_dir()
         else []
     )
+    analysis_contents = {
+        name: load_text(analysis_dir / name)
+        for name in REQUIRED_ANALYSIS_FILES
+        if (analysis_dir / name).is_file()
+    }
 
-    ticket_files = sorted(ticket_dir.glob("ticket_*.md"))
-    ticket_name: Optional[str] = None
+    ticket_files = sorted(
+        path for path in ticket_dir.glob("ticket_*.md") if path.is_file()
+    )
+    ticket_names = [path.name for path in ticket_files]
     ticket_content: Optional[str] = None
     missing_paths: list[str] = []
+    missing_ticket_paths: list[str] = []
+    unsafe_ticket_paths: list[str] = []
 
-    if ticket_files:
-        ticket_name = ticket_files[0].name
+    if len(ticket_files) == 1:
         ticket_content = load_text(ticket_files[0])
-        missing_paths = [
-            value
-            for value in _cited_image_paths(ticket_content)
-            if not _resolve_cited_path(value, ticket_dir, repo_root).exists()
-        ]
+        for value in _cited_image_paths(ticket_content):
+            resolved, inside = _resolve_ticket_path(value, ticket_dir)
+            if not inside:
+                # Absolute or escaping spellings are unsafe in both modes.
+                unsafe_ticket_paths.append(value)
+                missing_paths.append(value)
+                continue
+            # PRE-CLOSE-7 fires only when the inside path is missing; CLOSE-5
+            # additionally rejects spellings that exist but are not files.
+            if not resolved.exists():
+                missing_ticket_paths.append(value)
+            if not resolved.is_file():
+                missing_paths.append(value)
 
     return {
-        "ticket_file_name": ticket_name,
+        "ticket_file_names": ticket_names,
         "ticket_content": ticket_content,
         "working_analysis_files": working_files,
+        "analysis_contents": analysis_contents,
         "response_draft_present": (ticket_dir / "response-draft.md").is_file(),
         "screenshots_dir_present": (ticket_dir / "screenshots").is_dir(),
         "validations_dir_present": (ticket_dir / "validations").is_dir(),
         "missing_image_paths": missing_paths,
+        "missing_ticket_paths": missing_ticket_paths,
+        "unsafe_ticket_paths": unsafe_ticket_paths,
     }
+
+
+def evaluate_pre_close(
+    snapshot: CloseOutSnapshot, register_rows: list[ProblemRow]
+) -> list[str]:
+    """Evaluate pre-collapse readiness from an already-loaded snapshot."""
+    violations: list[str] = []
+    ticket_names = snapshot["ticket_file_names"]
+
+    if not ticket_names:
+        violations.append("PRE-CLOSE-0: ticket_<id>.md not found")
+    elif len(ticket_names) > 1:
+        violations.append(
+            "PRE-CLOSE-1: multiple ticket_<id>.md records found: "
+            + ", ".join(ticket_names)
+        )
+
+    actual_analysis = set(snapshot["working_analysis_files"])
+    required_analysis = set(REQUIRED_ANALYSIS_FILES)
+    for name in sorted(required_analysis - actual_analysis):
+        violations.append(f"PRE-CLOSE-2: required analysis file missing: {name}")
+    for name in sorted(actual_analysis - required_analysis):
+        violations.append(f"PRE-CLOSE-2: unexpected analysis file present: {name}")
+
+    if not snapshot["response_draft_present"]:
+        violations.append("PRE-CLOSE-3: response-draft.md not found")
+    if not snapshot["screenshots_dir_present"]:
+        violations.append("PRE-CLOSE-4: screenshots/ not found")
+    if not snapshot["validations_dir_present"]:
+        violations.append("PRE-CLOSE-5: validations/ not found")
+
+    for value in snapshot["unsafe_ticket_paths"]:
+        violations.append(
+            f"PRE-CLOSE-6: cited path escapes the ticket root: {value}"
+        )
+    for value in snapshot["missing_ticket_paths"]:
+        violations.append(f"PRE-CLOSE-7: cited path does not exist: {value}")
+
+    if len(ticket_names) == 1 and snapshot["ticket_content"] is not None:
+        try:
+            record = parse_ticket_record(
+                snapshot["ticket_content"], ticket_names[0]
+            )
+        except ValueError as exc:
+            violations.append(f"PRE-CLOSE-8: ticket record cannot be parsed: {exc}")
+        else:
+            violations.extend(
+                check_identification_consistency(
+                    record["identification_verdict"],
+                    record["known_problem_ids"],
+                    register_rows,
+                )
+            )
+
+    state_content = snapshot["analysis_contents"].get(STATE_FILE)
+    if state_content is not None:
+        try:
+            header = parse_state_header(state_content, STATE_FILE)
+        except ValueError as exc:
+            violations.append(f"PRE-CLOSE-9: state.md cannot be parsed: {exc}")
+        else:
+            violations.extend(check_phase(header))
+            if header["Phase"].strip() != "synthesize":
+                violations.append(
+                    "PRE-CLOSE-10: state.md Phase must be 'synthesize'"
+                )
+            violations.extend(check_identification_verdict(header))
+            violations.extend(check_kill_switches(header))
+            for _fname, item in _check_step_body_fill_markers(
+                state_content, STATE_FILE
+            ):
+                violations.append(f"{item} in {_fname}")
+
+    step_contents = {
+        name: content
+        for name, content in snapshot["analysis_contents"].items()
+        if name in STEP_FILES
+    }
+    for fname, item in check_step_files_have_required_sections(step_contents):
+        if item.startswith("UNFILLED-TOKEN:"):
+            violations.append(f"{item} in {fname}")
+        else:
+            violations.append(f"MISSING-SECTION: {fname} is missing {item}")
+
+    return violations
 
 
 def evaluate_close_out(snapshot: CloseOutSnapshot) -> list[str]:
@@ -891,12 +1008,19 @@ def evaluate_close_out(snapshot: CloseOutSnapshot) -> list[str]:
         CLOSE-2: response-draft.md remains
         CLOSE-3: screenshots/ missing from the durable set
         CLOSE-4: validations/ missing from the durable set
-        CLOSE-5: a cited image path does not resolve
+        CLOSE-5: a cited image path is not an existing file inside the
+                 ticket folder
+        CLOSE-6: multiple ticket_<id>.md records exist
     """
     violations: list[str] = []
 
-    if snapshot["ticket_file_name"] is None:
+    if not snapshot["ticket_file_names"]:
         violations.append("CLOSE-0: ticket_<id>.md not found")
+    elif len(snapshot["ticket_file_names"]) > 1:
+        violations.append(
+            "CLOSE-6: multiple ticket_<id>.md records found: "
+            + ", ".join(snapshot["ticket_file_names"])
+        )
 
     for name in snapshot["working_analysis_files"]:
         violations.append(
@@ -913,7 +1037,10 @@ def evaluate_close_out(snapshot: CloseOutSnapshot) -> list[str]:
         violations.append("CLOSE-4: validations/ missing from the durable set")
 
     for value in snapshot["missing_image_paths"]:
-        violations.append(f"CLOSE-5: cited image path does not exist: {value}")
+        violations.append(
+            f"CLOSE-5: cited image path is not an existing file inside the "
+            f"ticket folder: {value}"
+        )
 
     return violations
 
@@ -1103,9 +1230,9 @@ def validate_close_out(ticket_dir: str, repo_root: str) -> int:
     Returns 0 when the close-out set is complete, 1 when violations are found,
     and 2 when no ``ticket_<id>.md`` record exists (nothing to check).
     """
-    snapshot = load_close_out_snapshot(Path(ticket_dir), Path(repo_root))
+    snapshot = load_close_out_snapshot(Path(ticket_dir))
 
-    if snapshot["ticket_file_name"] is None:
+    if not snapshot["ticket_file_names"]:
         print(
             "CLOSE-SKIPPED: ticket_<id>.md not found at "
             f"{ticket_dir}",
@@ -1115,24 +1242,51 @@ def validate_close_out(ticket_dir: str, repo_root: str) -> int:
 
     violations = evaluate_close_out(snapshot)
 
-    if snapshot["ticket_content"] is not None:
-        record = parse_ticket_record(
-            snapshot["ticket_content"], str(snapshot["ticket_file_name"])
-        )
-        violations.extend(
-            check_identification_consistency(
-                record["identification_verdict"],
-                record["known_problem_ids"],
-                load_register_rows(Path(repo_root)),
+    if len(snapshot["ticket_file_names"]) == 1:
+        if snapshot["ticket_content"] is not None:
+            record = parse_ticket_record(
+                snapshot["ticket_content"],
+                snapshot["ticket_file_names"][0],
             )
-        )
+            violations.extend(
+                check_identification_consistency(
+                    record["identification_verdict"],
+                    record["known_problem_ids"],
+                    load_register_rows(Path(repo_root)),
+                )
+            )
 
     if violations:
         for violation in violations:
             print(violation, file=sys.stderr)
         return 1
 
-    print(f"ok  close-out: {ticket_dir}  ({snapshot['ticket_file_name']})")
+    print(
+        f"ok  close-out: {ticket_dir}  "
+        f"({snapshot['ticket_file_names'][0]})"
+    )
+    return 0
+
+
+def validate_pre_close(ticket_dir: str, repo_root: str) -> int:
+    """Validate the complete ticket set immediately before collapse."""
+    try:
+        snapshot = load_close_out_snapshot(Path(ticket_dir))
+        register_rows = load_register_rows(Path(repo_root))
+    except OSError as exc:
+        print(f"PRE-CLOSE-IO: {exc}", file=sys.stderr)
+        return 1
+
+    violations = evaluate_pre_close(snapshot, register_rows)
+    if violations:
+        for violation in violations:
+            print(violation, file=sys.stderr)
+        return 1
+
+    print(
+        f"ok  pre-close: {ticket_dir}  "
+        f"({snapshot['ticket_file_names'][0]})"
+    )
     return 0
 
 
@@ -1147,6 +1301,7 @@ def _build_parser() -> argparse.ArgumentParser:
             "Default: validate completed steps through the header Phase value.\n"
             "With --scaffold: structural-only validation of all copied steps.\n"
             "With --step NAME: strict validation of only that step + header.\n"
+            "With --pre-close: validate readiness before working-set collapse.\n"
             "With --close-out: validate the collapsed ticket durable set."
         ),
         epilog="Exit code 0 = pass, 1 = fail, 2 = close-out skipped. "
@@ -1155,7 +1310,10 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "analysis_dir",
-        help="Path to the analysis directory (or the ticket directory for --close-out)",
+        help=(
+            "Path to the analysis directory (or the ticket directory for "
+            "--pre-close/--close-out)"
+        ),
     )
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument(
@@ -1177,6 +1335,17 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     mode.add_argument(
+        "--pre-close",
+        action="store_true",
+        default=False,
+        dest="pre_close",
+        help=(
+            "Validate pre-collapse readiness: exactly one ticket record, the "
+            "complete analysis set, response draft, durable directories, and "
+            "safe cited paths."
+        ),
+    )
+    mode.add_argument(
         "--close-out",
         action="store_true",
         default=False,
@@ -1190,13 +1359,15 @@ def _build_parser() -> argparse.ArgumentParser:
         "--repo-root",
         default=".",
         dest="repo_root",
-        help="Repo root used to resolve cited image paths and the register.",
+        help="Repo root used to locate the problem register.",
     )
     return parser
 
 
 if __name__ == "__main__":
     args = _build_parser().parse_args()
+    if args.pre_close:
+        sys.exit(validate_pre_close(args.analysis_dir, args.repo_root))
     if args.close_out:
         sys.exit(validate_close_out(args.analysis_dir, args.repo_root))
     if args.step is not None:

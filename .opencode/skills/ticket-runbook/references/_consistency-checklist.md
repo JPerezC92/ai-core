@@ -9,7 +9,8 @@ Run every command from the project root. The validator enforces only the mechani
 - **Fresh scaffold:** run `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis-dir> --scaffold`. It requires the copied `analysis/` structure but intentionally permits template-body fill tokens. The analysis pass verifies `01-identify.md` `Pre` contains this ticket's context; later step bodies are intentionally still template content.
 - **Completed step:** before advancing completed step `NAME` (`identify`, `investigate`, `synthesize`), run `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis-dir> --step NAME`. That completed step must have no unfilled tokens.
 - **Completed working state:** after the `Phase:` header advances, reserve `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis-dir>` for full validation of all completed steps through that header.
-- **Close-out:** after the working set collapses, run `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --close-out`. It verifies the durable set and confirms the working set is gone.
+- **Pre-close readiness (before collapse):** run `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --pre-close`. It is read-only and proves the durable record and complete working set are ready before any deletion.
+- **Close-out postcondition (after collapse):** run `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --close-out`. It verifies the durable set and confirms the working set is gone.
 
 ## analysis/state.md
 
@@ -43,13 +44,34 @@ Run every command from the project root. The validator enforces only the mechani
 - Ticket folder contains `screenshots/`, `validations/`, the ticket record, and `response-draft.md`. *(analysis)*
 - Screenshots follow the `NN_<source>_<entity>[_<distinguisher>].png` convention; all referenced image paths exist on disk before the response phase. *(analysis)*
 
-## Close-out collapse
+## Pre-close readiness (before collapse)
 
-- Durable set: `ticket_<id>.md` plus `screenshots/`, `validations/`, and every other cited evidence file. *(delegated)*
-- Working set removed: `analysis/state.md` and every `analysis/*.md`, plus `response-draft.md`. *(delegated)*
-- Every `path:` recorded in an Imagen block resolves to an existing repo-relative file. *(delegated)*
+- Exactly one `ticket_<id>.md` record exists — zero or multiple is a halt. *(delegated)*
+- Working set complete and exact: `analysis/state.md`, `01-identify.md`, `02-investigate.md`, `03-synthesize.md` — nothing missing, nothing unexpected; `Phase: synthesize`. *(delegated)*
+- `response-draft.md` and the `screenshots/` and `validations/` directories are present. *(delegated)*
+- Every machine-addressable `path:` recorded in the ticket record is spelled ticket-folder-relative (`screenshots/<filename>`) and resolves inside the ticket folder to an existing file; repo-relative spellings fail. *(delegated)*
+- Identification/register consistency holds for the cited `P-NNN`. *(delegated)*
+- The mode is read-only: no ticket file is created, edited, renamed, or deleted. *(delegated — non-mutation)*
+
+## Semantic close-out confirmation (before authorization)
+
+- Register admission from the confirmed root cause is complete: `case:` pointer recorded, plus a `diagnostic:` sidecar pointer when the confirming query is reusable. *(analysis)*
+- Every executed query in `02-investigate.md` — manual `Query:` blocks and verifier-routed evidence — is preserved verbatim in `ticket_<id>.md` or a cited `validations/` artifact BEFORE collapse deletes the working file. *(analysis)*
+- Every non-`path:` evidence citation (prose/backtick references) in the ticket record resolves to real evidence. *(analysis)*
 - Each used image records `url:` when the ticket system returned one, and never records a fabricated `url:`. *(analysis)*
-- `screenshots/`, `validations/`, and other cited evidence files are never deleted at close. *(delegated)*
+- Posted-response fidelity and content/completeness gates pass. *(analysis)*
+- The exact phrase `Close out now` is obtained before any deletion. *(analysis)*
+
+## Authorization and collapse
+
+- Only `analysis/state.md`, every `analysis/*.md`, and `response-draft.md` are deleted — only after pre-close passes plus exact authorization. *(analysis)*
+- `ticket_<id>.md`, `screenshots/`, `validations/`, and every other cited evidence file are never deleted at close. *(delegated)*
+
+## Close-out postcondition (after collapse)
+
+- Durable set: `ticket_<id>.md` plus `screenshots/`, `validations/`, and every other cited evidence file; the working set (including `response-draft.md`) is gone. *(delegated)*
+- `--close-out` exits 0; exit 2 (no record) and exit 1 are both halts. *(delegated)*
+- Failure after collapse halts without deleting durable evidence to satisfy a validator. *(analysis)*
 
 ## Query retention and register admission (close-out)
 
@@ -60,4 +82,4 @@ Run every command from the project root. The validator enforces only the mechani
 
 ## Loop rule
 
-The validator enforces only the mechanical/repetitive subset (field presence, fraction/enum parse, section/label presence, unfilled tokens, kill-switch caps, cited-`P-NNN`/lifecycle consistency, and close-out file presence). Every value that must match evidence — SLA, discriminator evidence, verdict rationale, counters, naming, folder contents, and step context — is verified by the analysis pass against this checklist; a value is never invented to satisfy a check.
+The validator enforces only the mechanical/repetitive subset (field presence, fraction/enum parse, section/label presence, unfilled tokens, kill-switch caps, cited-`P-NNN`/lifecycle consistency, pre-close readiness, and close-out file presence). Every value that must match evidence — SLA, discriminator evidence, verdict rationale, counters, naming, folder contents, and step context — is verified by the analysis pass against this checklist; a value is never invented to satisfy a check.
