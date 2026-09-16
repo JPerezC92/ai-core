@@ -1104,6 +1104,38 @@ class ValidateRunbookTests(unittest.TestCase):
             )
             self.assertEqual(vr.validate_close_out(str(ticket_dir), d), 1)
 
+    def test_directory_citation_fails_pre_close_and_close_out(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _pre_close_ticket_dir(d)
+            (ticket_dir / "screenshots" / "frames").mkdir()
+            ticket_file = ticket_dir / "ticket_999999.md"
+            ticket_file.write_text(
+                ticket_file.read_text(encoding="utf-8").replace(
+                    "screenshots/01_source_entity.png", "screenshots/frames"
+                ),
+                encoding="utf-8",
+            )
+            snapshot = vr.load_close_out_snapshot(ticket_dir)
+
+            self.assertTrue((ticket_dir / "screenshots" / "frames").is_dir())
+            self.assertEqual(snapshot["unsafe_ticket_paths"], [])
+            pre_close = vr.evaluate_pre_close(snapshot, [])
+            self.assertTrue(
+                any("PRE-CLOSE-7" in item for item in pre_close), pre_close
+            )
+            self.assertEqual(vr.validate_pre_close(str(ticket_dir), d), 1)
+
+            shutil.rmtree(ticket_dir / "analysis")
+            (ticket_dir / "response-draft.md").unlink()
+            close_out = vr.evaluate_close_out(
+                vr.load_close_out_snapshot(ticket_dir)
+            )
+
+            self.assertTrue(
+                any("CLOSE-5" in item for item in close_out), close_out
+            )
+            self.assertEqual(vr.validate_close_out(str(ticket_dir), d), 1)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

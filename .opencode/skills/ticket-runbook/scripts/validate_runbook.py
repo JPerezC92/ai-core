@@ -893,11 +893,11 @@ def load_close_out_snapshot(ticket_dir: Path) -> CloseOutSnapshot:
                 unsafe_ticket_paths.append(value)
                 missing_paths.append(value)
                 continue
-            # PRE-CLOSE-7 fires only when the inside path is missing; CLOSE-5
-            # additionally rejects spellings that exist but are not files.
-            if not resolved.exists():
-                missing_ticket_paths.append(value)
+            # Both modes require an existing file inside the ticket root:
+            # PRE-CLOSE-7 and CLOSE-5 reject a spelling that is missing or that
+            # exists but is not a file (for example a directory).
             if not resolved.is_file():
+                missing_ticket_paths.append(value)
                 missing_paths.append(value)
 
     return {
@@ -948,7 +948,9 @@ def evaluate_pre_close(
             f"PRE-CLOSE-6: cited path escapes the ticket root: {value}"
         )
     for value in snapshot["missing_ticket_paths"]:
-        violations.append(f"PRE-CLOSE-7: cited path does not exist: {value}")
+        violations.append(
+            f"PRE-CLOSE-7: cited path is not an existing file: {value}"
+        )
 
     if len(ticket_names) == 1 and snapshot["ticket_content"] is not None:
         try:
