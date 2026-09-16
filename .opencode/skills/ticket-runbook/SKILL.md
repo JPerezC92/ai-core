@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.2.0
+  version: 2.3.0
   dependencies:
     - PyYAML==6.0.3
 ---
@@ -107,7 +107,7 @@ Runs as soon as the root cause is confirmed — it does not wait for Close out n
 3. Append the durable `case:` pointer for the current case to the existing `P-NNN` row's Evidence.
 4. Promote a `candidate` to `active` only after a second independent confirmed case.
 
-Register growth requires the durable case pointer but does not require a reusable diagnostic. When the confirming query is reusable, also persist it as parameterized SQL plus an adjacent `.verifier.yaml` sidecar at the destination project's declared query-storage path and record `diagnostic:<destination-relative-sidecar-path>` in the row's Evidence; if the destination has no declared path, ask for it — the `P-NNN` and case pointer are recorded first. This is symptom/problem register admission, not a patterns-catalog check.
+Register growth requires the durable case pointer but does not require a reusable diagnostic. When the confirming query is reusable, also persist it as parameterized SQL plus an adjacent `.verifier.yaml` sidecar at the destination project's declared query-storage path and record `diagnostic:<destination-relative-sidecar-path>` in the row's Evidence; if the destination has no declared path, ask for it — the `P-NNN` and case pointer are recorded first. When the proof path is a reusable identification pack rather than a one-row verifier, persist it at the destination-chosen path and record `pack:<destination-relative-pack-path>` in the row's Evidence; do not run `query_verification.py` on a pack — it is not a verifier and has no sidecar or result contract. A later `structural` ticket follows a recorded `pack:` pointer first — resolving the destination-relative path and replaying that correlation with current-ticket keys under destination-owned execution (AICore never executes or parses the pack) — then follows `diagnostic:` through protocol-v1 when present, before framing a new query. The `case:` pointer is still recorded first, the destination chooses the pack layout, AICore never names the directory, and the register row never receives SQL statements or result tables. This is symptom/problem register admission, not a patterns-catalog check.
 
 This step is not destructive and never gates on file deletion.
 
@@ -117,7 +117,7 @@ Register admission (step 6) already ran when the root cause was confirmed; this 
 
 1. Complete posted-response synchronization: the `## Responses` section of `ticket_<id>.md` mirrors the latest posted response (never the draft).
 2. Run `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --pre-close`. This mode is read-only and requires: exactly one `ticket_<id>.md`; the complete working set (`analysis/state.md`, `01-identify.md`, `02-investigate.md`, `03-synthesize.md` — nothing missing, nothing unexpected); `response-draft.md`; the `screenshots/` and `validations/` directories; a completed `synthesize` phase; every machine-addressable `path:` citation in the ticket record spelled ticket-folder-relative (`screenshots/<filename>`) and resolving to an existing file inside the ticket folder; and valid identification/register consistency. Abort on any non-zero exit.
-3. Semantic confirmation — the validator never claims this ground: confirm the earlier register admission completed (`case:` pointer, `diagnostic:` sidecar when applicable); every executed query from `02-investigate.md` is preserved verbatim in `ticket_<id>.md` or a cited `validations/` artifact (see the retention rule in `references/analysis/02-investigate.md`); every non-`path:` evidence citation (prose/backtick references) resolves to real evidence; and record content/completeness gates pass.
+3. Semantic confirmation — the validator never claims this ground: confirm the earlier register admission completed (`case:` pointer, plus a `pack:` pointer or a `diagnostic:` sidecar when applicable); every executed query from `02-investigate.md` is preserved verbatim in `ticket_<id>.md` or a cited `validations/` artifact (see the retention rule in `references/analysis/02-investigate.md`); every non-`path:` evidence citation (prose/backtick references) resolves to real evidence; and record content/completeness gates pass.
 4. Obtain the exact user authorization phrase "Close out now".
 5. Remove `analysis/state.md`, every `analysis/*.md` working file, and `response-draft.md` — nothing else.
 6. Run `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --close-out` and require exit 0. If it fails after collapse, halt without deleting anything further: `ticket_<id>.md`, `screenshots/`, `validations/`, and every cited durable evidence file are never deleted to satisfy a validator.

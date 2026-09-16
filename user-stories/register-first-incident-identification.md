@@ -31,6 +31,7 @@
 - ✅ Optional query-verification remains symptom evidence only and consumes one existing query-budget slot on the investigate step. Evidence: `ticket-runbook/SKILL.md:110-120`; `references/analysis/02-investigate.md`.
 - ✅ After a confirmed root cause, register admission runs before destructive collapse — it does not wait for `Close out now` — creating or updating the `S-xx`/`P-NNN` row with a durable `case:` pointer. Evidence: `ticket-runbook` SKILL.md steps 6-7; `knowledge/agents.md` Proactive admission.
 - ✅ Every executed investigation query survives collapse verbatim in `ticket_<id>.md` or a cited `validations/` artifact; when the confirming query is reusable it is optionally persisted as SQL plus adjacent sidecar at a destination-declared path with a `diagnostic:` pointer in Evidence. Evidence: `ticket-runbook` `references/analysis/02-investigate.md` Step 7; `knowledge/problems.md` Evidence format.
+- ✅ When the proof path is a reusable identification pack (multi-statement or multi-result correlation), Evidence may record `pack:` plus a destination-relative path without placing SQL or result tables in `knowledge/problems.md` or `knowledge/symptoms.md`; the destination chooses how and where to store the pack; a later `structural` ticket follows `pack:` before framing a new query; `diagnostic:` remains protocol-v1 only. Evidence: `knowledge/problems.md:18,36`; `knowledge/agents.md:25`; `ticket-runbook/SKILL.md:110`; `references/analysis/02-investigate.md:14`; `_consistency-checklist.md:58,79-80`; Sentinel 🛡️ (Quality Guardian) `[PASS]` 2026-09-16.
 
 ## Change log
 
@@ -42,6 +43,7 @@
 - 2026-09-16 - ticket-runbook-pre-close-20260915: implemented the unified ticket-folder `path:` resolver (58-test suite), the short-form template/SKILL/checklist teaching, Ledger 📒 (Record Keeper) LS-SCREENSHOTS ticket-folder join, and Quill 🪶 (Note Drafter) 1.1.1 `image_path_invalid`.
 - 2026-09-16 - ticket-runbook-pre-close-20260915: corrected the pre-close criterion's test-count citation from 53 to 58 after PR #41 review.
 - 2026-09-16 - ticket-runbook-pre-close-20260915: PR #41 rework hardened `--pre-close` to reject a non-file citation (directory) like `--close-out`; test-count evidence refreshed to 59.
+- 2026-09-16 - identification-pack-pointer-20260916: planned an optional `pack:` Evidence pointer for destination-owned identification packs; protocol-v1 `diagnostic:` unchanged; Tismart sync deferred.
 
 ## Resolved decisions
 
@@ -51,3 +53,4 @@
 - 2026-09-15 — `ticket-runbook-register-admission-20260914` extends this feature after a confirmed root cause: register growth happens before destructive collapse, every executed query remains durable, and an optional reusable verifier is discovered through the destination-relative `P-NNN` pointer.
 - 2026-09-15 — User selected a new `--pre-close` readiness mode over a prose-only reorder; existing `--close-out` semantics remain the post-collapse assertion, and the later Tismart atomic sync is a separate post-merge plan.
 - 2026-09-16 — User chose one ticket-folder-relative `path:` form `screenshots/<filename>` for AICore; both validator modes enforce it; Tismart `#229255` rewrite waits for the later adoption/close.
+- 2026-09-16 — Identification packs are a `pack:` pointer, not `diagnostic:`; AICore defines replay order; destination chooses storage layout; no Tismart sync in this plan.

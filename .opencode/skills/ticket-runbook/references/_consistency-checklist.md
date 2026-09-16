@@ -55,7 +55,7 @@ Run every command from the project root. The validator enforces only the mechani
 
 ## Semantic close-out confirmation (before authorization)
 
-- Register admission from the confirmed root cause is complete: `case:` pointer recorded, plus a `diagnostic:` sidecar pointer when the confirming query is reusable. *(analysis)*
+- Register admission from the confirmed root cause is complete: `case:` pointer recorded, plus an optional `pack:` pointer for a reusable identification pack, and an optional `diagnostic:` sidecar pointer when the confirming query is reusable under protocol-v1. *(analysis)*
 - Every executed query in `02-investigate.md` — manual `Query:` blocks and verifier-routed evidence — is preserved verbatim in `ticket_<id>.md` or a cited `validations/` artifact BEFORE collapse deletes the working file. *(analysis)*
 - Every non-`path:` evidence citation (prose/backtick references) in the ticket record resolves to real evidence. *(analysis)*
 - Each used image records `url:` when the ticket system returned one, and never records a fabricated `url:`. *(analysis)*
@@ -76,8 +76,8 @@ Run every command from the project root. The validator enforces only the mechani
 ## Query retention and register admission (close-out)
 
 - Every executed query in `02-investigate.md` — manual `Query:` blocks and verifier-routed evidence — is preserved verbatim in `ticket_<id>.md` or a cited `validations/` artifact BEFORE collapse deletes the working file. *(analysis)*
-- When the confirming query is reusable, it is persisted as parameterized SQL plus an adjacent `.verifier.yaml` sidecar at the destination project's declared query-storage path; the row's Evidence records `diagnostic:<destination-relative-sidecar-path>`. AICore never defines the destination directory. *(analysis)*
-- A later `structural` ticket follows the `diagnostic:` pointer and replays the stored pair with current-ticket parameters (one existing Query-budget slot) before framing a new query. *(analysis)*
+- When the confirming query is reusable, it is persisted as parameterized SQL plus an adjacent `.verifier.yaml` sidecar at the destination project's declared query-storage path; the row's Evidence records `diagnostic:<destination-relative-sidecar-path>`. A reusable identification pack (a multi-statement or multi-result correlation) is instead persisted at the destination-chosen path and recorded as `pack:<destination-relative-pack-path>`; it is not a verifier and is never evaluated by `query_verification.py`. AICore never defines the destination directory. *(analysis)*
+- A later `structural` ticket follows a recorded `pack:` pointer first — resolving the destination-relative path and replaying the correlation with current-ticket keys under destination-owned execution (AICore never executes or parses the pack) — then follows the `diagnostic:` pointer through protocol-v1 when present (one existing Query-budget slot), before framing a new query. *(analysis)*
 - Register admission on a confirmed root cause happens before collapse and never waits for `Close out now`; collapse itself requires explicit user authorization. *(analysis)*
 
 ## Loop rule

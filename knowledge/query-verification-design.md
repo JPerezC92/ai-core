@@ -13,12 +13,14 @@ This living design records the approach to query verification across destination
 - Dev-team verifiers, Dev workflow integration, and the Dev problem-record lifecycle.
 - External adapter execution, adapter commands, credentials, and connection strings.
 - Centralized verifier discovery or a central index.
-- Non-SQL sources, multiple result sets, and a general assertion language.
+- Non-SQL sources, multiple result sets, and a general assertion language. Multiple result sets remain deferred for protocol-v1: a one-row verifier cannot express a multi-statement or multi-result correlation.
 - Persistent query-root configuration.
 
 The goal is to let an incident case safely reuse a diagnostic query without placing large, project-specific SQL in the symptom or problem registers.
 
 **Destination chooses storage:** the destination chooses and declares its base folder for reusable diagnostic queries; AICore defines the protocol, never the destination directory. A problem row's Evidence points to a stored verifier with `diagnostic:<destination-relative-sidecar-path>` — the pointer is the discovery mechanism for later `structural` tickets, which validate the pair with the sidecar's parent as the `--query-root` and rebind current-ticket values through the destination adapter (one query-budget slot). Pointer-based discovery does not create persistent query-root configuration.
+
+**Identification packs:** a problem row's Evidence may also carry an optional `pack:<destination-relative-pack-path>` pointer to a reusable identification pack — a multi-statement or multi-result correlation the destination stores at its own chosen location. A pack is not a verifier: it has no sidecar, no one-row result contract, and is never validated or evaluated by `query_verification.py` or protocol-v1. A later `structural` ticket follows the `pack:` pointer first, resolving the destination-relative path and replaying the correlation with current-ticket keys under destination-owned execution; AICore never executes or parses the pack internals. The destination chooses the pack's directory, filename, and layout; AICore defines the pointer and replay order only.
 
 ## Core model
 
