@@ -15,7 +15,7 @@ One row per record; columns exactly `ID | Date | Team | Symptom | System | Modul
 - **Problem** — one-liner
 - **Discriminators** — `field=value` signals that must all be evidenced for an `exact` match
 - **Exclusions** — conditions that disqualify a match even when the discriminators align
-- **Evidence** — at least one durable `case:<durable-ticket-path>` pointer (repo-relative ticket-record path); optionally `diagnostic:<destination-relative-sidecar-path>` when a reusable confirming query exists. The `diagnostic:` sidecar and its adjacent parameterized `.sql` source must exist and follow query-verification protocol-v1. AICore never defines the destination directory.
+- **Evidence** — at least one durable `case:<durable-ticket-path>` pointer (repo-relative ticket-record path); optionally `pack:<destination-relative-pack-path>` for a reusable identification pack — a multi-statement or multi-result correlation stored at the destination's declared path — and optionally `diagnostic:<destination-relative-sidecar-path>` when a reusable one-row confirming query exists. The `diagnostic:` sidecar and its adjacent parameterized `.sql` source must exist and follow query-verification protocol-v1; a `pack:` is not a verifier and is never evaluated by `query_verification.py`. AICore never defines the destination directory. Register rows carry pointers only — never SQL statements or result tables.
 - **Root cause** — the actual cause, not the symptom
 - **Lifecycle** — `candidate | active | mitigated | resolved | retired` (see below)
 - **Allow_exact** — `yes | no`; the per-record gate for an `exact` verdict
@@ -33,7 +33,7 @@ One row per record; columns exactly `ID | Date | Team | Symptom | System | Modul
 
 **Admission:** the first confirmed case admits a row as `candidate`; a `candidate` row is never an `exact` match. A second independent confirmed case may promote a `candidate` to `active`, which makes it eligible for `exact` when `Allow_exact: yes`.
 
-**Operational gate:** admission runs via the ticket-runbook register-admission step when the root cause is confirmed — before destructive collapse, never waiting for `Close out now`. Admission requires the durable `case:` pointer and never blocks on a reusable diagnostic: if a reusable confirming query exists but the destination has no declared storage path, ask for the destination-relative path, then record the `diagnostic:` pointer beside its adjacent SQL source.
+**Operational gate:** admission runs via the ticket-runbook register-admission step when the root cause is confirmed — before destructive collapse, never waiting for `Close out now`. Admission requires the durable `case:` pointer and never blocks on a reusable `pack:` or `diagnostic:`. If a reusable confirming query exists but the destination has no declared storage path, ask for the destination-relative path, then record the `diagnostic:` pointer beside its adjacent SQL source. If the proof path is a reusable identification pack (a multi-statement or multi-result correlation) and the destination has not declared storage, ask for the destination-relative path and record `pack:` with it; the destination chooses the pack layout, AICore never names the directory, and a register row never receives SQL statements or result tables.
 
 Only `Team: incident` rows participate in incident identification.
 

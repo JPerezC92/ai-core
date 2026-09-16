@@ -28,6 +28,7 @@
 - ✅ The skill, protocol, fixtures, and migration entry are available to ticket-enabled destination projects. Evidence: the `query-verification` skill ships `references/protocol-v1.md` and the valid fixture trio, and `knowledge/query-verification-design.md` records the skill and design document as `only if ticket marker` migration items.
 - ✅ The shipped valid adapter-output fixture is independently protocol-valid and its source digest is guarded against fixture/source drift.
 - ✅ Reusable verifier persistence is destination-selected: the destination chooses its query-storage location, the problem row's Evidence records a `diagnostic:` pointer to the sidecar, and a later structural match replays the pair with current-ticket parameters under protocol-v1 (schema unchanged, one query-budget slot). Evidence: `knowledge/query-verification-design.md` Destination-chooses-storage; `knowledge/problems.md` Evidence format.
+- ✅ Protocol-v1 remains the only `diagnostic:` contract (one read-only SELECT, one row, three-state verdict). Identification packs use a separate `pack:` Evidence pointer and are not evaluated by `query_verification.py`. Evidence: `protocol-v1.md` byte-identical to `f0fb4874eb8110e03684adcf845dff5d6f3dbb95`; `test_query_verification.py` 73 tests OK; `ticket-runbook/SKILL.md:110`; `knowledge/problems.md:18`.
 
 ## Advisory dispositions
 
@@ -53,6 +54,7 @@ Recorded 2026-09-10. Every outcome is evidence-backed; no dependency, lockfile, 
 - 2026-09-12 - register-first-incident-identification-20260912: mapped the optional verifier route from Phase 04 wording to the investigate step; acceptance criteria unchanged.
 - 2026-09-15 - ticket-runbook-register-admission-20260914: recorded the approved lifecycle extension for destination-selected verifier storage and current-case replay; protocol-v1 remains unchanged and acceptance criteria update with implementation.
 - 2026-09-15 - debt-001-citation-currency-20260915: refreshed the current plan-enforce citations to the shipped 1.12.1 and the 50-test suite; no feature behavior or acceptance criteria changed.
+- 2026-09-16 - identification-pack-pointer-20260916: recorded that multi-result identification packs are `pack:`, not a protocol-v1 change; destination chooses pack storage.
 
 ## Resolved decisions
 
@@ -62,3 +64,4 @@ Recorded 2026-09-10. Every outcome is evidence-backed; no dependency, lockfile, 
 - 2026-09-10 - superseding decision: Python stdlib `unittest` test architecture is owned by Crucible 🔥 (Test Architect) via its additive `## PYTHON STDLIB UNITTEST TESTS` branch, which returns [PASS]/[FAIL] for exact active-plan Python test files; [UNCERTAIN] is not acceptable for that scope. The earlier Bastion-only gate and its recorded [UNCERTAIN] applicability verdict remain historical and are not relabeled.
 - 2026-09-12 - register-first collision: this story keeps its completed verifier contract; ticket-runbook identification is redefined by `register-first-incident-identification`. The optional verifier remains symptom evidence only on the investigate step.
 - 2026-09-15 - `ticket-runbook-register-admission-20260914` keeps the protocol-v1 verifier contract unchanged and adds lifecycle behavior only: the destination chooses storage, the problem row points to the sidecar when one exists, and a later structural match validates it with current-case parameters.
+- 2026-09-16 - `identification-pack-pointer-20260916` extends Evidence with `pack:` for destination-owned identification packs; protocol-v1 and this story's completed verifier criteria stay unchanged.

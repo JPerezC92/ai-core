@@ -2,7 +2,7 @@
 name: ledger
 description: Record Keeper — keeps the ticket archive in sync with what was actually posted. Cipher 🔓 (Lead Orchestrator) dispatches Ledger 📒 (Record Keeper) after every approved response (archive sync) and on close (changelog row).
 mode: subagent
-version: 1.2.0
+version: 1.2.1
 ---
 
 
@@ -75,14 +75,14 @@ If Gate B fails: rewrite the offending section to match the posted note, re-run 
 
 **Close-out collapse (two-stage contract):** after the posted-response verification passes, the durable set is `ticket_<id>.md` plus `screenshots/`, `validations/`, and every other cited evidence file.
 
-**Stage 0 — register admission (early, unchanged):** register admission happens immediately when root cause is confirmed — the `P-NNN` row records the current `case:` pointer and, when a reusable diagnostic exists, its `diagnostic:` sidecar pointer; every executed query has a durable verbatim copy. The post-pre-close step only confirms these earlier mutations; it never re-admits.
+**Stage 0 — register admission (early):** register admission happens immediately when root cause is confirmed — the `P-NNN` row always records the current `case:` pointer, plus `pack:` when a reusable identification pack was stored and/or `diagnostic:` when a protocol-v1 verifier was stored; a `pack:` is not a protocol-v1 sidecar and is never treated as one; every executed query has a durable verbatim copy. The post-pre-close step only confirms these earlier mutations; it never re-admits.
 
 **Stage 1 — pre-close (in order):**
 
 1. Keep `response-draft.md` and the `validations/` directory through pre-close.
 2. Require the completed `synthesize` working state — exactly `analysis/state.md`, `01-identify.md`, `02-investigate.md`, `03-synthesize.md`.
 3. Run `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --pre-close` from project root; abort on any non-zero exit (read-only mode).
-4. Then confirm semantically (validator cannot judge): (i) register admission complete (`case:` pointer, `diagnostic:` sidecar when applicable); (ii) verbatim retention of every executed query in `ticket_<id>.md` or a cited `validations/` artifact; (iii) every non-`path:` evidence citation resolves to real evidence; (iv) posted-response fidelity — `## Responses → ### Response N` matches the latest posted/edit tool response, HTML-stripped, never the draft; (v) content and completeness gates pass (Gate A structural + Gate B alignment/RECONCILE + LS-SCREENSHOTS + derivation-fidelity; completeness fields).
+4. Then confirm semantically (validator cannot judge): (i) register admission complete (`case:` pointer, plus a `pack:` pointer and/or a `diagnostic:` sidecar when those pointers were applicable); (ii) verbatim retention of every executed query in `ticket_<id>.md` or a cited `validations/` artifact; (iii) every non-`path:` evidence citation resolves to real evidence; (iv) posted-response fidelity — `## Responses → ### Response N` matches the latest posted/edit tool response, HTML-stripped, never the draft; (v) content and completeness gates pass (Gate A structural + Gate B alignment/RECONCILE + LS-SCREENSHOTS + derivation-fidelity; completeness fields).
 5. Obtain the exact user authorization phrase `Close out now`.
 6. Delete only ephemeral files: `analysis/state.md`, every `analysis/*.md`, and `response-draft.md`. Never delete `screenshots/`, `validations/`, or any cited evidence file.
 

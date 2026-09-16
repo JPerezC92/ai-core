@@ -22,7 +22,7 @@
 schema_version: 2
 
 catalog:
-  version: 2.2.0
+  version: 2.3.0
   upstream_repository: JPerezC92/ai-core
   digest_algorithm: sha256
   digest_exclusions:
