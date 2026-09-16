@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.1.0
+  version: 2.2.0
   dependencies:
     - PyYAML==6.0.3
 ---
@@ -79,7 +79,7 @@ Always scaffold, whatever the verdict — `exact`, `structural`, and `no_match` 
 
 **Pre-stage rule:** ALL screenshots (query images and browser captures) MUST exist on disk in `screenshots/` BEFORE Quill 🪶 (Note Drafter) is dispatched for the response phase. Dispatching Quill against not-yet-created image paths causes a guaranteed self-audit FAIL (`image_path_invalid`).
 
-**Imagen location rule:** every used image records its local `path:` (repo-relative file) and, when the ticket system returned one, its remote `url:` (ticket-system location). Never record a remote `url:` that does not exist, and never fabricate a local `path:`.
+**Imagen location rule:** every used image records its local `path:` as a ticket-folder-relative file (`screenshots/<filename>`) and, when the ticket system returned one, its remote `url:` (ticket-system location). Never record a remote `url:` that does not exist, never fabricate a local `path:`, and never spell the local path repo-relative (`tickets/.../screenshots/...` fails both validator modes).
 
 ### 4. Validate
 
@@ -111,15 +111,16 @@ Register growth requires the durable case pointer but does not require a reusabl
 
 This step is not destructive and never gates on file deletion.
 
-### 7. Close-out collapse (destructive)
+### 7. Close-out (two-stage: readiness gate, then authorized collapse)
 
-At close, after the posted response is verified:
+Register admission (step 6) already ran when the root cause was confirmed; this step only confirms that earlier mutation — it never re-admits. The durable set is `ticket_<id>.md` plus `screenshots/`, `validations/`, and every other cited evidence file. At close, run this order without skipping or reordering:
 
-1. Run `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --close-out`.
-2. The durable set is `ticket_<id>.md` plus `screenshots/`, `validations/`, and every other cited evidence file.
-3. Before deleting any working file, confirm register admission (step 6) completed and every executed query was preserved durably (see the retention rule in `references/analysis/02-investigate.md`).
-4. Remove `analysis/state.md` and every `analysis/*.md` working file, and remove `response-draft.md`, **only after** the close-out check passes and with explicit user authorization (the phrase "Close out now").
-5. Never delete `screenshots/`, `validations/`, or any cited evidence file.
+1. Complete posted-response synchronization: the `## Responses` section of `ticket_<id>.md` mirrors the latest posted response (never the draft).
+2. Run `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --pre-close`. This mode is read-only and requires: exactly one `ticket_<id>.md`; the complete working set (`analysis/state.md`, `01-identify.md`, `02-investigate.md`, `03-synthesize.md` — nothing missing, nothing unexpected); `response-draft.md`; the `screenshots/` and `validations/` directories; a completed `synthesize` phase; every machine-addressable `path:` citation in the ticket record spelled ticket-folder-relative (`screenshots/<filename>`) and resolving to an existing file inside the ticket folder; and valid identification/register consistency. Abort on any non-zero exit.
+3. Semantic confirmation — the validator never claims this ground: confirm the earlier register admission completed (`case:` pointer, `diagnostic:` sidecar when applicable); every executed query from `02-investigate.md` is preserved verbatim in `ticket_<id>.md` or a cited `validations/` artifact (see the retention rule in `references/analysis/02-investigate.md`); every non-`path:` evidence citation (prose/backtick references) resolves to real evidence; and record content/completeness gates pass.
+4. Obtain the exact user authorization phrase "Close out now".
+5. Remove `analysis/state.md`, every `analysis/*.md` working file, and `response-draft.md` — nothing else.
+6. Run `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --close-out` and require exit 0. If it fails after collapse, halt without deleting anything further: `ticket_<id>.md`, `screenshots/`, `validations/`, and every cited durable evidence file are never deleted to satisfy a validator.
 
 ## Optional verifier route (investigate step)
 

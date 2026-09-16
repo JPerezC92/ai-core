@@ -181,6 +181,62 @@ def _ticket_dir(
     return ticket_dir
 
 
+def _pre_close_ticket_dir(
+    d: str,
+    verdict: str = "no_match",
+    known: str = "[]",
+) -> Path:
+    """Create a complete pre-close ticket set with filled analysis files."""
+    ticket_dir = _ticket_dir(
+        d,
+        with_draft=True,
+        verdict=verdict,
+        known=known,
+    )
+    _make_analysis(
+        str(ticket_dir),
+        phase="synthesize",
+        verdict="no_match",
+    )
+    return ticket_dir
+
+
+REPO_RELATIVE_IMAGE = "tickets/999999/screenshots/01_source_entity.png"
+
+
+def _cite_repo_relative_spelling(d: str, ticket_file: Path) -> None:
+    """Point the ticket citation at a repo-relative spelling of the image.
+
+    Keeps the ticket-relative file in place and also creates the image at the
+    repo-root-relative spelling, so a passing result cannot come from either
+    the ticket-relative file or a repo-root fallback.
+    """
+    repo_copy = Path(d) / REPO_RELATIVE_IMAGE
+    repo_copy.parent.mkdir(parents=True, exist_ok=True)
+    repo_copy.write_text("x", encoding="utf-8")
+    ticket_file.write_text(
+        ticket_file.read_text(encoding="utf-8").replace(
+            "screenshots/01_source_entity.png", REPO_RELATIVE_IMAGE
+        ),
+        encoding="utf-8",
+    )
+
+
+def _filesystem_bytes(root: Path) -> tuple[dict[str, bytes], list[str]]:
+    """Return file bytes and directory names below ``root`` for mutation checks."""
+    files = {
+        str(path.relative_to(root)): path.read_bytes()
+        for path in sorted(root.rglob("*"))
+        if path.is_file()
+    }
+    directories = [
+        str(path.relative_to(root))
+        for path in sorted(root.rglob("*"))
+        if path.is_dir()
+    ]
+    return files, directories
+
+
 class ValidateRunbookTests(unittest.TestCase):
     # ── Scaffold and structure ───────────────────────────────────────────────
 
@@ -627,12 +683,256 @@ class ValidateRunbookTests(unittest.TestCase):
         self.assertEqual(record["known_problem_ids"], ["P-001"])
         self.assertEqual(record["identification_verdict"], "structural")
 
+    # ── Pre-close readiness ──────────────────────────────────────────────────
+
+    def test_pre_close_passes_pure_and_public_validation(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _pre_close_ticket_dir(d)
+            snapshot = vr.load_close_out_snapshot(ticket_dir)
+
+            self.assertEqual(vr.evaluate_pre_close(snapshot, []), [])
+            self.assertEqual(vr.validate_pre_close(str(ticket_dir), d), 0)
+
+    def test_pre_close_is_byte_for_byte_non_mutating(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _pre_close_ticket_dir(d)
+            before = _filesystem_bytes(ticket_dir)
+
+            self.assertEqual(vr.validate_pre_close(str(ticket_dir), d), 0)
+
+            self.assertEqual(_filesystem_bytes(ticket_dir), before)
+
+    def test_pre_close_rejects_zero_ticket_records(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _pre_close_ticket_dir(d)
+            (ticket_dir / "ticket_999999.md").unlink()
+            stderr = io.StringIO()
+
+            with contextlib.redirect_stderr(stderr):
+                result = vr.validate_pre_close(str(ticket_dir), d)
+
+            self.assertEqual(result, 1)
+            self.assertIn("PRE-CLOSE-0", stderr.getvalue())
+
+    def test_pre_close_rejects_multiple_ticket_records(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _pre_close_ticket_dir(d)
+            source = ticket_dir / "ticket_999999.md"
+            (ticket_dir / "ticket_111111.md").write_bytes(source.read_bytes())
+            snapshot = vr.load_close_out_snapshot(ticket_dir)
+
+            self.assertEqual(
+                snapshot["ticket_file_names"],
+                ["ticket_111111.md", "ticket_999999.md"],
+            )
+            violations = vr.evaluate_pre_close(snapshot, [])
+            self.assertTrue(
+                any("PRE-CLOSE-1" in item for item in violations), violations
+            )
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                result = vr.validate_pre_close(str(ticket_dir), d)
+            self.assertEqual(result, 1)
+            self.assertIn("PRE-CLOSE-1", stderr.getvalue())
+
+    def test_pre_close_rejects_missing_or_unexpected_analysis_file(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _pre_close_ticket_dir(d)
+            analysis_dir = ticket_dir / "analysis"
+            (analysis_dir / "02-investigate.md").unlink()
+            (analysis_dir / "04-unexpected.md").write_text(
+                "unexpected", encoding="utf-8"
+            )
+
+            violations = vr.evaluate_pre_close(
+                vr.load_close_out_snapshot(ticket_dir), []
+            )
+
+            self.assertTrue(
+                any(
+                    "required analysis file missing: 02-investigate.md" in item
+                    for item in violations
+                ),
+                violations,
+            )
+            self.assertTrue(
+                any(
+                    "unexpected analysis file present: 04-unexpected.md" in item
+                    for item in violations
+                ),
+                violations,
+            )
+
+    def test_pre_close_rejects_missing_response_draft(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _pre_close_ticket_dir(d)
+            (ticket_dir / "response-draft.md").unlink()
+            violations = vr.evaluate_pre_close(
+                vr.load_close_out_snapshot(ticket_dir), []
+            )
+
+            self.assertIn(
+                "PRE-CLOSE-3: response-draft.md not found", violations
+            )
+
+    def test_pre_close_rejects_each_missing_durable_directory(self) -> None:
+        for directory, code in (
+            ("screenshots", "PRE-CLOSE-4"),
+            ("validations", "PRE-CLOSE-5"),
+        ):
+            with self.subTest(directory=directory):
+                with tempfile.TemporaryDirectory() as d:
+                    ticket_dir = _pre_close_ticket_dir(d)
+                    shutil.rmtree(ticket_dir / directory)
+                    violations = vr.evaluate_pre_close(
+                        vr.load_close_out_snapshot(ticket_dir), []
+                    )
+                    self.assertTrue(
+                        any(code in item for item in violations), violations
+                    )
+
+    def test_pre_close_rejects_missing_cited_path(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _pre_close_ticket_dir(d)
+            (ticket_dir / "screenshots" / "01_source_entity.png").unlink()
+            violations = vr.evaluate_pre_close(
+                vr.load_close_out_snapshot(ticket_dir), []
+            )
+
+            self.assertTrue(
+                any("PRE-CLOSE-7" in item for item in violations), violations
+            )
+
+    def test_pre_close_rejects_cited_path_outside_ticket_root(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _pre_close_ticket_dir(d)
+            outside = Path(d) / "outside.png"
+            outside.write_text("x", encoding="utf-8")
+            ticket_file = ticket_dir / "ticket_999999.md"
+            ticket_file.write_text(
+                ticket_file.read_text(encoding="utf-8").replace(
+                    "screenshots/01_source_entity.png", "../outside.png"
+                ),
+                encoding="utf-8",
+            )
+            violations = vr.evaluate_pre_close(
+                vr.load_close_out_snapshot(ticket_dir), []
+            )
+
+            self.assertTrue(
+                any("PRE-CLOSE-6" in item for item in violations), violations
+            )
+
+    def test_pre_close_rejects_unparseable_ticket_record(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _pre_close_ticket_dir(d)
+            (ticket_dir / "ticket_999999.md").write_text(
+                "not frontmatter", encoding="utf-8"
+            )
+            violations = vr.evaluate_pre_close(
+                vr.load_close_out_snapshot(ticket_dir), []
+            )
+
+            self.assertTrue(
+                any("PRE-CLOSE-8" in item for item in violations), violations
+            )
+
+    def test_pre_close_rejects_identification_register_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _pre_close_ticket_dir(
+                d, verdict="exact", known="[P-001]"
+            )
+            violations = vr.evaluate_pre_close(
+                vr.load_close_out_snapshot(ticket_dir), []
+            )
+
+            self.assertTrue(
+                any("VERDICT-4" in item for item in violations), violations
+            )
+
+    def test_pre_close_requires_completed_synthesize_state(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _pre_close_ticket_dir(d)
+            _patch_header(ticket_dir / "analysis", {"Phase": "investigate"})
+            violations = vr.evaluate_pre_close(
+                vr.load_close_out_snapshot(ticket_dir), []
+            )
+
+            self.assertIn(
+                "PRE-CLOSE-10: state.md Phase must be 'synthesize'",
+                violations,
+            )
+
+    def test_pre_close_reuses_token_counter_and_section_checks(self) -> None:
+        cases = (
+            ("token", "UNFILLED-TOKEN"),
+            ("counter", "KILL-2"),
+            ("section", "MISSING-SECTION"),
+        )
+        for case, expected in cases:
+            with self.subTest(case=case):
+                with tempfile.TemporaryDirectory() as d:
+                    ticket_dir = _pre_close_ticket_dir(d)
+                    analysis_dir = ticket_dir / "analysis"
+                    if case == "token":
+                        target = analysis_dir / "03-synthesize.md"
+                        target.write_text(
+                            target.read_text(encoding="utf-8") + "\n<unfinished>\n",
+                            encoding="utf-8",
+                        )
+                    elif case == "counter":
+                        _patch_header(analysis_dir, {"Query-budget": "7/6"})
+                    else:
+                        target = analysis_dir / "03-synthesize.md"
+                        target.write_text(
+                            target.read_text(encoding="utf-8").replace(
+                                "## Gate", "## Not Gate"
+                            ),
+                            encoding="utf-8",
+                        )
+                    violations = vr.evaluate_pre_close(
+                        vr.load_close_out_snapshot(ticket_dir), []
+                    )
+                    self.assertTrue(
+                        any(expected in item for item in violations), violations
+                    )
+
+    def test_cli_modes_are_mutually_exclusive(self) -> None:
+        for conflicting_mode in (
+            ["--close-out"],
+            ["--scaffold"],
+            ["--step", "identify"],
+        ):
+            with self.subTest(conflicting_mode=conflicting_mode):
+                stderr = io.StringIO()
+                with contextlib.redirect_stderr(stderr):
+                    with self.assertRaises(SystemExit) as raised:
+                        vr._build_parser().parse_args(
+                            ["ticket", "--pre-close", *conflicting_mode]
+                        )
+
+                self.assertEqual(raised.exception.code, 2)
+                self.assertIn("not allowed with argument", stderr.getvalue())
+
+    def test_parser_accepts_every_prior_mode(self) -> None:
+        parser = vr._build_parser()
+
+        self.assertEqual(parser.parse_args(["analysis"]).analysis_dir, "analysis")
+        self.assertTrue(parser.parse_args(["analysis", "--scaffold"]).scaffold)
+        self.assertEqual(
+            parser.parse_args(["analysis", "--step", "identify"]).step,
+            "identify",
+        )
+        self.assertTrue(
+            parser.parse_args(["ticket", "--close-out"]).close_out
+        )
+
     # ── Close-out collapse ───────────────────────────────────────────────────
 
     def test_close_out_pass(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             ticket_dir = _ticket_dir(d)
-            snapshot = vr.load_close_out_snapshot(ticket_dir, ticket_dir)
+            snapshot = vr.load_close_out_snapshot(ticket_dir)
             self.assertEqual(vr.evaluate_close_out(snapshot), [])
             self.assertEqual(
                 vr.validate_close_out(str(ticket_dir), str(ticket_dir)), 0
@@ -641,7 +941,7 @@ class ValidateRunbookTests(unittest.TestCase):
     def test_close_out_working_files_remain(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             ticket_dir = _ticket_dir(d, with_working=True)
-            snapshot = vr.load_close_out_snapshot(ticket_dir, ticket_dir)
+            snapshot = vr.load_close_out_snapshot(ticket_dir)
             violations = vr.evaluate_close_out(snapshot)
             self.assertTrue(
                 any("CLOSE-1" in item for item in violations), violations
@@ -653,7 +953,7 @@ class ValidateRunbookTests(unittest.TestCase):
     def test_close_out_response_draft_remains(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             ticket_dir = _ticket_dir(d, with_draft=True)
-            snapshot = vr.load_close_out_snapshot(ticket_dir, ticket_dir)
+            snapshot = vr.load_close_out_snapshot(ticket_dir)
             violations = vr.evaluate_close_out(snapshot)
             self.assertTrue(
                 any("CLOSE-2" in item for item in violations), violations
@@ -662,7 +962,7 @@ class ValidateRunbookTests(unittest.TestCase):
     def test_close_out_missing_durable_dirs(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             ticket_dir = _ticket_dir(d, with_dirs=False)
-            snapshot = vr.load_close_out_snapshot(ticket_dir, ticket_dir)
+            snapshot = vr.load_close_out_snapshot(ticket_dir)
             violations = vr.evaluate_close_out(snapshot)
             self.assertTrue(
                 any("CLOSE-3" in item for item in violations), violations
@@ -675,7 +975,7 @@ class ValidateRunbookTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             ticket_dir = Path(d) / "ticket"
             ticket_dir.mkdir()
-            snapshot = vr.load_close_out_snapshot(ticket_dir, ticket_dir)
+            snapshot = vr.load_close_out_snapshot(ticket_dir)
             self.assertTrue(
                 any("CLOSE-0" in item for item in vr.evaluate_close_out(snapshot))
             )
@@ -685,14 +985,156 @@ class ValidateRunbookTests(unittest.TestCase):
             self.assertEqual(result, 2)
             self.assertIn("CLOSE-SKIPPED", buf.getvalue())
 
+    def test_close_out_rejects_multiple_ticket_records(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _ticket_dir(d)
+            source = ticket_dir / "ticket_999999.md"
+            (ticket_dir / "ticket_111111.md").write_bytes(source.read_bytes())
+            snapshot = vr.load_close_out_snapshot(ticket_dir)
+            violations = vr.evaluate_close_out(snapshot)
+
+            self.assertTrue(
+                any("CLOSE-6" in item for item in violations), violations
+            )
+            self.assertEqual(vr.validate_close_out(str(ticket_dir), d), 1)
+
+    def test_close_out_fails_before_and_passes_after_collapse(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _pre_close_ticket_dir(d)
+
+            self.assertEqual(vr.validate_close_out(str(ticket_dir), d), 1)
+
+            shutil.rmtree(ticket_dir / "analysis")
+            (ticket_dir / "response-draft.md").unlink()
+            self.assertEqual(vr.validate_close_out(str(ticket_dir), d), 0)
+
     def test_close_out_missing_image_path(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             ticket_dir = _ticket_dir(d, image_exists=False)
-            snapshot = vr.load_close_out_snapshot(ticket_dir, ticket_dir)
+            snapshot = vr.load_close_out_snapshot(ticket_dir)
             violations = vr.evaluate_close_out(snapshot)
             self.assertTrue(
                 any("CLOSE-5" in item for item in violations), violations
             )
+
+    # ── Ticket-relative path-citation unification ────────────────────────────
+
+    def test_ticket_relative_cited_path_passes_pre_close(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _pre_close_ticket_dir(d)
+            snapshot = vr.load_close_out_snapshot(ticket_dir)
+
+            self.assertEqual(snapshot["unsafe_ticket_paths"], [])
+            self.assertEqual(snapshot["missing_ticket_paths"], [])
+            self.assertEqual(vr.validate_pre_close(str(ticket_dir), d), 0)
+
+    def test_ticket_relative_cited_path_passes_close_out(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _ticket_dir(d)
+            snapshot = vr.load_close_out_snapshot(ticket_dir)
+
+            self.assertEqual(snapshot["missing_image_paths"], [])
+            self.assertEqual(
+                vr.validate_close_out(str(ticket_dir), str(ticket_dir)), 0
+            )
+
+    def test_repo_relative_spelling_fails_pre_close(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _pre_close_ticket_dir(d)
+            _cite_repo_relative_spelling(
+                d, ticket_dir / "ticket_999999.md"
+            )
+            snapshot = vr.load_close_out_snapshot(ticket_dir)
+
+            self.assertTrue(
+                (ticket_dir / "screenshots" / "01_source_entity.png").is_file()
+            )
+            self.assertTrue((Path(d) / REPO_RELATIVE_IMAGE).is_file())
+            self.assertEqual(snapshot["unsafe_ticket_paths"], [])
+            violations = vr.evaluate_pre_close(snapshot, [])
+
+            self.assertTrue(
+                any("PRE-CLOSE-7" in item for item in violations), violations
+            )
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                result = vr.validate_pre_close(str(ticket_dir), d)
+
+            self.assertEqual(result, 1)
+            self.assertIn("PRE-CLOSE-7", stderr.getvalue())
+
+    def test_repo_relative_spelling_fails_close_out(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _ticket_dir(d)
+            _cite_repo_relative_spelling(
+                d, ticket_dir / "ticket_999999.md"
+            )
+            snapshot = vr.load_close_out_snapshot(ticket_dir)
+
+            self.assertTrue(
+                (ticket_dir / "screenshots" / "01_source_entity.png").is_file()
+            )
+            self.assertTrue((Path(d) / REPO_RELATIVE_IMAGE).is_file())
+            violations = vr.evaluate_close_out(snapshot)
+
+            self.assertTrue(
+                any("CLOSE-5" in item for item in violations), violations
+            )
+            self.assertEqual(vr.validate_close_out(str(ticket_dir), d), 1)
+
+    def test_close_out_rejects_parent_escape_via_close_5(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _ticket_dir(d)
+            outside = Path(d) / "outside.png"
+            outside.write_text("x", encoding="utf-8")
+            ticket_file = ticket_dir / "ticket_999999.md"
+            ticket_file.write_text(
+                ticket_file.read_text(encoding="utf-8").replace(
+                    "screenshots/01_source_entity.png", "../outside.png"
+                ),
+                encoding="utf-8",
+            )
+            snapshot = vr.load_close_out_snapshot(ticket_dir)
+
+            self.assertEqual(snapshot["unsafe_ticket_paths"], ["../outside.png"])
+            violations = vr.evaluate_close_out(snapshot)
+
+            self.assertTrue(
+                any("CLOSE-5" in item for item in violations), violations
+            )
+            self.assertEqual(vr.validate_close_out(str(ticket_dir), d), 1)
+
+    def test_directory_citation_fails_pre_close_and_close_out(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _pre_close_ticket_dir(d)
+            (ticket_dir / "screenshots" / "frames").mkdir()
+            ticket_file = ticket_dir / "ticket_999999.md"
+            ticket_file.write_text(
+                ticket_file.read_text(encoding="utf-8").replace(
+                    "screenshots/01_source_entity.png", "screenshots/frames"
+                ),
+                encoding="utf-8",
+            )
+            snapshot = vr.load_close_out_snapshot(ticket_dir)
+
+            self.assertTrue((ticket_dir / "screenshots" / "frames").is_dir())
+            self.assertEqual(snapshot["unsafe_ticket_paths"], [])
+            pre_close = vr.evaluate_pre_close(snapshot, [])
+            self.assertTrue(
+                any("PRE-CLOSE-7" in item for item in pre_close), pre_close
+            )
+            self.assertEqual(vr.validate_pre_close(str(ticket_dir), d), 1)
+
+            shutil.rmtree(ticket_dir / "analysis")
+            (ticket_dir / "response-draft.md").unlink()
+            close_out = vr.evaluate_close_out(
+                vr.load_close_out_snapshot(ticket_dir)
+            )
+
+            self.assertTrue(
+                any("CLOSE-5" in item for item in close_out), close_out
+            )
+            self.assertEqual(vr.validate_close_out(str(ticket_dir), d), 1)
 
 
 if __name__ == "__main__":
