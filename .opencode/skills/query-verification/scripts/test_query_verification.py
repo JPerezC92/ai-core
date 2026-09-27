@@ -10,7 +10,7 @@ The static adapter fixture declares the real ``source_digest`` of the fixture
 ``.sql`` bytes. The happy-path loader asserts that declared digest equals the
 digest recomputed from those bytes, so any source drift fails the suite.
 
-Run: python3 .opencode/skills/query-verification/scripts/test_query_verification.py
+Run: uv run --frozen --group dev pytest .opencode/skills/query-verification/scripts/test_query_verification.py
 """
 
 import contextlib
@@ -21,10 +21,10 @@ import os
 import re
 import sys
 import tempfile
-import unittest
 from pathlib import Path
 from typing import Mapping, Optional, TypedDict, cast
 
+import pytest
 import yaml
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -227,7 +227,7 @@ def _write_root(
     return root
 
 
-class QueryVerificationTests(unittest.TestCase):
+class QueryVerificationTests:
     """Behavioral coverage for the incident query-verification pilot."""
 
     def _assert_rejected(
@@ -236,8 +236,8 @@ class QueryVerificationTests(unittest.TestCase):
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):
             result = qv.run_validate(str(root), str(sidecar_path))
-        self.assertEqual(result, 1, stderr.getvalue())
-        self.assertIn(fragment, stderr.getvalue())
+        assert result == 1, stderr.getvalue()
+        assert fragment in stderr.getvalue()
 
     def _assert_source_rejected(self, source_text: str, fragment: str) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -267,8 +267,8 @@ class QueryVerificationTests(unittest.TestCase):
         self, adapter: object, source_bytes: Optional[bytes]
     ) -> None:
         record = self._evaluate(_load_definition(), source_bytes, adapter)
-        self.assertEqual(record["verdict"], "inconclusive")
-        self.assertEqual(record["evidence"], {})
+        assert record["verdict"] == "inconclusive"
+        assert record["evidence"] == {}
 
     # -- happy path: static fixture trio -----------------------------------
 
@@ -279,30 +279,30 @@ class QueryVerificationTests(unittest.TestCase):
             result = qv.run_validate(
                 str(FIXTURES_DIR), str(FIXTURES_DIR / VALID_SIDECAR_NAME)
             )
-        self.assertEqual(result, 0, stderr.getvalue())
-        self.assertIn(VALID_VERIFIER_ID, stdout.getvalue())
+        assert result == 0, stderr.getvalue()
+        assert VALID_VERIFIER_ID in stdout.getvalue()
 
     def test_static_adapter_fixture_shape(self) -> None:
         raw = json.loads(
             (FIXTURES_DIR / VALID_ADAPTER_NAME).read_text(encoding="utf-8")
         )
-        self.assertEqual(
-            set(raw.keys()),
-            {"schema_version", "verifier_id", "source_digest", "result_set", "rows"},
-        )
-        self.assertEqual(raw["schema_version"], 1)
-        self.assertEqual(raw["verifier_id"], VALID_VERIFIER_ID)
-        self.assertEqual(raw["result_set"], VERIFICATION_RESULT_SET)
-        self.assertRegex(raw["source_digest"], _DIGEST_RE)
-        self.assertEqual(len(raw["rows"]), 1)
-        self.assertEqual(
-            raw["rows"][0],
-            {
-                "verification_verdict": VALID_VERDICT,
-                "case_reference": VALID_CASE_REFERENCE,
-                "matched_rows": 1,
-            },
-        )
+        assert set(raw.keys()) == {
+            "schema_version",
+            "verifier_id",
+            "source_digest",
+            "result_set",
+            "rows",
+        }
+        assert raw["schema_version"] == 1
+        assert raw["verifier_id"] == VALID_VERIFIER_ID
+        assert raw["result_set"] == VERIFICATION_RESULT_SET
+        assert re.search(_DIGEST_RE, raw["source_digest"])
+        assert len(raw["rows"]) == 1
+        assert raw["rows"][0] == {
+            "verification_verdict": VALID_VERDICT,
+            "case_reference": VALID_CASE_REFERENCE,
+            "matched_rows": 1,
+        }
 
     def test_valid_fixture_evaluation_writes_verified_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -320,30 +320,25 @@ class QueryVerificationTests(unittest.TestCase):
                     str(adapter_path),
                     str(evidence_path),
                 )
-            self.assertEqual(result, 0, stderr.getvalue())
+            assert result == 0, stderr.getvalue()
             record = json.loads(evidence_path.read_text(encoding="utf-8"))
-            self.assertEqual(record["verdict"], VALID_VERDICT)
-            self.assertEqual(record["verifier_id"], VALID_VERIFIER_ID)
-            self.assertEqual(record["result_set"], VERIFICATION_RESULT_SET)
-            self.assertEqual(
-                record["evidence"]["verification_verdict"], VALID_VERDICT
-            )
-            self.assertEqual(record["evidence"]["case_reference"], REDACTED)
-            self.assertEqual(record["evidence"]["matched_rows"], 1)
-            self.assertEqual(
-                set(record.keys()),
-                {
-                    "schema_version",
-                    "verifier_id",
-                    "verdict",
-                    "result_set",
-                    "source_digest",
-                    "definition_digest",
-                    "evidence",
-                    "evidence_digest",
-                },
-            )
-            self.assertNotIn(VALID_CASE_REFERENCE, json.dumps(record))
+            assert record["verdict"] == VALID_VERDICT
+            assert record["verifier_id"] == VALID_VERIFIER_ID
+            assert record["result_set"] == VERIFICATION_RESULT_SET
+            assert record["evidence"]["verification_verdict"] == VALID_VERDICT
+            assert record["evidence"]["case_reference"] == REDACTED
+            assert record["evidence"]["matched_rows"] == 1
+            assert set(record.keys()) == {
+                "schema_version",
+                "verifier_id",
+                "verdict",
+                "result_set",
+                "source_digest",
+                "definition_digest",
+                "evidence",
+                "evidence_digest",
+            }
+            assert VALID_CASE_REFERENCE not in json.dumps(record)
 
     # -- path and layout rejections ----------------------------------------
 
@@ -422,7 +417,7 @@ class QueryVerificationTests(unittest.TestCase):
             try:
                 os.symlink(outside_source, link)
             except (OSError, NotImplementedError) as exc:
-                self.skipTest(f"symlink creation unsupported: {exc}")
+                pytest.skip(f"symlink creation unsupported: {exc}")
             self._assert_rejected(
                 root, root / VALID_SIDECAR_NAME, "outside the query root"
             )
@@ -658,7 +653,7 @@ class QueryVerificationTests(unittest.TestCase):
             )
 
     def test_rejects_non_mapping_sidecar_document(self) -> None:
-        with self.assertRaises(qv.ValidationError):
+        with pytest.raises(qv.ValidationError):
             qv.parse_sidecar_document(["not", "a", "mapping"])
 
     # -- evaluator verdicts -------------------------------------------------
@@ -667,22 +662,17 @@ class QueryVerificationTests(unittest.TestCase):
         definition = _load_definition()
         source_bytes = _read_source_bytes()
         record = self._evaluate(definition, source_bytes, _base_adapter())
-        self.assertEqual(record["verdict"], "verified")
-        self.assertEqual(record["verifier_id"], VALID_VERIFIER_ID)
-        self.assertEqual(record["result_set"], VERIFICATION_RESULT_SET)
-        self.assertEqual(
-            record["source_digest"], qv.compute_sha256_digest(source_bytes)
+        assert record["verdict"] == "verified"
+        assert record["verifier_id"] == VALID_VERIFIER_ID
+        assert record["result_set"] == VERIFICATION_RESULT_SET
+        assert record["source_digest"] == qv.compute_sha256_digest(source_bytes)
+        assert record["definition_digest"] == qv.compute_sha256_digest(
+            _sidecar_bytes()
         )
-        self.assertEqual(
-            record["definition_digest"],
-            qv.compute_sha256_digest(_sidecar_bytes()),
-        )
-        self.assertEqual(record["evidence"]["case_reference"], REDACTED)
-        self.assertEqual(record["evidence"]["matched_rows"], 1)
-        self.assertEqual(
-            record["evidence_digest"], qv.compute_evidence_digest(record)
-        )
-        self.assertNotIn(VALID_CASE_REFERENCE, json.dumps(record))
+        assert record["evidence"]["case_reference"] == REDACTED
+        assert record["evidence"]["matched_rows"] == 1
+        assert record["evidence_digest"] == qv.compute_evidence_digest(record)
+        assert VALID_CASE_REFERENCE not in json.dumps(record)
 
     def test_evaluate_not_verified(self) -> None:
         adapter = _base_adapter()
@@ -690,10 +680,8 @@ class QueryVerificationTests(unittest.TestCase):
             "verification_verdict"
         ] = "not_verified"
         record = self._evaluate(_load_definition(), _read_source_bytes(), adapter)
-        self.assertEqual(record["verdict"], "not_verified")
-        self.assertEqual(
-            record["evidence"]["verification_verdict"], "not_verified"
-        )
+        assert record["verdict"] == "not_verified"
+        assert record["evidence"]["verification_verdict"] == "not_verified"
 
     def test_evaluate_explicit_inconclusive_verdict(self) -> None:
         adapter = _base_adapter()
@@ -701,8 +689,8 @@ class QueryVerificationTests(unittest.TestCase):
             "verification_verdict"
         ] = "inconclusive"
         record = self._evaluate(_load_definition(), _read_source_bytes(), adapter)
-        self.assertEqual(record["verdict"], "inconclusive")
-        self.assertEqual(record["evidence"]["case_reference"], REDACTED)
+        assert record["verdict"] == "inconclusive"
+        assert record["evidence"]["case_reference"] == REDACTED
 
     def test_evaluate_unknown_verdict_is_inconclusive(self) -> None:
         adapter = _base_adapter()
@@ -769,9 +757,9 @@ class QueryVerificationTests(unittest.TestCase):
 
     def test_evaluate_missing_definition_is_inconclusive(self) -> None:
         record = self._evaluate(None, _read_source_bytes(), _base_adapter())
-        self.assertEqual(record["verdict"], "inconclusive")
-        self.assertEqual(record["evidence"], {})
-        self.assertEqual(record["verifier_id"], VALID_VERIFIER_ID)
+        assert record["verdict"] == "inconclusive"
+        assert record["evidence"] == {}
+        assert record["verifier_id"] == VALID_VERIFIER_ID
 
     def test_evaluate_missing_adapter_file_writes_inconclusive(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -784,10 +772,10 @@ class QueryVerificationTests(unittest.TestCase):
                     str(tmp / "missing-adapter.json"),
                     str(evidence_path),
                 )
-            self.assertEqual(result, 0, stderr.getvalue())
+            assert result == 0, stderr.getvalue()
             record = json.loads(evidence_path.read_text(encoding="utf-8"))
-            self.assertEqual(record["verdict"], "inconclusive")
-            self.assertEqual(record["evidence"], {})
+        assert record["verdict"] == "inconclusive"
+        assert record["evidence"] == {}
 
     # -- deterministic redaction and digests -------------------------------
 
@@ -796,8 +784,8 @@ class QueryVerificationTests(unittest.TestCase):
         source_bytes = _read_source_bytes()
         first = self._evaluate(definition, source_bytes, _base_adapter())
         second = self._evaluate(definition, source_bytes, _base_adapter())
-        self.assertEqual(first, second)
-        self.assertEqual(first["evidence_digest"], second["evidence_digest"])
+        assert first == second
+        assert first["evidence_digest"] == second["evidence_digest"]
 
     def test_evidence_digest_changes_with_allowed_evidence(self) -> None:
         definition = _load_definition()
@@ -808,11 +796,9 @@ class QueryVerificationTests(unittest.TestCase):
             "matched_rows"
         ] = 2
         changed = self._evaluate(definition, source_bytes, changed_adapter)
-        self.assertEqual(changed["verdict"], "verified")
-        self.assertEqual(changed["evidence"]["matched_rows"], 2)
-        self.assertNotEqual(
-            baseline["evidence_digest"], changed["evidence_digest"]
-        )
+        assert changed["verdict"] == "verified"
+        assert changed["evidence"]["matched_rows"] == 2
+        assert baseline["evidence_digest"] != changed["evidence_digest"]
 
     def test_evidence_digest_changes_with_source_bytes(self) -> None:
         definition = _load_definition()
@@ -825,13 +811,9 @@ class QueryVerificationTests(unittest.TestCase):
             changed_source
         )
         changed = self._evaluate(definition, changed_source, changed_adapter)
-        self.assertEqual(changed["verdict"], "verified")
-        self.assertNotEqual(
-            baseline["source_digest"], changed["source_digest"]
-        )
-        self.assertNotEqual(
-            baseline["evidence_digest"], changed["evidence_digest"]
-        )
+        assert changed["verdict"] == "verified"
+        assert baseline["source_digest"] != changed["source_digest"]
+        assert baseline["evidence_digest"] != changed["evidence_digest"]
 
     # -- static execution-surface guarantee --------------------------------
 
@@ -841,17 +823,12 @@ class QueryVerificationTests(unittest.TestCase):
             for path in SCRIPTS_DIR.glob("*.py")
             if not path.name.startswith("test_")
         )
-        self.assertTrue(
-            production_scripts, "expected a production pilot script"
-        )
+        assert production_scripts, "expected a production pilot script"
         for path in production_scripts:
             source = path.read_text(encoding="utf-8")
             for pattern in _FORBIDDEN_SCRIPT_PATTERNS:
-                self.assertIsNone(
-                    re.search(pattern, source),
-                    f"{path.name} matches forbidden pattern {pattern!r}",
+                assert re.search(pattern, source) is None, (
+                    f"{path.name} matches forbidden pattern {pattern!r}"
                 )
 
 
-if __name__ == "__main__":
-    unittest.main(verbosity=2)

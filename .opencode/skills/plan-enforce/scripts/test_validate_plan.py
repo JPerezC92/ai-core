@@ -1,15 +1,16 @@
 """Tests for validate_plan.py — proves the mechanical validator catches each
 violation class and passes a well-formed plan.
 
-Run: python3 .opencode/skills/plan-enforce/scripts/test_validate_plan.py
+Run: uv run --frozen --group dev pytest .opencode/skills/plan-enforce/scripts/test_validate_plan.py
 """
 
 import contextlib
 import io
 import sys
 import tempfile
-import unittest
 from pathlib import Path
+
+import pytest
 
 sys.path.insert(0, str(Path(__file__).parent))
 import validate_plan as vp  # noqa: E402
@@ -179,7 +180,7 @@ PHASE_ONE = VALID_PHASE.replace("> **Writes:** none.", "> **Writes:** `src/a.py`
 PHASE_TWO = VALID_PHASE.replace("> **Writes:** none.", "> **Writes:** `src/b.py`.")
 
 
-class ValidatePlanTests(unittest.TestCase):
+class ValidatePlanTests:
     def _write(self, d: str, name: str, content: str) -> Path:
         p = Path(d) / name
         p.write_text(content, encoding="utf-8")
@@ -192,13 +193,13 @@ class ValidatePlanTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             self._write(d, "plan.md", VALID_PLAN)
             self._write(d, "phase-01-owner.md", VALID_PHASE)
-            self.assertEqual(vp.check_plan_file(Path(d) / "plan.md"), [])
-            self.assertEqual(vp.check_phase_file(Path(d) / "phase-01-owner.md"), [])
+            assert vp.check_plan_file(Path(d) / "plan.md") == []
+            assert vp.check_phase_file(Path(d) / "phase-01-owner.md") == []
 
     def test_valid_single_file_passes(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             p = self._write(d, "plan.md", VALID_PLAN)
-            self.assertEqual(vp.check_plan_file(p), [])
+            assert vp.check_plan_file(p) == []
 
     def test_validate_plan_dir_valid_fixture_outputs_success(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -208,8 +209,8 @@ class ValidatePlanTests(unittest.TestCase):
             with contextlib.redirect_stdout(stdout):
                 result = vp.validate_plan_dir(d, stories_dir=None)
 
-            self.assertEqual(result, 0)
-            self.assertEqual(stdout.getvalue(), f"ok  plan: {d}  phases: 1\n")
+            assert result == 0
+            assert stdout.getvalue() == f"ok  plan: {d}  phases: 1\n"
 
     def test_validate_plan_dir_missing_plan_outputs_exact_diagnostic(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -217,10 +218,8 @@ class ValidatePlanTests(unittest.TestCase):
             with contextlib.redirect_stderr(stderr):
                 result = vp.validate_plan_dir(d, stories_dir=None)
 
-            self.assertEqual(result, 1)
-            self.assertEqual(
-                stderr.getvalue(), f"MISSING-FILE: {Path(d) / 'plan.md'} not found\n"
-            )
+            assert result == 1
+            assert stderr.getvalue() == f"MISSING-FILE: {Path(d) / 'plan.md'} not found\n"
 
     def test_validate_plan_dir_unfilled_date_outputs_exact_diagnostic(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -234,8 +233,8 @@ class ValidatePlanTests(unittest.TestCase):
             with contextlib.redirect_stderr(stderr):
                 result = vp.validate_plan_dir(d, stories_dir=None)
 
-            self.assertEqual(result, 1)
-            self.assertEqual(stderr.getvalue(), "UNFILLED-TOKEN: YYYY-MM-DD\n")
+            assert result == 1
+            assert stderr.getvalue() == "UNFILLED-TOKEN: YYYY-MM-DD\n"
 
     def test_validate_single_file_valid_fixture_outputs_success(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -244,10 +243,8 @@ class ValidatePlanTests(unittest.TestCase):
             with contextlib.redirect_stdout(stdout):
                 result = vp.validate_single_file(str(plan_file))
 
-            self.assertEqual(result, 0)
-            self.assertEqual(
-                stdout.getvalue(), f"ok  single-file plan: {plan_file}\n"
-            )
+            assert result == 0
+            assert stdout.getvalue() == f"ok  single-file plan: {plan_file}\n"
 
     def test_validate_single_file_invalid_fixture_outputs_diagnostic(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -260,20 +257,18 @@ class ValidatePlanTests(unittest.TestCase):
             with contextlib.redirect_stderr(stderr):
                 result = vp.validate_single_file(str(plan_file))
 
-            self.assertEqual(result, 1)
-            self.assertEqual(
-                stderr.getvalue(),
+            assert result == 1
+            assert stderr.getvalue() == (
                 "STATUS: Status value 'bogus' not in allowed set "
-                "(['active', 'completed'])\n",
+                "(['active', 'completed'])\n"
             )
 
     def test_missing_phase_file_returns_exact_diagnostic(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             phase_file = Path(d) / "phase-01-owner.md"
-            self.assertEqual(
-                vp.check_phase_file(phase_file),
-                [f"MISSING-FILE: {phase_file} not found"],
-            )
+            assert vp.check_phase_file(phase_file) == [
+                f"MISSING-FILE: {phase_file} not found"
+            ]
 
     def test_validate_plan_dir_missing_story_index_outputs_exact_diagnostic(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -290,10 +285,10 @@ class ValidatePlanTests(unittest.TestCase):
             with contextlib.redirect_stderr(stderr):
                 result = vp.validate_plan_dir(d, stories_dir=str(stories_dir))
 
-            self.assertEqual(result, 1)
-            self.assertEqual(
-                stderr.getvalue(),
-                f"MISSING-INDEX: {stories_dir / 'index.md'} not found but story files exist\n",
+            assert result == 1
+            assert (
+                stderr.getvalue()
+                == f"MISSING-INDEX: {stories_dir / 'index.md'} not found but story files exist\n"
             )
 
     def test_validate_plan_dir_story_status_mismatch_outputs_exact_diagnostic(self) -> None:
@@ -316,88 +311,76 @@ class ValidatePlanTests(unittest.TestCase):
             with contextlib.redirect_stderr(stderr):
                 result = vp.validate_plan_dir(d, stories_dir=str(stories_dir))
 
-            self.assertEqual(result, 1)
-            self.assertEqual(
-                stderr.getvalue(),
+            assert result == 1
+            assert stderr.getvalue() == (
                 "INDEX-MISMATCH: story `my-feature` Status 'active' not mirrored "
-                "in index.md\n",
+                "in index.md\n"
             )
 
     def test_bad_status_flagged(self) -> None:
         bad = VALID_PLAN.replace("> **Status:** active", "> **Status:** bogus")
         meta = vp.parse_plan_metadata(bad)
-        self.assertEqual(
-            vp.check_status(meta),
-            ["STATUS: Status value 'bogus' not in allowed set (['active', 'completed'])"],
-        )
+        assert vp.check_status(meta) == [
+            "STATUS: Status value 'bogus' not in allowed set (['active', 'completed'])"
+        ]
 
     def test_completed_requires_line(self) -> None:
         bad = VALID_PLAN.replace("> **Status:** active", "> **Status:** completed")
         meta = vp.parse_plan_metadata(bad)
-        self.assertEqual(
-            vp.check_completed_line(meta),
-            ["COMPLETED-LINE: Status is completed but no `Completed:` line in metadata"],
-        )
+        assert vp.check_completed_line(meta) == [
+            "COMPLETED-LINE: Status is completed but no `Completed:` line in metadata"
+        ]
 
     def test_missing_section_flagged(self) -> None:
         bad = VALID_PLAN.replace("## Verification", "## Not Verification")
-        self.assertEqual(
-            vp.check_required_sections(bad),
-            ["MISSING-SECTION: plan.md is missing ## Verification"],
-        )
+        assert vp.check_required_sections(bad) == [
+            "MISSING-SECTION: plan.md is missing ## Verification"
+        ]
 
     def test_missing_body_alternative_flagged(self) -> None:
         bad = VALID_PLAN.replace("## Current state", "## Something Else")
-        self.assertEqual(
-            vp.check_required_sections(bad),
-            [
-                "MISSING-SECTION: plan.md is missing one of "
-                "## Body / ## Current state"
-            ],
-        )
+        assert vp.check_required_sections(bad) == [
+            "MISSING-SECTION: plan.md is missing one of "
+            "## Body / ## Current state"
+        ]
 
     def test_unfilled_angle_token_flagged(self) -> None:
         bad = VALID_PLAN.replace("- Prompted by: test", "- Prompted by: <task subject>")
-        self.assertEqual(vp.check_placeholders(bad), ["UNFILLED-TOKEN: <task subject>"])
+        assert vp.check_placeholders(bad) == ["UNFILLED-TOKEN: <task subject>"]
 
     def test_unfilled_tbd_flagged(self) -> None:
         bad = VALID_PLAN.replace("## Out of scope\n\n-", "## Out of scope\n\n- TBD")
-        self.assertEqual(vp.check_placeholders(bad), ["UNFILLED-TOKEN: TBD"])
+        assert vp.check_placeholders(bad) == ["UNFILLED-TOKEN: TBD"]
 
     def test_stray_comment_flagged(self) -> None:
         bad = VALID_PLAN.replace("## Goals", "<!-- fixture comment -->\n## Goals")
-        self.assertEqual(vp.check_placeholders(bad), ["STRAY-COMMENT: <!-- ... -->"])
+        assert vp.check_placeholders(bad) == ["STRAY-COMMENT: <!-- ... -->"]
 
     def test_multiline_comment_masks_placeholders_but_not_real_tokens(self) -> None:
         content = "<!-- fixture comment\n<ignored-placeholder>\n-->\n<real-placeholder>"
-        self.assertEqual(
-            vp.check_placeholders(content),
-            [
-                "STRAY-COMMENT: <!-- ... -->",
-                "UNFILLED-TOKEN: <real-placeholder>",
-            ],
-        )
+        assert vp.check_placeholders(content) == [
+            "STRAY-COMMENT: <!-- ... -->",
+            "UNFILLED-TOKEN: <real-placeholder>",
+        ]
 
     def test_missing_phase_section_flagged(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             p = self._write(d, "phase-01-x.md", VALID_PHASE.replace("## Gate", "## Not Gate"))
-            self.assertEqual(
-                vp.check_phase_file(p),
-                ["MISSING-SECTION: phase-01-x.md is missing ## Gate"],
-            )
+            assert vp.check_phase_file(p) == [
+                "MISSING-SECTION: phase-01-x.md is missing ## Gate"
+            ]
 
     def test_missing_phase_label_flagged(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             p = self._write(d, "phase-01-x.md", VALID_PHASE.replace("> **Owner:**", "> **NotOwner:**"))
-            self.assertEqual(
-                vp.check_phase_file(p),
-                ["MISSING-LABEL: phase-01-x.md is missing **Owner:**"],
-            )
+            assert vp.check_phase_file(p) == [
+                "MISSING-LABEL: phase-01-x.md is missing **Owner:**"
+            ]
 
     def test_valid_phase_verify_table_passes(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             p = self._write(d, "phase-01-x.md", VALID_PHASE)
-            self.assertEqual(vp.check_phase_file(p), [])
+            assert vp.check_phase_file(p) == []
 
     def test_missing_verify_commands_section_flagged(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -406,13 +389,10 @@ class ValidatePlanTests(unittest.TestCase):
                 "phase-01-x.md",
                 VALID_PHASE.replace("## Verify commands", "## Not Verify"),
             )
-            self.assertEqual(
-                vp.check_phase_file(p),
-                [
-                    "MISSING-SECTION: phase-01-x.md is missing ## Verify commands",
-                    "VERIFY-TABLE: phase-01-x.md is missing the ## Verify commands section",
-                ],
-            )
+            assert vp.check_phase_file(p) == [
+                "MISSING-SECTION: phase-01-x.md is missing ## Verify commands",
+                "VERIFY-TABLE: phase-01-x.md is missing the ## Verify commands section",
+            ]
 
     def test_verify_table_absent_flagged(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -426,10 +406,9 @@ class ValidatePlanTests(unittest.TestCase):
                     "",
                 ),
             )
-            self.assertEqual(
-                vp.check_phase_file(p),
-                ["VERIFY-TABLE: phase-01-x.md has no Executor/Command table"],
-            )
+            assert vp.check_phase_file(p) == [
+                "VERIFY-TABLE: phase-01-x.md has no Executor/Command table"
+            ]
 
     def test_verify_table_wrong_header_flagged(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -438,13 +417,10 @@ class ValidatePlanTests(unittest.TestCase):
                 "phase-01-x.md",
                 VALID_PHASE.replace("| Executor | Command |", "| Runner | Command |"),
             )
-            self.assertEqual(
-                vp.check_phase_file(p),
-                [
-                    "VERIFY-TABLE: phase-01-x.md table header must be exactly "
-                    "`Executor` then `Command`"
-                ],
-            )
+            assert vp.check_phase_file(p) == [
+                "VERIFY-TABLE: phase-01-x.md table header must be exactly "
+                "`Executor` then `Command`"
+            ]
 
     def test_verify_table_extra_column_flagged(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -455,13 +431,10 @@ class ValidatePlanTests(unittest.TestCase):
                     "| Executor | Command |", "| Executor | Command | Notes |"
                 ),
             )
-            self.assertEqual(
-                vp.check_phase_file(p),
-                [
-                    "VERIFY-TABLE: phase-01-x.md table header must be exactly "
-                    "`Executor` then `Command`"
-                ],
-            )
+            assert vp.check_phase_file(p) == [
+                "VERIFY-TABLE: phase-01-x.md table header must be exactly "
+                "`Executor` then `Command`"
+            ]
 
     def test_verify_table_header_only_flagged(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -472,10 +445,9 @@ class ValidatePlanTests(unittest.TestCase):
                     "| Test Executor | `python3 sample.py` |\n", ""
                 ),
             )
-            self.assertEqual(
-                vp.check_phase_file(p),
-                ["VERIFY-TABLE: phase-01-x.md table has no data rows"],
-            )
+            assert vp.check_phase_file(p) == [
+                "VERIFY-TABLE: phase-01-x.md table has no data rows"
+            ]
 
     def test_verify_table_empty_executor_flagged(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -487,10 +459,9 @@ class ValidatePlanTests(unittest.TestCase):
                     "|  | `python3 sample.py` |",
                 ),
             )
-            self.assertEqual(
-                vp.check_phase_file(p),
-                ["VERIFY-TABLE: phase-01-x.md data row 1 has an empty `Executor` cell"],
-            )
+            assert vp.check_phase_file(p) == [
+                "VERIFY-TABLE: phase-01-x.md data row 1 has an empty `Executor` cell"
+            ]
 
     def test_verify_table_empty_command_flagged(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -502,73 +473,63 @@ class ValidatePlanTests(unittest.TestCase):
                     "| Test Executor |  |",
                 ),
             )
-            self.assertEqual(
-                vp.check_phase_file(p),
-                ["VERIFY-TABLE: phase-01-x.md data row 1 has an empty `Command` cell"],
-            )
+            assert vp.check_phase_file(p) == [
+                "VERIFY-TABLE: phase-01-x.md data row 1 has an empty `Command` cell"
+            ]
 
     def test_index_missing_slug_flagged(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             self._write(d, "index.md", "# Index\n\n| Title | Status |\n|---|---|\n| other | active |\n")
             self._write(d, "my-feature.md", "# User story — my-feature\n\n> **Status:** active\n")
             findings = vp.check_story_index(d)
-            self.assertEqual(
-                findings,
-                ["INDEX-MISSING: story slug `my-feature` not listed in index.md"],
-            )
+            assert findings == [
+                "INDEX-MISSING: story slug `my-feature` not listed in index.md"
+            ]
 
     def test_goal_trace_valid_passes(self) -> None:
-        self.assertEqual(
+        assert (
             vp.check_goal_trace(
                 PHASE_AWARE_PLAN, ["phase-01-owner.md", "phase-02-owner.md"]
-            ),
-            [],
+            )
+            == []
         )
 
     def test_goal_trace_uncited_goal_flagged(self) -> None:
         bad = PHASE_AWARE_PLAN.replace("| out two | G2 |", "| out two | G1 |")
-        self.assertEqual(
-            vp.check_goal_trace(bad, ["phase-01-owner.md", "phase-02-owner.md"]),
-            ["GOAL-TRACE: goal `G2` is not cited by any phase"],
-        )
+        assert vp.check_goal_trace(
+            bad, ["phase-01-owner.md", "phase-02-owner.md"]
+        ) == ["GOAL-TRACE: goal `G2` is not cited by any phase"]
 
     def test_goal_trace_unknown_goal_flagged(self) -> None:
         bad = PHASE_AWARE_PLAN.replace("| out two | G2 |", "| out two | G9 |")
-        self.assertEqual(
-            vp.check_goal_trace(bad, ["phase-01-owner.md", "phase-02-owner.md"]),
-            [
-                "GOAL-TRACE: dispatch row 2 cites unknown goal `G9`",
-                "GOAL-TRACE: goal `G2` is not cited by any phase",
-            ],
-        )
+        assert vp.check_goal_trace(
+            bad, ["phase-01-owner.md", "phase-02-owner.md"]
+        ) == [
+            "GOAL-TRACE: dispatch row 2 cites unknown goal `G9`",
+            "GOAL-TRACE: goal `G2` is not cited by any phase",
+        ]
 
     def test_goal_trace_missing_phase_runbook_flagged(self) -> None:
-        self.assertEqual(
-            vp.check_goal_trace(PHASE_AWARE_PLAN, ["phase-01-owner.md"]),
-            [
-                "GOAL-TRACE: dispatch row 2 references missing phase file "
-                "`phase-02-owner.md`"
-            ],
-        )
+        assert vp.check_goal_trace(PHASE_AWARE_PLAN, ["phase-01-owner.md"]) == [
+            "GOAL-TRACE: dispatch row 2 references missing phase file "
+            "`phase-02-owner.md`"
+        ]
 
     def test_goal_trace_unreferenced_phase_file_flagged(self) -> None:
-        self.assertEqual(
-            vp.check_goal_trace(
-                PHASE_AWARE_PLAN,
-                ["phase-01-owner.md", "phase-02-owner.md", "phase-03-owner.md"],
-            ),
-            [
-                "GOAL-TRACE: phase file `phase-03-owner.md` is not referenced "
-                "by the phase index"
-            ],
-        )
+        assert vp.check_goal_trace(
+            PHASE_AWARE_PLAN,
+            ["phase-01-owner.md", "phase-02-owner.md", "phase-03-owner.md"],
+        ) == [
+            "GOAL-TRACE: phase file `phase-03-owner.md` is not referenced "
+            "by the phase index"
+        ]
 
     def test_manifest_equality_valid_passes(self) -> None:
         snapshots = [
             self._phase_snapshot("phase-01-owner.md", PHASE_ONE),
             self._phase_snapshot("phase-02-owner.md", PHASE_TWO),
         ]
-        self.assertEqual(vp.check_manifest_equality(PHASE_AWARE_PLAN, snapshots), [])
+        assert vp.check_manifest_equality(PHASE_AWARE_PLAN, snapshots) == []
 
     def test_manifest_missing_phase_path_flagged(self) -> None:
         bad_plan = PHASE_AWARE_PLAN.replace("| Modify | `src/b.py` |\n", "")
@@ -576,13 +537,10 @@ class ValidatePlanTests(unittest.TestCase):
             self._phase_snapshot("phase-01-owner.md", PHASE_ONE),
             self._phase_snapshot("phase-02-owner.md", PHASE_TWO),
         ]
-        self.assertEqual(
-            vp.check_manifest_equality(bad_plan, snapshots),
-            [
-                "MANIFEST: phase Writes path `src/b.py` is missing from the "
-                "write/delete manifest"
-            ],
-        )
+        assert vp.check_manifest_equality(bad_plan, snapshots) == [
+            "MANIFEST: phase Writes path `src/b.py` is missing from the "
+            "write/delete manifest"
+        ]
 
     def test_manifest_extra_path_flagged(self) -> None:
         bad_plan = PHASE_AWARE_PLAN.replace(
@@ -593,10 +551,9 @@ class ValidatePlanTests(unittest.TestCase):
             self._phase_snapshot("phase-01-owner.md", PHASE_ONE),
             self._phase_snapshot("phase-02-owner.md", PHASE_TWO),
         ]
-        self.assertEqual(
-            vp.check_manifest_equality(bad_plan, snapshots),
-            ["MANIFEST: manifest path `src/z.py` is not declared in any phase Writes"],
-        )
+        assert vp.check_manifest_equality(bad_plan, snapshots) == [
+            "MANIFEST: manifest path `src/z.py` is not declared in any phase Writes"
+        ]
 
     def test_manifest_unknown_action_flagged(self) -> None:
         bad_plan = PHASE_AWARE_PLAN.replace(
@@ -606,62 +563,51 @@ class ValidatePlanTests(unittest.TestCase):
             self._phase_snapshot("phase-01-owner.md", PHASE_ONE),
             self._phase_snapshot("phase-02-owner.md", PHASE_TWO),
         ]
-        self.assertEqual(
-            vp.check_manifest_equality(bad_plan, snapshots),
-            ["MANIFEST: manifest row 1 action 'Remove' not in ['Add', 'Delete', 'Modify']"],
-        )
+        assert vp.check_manifest_equality(bad_plan, snapshots) == [
+            "MANIFEST: manifest row 1 action 'Remove' not in ['Add', 'Delete', 'Modify']"
+        ]
 
     def test_manifest_none_writes_need_no_manifest_section(self) -> None:
         plan = VALID_PLAN.replace("## Write/delete manifest\n\n| Action | Path |\n|---|---|\n\n", "")
         snapshots = [self._phase_snapshot("phase-01-owner.md", VALID_PHASE)]
-        self.assertEqual(vp.check_manifest_equality(plan, snapshots), [])
+        assert vp.check_manifest_equality(plan, snapshots) == []
 
     def test_verification_parity_valid_passes(self) -> None:
-        self.assertEqual(vp.check_verification_parity(PHASE_AWARE_PLAN, 2), [])
+        assert vp.check_verification_parity(PHASE_AWARE_PLAN, 2) == []
 
     def test_verification_parity_mismatch_flagged(self) -> None:
-        self.assertEqual(
-            vp.check_verification_parity(PHASE_AWARE_PLAN, 1),
-            [
-                "VERIFICATION-PARITY: ## Verification has 2 checkbox(es) but the "
-                "plan has 1 phase file(s)"
-            ],
-        )
+        assert vp.check_verification_parity(PHASE_AWARE_PLAN, 1) == [
+            "VERIFICATION-PARITY: ## Verification has 2 checkbox(es) but the "
+            "plan has 1 phase file(s)"
+        ]
 
     def test_verification_parity_counts_completed_bullets(self) -> None:
         plan = PHASE_AWARE_PLAN.replace("- ⬜ two", "- ✅ two", 1)
-        self.assertEqual(vp.check_verification_parity(plan, 2), [])
+        assert vp.check_verification_parity(plan, 2) == []
 
     def test_audit_gate_pending_active_passes(self) -> None:
-        self.assertEqual(
-            vp.check_audit_gate(PHASE_AWARE_PLAN + AUDIT_PENDING, "active"), []
-        )
+        assert vp.check_audit_gate(PHASE_AWARE_PLAN + AUDIT_PENDING, "active") == []
 
     def test_audit_gate_absent_on_active_passes(self) -> None:
-        self.assertEqual(vp.check_audit_gate(PHASE_AWARE_PLAN, "active"), [])
+        assert vp.check_audit_gate(PHASE_AWARE_PLAN, "active") == []
 
     def test_audit_gate_completed_without_audit_flagged(self) -> None:
-        self.assertEqual(
-            vp.check_audit_gate(PHASE_AWARE_PLAN, "completed"),
-            ["AUDIT: completed plan is missing the ## Audit section"],
-        )
+        assert vp.check_audit_gate(PHASE_AWARE_PLAN, "completed") == [
+            "AUDIT: completed plan is missing the ## Audit section"
+        ]
 
     def test_audit_gate_completed_fail_flagged(self) -> None:
-        self.assertEqual(
-            vp.check_audit_gate(PHASE_AWARE_PLAN + AUDIT_FAIL, "completed"),
-            ["AUDIT: completed plan Verdict must be [PASS], found '[FAIL]'"],
-        )
+        assert vp.check_audit_gate(PHASE_AWARE_PLAN + AUDIT_FAIL, "completed") == [
+            "AUDIT: completed plan Verdict must be [PASS], found '[FAIL]'"
+        ]
 
     def test_audit_gate_unknown_verdict_flagged(self) -> None:
-        self.assertEqual(
-            vp.check_audit_gate(PHASE_AWARE_PLAN + AUDIT_UNKNOWN, "active"),
-            ["AUDIT: Verdict '[MAYBE]' not in ['[FAIL]', '[PASS]', '[PENDING]']"],
-        )
+        assert vp.check_audit_gate(PHASE_AWARE_PLAN + AUDIT_UNKNOWN, "active") == [
+            "AUDIT: Verdict '[MAYBE]' not in ['[FAIL]', '[PASS]', '[PENDING]']"
+        ]
 
     def test_audit_gate_completed_pass_passes(self) -> None:
-        self.assertEqual(
-            vp.check_audit_gate(PHASE_AWARE_PLAN + AUDIT_PASS, "completed"), []
-        )
+        assert vp.check_audit_gate(PHASE_AWARE_PLAN + AUDIT_PASS, "completed") == []
 
     def test_validate_plan_dir_phase_aware_valid_fixture_passes(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -672,8 +618,8 @@ class ValidatePlanTests(unittest.TestCase):
             with contextlib.redirect_stdout(stdout):
                 result = vp.validate_plan_dir(d, stories_dir=None)
 
-            self.assertEqual(result, 0)
-            self.assertEqual(stdout.getvalue(), f"ok  plan: {d}  phases: 2\n")
+            assert result == 0
+            assert stdout.getvalue() == f"ok  plan: {d}  phases: 2\n"
 
     def test_validate_plan_dir_manifest_drift_fails(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -686,13 +632,10 @@ class ValidatePlanTests(unittest.TestCase):
             with contextlib.redirect_stderr(stderr):
                 result = vp.validate_plan_dir(d, stories_dir=None)
 
-            self.assertEqual(result, 1)
-            self.assertEqual(
-                stderr.getvalue(),
+            assert result == 1
+            assert stderr.getvalue() == (
                 "MANIFEST: phase Writes path `src/b.py` is missing from the "
-                "write/delete manifest\n",
+                "write/delete manifest\n"
             )
 
 
-if __name__ == "__main__":
-    unittest.main(verbosity=2)

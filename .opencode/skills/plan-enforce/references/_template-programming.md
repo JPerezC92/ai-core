@@ -79,7 +79,7 @@
 | <Name Emoji (Role)> | `<shell command>` |
 -->
 
-- Python stdlib `unittest` edits at an exact active-plan path: list the declared literal `python3` command for that exact file, obtain Bastion 🧱 (Backend & Scripts Architect) `[PASS]`, and require Crucible 🔥 (Test Architect) to return `[PASS]` or `[FAIL]` — `[UNCERTAIN]` is not acceptable for this scope. `pytest` is not introduced.
+- Python `test_*.py` edits at an exact active-plan path: list the declared literal `uv run --frozen --group dev pytest` command for that path, obtain Bastion 🧱 (Backend & Scripts Architect) `[PASS]`, and require Crucible 🔥 (Test Architect) to return `[PASS]` or `[FAIL]` — `[UNCERTAIN]` is not acceptable for this scope.
 
 ## Audit
 

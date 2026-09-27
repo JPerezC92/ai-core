@@ -31,7 +31,7 @@
 - No unfilled `<...>` placeholder tokens.
 - `## Verify commands` is a non-empty canonical table with exactly the `Executor` and `Command` columns; every row pairs one non-empty executor with one non-empty command.
 - Executor authority is a phase-review item: the reviewer confirms the declared executor holds the role and tool authority to run the command. The validator checks declared traceability only and never inspects permission models.
-- A phase editing an exact active-plan Python stdlib `unittest` file lists the declared literal `python3` command and records Bastion 🧱 (Backend & Scripts Architect) `[PASS]`; Crucible 🔥 (Test Architect) is dispatched for the test-file edit and must return `[PASS]` or `[FAIL]` — `[UNCERTAIN]` is not acceptable for this scope and does not satisfy the gate. `pytest` is not introduced.
+- A phase editing an exact active-plan Python `test_*.py` file lists the declared literal `uv run --frozen --group dev pytest` command and records Bastion 🧱 (Backend & Scripts Architect) `[PASS]`; Crucible 🔥 (Test Architect) is dispatched for the test-file edit and must return `[PASS]` or `[FAIL]` — `[UNCERTAIN]` is not acceptable for this scope and does not satisfy the gate.
 
 ## user-stories
 

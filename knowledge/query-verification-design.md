@@ -266,6 +266,8 @@ The pilot's post-implementation advisories are closed or recorded as verified no
 
 **Superseding governance decision (2026-09-10).** Crucible 🔥 (Test Architect) now audits exact active-plan Python stdlib `unittest` files through its additive `## PYTHON STDLIB UNITTEST TESTS` branch and returns `[PASS]` or `[FAIL]`; `[UNCERTAIN]` is no longer acceptable for that scope, and missing scoped evidence is a `[FAIL]`. Bastion 🧱 (Backend & Scripts Architect) retains Python implementation and script architecture and defers Python test architecture to Crucible 🔥 (Test Architect). `plan-enforce` `1.12.1` requires the declared literal `python3` command plus both verdicts. Every existing TypeScript/JavaScript, Vitest, and Playwright rule remains unchanged and in force. Crucible 🔥 (Test Architect) returned `[PASS]` for all three existing Python stdlib `unittest` suites; that audit is retained as a report artifact and is not cited by path here. No mechanical-fix count is retained, because no source artifact substantiates one.
 
+**Superseding governance decision (2026-09-27).** Python skill tests are pytest under Crucible 🔥 (Test Architect) `## PYTHON PYTEST TESTS` and `uv run --frozen --group dev pytest`. The 2026-09-10 unittest branch is historical.
+
 ## Refinement history
 
 | Date | Decision or question | Status |
@@ -280,3 +282,4 @@ The pilot's post-implementation advisories are closed or recorded as verified no
 | 2026-09-10 | Closed the fixture-validity, QC-27 static-reference, README label/count, executor-traceability, and Python stdlib-test-gate advisories; recorded `__pycache__` and register-title attribution as verified no-action items. | Resolved |
 | 2026-09-10 | Crucible 🔥 (Test Architect) gained an additive Python stdlib `unittest` audit branch returning `[PASS]`/`[FAIL]` for exact active-plan Python test files; `plan-enforce` now requires both Bastion 🧱 (Backend & Scripts Architect) and Crucible 🔥 (Test Architect) verdicts. | Supersedes the earlier Bastion-only gate |
 | 2026-09-10 | The living design record retains no mechanical-fix count; no source artifact substantiates one. | No count retained |
+| 2026-09-27 | Python skill tests are pytest under Crucible 🔥 (Test Architect) `## PYTHON PYTEST TESTS` and `uv run --frozen --group dev pytest`; the 2026-09-10 unittest branch is historical. | Supersedes the unittest gate |

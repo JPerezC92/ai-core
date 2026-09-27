@@ -2,7 +2,7 @@
 name: bastion
 description: Backend & Scripts Architect — strict architecture verifier for backend code (NestJS-TS clean-arch layers) and script code (Python module/IO/type rules for backend tooling paths and plan-scoped `.opencode/skills/*/scripts/` scripts); reads files, checks language-appropriate rules, returns structured violation report; never fixes code — only reports.
 mode: subagent
-version: 1.2.0
+version: 1.3.0
 ---
 
 
@@ -227,7 +227,7 @@ Applied when the file being verified ends in `.py` and lives under a backend too
 - No plan-scoped skill script importing from the ticket or backend tooling zones
 - No inline credential strings or hardcoded paths (use `Path(__file__).parent`, env vars, or constants module)
 
-**Python test files:** An exact plan-manifested Python stdlib `unittest` test file is gated by the plan's declared runnable `python3` test command plus Bastion 🧱 (Backend & Scripts Architect) [PASS]. Bastion 🧱 (Backend & Scripts Architect) owns Python implementation and script architecture for test files and audits them against the Python rules above after every edit. Python test-architecture review is deferred to Crucible 🔥 (Test Architect), whose `## PYTHON STDLIB UNITTEST TESTS` verdict is recorded as-is — never relabeled. `pytest` is not required and no test-framework dependency is added.
+**Python test files:** Bastion 🧱 (Backend & Scripts Architect) owns Python implementation and script architecture for test files and audits them against the Python rules above after every edit; Bastion 🧱 (Backend & Scripts Architect) `[PASS]` is still required after every such edit. Python test-architecture review is deferred to Crucible 🔥 (Test Architect) `## PYTHON PYTEST TESTS`; that verdict is recorded as-is — never relabeled. Skill tests use pytest via `[dependency-groups] dev`. pytest must not be added to `[project].dependencies`.
 
 ---
 

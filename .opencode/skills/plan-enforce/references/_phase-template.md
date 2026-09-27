@@ -28,13 +28,13 @@ HARD RULE — fill every Step / Output / Gate / Abort. No `TBD` placeholders. Ag
 |---|---|
 | <Name Emoji (Role)> | `<shell command>` |
 
-- Python stdlib `unittest` edits at an exact active-plan path: declare the literal `python3` command for that exact file, record Bastion 🧱 (Backend & Scripts Architect) `[PASS]`, and require Crucible 🔥 (Test Architect) to return `[PASS]` or `[FAIL]` — `[UNCERTAIN]` is not acceptable for this scope. `pytest` is not introduced.
+- Python `test_*.py` edits at an exact active-plan path: declare the literal `uv run --frozen --group dev pytest` command for that path, record Bastion 🧱 (Backend & Scripts Architect) `[PASS]`, and require Crucible 🔥 (Test Architect) to return `[PASS]` or `[FAIL]` — `[UNCERTAIN]` is not acceptable for this scope.
 
 ## Gate
 
 - ⬜ <Condition that must be true before next phase begins>
 - ⬜ <Second condition if applicable>
-- Python stdlib `unittest` phases: the gate passes only when the exact file's declared `python3` command ran, Bastion 🧱 (Backend & Scripts Architect) returned `[PASS]`, and Crucible 🔥 (Test Architect) returned `[PASS]` or `[FAIL]`; a recorded `[UNCERTAIN]` does not satisfy this gate.
+- Python `test_*.py` phases: the gate passes only when the exact path's declared `uv run --frozen --group dev pytest` command ran, Bastion 🧱 (Backend & Scripts Architect) returned `[PASS]`, and Crucible 🔥 (Test Architect) returned `[PASS]` or `[FAIL]`; a recorded `[UNCERTAIN]` does not satisfy this gate.
 
 ## Abort conditions
 
