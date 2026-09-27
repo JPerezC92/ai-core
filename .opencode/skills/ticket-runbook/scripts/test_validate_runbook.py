@@ -2,7 +2,7 @@
 validates well-formed working analyses, register-first identification, and the
 close-out collapse.
 
-Run: python3 .opencode/skills/ticket-runbook/scripts/test_validate_runbook.py
+Run: uv run --frozen --group dev pytest .opencode/skills/ticket-runbook/scripts/test_validate_runbook.py
 """
 
 import contextlib
@@ -11,9 +11,10 @@ import re
 import shutil
 import sys
 import tempfile
-import unittest
 from datetime import datetime, timedelta
 from pathlib import Path
+
+import pytest
 
 sys.path.insert(0, str(Path(__file__).parent))
 import validate_runbook as vr  # noqa: E402
@@ -237,13 +238,13 @@ def _filesystem_bytes(root: Path) -> tuple[dict[str, bytes], list[str]]:
     return files, directories
 
 
-class ValidateRunbookTests(unittest.TestCase):
+class ValidateRunbookTests:
     # ── Scaffold and structure ───────────────────────────────────────────────
 
     def test_copied_scaffold_passes_scaffold_validation(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             analysis_dir = _copy_initialized_scaffold(d)
-            self.assertEqual(vr.validate_scaffold(str(analysis_dir)), 0)
+            assert vr.validate_scaffold(str(analysis_dir)) == 0
 
     def test_copied_scaffold_rejects_malformed_phase(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -253,11 +254,10 @@ class ValidateRunbookTests(unittest.TestCase):
             with contextlib.redirect_stderr(stderr):
                 result = vr.validate_scaffold(str(analysis_dir))
 
-            self.assertEqual(result, 1)
-            self.assertEqual(
-                stderr.getvalue(),
+            assert result == 1
+            assert stderr.getvalue() == (
                 "PHASE-ERROR: Phase value 'not-a-phase' not in allowed set "
-                "(identify, investigate, synthesize)\n",
+                "(identify, investigate, synthesize)\n"
             )
 
     def test_copied_scaffold_rejects_missing_step(self) -> None:
@@ -268,16 +268,14 @@ class ValidateRunbookTests(unittest.TestCase):
             with contextlib.redirect_stderr(stderr):
                 result = vr.validate_scaffold(str(analysis_dir))
 
-            self.assertEqual(result, 1)
-            self.assertIn(
-                "MISSING-STEP: 02-investigate.md", stderr.getvalue()
-            )
+            assert result == 1
+            assert "MISSING-STEP: 02-investigate.md" in stderr.getvalue()
 
     def test_default_ignores_future_template_tokens(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             analysis_dir = _copy_initialized_scaffold(d)
             _fill_template_identify(analysis_dir)
-            self.assertEqual(vr.validate(str(analysis_dir)), 0)
+            assert vr.validate(str(analysis_dir)) == 0
 
     def test_default_rejects_structural_defect_in_present_future_step(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -294,10 +292,10 @@ class ValidateRunbookTests(unittest.TestCase):
             with contextlib.redirect_stderr(stderr):
                 result = vr.validate(str(analysis_dir))
 
-            self.assertEqual(result, 1)
-            self.assertEqual(
-                stderr.getvalue(),
-                "MISSING-SECTION: 02-investigate.md is missing ## Gate\n",
+            assert result == 1
+            assert (
+                stderr.getvalue()
+                == "MISSING-SECTION: 02-investigate.md is missing ## Gate\n"
             )
 
     def test_completed_step_token_fails_default_and_strict_validation(self) -> None:
@@ -313,25 +311,25 @@ class ValidateRunbookTests(unittest.TestCase):
             with contextlib.redirect_stderr(default_stderr):
                 default_result = vr.validate(str(analysis_dir))
 
-            self.assertEqual(default_result, 1)
-            self.assertEqual(
-                default_stderr.getvalue(),
-                "UNFILLED-TOKEN: <unfilled-completed> in 01-identify.md\n",
+            assert default_result == 1
+            assert (
+                default_stderr.getvalue()
+                == "UNFILLED-TOKEN: <unfilled-completed> in 01-identify.md\n"
             )
             step_stderr = io.StringIO()
             with contextlib.redirect_stderr(step_stderr):
                 step_result = vr.validate_step(str(analysis_dir), "identify")
 
-            self.assertEqual(step_result, 1)
-            self.assertEqual(
-                step_stderr.getvalue(),
-                "UNFILLED-TOKEN: <unfilled-completed> in 01-identify.md\n",
+            assert step_result == 1
+            assert (
+                step_stderr.getvalue()
+                == "UNFILLED-TOKEN: <unfilled-completed> in 01-identify.md\n"
             )
 
     def test_valid_analysis_passes(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             analysis_dir = _make_analysis(d)
-            self.assertEqual(vr.validate(str(analysis_dir)), 0)
+            assert vr.validate(str(analysis_dir)) == 0
 
     def test_missing_step_file(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -340,14 +338,11 @@ class ValidateRunbookTests(unittest.TestCase):
             violations, warnings = vr.check_step_files_exist(
                 vr.load_step_file_contents(analysis_dir), str(analysis_dir)
             )
-            self.assertEqual(
-                violations,
-                [
-                    "MISSING-STEP: 02-investigate.md not found in "
-                    f"{analysis_dir}"
-                ],
-            )
-            self.assertEqual(warnings, [])
+            assert violations == [
+                "MISSING-STEP: 02-investigate.md not found in "
+                f"{analysis_dir}"
+            ]
+            assert warnings == []
 
     def test_missing_section_in_step_file(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -362,7 +357,7 @@ class ValidateRunbookTests(unittest.TestCase):
             findings = vr.check_step_files_have_required_sections(
                 vr.load_step_file_contents(analysis_dir)
             )
-            self.assertEqual(findings, [("02-investigate.md", "## Gate")])
+            assert findings == [("02-investigate.md", "## Gate")]
 
     def test_unfilled_token_flagged(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -374,10 +369,7 @@ class ValidateRunbookTests(unittest.TestCase):
             findings = vr.check_step_files_have_required_sections(
                 vr.load_step_file_contents(analysis_dir)
             )
-            self.assertEqual(
-                findings,
-                [("01-identify.md", "UNFILLED-TOKEN: <fill>")],
-            )
+            assert findings == [("01-identify.md", "UNFILLED-TOKEN: <fill>")]
 
     # ── Header enums and budgets ─────────────────────────────────────────────
 
@@ -393,10 +385,9 @@ class ValidateRunbookTests(unittest.TestCase):
                 },
             )
             header = vr.load_state_header(analysis_dir / "state.md")
-            self.assertEqual(
-                vr.check_kill_switches(header),
-                ["KILL-1: hypothesis cap exceeded (4 > 3)"],
-            )
+            assert vr.check_kill_switches(header) == [
+                "KILL-1: hypothesis cap exceeded (4 > 3)"
+            ]
 
     def test_query_budget_violation(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -410,10 +401,9 @@ class ValidateRunbookTests(unittest.TestCase):
                 },
             )
             header = vr.load_state_header(analysis_dir / "state.md")
-            self.assertEqual(
-                vr.check_kill_switches(header),
-                ["KILL-2: query budget exhausted (7 > 6)"],
-            )
+            assert vr.check_kill_switches(header) == [
+                "KILL-2: query budget exhausted (7 > 6)"
+            ]
 
     def test_rerun_violation(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -427,10 +417,9 @@ class ValidateRunbookTests(unittest.TestCase):
                 },
             )
             header = vr.load_state_header(analysis_dir / "state.md")
-            self.assertEqual(
-                vr.check_kill_switches(header),
-                ["KILL-3: re-run cap exceeded (3 > 2)"],
-            )
+            assert vr.check_kill_switches(header) == [
+                "KILL-3: re-run cap exceeded (3 > 2)"
+            ]
 
     def test_identification_verdict_invalid_enum(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -439,26 +428,20 @@ class ValidateRunbookTests(unittest.TestCase):
                 analysis_dir, {"identification_verdict": "bogus"}
             )
             header = vr.load_state_header(analysis_dir / "state.md")
-            self.assertEqual(
-                vr.check_identification_verdict(header),
-                [
-                    "VERDICT-1: identification_verdict value 'bogus' not in "
-                    "allowed set (exact, no_match, pending, structural)"
-                ],
-            )
+            assert vr.check_identification_verdict(header) == [
+                "VERDICT-1: identification_verdict value 'bogus' not in "
+                "allowed set (exact, no_match, pending, structural)"
+            ]
 
     def test_phase_invalid_enum(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             analysis_dir = _make_analysis(d)
             _patch_header(analysis_dir, {"Phase": "not-a-phase"})
             header = vr.load_state_header(analysis_dir / "state.md")
-            self.assertEqual(
-                vr.check_phase(header),
-                [
-                    "PHASE-ERROR: Phase value 'not-a-phase' not in allowed set "
-                    "(identify, investigate, synthesize)"
-                ],
-            )
+            assert vr.check_phase(header) == [
+                "PHASE-ERROR: Phase value 'not-a-phase' not in allowed set "
+                "(identify, investigate, synthesize)"
+            ]
 
     def test_concurrent_session_warning(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -470,17 +453,15 @@ class ValidateRunbookTests(unittest.TestCase):
             )
             header = vr.load_state_header(analysis_dir / "state.md")
             warning = vr.check_concurrent_session(header)
-            self.assertIsNotNone(warning)
-            self.assertIn("CONCURRENT", warning)
+            assert warning is not None
+            assert "CONCURRENT" in warning
 
     # ── Step modes ───────────────────────────────────────────────────────────
 
     def test_step_flag_on_present_step(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             analysis_dir = _make_analysis(d, STEP_FILES)
-            self.assertEqual(
-                vr.validate_step(str(analysis_dir), "investigate"), 0
-            )
+            assert vr.validate_step(str(analysis_dir), "investigate") == 0
 
     def test_step_flag_on_missing_step(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -488,8 +469,8 @@ class ValidateRunbookTests(unittest.TestCase):
             buf = io.StringIO()
             with contextlib.redirect_stderr(buf):
                 result = vr.validate_step(str(analysis_dir), "synthesize")
-            self.assertEqual(result, 1)
-            self.assertIn("STEP-NOT-WRITTEN", buf.getvalue())
+            assert result == 1
+            assert "STEP-NOT-WRITTEN" in buf.getvalue()
 
     def test_partial_analysis_default_passes_with_warning(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -499,8 +480,8 @@ class ValidateRunbookTests(unittest.TestCase):
             buf = io.StringIO()
             with contextlib.redirect_stderr(buf):
                 result = vr.validate(str(analysis_dir))
-            self.assertEqual(result, 0)
-            self.assertIn("INCOMPLETE-ANALYSIS", buf.getvalue())
+            assert result == 0
+            assert "INCOMPLETE-ANALYSIS" in buf.getvalue()
 
     # ── Register-first identification ────────────────────────────────────────
 
@@ -513,7 +494,7 @@ class ValidateRunbookTests(unittest.TestCase):
             "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n\n"
             "(no entries yet)"
         )
-        self.assertEqual(vr.parse_problem_register(content), [])
+        assert vr.parse_problem_register(content) == []
 
     def test_parse_problem_register_rows(self) -> None:
         row = _row(
@@ -533,12 +514,12 @@ class ValidateRunbookTests(unittest.TestCase):
             status="open",
         )
         rows = vr.parse_problem_register(_register(row))
-        self.assertEqual(len(rows), 1)
-        self.assertEqual(rows[0]["id"], "P-001")
-        self.assertEqual(rows[0]["team"], "incident")
-        self.assertEqual(rows[0]["symptom"], "S-05, S-07")
-        self.assertEqual(rows[0]["lifecycle"], "candidate")
-        self.assertEqual(rows[0]["allow_exact"], "no")
+        assert len(rows) == 1
+        assert rows[0]["id"] == "P-001"
+        assert rows[0]["team"] == "incident"
+        assert rows[0]["symptom"] == "S-05, S-07"
+        assert rows[0]["lifecycle"] == "candidate"
+        assert rows[0]["allow_exact"] == "no"
 
     def test_register_schema_rejects_bad_lifecycle(self) -> None:
         row = _row(
@@ -551,35 +532,26 @@ class ValidateRunbookTests(unittest.TestCase):
             status="open",
         )
         violations = vr.check_register_rows(_register(row))
-        self.assertTrue(
-            any("REGISTER-3" in item for item in violations), violations
-        )
+        assert any("REGISTER-3" in item for item in violations), violations
 
     def test_register_schema_rejects_bad_column_count(self) -> None:
         content = "## Register\n\n| P-001 | 2026-01-01 | incident |\n"
         violations = vr.check_register_rows(content)
-        self.assertTrue(
-            any("REGISTER-1" in item for item in violations), violations
-        )
+        assert any("REGISTER-1" in item for item in violations), violations
 
     def test_empty_register_verdict_no_match_ok(self) -> None:
-        self.assertEqual(
-            vr.check_identification_consistency("no_match", [], []), []
-        )
+        assert vr.check_identification_consistency("no_match", [], []) == []
 
     def test_empty_register_verdict_exact_rejected(self) -> None:
         violations = vr.check_identification_consistency(
             "exact", ["P-001"], []
         )
-        self.assertTrue(
-            any("VERDICT-4" in item for item in violations), violations
-        )
+        assert any("VERDICT-4" in item for item in violations), violations
 
     def test_exact_requires_cited_p_nnn(self) -> None:
-        self.assertEqual(
-            vr.check_identification_consistency("exact", [], []),
-            ["VERDICT-3: exact requires a cited incident P-NNN"],
-        )
+        assert vr.check_identification_consistency("exact", [], []) == [
+            "VERDICT-3: exact requires a cited incident P-NNN"
+        ]
 
     def test_exact_requires_active_and_allow_exact(self) -> None:
         candidate = _row(
@@ -594,12 +566,8 @@ class ValidateRunbookTests(unittest.TestCase):
         violations = vr.check_identification_consistency(
             "exact", ["P-001"], vr.parse_problem_register(_register(candidate))
         )
-        self.assertTrue(
-            any("VERDICT-6" in item for item in violations), violations
-        )
-        self.assertTrue(
-            any("VERDICT-7" in item for item in violations), violations
-        )
+        assert any("VERDICT-6" in item for item in violations), violations
+        assert any("VERDICT-7" in item for item in violations), violations
 
         active = _row(
             id="P-002",
@@ -610,11 +578,11 @@ class ValidateRunbookTests(unittest.TestCase):
             allow_exact="yes",
             status="open",
         )
-        self.assertEqual(
+        assert (
             vr.check_identification_consistency(
                 "exact", ["P-002"], vr.parse_problem_register(_register(active))
-            ),
-            [],
+            )
+            == []
         )
 
     def test_structural_requires_candidate_or_active(self) -> None:
@@ -630,9 +598,7 @@ class ValidateRunbookTests(unittest.TestCase):
         violations = vr.check_identification_consistency(
             "structural", ["P-001"], vr.parse_problem_register(_register(mitigated))
         )
-        self.assertTrue(
-            any("VERDICT-8" in item for item in violations), violations
-        )
+        assert any("VERDICT-8" in item for item in violations), violations
 
         candidate = _row(
             id="P-002",
@@ -643,13 +609,13 @@ class ValidateRunbookTests(unittest.TestCase):
             allow_exact="no",
             status="open",
         )
-        self.assertEqual(
+        assert (
             vr.check_identification_consistency(
                 "structural",
                 ["P-002"],
                 vr.parse_problem_register(_register(candidate)),
-            ),
-            [],
+            )
+            == []
         )
 
     def test_no_match_rejects_cited_p_nnn(self) -> None:
@@ -665,10 +631,9 @@ class ValidateRunbookTests(unittest.TestCase):
         violations = vr.check_identification_consistency(
             "no_match", ["P-001"], vr.parse_problem_register(_register(active))
         )
-        self.assertEqual(
-            violations,
-            ["VERDICT-2: no_match must not cite a P-NNN (cited: ['P-001'])"],
-        )
+        assert violations == [
+            "VERDICT-2: no_match must not cite a P-NNN (cited: ['P-001'])"
+        ]
 
     def test_parse_ticket_record(self) -> None:
         content = (
@@ -679,9 +644,9 @@ class ValidateRunbookTests(unittest.TestCase):
             "---\n\n# ticket\n"
         )
         record = vr.parse_ticket_record(content, "ticket_1.md")
-        self.assertEqual(record["symptom_ids"], ["S-05", "S-07"])
-        self.assertEqual(record["known_problem_ids"], ["P-001"])
-        self.assertEqual(record["identification_verdict"], "structural")
+        assert record["symptom_ids"] == ["S-05", "S-07"]
+        assert record["known_problem_ids"] == ["P-001"]
+        assert record["identification_verdict"] == "structural"
 
     # ── Pre-close readiness ──────────────────────────────────────────────────
 
@@ -690,17 +655,17 @@ class ValidateRunbookTests(unittest.TestCase):
             ticket_dir = _pre_close_ticket_dir(d)
             snapshot = vr.load_close_out_snapshot(ticket_dir)
 
-            self.assertEqual(vr.evaluate_pre_close(snapshot, []), [])
-            self.assertEqual(vr.validate_pre_close(str(ticket_dir), d), 0)
+            assert vr.evaluate_pre_close(snapshot, []) == []
+            assert vr.validate_pre_close(str(ticket_dir), d) == 0
 
     def test_pre_close_is_byte_for_byte_non_mutating(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             ticket_dir = _pre_close_ticket_dir(d)
             before = _filesystem_bytes(ticket_dir)
 
-            self.assertEqual(vr.validate_pre_close(str(ticket_dir), d), 0)
+            assert vr.validate_pre_close(str(ticket_dir), d) == 0
 
-            self.assertEqual(_filesystem_bytes(ticket_dir), before)
+            assert _filesystem_bytes(ticket_dir) == before
 
     def test_pre_close_rejects_zero_ticket_records(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -711,8 +676,8 @@ class ValidateRunbookTests(unittest.TestCase):
             with contextlib.redirect_stderr(stderr):
                 result = vr.validate_pre_close(str(ticket_dir), d)
 
-            self.assertEqual(result, 1)
-            self.assertIn("PRE-CLOSE-0", stderr.getvalue())
+            assert result == 1
+            assert "PRE-CLOSE-0" in stderr.getvalue()
 
     def test_pre_close_rejects_multiple_ticket_records(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -721,19 +686,17 @@ class ValidateRunbookTests(unittest.TestCase):
             (ticket_dir / "ticket_111111.md").write_bytes(source.read_bytes())
             snapshot = vr.load_close_out_snapshot(ticket_dir)
 
-            self.assertEqual(
-                snapshot["ticket_file_names"],
-                ["ticket_111111.md", "ticket_999999.md"],
-            )
+            assert snapshot["ticket_file_names"] == [
+                "ticket_111111.md",
+                "ticket_999999.md",
+            ]
             violations = vr.evaluate_pre_close(snapshot, [])
-            self.assertTrue(
-                any("PRE-CLOSE-1" in item for item in violations), violations
-            )
+            assert any("PRE-CLOSE-1" in item for item in violations), violations
             stderr = io.StringIO()
             with contextlib.redirect_stderr(stderr):
                 result = vr.validate_pre_close(str(ticket_dir), d)
-            self.assertEqual(result, 1)
-            self.assertIn("PRE-CLOSE-1", stderr.getvalue())
+            assert result == 1
+            assert "PRE-CLOSE-1" in stderr.getvalue()
 
     def test_pre_close_rejects_missing_or_unexpected_analysis_file(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -748,20 +711,14 @@ class ValidateRunbookTests(unittest.TestCase):
                 vr.load_close_out_snapshot(ticket_dir), []
             )
 
-            self.assertTrue(
-                any(
-                    "required analysis file missing: 02-investigate.md" in item
-                    for item in violations
-                ),
-                violations,
-            )
-            self.assertTrue(
-                any(
-                    "unexpected analysis file present: 04-unexpected.md" in item
-                    for item in violations
-                ),
-                violations,
-            )
+            assert any(
+                "required analysis file missing: 02-investigate.md" in item
+                for item in violations
+            ), violations
+            assert any(
+                "unexpected analysis file present: 04-unexpected.md" in item
+                for item in violations
+            ), violations
 
     def test_pre_close_rejects_missing_response_draft(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -771,25 +728,25 @@ class ValidateRunbookTests(unittest.TestCase):
                 vr.load_close_out_snapshot(ticket_dir), []
             )
 
-            self.assertIn(
-                "PRE-CLOSE-3: response-draft.md not found", violations
-            )
+            assert "PRE-CLOSE-3: response-draft.md not found" in violations
 
-    def test_pre_close_rejects_each_missing_durable_directory(self) -> None:
-        for directory, code in (
+    @pytest.mark.parametrize(
+        "directory,code",
+        [
             ("screenshots", "PRE-CLOSE-4"),
             ("validations", "PRE-CLOSE-5"),
-        ):
-            with self.subTest(directory=directory):
-                with tempfile.TemporaryDirectory() as d:
-                    ticket_dir = _pre_close_ticket_dir(d)
-                    shutil.rmtree(ticket_dir / directory)
-                    violations = vr.evaluate_pre_close(
-                        vr.load_close_out_snapshot(ticket_dir), []
-                    )
-                    self.assertTrue(
-                        any(code in item for item in violations), violations
-                    )
+        ],
+    )
+    def test_pre_close_rejects_each_missing_durable_directory(
+        self, directory: str, code: str
+    ) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _pre_close_ticket_dir(d)
+            shutil.rmtree(ticket_dir / directory)
+            violations = vr.evaluate_pre_close(
+                vr.load_close_out_snapshot(ticket_dir), []
+            )
+            assert any(code in item for item in violations), violations
 
     def test_pre_close_rejects_missing_cited_path(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -799,9 +756,7 @@ class ValidateRunbookTests(unittest.TestCase):
                 vr.load_close_out_snapshot(ticket_dir), []
             )
 
-            self.assertTrue(
-                any("PRE-CLOSE-7" in item for item in violations), violations
-            )
+            assert any("PRE-CLOSE-7" in item for item in violations), violations
 
     def test_pre_close_rejects_cited_path_outside_ticket_root(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -819,9 +774,7 @@ class ValidateRunbookTests(unittest.TestCase):
                 vr.load_close_out_snapshot(ticket_dir), []
             )
 
-            self.assertTrue(
-                any("PRE-CLOSE-6" in item for item in violations), violations
-            )
+            assert any("PRE-CLOSE-6" in item for item in violations), violations
 
     def test_pre_close_rejects_unparseable_ticket_record(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -833,9 +786,7 @@ class ValidateRunbookTests(unittest.TestCase):
                 vr.load_close_out_snapshot(ticket_dir), []
             )
 
-            self.assertTrue(
-                any("PRE-CLOSE-8" in item for item in violations), violations
-            )
+            assert any("PRE-CLOSE-8" in item for item in violations), violations
 
     def test_pre_close_rejects_identification_register_mismatch(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -846,9 +797,7 @@ class ValidateRunbookTests(unittest.TestCase):
                 vr.load_close_out_snapshot(ticket_dir), []
             )
 
-            self.assertTrue(
-                any("VERDICT-4" in item for item in violations), violations
-            )
+            assert any("VERDICT-4" in item for item in violations), violations
 
     def test_pre_close_requires_completed_synthesize_state(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -858,74 +807,74 @@ class ValidateRunbookTests(unittest.TestCase):
                 vr.load_close_out_snapshot(ticket_dir), []
             )
 
-            self.assertIn(
-                "PRE-CLOSE-10: state.md Phase must be 'synthesize'",
-                violations,
-            )
+            assert "PRE-CLOSE-10: state.md Phase must be 'synthesize'" in violations
 
-    def test_pre_close_reuses_token_counter_and_section_checks(self) -> None:
-        cases = (
+    @pytest.mark.parametrize(
+        "case,expected",
+        [
             ("token", "UNFILLED-TOKEN"),
             ("counter", "KILL-2"),
             ("section", "MISSING-SECTION"),
-        )
-        for case, expected in cases:
-            with self.subTest(case=case):
-                with tempfile.TemporaryDirectory() as d:
-                    ticket_dir = _pre_close_ticket_dir(d)
-                    analysis_dir = ticket_dir / "analysis"
-                    if case == "token":
-                        target = analysis_dir / "03-synthesize.md"
-                        target.write_text(
-                            target.read_text(encoding="utf-8") + "\n<unfinished>\n",
-                            encoding="utf-8",
-                        )
-                    elif case == "counter":
-                        _patch_header(analysis_dir, {"Query-budget": "7/6"})
-                    else:
-                        target = analysis_dir / "03-synthesize.md"
-                        target.write_text(
-                            target.read_text(encoding="utf-8").replace(
-                                "## Gate", "## Not Gate"
-                            ),
-                            encoding="utf-8",
-                        )
-                    violations = vr.evaluate_pre_close(
-                        vr.load_close_out_snapshot(ticket_dir), []
-                    )
-                    self.assertTrue(
-                        any(expected in item for item in violations), violations
-                    )
+        ],
+    )
+    def test_pre_close_reuses_token_counter_and_section_checks(
+        self, case: str, expected: str
+    ) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _pre_close_ticket_dir(d)
+            analysis_dir = ticket_dir / "analysis"
+            if case == "token":
+                target = analysis_dir / "03-synthesize.md"
+                target.write_text(
+                    target.read_text(encoding="utf-8") + "\n<unfinished>\n",
+                    encoding="utf-8",
+                )
+            elif case == "counter":
+                _patch_header(analysis_dir, {"Query-budget": "7/6"})
+            else:
+                target = analysis_dir / "03-synthesize.md"
+                target.write_text(
+                    target.read_text(encoding="utf-8").replace(
+                        "## Gate", "## Not Gate"
+                    ),
+                    encoding="utf-8",
+                )
+            violations = vr.evaluate_pre_close(
+                vr.load_close_out_snapshot(ticket_dir), []
+            )
+            assert any(expected in item for item in violations), violations
 
-    def test_cli_modes_are_mutually_exclusive(self) -> None:
-        for conflicting_mode in (
+    @pytest.mark.parametrize(
+        "conflicting_mode",
+        [
             ["--close-out"],
             ["--scaffold"],
             ["--step", "identify"],
-        ):
-            with self.subTest(conflicting_mode=conflicting_mode):
-                stderr = io.StringIO()
-                with contextlib.redirect_stderr(stderr):
-                    with self.assertRaises(SystemExit) as raised:
-                        vr._build_parser().parse_args(
-                            ["ticket", "--pre-close", *conflicting_mode]
-                        )
+        ],
+    )
+    def test_cli_modes_are_mutually_exclusive(
+        self, conflicting_mode: list[str]
+    ) -> None:
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            with pytest.raises(SystemExit) as raised:
+                vr._build_parser().parse_args(
+                    ["ticket", "--pre-close", *conflicting_mode]
+                )
 
-                self.assertEqual(raised.exception.code, 2)
-                self.assertIn("not allowed with argument", stderr.getvalue())
+        assert raised.value.code == 2
+        assert "not allowed with argument" in stderr.getvalue()
 
     def test_parser_accepts_every_prior_mode(self) -> None:
         parser = vr._build_parser()
 
-        self.assertEqual(parser.parse_args(["analysis"]).analysis_dir, "analysis")
-        self.assertTrue(parser.parse_args(["analysis", "--scaffold"]).scaffold)
-        self.assertEqual(
-            parser.parse_args(["analysis", "--step", "identify"]).step,
-            "identify",
+        assert parser.parse_args(["analysis"]).analysis_dir == "analysis"
+        assert parser.parse_args(["analysis", "--scaffold"]).scaffold
+        assert (
+            parser.parse_args(["analysis", "--step", "identify"]).step
+            == "identify"
         )
-        self.assertTrue(
-            parser.parse_args(["ticket", "--close-out"]).close_out
-        )
+        assert parser.parse_args(["ticket", "--close-out"]).close_out
 
     # ── Close-out collapse ───────────────────────────────────────────────────
 
@@ -933,57 +882,45 @@ class ValidateRunbookTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             ticket_dir = _ticket_dir(d)
             snapshot = vr.load_close_out_snapshot(ticket_dir)
-            self.assertEqual(vr.evaluate_close_out(snapshot), [])
-            self.assertEqual(
-                vr.validate_close_out(str(ticket_dir), str(ticket_dir)), 0
-            )
+            assert vr.evaluate_close_out(snapshot) == []
+            assert vr.validate_close_out(str(ticket_dir), str(ticket_dir)) == 0
 
     def test_close_out_working_files_remain(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             ticket_dir = _ticket_dir(d, with_working=True)
             snapshot = vr.load_close_out_snapshot(ticket_dir)
             violations = vr.evaluate_close_out(snapshot)
-            self.assertTrue(
-                any("CLOSE-1" in item for item in violations), violations
-            )
-            self.assertEqual(
-                vr.validate_close_out(str(ticket_dir), str(ticket_dir)), 1
-            )
+            assert any("CLOSE-1" in item for item in violations), violations
+            assert vr.validate_close_out(str(ticket_dir), str(ticket_dir)) == 1
 
     def test_close_out_response_draft_remains(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             ticket_dir = _ticket_dir(d, with_draft=True)
             snapshot = vr.load_close_out_snapshot(ticket_dir)
             violations = vr.evaluate_close_out(snapshot)
-            self.assertTrue(
-                any("CLOSE-2" in item for item in violations), violations
-            )
+            assert any("CLOSE-2" in item for item in violations), violations
 
     def test_close_out_missing_durable_dirs(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             ticket_dir = _ticket_dir(d, with_dirs=False)
             snapshot = vr.load_close_out_snapshot(ticket_dir)
             violations = vr.evaluate_close_out(snapshot)
-            self.assertTrue(
-                any("CLOSE-3" in item for item in violations), violations
-            )
-            self.assertTrue(
-                any("CLOSE-4" in item for item in violations), violations
-            )
+            assert any("CLOSE-3" in item for item in violations), violations
+            assert any("CLOSE-4" in item for item in violations), violations
 
     def test_close_out_missing_ticket(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             ticket_dir = Path(d) / "ticket"
             ticket_dir.mkdir()
             snapshot = vr.load_close_out_snapshot(ticket_dir)
-            self.assertTrue(
-                any("CLOSE-0" in item for item in vr.evaluate_close_out(snapshot))
+            assert any(
+                "CLOSE-0" in item for item in vr.evaluate_close_out(snapshot)
             )
             buf = io.StringIO()
             with contextlib.redirect_stderr(buf):
                 result = vr.validate_close_out(str(ticket_dir), str(ticket_dir))
-            self.assertEqual(result, 2)
-            self.assertIn("CLOSE-SKIPPED", buf.getvalue())
+            assert result == 2
+            assert "CLOSE-SKIPPED" in buf.getvalue()
 
     def test_close_out_rejects_multiple_ticket_records(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -993,29 +930,25 @@ class ValidateRunbookTests(unittest.TestCase):
             snapshot = vr.load_close_out_snapshot(ticket_dir)
             violations = vr.evaluate_close_out(snapshot)
 
-            self.assertTrue(
-                any("CLOSE-6" in item for item in violations), violations
-            )
-            self.assertEqual(vr.validate_close_out(str(ticket_dir), d), 1)
+            assert any("CLOSE-6" in item for item in violations), violations
+            assert vr.validate_close_out(str(ticket_dir), d) == 1
 
     def test_close_out_fails_before_and_passes_after_collapse(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             ticket_dir = _pre_close_ticket_dir(d)
 
-            self.assertEqual(vr.validate_close_out(str(ticket_dir), d), 1)
+            assert vr.validate_close_out(str(ticket_dir), d) == 1
 
             shutil.rmtree(ticket_dir / "analysis")
             (ticket_dir / "response-draft.md").unlink()
-            self.assertEqual(vr.validate_close_out(str(ticket_dir), d), 0)
+            assert vr.validate_close_out(str(ticket_dir), d) == 0
 
     def test_close_out_missing_image_path(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             ticket_dir = _ticket_dir(d, image_exists=False)
             snapshot = vr.load_close_out_snapshot(ticket_dir)
             violations = vr.evaluate_close_out(snapshot)
-            self.assertTrue(
-                any("CLOSE-5" in item for item in violations), violations
-            )
+            assert any("CLOSE-5" in item for item in violations), violations
 
     # ── Ticket-relative path-citation unification ────────────────────────────
 
@@ -1024,19 +957,17 @@ class ValidateRunbookTests(unittest.TestCase):
             ticket_dir = _pre_close_ticket_dir(d)
             snapshot = vr.load_close_out_snapshot(ticket_dir)
 
-            self.assertEqual(snapshot["unsafe_ticket_paths"], [])
-            self.assertEqual(snapshot["missing_ticket_paths"], [])
-            self.assertEqual(vr.validate_pre_close(str(ticket_dir), d), 0)
+            assert snapshot["unsafe_ticket_paths"] == []
+            assert snapshot["missing_ticket_paths"] == []
+            assert vr.validate_pre_close(str(ticket_dir), d) == 0
 
     def test_ticket_relative_cited_path_passes_close_out(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             ticket_dir = _ticket_dir(d)
             snapshot = vr.load_close_out_snapshot(ticket_dir)
 
-            self.assertEqual(snapshot["missing_image_paths"], [])
-            self.assertEqual(
-                vr.validate_close_out(str(ticket_dir), str(ticket_dir)), 0
-            )
+            assert snapshot["missing_image_paths"] == []
+            assert vr.validate_close_out(str(ticket_dir), str(ticket_dir)) == 0
 
     def test_repo_relative_spelling_fails_pre_close(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -1046,22 +977,18 @@ class ValidateRunbookTests(unittest.TestCase):
             )
             snapshot = vr.load_close_out_snapshot(ticket_dir)
 
-            self.assertTrue(
-                (ticket_dir / "screenshots" / "01_source_entity.png").is_file()
-            )
-            self.assertTrue((Path(d) / REPO_RELATIVE_IMAGE).is_file())
-            self.assertEqual(snapshot["unsafe_ticket_paths"], [])
+            assert (ticket_dir / "screenshots" / "01_source_entity.png").is_file()
+            assert (Path(d) / REPO_RELATIVE_IMAGE).is_file()
+            assert snapshot["unsafe_ticket_paths"] == []
             violations = vr.evaluate_pre_close(snapshot, [])
 
-            self.assertTrue(
-                any("PRE-CLOSE-7" in item for item in violations), violations
-            )
+            assert any("PRE-CLOSE-7" in item for item in violations), violations
             stderr = io.StringIO()
             with contextlib.redirect_stderr(stderr):
                 result = vr.validate_pre_close(str(ticket_dir), d)
 
-            self.assertEqual(result, 1)
-            self.assertIn("PRE-CLOSE-7", stderr.getvalue())
+            assert result == 1
+            assert "PRE-CLOSE-7" in stderr.getvalue()
 
     def test_repo_relative_spelling_fails_close_out(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -1071,16 +998,12 @@ class ValidateRunbookTests(unittest.TestCase):
             )
             snapshot = vr.load_close_out_snapshot(ticket_dir)
 
-            self.assertTrue(
-                (ticket_dir / "screenshots" / "01_source_entity.png").is_file()
-            )
-            self.assertTrue((Path(d) / REPO_RELATIVE_IMAGE).is_file())
+            assert (ticket_dir / "screenshots" / "01_source_entity.png").is_file()
+            assert (Path(d) / REPO_RELATIVE_IMAGE).is_file()
             violations = vr.evaluate_close_out(snapshot)
 
-            self.assertTrue(
-                any("CLOSE-5" in item for item in violations), violations
-            )
-            self.assertEqual(vr.validate_close_out(str(ticket_dir), d), 1)
+            assert any("CLOSE-5" in item for item in violations), violations
+            assert vr.validate_close_out(str(ticket_dir), d) == 1
 
     def test_close_out_rejects_parent_escape_via_close_5(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -1096,13 +1019,11 @@ class ValidateRunbookTests(unittest.TestCase):
             )
             snapshot = vr.load_close_out_snapshot(ticket_dir)
 
-            self.assertEqual(snapshot["unsafe_ticket_paths"], ["../outside.png"])
+            assert snapshot["unsafe_ticket_paths"] == ["../outside.png"]
             violations = vr.evaluate_close_out(snapshot)
 
-            self.assertTrue(
-                any("CLOSE-5" in item for item in violations), violations
-            )
-            self.assertEqual(vr.validate_close_out(str(ticket_dir), d), 1)
+            assert any("CLOSE-5" in item for item in violations), violations
+            assert vr.validate_close_out(str(ticket_dir), d) == 1
 
     def test_directory_citation_fails_pre_close_and_close_out(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -1117,13 +1038,11 @@ class ValidateRunbookTests(unittest.TestCase):
             )
             snapshot = vr.load_close_out_snapshot(ticket_dir)
 
-            self.assertTrue((ticket_dir / "screenshots" / "frames").is_dir())
-            self.assertEqual(snapshot["unsafe_ticket_paths"], [])
+            assert (ticket_dir / "screenshots" / "frames").is_dir()
+            assert snapshot["unsafe_ticket_paths"] == []
             pre_close = vr.evaluate_pre_close(snapshot, [])
-            self.assertTrue(
-                any("PRE-CLOSE-7" in item for item in pre_close), pre_close
-            )
-            self.assertEqual(vr.validate_pre_close(str(ticket_dir), d), 1)
+            assert any("PRE-CLOSE-7" in item for item in pre_close), pre_close
+            assert vr.validate_pre_close(str(ticket_dir), d) == 1
 
             shutil.rmtree(ticket_dir / "analysis")
             (ticket_dir / "response-draft.md").unlink()
@@ -1131,11 +1050,7 @@ class ValidateRunbookTests(unittest.TestCase):
                 vr.load_close_out_snapshot(ticket_dir)
             )
 
-            self.assertTrue(
-                any("CLOSE-5" in item for item in close_out), close_out
-            )
-            self.assertEqual(vr.validate_close_out(str(ticket_dir), d), 1)
+            assert any("CLOSE-5" in item for item in close_out), close_out
+            assert vr.validate_close_out(str(ticket_dir), d) == 1
 
 
-if __name__ == "__main__":
-    unittest.main(verbosity=2)

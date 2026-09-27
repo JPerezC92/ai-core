@@ -43,14 +43,15 @@
 - 2026-09-16 - ticket-runbook-pre-close-20260915: implemented the unified ticket-folder `path:` resolver (58-test suite), the short-form template/SKILL/checklist teaching, Ledger 📒 (Record Keeper) LS-SCREENSHOTS ticket-folder join, and Quill 🪶 (Note Drafter) 1.1.1 `image_path_invalid`.
 - 2026-09-16 - ticket-runbook-pre-close-20260915: corrected the pre-close criterion's test-count citation from 53 to 58 after PR #41 review.
 - 2026-09-16 - ticket-runbook-pre-close-20260915: PR #41 rework hardened `--pre-close` to reject a non-file citation (directory) like `--close-out`; test-count evidence refreshed to 59.
-- 2026-09-16 - identification-pack-pointer-20260916: planned an optional `pack:` Evidence pointer for destination-owned identification packs; protocol-v1 `diagnostic:` unchanged; Tismart sync deferred.
+- 2026-09-16 - identification-pack-pointer-20260916: planned an optional `pack:` Evidence pointer for destination-owned identification packs; protocol-v1 `diagnostic:` unchanged; adopter sync deferred.
+- 2026-09-27 - python-pytest-20260927: neutralized adopter names in this story (DEBT-004).
 
 ## Resolved decisions
 
-- 2026-09-12 — rewrite `ticket-runbook` in place; Increment 1 is AICore-only; tismart upgrade follows the AICore merge.
+- 2026-09-12 — rewrite `ticket-runbook` in place; Increment 1 is AICore-only; the adopter upgrade follows the AICore merge.
 - 2026-09-12 — working `analysis/` files collapse to `ticket_<id>.md` at close; keep screenshots, validations, and cited evidence; each image records local path and remote URL.
 - 2026-09-12 — collision with `incident-query-verification-pilot`: extend that story's scenario from Phase 04 to the investigate step; do not change its completed acceptance criteria.
 - 2026-09-15 — `ticket-runbook-register-admission-20260914` extends this feature after a confirmed root cause: register growth happens before destructive collapse, every executed query remains durable, and an optional reusable verifier is discovered through the destination-relative `P-NNN` pointer.
-- 2026-09-15 — User selected a new `--pre-close` readiness mode over a prose-only reorder; existing `--close-out` semantics remain the post-collapse assertion, and the later Tismart atomic sync is a separate post-merge plan.
-- 2026-09-16 — User chose one ticket-folder-relative `path:` form `screenshots/<filename>` for AICore; both validator modes enforce it; Tismart `#229255` rewrite waits for the later adoption/close.
-- 2026-09-16 — Identification packs are a `pack:` pointer, not `diagnostic:`; AICore defines replay order; destination chooses storage layout; no Tismart sync in this plan.
+- 2026-09-15 — User selected a new `--pre-close` readiness mode over a prose-only reorder; existing `--close-out` semantics remain the post-collapse assertion, and the later adopter atomic sync is a separate post-merge plan.
+- 2026-09-16 — User chose one ticket-folder-relative `path:` form `screenshots/<filename>` for AICore; both validator modes enforce it; destination `#229255` rewrite waits for the later adoption/close.
+- 2026-09-16 — Identification packs are a `pack:` pointer, not `diagnostic:`; AICore defines replay order; destination chooses storage layout; no adopter sync in this plan.

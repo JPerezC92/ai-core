@@ -11,3 +11,4 @@
 | `git-pr-drafting` | Pull request draft generation | active | developer-tooling | `.opencode/skills/git-pr/`, `plans/`, `pr-draft.md` |
 | `post-merge-branch-cleanup` | Merge-style-aware post-merge branch cleanup | active | developer-tooling | `.opencode/skills/plan-enforce/`, `.opencode/agents/herald.md` |
 | `op-model-configuration` | OpenCode model configuration | active | developer-tooling | `.opencode/skills/op-model/`, `opencode.json`, `opencode.jsonc` |
+| `python-pytest` | Python pytest test runner | active | developer-tooling | `pyproject.toml`, `uv.lock`, `.opencode/agents/crucible.md`, `.opencode/agents/bastion.md`, `.opencode/skills/plan-enforce/`, `.opencode/skills/*/scripts/test_*.py`, `AGENTS.md` |

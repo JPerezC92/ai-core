@@ -55,6 +55,7 @@ Recorded 2026-09-10. Every outcome is evidence-backed; no dependency, lockfile, 
 - 2026-09-15 - ticket-runbook-register-admission-20260914: recorded the approved lifecycle extension for destination-selected verifier storage and current-case replay; protocol-v1 remains unchanged and acceptance criteria update with implementation.
 - 2026-09-15 - debt-001-citation-currency-20260915: refreshed the current plan-enforce citations to the shipped 1.12.1 and the 50-test suite; no feature behavior or acceptance criteria changed.
 - 2026-09-16 - identification-pack-pointer-20260916: recorded that multi-result identification packs are `pack:`, not a protocol-v1 change; destination chooses pack storage.
+- 2026-09-27 - python-pytest-20260927: Python skill tests are pytest under Crucible 🔥 (Test Architect) `## PYTHON PYTEST TESTS`; 2026-09-10 unittest rows stay historical.
 
 ## Resolved decisions
 
@@ -65,3 +66,4 @@ Recorded 2026-09-10. Every outcome is evidence-backed; no dependency, lockfile, 
 - 2026-09-12 - register-first collision: this story keeps its completed verifier contract; ticket-runbook identification is redefined by `register-first-incident-identification`. The optional verifier remains symptom evidence only on the investigate step.
 - 2026-09-15 - `ticket-runbook-register-admission-20260914` keeps the protocol-v1 verifier contract unchanged and adds lifecycle behavior only: the destination chooses storage, the problem row points to the sidecar when one exists, and a later structural match validates it with current-case parameters.
 - 2026-09-16 - `identification-pack-pointer-20260916` extends Evidence with `pack:` for destination-owned identification packs; protocol-v1 and this story's completed verifier criteria stay unchanged.
+- 2026-09-27 - Python skill-test architecture is pytest via Crucible 🔥 (Test Architect) `## PYTHON PYTEST TESTS`; the 2026-09-10 unittest decisions remain historical and are not relabeled.

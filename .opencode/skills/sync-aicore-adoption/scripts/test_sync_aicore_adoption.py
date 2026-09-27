@@ -1,12 +1,11 @@
-"""Stdlib ``unittest`` suite for the sync-aicore-adoption protocol-v2 engine.
+"""Pytest suite for the sync-aicore-adoption protocol-v2 engine.
 
-Run directly with:
-    python3 .opencode/skills/sync-aicore-adoption/scripts/test_sync_aicore_adoption.py
+Run: uv run --frozen --group dev pytest .opencode/skills/sync-aicore-adoption/scripts/test_sync_aicore_adoption.py
 
 The suite never touches the network and never calls ``gh``: every fixture is a
-temporary git repository created under ``tempfile.mkdtemp()`` and removed in
-``tearDown``. CLI behavior is exercised through ``subprocess``; pure helpers are
-imported directly from the sibling engine module.
+temporary git repository created under ``tempfile.mkdtemp()`` and removed by
+the autouse fixture. CLI behavior is exercised through ``subprocess``; pure
+helpers are imported directly from the sibling engine module.
 """
 
 from __future__ import annotations
@@ -20,10 +19,11 @@ import os
 import subprocess
 import sys
 import tempfile
-import unittest
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from unittest import mock
 
+import pytest
 import yaml
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -65,7 +65,7 @@ def placeholder_digest(seed: str) -> str:
     return sha256_text("placeholder:" + seed)
 
 
-def snapshot_digest(declaration: str, review: str, rows: list) -> str:
+def snapshot_digest(declaration: str, review: str, rows: list[object]) -> str:
     return engine._snapshot_digest(sha256_text(declaration), sha256_text(review), rows)
 
 
@@ -258,7 +258,7 @@ def greeting_lock_document(
     declaration: str = GREETING_DECLARATION,
     review: str = EMPTY_REVIEW,
     mode: str = "mirror",
-) -> dict:
+) -> dict[str, object]:
     upstream_member = member_file(accepted_text)
     destination_member = member_file(destination_text)
     rows = [
@@ -302,7 +302,7 @@ def two_unit_lock_document(
     catalog: str = TWO_UNIT_CATALOG,
     declaration: str = TWO_UNIT_DECLARATION,
     review: str = EMPTY_REVIEW,
-) -> dict:
+) -> dict[str, object]:
     greeting_upstream = member_file(greeting_committed)
     note_upstream = member_file(note_committed)
     rows = [
@@ -362,7 +362,7 @@ def assertion_lock_document(
     catalog: str = ASSERTION_CATALOG,
     declaration: str = ASSERTION_DECLARATION,
     review: str = EMPTY_REVIEW,
-) -> dict:
+) -> dict[str, object]:
     opencode_list = engine.assertion_list_digest(OPENCODE_ASSERTIONS)
     gitignore_list = engine.assertion_list_digest(GITIGNORE_ASSERTIONS)
     opencode_status = engine.assertion_status_digest([("sudo-deny", opencode_present)])
@@ -417,7 +417,7 @@ def guarded_root_lock_document(
     destination_root: str,
     catalog: str = GUARDED_ROOT_CATALOG,
     declaration: str = GUARDED_ROOT_DECLARATION,
-) -> dict:
+) -> dict[str, object]:
     upstream_member = member_file(UPSTREAM_ROOT)
     destination_member = member_file(destination_root)
     rows = [
@@ -456,16 +456,16 @@ def guarded_root_lock_document(
     }
 
 
-class EngineTestCase(unittest.TestCase):
+class EngineTestCase:
     """Base case owning a temporary upstream repository and adopter repository."""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _temp_repos(self) -> Iterator[None]:
         self._tmp = tempfile.TemporaryDirectory()
         self.root = Path(self._tmp.name)
         self.upstream = self.root / "upstream"
         self.adopter = self.root / "adopter"
-
-    def tearDown(self) -> None:
+        yield
         self._tmp.cleanup()
 
     # -- git plumbing -------------------------------------------------------
@@ -478,7 +478,7 @@ class EngineTestCase(unittest.TestCase):
             text=True,
         )
         if check and proc.returncode != 0:
-            self.fail(f"git {' '.join(args)} failed in {repo}: {proc.stderr}")
+                pytest.fail(f"git {' '.join(args)} failed in {repo}: {proc.stderr}")
         return proc
 
     def init_repo(self, repo: Path) -> None:
@@ -522,17 +522,15 @@ class EngineTestCase(unittest.TestCase):
     def assert_exit(
         self, proc: subprocess.CompletedProcess, code: int, contains: str | None = None
     ) -> None:
-        self.assertEqual(
-            proc.returncode,
-            code,
+        assert proc.returncode == code, (
             f"expected exit {code}, got {proc.returncode}\n"
-            f"stdout={proc.stdout}\nstderr={proc.stderr}",
+            f"stdout={proc.stdout}\nstderr={proc.stderr}"
         )
         if contains is not None:
-            self.assertIn(contains, proc.stderr, f"stderr={proc.stderr}")
+            assert contains in proc.stderr, f"stderr={proc.stderr}"
 
     def base_check_args(
-        self, fixture: dict, *, review: Path | None = None, lock: Path | None = None
+        self, fixture: dict[str, object], *, review: Path | None = None, lock: Path | None = None
     ) -> list[str]:
         return [
             "--upstream-repo", str(fixture["upstream"]),
@@ -544,7 +542,7 @@ class EngineTestCase(unittest.TestCase):
 
     # -- snapshots ----------------------------------------------------------
 
-    def worktree_bytes(self, repo: Path) -> dict:
+    def worktree_bytes(self, repo: Path) -> dict[str, object]:
         snapshot = {}
         for path in sorted(Path(repo).rglob("*")):
             rel = path.relative_to(repo)
@@ -558,7 +556,7 @@ class EngineTestCase(unittest.TestCase):
     def status(self, repo: Path) -> str:
         return self.git(repo, "status", "--porcelain").stdout
 
-    def git_state(self, repo: Path) -> dict:
+    def git_state(self, repo: Path) -> dict[str, object]:
         return {
             "head": self.git(repo, "rev-parse", "HEAD").stdout,
             "index": self.git(repo, "ls-files", "-s").stdout,
@@ -568,7 +566,7 @@ class EngineTestCase(unittest.TestCase):
 
     # -- fixture builders ---------------------------------------------------
 
-    def _fixture_dict(self, accepted: str, adopter_rev: str) -> dict:
+    def _fixture_dict(self, accepted: str, adopter_rev: str) -> dict[str, object]:
         return {
             "accepted": accepted,
             "target": self.rev(self.upstream),
@@ -591,7 +589,7 @@ class EngineTestCase(unittest.TestCase):
         review: str = EMPTY_REVIEW,
         catalog: str = GREETING_CATALOG,
         mode: str = "mirror",
-    ) -> dict:
+    ) -> dict[str, object]:
         self.init_repo(self.upstream)
         self.write(self.upstream, CATALOG_REL, catalog)
         self.write(self.upstream, "content/greeting.txt", accepted_text)
@@ -630,10 +628,10 @@ class EngineTestCase(unittest.TestCase):
         catalog: str,
         declaration: str,
         review: str,
-        lock_builder,
-        upstream_files: dict,
-        adopter_files: dict,
-    ) -> dict:
+        lock_builder: Callable[[str], dict[str, object]],
+        upstream_files: dict[str, object],
+        adopter_files: dict[str, object],
+    ) -> dict[str, object]:
         """Build a fixture from explicit documents; ``lock_builder`` gets the accepted sha."""
         self.init_repo(self.upstream)
         self.write(self.upstream, CATALOG_REL, catalog)
@@ -661,7 +659,7 @@ class EngineTestCase(unittest.TestCase):
         note_target: str = "note v2\n",
         declaration: str = TWO_UNIT_DECLARATION,
         catalog: str = TWO_UNIT_CATALOG,
-    ) -> dict:
+    ) -> dict[str, object]:
         self.init_repo(self.upstream)
         self.write(self.upstream, CATALOG_REL, catalog)
         self.write(self.upstream, "content/greeting.txt", "hello\n")
@@ -701,7 +699,7 @@ class EngineTestCase(unittest.TestCase):
         declaration: str = ASSERTION_DECLARATION,
         review: str = EMPTY_REVIEW,
         catalog: str = ASSERTION_CATALOG,
-    ) -> dict:
+    ) -> dict[str, object]:
         self.init_repo(self.upstream)
         self.write(self.upstream, CATALOG_REL, catalog)
         self.write(self.upstream, "content/.keep", "")
@@ -728,7 +726,7 @@ class EngineTestCase(unittest.TestCase):
         adopter_rev = self.commit(self.adopter, "adopter")
         return self._fixture_dict(accepted, adopter_rev)
 
-    def build_guarded_root(self, destination_root: str) -> dict:
+    def build_guarded_root(self, destination_root: str) -> dict[str, object]:
         self.init_repo(self.upstream)
         self.write(self.upstream, CATALOG_REL, GUARDED_ROOT_CATALOG)
         self.write(self.upstream, "AGENTS.md", UPSTREAM_ROOT)
@@ -796,7 +794,7 @@ class EngineTestCase(unittest.TestCase):
         }
         return yaml.safe_dump(document, sort_keys=False)
 
-    def build_verify(self) -> dict:
+    def build_verify(self) -> dict[str, object]:
         self.init_repo(self.upstream)
         self.write(self.upstream, CATALOG_REL, GREETING_CATALOG)
         self.write(self.upstream, "content/greeting.txt", "hello\n")
@@ -855,11 +853,9 @@ units:
 class DigestGoldenTests(EngineTestCase):
     def test_file_hello_golden_vector(self) -> None:
         digest = member_file("hello\n")
-        self.assertEqual(
-            digest,
-            "sha256:cf41078b082e3740168bd7ad534ba1b70b12489c7ab43c6fb53743b0f3527887",
-            f"golden vector mismatch: {digest}",
-        )
+        assert digest == (
+            "sha256:cf41078b082e3740168bd7ad534ba1b70b12489c7ab43c6fb53743b0f3527887"
+        ), f"golden vector mismatch: {digest}"
 
 
 class SchemaParsingTests(EngineTestCase):
@@ -871,32 +867,34 @@ class SchemaParsingTests(EngineTestCase):
         lock_path = self.write(
             self.root, "lock.yaml", yaml.safe_dump(lock, sort_keys=False)
         )
-        self.assertIsInstance(engine.load_catalog(str(catalog)), dict)
-        self.assertIsInstance(engine.load_declaration(str(declaration)), dict)
-        self.assertIsInstance(engine.load_review(str(review)), dict)
-        self.assertIsInstance(engine.load_lock(str(lock_path)), dict)
+        assert isinstance(engine.load_catalog(str(catalog)), dict)
+        assert isinstance(engine.load_declaration(str(declaration)), dict)
+        assert isinstance(engine.load_review(str(review)), dict)
+        assert isinstance(engine.load_lock(str(lock_path)), dict)
 
-    def test_v1_documents_require_upgrade(self) -> None:
-        cases = {
-            "catalog": (
+    @pytest.mark.parametrize(
+        "name,loader_name,text",
+        [
+            (
+                "catalog",
                 "load_catalog",
                 "schema_version: 1\ncatalog: {}\nunits: []\n",
             ),
-            "declaration": ("load_declaration", "schema_version: 1\nunits: []\n"),
-            "review": ("load_review", "schema_version: 1\ndecisions: []\n"),
-            "lock": ("load_lock", "schema_version: 1\nunits: []\n"),
-        }
-        for name, (loader_name, text) in cases.items():
-            with self.subTest(document=name):
-                path = self.write(self.root, f"v1-{name}.yaml", text)
-                loader = getattr(engine, loader_name)
-                with self.assertRaises(engine.SyncError) as caught:
-                    loader(str(path))
-                self.assertEqual(
-                    caught.exception.code,
-                    "schema_upgrade_required",
-                    f"{name}: {caught.exception.message}",
-                )
+            ("declaration", "load_declaration", "schema_version: 1\nunits: []\n"),
+            ("review", "load_review", "schema_version: 1\ndecisions: []\n"),
+            ("lock", "load_lock", "schema_version: 1\nunits: []\n"),
+        ],
+    )
+    def test_v1_documents_require_upgrade(
+        self, name: str, loader_name: str, text: str
+    ) -> None:
+        path = self.write(self.root, f"v1-{name}.yaml", text)
+        loader = getattr(engine, loader_name)
+        with pytest.raises(engine.SyncError) as caught:
+            loader(str(path))
+        assert caught.value.code == "schema_upgrade_required", (
+            f"{name}: {caught.value.message}"
+        )
 
     def test_v1_catalog_cli_exit_2(self) -> None:
         fixture = self.build_greeting()
@@ -924,9 +922,9 @@ class SchemaParsingTests(EngineTestCase):
                 "sync_projection: file", "sync_projection: mystery"
             ),
         )
-        with self.assertRaises(engine.SyncError) as caught:
+        with pytest.raises(engine.SyncError) as caught:
             engine.load_catalog(str(catalog))
-        self.assertEqual(caught.exception.code, "unsupported_projection")
+        assert caught.value.code == "unsupported_projection"
 
 
 class LockValidityTests(EngineTestCase):
@@ -936,9 +934,9 @@ class LockValidityTests(EngineTestCase):
         path = self.write(
             self.root, "row-source.lock.yaml", yaml.safe_dump(lock, sort_keys=False)
         )
-        with self.assertRaises(engine.SyncError) as caught:
+        with pytest.raises(engine.SyncError) as caught:
             engine.load_lock(str(path))
-        self.assertEqual(caught.exception.code, "invalid_lock")
+        assert caught.value.code == "invalid_lock"
         fixture = self.build_greeting()
         args = [
             "check",
@@ -991,7 +989,7 @@ class LockValidityTests(EngineTestCase):
 
 
 class ExitContractTests(EngineTestCase):
-    def _check(self, fixture: dict, *extra: str) -> subprocess.CompletedProcess:
+    def _check(self, fixture: dict[str, object], *extra: str) -> subprocess.CompletedProcess:
         return self.run_cli(
             "check",
             *self.base_check_args(fixture),
@@ -1005,25 +1003,23 @@ class ExitContractTests(EngineTestCase):
         proc = self._check(fixture)
         self.assert_exit(proc, 0)
         report = json.loads(proc.stdout)
-        self.assertTrue(report["compliance"])
-        self.assertEqual(report["units"][0]["disposition"], "current")
+        assert report["compliance"]
+        assert report["units"][0]["disposition"] == "current"
 
     def test_update_available_exit_1(self) -> None:
         fixture = self.build_greeting(advance="content")
         proc = self._check(fixture)
         self.assert_exit(proc, 1)
         report = json.loads(proc.stdout)
-        self.assertFalse(report["compliance"])
-        self.assertEqual(report["units"][0]["disposition"], "update_available")
+        assert not report["compliance"]
+        assert report["units"][0]["disposition"] == "update_available"
 
     def test_baseline_advance_required_exit_1(self) -> None:
         fixture = self.build_greeting(advance="empty")
         proc = self._check(fixture)
         self.assert_exit(proc, 1)
         report = json.loads(proc.stdout)
-        self.assertEqual(
-            report["units"][0]["disposition"], "baseline_advance_required"
-        )
+        assert report["units"][0]["disposition"] == "baseline_advance_required"
 
     def test_mirror_changed_on_both_sides_is_conflict_exit_1(self) -> None:
         fixture = self.build_greeting(
@@ -1034,8 +1030,8 @@ class ExitContractTests(EngineTestCase):
         proc = self._check(fixture)
         self.assert_exit(proc, 1)
         report = json.loads(proc.stdout)
-        self.assertFalse(report["compliance"])
-        self.assertEqual(report["units"][0]["disposition"], "conflict")
+        assert not report["compliance"]
+        assert report["units"][0]["disposition"] == "conflict"
 
     def test_destination_owned_steady_state_is_unmanaged_exit_0(self) -> None:
         fixture = self.build_greeting(
@@ -1045,8 +1041,8 @@ class ExitContractTests(EngineTestCase):
         proc = self._check(fixture)
         self.assert_exit(proc, 0)
         report = json.loads(proc.stdout)
-        self.assertTrue(report["compliance"])
-        self.assertEqual(report["units"][0]["disposition"], "unmanaged")
+        assert report["compliance"]
+        assert report["units"][0]["disposition"] == "unmanaged"
 
     def test_destination_owned_upstream_changed_without_decision_exit_2(self) -> None:
         fixture = self.build_greeting(
@@ -1065,19 +1061,19 @@ class ExitContractTests(EngineTestCase):
             mode="destination_owned",
         )
         proc = self._check(fixture)
-        self.assertNotEqual(
-            proc.returncode, 2, f"reviewed change must be non-fatal\n{proc.stderr}"
+        assert proc.returncode != 2, (
+            f"reviewed change must be non-fatal\n{proc.stderr}"
         )
         report = json.loads(proc.stdout)
-        self.assertEqual(report["units"][0]["disposition"], "review_required")
+        assert report["units"][0]["disposition"] == "review_required"
 
     def test_diagnostic_never_exit_0(self) -> None:
         fixture = self.build_greeting(advance="content")
         proc = self._check(fixture, "--diagnostic-revision", fixture["accepted"])
         self.assert_exit(proc, 1)
         report = json.loads(proc.stdout)
-        self.assertFalse(report["compliance"])
-        self.assertTrue(report["diagnostic"])
+        assert not report["compliance"]
+        assert report["diagnostic"]
 
     def test_fatal_missing_declaration_exit_2(self) -> None:
         fixture = self.build_greeting()
@@ -1110,7 +1106,7 @@ class DeclarationValidationTests(EngineTestCase):
         self.assert_exit(self.run_cli(*args), 2, "declaration_incomplete")
 
     def test_always_unit_not_applicable_is_invalid_applicability(self) -> None:
-        def lock_builder(accepted: str) -> dict:
+        def lock_builder(accepted: str) -> dict[str, object]:
             rows = [{"id": "greeting", "mode": "not_applicable"}]
             return {
                 "schema_version": 2,
@@ -1142,7 +1138,7 @@ class DeclarationValidationTests(EngineTestCase):
 
 
 class AssertionTests(EngineTestCase):
-    def _check(self, fixture: dict) -> subprocess.CompletedProcess:
+    def _check(self, fixture: dict[str, object]) -> subprocess.CompletedProcess:
         return self.run_cli(
             "check",
             *self.base_check_args(fixture),
@@ -1150,7 +1146,7 @@ class AssertionTests(EngineTestCase):
             "--format", "json",
         )
 
-    def _propose(self, fixture: dict) -> subprocess.CompletedProcess:
+    def _propose(self, fixture: dict[str, object]) -> subprocess.CompletedProcess:
         return self.run_cli(
             "propose-lock",
             "--upstream-repo", str(fixture["upstream"]),
@@ -1165,26 +1161,26 @@ class AssertionTests(EngineTestCase):
         fixture = self.build_assertions()
         proc = self._check(fixture)
         self.assert_exit(proc, 0)
-        self.assertTrue(json.loads(proc.stdout)["compliance"])
+        assert json.loads(proc.stdout)["compliance"]
         self.assert_exit(self._propose(fixture), 0)
 
     def test_missing_opencode_gate_noncompliant_and_propose_refuses(self) -> None:
         fixture = self.build_assertions(current_opencode=False)
         proc = self._check(fixture)
         self.assert_exit(proc, 1)
-        self.assertFalse(json.loads(proc.stdout)["compliance"])
+        assert not json.loads(proc.stdout)["compliance"]
         self.assert_exit(self._propose(fixture), 2, "local_drift")
 
     def test_missing_gitignore_entry_noncompliant_and_propose_refuses(self) -> None:
         fixture = self.build_assertions(current_gitignore=False)
         proc = self._check(fixture)
         self.assert_exit(proc, 1)
-        self.assertFalse(json.loads(proc.stdout)["compliance"])
+        assert not json.loads(proc.stdout)["compliance"]
         self.assert_exit(self._propose(fixture), 2, "local_drift")
 
 
 class GuardedRootPolicyTests(EngineTestCase):
-    def _check(self, fixture: dict) -> subprocess.CompletedProcess:
+    def _check(self, fixture: dict[str, object]) -> subprocess.CompletedProcess:
         return self.run_cli(
             "check",
             *self.base_check_args(fixture),
@@ -1192,7 +1188,7 @@ class GuardedRootPolicyTests(EngineTestCase):
             "--format", "json",
         )
 
-    def _propose(self, fixture: dict) -> subprocess.CompletedProcess:
+    def _propose(self, fixture: dict[str, object]) -> subprocess.CompletedProcess:
         return self.run_cli(
             "propose-lock",
             "--upstream-repo", str(fixture["upstream"]),
@@ -1207,59 +1203,56 @@ class GuardedRootPolicyTests(EngineTestCase):
         fixture = self.build_guarded_root(root)
         proc = self._propose(fixture)
         self.assert_exit(proc, 2, "policy_violation")
-        self.assertEqual(proc.stdout, "", "a rejected proposal must emit no YAML")
+        assert proc.stdout == "", "a rejected proposal must emit no YAML"
 
     def test_clean_destination_root_passes_with_unchanged_lock_shape(self) -> None:
         fixture = self.build_guarded_root(CLEAN_DESTINATION_ROOT)
         check = self._check(fixture)
         self.assert_exit(check, 0)
         report = json.loads(check.stdout)
-        self.assertTrue(report["compliance"])
-        self.assertEqual(report["units"][0]["disposition"], "current")
+        assert report["compliance"]
+        assert report["units"][0]["disposition"] == "current"
         proposal = self._propose(fixture)
         self.assert_exit(proposal, 0)
         unit = yaml.safe_load(proposal.stdout)["units"][0]
         member = unit["members"][0]
         upstream_member = member_file(UPSTREAM_ROOT)
-        self.assertEqual(
-            unit["accepted_upstream_digest"],
-            engine.unit_digest([("root", upstream_member)]),
+        assert unit["accepted_upstream_digest"] == engine.unit_digest(
+            [("root", upstream_member)]
         )
-        self.assertEqual(member["accepted_upstream_digest"], upstream_member)
-        self.assertEqual(
-            member["accepted_destination_digest"],
-            member_file(CLEAN_DESTINATION_ROOT),
+        assert member["accepted_upstream_digest"] == upstream_member
+        assert member["accepted_destination_digest"] == member_file(
+            CLEAN_DESTINATION_ROOT
         )
-        self.assertEqual(
-            set(member),
-            {
-                "id",
-                "destination",
-                "accepted_upstream_digest",
-                "accepted_destination_digest",
-            },
-        )
+        assert set(member) == {
+            "id",
+            "destination",
+            "accepted_upstream_digest",
+            "accepted_destination_digest",
+        }
 
     def test_missing_required_destination_markers_rejects_proposal(self) -> None:
         self.assert_proposal_policy_violation(
             "# Relay project runtime\n> **Project identity:** Relay\n"
         )
 
-    def test_each_required_destination_marker_is_enforced(self) -> None:
-        markers = (
+    @pytest.mark.parametrize(
+        "marker",
+        [
             "> **Project identity:** Relay\n",
             "> **Spec version:** 2.1.0\n",
             "> **Local version:** 1.0.0\n",
+        ],
+    )
+    def test_each_required_destination_marker_is_enforced(self, marker: str) -> None:
+        violation = engine._adopter_root_policy_violation(
+            CLEAN_DESTINATION_ROOT.replace(marker, "").encode("utf-8")
         )
-        for marker in markers:
-            with self.subTest(marker=marker.strip()):
-                violation = engine._adopter_root_policy_violation(
-                    CLEAN_DESTINATION_ROOT.replace(marker, "").encode("utf-8")
-                )
-                self.assertIsNotNone(violation)
+        assert violation is not None
 
-    def test_all_forbidden_references_are_case_insensitive(self) -> None:
-        references = (
+    @pytest.mark.parametrize(
+        "reference",
+        [
             "AiCoRe",
             "AI-CORE",
             "MIGRATE-CORE-TO-PROJECT",
@@ -1268,11 +1261,13 @@ class GuardedRootPolicyTests(EngineTestCase):
             "UPSTREAM PROVENANCE",
             "UPSTREAM LINEAGE",
             "REUSE GUIDE",
-        )
-        for reference in references:
-            with self.subTest(reference=reference):
-                content = (CLEAN_DESTINATION_ROOT + "\n" + reference).encode("utf-8")
-                self.assertIsNotNone(engine._adopter_root_policy_violation(content))
+        ],
+    )
+    def test_all_forbidden_references_are_case_insensitive(
+        self, reference: str
+    ) -> None:
+        content = (CLEAN_DESTINATION_ROOT + "\n" + reference).encode("utf-8")
+        assert engine._adopter_root_policy_violation(content) is not None
 
     def test_original_reuse_guide_rejects_proposal(self) -> None:
         self.assert_proposal_policy_violation(ORIGINAL_REUSE_GUIDE_ROOT)
@@ -1288,13 +1283,11 @@ class GuardedRootPolicyTests(EngineTestCase):
         proc = self._check(fixture)
         self.assert_exit(proc, 1)
         report = json.loads(proc.stdout)
-        self.assertFalse(report["compliance"])
-        self.assertEqual(report["units"][0]["upstream_delta"], "unchanged")
-        self.assertEqual(report["units"][0]["destination_delta"], "unchanged")
-        self.assertEqual(report["units"][0]["disposition"], "policy_violation")
-        self.assertIn(
-            "root-runtime-spec: policy_violation", report["blocking_reasons"]
-        )
+        assert not report["compliance"]
+        assert report["units"][0]["upstream_delta"] == "unchanged"
+        assert report["units"][0]["destination_delta"] == "unchanged"
+        assert report["units"][0]["disposition"] == "policy_violation"
+        assert "root-runtime-spec: policy_violation" in report["blocking_reasons"]
 
     def test_non_utf8_destination_root_rejects_proposal(self) -> None:
         fixture = self.build_guarded_root(CLEAN_DESTINATION_ROOT)
@@ -1302,10 +1295,10 @@ class GuardedRootPolicyTests(EngineTestCase):
         fixture["adopter_rev"] = self.commit(fixture["adopter"], "non-utf8 root")
         proc = self._propose(fixture)
         self.assert_exit(proc, 2, "policy_violation")
-        self.assertEqual(proc.stdout, "")
+        assert proc.stdout == ""
 
 class ReviewEvidenceTests(EngineTestCase):
-    def _propose(self, fixture: dict) -> subprocess.CompletedProcess:
+    def _propose(self, fixture: dict[str, object]) -> subprocess.CompletedProcess:
         return self.run_cli(
             "propose-lock",
             "--upstream-repo", str(fixture["upstream"]),
@@ -1337,7 +1330,7 @@ class ReviewEvidenceTests(EngineTestCase):
         self.assert_exit(proc, 1)
         report = json.loads(proc.stdout)
         note = next(unit for unit in report["units"] if unit["id"] == "note")
-        self.assertEqual(note["disposition"], "update_available")
+        assert note["disposition"] == "update_available"
         self.assert_exit(self._propose(fixture), 0)
 
 
@@ -1348,7 +1341,7 @@ class SnapshotExplicitnessTests(EngineTestCase):
         worktree.write_text("DIRTY WORKTREE\n", encoding="utf-8")
         args = ["check", *self.base_check_args(fixture), "--adopter-index"]
         self.assert_exit(self.run_cli(*args), 0)
-        self.assertEqual(worktree.read_text(encoding="utf-8"), "DIRTY WORKTREE\n")
+        assert worktree.read_text(encoding="utf-8") == "DIRTY WORKTREE\n"
 
     def test_commit_revision_ignores_unstaged_worktree_edit(self) -> None:
         fixture = self.build_greeting()
@@ -1373,8 +1366,8 @@ class ReadOnlyTests(EngineTestCase):
             "--adopter-revision", fixture["adopter_rev"],
         )
         self.assert_exit(proc, 0)
-        self.assertEqual(before_files, self.worktree_bytes(fixture["adopter"]))
-        self.assertEqual(before_git, self.git_state(fixture["adopter"]))
+        assert before_files == self.worktree_bytes(fixture["adopter"])
+        assert before_git == self.git_state(fixture["adopter"])
 
     def test_propose_lock_writes_stdout_only(self) -> None:
         fixture = self.build_greeting()
@@ -1392,12 +1385,12 @@ class ReadOnlyTests(EngineTestCase):
             "--adopter-revision", fixture["adopter_rev"],
         )
         self.assert_exit(proc, 0)
-        self.assertIn("schema_version: 2", proc.stdout)
-        self.assertEqual(proc.stderr, "")
-        self.assertEqual(adopter_before, self.worktree_bytes(fixture["adopter"]))
-        self.assertEqual(upstream_before, self.worktree_bytes(fixture["upstream"]))
-        self.assertEqual(adopter_git, self.git_state(fixture["adopter"]))
-        self.assertEqual(upstream_git, self.git_state(fixture["upstream"]))
+        assert "schema_version: 2" in proc.stdout
+        assert proc.stderr == ""
+        assert adopter_before == self.worktree_bytes(fixture["adopter"])
+        assert upstream_before == self.worktree_bytes(fixture["upstream"])
+        assert adopter_git == self.git_state(fixture["adopter"])
+        assert upstream_git == self.git_state(fixture["upstream"])
 
     def test_verify_all_writes_nothing_to_checkouts(self) -> None:
         fixture = self.build_verify()
@@ -1413,8 +1406,8 @@ class ReadOnlyTests(EngineTestCase):
         )
         self.assert_exit(proc, 0)
         for path in adopters:
-            self.assertEqual(before[str(path)], self.worktree_bytes(path))
-            self.assertEqual(before_git[str(path)], self.git_state(path))
+            assert before[str(path)] == self.worktree_bytes(path)
+            assert before_git[str(path)] == self.git_state(path)
 
 
 class ProposeLockTests(EngineTestCase):
@@ -1435,23 +1428,20 @@ class ProposeLockTests(EngineTestCase):
         )
         self.assert_exit(proc, 0)
         candidate = yaml.safe_load(proc.stdout)
-        self.assertEqual(candidate["accepted_source_commit"], fixture["target"])
+        assert candidate["accepted_source_commit"] == fixture["target"]
         catalog = yaml.safe_load(GREETING_CATALOG)
-        self.assertEqual(
-            {row["id"] for row in candidate["units"]},
-            {unit["id"] for unit in catalog["units"]},
-        )
+        assert {row["id"] for row in candidate["units"]} == {
+            unit["id"] for unit in catalog["units"]
+        }
         for row in candidate["units"]:
-            self.assertNotIn("accepted_source_commit", row)
+            assert "accepted_source_commit" not in row
         reproduced_snapshot = engine._snapshot_digest(
             sha256_text(GREETING_DECLARATION),
             sha256_text(EMPTY_REVIEW),
             candidate["units"],
         )
-        self.assertEqual(
-            candidate["accepted_snapshot_digest"],
-            reproduced_snapshot,
-            "the engine must reproduce propose-lock's accepted_snapshot_digest",
+        assert candidate["accepted_snapshot_digest"] == reproduced_snapshot, (
+            "the engine must reproduce propose-lock's accepted_snapshot_digest"
         )
         candidate_path = self.write(
             self.root, "candidate.lock.yaml", proc.stdout
@@ -1466,7 +1456,7 @@ class ProposeLockTests(EngineTestCase):
 
 class VerifyAllTests(EngineTestCase):
     def _verify(
-        self, fixture: dict, registry: Path
+        self, fixture: dict[str, object], registry: Path
     ) -> subprocess.CompletedProcess:
         return self.run_cli(
             "verify-all",
@@ -1482,24 +1472,23 @@ class VerifyAllTests(EngineTestCase):
         proc = self._verify(fixture, fixture["current_registry"])
         self.assert_exit(proc, 0)
         report = json.loads(proc.stdout)
-        self.assertTrue(report["compliance"])
+        assert report["compliance"]
         by_id = {adopter["id"]: adopter for adopter in report["adopters"]}
-        self.assertTrue(by_id["good"]["compliance"])
-        self.assertEqual(report["blocking_reasons"], [])
+        assert by_id["good"]["compliance"]
+        assert report["blocking_reasons"] == []
 
     def test_stale_registered_adopter_exit_1_without_required_field(self) -> None:
         fixture = self.build_verify()
         proc = self._verify(fixture, fixture["stale_registry"])
         self.assert_exit(proc, 1)
         report = json.loads(proc.stdout)
-        self.assertFalse(report["compliance"])
+        assert not report["compliance"]
         by_id = {adopter["id"]: adopter for adopter in report["adopters"]}
-        self.assertTrue(by_id["good"]["compliance"])
-        self.assertFalse(by_id["stale"]["compliance"])
-        self.assertTrue(
-            any("stale" in reason for reason in report["blocking_reasons"]),
-            report["blocking_reasons"],
-        )
+        assert by_id["good"]["compliance"]
+        assert not by_id["stale"]["compliance"]
+        assert any(
+            "stale" in reason for reason in report["blocking_reasons"]
+        ), report["blocking_reasons"]
 
     def test_missing_checkout_is_blocking_without_network(self) -> None:
         fixture = self.build_verify()
@@ -1521,28 +1510,25 @@ class VerifyAllTests(EngineTestCase):
         ):
             with contextlib.redirect_stdout(buffer):
                 code = engine.run_verify(namespace)
-        self.assertEqual(code, 1, "missing required checkout must block")
+        assert code == 1, "missing required checkout must block"
         report = json.loads(buffer.getvalue())
         ghost = next(a for a in report["adopters"] if a["id"] == "ghost")
-        self.assertFalse(ghost["compliance"])
-        self.assertIn("repository_unavailable", ghost["error"])
-        self.assertTrue(
-            any("ghost" in reason for reason in report["blocking_reasons"]),
-            report["blocking_reasons"],
-        )
+        assert not ghost["compliance"]
+        assert "repository_unavailable" in ghost["error"]
+        assert any(
+            "ghost" in reason for reason in report["blocking_reasons"]
+        ), report["blocking_reasons"]
 
     def test_registry_entries_have_no_required_field(self) -> None:
         fixture = self.build_verify()
         document = yaml.safe_load(
             fixture["stale_registry"].read_text(encoding="utf-8")
         )
-        self.assertTrue(document["adopters"])
+        assert document["adopters"]
         for adopter in document["adopters"]:
-            self.assertNotIn("required", adopter)
-        self.assertIsInstance(
+            assert "required" not in adopter
+        assert isinstance(
             engine.load_registry(str(fixture["stale_registry"])), dict
         )
 
 
-if __name__ == "__main__":
-    unittest.main(verbosity=2)

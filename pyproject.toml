@@ -1,8 +1,21 @@
 [project]
 name = "aicore"
 version = "0.0.0"
-requires-python = ">=3.9"
+requires-python = ">=3.13"
 dependencies = ["PyYAML==6.0.3"]
+
+[dependency-groups]
+dev = ["pytest==9.0.3"]
 
 [tool.uv]
 package = false
+
+[tool.pytest.ini_options]
+testpaths = [
+  ".opencode/skills/plan-enforce/scripts",
+  ".opencode/skills/query-verification/scripts",
+  ".opencode/skills/sync-aicore-adoption/scripts",
+  ".opencode/skills/ticket-runbook/scripts",
+]
+python_files = ["test_*.py"]
+python_classes = ["*Tests"]

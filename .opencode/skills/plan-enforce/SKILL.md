@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.12.1
+  version: 1.13.0
 ---
 
 ## What I do
@@ -221,9 +221,9 @@ Every phase runbook's `## Verify commands` section is one canonical Markdown tab
 
 ### Non-TypeScript test files
 
-- A plan that edits an exact active-plan Python stdlib `unittest` file must list the declared literal `python3` command for that exact file, obtain Bastion 🧱 (Backend & Scripts Architect) `[PASS]` on the edit, and dispatch Crucible 🔥 (Test Architect) for the test-file edit.
+- A plan that edits an exact active-plan Python `test_*.py` file must list the declared literal `uv run --frozen --group dev pytest` command for that path, obtain Bastion 🧱 (Backend & Scripts Architect) `[PASS]` on the edit, and dispatch Crucible 🔥 (Test Architect) for the test-file edit.
 - Crucible 🔥 (Test Architect) must return `[PASS]` or `[FAIL]` for that Python test file. `[UNCERTAIN]` is not acceptable for an exact active-plan Python test path; a recorded `[UNCERTAIN]` does not satisfy this gate.
-- No test framework is added: `pytest` is not required or introduced for stdlib `unittest` files. This does not change the existing TypeScript / Atrium 🏛️ (Frontend Architect) and Crucible 🔥 (Test Architect) test-file gates.
+- pytest is the Python test runner via `[dependency-groups] dev`. This does not change the existing TypeScript / Atrium 🏛️ (Frontend Architect) and Crucible 🔥 (Test Architect) test-file gates.
 
 ## User stories
 

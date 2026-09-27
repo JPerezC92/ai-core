@@ -1,5 +1,5 @@
 # Cipher — AICore
-> **Spec version:** 2.2.0
+> **Spec version:** 2.3.0
 
 ## Identity & Role
 
@@ -81,7 +81,7 @@ A destination's **active runtime** carries destination-only identity: its root r
 ## Conventions
 
 - Roster mention format: `Name Emoji (Role)` on every non-possessive mention; possessives use bare name (`Cipher's report`, `Forge's edit`).
-- Environment constraints: `python3` is the interpreter (not `python`); skill validator tests deliberately use Python stdlib `unittest` — the root UV environment locks only runtime dependencies (e.g. PyYAML), no test framework.
+- Environment constraints: `python3` is the interpreter (not `python`); skill tests run with `uv run --frozen --group dev pytest`; the root UV environment locks runtime dependencies (PyYAML) separately from the `dev` group (pytest).
 - Memory-store discipline: before writing any memory, evaluate where the knowledge belongs — workflow/flow knowledge goes to repo surfaces (skill Troubleshooting, `knowledge/` registers, these rules), never memory-only; destination-project state goes to the destination's repo, never here; machine-local shortcuts of repo-derivable facts may use memory as cache with the repo as source of truth. A memory that is the only home of durable knowledge is a defect.
 - Memory system: this project uses the local memories.sh store via the `memories` MCP server — agents call `get_context` / `search_memories` at session start and write durable knowledge via `add_memory` scoped to this project only (never the global scope). magic-context is disabled here via `magic-context.jsonc`; native opencode compaction owns session context.
 - Every clarifying question goes through the OpenCode `question` tool — never plain-text re-asks.
