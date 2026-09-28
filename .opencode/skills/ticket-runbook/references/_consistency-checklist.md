@@ -17,7 +17,7 @@ Run every command from the project root. The validator enforces only the mechani
 - Header has all 7 YAML fields: `Phase`, `SLA-due`, `Updated`, `Hypotheses-outstanding`, `Query-budget`, `identification_verdict`, `Same-query-reruns`. *(delegated to `validate_runbook.py`)*
 - `Phase` is one of `identify` / `investigate` / `synthesize` and advances only after the previous step's gate passes and the validator exits clean. *(enum delegated)*
 - `identification_verdict` is one of `pending` / `exact` / `structural` / `no_match`. *(enum delegated; verdict-vs-register is delegated for cited `P-NNN`/lifecycle consistency and is analysis for discriminator evidence)*
-- `Query-budget` is `used/limit`: a fresh scaffold is `0/6`, and `6/6` is exhausted. The used value reflects actually consumed queries. *(delegated)*
+- `Query-budget` is `used/limit` with used less than or equal to the current limit (default 6). A fresh scaffold is `0/6`; exhausted means used equals limit. The used value reflects actually consumed queries. *(delegated)*
 - Other kill-switch counters reflect what was actually consumed: hypotheses ≤ 3 and same-query reruns ≤ 2. *(delegated)*
 - `SLA-due` matches the ticket's real SLA deadline (not a placeholder). *(analysis — value must match evidence)*
 

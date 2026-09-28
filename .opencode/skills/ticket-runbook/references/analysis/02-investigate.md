@@ -13,12 +13,12 @@
    - `exact` — record the cited `P-NNN`, restate its evidenced discriminators, and confirm the recorded root cause and fix still apply to the current ticket. No fresh hypothesis framing.
    - `structural` — restate the one inherited hypothesis from the cited `P-NNN`. If the row's Evidence carries a `pack:` pointer, resolve that destination-relative pack path FIRST: read the pack with destination tools and replay that correlation with current-ticket keys under destination-owned execution (AICore never executes or parses the pack internals). Only then frame a new query — and only if the pack replay is rejected, inapplicable, or inconclusive. If the row instead (or also) carries a `diagnostic:` pointer, resolve that destination-relative sidecar path next: validate the adjacent SQL/sidecar pair with `python3 .opencode/skills/query-verification/scripts/query_verification.py validate --query-root <sidecar-parent-dir> --sidecar <sidecar-path>`, let the destination-owned adapter bind current-ticket values (consumes one existing Query-budget slot), and evaluate the normalized output. Only then frame a new query — and only if the stored diagnostic is rejected, inapplicable, `not_verified`, or `inconclusive`. If the row has neither pointer, validate the hypothesis with adapted queries as before.
    - `no_match` — frame ≤3 evidence-backed hypotheses (H1 most likely). Each hypothesis MUST have: statement, partial evidence, refutation criteria, and a proposed validation query. Do not suggest skills by name.
-2. Execute ONE query per hypothesis, in H1→H2→H3 order. Before each query: check `Query-budget` — if it is `6/6`, stop and report budget exhausted.
+2. Execute ONE query per hypothesis, in H1→H2→H3 order. Before each query: check `Query-budget` — if used equals the current limit, stop and report budget exhausted (default limit 6; halt-and-ask unless the user already raised the denominator).
 3. After each query: write the result verbatim (exact counts, exact timestamps, exact field values). No paraphrase. Set `Confirmed: yes | no | inconclusive` for each hypothesis.
 4. After each same-query re-run (identical query re-executed): increment `Same-query-reruns`. If it reaches 2, stop re-running; flag in output.
 5. Write `02-investigate.md`: one block per hypothesis with Query / Result (verbatim) / Confirmed.
 6. Update `state.md`: decrement `Hypotheses-outstanding` per resolved hypothesis; update `Query-budget` as `used/limit`; update `Same-query-reruns`; set `Phase: investigate`, `Updated: <now>`.
-7. **Retention (before any collapse):** Every executed query block — manual `Query:` blocks, pack-replay evidence, and verifier-routed evidence alike — must be preserved verbatim in the durable ticket record: copy each block into `ticket_<id>.md` (Analysis section) or a cited artifact under `validations/` before close-out collapse deletes this file. Collapse is the deletion step; the durable copy is the retention mechanism. A reusable `pack:` pointer is an extra durable pointer, not a substitute for verbatim ticket retention: every executed query block from the pack replay still copies into `ticket_<id>.md` or a cited `validations/` artifact. Only the confirming reusable query is additionally promoted to a verifier pair at the destination project's declared query-storage path.
+7. **Retention (before any collapse):** Every executed query block — manual `Query:` blocks, pack-replay evidence, and verifier-routed evidence alike — must be preserved verbatim in the durable ticket record: copy each block into `ticket_<ID>.md` (Analysis section) or a cited artifact under `validations/` before close-out collapse deletes this file. Collapse is the deletion step; the durable copy is the retention mechanism. A reusable `pack:` pointer is an extra durable pointer, not a substitute for verbatim ticket retention: every executed query block from the pack replay still copies into `ticket_<ID>.md` or a cited `validations/` artifact. Only the confirming reusable query is additionally promoted to a verifier pair at the destination project's declared query-storage path.
 
 ## Optional verifier route (query-verification pilot)
 
@@ -32,7 +32,7 @@
    `python3 .opencode/skills/query-verification/scripts/query_verification.py evaluate --sidecar ./sql/checks/example-amount.verifier.yaml --adapter-output ./validations/session/adapter-output.json --evidence ./validations/session/example-amount.evidence.json`
 4. Record the verifier-evidence block below and update `state.md` as in Step 6.
 
-**Query-budget accounting:** exactly one adapter execution consumes exactly one existing Query-budget slot. The `6/6` cap, the `Same-query-reruns` cap of 2, and the normal per-hypothesis query path are unchanged. No new counter, budget, or header field is introduced.
+**Query-budget accounting:** exactly one adapter execution consumes exactly one existing Query-budget slot. The default limit is 6 (exhausted when used equals limit). Raise the denominator only with user authorization; never write used greater than limit; never write `14/6`. The `Same-query-reruns` cap of 2 and the normal per-hypothesis query path are unchanged. No new counter, budget, or header field is introduced.
 
 **Non-verifier queries:** any query not run through the verifier route keeps the required verbatim `Query:` / `Result (verbatim)` evidence from Steps 2 and 4.
 
@@ -93,17 +93,17 @@
 
 - ⬜ `exact` and `structural` cite the `P-NNN` inherited from `01-identify.md`; `no_match` frames ≤3 hypotheses
 - ⬜ Each hypothesis has a Confirmed verdict
-- ⬜ `Query-budget` in `state.md` is used/limit and does not exceed `6/6`
+- ⬜ `Query-budget` in `state.md` is used/limit and used is less than or equal to the current limit (default 6)
 - ⬜ `Same-query-reruns` counter does not exceed 2
 - ⬜ All result values are verbatim — no paraphrase, no rounding
 - ⬜ If the optional verifier route was used: the verifier-evidence block records the verifier ID, one of the three verdicts, the source/definition/evidence digests, and the redacted case-evidence path
-- ⬜ The verifier route consumed exactly one Query-budget slot; the `6/6` cap, `Same-query-reruns`, and the manual per-hypothesis path are unchanged
+- ⬜ The verifier route consumed exactly one Query-budget slot; the default Query-budget limit of 6, `Same-query-reruns`, and the manual per-hypothesis path are unchanged
 - ⬜ A verifier verdict is recorded as symptom evidence only — not as root-cause proof or fix authorization
-- ⬜ Every executed query block has a durable verbatim copy in `ticket_<id>.md` or a cited `validations/` artifact
+- ⬜ Every executed query block has a durable verbatim copy in `ticket_<ID>.md` or a cited `validations/` artifact
 
 ## Abort conditions
 
-- `Query-budget` reaches `6/6` with no confirmed hypothesis → halt; return to Cipher 🔓 (Lead Orchestrator) with a budget-exhausted signal.
+- `Query-budget` used equals the current limit with no confirmed hypothesis → halt-and-ask (unless the user already raised the denominator); return to Cipher 🔓 (Lead Orchestrator) with a budget-exhausted signal.
 - `Same-query-reruns` reaches 2 → cease re-running; report to Cipher 🔓 (Lead Orchestrator).
 - Cannot frame even one evidence-backed hypothesis → halt with an "insufficient data" finding. Do not invent hypotheses.
 - Halt if the optional verifier route would require a state-header schema change, a query-budget increase, ticket data migration, or automatic query execution.

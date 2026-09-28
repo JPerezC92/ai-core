@@ -32,6 +32,9 @@
 - ✅ After a confirmed root cause, register admission runs before destructive collapse — it does not wait for `Close out now` — creating or updating the `S-xx`/`P-NNN` row with a durable `case:` pointer. Evidence: `ticket-runbook` SKILL.md steps 6-7; `knowledge/agents.md` Proactive admission.
 - ✅ Every executed investigation query survives collapse verbatim in `ticket_<id>.md` or a cited `validations/` artifact; when the confirming query is reusable it is optionally persisted as SQL plus adjacent sidecar at a destination-declared path with a `diagnostic:` pointer in Evidence. Evidence: `ticket-runbook` `references/analysis/02-investigate.md` Step 7; `knowledge/problems.md` Evidence format.
 - ✅ When the proof path is a reusable identification pack (multi-statement or multi-result correlation), Evidence may record `pack:` plus a destination-relative path without placing SQL or result tables in `knowledge/problems.md` or `knowledge/symptoms.md`; the destination chooses how and where to store the pack; a later `structural` ticket follows `pack:` before framing a new query; `diagnostic:` remains protocol-v1 only. Evidence: `knowledge/problems.md:18,36`; `knowledge/agents.md:25`; `ticket-runbook/SKILL.md:110`; `references/analysis/02-investigate.md:14`; `_consistency-checklist.md:58,79-80`; Sentinel 🛡️ (Quality Guardian) `[PASS]` 2026-09-16.
+- ✅ Fill-token scan ignores HTML comments, including a single-line comment in `analysis/state.md`, so `--pre-close` does not report them as `UNFILLED-TOKEN`. Evidence: `validate_runbook.py` `_check_step_body_fill_markers`; `test_state_html_comment_is_not_unfilled_token`; Bastion 🧱 (Backend & Scripts Architect) and Crucible 🔥 (Test Architect) `[PASS]` 2026-09-27.
+- ✅ Instruction CLI placeholders `` `<sidecar-parent-dir>` `` and `` `<sidecar-path>` ``, and durable ticket records spelled with `` `<ID>` ``, do not fail `--step investigate`; Output fill tokens still fail until filled. Evidence: `EXCLUDE_FILL_TOKENS`; `test_filled_investigate_keeps_sidecar_command_examples`; `test_unfilled_output_fill_fails_step_investigate`.
+- ✅ KILL-2 compares Query-budget used to the header denominator, not a hardcoded 6. `14/14` passes; `7/6` fails. Default scaffold limit remains 6. Evidence: `validate_runbook.py` `check_kill_switches`; `test_query_budget_compared_to_denominator`; `test_pre_close_accepts_authorized_raised_query_budget`; `test_pre_close_rejects_query_budget_over_denominator`; `ticket-runbook` SKILL.md 2.4.0.
 
 ## Change log
 
@@ -45,6 +48,8 @@
 - 2026-09-16 - ticket-runbook-pre-close-20260915: PR #41 rework hardened `--pre-close` to reject a non-file citation (directory) like `--close-out`; test-count evidence refreshed to 59.
 - 2026-09-16 - identification-pack-pointer-20260916: planned an optional `pack:` Evidence pointer for destination-owned identification packs; protocol-v1 `diagnostic:` unchanged; adopter sync deferred.
 - 2026-09-27 - python-pytest-20260927: neutralized adopter names in this story (DEBT-004).
+- 2026-09-27 - runbook-budget-and-plan-review-20260927: planned HTML-comment fill-token ignore, sidecar instruction excludes, and denominator-authoritative Query-budget KILL-2.
+- 2026-09-27 - runbook-budget-and-plan-review-20260927: implemented `ticket-runbook` 2.4.0; pytest 74 passed; Bastion 🧱 (Backend & Scripts Architect) and Crucible 🔥 (Test Architect) `[PASS]`.
 
 ## Resolved decisions
 

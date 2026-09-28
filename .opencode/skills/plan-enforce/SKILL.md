@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.13.0
+  version: 1.14.0
 ---
 
 ## What I do
@@ -144,7 +144,8 @@ Do not create `plan.md` or any `phase-*.md` until the user confirms all four. Sk
 Write the confirmed goals into `plan.md` under `## Goals`:
 
 - One checkbox per goal: `- ⬜ **G1:** <goal>`
-- Programming plans use `references/_template-programming.md`, where every goal carries a `Done when:` criterion — the observable condition that proves the goal is met.
+- Each goal lists Issue, How, and Files. `## Context` remains the overall issue.
+- Programming plans use `references/_template-programming.md`, where every goal also carries a `Done when:` criterion — the observable condition that proves the goal is met.
 - After confirmation, goals are never renumbered or reworded silently — changes go through Drift watch.
 
 ### Drift watch
@@ -230,7 +231,8 @@ Every phase runbook's `## Verify commands` section is one canonical Markdown tab
 User stories are the durable per-feature registry — one file per feature, `user-stories/<feature-slug>.md`, built from `references/_template-user-story.md`. Plans are temporal and never carry the durable definition; the story does.
 
 - **Index first:** `user-stories/index.md` is the single structural reference point. The collision gate and feature matching read the index first, filter candidates by epic / affected areas, then read the candidate bodies.
-- **CREATE:** create `user-stories/<feature-slug>.md` when a plan touches a feature that has no story yet.
+- **Before any new story file:** Cipher 🔓 (Lead Orchestrator) reads `user-stories/index.md`, filters by epic and affected areas, reads candidate bodies, presents UPDATE / rename / CREATE with evidence, and waits for an explicit user choice via the `question` tool. CREATE without that choice is forbidden. Cipher 🔓 (Lead Orchestrator) may not CREATE on its own say-so.
+- **CREATE:** create `user-stories/<feature-slug>.md` only after that explicit CREATE choice, when a plan touches a feature that has no story yet.
 - **UPDATE:** update the affected story in the same step as the plan work — the body reflects the CURRENT feature definition; append a dated `## Change log` entry per plan that touched it.
 - **COLLIDE:** when the intended work overlaps, contradicts, or extends an existing story, stop and run the collision gate (see **User-story collision gate**).
 - **Durable:** stories are never archived or deleted with plans. Plan archival moves `plans/` artifacts only; `user-stories/` stays.
@@ -249,7 +251,8 @@ Which plans carry a user story?
 
 Before planning work that touches features, read `user-stories/index.md` first, filter candidates by epic / affected areas, then read the candidate bodies and learn the current definitions. Scan the intended work for collisions with an existing story: overlap (same scenario), contradiction (opposing behavior), or extension (supersedes or broadens a defined feature).
 
-- **On collision:** stop before creating any plan file. Report the collision with evidence — the existing story's persona/goal/scenario and the intended work's corresponding statements — and ask the user how to proceed.
+- **On collision:** stop before creating any plan file. Report the collision with evidence — the existing story's persona/goal/scenario and the intended work's corresponding statements — and ask the user how to proceed. Overlap, contradiction, and extension still stop.
+- **Before any new story file:** present the index-filtered candidates with evidence and the three choices UPDATE / rename / CREATE. Wait for an explicit user choice via the `question` tool. CREATE without that choice is forbidden.
 - **On the user's decision:** append a dated line to the affected story's `## Resolved decisions` recording the resolution.
 - **Drift watch:** re-run the gate when scope adds a feature mid-plan (see **Goal lifecycle** → Drift watch).
 
@@ -261,13 +264,26 @@ Before planning work that touches features, read `user-stories/index.md` first, 
 4. Detect the goals from the task description: numbered `G1..Gn`, each stating what must be true when the plan is done (see **Goal lifecycle** → Detect).
 5. Run the goals-confirmation gate: first present the goals and classification in Markdown (see **Goal lifecycle** → Present), then run one short `question` call confirming them BEFORE any file creation (see **Goal lifecycle** → Confirm).
 6. Select the template: `references/_template-programming.md` for programming plans, `references/_template.md` otherwise (see **Template selection**).
-7. Run the user-story gate: read `user-stories/index.md`, identify the touched features, and for each run CREATE / UPDATE / COLLIDE (see **User stories** + **User-story collision gate**). On collision, stop before creating any plan file and ask the user. If the plan skips stories (see **User-story scope**), record that in the plan's Context.
+7. Run the user-story gate: read `user-stories/index.md`, filter by epic and affected areas, read candidate bodies, and for each feature run UPDATE / rename / CREATE / COLLIDE (see **User stories** + **User-story collision gate**). Do not create a new story file until the user makes an explicit UPDATE / rename / CREATE choice. On overlap, contradiction, or extension, stop before creating any plan file and ask the user. If the plan skips stories (see **User-story scope**), record that in the plan's Context.
 8. Run the post-scope collision check. Stop on overlap; do not create files.
 9. Create `plans/<task-slug>-YYYYMMDD/plan.md` from the selected template and one `phase-NN-<owner>.md` from `references/_phase-template.md` per phase. Record the derived write/delete manifest in the plan's `## Write/delete manifest` section; its `Action`/`Path` rows must equal the union of the phases' `**Writes:**` paths, because the validator enforces that equality.
 10. Fill each phase's Owner, Pre, Reads, Writes, Steps, Output, Verify commands, Gate, and Abort conditions. Do not leave `TBD` in Steps, Output, Gate, or Abort.
 11. Add one verification checkbox per phase output and confirm every checkbox traces to a phase output.
 12. Run the post-write self-verification loop (below) on every written file.
-13. Render the plan through `ExitPlanMode` before dispatching Forge 🔨 (Implementer).
+13. After self-verification, send the execution-review message (see **Execution-review message**) and stop. Do not dispatch Forge 🔨 (Implementer) in this turn. Do not treat `ExitPlanMode` as authorization to implement.
+
+## Execution-review message
+
+After plan files are written and the post-write self-verification loop is clean, Cipher 🔓 (Lead Orchestrator) sends one human-readable last message and stops.
+
+- Write **prose**, per goal, in this order: Issue, Goal, How, Files.
+- `plan.md` uses the same per-goal layout. `## Context` is the overall issue.
+- A recap file table may follow the prose. It must not replace the per-goal prose.
+- Dense dumps and table-only briefs are a violation.
+- Do not dispatch Forge 🔨 (Implementer) in the same turn as this message.
+- Do not ask a corrective, release, or scope-change question in the same turn as this message without that file list.
+
+Forge 🔨 (Implementer) starts only on a later user turn that explicitly authorizes execution after this message, plus independent-audit `[PASS]` and the stash gate.
 
 ## Post-write self-verification loop
 
@@ -275,7 +291,7 @@ Run after every file write (`plan.md`, each phase file, story create/update, ind
 
 1. **Re-read** every file just written: `plan.md`, each `phase-NN-<owner>.md`, `user-stories/<slug>.md`, `user-stories/index.md`.
 2. **Mechanical pass** — for an active subfolder plan that creates or modifies a user story or `user-stories/index.md`, run `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan-dir> --stories user-stories` so index mirroring runs. For a no-stories path, run `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan-dir>` without `--stories`; use `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan.md> --single-file` for the single-file layout. It enforces the repetitive subset: Status enum, `Completed:` line, required sections, phase sections/labels, phase executor-command table presence/shape, unfilled `<...>`/`TBD`/date placeholders, index mirroring, goal trace, manifest equality, verification parity, and the completed-plan audit gate. Fix anything it reports.
-3. **Analysis pass** — re-read each file against `references/_consistency-checklist.md`. Verify every value matches evidence: goals match the confirmed list, every phase traces to ≥1 goal and references an existing phase file, verification checkboxes trace to phase outputs, `## Writes` matches the manifest, story title/status mirror the index, and touched stories carry no `⬜` acceptance criteria at completion (see `### Acceptance-criterion reconciliation`). Never invent a value to satisfy a check — stop and ask.
+3. **Analysis pass** — re-read each file against `references/_consistency-checklist.md`. Verify every value matches evidence: goals match the confirmed list, each goal lists Issue, How, and Files, every phase traces to ≥1 goal and references an existing phase file, verification checkboxes trace to phase outputs, `## Writes` matches the manifest, story title/status mirror the index, and touched stories carry no `⬜` acceptance criteria at completion (see `### Acceptance-criterion reconciliation`). Never invent a value to satisfy a check — stop and ask.
 4. **Repeat** until a clean pass, then report the pass count in chat as `self-verification passes: N`.
 5. **Cap (S-07):** after 3 iterations, or the same violation persisting twice unchanged, stop-and-ask instead of looping.
 
@@ -295,9 +311,10 @@ A plan is never reported ready and Forge 🔨 (Implementer) is never dispatched 
 | Event | Required action |
 |---|---|
 | Any plan/phase/story/index file write | Run the post-write self-verification loop (mechanical + analysis) until clean. |
+| Plan files written | Send the execution-review message and stop. Do not dispatch Forge 🔨 (Implementer) in the plan-creation turn. |
 | Phase completes | Mark its verification item complete in `plan.md`. |
 | Scope changes | Stop; notify the user with evidence of the drift and wait for their call; then update `## Goals` and append a dated line to `## Resolved decisions`; re-derive the manifest and re-run the collision check. |
-| Forge 🔨 (Implementer) dispatch | Run both stash-gate parts, require an active plan, and require a recorded independent-audit `[PASS]` in `## Audit` before dispatch. |
+| Forge 🔨 (Implementer) dispatch | Dispatch only on a later user turn that explicitly authorizes execution after the execution-review message. Run both stash-gate parts, require an active plan, and require a recorded independent-audit `[PASS]` in `## Audit` before dispatch. |
 | Plan ready to report or resume | Require a recorded independent-audit `[PASS]` with auditor and date; an unavailable auditor leaves the plan not-ready (fail-closed). |
 | Audits pass, release PR requested | Present the goals resume in chat (`✅`/`❌` per goal with evidence), write `## Outcome`, set `Status: completed`, append `Completed: YYYY-MM-DD HH:MM`, and move the plan to `plans/.completed/` — all BEFORE the release PR is built. |
 | Plan was tracked mid-work | Stage the plan-file deletions into the completing PR; never stage a completed plan's content. |

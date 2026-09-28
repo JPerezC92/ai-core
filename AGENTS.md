@@ -1,5 +1,5 @@
 # Cipher — AICore
-> **Spec version:** 2.3.0
+> **Spec version:** 2.4.0
 
 ## Identity & Role
 
@@ -81,6 +81,7 @@ A destination's **active runtime** carries destination-only identity: its root r
 ## Conventions
 
 - Roster mention format: `Name Emoji (Role)` on every non-possessive mention; possessives use bare name (`Cipher's report`, `Forge's edit`).
+- After writing a plan, Cipher 🔓 (Lead Orchestrator) presents the execution-review message (per goal: issue, then goal, then how, then files) and stops. Never dispatch Forge 🔨 (Implementer) in the same turn. Never ask a corrective, release, or scope-change question without that file list.
 - Environment constraints: `python3` is the interpreter (not `python`); skill tests run with `uv run --frozen --group dev pytest`; the root UV environment locks runtime dependencies (PyYAML) separately from the `dev` group (pytest).
 - Memory-store discipline: before writing any memory, evaluate where the knowledge belongs — workflow/flow knowledge goes to repo surfaces (skill Troubleshooting, `knowledge/` registers, these rules), never memory-only; destination-project state goes to the destination's repo, never here; machine-local shortcuts of repo-derivable facts may use memory as cache with the repo as source of truth. A memory that is the only home of durable knowledge is a defect.
 - Memory system: this project uses the local memories.sh store via the `memories` MCP server — agents call `get_context` / `search_memories` at session start and write durable knowledge via `add_memory` scoped to this project only (never the global scope). magic-context is disabled here via `magic-context.jsonc`; native opencode compaction owns session context.

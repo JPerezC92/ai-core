@@ -7,7 +7,7 @@ Query-budget: "0/6"
 identification_verdict: "pending"
 Same-query-reruns: "0/2"
 ---
-<!-- Query-budget is used/limit: fresh scaffold 0/6; 6/6 is exhausted. -->
+<!-- Query-budget is used/limit, default 6; exhausted when used equals limit. -->
 <!-- identification_verdict valid values:
      pending    — set at scaffold; the identify step replaces it
      exact      — exactly one active incident P-NNN with allow_exact: yes and every discriminator already evidenced

@@ -15,11 +15,17 @@
 
 ## Goals
 
-> Every programming goal carries a `Done when:` criterion — the observable condition that proves the goal is met.
+> Every programming goal carries Issue, How, Files, and a `Done when:` criterion — the observable condition that proves the goal is met. `## Context` is the overall issue.
 
 - ⬜ **G1:** <goal 1>
+  - Issue: <the problem this goal fixes>
+  - How: <how it is fixed>
+  - Files: <paths this goal writes>
   - Done when: <observable condition>
 - ⬜ **G2:** <goal 2>
+  - Issue: <the problem this goal fixes>
+  - How: <how it is fixed>
+  - Files: <paths this goal writes>
   - Done when: <observable condition>
 
 ## Current state

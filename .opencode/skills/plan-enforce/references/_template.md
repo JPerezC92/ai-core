@@ -15,10 +15,16 @@
 
 ## Goals
 
-> Required. Numbered checkboxes tracked from confirmation to completion — each goal states what must be true when the plan is done.
+> Required. Numbered checkboxes tracked from confirmation to completion — each goal states what must be true when the plan is done. `## Context` is the overall issue. Each goal lists Issue, How, and Files.
 
 - ⬜ **G1:** <goal 1 — what must be true when this plan is done>
+  - Issue: <the problem this goal fixes>
+  - How: <how it is fixed>
+  - Files: <paths this goal writes>
 - ⬜ **G2:** <goal 2>
+  - Issue: <the problem this goal fixes>
+  - How: <how it is fixed>
+  - Files: <paths this goal writes>
 
 ## Body
 

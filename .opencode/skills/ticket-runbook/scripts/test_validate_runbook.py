@@ -371,6 +371,50 @@ class ValidateRunbookTests:
             )
             assert findings == [("01-identify.md", "UNFILLED-TOKEN: <fill>")]
 
+    def test_state_html_comment_is_not_unfilled_token(self) -> None:
+        comment = (
+            "<!-- Query-budget is used/limit, default 6; "
+            "exhausted when used equals limit. -->"
+        )
+        findings = vr._check_step_body_fill_markers(
+            _state_md() + "\n" + comment + "\n", "state.md"
+        )
+        assert findings == []
+
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _pre_close_ticket_dir(d)
+            state = ticket_dir / "analysis" / "state.md"
+            state.write_text(
+                state.read_text(encoding="utf-8") + "\n" + comment + "\n",
+                encoding="utf-8",
+            )
+            assert vr.validate_pre_close(str(ticket_dir), d) == 0
+
+    def test_leftover_fill_token_in_state_still_fails(self) -> None:
+        findings = vr._check_step_body_fill_markers(
+            _state_md() + "\n<unfinished>\n", "state.md"
+        )
+        assert findings == [("state.md", "UNFILLED-TOKEN: <unfinished>")]
+
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _pre_close_ticket_dir(d)
+            state = ticket_dir / "analysis" / "state.md"
+            state.write_text(
+                state.read_text(encoding="utf-8") + "\n<unfinished>\n",
+                encoding="utf-8",
+            )
+            violations = vr.evaluate_pre_close(
+                vr.load_close_out_snapshot(ticket_dir), []
+            )
+            assert any(
+                "UNFILLED-TOKEN: <unfinished>" in item for item in violations
+            ), violations
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                result = vr.validate_pre_close(str(ticket_dir), d)
+            assert result == 1
+            assert "UNFILLED-TOKEN: <unfinished>" in stderr.getvalue()
+
     # ── Header enums and budgets ─────────────────────────────────────────────
 
     def test_hypothesis_cap_violation(self) -> None:
@@ -404,6 +448,24 @@ class ValidateRunbookTests:
             assert vr.check_kill_switches(header) == [
                 "KILL-2: query budget exhausted (7 > 6)"
             ]
+
+    @pytest.mark.parametrize(
+        "budget,expected",
+        [
+            ("6/6", []),
+            ("7/6", ["KILL-2: query budget exhausted (7 > 6)"]),
+            ("7/7", []),
+            ("14/14", []),
+        ],
+    )
+    def test_query_budget_compared_to_denominator(
+        self, budget: str, expected: list[str]
+    ) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            analysis_dir = _make_analysis(d)
+            _patch_header(analysis_dir, {"Query-budget": budget})
+            header = vr.load_state_header(analysis_dir / "state.md")
+            assert vr.check_kill_switches(header) == expected
 
     def test_rerun_violation(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -462,6 +524,35 @@ class ValidateRunbookTests:
         with tempfile.TemporaryDirectory() as d:
             analysis_dir = _make_analysis(d, STEP_FILES)
             assert vr.validate_step(str(analysis_dir), "investigate") == 0
+
+    def test_filled_investigate_keeps_sidecar_command_examples(self) -> None:
+        sidecar_cli = (
+            "python3 .opencode/skills/query-verification/scripts/"
+            "query_verification.py validate --query-root <sidecar-parent-dir> "
+            "--sidecar <sidecar-path>"
+        )
+        with tempfile.TemporaryDirectory() as d:
+            analysis_dir = _make_analysis(d, phase="investigate")
+            investigate = analysis_dir / "02-investigate.md"
+            investigate.write_text(
+                _filled_step("02-investigate.md") + "\n" + sidecar_cli + "\n",
+                encoding="utf-8",
+            )
+            assert vr.validate_step(str(analysis_dir), "investigate") == 0
+
+    def test_unfilled_output_fill_fails_step_investigate(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            analysis_dir = _make_analysis(d, phase="investigate")
+            investigate = analysis_dir / "02-investigate.md"
+            investigate.write_text(
+                _filled_step("02-investigate.md") + "\n<fill>\n",
+                encoding="utf-8",
+            )
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                result = vr.validate_step(str(analysis_dir), "investigate")
+            assert result == 1
+            assert "UNFILLED-TOKEN: <fill>" in stderr.getvalue()
 
     def test_step_flag_on_missing_step(self) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -843,6 +934,26 @@ class ValidateRunbookTests:
                 vr.load_close_out_snapshot(ticket_dir), []
             )
             assert any(expected in item for item in violations), violations
+
+    def test_pre_close_accepts_authorized_raised_query_budget(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _pre_close_ticket_dir(d)
+            _patch_header(ticket_dir / "analysis", {"Query-budget": "14/14"})
+            violations = vr.evaluate_pre_close(
+                vr.load_close_out_snapshot(ticket_dir), []
+            )
+            assert not any("KILL-2" in item for item in violations), violations
+            assert vr.validate_pre_close(str(ticket_dir), d) == 0
+
+    def test_pre_close_rejects_query_budget_over_denominator(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            ticket_dir = _pre_close_ticket_dir(d)
+            _patch_header(ticket_dir / "analysis", {"Query-budget": "7/6"})
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                result = vr.validate_pre_close(str(ticket_dir), d)
+            assert result == 1
+            assert "KILL-2" in stderr.getvalue()
 
     @pytest.mark.parametrize(
         "conflicting_mode",

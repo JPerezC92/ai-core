@@ -124,12 +124,21 @@ ALLOWED_STATUSES: frozenset[str] = frozenset({"open", "closed"})
 # (boilerplate references, not data placeholders).  Every other <...> token is
 # treated as an unfilled fill-marker.
 EXCLUDE_FILL_TOKENS: frozenset[str] = frozenset(
-    {"<now>", "<calculated>", "<ID>", "<SYSTEM>", "<timestamp>"}
+    {
+        "<now>",
+        "<calculated>",
+        "<ID>",
+        "<SYSTEM>",
+        "<timestamp>",
+        "<sidecar-parent-dir>",
+        "<sidecar-path>",
+    }
 )
 
 _DATETIME_FMT = "%Y-%m-%dT%H:%M"
 _FRACTION_RE = re.compile(r"^(\d+)/(\d+)$")
 _FILL_TOKEN_RE = re.compile(r"<[^>]+>")
+_HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
 _PROBLEM_ID_RE = re.compile(r"^P-\d+$")
 _SYMPTOM_ID_RE = re.compile(r"S-\d{2}")
 _CITED_PATH_RE = re.compile(r"\bpath:\s*\**\s*([^\n]+)")
@@ -378,7 +387,7 @@ def check_kill_switches(header: AnalysisHeader) -> list[str]:
 
     Violations:
         KILL-1: Hypotheses-outstanding numerator > KILL_MAX_HYPOTHESES
-        KILL-2: Query-budget numerator > KILL_MAX_QUERIES
+        KILL-2: Query-budget numerator > denominator
         KILL-3: Same-query-reruns numerator > KILL_MAX_RERUNS
     """
     violations: list[str] = []
@@ -394,11 +403,11 @@ def check_kill_switches(header: AnalysisHeader) -> list[str]:
         violations.append(f"KILL-1: cannot parse Hypotheses-outstanding — {exc}")
 
     try:
-        q_consumed, _ = _parse_fraction(header["Query_budget"])
-        if q_consumed > KILL_MAX_QUERIES:
+        q_consumed, q_limit = _parse_fraction(header["Query_budget"])
+        if q_consumed > q_limit:
             violations.append(
                 f"KILL-2: query budget exhausted "
-                f"({q_consumed} > {KILL_MAX_QUERIES})"
+                f"({q_consumed} > {q_limit})"
             )
     except ValueError as exc:
         violations.append(f"KILL-2: cannot parse Query-budget — {exc}")
@@ -539,11 +548,13 @@ def _check_step_body_fill_markers(
     """Scan step-file content for unfilled ``<...>`` placeholder tokens.
 
     Any ``<token>`` NOT in ``EXCLUDE_FILL_TOKENS`` is treated as an unfilled data
-    placeholder left over from the scaffold template.  Accepts already-read
-    content (no IO performed here).
+    placeholder left over from the scaffold template.  HTML comments are
+    stripped before the scan.  Accepts already-read content (no IO performed
+    here).
     """
     findings: list[tuple[str, str]] = []
-    for line in content.splitlines():
+    stripped = _HTML_COMMENT_RE.sub("", content)
+    for line in stripped.splitlines():
         for tok in _FILL_TOKEN_RE.findall(line):
             if tok not in EXCLUDE_FILL_TOKENS:
                 findings.append((fname, f"UNFILLED-TOKEN: {tok}"))
