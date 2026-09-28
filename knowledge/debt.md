@@ -21,4 +21,11 @@ Each entry MUST include:
 
 ## Register
 
-(open debts: none)
+### DEBT-001 — PR test-evidence observed output is unstandardized
+
+- **ID:** DEBT-001
+- **Date:** 2026-09-27
+- **Description:** `## Test evidence` Observed output has no human-readable contract. Agents paste full runner stdout (pytest `-q` progress dots, traces, dumps). The useful signal is the verdict line.
+- **Direct evidence:** PR #44 Test evidence for pytest at `c89a6e6698a52948cfbf3f62c8eb41f04383482e` recorded `........................................................................ [ 97%]` / `.. [100%]` plus `74 passed in 0.11s`. User rejected the dots as unhelpful. `git-pr` SKILL.md Post-PR evidence contract requires `<literal observed output>` with no verdict-only rule. Inquisitor 🔎 (PR Reviewer) and Herald 📯 (Release Manager) persist that same shape.
+- **Resolution criteria:** `git-pr`, Inquisitor 🔎 (PR Reviewer), and Herald 📯 (Release Manager) require Observed output to be the human-readable verdict only (for pytest: `N passed in Xs`). Progress bars, per-test dots, stack traces, and raw dumps are forbidden unless the user asks for them. Clearing PR UPDATES `user-stories/git-pr-drafting.md`; do not CREATE a new story. That PR deletes this entry.
+- **Explicit deferral decision:** User, 2026-09-27 — strip the dots from PR #44 now; standardize the contract later. Non-blocking for #44 merge.
