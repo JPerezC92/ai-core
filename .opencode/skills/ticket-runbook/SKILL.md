@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.3.0
+  version: 2.4.0
   dependencies:
     - PyYAML==6.0.3
 ---
@@ -72,7 +72,7 @@ Always scaffold, whatever the verdict — `exact`, `structural`, and `no_match` 
 
 1. If the ticket folder does not exist, create it first: ticket folder + `screenshots/` + `validations/` + ticket record (from `references/ticket-template.md`) + `response-draft.md` (from `references/response-draft-template.md`).
 2. Copy the analysis template from `references/analysis/` into the ticket folder's `analysis/` subfolder: `state.md`, `01-identify.md`, `02-investigate.md`, `03-synthesize.md`.
-3. Initialize the `analysis/state.md` header: `Phase` (`identify`), `SLA-due` (from ticket), `Updated` (current timestamp), `Hypotheses-outstanding` (`3/3`), `Query-budget` (`0/6`, used/limit; `6/6` is exhausted), `identification_verdict` (`pending`), `Same-query-reruns` (`0/2`).
+3. Initialize the `analysis/state.md` header: `Phase` (`identify`), `SLA-due` (from ticket), `Updated` (current timestamp), `Hypotheses-outstanding` (`3/3`), `Query-budget` (`0/6`, used/limit, default limit 6), `identification_verdict` (`pending`), `Same-query-reruns` (`0/2`). **Query-budget (HARD):** exhausted means used equals the current limit; halt-and-ask at that point unless the user already raised the denominator. Raise the denominator first (`14/14`); never write used greater than limit; never write `14/6`.
 4. Record the identification result in `01-identify.md`: system, module, matched `S-xx`, matched incident `P-NNN` (if any), discriminator/exclusion evaluation, verdict, and rationale.
 
 **Screenshot naming convention:** files placed in `screenshots/` must follow the project's `NN_<source>_<entity>[_<distinguisher>].png` convention (zero-padded NN matches ImagenN order; no campaign/entity ID/region in filename). Forbidden initial names: `image1.png`, `screenshot.png`, any name without the `NN_` prefix. Investigator 🔍 (Incident Investigator) + Quill 🪶 (Note Drafter) dispatch prompts MUST reference final filenames; renaming at close-out is a process violation.
@@ -127,7 +127,7 @@ Register admission (step 6) already ran when the root cause was confirmed; this 
 The investigate step documents an optional, incident-only verifier route. It is off by default; the manual per-hypothesis query path is unchanged and remains the default.
 
 - The `query-verification` skill validates an incident-owned, sidecar-defined SQL verifier against an invocation-time query root and evaluates the destination-owned adapter's normalized output offline. AICore never executes the query, holds credentials, or invokes the adapter.
-- Exactly one adapter execution consumes exactly one existing Query-budget slot. The `6/6` cap, the `Same-query-reruns` cap of 2, and the normal per-hypothesis query path are unchanged; no new header field, counter, or budget is introduced.
+- Exactly one adapter execution consumes exactly one existing Query-budget slot. The default Query-budget limit is 6 (exhausted when used equals limit); halt-and-ask at that point unless the user already raised the denominator. Never write used greater than limit; never write `14/6`. The `Same-query-reruns` cap of 2 and the normal per-hypothesis query path are unchanged; no new header field, counter, or budget is introduced.
 - The redacted case-evidence record is written under the ticket's existing session-specific `validations/` folder with the verifier ID as the filename stem.
 - The analysis and ticket evidence record only the verifier ID, the three-state verdict, the source/definition/evidence digests, and the redacted case-evidence path. Credentials, raw adapter output, rendered SQL, rendered parameter values, and unredacted configured identifiers are never retained.
 - A `verified` verdict is symptom evidence only; it never establishes root-cause equivalence or authorizes a fix.

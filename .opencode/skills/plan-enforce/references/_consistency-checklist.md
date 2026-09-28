@@ -8,12 +8,18 @@
 - When `Status: completed`, a `Completed: YYYY-MM-DD HH:MM` line is present in the metadata header.
 - Metadata header has `Started` and `Subject` (and `Layout` for subfolder plans).
 - Required sections present: `## Context`, `## Goals`, `## Critical files / tools`, `## Verification`, `## Out of scope` (or `## Out of scope / Do-not-touch`), plus `## Body` (base template) or `## Current state` + `## Behavior change` (programming template).
-- `## Goals` checkboxes present and match the confirmed goal list; programming goals each carry a `Done when:` criterion.
+- `## Goals` checkboxes present and match the confirmed goal list; each goal lists Issue, How, and Files; programming goals each carry a `Done when:` criterion. `## Context` is the overall issue. Table-only goals without that per-goal prose are a violation.
 - No unfilled placeholders: `<task subject>`, a literal `YYYY-MM-DD HH:MM`, or stray `<!-- -->` comment lines (the `## Pending` section may retain its example comments).
 - Goal trace: every dispatch-table row names an existing `phase-NN-<owner>.md` runbook, every phase file appears in the dispatch table, and (when the table ends in a `Goals` column) every cited goal ID exists and every declared goal ID is cited by ≥1 row.
 - Manifest equality: `## Write/delete manifest` is an `Action`/`Path` table using only `Modify`, `Add`, or `Delete`, and its normalized path set equals the union of every phase's `**Writes:**` paths (`none` contributes nothing).
 - Verification parity: the count of `## Verification` `- ⬜` / `- ✅` bullets equals the number of phase files; each verification checkbox traces to a phase output.
 - Audit gate: `## Audit` (when present) carries a `Verdict` in `[PENDING]`, `[PASS]`, `[FAIL]`; a `Status: completed` plan carries `[PASS]` with a non-empty `Auditor` and a set `Date`. An unknown verdict or an audit missing on a completed plan is a violation.
+
+## Execution-review (analysis)
+
+- After plan files are written, the last user-facing message is human-readable prose per goal in order Issue, Goal, How, Files. A recap file table may follow and must not replace that prose. Dense dumps and table-only briefs are a violation.
+- Forge 🔨 (Implementer) is not dispatched in the plan-creation turn. `ExitPlanMode` is not authorization to implement.
+- CREATE of a new story file requires an explicit UPDATE / rename / CREATE user choice after index-filtered candidate analysis. CREATE without that choice is a violation.
 
 ## Audit gate
 
@@ -39,6 +45,7 @@
 - Each story's `Title` and `Status` mirror the corresponding `index.md` columns.
 - No unfilled `<...>`, `TODO`, or `TBD` placeholders.
 - A dated `## Change log` entry is present for every plan that touched the story.
+- CREATE of a new story file is forbidden until Cipher 🔓 (Lead Orchestrator) has read `user-stories/index.md`, filtered by epic and affected areas, read candidate bodies, presented UPDATE / rename / CREATE with evidence, and received an explicit user choice.
 - Acceptance-criterion reconciliation (fail-closed): a story touched by the plan carries no `⬜` or `❌` criteria when the plan completes — each is `✅` (evidence-established) or removed as out-of-scope; `❌` (explicitly unmet) blocks completion until satisfied or removed. Out-of-scope work is removed, never left unchecked. Release events (PR opened/reviewed/merged) are not acceptance criteria. This is semantic analysis (evidence-to-checkbox truth), never mechanical auto-checking.
 
 ## Loop rule
