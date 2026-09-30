@@ -3,11 +3,24 @@
 Implements the CLI surface, the v2 document loaders with schema-shape
 validation, the Section 7 digest protocol, the Section 6 applicability model,
 the read-only ``check`` command (Sections 8-12), the stdout-only
-``propose-lock`` command (Sections 3-4, 15), and the read-only ``verify-all``
-aggregate over the adopter registry (Section 16).
+``propose-lock`` command (Sections 3-4, 15), the read-only ``verify-all``
+aggregate over the adopter registry (Section 16), the portable-story
+index merge (Section 17), and the ``apply`` command (Sections 11, 18): it
+classifies the bounded write set, refuses every unit outside it, journals
+every path it intends to write, stages the writable members, merges the story
+index for writable story units, regenerates the candidate lock through the
+``propose-lock`` builder, and verifies the result with the ``check`` report.
+Any failure after the first mutation triggers a best-effort restore of every
+journaled path before that failure is surfaced; a restore that cannot put a
+path back emits an ``apply_restore_failed`` recovery record on stderr naming
+every path that may now be inconsistent. The restore is best-effort, never
+atomic, and never a crash transaction.
 
-Read-only by construction: nothing here mutates an upstream or adopter
-repository, the index, or the worktree.
+``check``, ``propose-lock``, and ``verify-all`` are read-only by
+construction: they mutate no upstream or adopter repository, index, or
+worktree, and ``propose-lock`` writes only to stdout. ``apply`` is the single
+write path: it writes only adopter worktree content and the adopter lock
+file, never Git state.
 """
 
 from __future__ import annotations
@@ -18,11 +31,21 @@ import json
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
 from dataclasses import dataclass
-from typing import Callable, Iterable, Mapping, NoReturn, Protocol, Sequence
+from typing import (
+    Callable,
+    Iterable,
+    Literal,
+    Mapping,
+    NoReturn,
+    Protocol,
+    Sequence,
+    TypedDict,
+)
 
 import yaml
 
@@ -34,6 +57,9 @@ PROJECTIONS = ("file", "tree")
 SYNC_PROJECTIONS = ("file", "guarded_file", "tree", "assertions")
 DESTINATION_POLICIES = ("adopter_root_runtime",)
 REVIEW_DECISIONS = ("applied", "declined", "superseded")
+COLLISION_POLICIES = ("core_wins",)
+STORY_UNIT_KIND = "user-story"
+STORY_INDEX_NAME = "index.md"
 LOCK_DIGEST_FIELDS = (
     "accepted_catalog_digest",
     "declaration_digest",
@@ -175,7 +201,7 @@ def _catalog_unit(unit: object, where: str, seen: set[str]) -> None:
             "contains",
         )
     else:
-        _mapping_list(
+        members = _mapping_list(
             unit.get("members"),
             f"{where}.members",
             "invalid_mapping",
@@ -183,6 +209,15 @@ def _catalog_unit(unit: object, where: str, seen: set[str]) -> None:
             "source",
             "destination",
         )
+        for index, member in enumerate(members):
+            if "collision_policy" not in member:
+                continue
+            _need(
+                member["collision_policy"] in COLLISION_POLICIES,
+                "invalid_mapping",
+                f"{where}.members[{index}].collision_policy must be one of "
+                f"{COLLISION_POLICIES}",
+            )
     if projection == "guarded_file":
         _need(
             unit.get("destination_policy") in DESTINATION_POLICIES,
@@ -541,6 +576,278 @@ def evaluate_applicability(catalog_unit: object, profile: Mapping[str, object]) 
         any_of = applicability["any_of"]
         return any(bool(profile.get(str(marker), False)) for marker in any_of)
     _fail("invalid_applicability", "applicability must be always/requires/any_of")
+
+
+# ---------------------------------------------------------------------------
+# portable story projection (protocol-v2 Section 17): index merge
+# ---------------------------------------------------------------------------
+
+
+def _line_content(line: bytes) -> bytes:
+    """Return one line's bytes without its trailing line ending."""
+    return line.rstrip(b"\r\n")
+
+
+def _line_ending(line: bytes) -> bytes:
+    """Return the trailing line-ending bytes of one line (possibly empty)."""
+    return line[len(_line_content(line)):]
+
+
+def _is_story_separator(line: bytes) -> bool:
+    """Return whether a table line is the markdown separator row (``|---|``)."""
+    content = _line_content(line).strip()
+    return (
+        content.startswith(b"|")
+        and b"-" in content
+        and not (set(content) - set(b"|-: \t"))
+    )
+
+
+def _story_row_slug(line: bytes) -> str | None:
+    """Return a table row's first cell as its slug key, or ``None`` when unkeyed."""
+    content = _line_content(line)
+    if not content.startswith(b"|"):
+        return None
+    cells = content.split(b"|")
+    if len(cells) < 3:
+        return None
+    first = cells[1].strip()
+    if len(first) >= 3 and first.startswith(b"`") and first.endswith(b"`"):
+        first = first[1:-1]
+    if not first:
+        return None
+    try:
+        return first.decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+
+
+def _story_table_block(lines: Sequence[bytes]) -> tuple[int, int] | None:
+    """Return the ``[start, end)`` line span of the first markdown table."""
+    start: int | None = None
+    end = 0
+    for index, line in enumerate(lines):
+        if _line_content(line).startswith(b"|"):
+            if start is None:
+                start = index
+            end = index + 1
+        elif start is not None:
+            break
+    if start is None:
+        return None
+    return start, end
+
+
+def _keyed_story_rows(lines: Sequence[bytes]) -> dict[str, bytes]:
+    """Map each data-row slug of the first table to its content (no ending)."""
+    rows: dict[str, bytes] = {}
+    block = _story_table_block(lines)
+    if block is None:
+        return rows
+    start, end = block
+    for index in range(start + 1, end):
+        if _is_story_separator(lines[index]):
+            continue
+        slug = _story_row_slug(lines[index])
+        if slug is not None and slug not in rows:
+            rows[slug] = _line_content(lines[index])
+    return rows
+
+
+def _seed_story_index(core_lines: Sequence[bytes], slugs: Sequence[str]) -> bytes:
+    """Build a fresh destination index: the core document minus non-member rows."""
+    wanted = set(slugs)
+    block = _story_table_block(core_lines)
+    if block is None:
+        return b"".join(core_lines)
+    start, end = block
+    kept: list[bytes] = []
+    for index, line in enumerate(core_lines):
+        if start <= index < end and index != start and not _is_story_separator(line):
+            slug = _story_row_slug(line)
+            if slug is not None and slug not in wanted:
+                continue
+        kept.append(line)
+    return b"".join(kept)
+
+
+def _append_core_story_table(
+    destination_index: bytes,
+    core_lines: Sequence[bytes],
+    core_rows: Mapping[str, bytes],
+    members: Sequence[tuple[str, str, object]],
+) -> bytes:
+    """Append the applicable core table block after a destination without a table."""
+    block = _story_table_block(core_lines)
+    if block is None:
+        return destination_index
+    start, end = block
+    header = core_lines[start]
+    ending = _line_ending(header) or b"\n"
+    table_lines = [header]
+    for index in range(start + 1, end):
+        if _is_story_separator(core_lines[index]):
+            table_lines.append(core_lines[index])
+            break
+    table_lines.extend(
+        core_rows[slug] + ending for slug, _destination, _policy in members
+    )
+    out = destination_index
+    if out and not out.endswith(b"\n"):
+        out += b"\n"
+    if out and not out.endswith(b"\n\n"):
+        out += b"\n"
+    return out + b"".join(table_lines)
+
+
+def _merge_story_rows(
+    destination_index: bytes,
+    core_lines: Sequence[bytes],
+    core_rows: Mapping[str, bytes],
+    members: Sequence[tuple[str, str, object]],
+) -> tuple[bytes, list[str]]:
+    """Merge core rows into an existing destination table, reporting collisions."""
+    lines = destination_index.splitlines(keepends=True)
+    block = _story_table_block(lines)
+    if block is None:
+        return (
+            _append_core_story_table(destination_index, core_lines, core_rows, members),
+            [],
+        )
+    start, end = block
+    table_ending = _line_ending(lines[start]) or b"\n"
+    row_index: dict[str, int] = {}
+    for index in range(start + 1, end):
+        if _is_story_separator(lines[index]):
+            continue
+        slug = _story_row_slug(lines[index])
+        if slug is not None and slug not in row_index:
+            row_index[slug] = index
+    collisions: list[str] = []
+    missing: list[str] = []
+    for slug, destination, policy in members:
+        index = row_index.get(slug)
+        if index is None:
+            missing.append(slug)
+            continue
+        core_row = core_rows[slug]
+        if _line_content(lines[index]) == core_row:
+            continue
+        if policy not in COLLISION_POLICIES:
+            continue
+        lines[index] = core_row + _line_ending(lines[index])
+        collisions.append(f"collision: path {destination}; core wins")
+        collisions.append(f"collision: slug {slug}; core wins")
+    if missing:
+        if not lines[end - 1].endswith((b"\n", b"\r")):
+            lines[end - 1] = lines[end - 1] + table_ending
+        lines[end:end] = [core_rows[slug] + table_ending for slug in missing]
+    return b"".join(lines), collisions
+
+
+class StoryMergeMember(TypedDict):
+    id: str
+    destination: str
+    collision_policy: str | None
+
+
+def merge_story_index(
+    core_index: bytes,
+    destination_index: bytes | None,
+    members: Sequence[StoryMergeMember],
+) -> tuple[bytes, list[str]]:
+    """Pure story-index merge (bytes in, bytes out, no file IO).
+
+    Seeds a fresh destination with only the applicable core rows; for an
+    existing index inserts missing core rows and replaces differing rows
+    inside the existing table. Destination-only rows, rows of members
+    without ``collision_policy: core_wins``, and every byte before and
+    after the table are preserved byte-for-byte (line endings included).
+    Returns the merged bytes plus one ``collision: path <destination>;
+    core wins`` and one ``collision: slug <slug>; core wins`` string per
+    differing ``core_wins`` member; identical rows report nothing.
+    """
+    parsed: list[tuple[str, str, object]] = []
+    for index, member in enumerate(members):
+        slug = _field(member, "id")
+        destination = _field(member, "destination")
+        _need(
+            isinstance(slug, str) and bool(slug),
+            "invalid_mapping",
+            f"members[{index}].id must be a non-empty string",
+        )
+        _need(
+            isinstance(destination, str) and bool(destination),
+            "invalid_mapping",
+            f"members[{index}].destination must be a non-empty string",
+        )
+        policy = _field(member, "collision_policy")
+        _need(
+            policy is None or policy in COLLISION_POLICIES,
+            "invalid_mapping",
+            f"members[{index}].collision_policy must be one of {COLLISION_POLICIES}",
+        )
+        parsed.append((str(slug), str(destination), policy))
+    core_lines = core_index.splitlines(keepends=True)
+    core_rows = _keyed_story_rows(core_lines)
+    for slug, _destination, _policy in parsed:
+        _need(
+            slug in core_rows,
+            "invalid_mapping",
+            f"core story index has no row for member {slug!r}",
+        )
+    if destination_index is None or destination_index == b"":
+        return _seed_story_index(core_lines, [slug for slug, _, _ in parsed]), []
+    return _merge_story_rows(destination_index, core_lines, core_rows, parsed)
+
+
+def _sibling_story_index(member_path: str) -> str:
+    """Return the ``index.md`` path beside one story member path."""
+    normalized = member_path.replace("\\", "/")
+    if "/" not in normalized:
+        return STORY_INDEX_NAME
+    directory = normalized.rsplit("/", 1)[0]
+    return f"{directory}/{STORY_INDEX_NAME}"
+
+
+def _story_index_collisions(
+    uid: str,
+    catalog_unit: Mapping[str, object],
+    decl_unit: Mapping[str, object],
+    upstream: _GitRepo,
+    commit: str,
+    snapshot: _Snapshot,
+) -> list[str]:
+    """IO boundary: merge one applicable story unit's index in memory.
+
+    The core index sits beside the unit's catalog member sources and the
+    destination index beside the declared member destinations. The merged
+    bytes stay in memory — this command path writes nothing.
+    """
+    declared = _declared_members(catalog_unit, decl_unit, uid)
+    members = list(catalog_unit.get("members", []))
+    _need(members, "invalid_mapping", f"{uid}: user-story unit must declare members")
+    first = members[0]
+    core_index_path = _sibling_story_index(str(_field(first, "source")))
+    destination_index_path = _sibling_story_index(
+        _normalize_destination(declared[str(_field(first, "id"))])
+    )
+    core_entry = upstream.file_entry(commit, core_index_path, "baseline_unavailable")
+    destination_entry = snapshot.file_entry(destination_index_path)
+    rows: list[StoryMergeMember] = [
+        {
+            "id": str(_field(member, "id")),
+            "destination": declared[str(_field(member, "id"))],
+            "collision_policy": _field(member, "collision_policy"),
+        }
+        for member in members
+    ]
+    _merged, collisions = merge_story_index(
+        core_entry.content if core_entry is not None else b"",
+        destination_entry.content if destination_entry is not None else None,
+        rows,
+    )
+    return collisions
 
 
 # ---------------------------------------------------------------------------
@@ -930,7 +1237,21 @@ def _destination_policy_violation(
     decl_unit: Mapping[str, object],
     snapshot: _Snapshot,
 ) -> str | None:
-    """Evaluate a catalog unit's closed destination policy against its snapshot."""
+    """Evaluate a catalog unit's closed destination policy against its snapshot.
+
+    The adopter's ``opencode.jsonc`` — the destination of the catalog's
+    ``opencode-config`` assertions unit — is evaluated first: every
+    ``agent.*.permission.bash`` allow is classified under the runner policy.
+    The guarded root-runtime identity policy then runs unchanged for
+    ``guarded_file`` units.
+    """
+    destination = str(catalog_unit.get("destination") or "")
+    if _is_opencode_config_destination(destination):
+        entry = snapshot.file_entry(destination)
+        if entry is None:
+            # A missing config stays governed by the unit's assertions.
+            return None
+        return _opencode_config_policy_violation(entry.content)
     if catalog_unit.get("sync_projection") != "guarded_file":
         return None
     policy = str(catalog_unit.get("destination_policy"))
@@ -955,6 +1276,192 @@ def _destination_policy_violation(
     entry = snapshot.file_entry(destination)
     content = entry.content if entry is not None else b""
     return _adopter_root_policy_violation(content)
+
+
+AICORE_SUITE_COMMAND = "uv run --frozen --group dev pytest -q"
+
+
+def _runner_policy_violation(grant: object) -> str | None:
+    """Return the runner-grant policy violation, or ``None`` when reviewed.
+
+    Accepts the reviewed AICore suite command by exact literal comparison
+    (no whitespace normalisation) and the bounded package test scripts
+    ``pnpm test``, ``npm test``, ``yarn test``, and ``cargo test``. Every
+    other payload — another ``uv run`` payload, an appended test path, a
+    wildcard, reordered tokens, interior double-spaces, or a broad
+    catch-all allow — is rejected with a reason naming why.
+    """
+    if not isinstance(grant, str):
+        return "runner grant must be a string"
+    if grant == AICORE_SUITE_COMMAND:
+        return None
+    bounded_runners = ("pnpm test", "npm test", "yarn test", "cargo test")
+    if grant in bounded_runners:
+        return None
+    return "runner grant is not a reviewed test-runner command"
+
+
+OPENCODE_CONFIG_BASENAME = "opencode.jsonc"
+_PACKAGE_TEST_SCRIPT_HEADS = frozenset(
+    {("pnpm", "test"), ("npm", "test"), ("yarn", "test"), ("cargo", "test")}
+)
+_INTERPRETER_RUNNER_HEADS = frozenset(
+    {
+        # shells
+        "bash",
+        "sh",
+        "zsh",
+        "dash",
+        "fish",
+        "csh",
+        "ksh",
+        # language interpreters
+        "python",
+        "python2",
+        "python3",
+        "node",
+        "deno",
+        "bun",
+        "ruby",
+        "perl",
+        "php",
+        "lua",
+        "java",
+        "go",
+        # package, test, and tool runners
+        "uv",
+        "uvx",
+        "uv run",
+        "uv tool run",
+        "pytest",
+        "py.test",
+        "npm",
+        "pnpm",
+        "yarn",
+        "npx",
+        "npm exec",
+        "pnpm dlx",
+        "yarn dlx",
+        "cargo",
+        "rustc",
+        "docker",
+        "podman",
+        "git",
+        "gh",
+    }
+)
+
+
+def _is_opencode_config_destination(destination: str) -> bool:
+    """Return whether a catalog destination names the adopter's opencode config."""
+    return (
+        _normalize_destination(destination).rsplit("/", 1)[-1]
+        == OPENCODE_CONFIG_BASENAME
+    )
+
+
+def _catch_all_policy_violation(pattern: str) -> str | None:
+    """Return the catch-all violation for an allow pattern, or ``None``.
+
+    Rule 2 of the runner policy: ``*``, ``**``, and any trailing-``*``
+    pattern whose head is a bare interpreter/runner invocation (``uv *``,
+    ``pytest *``, ``bash *``, ``uv run *``) grants a whole interpreter or
+    runner and is rejected outright. A trailing ``*`` under a concrete
+    subcommand head (``pnpm install *``) stays scoped and is not a
+    catch-all.
+    """
+    if pattern.strip() in ("*", "**"):
+        return f"allow {pattern!r} grants every command"
+    if pattern.endswith("*"):
+        head = pattern[:-1].rstrip()
+        if head in _INTERPRETER_RUNNER_HEADS:
+            return f"allow {pattern!r} grants a whole interpreter/runner"
+    return None
+
+
+def _is_test_runner_pattern(pattern: str) -> bool:
+    """Return whether an allow pattern names a pytest or package-test command.
+
+    Test-runner commands are anything containing ``pytest`` (any payload,
+    any ordering) or a package test script — ``pnpm test``, ``npm test``,
+    ``yarn test``, ``cargo test`` — with or without appended arguments.
+    Every identified pattern must then satisfy ``_runner_policy_violation``.
+    """
+    if "pytest" in pattern.casefold():
+        return True
+    return tuple(pattern.split()[:2]) in _PACKAGE_TEST_SCRIPT_HEADS
+
+
+def _bash_grant_policy_violation(where: str, bash: object) -> str | None:
+    """Classify one agent's ``permission.bash`` grants under the runner policy.
+
+    Rule 1: only ``allow`` entries are examined — a ``deny`` entry (including
+    the deny-first ``"*": "deny"`` catch-all) and an ``ask`` entry are never
+    judged. Rule 2: a broad catch-all allow is rejected outright. Rule 3: an
+    identified test-runner allow must satisfy ``_runner_policy_violation`` —
+    exactly ``AICORE_SUITE_COMMAND`` or a bounded package test script — any
+    other payload is rejected. Rule 4: an allow that is neither a catch-all
+    nor a test runner (``pnpm install``) is skipped. An absent test-runner
+    allow is not a violation by itself. A blanket string ``"allow"`` is the
+    mapping catch-all ``"*": "allow"`` and is rejected with it.
+    """
+    if isinstance(bash, str):
+        if bash == "allow":
+            return f"{where}: blanket string 'allow' grants every command"
+        return None
+    if not isinstance(bash, Mapping):
+        return None
+    for pattern, action in bash.items():
+        if not isinstance(pattern, str) or not isinstance(action, str):
+            continue
+        if action != "allow":
+            continue
+        catch_all = _catch_all_policy_violation(pattern)
+        if catch_all is not None:
+            return f"{where}: {catch_all}"
+        if _is_test_runner_pattern(pattern):
+            reason = _runner_policy_violation(pattern)
+            if reason is not None:
+                return f"{where}: test-runner allow {pattern!r}: {reason}"
+    return None
+
+
+def _opencode_config_policy_violation(content: bytes) -> str | None:
+    """Return the first runner-allow violation in the adopter opencode config.
+
+    Reuses the guarded-config comment stripper and the existing JSON loader:
+    the bytes are decoded as UTF-8, ``//``/``#`` comment lines are stripped,
+    the document is parsed as JSON, and every ``agent.*.permission.bash``
+    block is classified. Content that is not UTF-8, not a JSONC object, or
+    that carries no ``agent.*.permission.bash`` block yields ``None`` — the
+    catalog assertions keep governing those states exactly as before, and
+    the top-level ``permission.bash`` block is out of scope.
+    """
+    try:
+        text = content.decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+    try:
+        document = json.loads(_strip_comments(text))
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(document, dict):
+        return None
+    agents = document.get("agent")
+    if not isinstance(agents, Mapping):
+        return None
+    for name, agent in agents.items():
+        if not isinstance(agent, Mapping):
+            continue
+        permission = agent.get("permission")
+        if not isinstance(permission, Mapping):
+            continue
+        violation = _bash_grant_policy_violation(
+            f"agent {str(name)!r} permission.bash", permission.get("bash")
+        )
+        if violation is not None:
+            return violation
+    return None
 
 
 def _assertion_deltas(
@@ -1166,6 +1673,7 @@ def _check_report(
     )
     decisions = {str(d.get("unit")): d for d in review.get("decisions", [])}
     results: list[dict[str, object]] = []
+    collisions: list[str] = []
     blocking: list[str] = []
     for uid, catalog_unit in catalog_units.items():
         decl_unit = declaration_units[uid]
@@ -1239,6 +1747,12 @@ def _check_report(
         )
         if disposition == "current" and accepted != target:
             disposition = "baseline_advance_required"
+        if mode != "replacement" and catalog_unit.get("kind") == STORY_UNIT_KIND:
+            collisions.extend(
+                _story_index_collisions(
+                    uid, catalog_unit, decl_unit, upstream, target, snapshot
+                )
+            )
         results.append(
             {
                 "id": uid,
@@ -1257,6 +1771,7 @@ def _check_report(
         "required_revision": target,
         "diagnostic": diagnostic,
         "units": results,
+        "collisions": collisions,
         "blocking_reasons": blocking,
     }
 
@@ -1306,6 +1821,8 @@ def _print_human(report: Mapping[str, object]) -> None:
             f"destination={unit['destination_delta'] or 'n/a'}"
         )
         print(f"  {unit['id']} [{unit['mode']}] {delta} -> {unit['disposition']}")
+    for collision in report.get("collisions") or []:
+        print(collision)
     for reason in report["blocking_reasons"]:
         print(f"blocking: {reason}")
 
@@ -1572,18 +2089,15 @@ def _snapshot_digest(
     return _sha256(b"".join(chunks))
 
 
-def run_propose(args: argparse.Namespace) -> int:
-    """Build one candidate v2 lock at the trusted revision; emit YAML to stdout only."""
-    _need(
-        args.adopter_revision is not None or args.adopter_index,
-        "adopter_snapshot_unavailable",
-        "exactly one of --adopter-revision or --adopter-index is required",
-    )
-    for name, value, code in (
-        ("--declaration", args.declaration, "invalid_declaration"),
-        ("--catalog", args.catalog, "invalid_mapping"),
-    ):
-        _need(value, code, f"{name} is required")
+def _propose_lock_document(args: argparse.Namespace, snapshot: _Snapshot) -> dict:
+    """Build one candidate v2 lock document; print nothing and write nothing.
+
+    Shared builder behind ``propose-lock``, which emits the document to
+    stdout only, and ``apply``, which writes it to the adopter lock file.
+    Every input is read from ``args``; the caller supplies the explicit
+    adopter snapshot. Portable story collisions (Section 17) are diagnostics
+    and stay on stderr, so every caller's stdout contract remains intact.
+    """
     catalog_path = _resolve_catalog_path(str(args.catalog), str(args.upstream_repo))
     declaration = load_declaration(str(args.declaration))
     review = (
@@ -1601,7 +2115,6 @@ def run_propose(args: argparse.Namespace) -> int:
     )
     upstream = _GitRepo(str(args.upstream_repo))
     target, _diagnostic = _trusted_revision(upstream, None)
-    snapshot = _snapshot_for(args, _resolve_adopter_repo(args))
     catalog_units, declaration_units = _validate_declaration_coverage(
         catalog, declaration, declaration.get("profile", {})
     )
@@ -1690,6 +2203,11 @@ def run_propose(args: argparse.Namespace) -> int:
                     destinations,
                 )
             )
+        if mode != "replacement" and catalog_unit.get("kind") == STORY_UNIT_KIND:
+            for collision in _story_index_collisions(
+                uid, catalog_unit, decl_unit, upstream, target, snapshot
+            ):
+                print(collision, file=sys.stderr)
     _check_destination_set(destinations)
     declaration_digest = _raw_file_digest(str(args.declaration))
     review_digest = (
@@ -1697,7 +2215,7 @@ def run_propose(args: argparse.Namespace) -> int:
         if args.review and os.path.isfile(str(args.review))
         else _sha256(b"")
     )
-    lock = {
+    return {
         "schema_version": 2,
         "upstream_repository": declaration.get("upstream_repository"),
         "accepted_source_commit": target,
@@ -1709,6 +2227,23 @@ def run_propose(args: argparse.Namespace) -> int:
         ),
         "units": rows,
     }
+
+
+def run_propose(args: argparse.Namespace) -> int:
+    """Build one candidate v2 lock at the trusted revision; emit YAML to stdout only."""
+    _need(
+        args.adopter_revision is not None or args.adopter_index,
+        "adopter_snapshot_unavailable",
+        "exactly one of --adopter-revision or --adopter-index is required",
+    )
+    for name, value, code in (
+        ("--declaration", args.declaration, "invalid_declaration"),
+        ("--catalog", args.catalog, "invalid_mapping"),
+    ):
+        _need(value, code, f"{name} is required")
+    lock = _propose_lock_document(
+        args, _snapshot_for(args, _resolve_adopter_repo(args))
+    )
     text = yaml.safe_dump(lock, sort_keys=False, default_flow_style=False)
     sys.stdout.write(text.rstrip("\n") + "\n")
     return 0
@@ -1906,7 +2441,10 @@ def run_verify(args: argparse.Namespace) -> int:
                 blocking.append(f"{result['id']}: {detail}")
     finally:
         for temp in temp_dirs:
-            shutil.rmtree(temp, ignore_errors=True)
+            try:
+                shutil.rmtree(temp)
+            except OSError as exc:
+                print(f"sync-aicore-adoption: temp cleanup failed for {temp}: {exc}", file=sys.stderr)
     compliance = not blocking
     report = {
         "compliance": compliance,
@@ -1917,6 +2455,929 @@ def run_verify(args: argparse.Namespace) -> int:
         print(json.dumps(report, indent=2))
     else:
         _print_verify_human(report)
+    return 0 if compliance else 1
+
+
+# ---------------------------------------------------------------------------
+# apply (protocol-v2 Sections 11, 18): classification, refusal, write path
+# ---------------------------------------------------------------------------
+
+ApplyClassification = Literal["writable", "refused", "skipped", "no_action"]
+
+
+@dataclass(frozen=True)
+class ApplyContext:
+    """Read-only inputs shared by one ``apply`` classification run."""
+
+    upstream: _GitRepo
+    target: str
+    accepted: str
+    snapshot: _Snapshot
+    catalog_path: str
+
+
+class ApplyUnitState(TypedDict):
+    """Observed state of one declared unit at the trusted target revision."""
+
+    id: str
+    mode: str
+    install_strategy: str
+    disposition: str
+    upstream_changed: bool
+    policy_violation: str | None
+    core_wins_members: tuple[str, ...]
+
+
+class ApplyUnitDecision(TypedDict):
+    """One unit's classification under the bounded ``apply`` write-set rule."""
+
+    id: str
+    mode: str
+    install_strategy: str
+    disposition: str
+    classification: ApplyClassification
+    refusal_code: str | None
+    reason: str
+    core_wins_members: tuple[str, ...]
+
+
+def _apply_decision(
+    state: ApplyUnitState,
+    classification: ApplyClassification,
+    refusal_code: str | None,
+    reason: str,
+) -> ApplyUnitDecision:
+    """Build one typed decision row from an observed unit state."""
+    return {
+        "id": state["id"],
+        "mode": state["mode"],
+        "install_strategy": state["install_strategy"],
+        "disposition": state["disposition"],
+        "classification": classification,
+        "refusal_code": refusal_code,
+        "reason": reason,
+        "core_wins_members": state["core_wins_members"],
+    }
+
+
+def _apply_destination_changed(
+    decl_unit: Mapping[str, object],
+    baseline_row: Mapping[str, object] | None,
+    snapshot: _Snapshot,
+    projection: str,
+) -> bool:
+    """Destination delta for ``apply`` over the accepted lock baseline.
+
+    A member with no ``accepted_destination_digest`` in the baseline (declared
+    after the accepted snapshot) is seeded with the empty member digest, so it
+    reads as unchanged while its destination holds no bytes: nothing was ever
+    accepted there, so nothing can be lost. Accepted members keep
+    ``_destination_changed``'s strict comparison, so pre-existing destination
+    bytes still surface as ``local_drift`` or ``conflict``. The baseline row
+    itself is never mutated: the seeded copy is local to this call.
+    """
+    row: Mapping[str, object] = baseline_row if baseline_row is not None else {}
+    key = "replacement_members" if decl_unit.get("mode") == "replacement" else "members"
+    accepted_ids = {str(member.get("id")) for member in (row.get(key, []) or [])}
+    never_accepted: list[dict[str, object]] = [
+        {
+            "id": str(member.get("id")),
+            "accepted_destination_digest": member_digest([]),
+        }
+        for member in (decl_unit.get(key, []) or [])
+        if str(member.get("id")) not in accepted_ids
+    ]
+    if not never_accepted:
+        return _destination_changed(decl_unit, row, snapshot, projection)
+    merged: dict[str, object] = dict(row)
+    merged[key] = list(row.get(key, []) or []) + never_accepted
+    return _destination_changed(decl_unit, merged, snapshot, projection)
+
+
+def _apply_unit_state(
+    uid: str,
+    catalog_unit: Mapping[str, object],
+    decl_unit: Mapping[str, object],
+    baseline_row: Mapping[str, object] | None,
+    context: ApplyContext,
+) -> ApplyUnitState:
+    """Observe one declared unit against the accepted lock baseline.
+
+    The upstream delta compares the unit digest at the trusted target revision
+    with the digest recorded in the lock row: a unit with no baseline row is
+    new at the target revision. ``core_wins_members`` carries only members
+    that declare ``collision_policy: core_wins``, so no other index row can
+    ever be treated as core-winnable downstream.
+    """
+    mode = str(decl_unit.get("mode"))
+    strategy = str(catalog_unit.get("install_strategy"))
+    core_wins = tuple(
+        str(member.get("id"))
+        for member in (catalog_unit.get("members", []) or [])
+        if member.get("collision_policy") in COLLISION_POLICIES
+    )
+    if mode == "not_applicable":
+        # Inapplicable units are never observed: no policy check, no delta.
+        return {
+            "id": uid,
+            "mode": mode,
+            "install_strategy": strategy,
+            "disposition": "not_applicable",
+            "upstream_changed": False,
+            "policy_violation": None,
+            "core_wins_members": core_wins,
+        }
+    projection = str(catalog_unit.get("sync_projection"))
+    violation = _destination_policy_violation(
+        uid, catalog_unit, decl_unit, context.snapshot
+    )
+    upstream_changed = (
+        baseline_row is None
+        or _unit_upstream_digest(context.upstream, context.target, catalog_unit)
+        != baseline_row.get("accepted_upstream_digest")
+    )
+    if projection == "assertions":
+        if baseline_row is None:
+            destination_changed = True
+        else:
+            accepted_assertions = _catalog_assertions_at(
+                context.upstream, context.accepted, context.catalog_path, uid
+            )
+            # Only the destination half is consumed: the upstream delta above
+            # already compares the recorded baseline with the target revision.
+            destination_changed = _assertion_deltas(
+                catalog_unit, baseline_row, context.snapshot, accepted_assertions
+            )[1]
+    else:
+        destination_changed = _apply_destination_changed(
+            decl_unit, baseline_row, context.snapshot, projection
+        )
+    disposition = (
+        "policy_violation"
+        if violation is not None
+        else _disposition(mode, upstream_changed, destination_changed)
+    )
+    return {
+        "id": uid,
+        "mode": mode,
+        "install_strategy": strategy,
+        "disposition": disposition,
+        "upstream_changed": upstream_changed,
+        "policy_violation": violation,
+        "core_wins_members": core_wins,
+    }
+
+
+def _apply_refusal_reason(state: ApplyUnitState) -> str:
+    """Explain why one unit outside ``apply``'s writable set cannot be written.
+
+    Exactly one branch matches: a ``copy`` + ``mirror`` unit the writable rule
+    already turned down, a non-``copy`` unit ``apply`` never writes, or a
+    ``copy`` unit in a non-``mirror`` mode that its review governs.
+    """
+    strategy = state["install_strategy"]
+    disposition = state["disposition"]
+    if strategy == "copy" and state["mode"] == "mirror":
+        return (
+            f"copy mirror unit is {disposition}; destination bytes are "
+            "never overwritten by apply"
+        )
+    if strategy != "copy":
+        return (
+            f"install_strategy {strategy} is never written by apply and "
+            f"the unit is {disposition}"
+        )
+    return (
+        f"{state['mode']} unit is never written by apply and "
+        f"the unit is {disposition}"
+    )
+
+
+def _classify_apply_unit(state: ApplyUnitState, decided: set[str]) -> ApplyUnitDecision:
+    """Apply the bounded write-set rule to one observed unit.
+
+    WRITABLE is exactly ``copy`` ∩ ``mirror`` ∩ ``update_available`` (Section
+    11). ``not_applicable`` units are skipped; every other applicable unit
+    outside that writable set whose disposition is blocking is refused
+    fail-closed — whatever its ``install_strategy`` and mode — because the
+    lock regeneration is global and would otherwise re-baseline a unit whose
+    state still blocks; every remaining unit (``current``, ``unmanaged``, any
+    other non-blocking state) is an explicit no-action row, so no unit is
+    classified by omission.
+    """
+    uid = state["id"]
+    mode = state["mode"]
+    strategy = state["install_strategy"]
+    disposition = state["disposition"]
+    if mode == "not_applicable":
+        return _apply_decision(state, "skipped", None, "not_applicable mode is skipped")
+    if state["policy_violation"] is not None:
+        return _apply_decision(
+            state, "refused", "policy_violation", str(state["policy_violation"])
+        )
+    if mode in _REVIEW_MODES and state["upstream_changed"] and uid not in decided:
+        return _apply_decision(
+            state,
+            "refused",
+            "review_changed",
+            "upstream changed at the target revision but the review has no "
+            "decision for it",
+        )
+    if strategy == "copy" and mode == "mirror" and disposition == "update_available":
+        return _apply_decision(
+            state,
+            "writable",
+            None,
+            "copy mirror unit with an upstream update and an unchanged "
+            "destination",
+        )
+    if disposition in _BLOCKING_DISPOSITIONS:
+        return _apply_decision(
+            state, "refused", disposition, _apply_refusal_reason(state)
+        )
+    if strategy == "copy" and mode == "mirror":
+        return _apply_decision(
+            state, "no_action", None, f"copy mirror unit is {disposition}"
+        )
+    if strategy != "copy":
+        return _apply_decision(
+            state,
+            "no_action",
+            None,
+            f"install_strategy {strategy} is never written by apply and "
+            f"the unit is {disposition}",
+        )
+    return _apply_decision(
+        state,
+        "no_action",
+        None,
+        f"{mode} unit is never written by apply; the review governs it",
+    )
+
+
+def _apply_decisions(
+    catalog_units: Mapping[str, Mapping[str, object]],
+    declaration_units: Mapping[str, Mapping[str, object]],
+    baseline: Mapping[str, Mapping[str, object]],
+    decided: set[str],
+    context: ApplyContext,
+) -> list[ApplyUnitDecision]:
+    """Build the complete decision set, one row per declared catalog unit.
+
+    Mapping validation is ``propose-lock``'s: every applicable non-replacement
+    unit maps every catalog member exactly once, a replacement unit declares no
+    members, and ``not_applicable`` units are skipped before any observation.
+    """
+    decisions: list[ApplyUnitDecision] = []
+    for uid, catalog_unit in catalog_units.items():
+        decl_unit = declaration_units[uid]
+        mode = str(decl_unit.get("mode"))
+        if mode != "not_applicable":
+            if mode == "replacement":
+                _need(
+                    not decl_unit.get("members"),
+                    "invalid_declaration",
+                    f"{uid}: replacement must not declare members",
+                )
+            else:
+                _declared_members(catalog_unit, decl_unit, uid)
+        baseline_row = baseline.get(uid)
+        if (
+            baseline_row is not None
+            and str(baseline_row.get("mode")) == "not_applicable"
+        ):
+            # A not_applicable lock row accepted nothing for this unit, so it
+            # carries no member evidence for the destination comparison.
+            baseline_row = None
+        state = _apply_unit_state(uid, catalog_unit, decl_unit, baseline_row, context)
+        decisions.append(_classify_apply_unit(state, decided))
+    return decisions
+
+
+class ApplyJournalEntry(TypedDict):
+    """Pre-mutation record of one path ``apply`` intends to write.
+
+    ``content`` and ``mode`` are ``None`` when the path does not exist yet,
+    so the later restore path knows the write created the file. The journal
+    is held in memory only; nothing here persists it.
+    """
+
+    path: str
+    relative: str
+    content: bytes | None
+    mode: int | None
+
+
+class ApplyRecoveryRecord(TypedDict):
+    """Escape hatch for paths a failed restore could not put back.
+
+    Emitted on stderr under the ``apply_restore_failed`` code when
+    best-effort restoration leaves any journaled path out of sync with the
+    journal: those paths must then be reconciled by hand, and ``paths``
+    names each of them as a relative path. ``original`` is the failure that
+    triggered the restore, rendered ``<code>: <message>`` for a
+    ``SyncError`` and ``<type>: <message>`` otherwise. Nothing here
+    promises atomicity or crash-transaction semantics.
+    """
+
+    original: str
+    paths: tuple[str, ...]
+
+
+class ApplyReport(TypedDict):
+    """Machine-readable ``apply`` outcome printed to stdout.
+
+    ``apply`` is ``success``, ``noop``, or ``failure``; ``verify`` is
+    ``pass``, ``skipped``, or ``fail``; ``blocking`` carries the ``check``
+    report's blocking reasons (empty on success and no-op runs).
+    """
+
+    apply: str
+    written: list[str]
+    lock: str | None
+    verify: str
+    blocking: list[str]
+
+
+@dataclass(frozen=True)
+class ApplyStagedWrite:
+    """One planned content write: adopter-relative path, bytes, POSIX mode."""
+
+    relative: str
+    content: bytes
+    mode: int
+
+
+@dataclass(frozen=True)
+class ApplyStoryIndexPlan:
+    """One writable story unit's planned index merge (Section 17)."""
+
+    relative: str
+    core_index: bytes
+    rows: tuple[StoryMergeMember, ...]
+
+
+class _WorktreeSnapshot:
+    """Adopter snapshot read from on-disk worktree bytes, for ``apply`` only.
+
+    ``check``, ``propose-lock``, and ``verify-all`` never construct this
+    class: they keep reading exactly one explicit commit or staged index.
+    ``apply`` uses it after staging so lock regeneration and verification
+    report the state ``apply`` actually wrote. Regular files only: the Git
+    mode is derived from the executable bit, matching how Git records
+    ``100644``/``100755`` blobs.
+    """
+
+    def __init__(self, root: str) -> None:
+        self.root = root
+
+    def _absolute(self, relative: str) -> str:
+        if os.path.isabs(relative):
+            return relative
+        return os.path.join(self.root, *relative.split("/"))
+
+    def _entry(self, absolute: str, logical: str, entry_path: str) -> ProjectedEntry:
+        try:
+            with open(absolute, "rb") as handle:
+                content = handle.read()
+            permission_bits = os.stat(absolute).st_mode
+        except OSError as exc:
+            _fail(
+                "adopter_snapshot_unavailable",
+                f"cannot read worktree file {logical}: {exc}",
+            )
+        return ProjectedEntry(
+            path=entry_path,
+            mode="100755" if permission_bits & 0o111 else "100644",
+            content=content,
+        )
+
+    def file_entry(self, path: str) -> ProjectedEntry | None:
+        absolute = self._absolute(path)
+        if not os.path.isfile(absolute):
+            return None
+        return self._entry(absolute, path, "")
+
+    def tree_entries(self, root: str) -> list[ProjectedEntry]:
+        base = self._absolute(root)
+        entries: list[ProjectedEntry] = []
+        if not os.path.isdir(base):
+            return entries
+        for current, _directories, files in os.walk(base):
+            for name in sorted(files):
+                absolute = os.path.join(current, name)
+                relative = os.path.relpath(absolute, base).replace(os.sep, "/")
+                logical = f"{root.rstrip('/')}/{relative}"
+                entries.append(self._entry(absolute, logical, relative))
+        return entries
+
+
+def _posix_file_mode(git_mode: str, where: str) -> int:
+    """Map a Git regular-file mode to the POSIX bits ``apply`` writes."""
+    _need(
+        git_mode in ("100644", "100755"),
+        "unsupported_special_file",
+        f"{where}: unsupported file mode {git_mode}",
+    )
+    return 0o755 if git_mode == "100755" else 0o644
+
+
+def _apply_worktree_path(root: str, relative: str) -> str:
+    """Resolve one adopter-relative destination to its absolute worktree path."""
+    if os.path.isabs(relative):
+        return relative
+    return os.path.join(root, *relative.split("/"))
+
+
+def _apply_path_state(root: str, relative: str) -> ApplyJournalEntry:
+    """IO helper: capture one intended path's current bytes and file mode.
+
+    Reads only; nothing is written. An absent path records ``None`` bytes
+    and mode so the journal can distinguish an update from a creation.
+    """
+    path = _apply_worktree_path(root, relative)
+    if not os.path.isfile(path):
+        return {"path": path, "relative": relative, "content": None, "mode": None}
+    try:
+        with open(path, "rb") as handle:
+            content = handle.read()
+        mode = stat.S_IMODE(os.stat(path).st_mode)
+    except OSError as exc:
+        _fail(
+            "adopter_snapshot_unavailable",
+            f"cannot read current bytes of {relative}: {exc}",
+        )
+    return {"path": path, "relative": relative, "content": content, "mode": mode}
+
+
+def _apply_write_file(path: str, relative: str, content: bytes, mode: int) -> None:
+    """IO helper: write one staged file and its POSIX mode, or fail closed."""
+    try:
+        directory = os.path.dirname(path)
+        if directory:
+            os.makedirs(directory, exist_ok=True)
+        with open(path, "wb") as handle:
+            handle.write(content)
+        os.chmod(path, mode)
+    except OSError as exc:
+        _fail("apply_write_failed", f"cannot write {relative}: {exc}")
+
+
+def _apply_restore_matches(entry: ApplyJournalEntry) -> bool:
+    """IO helper: return whether one journaled path matches its recorded state."""
+    path = entry["path"]
+    content = entry["content"]
+    if content is None:
+        # The journal recorded no regular file here, so a regular file now
+        # can only be this run's creation. A pre-existing directory or link
+        # is not this run's work and is left exactly where it is.
+        return not os.path.isfile(path)
+    if not os.path.isfile(path):
+        return False
+    try:
+        with open(path, "rb") as handle:
+            current = handle.read()
+        mode = stat.S_IMODE(os.stat(path).st_mode)
+    except OSError:
+        return False
+    recorded_mode = entry["mode"]
+    return current == content and (recorded_mode is None or mode == recorded_mode)
+
+
+def _apply_restore_entry(entry: ApplyJournalEntry) -> bool:
+    """IO helper: best-effort restore of a single journaled path.
+
+    A path with recorded bytes is rewritten and re-chmodded to its recorded
+    mode; a path that held no regular file before the run has the regular
+    file this run created removed from it. Returns ``False`` when the path
+    cannot be put back or does not verify against the journal. IO failures
+    are converted to that ``False`` outcome — this never raises.
+    """
+    path = entry["path"]
+    content = entry["content"]
+    mode = entry["mode"]
+    try:
+        if content is None:
+            if os.path.isfile(path):
+                os.remove(path)
+        else:
+            with open(path, "wb") as handle:
+                handle.write(content)
+            if mode is not None:
+                os.chmod(path, mode)
+    except OSError:
+        return False
+    return _apply_restore_matches(entry)
+
+
+def _apply_restore(journal: Sequence[ApplyJournalEntry]) -> tuple[str, ...]:
+    """Best-effort restore of every journaled path after a failed mutation.
+
+    Attempts each journaled path exactly once and never stops at the first
+    restore failure: a path that cannot be put back is recorded and the loop
+    keeps going. Returns the adopter-relative paths whose on-disk state still
+    does not match the journal — an empty tuple means every journaled path is
+    back to its recorded pre-apply bytes and file mode. Only journaled paths
+    are restored; parent directories this run created along the way are not
+    journaled and stay where they are. This is a best-effort restore, not a
+    transaction and not crash-atomic.
+    """
+    inconsistent: list[str] = []
+    for entry in journal:
+        if not _apply_restore_entry(entry):
+            inconsistent.append(entry["relative"])
+    return tuple(inconsistent)
+
+
+def _apply_original_failure(exc: BaseException) -> str:
+    """Render one mutation failure as a recovery record's ``original`` field."""
+    if isinstance(exc, SyncError):
+        return f"{exc.code}: {exc.message}"
+    return f"{type(exc).__name__}: {exc}"
+
+
+def _emit_apply_recovery(record: ApplyRecoveryRecord) -> None:
+    """Emit one recovery record on stderr under ``apply_restore_failed``."""
+    payload = json.dumps(
+        {"original": record["original"], "paths": list(record["paths"])},
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    print(
+        f"sync-aicore-adoption: apply_restore_failed: recovery record: {payload}",
+        file=sys.stderr,
+    )
+
+
+def _apply_abandon(
+    journal: Sequence[ApplyJournalEntry], exc: BaseException
+) -> NoReturn:
+    """Surface a mutation failure only after a best-effort journal restore.
+
+    Every journaled path is restored first. When all of them verify against
+    the journal, the original failure is re-raised under its own code — or
+    under ``apply_write_failed`` when it was not a ``SyncError`` — with an
+    explicit statement that every journaled path is back to its recorded
+    pre-apply bytes and mode, and the run exits non-zero. When any journaled
+    path cannot be put back, the recovery record naming those paths is
+    emitted on stderr and the same run exits non-zero under
+    ``apply_restore_failed``, leaving the adopter to be reconciled by hand
+    from that record. The restore is best-effort: no atomicity or
+    crash-transaction guarantee is claimed anywhere on either path.
+    """
+    original = _apply_original_failure(exc)
+    inconsistent = _apply_restore(journal)
+    restored = "every journaled path was restored to its recorded pre-apply bytes and mode"
+    if not inconsistent:
+        if isinstance(exc, SyncError):
+            raise SyncError(
+                exc.code, f"{exc.message}; {restored}"
+            ) from exc
+        raise SyncError(
+            "apply_write_failed", f"{original}; {restored}"
+        ) from exc
+    _emit_apply_recovery(
+        ApplyRecoveryRecord(original=original, paths=inconsistent)
+    )
+    raise SyncError(
+        "apply_restore_failed",
+        f"apply failed ({original}); best-effort restore left "
+        f"{len(inconsistent)} journaled path(s) possibly inconsistent: "
+        f"{', '.join(inconsistent)}",
+    ) from exc
+
+
+def _apply_write_plan(
+    writable_ids: Sequence[str],
+    catalog_units: Mapping[str, Mapping[str, object]],
+    declaration_units: Mapping[str, Mapping[str, object]],
+    control_paths: Sequence[str],
+    lock_relative: str,
+    upstream: _GitRepo,
+    target: str,
+) -> tuple[list[ApplyStagedWrite], list[ApplyStoryIndexPlan]]:
+    """Plan every content write ``apply`` intends to make; write nothing.
+
+    IO boundary: reads upstream Git objects at ``target`` through
+    ``_GitRepo`` and validates destinations; the adopter worktree is never
+    touched here. Destinations are validated with ``propose-lock``'s rules —
+    no absolute path, no parent traversal, no protected control path, no
+    duplicate or overlapping destination — and the lock path participates
+    in the same conflict check, so an invalid mapping can never reach the
+    worktree before it fails closed. Only ``file``, ``guarded_file``, and
+    ``tree`` projections carry stageable content; assertion units never do.
+    """
+    staged: list[ApplyStagedWrite] = []
+    stories: list[ApplyStoryIndexPlan] = []
+    destinations: list[tuple[str, str, str]] = [("<apply>", "lock", lock_relative)]
+    index_paths: set[str] = set()
+    for uid in writable_ids:
+        catalog_unit = catalog_units[uid]
+        decl_unit = declaration_units[uid]
+        projection = str(catalog_unit.get("sync_projection"))
+        _need(
+            projection in ("file", "guarded_file", "tree"),
+            "unsupported_projection",
+            f"{uid}: sync_projection {projection} carries no stageable content",
+        )
+        declared = _declared_members(catalog_unit, decl_unit, uid)
+        members = list(catalog_unit.get("members", []) or [])
+        _need(members, "invalid_mapping", f"{uid}: writable unit must declare members")
+        normalized_by_id: dict[str, str] = {}
+        for member in members:
+            member_id = str(member.get("id"))
+            source = str(member.get("source"))
+            normalized = _validate_destination(
+                declared[member_id], f"{uid}.{member_id}", control_paths
+            )
+            normalized_by_id[member_id] = normalized
+            destinations.append((uid, member_id, normalized))
+            if _content_projection(projection) == "tree":
+                entries = upstream.tree_entries(target, source, "baseline_unavailable")
+                _need(
+                    entries,
+                    "baseline_unavailable",
+                    f"{uid}.{member_id}: source tree is empty at {target}; "
+                    "apply never deletes destination files",
+                )
+                for entry in entries:
+                    staged.append(
+                        ApplyStagedWrite(
+                            relative=f"{normalized}/{entry.path}",
+                            content=entry.content,
+                            mode=_posix_file_mode(entry.mode, f"{uid}.{member_id}"),
+                        )
+                    )
+                continue
+            entry = upstream.file_entry(target, source, "baseline_unavailable")
+            _need(
+                entry is not None,
+                "baseline_unavailable",
+                f"{uid}.{member_id}: source file is missing at {target}",
+            )
+            staged.append(
+                ApplyStagedWrite(
+                    relative=normalized,
+                    content=entry.content,
+                    mode=_posix_file_mode(entry.mode, f"{uid}.{member_id}"),
+                )
+            )
+        if catalog_unit.get("kind") == STORY_UNIT_KIND:
+            first = members[0]
+            first_id = str(first.get("id"))
+            index_relative = _sibling_story_index(normalized_by_id[first_id])
+            core_path = _sibling_story_index(str(first.get("source")))
+            core_entry = upstream.file_entry(target, core_path, "baseline_unavailable")
+            if index_relative not in index_paths:
+                # Story units may legitimately share one destination index;
+                # their merges compose instead of conflicting (Section 17).
+                index_paths.add(index_relative)
+                destinations.append((uid, "index", index_relative))
+            rows = tuple(
+                StoryMergeMember(
+                    id=str(member.get("id")),
+                    destination=declared[str(member.get("id"))],
+                    collision_policy=member.get("collision_policy"),
+                )
+                for member in members
+            )
+            stories.append(
+                ApplyStoryIndexPlan(
+                    relative=index_relative,
+                    core_index=(
+                        core_entry.content if core_entry is not None else b""
+                    ),
+                    rows=rows,
+                )
+            )
+    _check_destination_set(destinations)
+    return staged, stories
+
+
+def _print_apply_report(report: ApplyReport, output_format: str) -> None:
+    """Print one terse, machine-readable ``apply`` outcome to stdout."""
+    if output_format == "json":
+        print(json.dumps(report, indent=2))
+        return
+    print(f"apply: {report['apply']}")
+    written = ", ".join(report["written"]) if report["written"] else "none"
+    print(f"written: {written}")
+    print(f"lock: {report['lock'] if report['lock'] is not None else 'none'}")
+    print(f"verify: {report['verify']}")
+    for reason in report["blocking"]:
+        print(f"blocking: {reason}")
+
+
+def run_apply(args: argparse.Namespace) -> int:
+    """Classify the bounded ``apply`` write set, stage it, re-lock, verify.
+
+    Reuses ``propose-lock``'s loaders, coverage validation, trusted-revision
+    and snapshot resolution, then builds one decision per declared unit
+    against the accepted lock baseline. Every refusal raises ``SyncError``
+    (exit 2) naming the units and their reasons before anything is written.
+
+    A refusal-free run then: journals every path it intends to write with
+    current bytes and file mode (in memory), stages the writable members,
+    merges the portable story index for writable story units, regenerates
+    the candidate lock through the ``propose-lock`` builder, and runs the
+    ``check`` report against the written worktree. Classification reads the
+    declared explicit snapshot; lock regeneration and verification read the
+    post-write worktree, so the result reported is the state actually
+    staged. An empty write set is a no-op that exits 0 without touching the
+    adopter; compliance exits 0, a non-compliant check exits 1 with its
+    blocking reasons, and fatal protocol failures exit 2.
+
+    Every mutation after the journal — content staging, story-index writes,
+    and the lock write — plus lock regeneration and verification run inside
+    one guarded region. Any failure there restores every journaled path from
+    the in-memory journal before the failure is surfaced, so a failed run
+    never leaves content half-written under a lock that would make ``check``
+    pass silently on it. The restore is best-effort, not atomic: when it
+    cannot put a path back it emits an ``apply_restore_failed`` recovery
+    record on stderr naming every path that may now be inconsistent and
+    still exits non-zero. A restored-and-abandoned failure exits 2 with its
+    original code (``apply_write_failed`` for a write IO error); a
+    non-compliant verify still exits 1 on its written, lock-consistent
+    state.
+    """
+    _need(
+        args.adopter_revision is not None or args.adopter_index,
+        "adopter_snapshot_unavailable",
+        "exactly one of --adopter-revision or --adopter-index is required",
+    )
+    for name, value, code in (
+        ("--declaration", args.declaration, "invalid_declaration"),
+        ("--lock", args.lock, "invalid_lock"),
+        ("--catalog", args.catalog, "invalid_mapping"),
+    ):
+        _need(value, code, f"{name} is required")
+    catalog_path = _resolve_catalog_path(str(args.catalog), str(args.upstream_repo))
+    declaration = load_declaration(str(args.declaration))
+    review = (
+        load_review(str(args.review))
+        if args.review
+        else {"schema_version": 2, "decisions": []}
+    )
+    catalog = load_catalog(catalog_path)
+    block = catalog.get("catalog")
+    _need(
+        isinstance(block, Mapping)
+        and block.get("upstream_repository") == declaration.get("upstream_repository"),
+        "repository_identity_mismatch",
+        "catalog and declaration upstream_repository differ",
+    )
+    upstream = _GitRepo(str(args.upstream_repo))
+    target, _diagnostic = _trusted_revision(upstream, None)
+    adopter = _resolve_adopter_repo(args)
+    snapshot = _snapshot_for(args, adopter)
+    catalog_units, declaration_units = _validate_declaration_coverage(
+        catalog, declaration, declaration.get("profile", {})
+    )
+    decided = {str(d.get("unit")) for d in review.get("decisions", [])}
+    baseline_lock = load_lock(str(args.lock))
+    _need(
+        baseline_lock.get("upstream_repository")
+        in (None, declaration.get("upstream_repository")),
+        "repository_identity_mismatch",
+        "baseline lock upstream_repository differs from the declaration",
+    )
+    accepted = str(baseline_lock.get("accepted_source_commit"))
+    _need(
+        upstream.is_ancestor(accepted, target),
+        "baseline_unavailable",
+        f"accepted commit {accepted} is not an ancestor of {target}",
+    )
+    baseline = {str(row.get("id")): row for row in baseline_lock.get("units", [])}
+    unit_decisions = _apply_decisions(
+        catalog_units,
+        declaration_units,
+        baseline,
+        decided,
+        ApplyContext(
+            upstream=upstream,
+            target=target,
+            accepted=accepted,
+            snapshot=snapshot,
+            catalog_path=catalog_path,
+        ),
+    )
+    refusals = [row for row in unit_decisions if row["classification"] == "refused"]
+    if refusals:
+        detail = "; ".join(f"{row['id']}: {row['reason']}" for row in refusals)
+        _fail(str(refusals[0]["refusal_code"]), f"apply refused: {detail}")
+    writable = [row for row in unit_decisions if row["classification"] == "writable"]
+    if not writable:
+        _print_apply_report(
+            ApplyReport(
+                apply="noop",
+                written=[],
+                lock=None,
+                verify="skipped",
+                blocking=[],
+            ),
+            args.format,
+        )
+        return 0
+    root = adopter.toplevel() or adopter.path
+    lock_path = str(args.lock)
+    lock_relative = _repo_relative_path(adopter, lock_path)
+    staged, stories = _apply_write_plan(
+        [row["id"] for row in writable],
+        catalog_units,
+        declaration_units,
+        _control_paths(catalog),
+        lock_relative,
+        upstream,
+        target,
+    )
+    # Journal first: record every path this run intends to write, with its
+    # current bytes and file mode, in memory. Nothing is mutated yet; the
+    # guarded region below consumes this journal for restoration. A shared
+    # story index is journaled exactly once.
+    intended = (
+        [write.relative for write in staged]
+        + [plan.relative for plan in stories]
+        + [lock_relative]
+    )
+    journal: list[ApplyJournalEntry] = [
+        _apply_path_state(root, relative)
+        for relative in dict.fromkeys(intended)
+    ]
+    journal_by_relative = {entry["relative"]: entry for entry in journal}
+    # One guarded region covers every mutation and both post-mutation reads:
+    # content staging, story-index writes, the lock write, lock regeneration,
+    # and verification. Any exception raised inside it — including a
+    # ``SyncError`` from a merge, from the propose-lock builder, or from the
+    # check report — hands the journal to ``_apply_abandon``, which restores
+    # first and only then surfaces the failure. ``KeyboardInterrupt`` and
+    # ``SystemExit`` are ``BaseException`` and deliberately propagate
+    # untouched.
+    try:
+        # Stage the writable members' core content at their declared destinations.
+        for write in staged:
+            entry = journal_by_relative[write.relative]
+            _apply_write_file(entry["path"], write.relative, write.content, write.mode)
+        # Merge the portable story index for each writable story unit: core rows
+        # for members carrying collision_policy: core_wins replace differing rows;
+        # destination-only rows and every byte outside the table survive intact.
+        # Units sharing one destination index compose in declared order — each
+        # merge reads the previous one's result — and the composed bytes are
+        # written once per index path.
+        merged_indexes: dict[str, bytes] = {}
+        for plan in stories:
+            entry = journal_by_relative[plan.relative]
+            base = merged_indexes.get(plan.relative, entry["content"])
+            result, _collisions = merge_story_index(plan.core_index, base, plan.rows)
+            merged_indexes[plan.relative] = result
+        for relative, content in merged_indexes.items():
+            entry = journal_by_relative[relative]
+            mode = entry["mode"] if entry["mode"] is not None else 0o644
+            _apply_write_file(entry["path"], relative, content, mode)
+        # Regenerate the candidate lock through the propose-lock builder at the
+        # one target revision, reading the post-write worktree, and write it only
+        # after every content byte is staged.
+        candidate = _propose_lock_document(args, _WorktreeSnapshot(root))
+        text = yaml.safe_dump(candidate, sort_keys=False, default_flow_style=False)
+        lock_entry = journal_by_relative[lock_relative]
+        lock_mode = lock_entry["mode"] if lock_entry["mode"] is not None else 0o644
+        _apply_write_file(
+            lock_entry["path"],
+            lock_relative,
+            (text.rstrip("\n") + "\n").encode("utf-8"),
+            lock_mode,
+        )
+        # Verify with the existing check logic against the written worktree and
+        # require its exit 0 before this run may report success. A failure here
+        # must also restore: content without its regenerated lock is exactly the
+        # half-written state no run may leave behind.
+        verification = _check_report(
+            str(args.declaration),
+            lock_path,
+            str(args.review) if args.review else None,
+            catalog_path,
+            upstream,
+            target,
+            False,
+            lambda: _WorktreeSnapshot(root),
+        )
+    except Exception as exc:
+        _apply_abandon(journal, exc)
+    # Non-compliance is not a mutation failure: the worktree and its lock are
+    # written and mutually consistent, so ``check`` reports the same blocking
+    # reasons here instead of passing silently, and the run exits 1 on it.
+    compliance = bool(verification.get("compliance"))
+    _print_apply_report(
+        ApplyReport(
+            apply="success" if compliance else "failure",
+            written=[row["id"] for row in writable],
+            lock=lock_path,
+            verify="pass" if compliance else "fail",
+            blocking=[
+                str(reason) for reason in verification.get("blocking_reasons", [])
+            ],
+        ),
+        args.format,
+    )
     return 0 if compliance else 1
 
 
@@ -1968,7 +3429,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_global_options(parser)
     subparsers = parser.add_subparsers(
-        dest="command", metavar="{check,propose-lock,verify-all}"
+        dest="command", metavar="{check,propose-lock,verify-all,apply}"
     )
     subparsers.required = True
     check = subparsers.add_parser("check", help="report adoption compliance")
@@ -1992,6 +3453,12 @@ def build_parser() -> argparse.ArgumentParser:
     _add_global_options(verify)
     verify.add_argument("--checkouts-root", help="cached read-only checkout root")
     verify.set_defaults(func=run_verify)
+    apply = subparsers.add_parser(
+        "apply", help="apply a reviewed byte-equal update to the adopter"
+    )
+    _add_global_options(apply)
+    _add_snapshot_options(apply)
+    apply.set_defaults(func=run_apply)
     return parser
 
 

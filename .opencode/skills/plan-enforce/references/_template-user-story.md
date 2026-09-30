@@ -3,6 +3,7 @@
 > **Created:** YYYY-MM-DD
 > **Title:** <short human title — mirrors the `title` column in `user-stories/index.md`>
 > **Status:** <draft | active | superseded — mirrors the `status` column in `user-stories/index.md`>
+> **version:** 1.0.0
 > **Epic:** <epic-slug> (optional — leave empty when no epic)
 > **Affected areas:** <matching handle, e.g. `src/`, `.opencode/skills/plan-enforce/`, a backend tooling path>
 

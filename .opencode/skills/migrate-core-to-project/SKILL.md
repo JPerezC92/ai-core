@@ -1,19 +1,21 @@
 ---
 name: migrate-core-to-project
-description: Bootstrap an atomic AICore adoption into a target project — deterministically. Detects the target's profile, reads the machine catalog, enrolls the complete applicable unit set at one revision, merges the required config assertions, bootstraps the declaration/review/lock, and verifies with the sync engine's compliance check. Use when the user wants to install the core into another project or scaffold a project with the agent tooling.
+description: Bootstrap an atomic AICore adoption into a target project — deterministically. Detects the target's profile, reads the machine catalog, decides every applicable unit's ownership mode with reviewed destination bytes before the first write, enrolls the complete applicable unit set at one revision, merges the required config assertions, bootstraps the declaration/review/lock, and verifies with the sync engine's compliance check. Use when the user wants to install the core into another project or scaffold a project with the agent tooling.
 license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.2.0
+  version: 2.3.0
   domain: opencode
 ---
 
 ## What I do
 
-Bootstrap AICore's reusable, agnostic core into a target project as one atomic enrollment. I detect the target's profile mechanically, confirm the destination project identity, read the machine catalog (`.aicore/core-catalog-v2.yaml`), enroll the **complete applicable unit set** at one AICore revision, merge the required config assertions, write the destination's root runtime as an `adapted` document that presents the destination as the active project with destination-only identity (source provenance lives in the `.aicore` controls), generate the adopter control surfaces (`.aicore/adoption.yaml`, `.aicore/adoption-review.yaml`), delegate lock generation and verification to `sync-aicore-adoption`, and report stack-mismatched rulebook bodies that need destination-side adaptation. I never run git; shipping (branch/commit/PR) happens separately.
+Bootstrap AICore's reusable, agnostic core into a target project as one atomic enrollment. I detect the target's profile mechanically, confirm the destination project identity, read the machine catalog (`.aicore/core-catalog-v2.yaml`), run a **mode review** that records every applicable unit's ownership mode together with reviewed destination bytes and writes the adopter control surfaces (`.aicore/adoption.yaml`, `.aicore/adoption-review.yaml`) **before any adopted-content byte is written**, enroll the **complete applicable unit set** at one AICore revision, merge the required config assertions, write the destination's root runtime as an `adapted` document that presents the destination as the active project with destination-only identity (source provenance lives in the `.aicore` controls), delegate lock generation and verification to `sync-aicore-adoption`, and report stack-mismatched rulebook bodies that need destination-side adaptation. I never run git; shipping (branch/commit/PR) happens separately.
 
 There is no partial or selectable enrollment: applicable units install as a complete set at one revision, and inapplicable units are recorded as `not_applicable` under a machine-checked applicability rule. I fail closed on stale or partial content.
+
+Ownership is decided before writes: `install_strategy: copy` units in mode `mirror` receive core bytes; `merge`, `preserve`, and every non-mirror unit keep owner bytes; a differing `adapted` file is **read and edited**, never overwritten; a destination difference with no recorded mode and reviewed bytes blocks the run before the first copy.
 
 ## When to use me
 
@@ -40,6 +42,8 @@ Use one `question` call for the missing argument. Do not add a manual "Other" op
 
 ## Steps
 
+Every step reads any target file in full before editing it. Steps 1-3 decide and record ownership; no adopted-content byte is written until step 3 has a recorded mode for every applicable unit and reviewed destination bytes for every non-mirror unit.
+
 ### 1. Detect the profile (deterministic)
 
 Read the target root for mechanical markers, not judgments:
@@ -61,22 +65,48 @@ Output the profile triple plus the confirmed destination identity. The detected 
 
 Read `.aicore/core-catalog-v2.yaml`. For every unit, evaluate its `applicability` against the detected profile (`always` / `requires` / `any_of`). Produce the applicable set and the inapplicable set.
 
-Present the profile and the two sets via the `question` tool as a single confirmation: **"Enroll the complete applicable set?"** with the profile and the applicable/inapplicable lists. Do not offer per-unit selection; the only options are confirm or correct the profile. Config merge targets are always handled in step 5.
+Present the profile and the two sets via the `question` tool as a single confirmation: **"Enroll the complete applicable set?"** with the profile and the applicable/inapplicable lists. Do not offer per-unit selection; the only options are confirm or correct the profile. Config merge targets are always handled in step 6.
 
 If the user corrects the profile, recompute the sets before proceeding.
 
-### 3. Enroll the complete applicable set
+### 3. Mode review and control surfaces (before any content write)
 
-Copy every applicable unit. Never write beyond the catalog's declared members.
+This step decides ownership. It reads destination bytes and writes only the two control documents — never adopted content.
 
-- **Agents** copy as pairs (`.opencode/agents/<name>.md` + `agents/<name>/profile.md`); `cipher` is CV-only.
-- **Skills** copy their directories, excluding `__pycache__/` and `*.pyc`.
-- **Infra** copies every declared member.
-- **Config** units (`root-runtime-spec`, `opencode-config`, `gitignore-config`) are merged in step 5, not copied.
+For **every** applicable unit, read the destination's existing bytes at the mapped path (the declared member destination, or the unit's `destination` for assertion units) and confirm one ownership mode with the owner via the `question` tool, together with the reviewed destination content:
 
-**Stale content fails closed.** If a destination path already exists with content that differs from the source revision, do NOT silently skip or overwrite: report the mismatch and require an explicit user override. An identical present path is left untouched.
+- **`mirror`** — the destination is absent or byte-identical to the source revision; the unit will receive core bytes in step 4.
+- **`adapted`** — the destination intentionally differs from the source revision; the reviewed destination bytes at the mapped path are the content that must survive. A differing `adapted` file is **read and edited**, never overwritten.
+- **`replacement`** — the destination is adopter-local content with no byte-convergence claim (declared with `replacement_members`, never with `members`).
+- **`destination_owned`** — an intentional local fork whose upstream changes are tracked through review decisions only.
 
-### 4. Dependency union
+Rules for this step:
+
+1. **Every applicable unit gets a recorded mode** — no partial classification, no deferred unit. Every inapplicable unit is recorded `not_applicable` under the machine-checked applicability rule from step 2.
+2. **Every non-mirror unit gets reviewed destination bytes** before anything is written; that reviewed content lives at the mapped destination path and is never replaced by core bytes.
+3. **An unreviewed difference blocks here.** If a destination path exists with content differing from the source revision and the owner has not classified it as `mirror`, `adapted`, `replacement`, or `destination_owned`, halt this step — no copy begins. This is upstream of the "stale content fails closed" override in step 4.
+4. **`root-runtime-spec` is `adapted`.** The destination root runtime carries its own destination-only `Project identity` and is intentionally not a byte-identical mirror of the upstream `AGENTS.md`; the `Local version: 1.0.0` marker rule is applied in step 6.
+
+Only after every unit has a recorded mode and — for non-mirror units — reviewed destination bytes, write the control surfaces:
+
+1. Write `.aicore/adoption.yaml` (schema v2): the `profile` triple, and **one entry per catalog unit** — `mirror` for byte-identical copies, `adapted`/`replacement`/`destination_owned` only where the destination intentionally differs, and `not_applicable` for every inapplicable unit. Declare the `root-runtime-spec` unit as mode `adapted` as required by rule 4 above.
+2. Write `.aicore/adoption-review.yaml` (schema v2): empty `decisions` initially; decisions are added when a non-mirror unit changes upstream.
+3. These two control documents are the record of the mode review. No adopted-content byte may be written before both exist and together cover every catalog unit.
+
+### 4. Enroll the complete applicable set
+
+Copy content only now — after step 3 has recorded a mode for every applicable unit and reviewed destination bytes for every non-mirror unit. Never write beyond the catalog's declared members.
+
+- **`copy`-and-`mirror` units receive core bytes.** Copy every applicable unit declared `mirror`:
+  - **Agents** copy as pairs (`.opencode/agents/<name>.md` + `agents/<name>/profile.md`); `cipher` is CV-only.
+  - **Skills** copy their directories, excluding `__pycache__/` and `*.pyc`.
+  - **Infra** copies every declared member.
+- **`merge`, `preserve`, and any non-mirror unit keep owner bytes.** Config units (`root-runtime-spec`, `opencode-config`, `gitignore-config`) are merged in step 6, not copied; a `preserve` unit is never overwritten.
+- **A differing `adapted` file is read and edited, never overwritten** — apply the upstream change onto the destination's own reviewed bytes instead of replacing them with core bytes.
+
+**Stale content fails closed.** If a destination path already exists with content that differs from the source revision, do NOT silently skip or overwrite: report the mismatch and require an explicit user override, which re-runs the mode review for that unit. An identical present path is left untouched.
+
+### 5. Dependency union
 
 For each enrolled skill, read its `SKILL.md` frontmatter `metadata.dependencies`. Compute the union.
 
@@ -84,7 +114,9 @@ For each enrolled skill, read its `SKILL.md` frontmatter `metadata.dependencies`
 - **Non-empty union** — generate a `pyproject.toml` (`[project]` with the target name, `version = "0.0.0"`, `requires-python = ">=3.9"`, the union `dependencies`; `[tool.uv]` with `package = false`), then print the lock instruction `uv lock --project <target>`.
 - **Empty union** — skip.
 
-### 5. Merge config (assertion units)
+### 6. Merge config (assertion units)
+
+These units keep owner bytes: merge appends what is missing and never rewrites the file. Read the target file in full before editing it.
 
 - **`AGENTS.md` (`root-runtime-spec`)** — establish the destination as the active project with destination-only identity. Merge new roster lines into an existing root file; write fresh if absent. When written, the destination root runtime must carry:
   - a `Project identity` marker naming the step-1 confirmed destination identity as the active project;
@@ -94,27 +126,29 @@ For each enrolled skill, read its `SKILL.md` frontmatter `metadata.dependencies`
 - **`.gitignore` (`gitignore-config`)** — append-if-missing `output/`, `pr-draft.md`, `commit.txt`, `plans/.completed/`.
 - **Build approvals** — if the target uses pnpm ≥ 11, approve native build scripts via `pnpm approve-builds`.
 
-### 6. Bootstrap the adopter control surfaces
-
-1. Write `.aicore/adoption.yaml` (schema v2): the `profile` triple, and **one entry per catalog unit** — `mirror` for byte-identical copies, `adapted`/`replacement`/`destination_owned` only where the destination intentionally differs, and `not_applicable` for every inapplicable unit. Declare the `root-runtime-spec` unit as mode `adapted`: the destination root runtime carries its own destination-only `Project identity` and is intentionally not a byte-identical mirror of the upstream `AGENTS.md`.
-2. Write `.aicore/adoption-review.yaml` (schema v2): empty `decisions` initially; decisions are added when a non-mirror unit changes upstream.
-3. Do NOT hand-write the lock. Delegate lock generation to the sync engine:
-   `python3 .opencode/skills/sync-aicore-adoption/scripts/sync_aicore_adoption.py propose-lock --upstream-repo <aicore> --adopter-repo <target> --declaration <target>/.aicore/adoption.yaml --review <target>/.aicore/adoption-review.yaml --adopter-index`
-   and have the user commit the emitted candidate as `.aicore/adoption.lock.yaml`.
-
 ### 7. Consistency pass
 
 After enrollment, verify and fix cross-references on the union of enrolled + already-present content:
 
 1. **Broken file pointers** — trim references only to agents that are neither enrolled nor already present.
-2. **Roster lists** — align `AGENTS.md`, `knowledge/agents.md`, and Sentinel audit lists to the enrolled roster.
+2. **Roster lists** — align `AGENTS.md`, `knowledge/agents.md`, and Sentinel 🛡️ (Quality Guardian) audit lists to the enrolled roster.
 3. **Non-enrolled team references** — de-reference teams that were not enrolled (only when genuinely inapplicable).
 4. **Frontmatter** — every spec has `name` (matching filename), `description`, and `mode: subagent`.
 5. **CV ↔ spec reconciliation** — persona CVs and runtime specs agree.
 6. **Grammar/emoji** — CV H1 headings use `# Name Emoji — Role`.
 7. **Stack-mismatch report** — compare each stack-bound rulebook body (`atrium` React/web, `bastion` NestJS-TS + Python, `crucible` Vitest/Playwright, `lumen` web) against the detected stacks and report mismatches as `adapt destination-side`. Report only.
 
-### 8. Verify (compliance)
+### 8. Lock generation
+
+Do NOT hand-write the lock. Delegate lock generation to the sync engine:
+
+```
+python3 .opencode/skills/sync-aicore-adoption/scripts/sync_aicore_adoption.py propose-lock --upstream-repo <aicore> --adopter-repo <target> --declaration <target>/.aicore/adoption.yaml --review <target>/.aicore/adoption-review.yaml --adopter-index
+```
+
+and have the user commit the emitted candidate as `.aicore/adoption.lock.yaml`. There is no parallel migrator and no disk-crash transaction claim: the lock is generated evidence, rebuilt only from the recorded declaration, the review, and the staged destination bytes.
+
+### 9. Verify (compliance)
 
 Enrollment is complete only when the sync engine reports compliance:
 
@@ -145,8 +179,9 @@ Read [`.aicore/core-catalog-v2.yaml`](../../../.aicore/core-catalog-v2.yaml) bef
 Target: Next.js project (`package.json`). Profile: `backend_stack: true` (node), `python_scripts: true`, `ticket_system: false`.
 
 - Enrolled: the always units plus `bastion` (via `backend_stack`/`python_scripts`); ticket-team units and `query-verification*`/`ticket-runbook` recorded `not_applicable`.
+- Mode review first: every applicable unit gets its recorded mode and non-mirror units their reviewed destination bytes; declaration + review written before any content byte.
 - Config merged so `opencode-config`/`gitignore-config` assertions pass.
-- Declaration + review written; lock generated by `propose-lock`; `check` exit 0.
+- Lock generated by `propose-lock`; `check` exit 0.
 - Mismatch report flags `atrium`/`bastion`/`crucible`/`lumen` bodies to adapt destination-side.
 
 ### Example 2 — Rust TUI tool, no ticket system

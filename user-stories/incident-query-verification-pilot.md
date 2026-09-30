@@ -3,6 +3,7 @@
 > **Created:** 2026-09-10
 > **Title:** Incident query-verification pilot
 > **Status:** active
+> **version:** 1.0.0
 > **Epic:** incident-diagnostics
 > **Affected areas:** `.opencode/skills/query-verification/`, `.opencode/skills/ticket-runbook/`, `.opencode/agents/crucible.md`, `knowledge/`
 
