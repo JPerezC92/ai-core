@@ -1,26 +1,26 @@
 ---
 name: migrate-core-to-project
-description: Bootstrap an atomic AICore adoption into a target project — deterministically. Detects the target's profile, reads the machine catalog, decides every applicable unit's ownership mode with reviewed destination bytes before the first write, enrolls the complete applicable unit set at one revision, merges the required config assertions, bootstraps the declaration/review/lock, and verifies with the sync engine's compliance check. Use when the user wants to install the core into another project or scaffold a project with the agent tooling.
+description: Bootstrap an atomic AICore adoption through reviewed destination edits, exact-byte approval, candidate-lock evidence, and read-only checks. Use when a project first adopts the core.
 license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.3.0
+  version: 3.2.1
   domain: opencode
 ---
 
 ## What I do
 
-Bootstrap AICore's reusable, agnostic core into a target project as one atomic enrollment. I detect the target's profile mechanically, confirm the destination project identity, read the machine catalog (`.aicore/core-catalog-v2.yaml`), run a **mode review** that records every applicable unit's ownership mode together with reviewed destination bytes and writes the adopter control surfaces (`.aicore/adoption.yaml`, `.aicore/adoption-review.yaml`) **before any adopted-content byte is written**, enroll the **complete applicable unit set** at one AICore revision, merge the required config assertions, write the destination's root runtime as an `adapted` document that presents the destination as the active project with destination-only identity (source provenance lives in the `.aicore` controls), delegate lock generation and verification to `sync-aicore-adoption`, and report stack-mismatched rulebook bodies that need destination-side adaptation. I never run git; shipping (branch/commit/PR) happens separately.
+Bootstrap AICore's reusable, agnostic core into a target project as one atomic enrollment. Follow `sync-aicore-adoption` protocol v2 §4–§5; do not use a second order. Pin an approved refresh of the protected upstream tip, detect the profile, and prepare the complete result outside the destination: modes, extensions, dependency union, config, and consistency corrections. Freeze approval, write `.aicore/adoption.yaml` and `.aicore/adoption-review.yaml`, then write reviewed content. The destination root is `adapted` and destination-only. Source provenance lives in the `.aicore` controls. Lock generation uses `python3 -B` and an external candidate. I never run destination git; Herald 📯 (Release Manager) stages only approved paths. Shipping remains separate. There is no backup or rollback.
 
 There is no partial or selectable enrollment: applicable units install as a complete set at one revision, and inapplicable units are recorded as `not_applicable` under a machine-checked applicability rule. I fail closed on stale or partial content.
 
-Ownership is decided before writes: `install_strategy: copy` units in mode `mirror` receive core bytes; `merge`, `preserve`, and every non-mirror unit keep owner bytes; a differing `adapted` file is **read and edited**, never overwritten; a destination difference with no recorded mode and reviewed bytes blocks the run before the first copy.
+Ownership is decided before writes: a reviewed byte-identical `mirror` receives its approved result; `merge`, `preserve`, and every other non-mirror unit keep owner bytes; a differing `adapted` file is **read and edited**, never overwritten; a destination difference with no recorded mode and reviewed bytes blocks the run before the first write. Protected mirrors still need an applied `verified_layout` decision.
 
 ## When to use me
 
 - User wants to install the core into another project ("install AICore in X").
-- User wants to scaffold a new project with the agent tooling.
+- User wants to enroll the agent tooling into an existing or new repository. This is not an application generator.
 - A project must be brought under the atomic adoption contract for the first time.
 
 Do NOT use me to create or edit skills or agents — those are `op-skill-creator` and `op-agent-creator` territory. Do NOT use me for recurring updates on an already-enrolled adopter — that is `sync-aicore-adoption`.
@@ -42,7 +42,7 @@ Use one `question` call for the missing argument. Do not add a manual "Other" op
 
 ## Steps
 
-Every step reads any target file in full before editing it. Steps 1-3 decide and record ownership; no adopted-content byte is written until step 3 has a recorded mode for every applicable unit and reviewed destination bytes for every non-mirror unit.
+Every step reads any target file in full before editing it. The only sequence is protocol v2 §5: controlled preflight, pin, external full preparation, complete-output collision and recheck, frozen approval, controls then content, exact-path staging, external candidate, lock-only acceptance. Destination-before includes absence. No destination byte is written before that approval.
 
 ### 1. Detect the profile (deterministic)
 
@@ -59,23 +59,28 @@ Read the target root for mechanical markers, not judgments:
 
 Derive the **destination identity** from the target's own declarative metadata, never from AICore: the `[project].name` in `pyproject.toml`, the `name` in `package.json`, the module name in `Cargo.toml`/`go.mod`, or the target directory name. When these disagree, ask via the `question` tool and confirm one identity before proceeding.
 
-Output the profile triple plus the confirmed destination identity. The detected stack list also feeds the step-7 mismatch report.
+Output the profile triple plus the confirmed destination identity. The detected stack list feeds the external consistency preparation below.
 
 ### 2. Compute the applicable set and confirm once
 
 Read `.aicore/core-catalog-v2.yaml`. For every unit, evaluate its `applicability` against the detected profile (`always` / `requires` / `any_of`). Produce the applicable set and the inapplicable set.
 
-Present the profile and the two sets via the `question` tool as a single confirmation: **"Enroll the complete applicable set?"** with the profile and the applicable/inapplicable lists. Do not offer per-unit selection; the only options are confirm or correct the profile. Config merge targets are always handled in step 6.
+Present the profile and the two sets via the `question` tool as a single confirmation: **"Enroll the complete applicable set?"** with the profile and the applicable/inapplicable lists. Do not offer per-unit selection; the only options are confirm or correct the profile. Config merge targets are prepared outside the destination before approval.
 
 If the user corrects the profile, recompute the sets before proceeding.
 
-### 3. Mode review and control surfaces (before any content write)
+### 3. Controlled clean start and pin
 
-This step decides ownership. It reads destination bytes and writes only the two control documents — never adopted content.
+Follow protocol v2 §5 steps 1–2 before any destination write. Dirty, occupied, or uncertain state aborts. Do not save, commit, stash, clean, or resume. There is no backup or rollback. A clean bisect is not dirtiness. Pin the selected source, absolute catalog, and reviewed engine. Source refresh is a separate approved upstream checkout.
+
+### 4. External full preparation
+
+Read destination bytes and prepare every result outside the destination. This step writes nothing to the destination.
 
 For **every** applicable unit, read the destination's existing bytes at the mapped path (the declared member destination, or the unit's `destination` for assertion units) and confirm one ownership mode with the owner via the `question` tool, together with the reviewed destination content:
 
-- **`mirror`** — the destination is absent or byte-identical to the source revision; the unit will receive core bytes in step 4.
+- **`mirror` for ordinary protected content** — permitted only after a full review shows the destination-prepared document is byte-identical to the selected source. Absence is not mirror. Prepare project extensions first; do not copy source project extensions to fill an absent file.
+- **`mirror` for an assertion unit** — required when the unit is applicable. It has no members. Convergence is assertion presence in the prepared config fragment, not whole-file byte identity. An absent or locally customized config can still be `mirror` after the owner reviews the prepared fragment.
 - **`adapted`** — the destination intentionally differs from the source revision; the reviewed destination bytes at the mapped path are the content that must survive. A differing `adapted` file is **read and edited**, never overwritten.
 - **`replacement`** — the destination is adopter-local content with no byte-convergence claim (declared with `replacement_members`, never with `members`).
 - **`destination_owned`** — an intentional local fork whose upstream changes are tracked through review decisions only.
@@ -83,88 +88,84 @@ For **every** applicable unit, read the destination's existing bytes at the mapp
 Rules for this step:
 
 1. **Every applicable unit gets a recorded mode** — no partial classification, no deferred unit. Every inapplicable unit is recorded `not_applicable` under the machine-checked applicability rule from step 2.
-2. **Every non-mirror unit gets reviewed destination bytes** before anything is written; that reviewed content lives at the mapped destination path and is never replaced by core bytes.
-3. **An unreviewed difference blocks here.** If a destination path exists with content differing from the source revision and the owner has not classified it as `mirror`, `adapted`, `replacement`, or `destination_owned`, halt this step — no copy begins. This is upstream of the "stale content fails closed" override in step 4.
-4. **`root-runtime-spec` is `adapted`.** The destination root runtime carries its own destination-only `Project identity` and is intentionally not a byte-identical mirror of the upstream `AGENTS.md`; the `Local version: 1.0.0` marker rule is applied in step 6.
+2. **Every protected unit, including mirrors, and every other non-mirror unit gets a reviewed prepared result** before controls are written. That result may live outside the destination path. It is not required to occupy the destination before the first write. After controls, only approved paths are written.
+3. **An unreviewed difference blocks here.** If a destination path exists with content differing from the source revision and the owner has not classified it, halt. No destination copy begins.
+4. **`root-runtime-spec` is `adapted`.** The prepared root carries destination-only `Project identity` and `Local version: 1.0.0`. It is not a byte-identical mirror of upstream `AGENTS.md`.
+5. **An absent `knowledge-debt` or `symptom-problem-register` path is not classified `mirror` and is not copied from source records.** Its prepared result is a structural header plus, for the shared unit, the retained reusable symptom catalog. Create that approved absent file only after controls exist. Never overwrite an existing register. Do not import source debt or problem history.
 
-Only after every unit has a recorded mode and — for non-mirror units — reviewed destination bytes, write the control surfaces:
+Prepare these results in the same external set, before approval:
 
-1. Write `.aicore/adoption.yaml` (schema v2): the `profile` triple, and **one entry per catalog unit** — `mirror` for byte-identical copies, `adapted`/`replacement`/`destination_owned` only where the destination intentionally differs, and `not_applicable` for every inapplicable unit. Declare the `root-runtime-spec` unit as mode `adapted` as required by rule 4 above.
-2. Write `.aicore/adoption-review.yaml` (schema v2): empty `decisions` initially; decisions are added when a non-mirror unit changes upstream.
-3. These two control documents are the record of the mode review. No adopted-content byte may be written before both exist and together cover every catalog unit.
+- **Dependency union.** Read each enrolled skill's `metadata.dependencies`. A pin conflict halts for Warden 🔒 (Dependency Warden). Merge only missing approved declarations into the prepared manifest. Do not replace project identity or install packages.
+- **Config.** Prepare assertion and ignore entries when missing. The root runtime is a reviewed section-aware edit: destination-only identity, exact selected mandatory bytes, compatible local extensions, and no copied AICore project extensions, debt, or history. Prepare `opencode.jsonc` permission gates and the literal `test_runner` allow. Prepare missing `.gitignore` entries `output/`, `pr-draft.md`, `commit.txt`, and `plans/.completed/`.
+- **Consistency.** Fix the prepared result, not the destination after copy. Report unusable mandatory references. Do not rewrite mandatory roster bytes, delete mandatory references, or replace a rulebook body. Specs need `name`, `description`, and `mode: subagent`. CVs use `# Name Emoji — Role`.
 
-### 4. Enroll the complete applicable set
+The prepared declaration is schema v2: one entry per catalog unit, `root-runtime-spec` as `adapted`, and reviewed `test_runner` metadata or explicit `no_tests: true`. The prepared review uses a null baseline and one applied decision per applicable protected unit, including mirrors, plus every other non-mirror unit. Each decision binds reviewer, evidence, upstream digest, result digest, and `verified_layout: two-section-v1` when the unit has `rule_documents`.
 
-Copy content only now — after step 3 has recorded a mode for every applicable unit and reviewed destination bytes for every non-mirror unit. Never write beyond the catalog's declared members.
+### 5. Collision, recheck, and frozen approval
 
-- **`copy`-and-`mirror` units receive core bytes.** Copy every applicable unit declared `mirror`:
-  - **Agents** copy as pairs (`.opencode/agents/<name>.md` + `agents/<name>/profile.md`); `cipher` is CV-only.
-  - **Skills** copy their directories, excluding `__pycache__/` and `*.pyc`.
-  - **Infra** copies every declared member.
-- **`merge`, `preserve`, and any non-mirror unit keep owner bytes.** Config units (`root-runtime-spec`, `opencode-config`, `gitignore-config`) are merged in step 6, not copied; a `preserve` unit is never overwritten.
-- **A differing `adapted` file is read and edited, never overwritten** — apply the upstream change onto the destination's own reviewed bytes instead of replacing them with core bytes.
+Check the complete intended write set: every adopted, config, manifest, and index path plus `.aicore/adoption.yaml`, `.aicore/adoption-review.yaml`, and `.aicore/adoption.lock.yaml`. An existing ignored occupant blocks. An ignore rule without a file is not unsaved work and does not authorize `git add -f`. Recheck cleanliness. Freeze the declaration, review, and prepared-result digests. Protected approval requires the model to read every complete document.
 
-**Stale content fails closed.** If a destination path already exists with content that differs from the source revision, do NOT silently skip or overwrite: report the mismatch and require an explicit user override, which re-runs the mode review for that unit. An identical present path is left untouched.
+### 6. Write controls, then approved content
 
-### 5. Dependency union
+Write the two frozen control documents first. No adopted-content byte precedes them. Then write only approved paths. The story index is an auxiliary file, not a catalog member. Create an approved absent register only if that path is still absent.
 
-For each enrolled skill, read its `SKILL.md` frontmatter `metadata.dependencies`. Compute the union.
+- **Reviewed `copy`-and-`mirror` units receive the approved byte-identical result.** Do not copy an unreviewed upstream document, and do not inherit its project extensions:
+  - **Agents** enroll as reviewed pairs (`.opencode/agents/<name>.md` + `agents/<name>/profile.md`); `cipher` is CV-only. The spec is mirror only when the prepared document is byte-identical.
+  - **Skills** enroll their reviewed directories, excluding `__pycache__/` and `*.pyc`.
+  - **Infra** enrolls every declared member from its approved result. After controls, create an approved absent `knowledge-debt` or problem-register file from its structural header. Do not copy source debt or problem rows. Retain the reusable symptom catalog in the shared unit.
+- **`merge`, `preserve`, and any non-mirror unit keep owner bytes.** Config units receive the externally prepared merge, not a post-copy fix. A `preserve` unit is never overwritten.
+- **A differing `adapted` file receives its frozen prepared result, never an unreviewed overwrite.** That result edits the destination's reviewed bytes outside the destination before the write.
 
-- **Conflict** (same package, different pins) — blocking mismatch; halt until the user resolves it.
-- **Non-empty union** — generate a `pyproject.toml` (`[project]` with the target name, `version = "0.0.0"`, `requires-python = ">=3.9"`, the union `dependencies`; `[tool.uv]` with `package = false`), then print the lock instruction `uv lock --project <target>`.
-- **Empty union** — skip.
+**Stale content fails closed.** If a destination path already exists with content that differs from the source revision, do not silently skip or overwrite. Stop and prepare the classification again. Do not resume or roll back. For a unit with `rule_documents`, the only accepting modes are `mirror`, `adapted`, or machine-valid `not_applicable`, and acceptance requires an applied decision with `verified_layout: two-section-v1` after reading the whole accepted source, the whole target source, and every destination rule surface. `replacement` and `destination_owned` cannot bypass mandatory bytes. A `preserve` member that is absent is created from its structural header or schema; an existing preserve member is never overwritten. An identical present path is left untouched.
 
-### 6. Merge config (assertion units)
+Do not run `pnpm approve-builds` or the target build.
 
-These units keep owner bytes: merge appends what is missing and never rewrites the file. Read the target file in full before editing it.
+The written root must carry the confirmed destination identity, the ancestor spec version, and `Local version: 1.0.0`. It has no AICore identity, repository, management-tool, reuse-guide, provenance, or lineage reference. The target root policy is `adopter_root_rules`.
 
-- **`AGENTS.md` (`root-runtime-spec`)** — establish the destination as the active project with destination-only identity. Merge new roster lines into an existing root file; write fresh if absent. When written, the destination root runtime must carry:
-  - a `Project identity` marker naming the step-1 confirmed destination identity as the active project;
-  - the ancestor AICore spec version in the copied spec's version field, plus a destination `Local version: 1.0.0` marker that advances only on destination-local edits, never on an AICore sync;
-  - destination-only content: no AICore identity, upstream repository, management-tool, reuse-guide, provenance, or lineage reference, and no inherited AICore reuse guidance. The engine enforces this closed policy (`guarded_file` + `adopter_root_runtime`) at proposal and check; source identity and provenance live only in the adopter's `.aicore` controls.
-- **`opencode.jsonc` (`opencode-config`)** — append the required permission gates declared as catalog assertions (grep before adding; never duplicate): stash push/apply allows, stash pop/drop/clear/update-ref/reflog/gc/repack/prune/symbolic-ref denies, `sudo` / `rm -rf /*` / `git push --force` / `gh pr merge` / `gh repo delete` / root-redirect denies, and the `mv plans/*-*` allow.
-- **`.gitignore` (`gitignore-config`)** — append-if-missing `output/`, `pr-draft.md`, `commit.txt`, `plans/.completed/`.
-- **Build approvals** — if the target uses pnpm ≥ 11, approve native build scripts via `pnpm approve-builds`.
+### 7. Exact-path staging, external candidate, and acceptance
 
-### 7. Consistency pass
+Herald 📯 (Release Manager) stages only the already approved paths and confirms they still match the frozen result. No `add -A` or `add .`. The engine selects `refs/remotes/origin/main`, then `refs/heads/main` only if the first ref is absent. That selected SHA must equal the reviewed source SHA at proposal and at final check. Hash the executing engine and every imported local production module. The selected source revision and adopter index must not change between proposal and final check, except the accepted-lock path after candidate success. Initial enrollment omits `--lock` and keeps the null baseline recorded before the first write. A missing update lock is never first enrollment. Staging may apply clean filters; unknown effects block.
 
-After enrollment, verify and fix cross-references on the union of enrolled + already-present content:
+For a later retirement, the declaration stays target-catalog-only: do not declare a retired unit or delete its destination content. The candidate lock carries one historical `retired: true` row for an ordinary retired non-mirror unit, preserving its predecessor member mapping and reviewed digest evidence. Ordinary retained members explicitly state `projection: file|tree`; replacement members retain their existing projection. That row participates in the normal lock and accepted-snapshot digests, preserving later verification without restoring upstream ownership. This workflow does not claim an automated recovery path.
 
-1. **Broken file pointers** — trim references only to agents that are neither enrolled nor already present.
-2. **Roster lists** — align `AGENTS.md`, `knowledge/agents.md`, and Sentinel 🛡️ (Quality Guardian) audit lists to the enrolled roster.
-3. **Non-enrolled team references** — de-reference teams that were not enrolled (only when genuinely inapplicable).
-4. **Frontmatter** — every spec has `name` (matching filename), `description`, and `mode: subagent`.
-5. **CV ↔ spec reconciliation** — persona CVs and runtime specs agree.
-6. **Grammar/emoji** — CV H1 headings use `# Name Emoji — Role`.
-7. **Stack-mismatch report** — compare each stack-bound rulebook body (`atrium` React/web, `bastion` NestJS-TS + Python, `crucible` Vitest/Playwright, `lumen` web) against the detected stacks and report mismatches as `adapt destination-side`. Report only.
+For root and derived runtime specs, show actual source ancestor version and destination `Local version`/`local-version` values. Initialize the destination value at `1.0.0`; preserve it for upstream-only content and record a SemVer bump rationale for a destination-local rule.
 
-### 8. Lock generation
-
-Do NOT hand-write the lock. Delegate lock generation to the sync engine:
+Do NOT hand-write an accepted lock. The required workflow delegates *candidate* generation to the read-only sync engine:
 
 ```
-python3 .opencode/skills/sync-aicore-adoption/scripts/sync_aicore_adoption.py propose-lock --upstream-repo <aicore> --adopter-repo <target> --declaration <target>/.aicore/adoption.yaml --review <target>/.aicore/adoption-review.yaml --adopter-index
+python3 -B <aicore-checkout>/.opencode/skills/sync-aicore-adoption/scripts/sync_aicore_adoption.py propose-lock --upstream-repo <aicore> --catalog <aicore-checkout>/.aicore/core-catalog-v2.yaml --adopter-repo <target> --declaration <target>/.aicore/adoption.yaml --review <target>/.aicore/adoption-review.yaml --adopter-index
 ```
 
-and have the user commit the emitted candidate as `.aicore/adoption.lock.yaml`. There is no parallel migrator and no disk-crash transaction claim: the lock is generated evidence, rebuilt only from the recorded declaration, the review, and the staged destination bytes.
+The script and catalog paths are absolute. A relative path from the destination is not the invocation. Controls are read from disk; adopted content is the explicit index.
 
-### 9. Verify (compliance)
+Save stdout to an owner-approved candidate outside the resolved destination. Never use `<target>/.aicore/adoption.lock.candidate.yaml`. The candidate is evidence, not a publisher or crash transaction.
 
-Enrollment is complete only when the sync engine reports compliance:
+Run `check` against the same explicit staged snapshot and that external candidate:
 
 ```
-python3 .opencode/skills/sync-aicore-adoption/scripts/sync_aicore_adoption.py check \
+python3 -B <aicore-checkout>/.opencode/skills/sync-aicore-adoption/scripts/sync_aicore_adoption.py check --catalog <aicore-checkout>/.aicore/core-catalog-v2.yaml \
+  --upstream-repo <aicore> --adopter-repo <target> \
+  --declaration <target>/.aicore/adoption.yaml \
+  --review <target>/.aicore/adoption-review.yaml \
+  --lock <external-candidate> --adopter-index
+```
+
+Only after exit 0 may the owner install the candidate as `.aicore/adoption.lock.yaml` and stage only that lock path. Declaration, review, adopted content, the story index, and the manifest stay frozen. Compare disk and index bytes for declaration, review, and the accepted lock before the final check. On failure, stop and report. Do not restore or delete applied files.
+
+The acceptance workflow permits enrollment to be recorded complete only when the final sync-engine check reports compliance:
+
+```
+python3 -B <aicore-checkout>/.opencode/skills/sync-aicore-adoption/scripts/sync_aicore_adoption.py check --catalog <aicore-checkout>/.aicore/core-catalog-v2.yaml \
   --upstream-repo <aicore> --adopter-repo <target> \
   --declaration <target>/.aicore/adoption.yaml \
   --review <target>/.aicore/adoption-review.yaml \
   --lock <target>/.aicore/adoption.lock.yaml --adopter-index
 ```
 
-- Exit 0 — complete and current (every declared unit `current`/`not_applicable`, or the `unmanaged` `destination_owned` steady state); enrollment is done.
-- Exit 1 — a blocking disposition remains (stale/drift/conflict/unresolved); fix and re-run.
-- Exit 2 — fatal (incomplete declaration, invalid applicability, invalid lock, schema upgrade); fix and re-run.
+- The established command interface defines Exit 0 as complete and current (every declared unit `current`/`not_applicable`, or the `unmanaged` `destination_owned` steady state); the owner may record enrollment done only after observing it.
+- Exit 1 is a blocking disposition. Exit 2 is fatal. Stop and report. A later attempt is a new clean-start sequence, not a resume or rollback.
 
-Do not report success until `check` exits 0. Run the target's build command as a final smoke test.
+Do not report success until `check` exits 0. Do not run the target's build as an enrollment smoke test.
 
 ## Core catalog
 
@@ -179,10 +180,9 @@ Read [`.aicore/core-catalog-v2.yaml`](../../../.aicore/core-catalog-v2.yaml) bef
 Target: Next.js project (`package.json`). Profile: `backend_stack: true` (node), `python_scripts: true`, `ticket_system: false`.
 
 - Enrolled: the always units plus `bastion` (via `backend_stack`/`python_scripts`); ticket-team units and `query-verification*`/`ticket-runbook` recorded `not_applicable`.
-- Mode review first: every applicable unit gets its recorded mode and non-mirror units their reviewed destination bytes; declaration + review written before any content byte.
-- Config merged so `opencode-config`/`gitignore-config` assertions pass.
-- Lock generated by `propose-lock`; `check` exit 0.
-- Mismatch report flags `atrium`/`bastion`/`crucible`/`lumen` bodies to adapt destination-side.
+- External preparation records every mode and protected `verified_layout` decision before any destination write. Config is in that prepared result.
+- `python3 -B` `propose-lock` writes an external candidate; `check` exit 0; only the accepted lock is then installed.
+- Stack differences are prepared in project extensions before enrollment. Mandatory rulebook bodies are not replaced.
 
 ### Example 2 — Rust TUI tool, no ticket system
 
@@ -195,7 +195,9 @@ Target: `Cargo.toml`. Profile: `backend_stack: false`, `python_scripts: true`, `
 
 - **`check` exits 2 with `declaration_incomplete`** — the declaration omits a catalog unit. Fix: add every unit as a real mode or `not_applicable`.
 - **`check` exits 2 with `invalid_applicability`** — an `always` unit is `not_applicable`, or an applicable unit was excluded. Fix: correct the profile or the mode.
-- **`check` exits 1 with a config assertion failure** — a required permission gate or ignore entry is missing. Fix: merge it, then regenerate the lock.
-- **A present file differs from the source** — stale or customized content. Fix: explicit user override to re-copy, or declare the unit `adapted` with a review decision — never silent overwrite.
+- **Dirty or uncertain destination** — abort before any write. Do not stash, commit, or clean it from this skill.
+- **Candidate inside the destination** — move it outside. `<target>/.aicore/adoption.lock.candidate.yaml` is not the candidate path.
+- **`check` exits 1 with a config assertion failure** — stop. Correct the external preparation and start a new clean sequence. Do not patch the destination after approval.
+- **A present file differs from the source** — stale or customized content. Fix: re-run mode review. A protected unit may be `mirror`, `adapted`, or machine-valid `not_applicable` only after a full three-surface review and an applied `verified_layout` decision. Never silently overwrite, and never re-copy mandatory bytes over a local mandatory edit.
 - **`check` exits 2 with `schema_upgrade_required`** — the adopter still carries a v1 declaration or lock. Fix: re-declare under v2 and regenerate the lock.
 - **`propose-lock` exits 2 with `policy_violation`** — the destination root runtime carries an AICore/upstream/management-tool/reuse-guide/lineage reference or is missing a required `Project identity`/`Spec version`/`Local version` marker. Fix: rewrite the root to destination-only content, then regenerate the lock.
