@@ -11,11 +11,7 @@ dev = ["pytest==9.0.3"]
 package = false
 
 [tool.pytest.ini_options]
-testpaths = [
-  ".opencode/skills/plan-enforce/scripts",
-  ".opencode/skills/query-verification/scripts",
-  ".opencode/skills/sync-aicore-adoption/scripts",
-  ".opencode/skills/ticket-runbook/scripts",
-]
+testpaths = ["."]
+norecursedirs = ["node_modules", ".venv", "output", "plans/.completed", "build", "dist", "__pycache__", ".git"]
 python_files = ["test_*.py"]
 python_classes = ["*Tests"]

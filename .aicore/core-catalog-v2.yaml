@@ -19,10 +19,18 @@
 #   assertions   - deterministic required-substring assertions over a merged
 #                  adopter-owned fragment (comment lines are ignored before
 #                  matching). There is no `none`: every unit is checkable.
+#
+# collision_policy (optional, per member; today only on portable story members):
+#   core_wins    - in the story index merge the core row replaces a differing
+#                  destination row inside the existing table, and the engine
+#                  reports `collision: path <destination>; core wins` plus
+#                  `collision: slug <slug>; core wins`. Any other value is
+#                  `invalid_mapping`. A member without `core_wins` never wins
+#                  a collision: its destination bytes and rows stay untouched.
 schema_version: 2
 
 catalog:
-  version: 2.3.0
+  version: 2.4.0
   upstream_repository: JPerezC92/ai-core
   digest_algorithm: sha256
   digest_exclusions:
@@ -313,6 +321,41 @@ units:
     sync_projection: file
     members:
       - { id: gitkeep, source: user-stories/.gitkeep, destination: user-stories/.gitkeep }
+
+  # ------------------------------------------------------ portable stories
+  # Portable stories are delivered as `copy` file members split by
+  # applicability class. The `user-stories` scaffold unit above stays
+  # `preserve`; `user-stories/index.md` is NEVER a member — core index rows
+  # are merged into the destination's existing table (see protocol-v2.md),
+  # and `aicore-adoption-sync` is AICore-only, never a member.
+
+  - id: portable-stories-always
+    kind: user-story
+    applicability: { always: true }
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: plan-enforce, source: user-stories/plan-enforce.md, destination: user-stories/plan-enforce.md, collision_policy: core_wins }
+      - { id: git-pr-drafting, source: user-stories/git-pr-drafting.md, destination: user-stories/git-pr-drafting.md, collision_policy: core_wins }
+      - { id: op-model-configuration, source: user-stories/op-model-configuration.md, destination: user-stories/op-model-configuration.md, collision_policy: core_wins }
+      - { id: post-merge-branch-cleanup, source: user-stories/post-merge-branch-cleanup.md, destination: user-stories/post-merge-branch-cleanup.md, collision_policy: core_wins }
+
+  - id: portable-stories-ticket
+    kind: user-story
+    applicability: { requires: [ticket_system] }
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: register-first-incident-identification, source: user-stories/register-first-incident-identification.md, destination: user-stories/register-first-incident-identification.md, collision_policy: core_wins }
+      - { id: incident-query-verification-pilot, source: user-stories/incident-query-verification-pilot.md, destination: user-stories/incident-query-verification-pilot.md, collision_policy: core_wins }
+
+  - id: portable-stories-python
+    kind: user-story
+    applicability: { requires: [python_scripts] }
+    install_strategy: copy
+    sync_projection: file
+    members:
+      - { id: python-pytest, source: user-stories/python-pytest.md, destination: user-stories/python-pytest.md, collision_policy: core_wins }
 
   # ---------------------------------------------------------------- config
   - id: root-runtime-spec

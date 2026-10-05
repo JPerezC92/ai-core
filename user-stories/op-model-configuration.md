@@ -3,6 +3,7 @@
 > **Created:** 2026-09-14
 > **Title:** OpenCode model configuration
 > **Status:** active
+> **version:** 1.0.0
 > **Epic:** developer-tooling
 > **Affected areas:** `.opencode/skills/op-model/`, `opencode.json`, `opencode.jsonc`
 

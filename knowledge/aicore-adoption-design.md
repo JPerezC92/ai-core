@@ -1,76 +1,36 @@
 # AICore adoption and synchronization — design
 
 > **Status:** current
-> **Scope:** Why v2 makes AICore adoption atomic, how applicability, reconciliation evidence, and the registry work, and how the reusable-core boundary is preserved. This is the design rationale; the exact contract lives in `.opencode/skills/sync-aicore-adoption/references/protocol-v2.md`.
+> **Scope:** Rationale for atomic catalog-led, human-reviewed adoption. The exact read-only contract is in `.opencode/skills/sync-aicore-adoption/references/protocol-v2.md`.
 
-## 1. Why v2 exists
+## Atomic evidence, not automatic publication
 
-v1 tracked a per-unit `accepted_source_commit`, so an adopter could advance one unit and leave another on an older AICore revision. `check` reported a `baseline_advance_required` unit but still exited 0, and `propose-lock --unit` deliberately preserved the stale rows. In practice an adopter could run indefinitely on old governance while every check looked green.
+An adoption lock accepts one upstream revision for every catalog unit. The catalog supplies the machine boundary: unit/member identity, applicability, mode mapping, projections, and accepted digests. It cannot decide whether a changed governance rule is incorporated into a destination adaptation. That decision requires a review of the accepted core definition, target core definition, and destination content.
 
-v2 removes that failure mode: adoption is one transaction at one trusted AICore revision. It keeps the genuinely useful parts of v1 — declaration/lock separation, explicit snapshots, deterministic digests, read-only tools — and adds the guardrails that make "fully current" verifiable.
+`check` and `propose-lock` read an explicit content snapshot and disk controls. They do not mutate the selected existing repository. `verify-all` may clone into and remove only a temporary directory it creates; a supplied checkout is never fetched, checked out, or cleaned. Existing-repository reads use one controlled Git invocation with `--no-optional-locks`, an empty command-local `core.fsmonitor` value, inherited Git redirection removed, and no lazy fetch — `false` is not the disable value because Git can execute it as a hook name — and `verify-all` may clone and remove only its own temporary directory; that boundary is not a host sandbox and not a recovery mechanism. The removed `apply` publisher could classify a snapshot and then write an unchecked worktree. Recovery machinery is not a substitute for owner review. Migration and sync abort before any destination change when the destination is dirty or cleanliness is uncertain. They do not save, stash, clean, or roll back. One sequence prepares the complete result outside the destination, freezes approval, writes controls then content, stages exact paths, and keeps the candidate outside the destination. Failure stops and reports. A clean bisect is not unsaved work. Python does not judge prose or SemVer.
 
-## 2. Two operations, two upstream-only tools
+## Bound reconciliation evidence
 
-| Operation | Tool | Question it answers |
-|---|---|---|
-| Initial adoption | `migrate-core-to-project` | Which applicable core units does this project need, and how are they enrolled? |
-| Recurring synchronization | `sync-aicore-adoption` | Is the whole adopter current at the trusted revision, and what needs review? |
+Every proposal against an accepted baseline now requires a fresh review transition binding the baseline-lock digest, target source commit, and declaration digest (`adoption_reconciliation.py::_review_transition_matches`, enforced in `adoption_propose.py`); initial enrollment binds an explicit null baseline. Each protected decision, including mirrors, and each other changed non-mirror decision additionally binds reviewer, nonempty evidence, reviewed upstream digest, and reviewed destination-result digest. Before delta classification, baseline source/member/mapping facts are reproduced against the accepted catalog/revision at the accepted commit, failing `baseline_unavailable` when they cannot reproduce. These facts ensure an old approval cannot authorize new source or destination bytes: accepted historical reviews stay readable but never authorize a fresh candidate, and legacy v2 reviews remain historical readable state.
 
-Both are **AICore-owned management tools**. They run from an AICore checkout against a runtime-supplied adopter path and are never copied into an adopter repository. They read one authoritative machine catalog (`.aicore/core-catalog-v2.yaml`).
+Accepted and target catalogs are intentionally separate, and accepted and target declaration facts are no longer aliased. `check` reports added, removed, member, and applicability changes with accepted controls and exits 1 for a valid pending transition. A reused retired ID fails `invalid_lock` before any target row is built or carried. Catalog additions, retirements, member changes, and applicability changes are evidence for the owner’s edit list, never permission to delete destination business files or to infer semantic compatibility.
 
-## 3. One revision, one transaction
+For an ordinary retired non-mirror unit, v2 keeps one lock-only historical descriptor: `retired: true`, its predecessor mapping, and reviewed digest facts. Ordinary retained members state `projection: file|tree`; replacement members reuse their existing projection. The target declaration remains current-target-only, while the retained row stays in the normal lock and accepted-snapshot digests; retained lock-only descriptors carry forward with drift detection. This preserves verification of intentionally retained destination content without deletion or ownership restoration. Retired lock rows remain verification facts. They are not a backup or a rollback.
 
-- The lock has exactly one `accepted_source_commit` and one `accepted_catalog_digest`. Per-unit source commits do not exist.
-- `propose-lock` rebuilds every declared unit at that one revision; there is no `--unit`.
-- `check` exits 0 only when the whole adopter is complete, current, and resolved. Every blocking disposition (`baseline_advance_required`, `update_available`, `local_drift`, `review_required`, `conflict`) exits nonzero. `unmanaged` — a `destination_owned` unit whose upstream is unchanged — is the non-blocking steady state of an intentional local fork; a `destination_owned` unit whose upstream did change is `review_required` and blocks.
+**Runner permission.** The destination `opencode.jsonc` is validated against reviewed `test_runner` metadata. Only the nominated executor’s ordered `*`/`?` rules are inspected and evaluated last-match-wins, so a later `deny` or `ask` overrides an earlier literal `allow`; a broad wildcard `allow` that is not itself an approved command literal is rejected structurally; unrelated agents and global grants are never inspected; literal install entries and separate install approval survive. JSONC stripping rejects an unterminated block comment and preserves token boundaries instead of manufacturing valid JSON. The runner rules live in `adoption_policies.py`. `test_adoption_config.py` is not part of this head.
 
-This is what makes "if I update AICore, every subproject must receive the new rules" checkable: a project can no longer be partially modern.
+## Runtime lineage
 
-## 4. Applicability: all applicable units, not all units
+The root runtime spec's `## Project extensions` → `### Reuse guide (adopting this core)` version-governance clause separates the ancestor version from destination `Local version` / `local-version`. A source update preserves the local version. A destination-local runtime rule change gets a reviewer-justified SemVer bump: major for incompatible authority/safety, minor for an enforceable capability, patch for compatible clarification. The model — not Python — reads the previous core, the target core, the destination, and the result, and judges incorporation, mandatory precedence, and the local-version rationale under the `AGENTS.md` local-version policy. Digest-bound review protects the exact reviewed bytes; Python only binds those reviewed bytes and rejects post-approval mutations. No Python version-inference subsystem exists, and source ancestor surfaces never receive local-version markers. Prepared runtime-lineage examples in `test_adoption_apply.py::RuntimeLineageWorkflowTests` show local-version preservation on an upstream-only update, a reviewed local bump, rejection of a result altered after approval, and destination-marker-free source ancestors.
 
-Atomic does not mean one-size-fits-all. The catalog marks each unit with machine `applicability`:
+**Bounded residual.** A derived spec that uses frontmatter `local-version` has no engine-level byte-binding test, because the guarded-root policy is root-runtime-specific (it requires the `> **Local version:**` marker); its evidence is model review plus a mechanical source/destination marker guard.
 
-- `always` — every project must adopt it.
-- `requires: [marker]` — adopted only when the marker is true (for example, ticket-only units require `ticket_system`).
-- `any_of: [marker]` — adopted when any listed marker is true (for example, `bastion` for a backend stack or Python scripts).
+A historical corrective series recorded `uv run --frozen --group dev pytest -q` as `359 passed`, with code, test-architecture, dependency, and model reviews `[PASS]` after one corrected derived-source marker case. That count is not current safety or completion evidence.
 
-The adopter declaration carries an explicit `profile` (`backend_stack`, `python_scripts`, `ticket_system`). The engine checks that every applicable unit is adopted and every inapplicable unit is `not_applicable`. A dev-only project therefore excludes the incident team *explicitly and auditably* rather than by silent omission, and cannot later drift because the exclusion is re-checked on every run.
+## Sectioned ownership
 
-## 5. Ownership modes and reconciliation evidence
+Protected rule documents advertise layout with one standalone marker and two ordered ownership headings. Catalog `rule_documents` names those paths. A fresh applied decision may record `verified_layout: two-section-v1` only after a complete model review of every protected document in the unit. That decision is required for mirrors as well as adaptations, and its upstream and destination digests must match the prepared result. Python compares exact mandatory-section bytes and rejects a marker-only claim, a missing attestation, and `replacement` or `destination_owned` on a protected unit. The target root policy `adopter_root_rules` makes an older reader fail closed. Compatible project extensions stay. A conflicting extension loses even when its bytes did not change, including a cross-file affected rule; the user-facing notice cites both rules, the mandatory winner, and the result change. Bootstrap prepares extensions, config, dependencies, and consistency corrections outside the destination before enrollment, records an applied `verified_layout` decision for every protected unit including mirrors, and hashes those prepared results before the first destination write. The candidate is never `<target>/.aicore/adoption.lock.candidate.yaml`. Assertion units are mirror over assertion presence, not whole-file identity. The selected engine ref must equal the reviewed source SHA, and `--catalog` is the absolute reviewed catalog. After candidate success only the accepted lock may be staged. Creates approved absent registers only after controls exist, never overwrites existing records, and does not copy source project extensions, debt, or history. Build approval and application builds are outside enrollment. Recurring updates require an approved protected-tip refresh and the existing absolute manager invocation. No destination updater package is added.
 
-Modes still let an adopter customize: `mirror` must match exactly; `adapted` may differ; `replacement` substitutes named local members; `destination_owned` is kept locally. What changes is proof: when the upstream digest of a non-mirror unit changes, the adopter must record a decision in `.aicore/adoption-review.yaml` (`applied`, `declined`, or `superseded`, with evidence). The review's raw digest is bound into the lock, so a stale review cannot silently re-baseline new upstream rules. Digests alone cannot prove a prose rule was incorporated; the review is the explicit, reviewable reconciliation.
+## Boundaries
 
-## 6. Merged configuration is deterministic
-
-`opencode.jsonc` permissions and `.gitignore` entries are merged fragments, not copied files, so v1 excluded them with `sync_projection: none` and never checked them. v2 replaces `none` with deterministic **assertions**: an ordered list of required substrings (comment lines ignored). A missing permission gate or ignore entry is drift and cannot be `current`. The previously invisible safety surface is now part of compliance.
-
-## 7. The registry and `verify-all`
-
-A per-project lock answers "is this project current?". It cannot answer "did we update every project?". `.aicore/adopters.yaml` is AICore's authoritative registry of adopter repositories, and `verify-all` checks each one against the trusted revision, blocking if any registered adopter is missing, unreachable, stale, or not current. The registry stores repository identity and adoption-file paths only — no credentials, no machine-local paths, no project source.
-
-## 8. The one external-reference exception
-
-AICore is a reusable, agnostic core: it must not embed any adopter's topology. The registry is the single, deliberate exception — one file whose entire purpose is to name external adopter repositories. Every other **shipped** AICore surface stays neutral (local plans and gitignored temporal output are not shipped and may reference adopters). This keeps the core reusable while giving AICore a verifiable adopter set.
-
-## 9. Snapshots, trusted revision, and read-only design
-
-The checker reads adopter content from exactly one explicit snapshot (a commit or the staged index), never the working tree. Compliance compares against the trusted revision — the tip of the upstream protected default branch; an explicit `--diagnostic-revision` is diagnostic only and can never pass. All commands are read-only: `check` and `verify-all` write nothing, `propose-lock` writes only to stdout. There is no apply/merge/delete path.
-
-## 10. Migrating from v1
-
-v1 files are retained verbatim as migration input and are never amended. Any command reading a v1 declaration or lock fails with `schema_upgrade_required` (exit 2) and prints upgrade guidance. Upgrade is not a per-unit carry-forward: the adopter re-declares under v2, authors the review, and regenerates one fresh lock at one revision. AICore contains only neutral fixtures and the management engines; every real declaration, lock, review, and registry entry is created in its owning repository.
-
-## 11. The adopter runtime identity boundary
-
-Byte digests prove consistency, not identity separation. An adopter could pass migration, a human audit, and atomic compliance while its **active** root runtime still described AICore — the upstream core, its management tools, and its reuse guidance — as the running system. A lock can only confirm the bytes it was generated around; it cannot tell whether those bytes name the wrong project.
-
-The boundary is therefore machine-enforced at the root runtime. The catalog's `root-runtime-spec` is a `guarded_file` unit with the closed `destination_policy: adopter_root_runtime`. Before any disposition or lock is produced, the mapped destination root is decoded as UTF-8 text and must:
-
-- contain no case-insensitive AICore/upstream reference — `aicore`, `ai-core`, `migrate-core-to-project`, `sync-aicore-adoption`, `.aicore/`, `upstream provenance`, `upstream lineage`, or `reuse guide`; and
-- carry its own `Project identity`, `Spec version`, and `Local version` markers.
-
-A violating root can never be `current`. `propose-lock` fails closed with the stable code `policy_violation` (exit 2) and emits no candidate YAML, and `check` reports the blocking disposition `policy_violation` and exits 1 even when the root bytes already match the accepted lock. The policy is scoped to the adopter snapshot's mapped root only: AICore's own source root keeps its reuse guide, and machine provenance (`upstream_repository`, accepted commit, digests) remains authoritative in `.aicore/adoption.yaml`, `.aicore/adoption-review.yaml`, and `.aicore/adoption.lock.yaml`.
-
-The projection set stays closed so the guard fails closed on older engines too: an engine that predates `guarded_file` rejects the catalog with `unsupported_projection` (fatal) rather than ignoring the policy and blessing a non-conforming root. Lock and declaration schemas are unchanged — `guarded_file` normalizes to the `file` projection for digest framing.
-
-**Rollout consequence.** The guard is a compliance-tightening change: every existing adopter whose active root still carries AICore or upstream text becomes non-compliant the moment it is checked against the released guard, and stays blocking until the root is rewritten to destination-only identity and the lock is regenerated against the trusted revision. This is intentional fail-closed behavior — the previous run was compliant only because the defect could not be expressed. Downstream adopters are synchronized after the AICore release; this upstream plan neither edits an adopter repository nor registers one.
+The management tools are upstream-only and never catalog units. The registry is the sole shipped surface allowed to name adopters. Root runtime destination identity remains guarded: destination active runtimes do not carry AICore provenance, while `.aicore` controls retain machine source evidence.

@@ -3,6 +3,7 @@
 > **Created:** 2026-09-15
 > **Title:** Merge-style-aware post-merge branch cleanup
 > **Status:** active
+> **version:** 1.0.0
 > **Epic:** developer-tooling
 > **Affected areas:** `.opencode/skills/plan-enforce/`, `.opencode/agents/herald.md`
 

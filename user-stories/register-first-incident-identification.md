@@ -3,6 +3,7 @@
 > **Created:** 2026-09-12
 > **Title:** Register-first incident identification
 > **Status:** active
+> **version:** 1.0.0
 > **Epic:** incident-diagnostics
 > **Affected areas:** `.opencode/skills/ticket-runbook/`, `knowledge/symptoms.md`, `knowledge/problems.md`, `knowledge/agents.md`, `.opencode/agents/investigator.md`, `.opencode/agents/ledger.md`, `.opencode/agents/quill.md`
 

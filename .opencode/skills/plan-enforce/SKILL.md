@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.14.0
+  version: 1.15.0
 ---
 
 ## What I do
@@ -222,9 +222,10 @@ Every phase runbook's `## Verify commands` section is one canonical Markdown tab
 
 ### Non-TypeScript test files
 
-- A plan that edits an exact active-plan Python `test_*.py` file must list the declared literal `uv run --frozen --group dev pytest` command for that path, obtain Bastion 🧱 (Backend & Scripts Architect) `[PASS]` on the edit, and dispatch Crucible 🔥 (Test Architect) for the test-file edit.
-- Crucible 🔥 (Test Architect) must return `[PASS]` or `[FAIL]` for that Python test file. `[UNCERTAIN]` is not acceptable for an exact active-plan Python test path; a recorded `[UNCERTAIN]` does not satisfy this gate.
-- pytest is the Python test runner via `[dependency-groups] dev`. This does not change the existing TypeScript / Atrium 🏛️ (Frontend Architect) and Crucible 🔥 (Test Architect) test-file gates.
+- Crucible 🔥 (Test Architect) is the executor of each declared project-approved test command. Forge 🔨 (Implementer) writes the tests. Bastion 🧱 (Backend & Scripts Architect) audits applicable Python implementation.
+- A plan that edits a Python `test_*.py` file in the project's reviewed discovery areas must list the project's reviewed whole-suite command (in AICore: `uv run --frozen --group dev pytest -q`), obtain Bastion 🧱 (Backend & Scripts Architect) `[PASS]` on applicable implementation edits, and dispatch Crucible 🔥 (Test Architect) to run that command and return `[PASS]` or `[FAIL]`.
+- `[UNCERTAIN]` is not acceptable for a Python pytest file in the reviewed discovery areas. Cipher 🔓 (Lead Orchestrator) checks the exact reviewed command before dispatch. Project runner permissions live in that project's root `opencode.jsonc` under `agent.crucible.permission`; they are command-text gates, not a sandbox.
+- This does not change the existing TypeScript / Atrium 🏛️ (Frontend Architect) and Crucible 🔥 (Test Architect) test-file gates.
 
 ## User stories
 

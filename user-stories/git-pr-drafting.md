@@ -3,6 +3,7 @@
 > **Created:** 2026-09-14
 > **Title:** Pull request draft generation
 > **Status:** active
+> **version:** 1.0.0
 > **Epic:** developer-tooling
 > **Affected areas:** `.opencode/skills/git-pr/`, `plans/`, `pr-draft.md`
 

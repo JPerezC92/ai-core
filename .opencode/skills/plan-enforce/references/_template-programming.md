@@ -85,7 +85,7 @@
 | <Name Emoji (Role)> | `<shell command>` |
 -->
 
-- Python `test_*.py` edits at an exact active-plan path: list the declared literal `uv run --frozen --group dev pytest` command for that path, obtain Bastion 🧱 (Backend & Scripts Architect) `[PASS]`, and require Crucible 🔥 (Test Architect) to return `[PASS]` or `[FAIL]` — `[UNCERTAIN]` is not acceptable for this scope.
+- Python `test_*.py` edits in reviewed discovery areas: list the project's approved whole-suite command (AICore uses `uv run --frozen --group dev pytest -q`), assign Crucible 🔥 (Test Architect) as executor, obtain Bastion 🧱 (Backend & Scripts Architect) `[PASS]`, and require Crucible 🔥 (Test Architect) `[PASS]` or `[FAIL]` — `[UNCERTAIN]` is not acceptable for this scope.
 
 ## Audit
 

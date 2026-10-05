@@ -9,6 +9,15 @@
         "build": {
             "model": "zai-coding-plan/glm-4.7",
             "color": "secondary"
+        },
+        "crucible": {
+            "permission": {
+                "bash": {
+                    "*": "deny",
+                    "pnpm install": "allow",
+                    "uv run --frozen --group dev pytest -q": "allow"
+                }
+            }
         }
     },
     // Project instructions (optional — point at your own docs):

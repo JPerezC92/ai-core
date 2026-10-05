@@ -1,234 +1,125 @@
 # AICore adoption synchronization — protocol v2
 
 > **Status:** current
-> **Supersedes:** `protocol-v1.md` (retained verbatim as migration input; never amended).
-> **Scope:** The exact contract for `check`, `propose-lock`, and `verify-all`. v2 makes adoption atomic: one upstream revision per adopter, complete catalog coverage, machine-checked applicability, deterministic merged-config assertions, and tracked reconciliation evidence. Partial per-unit acceptance is forbidden.
+> **Scope:** Schema-v2 evidence contract for `check`, `propose-lock`, and `verify-all`. `apply` is removed. Existing-repository reads do not mutate; `verify-all` may use its own temporary clone. Destination edits are owner operations. There is no backup or rollback.
 
-## Section 1 — Core / adopter split
+## 1. Atomic adoption and ownership
 
-| Artifact | Owner | Contains | Never contains |
-|---|---|---|---|
-| `.aicore/core-catalog-v2.yaml` | AICore upstream | unit identity, logical members, real tracked source paths, canonical destinations, machine `applicability`, `install_strategy`, `sync_projection`, config `assertions` | adopter modes, destination overrides, digests |
-| `.aicore/adoption.yaml` (declaration) | Adopter | upstream identity, `profile`, one entry per catalog unit with its `mode` and destination mapping | digests, accepted commit |
-| `.aicore/adoption-review.yaml` (review) | Adopter | reconciliation decisions for changed non-mirror units | generated digests |
-| `.aicore/adoption.lock.yaml` (lock) | Generated | one top-level accepted baseline and one row per declared unit | intent, modes, hand-edited content |
-| `.aicore/adopters.yaml` (registry) | AICore upstream | the authoritative list of adopter repositories used by `verify-all` | credentials, machine-local paths, project source |
+The upstream catalog owns unit identity, members, applicability, strategy, projections, and assertions. The adopter declaration owns profile, mode, and destination mappings. The review owns human reconciliation decisions. The generated lock owns one accepted source commit and digest evidence. Every catalog unit is declared once as an applicable mode or machine-justified `not_applicable`; partial acceptance is forbidden.
 
-The declaration is intent. The review is the human reconciliation decision. The lock is generated evidence. A maintainer edits the declaration and review, runs `propose-lock`, reviews the candidate, and commits it as the lock.
+The accepted catalog is read at `accepted_source_commit`; the target catalog is read at the trusted revision. That trusted revision is an approved refresh of the protected upstream default-branch tip; a local origin or main ref alone is not that evidence. Both catalogs remain distinct. Added, retired, member, applicability, and effective-mode changes are reported. Retirement never authorizes deletion of destination content.
 
-`migrate-core-to-project` and `sync-aicore-adoption` are upstream-only operator tools; neither the tools nor the catalog nor the registry is an adopted-content unit.
+## 2. Declaration and lock framing
 
-## Section 2 — Declaration schema v2
+`schema_version` remains `2`.
 
-```yaml
-schema_version: 2
-upstream_repository: JPerezC92/ai-core
-profile:
-  backend_stack: false
-  python_scripts: true
-  ticket_system: false
-units:
-  - id: <catalog-unit-id>
-    mode: mirror | adapted | replacement | destination_owned | not_applicable
-    members:
-      - { id: <catalog-member-id>, destination: <repo-relative path> }
-  - id: <catalog-unit-id>
-    mode: replacement
-    replacement_members:
-      - { id: <adopter-local-id>, destination: <repo-relative path>, projection: file | tree }
-  - id: <catalog-unit-id>
-    mode: not_applicable
-```
+- `mirror`, `adapted`, and `destination_owned` map every ordinary catalog member through `members`.
+- `replacement` has only `replacement_members`, with `id`, `destination`, and `file|tree` projection.
+- `not_applicable` has no members.
+- Assertion declarations have no members and support only `mirror` or `not_applicable`. An applicable assertion lock row is `mirror` with exactly one `members` entry `id: assertions`; a not-applicable assertion row has no members.
+- A lock has one `accepted_source_commit`, `accepted_catalog_digest`, declaration digest, review digest, accepted snapshot digest, and a row for every unit. Per-unit source commits and incompatible member framing are invalid.
 
-Rules:
+### Retired lock-only descriptor
 
-- Every catalog unit id appears exactly once. A missing id is `declaration_incomplete`; an unknown or duplicated id is `invalid_declaration`. Both are fatal (exit 2).
-- `profile` markers are `backend_stack`, `python_scripts`, `ticket_system`, each boolean.
-- `not_applicable` is valid only when the catalog unit is not `always` and its applicability conditions are false under the declared `profile`; otherwise `invalid_applicability` (fatal).
-- `mirror` and `adapted` and `destination_owned` map every catalog member exactly once; a member absent from the current catalog is `invalid_declaration`.
-- `replacement` uses named local `replacement_members` with a unique id, a destination, and an explicit `file|tree` projection; it never claims byte convergence.
-- Each `file`/`tree` member maps to exactly one rooted destination; `assertions` units must not declare members — their destination is `destination` in the catalog.
+The declaration is target-catalog-only: a retired unit is absent from it. For an ordinary retired non-mirror unit, the lock retains exactly one historical row marked `retired: true`. Its predecessor mapping remains in that row; ordinary retained members explicitly carry `projection: file|tree`, while replacement members retain their existing projection. The row's mapping and reviewed destination facts participate in the normal lock and accepted-snapshot digests. It is historical verification evidence only: retirement neither deletes destination content nor restores upstream ownership. Historical rows carry forward across later locks until a future protocol explicitly supersedes their retention.
 
-## Section 3 — Review schema v2
+Digest framing remains v2: SHA-256 file/tree member framing, ordered unit-member framing (including retained retired rows), declaration mapping framing, ordered assertion-list framing, and ordered assertion-status framing. The accepted snapshot digest binds declaration digest, review digest, and accepted destination member facts, including retained retired-row facts.
+
+## 3. Review schema and fresh transition bindings
+
+Historical accepted v2 review documents remain readable. A transition-bound fresh acceptance adds this optional existing-document block:
 
 ```yaml
-schema_version: 2
-upstream_repository: JPerezC92/ai-core
+transition:
+  baseline_lock_digest: sha256:<hex> # null only for first enrollment
+  target_source_commit: <40-char SHA>
+  declaration_digest: sha256:<hex>
 decisions:
-  - unit: <catalog-unit-id>
-    decision: applied | declined | superseded
-    evidence: <short human-verifiable reference or note>
-    reviewer: <role responsible for the decision>
+  - unit: <every applicable protected unit, including mirrors>
+    decision: applied
+    verified_layout: two-section-v1
+    reviewer: <role>
+    evidence: <nonempty note>
+    reviewed_upstream_digest: sha256:<hex>
+    reviewed_destination_digest: sha256:<hex>
 ```
 
-- A decision is required whenever a `mirror`-excluded unit's upstream digest changed between the accepted baseline and the target revision: `adapted`, `replacement`, and `destination_owned`.
-- `declined` and `superseded` must carry an `evidence` note explaining why the upstream change does not apply or is overridden locally.
-- The review file's raw digest is bound into the lock as `review_digest`; a changed review invalidates the lock (`declaration_changed`-class, fatal).
+For fresh acceptance the three transition fields and every required decision binding are mandatory. The baseline digest must identify the supplied existing lock: the lock's `accepted_source_commit` is pinned to a full 40-character lowercase SHA (a movable revspec such as `HEAD` fails `invalid_lock`), and `propose-lock` reads each control file exactly once so `baseline_lock_digest` is computed from the same bytes that produced the parsed baseline rows. A supplied missing update lock fails, while first enrollment explicitly omits `--lock` and uses null baseline. Changing the baseline, target, declaration, reviewed source, or prepared destination result invalidates authorization. Duplicate and unknown decisions fail. `applied`, `declined`, and `superseded` are all evidence-bearing choices. A historical unit-only decision remains readable but cannot clear a fresh transition.
 
-## Section 4 — Lock schema v2
+`check` validates an accepted transition against the lock's accepted source, declaration digest, and locked destination member facts; it uses a live snapshot only for current policy and newer-delta classification.
+
+## 4. Actors and command boundary
+
+Three actors stay separate. A passing `check`, or a test-local driver, is not permission to mutate a destination.
+
+- **Engine:** `check` and `propose-lock` read an explicit local content snapshot and the supplied control files, then emit evidence. Adopted content comes from the explicit commit or staged index. Declaration, review, and lock bytes are read from their disk paths. Do not claim every input comes from HEAD. These commands do not edit, stage, commit, fetch, or clean the selected existing repository. Missing objects fail. The invocation must be the installed trusted Git with `--no-optional-locks`, an empty command-local `core.fsmonitor` value so a repository hook path is not executed, hooks and configured read helpers disabled, inherited repository/index/config/trace redirection removed, and no lazy fetch. `false` is not used because Git can execute it as a hook name. This is not an arbitrary host sandbox.
+- **Verifier clone:** `verify-all` may use the network, clone into a temporary directory it creates, and remove only that directory. A supplied checkout is read and is never fetched, checked out, or cleaned. `--checkouts-root` does not promise offline verification: a missing cache entry may still clone. That temporary activity is not an existing-repository write and not a publisher.
+- **Workflow:** the model and Herald 📯 (Release Manager) confirm cleanliness and may edit or `git add` only approved adoption paths. That add updates the index and object storage and may apply repository clean filters. Unknown helper or transform effects block. Do not edit owner Git configuration or force normalization. A test-local driver demonstrates this contract only; it is not a shipping mutation gate.
+
+| Command | Existing repository | Other effect |
+|---|---|---|
+| `check` | no mutation | none |
+| `propose-lock` | no mutation | stdout only |
+| `verify-all` | supplied checkout unchanged | may clone and remove its own temporary directory |
+
+`apply` is not a protocol command. It must be rejected as an unrecognized CLI command without writes. No engine command edits content, stages, commits, stashes, resets, restores, or accepts a lock.
+
+## 5. One operator sequence
+
+Migration and sync abort before any destination change when the destination has unsaved or uncommitted work, or when cleanliness cannot be confirmed. The operation does not save, commit, stash, reset, clean, or resume. There is no backup, checkpoint, or rollback. If application fails after a clean start, stop and report the current state. Do not restore or delete applied files automatically.
+
+This is the only sequence. Skills reference it; they do not publish a second order.
+
+1. **Controlled preflight.** Require a committed HEAD, saved-editor evidence, and no assume-unchanged or skip-worktree entries. `status --porcelain=v2 -z --untracked-files=all --ignore-submodules=none` must succeed with empty stdout. Resolve `MERGE_HEAD`, `CHERRY_PICK_HEAD`, `REVERT_HEAD`, `rebase-merge`, `rebase-apply`, and `sequencer` with `rev-parse --git-path`, relative to the destination. A linked-worktree gitfile is supported layout, not dirtiness. A clean bisect is not unsaved work and is not banned. Unknown editor evidence, index flags, or command results abort. Read-only failure is not cleanliness.
+2. **Pin inputs.** Pin `refs/remotes/origin/main`, then `refs/heads/main` only if the first ref is absent, the absolute catalog whose disk bytes match that commit, and the reviewed engine. Source refresh belongs to a separate approved upstream checkout.
+3. **External full preparation.** Prepare extensions, dependency union, config, consistency corrections, absent register headers, retained records, and the story-index merge outside the destination. Mandatory bytes stay exact. Do not import source project extensions or history. Do not install packages or build an application.
+4. **Complete-output collision and recheck.** The intended write set is every adopted, config, manifest, and index path plus `.aicore/adoption.yaml`, `.aicore/adoption-review.yaml`, and `.aicore/adoption.lock.yaml`. An existing ignored or untracked occupant of any such path blocks. An ignore rule with no existing file is not unsaved work, and absence does not authorize `git add -f`. Recheck cleanliness immediately before the first write. New work aborts and is not restored.
+5. **Freeze approval.** Record declaration, review, and prepared-result digests before the first destination write. Protected units, including mirrors, need an applied `verified_layout: two-section-v1` decision after the model reads every complete document. Assertion units are `mirror` over ordered assertion presence, not whole-file identity. The initial baseline is null. An update baseline is the predecessor lock, not the candidate hash.
+6. **Write controls, then reviewed content.** Controls are written before adopted content. The story index is an approved auxiliary file, not a catalog member. Create an approved absent register only after controls exist. Never overwrite an existing register.
+7. **Exact-path staging.** Stage only approved paths. No `add -A`, `add .`, pull, checkout, switch, merge, rebase, cherry-pick, bisect, commit, stash, reset, restore, or clean. Disk and index bytes must equal the frozen result. Index digests verify the earlier approval; they do not create it.
+8. **External candidate.** Invoke the engine with `python3 -B` and the absolute reviewed engine and catalog. Save `propose-lock` stdout outside the resolved destination. Never use `<target>/.aicore/adoption.lock.candidate.yaml`. Check that same explicit snapshot against the external candidate.
+9. **Lock-only acceptance.** After exit 0, install and stage only `.aicore/adoption.lock.yaml`, then final-check. Declaration, review, content, index, and manifest stay frozen.
+10. **Failure.** Stop and report the step and current state. Do not claim acceptance, roll back, clean, or resume.
+
+A dirty snapshot may be diagnosed. That diagnosis does not authorize migration or sync. Whole-worktree and index comparisons are verification only, never a restorable journal.
+
+## 5.1 Digest framing
+
+Algorithm: `sha256`. Output: `sha256:<lowercase hex>`. A file member is one entry with logical path `""`. A tree member includes files under its root except `__pycache__` and `*.pyc`. Framing, in ascending path order, is `entry`, `path`, `mode` (`100644`, `100755`, or `120000`), `size`, and raw `content` bytes. Unit digests use catalog member order. The declaration digest is the SHA-256 of the exact serialized declaration bytes. Golden file vector: path `""`, mode `100644`, content `hello\n` is `sha256:cf41078b082e3740168bd7ad534ba1b70b12489c7ab43c6fb53743b0f3527887`.
+
+## 6. Runtime lineage review
+
+For a root or derived runtime spec, reviewers read actual before/after ancestor version and destination `Local version` / `local-version` values under the root runtime spec's `## Project extensions` → `### Reuse guide (adopting this core)` version-governance clause. Upstream-only sync preserves the destination value. A destination-local rule change has a reviewed SemVer bump and recorded rationale. The independent model review reads every complete previous-core, target-core, destination-before, and result document and judges incorporation, mandatory precedence, preservation of a compatible local business rule, and the bump rationale; Python binds the reviewed bytes and never substitutes a token or digest for that review. Source ancestors remain free of destination local-version markers.
+
+## 7. Errors and compatibility
+
+v1 remains upgrade-only input and fails `schema_upgrade_required`. Fatal v2 input failures include `baseline_unavailable`, `invalid_lock`, `invalid_declaration`, `declaration_incomplete`, `invalid_applicability`, `declaration_changed`, `review_changed`, `catalog_changed`, `invalid_mapping`, `unsupported_projection`, `adopter_snapshot_unavailable`, and `repository_identity_mismatch`.
+
+## 8. Test-runner governance
+
+A declaration records its reviewed whole-project test disposition in a `test_runner` block required for acceptance, present either as explicit `no_tests` or as whole-project `commands`:
 
 ```yaml
-schema_version: 2
-upstream_repository: JPerezC92/ai-core
-accepted_source_commit: <40-char sha>
-accepted_catalog_digest: sha256:<hex>
-declaration_digest: sha256:<hex>
-review_digest: sha256:<hex>
-accepted_snapshot_digest: sha256:<hex>
-units:
-  - id: <catalog-unit-id>
-    mode: mirror | adapted | replacement | destination_owned
-    declaration_unit_digest: sha256:<hex>
-    accepted_upstream_digest: sha256:<hex>
-    members:
-      - id: <catalog-member-id>
-        destination: <repo-relative path>
-        accepted_upstream_digest: sha256:<hex>
-        accepted_destination_digest: sha256:<hex>
-  - id: <assertion-unit-id>
-    mode: mirror
-    declaration_unit_digest: sha256:<hex>
-    accepted_upstream_digest: sha256:<hex>
-    members:
-      - id: assertions
-        destination: <repo-relative path>
-        accepted_upstream_digest: sha256:<hex>
-        accepted_destination_digest: sha256:<hex>
-  - id: <catalog-unit-id>
-    mode: not_applicable
-  - id: <catalog-unit-id>
-    mode: replacement
-    declaration_unit_digest: sha256:<hex>
-    accepted_upstream_digest: sha256:<hex>
-    replacement_members:
-      - id: <adopter-local-id>
-        destination: <repo-relative path>
-        projection: file | tree
-        accepted_destination_digest: sha256:<hex>
+test_runner:
+  commands:            # approved whole-suite command(s), literal
+    - pnpm test
+  executor: crucible   # the designated agent that runs the whole suite
+  scope: whole_project
+  reviewer: <role>
+  evidence: <nonempty note>
 ```
 
-Rules:
+- The block is a mapping with only these keys: `no_tests`, `commands`, `executor`, `scope`, `reviewer`, `evidence`. An unknown key is `invalid_declaration`.
+- `commands` is a nonempty list of nonempty literal strings: an entry containing `*` or `?` is `invalid_declaration`, so a wildcard can never be declared as an approved command and the broad-grant approved-command exemption cannot launder a wildcard grant. `executor`, `reviewer`, and `evidence` are nonempty strings; `scope` is exactly `whole_project`. A missing, empty, wildcarded, or wrong-typed field is `invalid_declaration`.
+- An explicit no-tests disposition is `no_tests: true` with nonempty `reviewer` and `evidence`, and no `commands`, `executor`, or `scope`.
+- An absent block is a `policy_violation`: the adopter declares no reviewed `test_runner` metadata.
 
-- There is exactly one `accepted_source_commit` for the whole lock and one `accepted_catalog_digest`. Per-unit source commits do not exist; any lock row carrying its own source commit is `invalid_lock` (fatal).
-- Every non-`not_applicable` row's evidence must reproduce from the single accepted source commit; a mismatch is `invalid_lock`.
-- Every catalog unit has a row. A `not_applicable` row carries only `id` and `mode`.
-- `mirror` rows require accepted upstream and destination digests to be equal. Assertion units are `mirror` rows whose digests cover the assertion list and the assertion-status map (Section 7).
-- `accepted_snapshot_digest` is a digest over the ordered `(unit id, member id, accepted_destination_digest)` tuples plus the declaration and review digests, binding the lock to one adopter snapshot.
+Validation is literal and placement-bound. `check` and `propose-lock` parse the adopter's `opencode.jsonc` and inspect only `agent.<executor>.permission.bash`. A `//` comment terminates at the first of `\n`, `\r`, `\u2028`, `\u2029` — a `\r\n` pair is one terminator and an `\u2028`/`\u2029` terminator is normalized to `\n` so it stays valid JSON whitespace — so the checker never accepts a document whose comment structure a conformant JSONC parse sees differently (it is stricter for bare ECMAScript-only whitespace outside comments), and a terminated comment can never hide following rules from the checker. The nominated executor's rules are evaluated in document order with OpenCode `*`/`?` wildcard semantics and last-match-wins, so an approved command is executable only when its last matching rule is a literal `allow`:
 
-## Section 5 — Catalog schema v2
+- Every approved command must resolve to a literal `allow` as its final matching rule; a later matching `deny` or `ask` makes an earlier literal `allow` non-executable, and a missing approved command fails.
+- An entry whose value is not exactly `allow`, `ask`, or `deny` is a config violation in both the ordered-effect evaluation and the broad-grant scan; an unrecognized action never skips a rule or resolves an approval.
+- A blanket string `"allow"`, a broad wildcard `allow` that is not itself an approved command literal, or malformed/non-object JSONC fails.
+- Unrelated agents and top-level/global grants are never inspected; other non-test `allow` entries (`git`, build, install) are ignored.
+- A `no_tests` declaration skips grant checks.
 
-- `schema_version: 2`; `catalog.version` is SemVer and changes when any unit, member, applicability, or assertion changes.
-- `applicability` is one of `{ always: true }`, `{ requires: [marker, ...] }`, or `{ any_of: [marker, ...] }`.
-- `sync_projection` is `file`, `guarded_file`, `tree`, or `assertions`. There is no `none`.
-- `guarded_file` is a single tracked file with a closed `destination_policy`. The only defined policy is `adopter_root_runtime`; a `destination_policy` on any other projection, or an unknown policy value, is `invalid_mapping` (fatal). `guarded_file` normalizes to the `file` projection for all digest framing, so lock and declaration member shapes are unchanged.
-- The projection set is closed: an engine that does not understand `guarded_file` fails with `unsupported_projection` (fatal) instead of skipping the unit. A guarded root can therefore never be silently accepted by an older engine.
-- Assertion units declare a `destination` and an ordered `assertions` list of `{ id, contains }` required substrings.
-
-## Section 6 — Applicability model
-
-For each catalog unit the engine evaluates applicability under the declaration `profile`:
-
-- `always` → applicable.
-- `requires: [m1, m2]` → applicable iff every marker is true.
-- `any_of: [m1, m2]` → applicable iff at least one marker is true.
-
-A unit that is applicable must be adopted with a real mode; a unit that is not applicable must be `not_applicable`. Any mismatch is fatal (`invalid_applicability`). This is how a dev-only project excludes the incident team without silently abandoning it: the exclusion is declared, machine-checked, and current.
-
-## Section 7 — Digest protocol (v2)
-
-`sha256`, output `sha256:<lowercase hex>`.
-
-- `file` / `guarded_file` / `tree` member digests use the v1 framing (path/mode/size/content, ascending logical path, `__pycache__` and `*.pyc` excluded) — unchanged.
-- Unit digest uses the v1 member framing — unchanged.
-- Declaration-unit intent digest is the v1 framing — unchanged.
-- Assertion-list digest: for each assertion in catalog order,
-  ```
-  b"assertion\n" b"id:"+id+b"\n" b"contains:"+contains+b"\n"
-  ```
-- Assertion-status digest: for each assertion in catalog order,
-  ```
-  b"status\n" b"id:"+id+b"\n" b"present:"+(b"1"|b"0")+b"\n"
-  ```
-
-## Section 8 — Semantic config assertions
-
-- A destination fragment is read from the adopter snapshot, then every line whose trimmed form begins with `//` (JSONC) or `#` (ignore files) is dropped. Remaining text is matched literally.
-- An assertion is `present` when its `contains` substring appears in the stripped text.
-- `opencode-config` covers permission gates (stash push/apply allows; stash pop/drop/clear, update-ref, reflog, gc, prune, repack, symbolic-ref denial; `sudo`, `rm -rf /*`, `git push --force`, `gh pr merge`, `gh repo delete`, root redirect denials; `mv plans/*-*` allow).
-- `gitignore-config` covers the required ignore entries.
-- A missing required assertion is `local_drift` at minimum and `conflict` if upstream also changed; the unit can never be `current` while an assertion is absent.
-
-## Section 9 — Explicit adopter snapshot
-
-`check` and `propose-lock` read adopter destination content from exactly one explicit source:
-
-- `--adopter-revision <40-char sha>` — that commit's tree.
-- `--adopter-index` — the staged Git index only.
-
-Missing, ambiguous, malformed, or non-commit inputs are `adopter_snapshot_unavailable`. No command reads the adopter worktree. The declaration, review, and lock are read from the upstream invocation paths, not from destination content; the engine requires them to belong to the same snapshot when a revision is supplied.
-
-## Section 10 — Trusted revision and diagnostic mode
-
-- Compliance mode resolves the trusted revision as the tip of the upstream repository's protected default branch (`refs/remotes/origin/main`, falling back to `refs/heads/main`). The lock's `accepted_source_commit` must be an ancestor of it, or `baseline_unavailable` (fatal).
-- `--diagnostic-revision <sha>` is diagnostic only: it compares against that explicit revision and always reports `compliance: false`, exiting 1 at best. It can never exit 0.
-
-## Section 11 — Comparison and dispositions
-
-| mode | upstream delta | destination delta | disposition |
-|---|---|---|---|
-| mirror | unchanged | unchanged | `current` |
-| mirror | changed | unchanged | `update_available` |
-| mirror | unchanged | changed | `local_drift` |
-| mirror | changed | changed | `conflict` |
-| adapted | unchanged | unchanged | `current` |
-| adapted | changed | unchanged | `update_available` |
-| adapted | unchanged | changed | `local_drift` |
-| adapted | changed | changed | `review_required` |
-| replacement | unchanged | unchanged | `current` |
-| replacement | unchanged | changed | `local_drift` |
-| replacement | changed | any | `review_required` |
-| destination_owned | changed | any | `review_required` |
-| destination_owned | unchanged | any | `unmanaged` |
-| any | accepted baseline behind target | any | `baseline_advance_required` when otherwise `current` |
-| not_applicable | n/a | n/a | `not_applicable` |
-
-A delta is `changed` or `unchanged` (the engine does not distinguish added/removed/modified). Assertion units follow the `mirror` rows using their assertion-list delta (upstream) and assertion-status delta (destination). `replacement` never reports `update_available`.
-
-A `guarded_file` unit evaluates its `destination_policy` against the snapshot before any delta is reported. For `adopter_root_runtime`, the mapped root is decoded as UTF-8 text and must contain no case-insensitive prohibited reference (`aicore`, `ai-core`, `migrate-core-to-project`, `sync-aicore-adoption`, `.aicore/`, `upstream provenance`, `upstream lineage`, `reuse guide`) and must carry the `Project identity`, `Spec version`, and `Local version` markers. A violating root reports the disposition `policy_violation` regardless of upstream or destination delta, is always blocking, and can never be `current`. The policy applies to the adopter snapshot only; AICore's own upstream root is not subject to it.
-
-## Section 12 — Exit contract
-
-| Exit | Meaning |
-|---:|---|
-| 0 | Compliance pass: complete declaration, all units `current` or `not_applicable` (or the `unmanaged` `destination_owned` steady state), all changed non-mirror units reviewed, catalog current. |
-| 1 | Valid input but non-compliant: any `baseline_advance_required`, `update_available`, `local_drift`, `review_required`, `conflict`, or `policy_violation` on any declared unit; diagnostic mode. `unmanaged` — a `destination_owned` unit whose upstream is unchanged — is the non-blocking steady state of an intentional local fork. |
-| 2 | Fatal: schema/identity/mapping/snapshot/trust failure, `declaration_incomplete`, `invalid_applicability`, `invalid_lock`, `invalid_declaration`, `schema_upgrade_required`. |
-
-## Section 13 — Top-level fatal errors
-
-`baseline_unavailable`, `invalid_lock`, `invalid_declaration`, `declaration_incomplete`, `invalid_applicability`, `declaration_changed`, `review_changed`, `catalog_changed`, `invalid_mapping`, `unsupported_projection`, `unsupported_special_file`, `adopter_snapshot_unavailable`, `repository_identity_mismatch`, `schema_upgrade_required`, `unknown_key`.
-
-`policy_violation` is the guard-specific code and is not a top-level parse failure: `propose-lock` emits it (exit 2) when a guarded root violates its `destination_policy`, and `check` reports it as a blocking disposition (exit 1).
-
-## Section 14 — v1 migration
-
-- A v1 lock or declaration is upgrade-only input. Any command reading one fails with `schema_upgrade_required` (exit 2) and prints upgrade guidance to stderr.
-- Upgrade is not a per-unit carry-forward: the adopter re-declares under v2 (adding `profile`, covering every catalog unit including the former `none` config units), authors the review, and regenerates a fresh v2 lock at one revision.
-
-## Section 15 — `propose-lock`
-
-- Inputs: validated declaration + review, catalog-bearing current revision, one explicit adopter snapshot.
-- Removes `--unit`: a proposal rebuilds every declared unit at the one current revision. There is no partial mode.
-- Rejects an incomplete declaration, a missing review decision for a changed non-mirror unit, an incomplete mirror subtree, a missing required assertion, invalid applicability, or a guarded root that violates its `destination_policy` (stable code `policy_violation`).
-- Emits candidate lock YAML plus one trailing newline to stdout only; diagnostics to stderr.
-
-## Section 16 — `verify-all`
-
-- Reads `.aicore/adopters.yaml` (registry) from the upstream repository.
-- For every registered adopter: resolves the registry repository at `default_branch`, obtains a read-only checkout (a fresh `gh repo clone` into a temp directory unless a cached checkout is supplied), and runs compliance `check` at that commit.
-- Produces one verdict per adopter and a blocking aggregate: any adopter that is missing, unreachable, stale, or not at the trusted revision fails the run (exit 1).
-- Registry entries carry `id`, `repository`, `default_branch`, `declaration_path`, `lock_path`, and `review_path`. Every registered adopter is mandatory — there is no `required` flag and no entry that can be exempted. No credentials or machine-local paths.
-
-## Section 17 — Read-only guarantee
-
-`check` and `verify-all` write nothing. `propose-lock` writes only to stdout. There is no apply, copy, merge, delete, fetch-into-adopter, or adopter Git-mutation path. Tests assert the adopter worktree and Git state are byte-identical before and after each command.
+Command text does not prove suite coverage; the destination's own `reviewer` and `evidence` attest it. Validation never imposes AICore's UV command and never accepts a finite runner-name list.

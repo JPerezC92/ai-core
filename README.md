@@ -22,11 +22,11 @@ output/                       Temporal working space (audits, research, design �
 
 ## How to use it in another project
 
-1. Run `migrate-core-to-project` to enroll the **complete applicable unit set** atomically (see `AGENTS.md` → Reuse guide); it bootstraps `.aicore/adoption.yaml`, `.aicore/adoption-review.yaml`, and `.aicore/adoption.lock.yaml`.
-2. Keep the shared infrastructure: `knowledge/agents.md`, `knowledge/debt.md`, `knowledge/symptoms.md`, `knowledge/problems.md`, `plans/`, `user-stories/`, and `output/` for temporal artifacts.
-3. Adapt the stack-specific rulebooks (`atrium.md`, `bastion.md`, `crucible.md`, `lumen.md`) if your stack differs, and record the reconciliation in `.aicore/adoption-review.yaml`.
-4. Substitute your real tooling wherever an agent says "the ticket system", "the primary database", "the docs/wiki", etc. The core ships neutral on purpose.
-5. `sync-aicore-adoption check` verifies one adopter's compliance; `sync-aicore-adoption verify-all` checks every adopter registered in `.aicore/adopters.yaml`.
+1. Start only from a destination that is already clean and saved. A dirty or uncertain destination aborts `migrate-core-to-project`; the skill does not commit, stash, or clean it. Run it after an approved source refresh. Prepare the complete result outside the destination, freeze approval, then enroll the **complete applicable unit set** (see `AGENTS.md` → Reuse guide). It writes `.aicore/adoption.yaml` and `.aicore/adoption-review.yaml` before content, and installs `.aicore/adoption.lock.yaml` only after an external candidate check. Do not treat enrollment as an application build.
+2. Keep shared rule infrastructure (`knowledge/agents.md`) and the destination's own `plans/` and `user-stories/`. Initialize destination registers from their structural headers. Do not copy AICore debt, symptom history, or problem records into the destination.
+3. If your stack differs, adapt only the project-extensions sections of the stack-specific rulebooks (`atrium.md`, `bastion.md`, `crucible.md`, `lumen.md`) before enrollment, and record that review in `.aicore/adoption-review.yaml`. Do not replace mandatory bytes.
+4. Substitute your real tooling only in destination-owned project extensions or destination configuration. Do not edit protected mandatory text. The core ships neutral on purpose.
+5. Recurring updates run from an AICore checkout, after an approved refresh of the protected upstream tip. Invoke `python3 -B` on the absolute `sync-aicore-adoption` script with explicit upstream, adopter snapshot, declaration, review, and lock options. Save a candidate outside the destination. `check` verifies one explicit snapshot and does not authorize writes. `verify-all` checks every adopter in `.aicore/adopters.yaml`; it may clone into and remove its own temporary directory, and it does not clean a supplied checkout. A local branch that was not refreshed is not live remote truth.
 
 ## Notes
 
