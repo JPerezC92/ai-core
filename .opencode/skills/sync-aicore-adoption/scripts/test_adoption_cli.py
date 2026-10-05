@@ -400,7 +400,7 @@ class VerifyAllTests(EngineTestCase):
         assert environment["GIT_CONFIG_NOSYSTEM"] == "1"
         assert "--template" in command
         assert any(part.startswith("core.hooksPath=") for part in command)
-        assert "core.fsmonitor=false" in command
+        assert "core.fsmonitor=" in command
         assert str(existing) not in command
         assert self.worktree_bytes(existing) == before
         assert (existing / ".git" / "index").read_bytes() == index_before

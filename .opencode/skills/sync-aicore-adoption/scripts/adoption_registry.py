@@ -99,7 +99,7 @@ def _git_clone(repository: str, destination: str, branch: str) -> str | None:
         "--template",
         template["path"],
         "--config",
-        "core.fsmonitor=false",
+        "core.fsmonitor=",
         "--config",
         f"core.hooksPath={template['path']}",
         "--config",
