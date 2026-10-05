@@ -37,7 +37,7 @@
 - No unfilled `<...>` placeholder tokens.
 - `## Verify commands` is a non-empty canonical table with exactly the `Executor` and `Command` columns; every row pairs one non-empty executor with one non-empty command.
 - Executor authority is a phase-review item: the reviewer confirms the declared executor holds the role and tool authority to run the command. The validator checks declared traceability only and never inspects permission models.
-- A phase editing a Python `test_*.py` file in reviewed discovery areas lists the destination's approved whole-suite command (AICore uses `uv run --frozen --group dev pytest -q`), assigns Crucible 🔥 (Test Architect) as its executor, and records Bastion 🧱 (Backend & Scripts Architect) `[PASS]`; the gate requires Crucible's test command exit 0 and a separate test-architecture `[PASS]`; `[FAIL]` or `[UNCERTAIN]` blocks completion.
+- A phase editing a Python `test_*.py` file in reviewed discovery areas lists the destination's approved whole-suite command, assigns Crucible 🔥 (Test Architect) as its executor, and records Bastion 🧱 (Backend & Scripts Architect) `[PASS]`; the gate requires Crucible's test command exit 0 and a separate test-architecture `[PASS]`; `[FAIL]` or `[UNCERTAIN]` blocks completion.
 
 ## user-stories
 

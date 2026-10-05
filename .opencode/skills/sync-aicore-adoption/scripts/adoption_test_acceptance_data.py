@@ -8,7 +8,8 @@ and commit helpers stay in logic modules, never as data constants.
 The runtime-lineage cases exist so an independent model review can read every
 complete previous-core / target-core / destination-before / result set and
 judge ancestor attribution, preservation of the destination's existing local
-rule, and the recorded local-version rationale under ``AGENTS.md:75``. Python
+rule, and the recorded local-version rationale under the ``AGENTS.md``
+reuse-guide clause (line 30). Python
 only stores and binds these bytes; no test module classifies the meaning of a
 result or the correctness of a bump.
 """
@@ -177,6 +178,135 @@ PROTECTED_DESTINATION_AGENT = (
 ) + PROTECTED_AGENT_MANDATORY
 
 PROTECTED_AGENT_PROFILE = "Reviewer persona profile.\n"
+
+# ---------------------------------------------------------------------------
+# Derived runtime spec fixtures (G3)
+# ---------------------------------------------------------------------------
+#
+# A derived runtime spec is a protected agent document whose destination
+# frontmatter carries a destination-local ``local-version`` marker. The
+# upstream source omits the marker; the prepared destination result carries it.
+# Python binds these bytes through the same propose/check engine as the root
+# lineage; no test classifies the marker's meaning or the correctness of a bump.
+
+PROTECTED_AGENT_MANDATORY_V2 = """## Mandatory core
+
+MANDATORY_AGENT_CORE
+AGENT_CORE_RULE_TWO
+
+### Hard Rules
+- Never edit source.
+"""
+
+PROTECTED_DERIVED_SOURCE_AGENT = (
+    "---\n"
+    "name: reviewer\n"
+    "description: Reviews changes.\n"
+    "mode: subagent\n"
+    "version: 1.0.0\n"
+    "---\n"
+    "\n"
+    "# Reviewer\n"
+    "\n"
+    "> **Rule layout:** two-section-v1\n"
+    "\n"
+    "**Persona / personality:** see `agents/reviewer/profile.md` "
+    "(source of truth — do not duplicate here).\n"
+    "\n"
+    "## Project extensions\n"
+    "\n"
+    "Source extension note.\n"
+    "\n"
+) + PROTECTED_AGENT_MANDATORY
+
+PROTECTED_DERIVED_SOURCE_AGENT_V2 = (
+    "---\n"
+    "name: reviewer\n"
+    "description: Reviews changes.\n"
+    "mode: subagent\n"
+    "version: 1.0.0\n"
+    "---\n"
+    "\n"
+    "# Reviewer\n"
+    "\n"
+    "> **Rule layout:** two-section-v1\n"
+    "\n"
+    "**Persona / personality:** see `agents/reviewer/profile.md` "
+    "(source of truth — do not duplicate here).\n"
+    "\n"
+    "## Project extensions\n"
+    "\n"
+    "Source extension note.\n"
+    "\n"
+) + PROTECTED_AGENT_MANDATORY_V2
+
+PROTECTED_DERIVED_DESTINATION_AGENT = (
+    "---\n"
+    "name: reviewer\n"
+    "description: Reviews changes.\n"
+    "mode: subagent\n"
+    "version: 1.0.0\n"
+    "local-version: 1.4.2\n"
+    "---\n"
+    "\n"
+    "# Reviewer — Destination\n"
+    "\n"
+    "> **Rule layout:** two-section-v1\n"
+    "\n"
+    "**Persona / personality:** see `agents/reviewer/profile.md` "
+    "(source of truth — do not duplicate here).\n"
+    "\n"
+    "## Project extensions\n"
+    "\n"
+    "Destination extension note.\n"
+    "\n"
+) + PROTECTED_AGENT_MANDATORY
+
+PROTECTED_DERIVED_RESULT_UPSTREAM_ONLY = (
+    "---\n"
+    "name: reviewer\n"
+    "description: Reviews changes.\n"
+    "mode: subagent\n"
+    "version: 1.0.0\n"
+    "local-version: 1.4.2\n"
+    "---\n"
+    "\n"
+    "# Reviewer — Destination\n"
+    "\n"
+    "> **Rule layout:** two-section-v1\n"
+    "\n"
+    "**Persona / personality:** see `agents/reviewer/profile.md` "
+    "(source of truth — do not duplicate here).\n"
+    "\n"
+    "## Project extensions\n"
+    "\n"
+    "Destination extension note.\n"
+    "\n"
+) + PROTECTED_AGENT_MANDATORY_V2
+
+PROTECTED_DERIVED_RESULT_LOCAL_CHANGE = (
+    "---\n"
+    "name: reviewer\n"
+    "description: Reviews changes.\n"
+    "mode: subagent\n"
+    "version: 1.0.0\n"
+    "local-version: 1.5.0\n"
+    "---\n"
+    "\n"
+    "# Reviewer — Destination\n"
+    "\n"
+    "> **Rule layout:** two-section-v1\n"
+    "\n"
+    "**Persona / personality:** see `agents/reviewer/profile.md` "
+    "(source of truth — do not duplicate here).\n"
+    "\n"
+    "## Project extensions\n"
+    "\n"
+    "Destination extension note.\n"
+    "\n"
+    "- LOCAL_AGENT_RULE: Reviewer applies the destination checklist.\n"
+    "\n"
+) + PROTECTED_AGENT_MANDATORY
 
 MIXED_CATALOG = """schema_version: 2
 catalog:
@@ -375,7 +505,7 @@ RELAY_RESULT_NEW_ENFORCEMENT = """# Relay project runtime
 
 RELAY_REVIEW_NEW_ENFORCEMENT = (
     "Incorporated CORE_RULE_TWO and added the destination-local enforceable "
-    "LOCAL_ENFORCEMENT_RULE while retaining LOCAL_BUSINESS_RULE; AGENTS.md:75 "
+    "LOCAL_ENFORCEMENT_RULE while retaining LOCAL_BUSINESS_RULE; the AGENTS.md local-version clause "
     "gives a new local enforceable rule a minor bump, so the destination Local "
     "version advances 1.4.2 -> 1.5.0."
 )
@@ -584,7 +714,7 @@ RUNTIME_LINEAGE_CASES: tuple[RuntimeLineageCase, ...] = (
         "intended_verdict": "pass",
         "intent": (
             "A new destination-local enforceable rule takes a minor bump under "
-            "AGENTS.md:75 (1.4.2 -> 1.5.0) while the target ancestor is adopted "
+            "the AGENTS.md local-version clause (1.4.2 -> 1.5.0) while the target ancestor is adopted "
             "and the existing local business rule survives."
         ),
     },
@@ -673,7 +803,7 @@ RUNTIME_LINEAGE_CASES: tuple[RuntimeLineageCase, ...] = (
         "intended_verdict": "block",
         "intent": (
             "Contradictory bump: a new local enforceable rule takes a patch bump "
-            "although AGENTS.md:75 requires a minor bump."
+            "although the AGENTS.md local-version clause requires a minor bump."
         ),
     },
 )
@@ -1615,3 +1745,29 @@ BOOTSTRAP_EXISTING_FILES: dict[str, str] = {
     "user-stories/alpha.md": BOOTSTRAP_STORY_FILE,
     "user-stories/index.md": BOOTSTRAP_EXISTING_INDEX,
 }
+
+# Real-catalog enrollment prepares destination-owned records externally. A
+# fresh destination gets structural register headers with no source history
+# rows and a destination symptom catalog; the source registers and the source
+# story index are never copied. Existing destinations keep their own register
+# bytes, and the story index is merged from the selected source rows.
+REAL_CATALOG_DEBT_HEADER = """# Accepted Debt Register
+
+## Entry format
+
+Each entry includes an ID, a date, and a deferral decision.
+
+## Register
+"""
+REAL_CATALOG_PROBLEM_HEADER = """# Known Problem Pattern Register
+
+## Entry format
+
+One row per record. Source history is not an entry.
+
+## Register
+"""
+REAL_CATALOG_SYMPTOMS = """# Diagnostic Symptom Catalog
+
+SYMPTOM_CATALOG_TEXT: durable class S-01 stays in the destination catalog.
+"""

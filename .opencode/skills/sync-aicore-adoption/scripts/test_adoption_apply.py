@@ -30,7 +30,7 @@ from typing import cast
 import pytest
 import yaml
 
-from adoption_constants import RULE_LAYOUT_VALUE
+from adoption_constants import AICORE_SUITE_COMMAND, RULE_LAYOUT_VALUE
 from adoption_content import (
     _destination_unit_digest,
     _rule_layout,
@@ -58,7 +58,7 @@ from adoption_git import (
     _run_controlled_read,
 )
 from adoption_loaders import _raw_file_digest, load_lock
-from adoption_mapping import _catalog_transition
+from adoption_mapping import _catalog_transition, evaluate_applicability
 from adoption_reconciliation import _reviewed_unit_source_digest
 from adoption_schema import _parse_document_bytes, _validate_lock_document
 from adoption_stories import merge_story_index
@@ -105,6 +105,11 @@ from adoption_test_acceptance_data import (
     PROTECTED_AGENT_MANDATORY,
     PROTECTED_AGENT_MIRROR_DECLARATION,
     PROTECTED_AGENT_PROFILE,
+    PROTECTED_DERIVED_DESTINATION_AGENT,
+    PROTECTED_DERIVED_RESULT_LOCAL_CHANGE,
+    PROTECTED_DERIVED_RESULT_UPSTREAM_ONLY,
+    PROTECTED_DERIVED_SOURCE_AGENT,
+    PROTECTED_DERIVED_SOURCE_AGENT_V2,
     PROTECTED_DESTINATION_AGENT,
     PROTECTED_DESTINATION_ROOT,
     PROTECTED_MANDATORY_CORE,
@@ -112,6 +117,9 @@ from adoption_test_acceptance_data import (
     PROTECTED_ROOT_DECLARATION,
     PROTECTED_SOURCE_AGENT,
     PROTECTED_SOURCE_ROOT,
+    REAL_CATALOG_DEBT_HEADER,
+    REAL_CATALOG_PROBLEM_HEADER,
+    REAL_CATALOG_SYMPTOMS,
     RELAY_DESTINATION_BEFORE,
     RELAY_PREVIOUS_CORE,
     RELAY_RESULT_NEW_ENFORCEMENT,
@@ -132,7 +140,9 @@ from adoption_test_repos import (
     UNPROTECTED_RULE_CATALOG,
     AdopterFixture,
     EngineTestCase,
+    repository_root,
 )
+from adoption_test_runner_data import AICORE_RUNNER, NO_TESTS_RUNNER
 
 _LINEAGE_CASE_FIELDS: tuple[str, ...] = (
     "previous_core",
@@ -494,6 +504,53 @@ def _external_destination_digest(
         destination = declared[member_id]
         mode, content = files[destination]
         pairs.append((member_id, _file_member_digest(content, mode)))
+    return unit_digest(pairs)
+
+
+def _external_unit_digest(
+    catalog_unit: dict[str, object],
+    declaration_unit: dict[str, object],
+    files: dict[str, tuple[str, bytes]],
+) -> str:
+    """Digest prepared buffers exactly as the staged index snapshot will.
+
+    The general form covers assertions, single-file and tree members so the
+    real catalog's protected skills and agents bind from external preparation
+    before any destination write.
+    """
+    if catalog_unit.get("sync_projection") == "assertions":
+        destination = str(catalog_unit.get("destination"))
+        text = files[destination][1].decode("utf-8")
+        stripped = _strip_comments(text)
+        status = [
+            (str(assertion.get("id")), str(assertion.get("contains")) in stripped)
+            for assertion in catalog_unit.get("assertions", [])
+        ]
+        return assertion_status_digest(status)
+    declared = {
+        str(member.get("id")): str(member.get("destination"))
+        for member in declaration_unit.get("members", [])
+    }
+    projection = str(catalog_unit.get("sync_projection"))
+    pairs: list[tuple[str, str]] = []
+    for member in catalog_unit.get("members", []):
+        member_id = str(member.get("id"))
+        destination = declared[member_id]
+        if projection == "tree":
+            prefix = destination.rstrip("/") + "/"
+            entries = [
+                ProjectedEntry(
+                    path=relative[len(prefix):],
+                    mode=mode,
+                    content=content,
+                )
+                for relative, (mode, content) in files.items()
+                if relative.startswith(prefix)
+            ]
+            pairs.append((member_id, member_digest(entries)))
+        else:
+            mode, content = files[destination]
+            pairs.append((member_id, _file_member_digest(content, mode)))
     return unit_digest(pairs)
 
 
@@ -1257,7 +1314,7 @@ class RuntimeLineageWorkflowTests(EngineTestCase):
     def test_lineage_sources_omit_destination_local_markers(self) -> None:
         """Mechanical guard for the source/destination lineage boundary.
 
-        ``AGENTS.md:75`` keeps destination ``Local version`` / ``local-version``
+        ``AGENTS.md`` line 30 keeps destination ``Local version`` / ``local-version``
         markers out of AICore ancestor surfaces, so every case's ``previous_core``
         and ``target_core`` omit them while its ``destination_before`` and
         ``result`` carry one. This is a byte-level framing check, not the
@@ -1274,6 +1331,137 @@ class RuntimeLineageWorkflowTests(EngineTestCase):
                 assert (
                     "local-version" in destination or "Local version" in destination
                 ), case["case_id"]
+
+
+class DerivedRuntimeByteBindingTests(EngineTestCase):
+    """Prepared derived runtime specs whose destination frontmatter is bound.
+
+    Python binds the prepared bytes through the same propose/check engine as
+    the root lineage and rejects a result altered after review. The semantic
+    comparison and every local-version rationale are established by the
+    independent model review over the derived lineage case; no assertion here
+    classifies the meaning of the marker or the correctness of a bump.
+    """
+
+    def _accept_prepared_derived(
+        self, fixture: AdopterFixture, result: str
+    ) -> None:
+        """Prepare, propose, same-snapshot check, accept, and final-check an agent."""
+        adopter = fixture["adopter"]
+        self.write(adopter, ".opencode/agents/reviewer.md", result)
+        fixture["adopter_rev"] = self.commit(adopter, "prepared derived runtime")
+        _write_prepared_review(
+            self,
+            fixture,
+            "reviewer-agent",
+            "applied",
+            verified_layout=RULE_LAYOUT_VALUE,
+        )
+        proposal = _propose_prepared(self, fixture, str(fixture["adopter_rev"]))
+        self.assert_exit(proposal, 0)
+        candidate_path = self.write(
+            self.root, "derived-candidate.lock.yaml", proposal.stdout
+        )
+        self.assert_exit(
+            self.run_cli(
+                "check",
+                *self.base_check_args(fixture, lock=candidate_path),
+                "--adopter-revision",
+                str(fixture["adopter_rev"]),
+            ),
+            0,
+        )
+        self.write(adopter, ".aicore/adoption.lock.yaml", proposal.stdout)
+        fixture["adopter_rev"] = self.commit(adopter, "accept derived candidate")
+        final = self.run_cli(
+            "check",
+            *self.base_check_args(fixture),
+            "--adopter-revision",
+            str(fixture["adopter_rev"]),
+            "--format",
+            "json",
+        )
+        self.assert_exit(final, 0)
+        assert json.loads(final.stdout)["compliance"] is True
+
+    def test_derived_upstream_only_update_preserves_frontmatter_local_version(
+        self,
+    ) -> None:
+        fixture = self.build_protected_agent(
+            destination_agent=PROTECTED_DERIVED_DESTINATION_AGENT,
+            upstream_agent=PROTECTED_DERIVED_SOURCE_AGENT,
+        )
+        self.write(
+            fixture["upstream"],
+            ".opencode/agents/reviewer.md",
+            PROTECTED_DERIVED_SOURCE_AGENT_V2,
+        )
+        self.commit(fixture["upstream"], "upstream derived runtime update")
+
+        self._accept_prepared_derived(
+            fixture, PROTECTED_DERIVED_RESULT_UPSTREAM_ONLY
+        )
+
+        destination = (
+            fixture["adopter"] / ".opencode/agents/reviewer.md"
+        ).read_text(encoding="utf-8")
+        source = (
+            fixture["upstream"] / ".opencode/agents/reviewer.md"
+        ).read_text(encoding="utf-8")
+        assert "local-version: 1.4.2" in destination
+        assert "AGENT_CORE_RULE_TWO" in destination
+        assert "local-version" not in source
+
+    def test_derived_destination_local_change_is_bound_and_accepted(self) -> None:
+        fixture = self.build_protected_agent(
+            destination_agent=PROTECTED_DERIVED_DESTINATION_AGENT,
+            upstream_agent=PROTECTED_DERIVED_SOURCE_AGENT,
+        )
+
+        self._accept_prepared_derived(fixture, PROTECTED_DERIVED_RESULT_LOCAL_CHANGE)
+
+        destination = (
+            fixture["adopter"] / ".opencode/agents/reviewer.md"
+        ).read_text(encoding="utf-8")
+        assert "local-version: 1.5.0" in destination
+        assert "LOCAL_AGENT_RULE" in destination
+
+    def test_derived_result_altered_after_review_is_rejected(self) -> None:
+        fixture = self.build_protected_agent(
+            destination_agent=PROTECTED_DERIVED_DESTINATION_AGENT,
+            upstream_agent=PROTECTED_DERIVED_SOURCE_AGENT,
+        )
+        adopter = fixture["adopter"]
+        self.write(
+            adopter,
+            ".opencode/agents/reviewer.md",
+            PROTECTED_DERIVED_RESULT_LOCAL_CHANGE,
+        )
+        fixture["adopter_rev"] = self.commit(
+            adopter, "prepared derived local change"
+        )
+        _write_prepared_review(
+            self,
+            fixture,
+            "reviewer-agent",
+            "applied",
+            verified_layout=RULE_LAYOUT_VALUE,
+        )
+
+        tampered = PROTECTED_DERIVED_RESULT_LOCAL_CHANGE.replace(
+            "local-version: 1.5.0", "local-version: 1.5.1"
+        )
+        self.write(adopter, ".opencode/agents/reviewer.md", tampered)
+        tampered_rev = self.commit(adopter, "unreviewed derived version change")
+        rejected = _propose_prepared(self, fixture, tampered_rev)
+        self.assert_exit(rejected, 2, "review_changed")
+        assert rejected.stdout == ""
+
+        self._accept_prepared_derived(fixture, PROTECTED_DERIVED_RESULT_LOCAL_CHANGE)
+        accepted = (
+            adopter / ".opencode/agents/reviewer.md"
+        ).read_text(encoding="utf-8")
+        assert "local-version: 1.5.0" in accepted
 
 
 class ProtectedAcceptanceTests(EngineTestCase):
@@ -2160,8 +2348,15 @@ class RuleNoticeAcceptanceTests(EngineTestCase):
         assert rejected.stdout == ""
 
 
-class OrderedBootstrapAcceptanceTests(EngineTestCase):
-    """One fresh and one existing enrollment. Approval is frozen before writes."""
+class OrderedEnrollmentDriverMixin:
+    """Ordered clean-start driver reused by synthetic and real-catalog flows.
+
+    The driver owns the reviewed sequence: controlled preflight, external
+    complete preparation, recheck, freeze controls, recheck before write, write
+    controls then content, stage reviewed paths, propose an external candidate,
+    check that candidate, install the lock only, and final-check. Preparation,
+    declaration, and review generation are supplied by the caller.
+    """
 
     def _fixture(self, accepted: str) -> AdopterFixture:
         return {
@@ -2279,6 +2474,100 @@ class OrderedBootstrapAcceptanceTests(EngineTestCase):
             return flag_block
         return self._ignored_write_occupant(repo)
 
+    def _ordered_enroll(
+        self,
+        *,
+        editor_confirmed: bool | None,
+        before: dict[str, str] | None,
+        prepare: "Callable[[dict[str, str] | None], tuple[dict[str, str], list[str]]]",
+        declaration_text: str,
+        build_review: "Callable[[dict[str, str], str], str]",
+        baseline_lock: bool = False,
+        fail_after_content_writes: int | None = None,
+        approval: bool = True,
+        after_prepare: Callable[[], None] | None = None,
+    ) -> subprocess.CompletedProcess[str]:
+        """Run one ordered enrollment over caller-supplied preparation."""
+        adopter = self.adopter
+        self.events: list[str] = []
+        reason = self._preflight(adopter, editor_confirmed)
+        self.events.append("preflight")
+        if reason is not None:
+            self.events.append("abort")
+            raise CleanStartAbort(reason)
+        prepared, collisions = prepare(before)
+        self.collisions = collisions
+        self.events.append("prepare_external")
+        if after_prepare is not None:
+            after_prepare()
+        reason = self._preflight(adopter, editor_confirmed)
+        self.events.append("recheck")
+        if reason is not None:
+            self.events.append("abort")
+            raise CleanStartAbort(reason)
+        if not approval:
+            self.events.append("missing_approval")
+            raise FrozenReviewMissing("review was not frozen")
+        review_text = build_review(prepared, declaration_text)
+        self.events.append("freeze_controls")
+        reason = self._preflight(adopter, editor_confirmed)
+        self.events.append("recheck_before_write")
+        if reason is not None:
+            self.events.append("abort")
+            raise CleanStartAbort(reason)
+        self.write(adopter, ".aicore/adoption.yaml", declaration_text)
+        self.write(adopter, ".aicore/adoption-review.yaml", review_text)
+        self.events.append("write_controls")
+        written = 0
+        for relative, text in prepared.items():
+            if (
+                fail_after_content_writes is not None
+                and written >= fail_after_content_writes
+            ):
+                self.events.append("stop_partial")
+                raise PartialWriteStopped(relative)
+            self._write_adopted(adopter, relative, text, declaration_text, review_text)
+            written += 1
+        frozen_review = (adopter / ".aicore/adoption-review.yaml").read_bytes()
+        self.events.append("write_content")
+        assert (adopter / ".aicore/adoption-review.yaml").read_bytes() == frozen_review
+        self.stage(
+            adopter,
+            ".aicore/adoption.yaml",
+            ".aicore/adoption-review.yaml",
+            *prepared,
+        )
+        self.events.append("stage_reviewed")
+        fixture = self._fixture(self.rev(self.upstream))
+        proposal = _propose_index(self, fixture, update=baseline_lock)
+        self.events.append("propose")
+        self.assert_exit(proposal, 0)
+        candidate = self.write(self.root, "ordered-candidate.lock.yaml", proposal.stdout)
+        checked = _check_index(self, fixture, lock=candidate, json_output=True)
+        self.events.append("check_candidate")
+        self.assert_exit(checked, 0)
+        report = json.loads(checked.stdout)
+        assert report["compliance"] is True
+        assert report["diagnostic"] is False
+        assert report["blocking_reasons"] == []
+        self.write(adopter, ".aicore/adoption.lock.yaml", proposal.stdout)
+        self.stage(adopter, ".aicore/adoption.lock.yaml")
+        self.events.append("stage_lock_only")
+        final = _check_index(self, fixture, json_output=True)
+        self.events.append("check_final")
+        self.assert_exit(final, 0)
+        final_report = json.loads(final.stdout)
+        assert final_report["compliance"] is True
+        assert final_report["diagnostic"] is False
+        assert final_report["blocking_reasons"] == []
+        assert self.events == list(_ENROLL_EVENTS)
+        self.proposal_stdout = proposal.stdout
+        return proposal
+
+
+class OrderedBootstrapAcceptanceTests(EngineTestCase, OrderedEnrollmentDriverMixin):
+    """One fresh and one existing enrollment. Approval is frozen before writes."""
+
     def _prepare_all(
         self, before: dict[str, str] | None
     ) -> tuple[dict[str, str], list[str]]:
@@ -2383,82 +2672,16 @@ class OrderedBootstrapAcceptanceTests(EngineTestCase):
         approval: bool = True,
         after_prepare: Callable[[], None] | None = None,
     ) -> subprocess.CompletedProcess[str]:
-        adopter = self.adopter
-        self.events: list[str] = []
-        reason = self._preflight(adopter, editor_confirmed)
-        self.events.append("preflight")
-        if reason is not None:
-            self.events.append("abort")
-            raise CleanStartAbort(reason)
-        prepared, collisions = self._prepare_all(before)
-        self.collisions = collisions
-        self.events.append("prepare_external")
-        if after_prepare is not None:
-            after_prepare()
-        reason = self._preflight(adopter, editor_confirmed)
-        self.events.append("recheck")
-        if reason is not None:
-            self.events.append("abort")
-            raise CleanStartAbort(reason)
-        if not approval:
-            self.events.append("missing_approval")
-            raise FrozenReviewMissing("review was not frozen")
-        declaration_text = BOOTSTRAP_DECLARATION
-        review_text = self._review_text(prepared, declaration_text)
-        self.events.append("freeze_controls")
-        reason = self._preflight(adopter, editor_confirmed)
-        self.events.append("recheck_before_write")
-        if reason is not None:
-            self.events.append("abort")
-            raise CleanStartAbort(reason)
-        self.write(adopter, ".aicore/adoption.yaml", declaration_text)
-        self.write(adopter, ".aicore/adoption-review.yaml", review_text)
-        self.events.append("write_controls")
-        written = 0
-        for relative, text in prepared.items():
-            if (
-                fail_after_content_writes is not None
-                and written >= fail_after_content_writes
-            ):
-                self.events.append("stop_partial")
-                raise PartialWriteStopped(relative)
-            self._write_adopted(adopter, relative, text, declaration_text, review_text)
-            written += 1
-        frozen_review = (adopter / ".aicore/adoption-review.yaml").read_bytes()
-        self.events.append("write_content")
-        assert (adopter / ".aicore/adoption-review.yaml").read_bytes() == frozen_review
-        self.stage(
-            adopter,
-            ".aicore/adoption.yaml",
-            ".aicore/adoption-review.yaml",
-            *prepared,
+        return self._ordered_enroll(
+            editor_confirmed=editor_confirmed,
+            before=before,
+            prepare=self._prepare_all,
+            declaration_text=BOOTSTRAP_DECLARATION,
+            build_review=self._review_text,
+            fail_after_content_writes=fail_after_content_writes,
+            approval=approval,
+            after_prepare=after_prepare,
         )
-        self.events.append("stage_reviewed")
-        fixture = self._fixture(self.rev(self.upstream))
-        proposal = _propose_index(self, fixture, update=False)
-        self.events.append("propose")
-        self.assert_exit(proposal, 0)
-        candidate = self.write(self.root, "bootstrap-candidate.lock.yaml", proposal.stdout)
-        checked = _check_index(self, fixture, lock=candidate, json_output=True)
-        self.events.append("check_candidate")
-        self.assert_exit(checked, 0)
-        report = json.loads(checked.stdout)
-        assert report["compliance"] is True
-        assert report["diagnostic"] is False
-        assert report["blocking_reasons"] == []
-        self.write(adopter, ".aicore/adoption.lock.yaml", proposal.stdout)
-        self.stage(adopter, ".aicore/adoption.lock.yaml")
-        self.events.append("stage_lock_only")
-        final = _check_index(self, fixture, json_output=True)
-        self.events.append("check_final")
-        self.assert_exit(final, 0)
-        final_report = json.loads(final.stdout)
-        assert final_report["compliance"] is True
-        assert final_report["diagnostic"] is False
-        assert final_report["blocking_reasons"] == []
-        assert self.events == list(_ENROLL_EVENTS)
-        self.proposal_stdout = proposal.stdout
-        return proposal
 
     def _commit_owner_notes(self) -> None:
         self.write(self.adopter, "OWNER-NOTES.md", "unrelated owner work\n")
@@ -3028,3 +3251,556 @@ class Phase01ProtectionPolicyTests(EngineTestCase):
         )
         self.assert_exit(proposal, 2, "invalid_mapping")
         assert proposal.stdout == ""
+
+
+_REAL_CATALOG_ROOT_UNIT = "root-runtime-spec"
+_REAL_CATALOG_ADAPTED_UNITS = frozenset({"knowledge-debt", "symptom-problem-register"})
+_REAL_CATALOG_STORY_KIND = "user-story"
+_REAL_CATALOG_COPY_SKIP = frozenset({"__pycache__", ".git"})
+
+
+def _real_catalog_excluded(relative: Path) -> bool:
+    """Return whether a copied corpus path is generated rather than source."""
+    return any(
+        part in _REAL_CATALOG_COPY_SKIP or part.endswith(".pyc")
+        for part in relative.parts
+    )
+
+
+def _real_catalog_members(unit: dict[str, object]) -> list[dict[str, str]]:
+    """Map one catalog unit's member ids to their declared destination paths."""
+    return [
+        {"id": str(member["id"]), "destination": str(member["destination"])}
+        for member in cast(list[dict[str, object]], unit["members"])
+    ]
+
+
+def _real_catalog_assertions(
+    catalog: dict[str, object], unit_id: str
+) -> list[dict[str, object]]:
+    """Return one catalog config unit's reviewed assertion entries."""
+    unit = next(
+        item
+        for item in cast(list[dict[str, object]], catalog["units"])
+        if str(item["id"]) == unit_id
+    )
+    return list(cast(list[dict[str, object]], unit.get("assertions", [])))
+
+
+def _real_catalog_bash_fragment(catalog: dict[str, object]) -> dict[str, str]:
+    """Build the destination bash mapping from the catalog's key/value assertions.
+
+    The opencode-config assertions are JSON ``key: value`` fragments, so the
+    destination fragment is a projection of the catalog rather than a
+    hand-copied token table. A renamed or reformatted assertion fails here.
+    """
+    fragment: dict[str, str] = {}
+    for assertion in _real_catalog_assertions(catalog, "opencode-config"):
+        contains = str(assertion["contains"])
+        parsed = json.loads("{" + contains + "}")
+        if not isinstance(parsed, dict) or len(parsed) != 1:
+            raise AssertionError(
+                f"opencode-config assertion {assertion['id']!r} is not a key/value pair"
+            )
+        for key, value in parsed.items():
+            if not isinstance(key, str) or not isinstance(value, str):
+                raise AssertionError(
+                    f"opencode-config assertion {assertion['id']!r} is not a string pair"
+                )
+            fragment[key] = value
+    return fragment
+
+
+def _real_catalog_gitignore_fragment(catalog: dict[str, object]) -> str:
+    """Build the destination ignore lines from the catalog's ignore assertions."""
+    lines = [
+        str(assertion["contains"])
+        for assertion in _real_catalog_assertions(catalog, "gitignore-config")
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def _real_catalog_opencode_config(catalog: dict[str, object]) -> str:
+    """A destination config carrying the catalog's reviewed assertions."""
+    return (
+        json.dumps(
+            {"permission": {"bash": _real_catalog_bash_fragment(catalog)}},
+            indent=2,
+        )
+        + "\n"
+    )
+
+
+def _real_catalog_runner_config(catalog: dict[str, object]) -> str:
+    """A destination config with the catalog assertions plus the executor grant."""
+    return (
+        json.dumps(
+            {
+                "permission": {"bash": _real_catalog_bash_fragment(catalog)},
+                "agent": {
+                    str(AICORE_RUNNER["executor"]): {
+                        "permission": {
+                            "bash": {
+                                "*": "deny",
+                                AICORE_SUITE_COMMAND: "allow",
+                            }
+                        }
+                    }
+                },
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+
+
+def _real_catalog_gitignore(catalog: dict[str, object]) -> str:
+    """A destination .gitignore carrying the catalog's reviewed ignore assertions."""
+    return _real_catalog_gitignore_fragment(catalog)
+
+
+class RealCatalogEnrollmentTests(EngineTestCase, OrderedEnrollmentDriverMixin):
+    """Fresh and existing enrollment against the shipped catalog and real corpus.
+
+    Both flows drive the shared ordered driver. The fresh flow uses the null
+    baseline and a reviewed whole-project ``test_runner`` with its literal
+    destination grant; the existing flow accepts a predecessor lock and then
+    reviews a transition bound to that baseline. Everything is built under
+    ``tmp_path`` and the real checkout is only read.
+    """
+
+    def _copy_source_to(
+        self, base: Path, source: str, destination: str, repository: Path
+    ) -> None:
+        origin = repository / source
+        target = self._confined_path(base / destination, "catalog copy target")
+        if origin.is_dir():
+            for path in sorted(origin.rglob("*")):
+                if not path.is_file():
+                    continue
+                relative = path.relative_to(origin)
+                if _real_catalog_excluded(relative):
+                    continue
+                written = self._confined_path(
+                    base / f"{destination.rstrip('/')}/{relative.as_posix()}",
+                    "catalog copy target",
+                )
+                written.parent.mkdir(parents=True, exist_ok=True)
+                written.write_bytes(path.read_bytes())
+        else:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(origin.read_bytes())
+
+    def _profile(self) -> dict[str, bool]:
+        return {"backend_stack": True, "python_scripts": True, "ticket_system": True}
+
+    def _init_real_catalog(self) -> tuple[dict[str, object], dict[str, bool]]:
+        """Copy the shipped catalog and complete corpus into the temporary upstream."""
+        repository = repository_root()
+        catalog_text = (repository / CATALOG_REL).read_text(encoding="utf-8")
+        catalog = yaml.safe_load(catalog_text)
+        assert isinstance(catalog, dict)
+        profile = self._profile()
+        self.init_repo(self.upstream)
+        self.write(self.upstream, CATALOG_REL, catalog_text)
+        self._real_catalog_source(catalog, profile, repository)
+        self.commit(self.upstream, "shipped catalog source")
+        return catalog, profile
+
+    def _real_catalog_declaration(
+        self,
+        catalog: dict[str, object],
+        profile: dict[str, bool],
+        test_runner: dict[str, object],
+    ) -> dict[str, object]:
+        """Declare every catalog unit at the reviewed profile and runner."""
+        units: list[dict[str, object]] = []
+        for unit in cast(list[dict[str, object]], catalog["units"]):
+            uid = str(unit["id"])
+            if not evaluate_applicability(unit, profile):
+                units.append({"id": uid, "mode": "not_applicable"})
+            elif uid == _REAL_CATALOG_ROOT_UNIT:
+                units.append(
+                    {"id": uid, "mode": "adapted", "members": _real_catalog_members(unit)}
+                )
+            elif unit.get("sync_projection") == "assertions":
+                units.append({"id": uid, "mode": "mirror"})
+            elif uid in _REAL_CATALOG_ADAPTED_UNITS:
+                units.append(
+                    {"id": uid, "mode": "adapted", "members": _real_catalog_members(unit)}
+                )
+            else:
+                units.append(
+                    {"id": uid, "mode": "mirror", "members": _real_catalog_members(unit)}
+                )
+        return {
+            "schema_version": 2,
+            "upstream_repository": cast(
+                dict[str, object], catalog["catalog"]
+            )["upstream_repository"],
+            "profile": profile,
+            "test_runner": test_runner,
+            "units": units,
+        }
+
+    def _real_catalog_source(
+        self, catalog: dict[str, object], profile: dict[str, bool], repository: Path
+    ) -> None:
+        """Copy the complete applicable corpus into the temporary upstream."""
+        for unit in cast(list[dict[str, object]], catalog["units"]):
+            if not evaluate_applicability(unit, profile):
+                continue
+            if unit.get("sync_projection") == "assertions":
+                continue
+            for member in cast(list[dict[str, object]], unit["members"]):
+                source = str(member["source"])
+                self._copy_source_to(self.upstream, source, source, repository)
+        self._copy_source_to(
+            self.upstream,
+            "user-stories/index.md",
+            "user-stories/index.md",
+            repository,
+        )
+
+    def _read_tree(self, origin: Path, destination: str, prepared: dict[str, str]) -> None:
+        """Read one member (file or tree) from the selected source into buffers."""
+        if origin.is_dir():
+            for path in sorted(origin.rglob("*")):
+                if not path.is_file():
+                    continue
+                relative = path.relative_to(origin)
+                if _real_catalog_excluded(relative):
+                    continue
+                rendered = f"{destination.rstrip('/')}/{relative.as_posix()}"
+                prepared[rendered] = path.read_text(encoding="utf-8")
+        else:
+            prepared[destination] = origin.read_text(encoding="utf-8")
+
+    def _real_catalog_prepare(
+        self,
+        catalog: dict[str, object],
+        declaration: dict[str, object],
+        profile: dict[str, bool],
+        before: dict[str, str] | None,
+        test_runner: dict[str, object],
+    ) -> tuple[dict[str, str], list[str]]:
+        """Prepare every destination result outside the destination.
+
+        Protected documents mirror the selected source; the root and the
+        destination-owned registers are prepared from destination identity and
+        structural headers; the story index is merged from the source rows.
+        """
+        before_map = before or {}
+        declarations = {
+            str(unit["id"]): unit
+            for unit in cast(list[dict[str, object]], declaration["units"])
+        }
+        prepared: dict[str, str] = {}
+        prepared["AGENTS.md"] = _prepare_root(
+            (self.upstream / "AGENTS.md").read_text(encoding="utf-8"),
+            before_map.get("AGENTS.md"),
+        )
+        debt_source = (self.upstream / "knowledge/debt.md").read_text(encoding="utf-8")
+        prepared["knowledge/debt.md"] = _enroll_member(
+            before_map.get("knowledge/debt.md"), debt_source, REAL_CATALOG_DEBT_HEADER
+        )
+        symptoms_source = (self.upstream / "knowledge/symptoms.md").read_text(
+            encoding="utf-8"
+        )
+        problems_source = (self.upstream / "knowledge/problems.md").read_text(
+            encoding="utf-8"
+        )
+        prepared["knowledge/symptoms.md"] = _enroll_member(
+            before_map.get("knowledge/symptoms.md"),
+            symptoms_source,
+            REAL_CATALOG_SYMPTOMS,
+        )
+        prepared["knowledge/problems.md"] = _enroll_member(
+            before_map.get("knowledge/problems.md"),
+            problems_source,
+            REAL_CATALOG_PROBLEM_HEADER,
+        )
+        for unit in cast(list[dict[str, object]], catalog["units"]):
+            uid = str(unit["id"])
+            if not evaluate_applicability(unit, profile):
+                continue
+            if unit.get("sync_projection") == "assertions":
+                continue
+            if uid == _REAL_CATALOG_ROOT_UNIT or uid in _REAL_CATALOG_ADAPTED_UNITS:
+                continue
+            declared = {
+                str(member["id"]): str(member["destination"])
+                for member in cast(
+                    list[dict[str, object]], declarations[uid].get("members", [])
+                )
+            }
+            for member in cast(list[dict[str, object]], unit["members"]):
+                source = str(member["source"])
+                destination = declared[str(member["id"])]
+                self._read_tree(self.upstream / source, destination, prepared)
+        if test_runner.get("no_tests") is True:
+            prepared["opencode.jsonc"] = _real_catalog_opencode_config(catalog)
+        else:
+            prepared["opencode.jsonc"] = _real_catalog_runner_config(catalog)
+        prepared[".gitignore"] = _real_catalog_gitignore(catalog)
+        story_members = self._real_catalog_story_members(catalog, declaration)
+        core_index = (self.upstream / "user-stories/index.md").read_text(encoding="utf-8")
+        before_index = before_map.get("user-stories/index.md")
+        merged, collisions = merge_story_index(
+            core_index.encode("utf-8"),
+            None if before_index is None else before_index.encode("utf-8"),
+            story_members,
+        )
+        prepared["user-stories/index.md"] = merged.decode("utf-8")
+        return prepared, collisions
+
+    def _real_catalog_story_members(
+        self, catalog: dict[str, object], declaration: dict[str, object]
+    ) -> list[StoryMergeMember]:
+        """Collect the applicable portable story rows for the index merge."""
+        declarations = {
+            str(unit["id"]): unit
+            for unit in cast(list[dict[str, object]], declaration["units"])
+        }
+        members: list[StoryMergeMember] = []
+        for unit in cast(list[dict[str, object]], catalog["units"]):
+            if unit.get("kind") != _REAL_CATALOG_STORY_KIND:
+                continue
+            decl_unit = declarations[str(unit["id"])]
+            if decl_unit.get("mode") == "not_applicable":
+                continue
+            declared = {
+                str(member["id"]): str(member["destination"])
+                for member in cast(
+                    list[dict[str, object]], decl_unit.get("members", [])
+                )
+            }
+            for member in cast(list[dict[str, object]], unit["members"]):
+                policy = member.get("collision_policy")
+                members.append(
+                    {
+                        "id": str(member["id"]),
+                        "destination": declared[str(member["id"])],
+                        "collision_policy": (
+                            str(policy) if policy is not None else None
+                        ),
+                    }
+                )
+        return members
+
+    def _real_catalog_review(
+        self,
+        catalog: dict[str, object],
+        declaration_text: str,
+        prepared: dict[str, str],
+        *,
+        target: str,
+        baseline_lock_digest: str | None,
+    ) -> str:
+        """Bind each protected or reconciled unit to the prepared result."""
+        declaration = yaml.safe_load(declaration_text)
+        assert isinstance(declaration, dict)
+        upstream = _GitRepo(str(self.upstream))
+        files = {
+            relative: ("100644", text.encode("utf-8"))
+            for relative, text in prepared.items()
+        }
+        declarations = {
+            str(unit["id"]): unit
+            for unit in cast(list[dict[str, object]], declaration["units"])
+        }
+        decisions: list[dict[str, object]] = []
+        for unit in cast(list[dict[str, object]], catalog["units"]):
+            uid = str(unit["id"])
+            decl_unit = declarations[uid]
+            mode = str(decl_unit.get("mode"))
+            protected = bool(unit.get("rule_documents"))
+            if mode == "not_applicable":
+                continue
+            if not (
+                protected or mode in ("adapted", "replacement", "destination_owned")
+            ):
+                continue
+            document: dict[str, object] = {
+                "unit": uid,
+                "decision": "applied",
+                "reviewer": "test-suite",
+                "evidence": (
+                    "Reviewed the shipped catalog unit against the prepared destination."
+                ),
+                "reviewed_upstream_digest": _unit_upstream_digest(upstream, target, unit),
+                "reviewed_destination_digest": _external_unit_digest(
+                    unit, decl_unit, files
+                ),
+            }
+            if protected:
+                document["verified_layout"] = RULE_LAYOUT_VALUE
+            decisions.append(document)
+        review = {
+            "schema_version": 2,
+            "upstream_repository": cast(
+                dict[str, object], catalog["catalog"]
+            )["upstream_repository"],
+            "transition": {
+                "baseline_lock_digest": baseline_lock_digest,
+                "target_source_commit": target,
+                "declaration_digest": _sha256(declaration_text.encode("utf-8")),
+            },
+            "decisions": decisions,
+        }
+        return yaml.safe_dump(review, sort_keys=False)
+
+    def _worktree_text(self, repo: Path) -> dict[str, str]:
+        """Read destination text so a transition can retain owner register bytes."""
+        return {
+            str(path.relative_to(repo)): path.read_text(encoding="utf-8")
+            for path in repo.rglob("*")
+            if path.is_file() and path.relative_to(repo).parts[0] != ".git"
+        }
+
+    def _assert_real_catalog_enrolled(self, catalog: dict[str, object]) -> None:
+        """Assert the complete applicable corpus is enrolled as protected."""
+        adopter = self.adopter
+        lock = yaml.safe_load(self.proposal_stdout)
+        assert isinstance(lock, dict)
+        modes = {str(row["id"]): str(row.get("mode")) for row in lock["units"]}
+        assert modes[_REAL_CATALOG_ROOT_UNIT] == "adapted"
+        assert modes["knowledge-debt"] == "adapted"
+        assert modes["symptom-problem-register"] == "adapted"
+        rule_documents = sorted(
+            {
+                str(document)
+                for unit in cast(list[dict[str, object]], catalog["units"])
+                for document in (unit.get("rule_documents") or [])
+            }
+        )
+        assert rule_documents, "the real catalog must declare protected rule documents"
+        for document in rule_documents:
+            destination = (adopter / document).read_text(encoding="utf-8")
+            source = (self.upstream / document).read_text(encoding="utf-8")
+            destination_layout, destination_violation = _scan_rule_layout(destination)
+            source_layout, source_violation = _scan_rule_layout(source)
+            assert destination_layout is not None, (document, destination_violation)
+            assert source_layout is not None, (document, source_violation)
+            assert destination_layout.mandatory == source_layout.mandatory, document
+        debt = (adopter / "knowledge/debt.md").read_text(encoding="utf-8")
+        problems = (adopter / "knowledge/problems.md").read_text(encoding="utf-8")
+        assert "DEBT-001" not in debt
+        assert "P-001" not in problems
+        index = (adopter / "user-stories/index.md").read_text(encoding="utf-8")
+        assert "aicore-adoption-sync" not in index
+        assert "`plan-enforce`" in index
+        assert (adopter / "OWNER-NOTES.md").read_text(encoding="utf-8") == (
+            "unrelated owner work\n"
+        )
+
+    def test_real_catalog_fresh_enrollment_orders_runner_flow(self) -> None:
+        catalog, profile = self._init_real_catalog()
+        declaration = self._real_catalog_declaration(catalog, profile, AICORE_RUNNER)
+        declaration_text = yaml.safe_dump(declaration, sort_keys=False)
+        self.init_repo(self.adopter)
+        self.write(self.adopter, "OWNER-NOTES.md", "unrelated owner work\n")
+        self.commit(self.adopter, "owner notes")
+        start = len(self.command_trace)
+        self._ordered_enroll(
+            editor_confirmed=True,
+            before=None,
+            prepare=lambda before: self._real_catalog_prepare(
+                catalog, declaration, profile, before, AICORE_RUNNER
+            ),
+            declaration_text=declaration_text,
+            build_review=lambda prepared, text: self._real_catalog_review(
+                catalog,
+                text,
+                prepared,
+                target=self.rev(self.upstream),
+                baseline_lock_digest=None,
+            ),
+        )
+        self._assert_driver_trace(start)
+        self._assert_real_catalog_enrolled(catalog)
+        config = json.loads((self.adopter / "opencode.jsonc").read_text(encoding="utf-8"))
+        executor = str(AICORE_RUNNER["executor"])
+        bash = config["agent"][executor]["permission"]["bash"]
+        assert bash["*"] == "deny"
+        assert bash[AICORE_SUITE_COMMAND] == "allow"
+
+    def test_real_catalog_existing_enrollment_transitions_ordered(self) -> None:
+        catalog, profile = self._init_real_catalog()
+        declaration = self._real_catalog_declaration(catalog, profile, NO_TESTS_RUNNER)
+        declaration_text = yaml.safe_dump(declaration, sort_keys=False)
+        self.init_repo(self.adopter)
+        self.write(self.adopter, "OWNER-NOTES.md", "unrelated owner work\n")
+        self.commit(self.adopter, "owner notes")
+        # Predecessor: the same ordered driver accepts the complete enrollment.
+        self._ordered_enroll(
+            editor_confirmed=True,
+            before=None,
+            prepare=lambda before: self._real_catalog_prepare(
+                catalog, declaration, profile, before, NO_TESTS_RUNNER
+            ),
+            declaration_text=declaration_text,
+            build_review=lambda prepared, text: self._real_catalog_review(
+                catalog,
+                text,
+                prepared,
+                target=self.rev(self.upstream),
+                baseline_lock_digest=None,
+            ),
+        )
+        self.commit(self.adopter, "accept predecessor lock")
+        # An existing destination-owned register keeps local rows across the
+        # reviewed transition; the source registers are never copied in.
+        self.write(
+            self.adopter,
+            "knowledge/debt.md",
+            REAL_CATALOG_DEBT_HEADER + "\nDEBT-014 Relay keeps this local deferral.\n",
+        )
+        self.write(
+            self.adopter,
+            "knowledge/problems.md",
+            REAL_CATALOG_PROBLEM_HEADER
+            + "\nP-014 Relay keeps this local problem row.\n",
+        )
+        self.commit(self.adopter, "owner register rows")
+        baseline_lock_digest = _raw_file_digest(
+            str(self.adopter / ".aicore/adoption.lock.yaml")
+        )
+        advanced = (self.upstream / "knowledge/agents.md").read_text(encoding="utf-8")
+        self.write(
+            self.upstream,
+            "knowledge/agents.md",
+            advanced + "\nTRANSITION_MANDATORY_LINE\n",
+        )
+        self.commit(self.upstream, "advance protected rule document")
+        before = self._worktree_text(self.adopter)
+        start = len(self.command_trace)
+        self._ordered_enroll(
+            editor_confirmed=True,
+            before=before,
+            prepare=lambda current: self._real_catalog_prepare(
+                catalog, declaration, profile, current, NO_TESTS_RUNNER
+            ),
+            declaration_text=declaration_text,
+            build_review=lambda prepared, text: self._real_catalog_review(
+                catalog,
+                text,
+                prepared,
+                target=self.rev(self.upstream),
+                baseline_lock_digest=baseline_lock_digest,
+            ),
+            baseline_lock=True,
+        )
+        self._assert_driver_trace(start)
+        self._assert_real_catalog_enrolled(catalog)
+        debt = (self.adopter / "knowledge/debt.md").read_text(encoding="utf-8")
+        problems = (self.adopter / "knowledge/problems.md").read_text(encoding="utf-8")
+        assert "DEBT-014" in debt
+        assert "P-014" in problems
+        lock = yaml.safe_load(self.proposal_stdout)
+        assert isinstance(lock, dict)
+        assert lock["accepted_source_commit"] == self.rev(self.upstream)
+        declaration_document = yaml.safe_load(
+            (self.adopter / ".aicore/adoption.yaml").read_text(encoding="utf-8")
+        )
+        assert declaration_document["test_runner"]["no_tests"] is True
