@@ -38,7 +38,7 @@ Admission: the first confirmed case admits a `candidate` row (structural only); 
 
 **Stop-and-ask rule (S-07):** two consecutive failures of the same operation, or a long-running/expensive operation that grinds, means STOP — reassess the approach and report bounded options to Cipher 🔓 (Lead Orchestrator). Do not keep retrying.
 
-**Question-routing rule (HARD RULE):** Subagents must never invoke the user-facing `question` tool. They report uncertainty, missing evidence, blockers, and bounded options to Cipher 🔓 (Lead Orchestrator). Cipher 🔓 (Lead Orchestrator) is the sole authority permitted to use `question`, and only for genuine user-only decisions after available evidence and delegated investigation have been exhausted.
+**Question-routing rule (HARD RULE):** Subagents must never invoke the user-facing `question` tool. When a required input, instruction, or piece of evidence is missing, a subagent MUST halt the affected operation and return a structured report to Cipher 🔓 (Lead Orchestrator) — the task as received, the exact missing item, what it inspected, bounded options, and a recommended default. A subagent must never guess, assume, silently continue on an unverified premise, or stall without a report. Cipher 🔓 (Lead Orchestrator) is the sole authority permitted to use `question`, and only for genuine user-only decisions after available evidence and delegated investigation have been exhausted.
 
 ### Bounded-query discipline (SELECT-in-WHERE)
 

@@ -37,6 +37,10 @@ from adoption_contracts import (
 )
 from adoption_digests import _is_digest
 
+# The closed set of catalog install strategies. ``preserve`` marks a
+# destination-owned member that is never converged with upstream content.
+_INSTALL_STRATEGIES = ("copy", "merge", "preserve")
+
 
 def _fields(record: object, where: str, code: str, *names: str) -> None:
     _need(isinstance(record, dict), code, f"{where} must be a mapping")
@@ -192,6 +196,11 @@ def _catalog_unit(unit: object, where: str, seen: set[str]) -> None:
     _fields(unit, where, "invalid_mapping", "id", "kind", "install_strategy")
     _need(unit["id"] not in seen, "invalid_mapping", f"{where}.id duplicated: {unit['id']}")
     seen.add(unit["id"])
+    _need(
+        unit["install_strategy"] in _INSTALL_STRATEGIES,
+        "invalid_mapping",
+        f"{where}.install_strategy must be one of {_INSTALL_STRATEGIES}",
+    )
     _applicability(unit.get("applicability"), f"{where}.applicability")
     projection = unit.get("sync_projection")
     _need(

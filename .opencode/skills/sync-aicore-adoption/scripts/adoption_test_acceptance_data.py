@@ -1358,20 +1358,38 @@ RULE_NOTICE_SEMANTIC_OMISSION_CASES: tuple[RuleNoticeCase, ...] = (
 # Hermetic bootstrap prepared results (G3)
 # ---------------------------------------------------------------------------
 #
-# Fresh enrollment creates absent debt/problem registers from structural
-# headers and does not copy source rows. An existing project keeps its
-# register, preserve member, and manifest bytes. The symptom catalog text is
-# retained in both. Production code gains no writer; tests prepare these
-# bytes with ordinary file operations and the existing temp-repo helpers.
+# Fresh enrollment creates the absent debt register from the shipped 0-entry
+# template (``knowledge/debt.template.md``) and creates the problem register
+# from its structural header. Neither copies source rows. An existing project
+# keeps its own register, preserve member, and manifest bytes. The symptom
+# catalog text is retained in both. Production code gains no writer; tests
+# prepare these bytes with ordinary file operations and the existing temp-repo
+# helpers.
 
-BOOTSTRAP_DEBT_HEADER = """# Accepted Debt Register
+DEBT_TEMPLATE = """# Accepted Debt Register
+
+Records of deferred technical or process debt that are **non-blocking** for release.
 
 ## Entry format
 
-Each entry includes an ID, a date, and a deferral decision.
+Each entry MUST include:
+
+- **ID** — unique identifier (the `DEBT` prefix and a zero-padded sequence number)
+- **Date** — when the deferral decision was made
+- **Description** — what is deferred
+- **Direct evidence** — the evidence that justifies deferral
+- **Resolution criteria** — what must be true for the debt to be cleared
+- **Explicit deferral decision** — who decided, and when
+
+## Rules
+
+- An accepted debt is nonblocking only when its record here carries direct evidence, resolution criteria, and an explicit deferral decision (see Herald 📯 (Release Manager) spec).
+- Disclose the ID and unresolved criteria in any operation report that touches it.
+- Clear and retire a debt in the same PR: the PR that clears a debt deletes its entry from this register, and its body and commit carry the Resolution evidence (criteria met, validation and audit results). Git history is the permanent record for retired entries; this register holds open debts only. Never open a dedicated PR whose sole purpose is pruning cleared entries — each debt is retired by exactly one PR: its clearing PR.
 
 ## Register
 """
+BOOTSTRAP_DEBT_HEADER = DEBT_TEMPLATE
 BOOTSTRAP_PROBLEM_HEADER = """# Known Problem Pattern Register
 
 ## Entry format
@@ -1379,12 +1397,6 @@ BOOTSTRAP_PROBLEM_HEADER = """# Known Problem Pattern Register
 One row per record. Source history is not an entry.
 
 ## Register
-"""
-BOOTSTRAP_SOURCE_DEBT = """# Accepted Debt Register
-
-## Register
-
-DEBT-001 source history row must not be copied.
 """
 BOOTSTRAP_SOURCE_PROBLEMS = """# Known Problem Pattern Register
 
@@ -1638,10 +1650,10 @@ units:
   - id: knowledge-debt
     kind: infra
     applicability: { always: true }
-    install_strategy: copy
+    install_strategy: preserve
     sync_projection: file
     members:
-      - { id: file, source: knowledge/debt.md, destination: knowledge/debt.md }
+      - { id: file, source: knowledge/debt.template.md, destination: knowledge/debt.md }
   - id: symptom-problem-register
     kind: infra
     applicability: { always: true }
@@ -1722,7 +1734,7 @@ BOOTSTRAP_SOURCE_FILES: dict[str, str] = {
     "agents/reviewer/profile.md": PROTECTED_AGENT_PROFILE,
     "skills/mirror-note.md": BOOTSTRAP_MIRROR_NOTE,
     ".opencode/skills/enrolled/SKILL.md": BOOTSTRAP_SKILL,
-    "knowledge/debt.md": BOOTSTRAP_SOURCE_DEBT,
+    "knowledge/debt.template.md": DEBT_TEMPLATE,
     "knowledge/symptoms.md": BOOTSTRAP_SYMPTOMS,
     "knowledge/problems.md": BOOTSTRAP_SOURCE_PROBLEMS,
     "plans/.gitkeep": BOOTSTRAP_SOURCE_GITKEEP,
@@ -1747,18 +1759,12 @@ BOOTSTRAP_EXISTING_FILES: dict[str, str] = {
 }
 
 # Real-catalog enrollment prepares destination-owned records externally. A
-# fresh destination gets structural register headers with no source history
-# rows and a destination symptom catalog; the source registers and the source
-# story index are never copied. Existing destinations keep their own register
-# bytes, and the story index is merged from the selected source rows.
-REAL_CATALOG_DEBT_HEADER = """# Accepted Debt Register
-
-## Entry format
-
-Each entry includes an ID, a date, and a deferral decision.
-
-## Register
-"""
+# fresh destination gets the shipped 0-entry debt template and a structural
+# problem header with no source history rows, plus a destination symptom
+# catalog; the source registers and the source story index are never copied.
+# Existing destinations keep their own register bytes, and the story index is
+# merged from the selected source rows.
+REAL_CATALOG_DEBT_HEADER = DEBT_TEMPLATE
 REAL_CATALOG_PROBLEM_HEADER = """# Known Problem Pattern Register
 
 ## Entry format

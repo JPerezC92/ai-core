@@ -59,6 +59,7 @@ from adoption_mapping import (
 from adoption_policies import _destination_policy_violation
 from adoption_reconciliation import (
     _applied_verified_layout,
+    _debt_mirror_disposition,
     _disposition,
     _review_decision_matches,
     _reviewed_unit_source_digest,
@@ -513,7 +514,10 @@ def _check_report(
             and (not protected or _applied_verified_layout(decision))
         )
         disposition = _disposition(mode, upstream_changed, destination_changed)
-        if policy_violation is not None:
+        debt_mirror = _debt_mirror_disposition(uid, mode)
+        if debt_mirror is not None:
+            disposition = debt_mirror
+        elif policy_violation is not None:
             disposition = "policy_violation"
         elif accepted_protected_violation is not None:
             disposition = "local_drift"

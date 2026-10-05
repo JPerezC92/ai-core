@@ -18,6 +18,13 @@ CatalogUnitIndex: TypeAlias = dict[str, Mapping[str, object]]
 DeclarationUnitIndex: TypeAlias = dict[str, Mapping[str, object]]
 LockUnitIndex: TypeAlias = dict[str, Mapping[str, object]]
 
+# The debt register is destination-owned: it ships as a 0-entry template
+# (``knowledge/debt.template.md``) and must never be byte-converged with an
+# upstream register. A ``mirror`` declaration would import source debt, so it is
+# rejected here for both ``propose-lock`` and ``check``. Only this unit is
+# scoped; the ``plans``/``user-stories`` preserve units stay mirror-declarable.
+DEBT_UNIT_ID = "knowledge-debt"
+
 
 def evaluate_applicability(catalog_unit: object, profile: Mapping[str, object]) -> bool:
     """Return whether a catalog unit applies under the declaration profile (Section 1)."""
@@ -160,6 +167,12 @@ def _validate_catalog_unit_framing(
         for uid, catalog_unit in catalog_units.items():
             declaration_unit = declaration_units[uid]
             mode = declaration_unit.get("mode")
+            if uid == DEBT_UNIT_ID and mode == "mirror":
+                _fail(
+                    "invalid_declaration",
+                    f"{uid}: the destination-owned debt register cannot be declared "
+                    f"mirror; declare it adapted so destination debt is preserved",
+                )
             if catalog_unit.get("rule_documents") and (
                 mode not in PROTECTED_DECLARATION_MODES
             ):

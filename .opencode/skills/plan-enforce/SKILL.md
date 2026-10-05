@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.15.0
+  version: 1.16.0
 ---
 
 # plan-enforce
@@ -28,7 +28,7 @@ This project's Python test-file pattern is `test_*.py`. This project's root open
 
 ### Plan validator script
 
-This project's plan validator script is `python3 .opencode/skills/plan-enforce/scripts/validate_plan.py`.
+This project's plan validator script is `uv run --frozen python3 .opencode/skills/plan-enforce/scripts/validate_plan.py`. Every Python invocation in this skill runs through the project's virtual environment.
 
 ### Plan, story, and checklist templates
 
@@ -210,6 +210,7 @@ There is no "left as pending" state for a criterion in a touched story: an `⬜`
 When the plan's work is done and its audits have passed — before the release PR is built:
 
 - Confirm `## Audit` records an independent auditor's `[PASS]` with `Auditor`, `Findings`, and `Date` (see **Independent audit gate**); `[PENDING]`, `[FAIL]`, or a missing audit blocks completion.
+- Evaluate completion evidence as a layered matrix on the current snapshot: code architecture, test architecture, test execution, and model/guidance verdicts — each with its scope and verdict. A passing execution result never stands in for a required architecture verdict, and a missing or adverse layer blocks completion. A planning-readiness audit is never reused as the completion audit. Adjudicate any adverse finding before marking a goal or criterion complete, writing `## Outcome`, or archiving.
 - Run acceptance-criterion reconciliation (see **Acceptance-criterion reconciliation**) over every touched story; block `## Outcome` and the archive move until no `⬜` or `❌` criterion remains — each is `✅` or removed as out-of-scope.
 - Present the goals resume in chat: one line per goal, `✅` when met, `❌` when not, each with a 1-line evidence note.
 - Write `## Outcome` into `plan.md` — what the plan produced, per goal — BEFORE moving the plan to `plans/.completed/`.
@@ -225,6 +226,8 @@ Every plan artifact is challenged for removability before it is rendered.
 - **Reduction pass before render:** before presenting a plan, phase, step, or new file, challenge it: "removable or mergeable while meeting the goals?" If yes, remove or merge it. Programming plans record the reduction outcome in `## Design decisions` (what was cut or merged, and why).
 - **Speculative artifacts forbidden:** do not plan files, phases, or steps that no goal and no explicit user request demands. "Might be useful later" is not a goal.
 - **Soft goal-bloat flag:** more than 5 goals, or any goal that is not a single observable condition, triggers the soft flag. Report it in the Markdown presentation before the concise confirmation question; the user decides whether to trim, split, or accept. The flag is a notification, not a hard limit.
+- **Evidence-bounded finding admission:** an admitted finding states the confirmed goal, the governing normative clause, the actual responsible actor and the shipped path it controls (distinct from a helper or fixture), expected versus observed behavior, affected scope, a reproduction or static fact, severity with literal output, and an explicit keep / fix / reject-scope decision. Review classifies it as a requirement defect, documentation drift, or supplemental concern; a speculative blocker is never admitted, and the flow is judged once, not through an unbounded helper or test matrix.
+- **Legacy revalidation:** whenever behavior is replaced, superseded, or newly wired, search for the superseded implementation, remove dead code and stale wiring, and record the sweep as completion evidence. No validated-but-unread field, dead symbol, or stale mapping survives a completed change.
 
 ### Dispatch bundle contract
 
@@ -235,7 +238,7 @@ Every subagent dispatch prompt carries the complete context the subagent needs. 
 3. **Phase file** — the full `phase-NN-<owner>.md` content for the phase being dispatched.
 4. **Re-pasted data values** — every data value from prior-phase Outputs that the phase's Reads list consumes (IDs, lists, paths, query results, decision strings). Re-paste the values into the prompt; "see phase-01 output" without the values is not sufficient.
 
-**Fail-closed bundle check:** before every dispatch, verify all four parts are present in the prompt. If any part is missing or paraphrased, do NOT dispatch — rebuild the bundle. A summarized goal or a paraphrased phase step is a failed bundle, because the subagent acts on the words in the prompt, not on the plan file. Every dispatch prompt must also carry the question-routing prohibition: subagents must never invoke the user-facing `question` tool; they report blockers, missing evidence, and bounded options to Cipher 🔓 (Lead Orchestrator).
+**Fail-closed bundle check:** before every dispatch, verify all four parts are present in the prompt. If any part is missing or paraphrased, do NOT dispatch — rebuild the bundle. A summarized goal or a paraphrased phase step is a failed bundle, because the subagent acts on the words in the prompt, not on the plan file. Every dispatch prompt must also carry the question-routing prohibition and the stop-and-report contract verbatim: subagents must never invoke the user-facing `question` tool; a subagent that lacks a required input, instruction, or piece of evidence halts the affected operation and returns a structured report to Cipher 🔓 (Lead Orchestrator) — the task as received, the exact missing item, what it inspected, bounded options, and a recommended default — and never guesses, assumes, silently continues, or stalls.
 
 ### Template selection
 
@@ -344,6 +347,11 @@ A plan is never reported ready and Forge 🔨 (Implementer) is never dispatched 
 - **Record:** write the outcome into `plan.md` under `## Audit` with `- Auditor:`, `- Verdict:`, `- Findings:`, and `- Date:`. The verdict is one of `[PENDING]`, `[PASS]`, `[FAIL]`.
 - **Gate:** the plan is not ready and Forge 🔨 (Implementer) is not dispatched until the verdict is `[PASS]` with a non-empty auditor and a date.
 - **Fail-closed:** if no auditor is available, the plan stays not-ready. A substitute auditor requires explicit user authorization, recorded in `## Audit`. Never self-audit, never invent a verdict, and never downgrade a `[FAIL]` to unblock dispatch.
+- **Planning versus completion:** a planning-readiness audit and a completion audit are distinct. The completion audit evaluates the finished work at its final candidate and is required before `## Outcome`, goal checkmarks, and archive; planning `[PASS]` or an execution-only result never substitutes for it.
+
+### All-changes disposition
+
+When asked to analyze all pending changes, enumerate every nonignored modified, deleted, and untracked path and give each an evidence-based `ship`, `fix`, or `drop` disposition before asking any scope question. Inspect the path's content first; manifest absence never proves a path is unrelated, and a pre-existing path is not automatically out of scope. Do not defer to a scope question while an inspected path still lacks a disposition, and never claim completion beyond the reviewed scope.
 
 ### Plan lifecycle rules
 

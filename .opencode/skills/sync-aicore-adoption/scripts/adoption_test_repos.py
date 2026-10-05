@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import os
 import subprocess
 import sys
@@ -73,18 +72,6 @@ def repository_root() -> Path:
             return candidate
     raise AssertionError("repository root with the v2 catalog was not found")
 
-
-def production_engine_inventory(script_dir: Path = SCRIPT_DIR) -> dict[str, str]:
-    """Hash the reviewed production engine modules. Test modules are excluded."""
-    paths = sorted(
-        path
-        for path in script_dir.glob("adoption_*.py")
-        if not path.name.startswith("adoption_test_")
-    )
-    paths.append(script_dir / "sync_aicore_adoption.py")
-    return {
-        path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in paths
-    }
 
 UNPROTECTED_RULE_CATALOG = """schema_version: 2
 catalog:

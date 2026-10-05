@@ -344,10 +344,10 @@ units:
   - id: knowledge-debt
     kind: infra
     applicability: { always: true }
-    install_strategy: copy
+    install_strategy: preserve
     sync_projection: file
     members:
-      - { id: file, source: knowledge/debt.md, destination: knowledge/debt.md }
+      - { id: file, source: knowledge/debt.template.md, destination: knowledge/debt.md }
 
   - id: symptom-problem-register
     kind: infra
