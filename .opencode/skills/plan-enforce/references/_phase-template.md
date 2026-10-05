@@ -28,7 +28,7 @@ HARD RULE — fill every Step / Output / Gate / Abort. No `TBD` placeholders. Ag
 |---|---|
 | <Name Emoji (Role)> | `<shell command>` |
 
-- Python `test_*.py` edits in reviewed discovery areas: declare the project's approved whole-suite command (AICore uses `uv run --frozen --group dev pytest -q`), assign Crucible 🔥 (Test Architect) as executor, record Bastion 🧱 (Backend & Scripts Architect) `[PASS]`, and require Crucible 🔥 (Test Architect) `[PASS]` or `[FAIL]` — `[UNCERTAIN]` is not acceptable for this scope.
+- Python `test_*.py` edits in reviewed discovery areas: declare the project's approved whole-suite command, assign Crucible 🔥 (Test Architect) as executor, record Bastion 🧱 (Backend & Scripts Architect) `[PASS]`, and require Crucible 🔥 (Test Architect) `[PASS]` or `[FAIL]` — `[UNCERTAIN]` is not acceptable for this scope.
 
 ## Gate
 

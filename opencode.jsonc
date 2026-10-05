@@ -4,11 +4,17 @@
     "agent": {
         "plan": {
             "model": "deepseek/deepseek-v4-flash",
-            "color": "warning"
+            "color": "warning",
+            "permission": {
+                "question": "allow"
+            }
         },
         "build": {
             "model": "zai-coding-plan/glm-4.7",
-            "color": "secondary"
+            "color": "secondary",
+            "permission": {
+                "question": "allow"
+            }
         },
         "crucible": {
             "permission": {
@@ -38,7 +44,7 @@
         "task": "allow",
         "skill": "allow",
         "lsp": "allow",
-        "question": "allow",
+        "question": "deny",
         "edit": "allow",
         "external_directory": {
             "*": "allow"

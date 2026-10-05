@@ -1,6 +1,6 @@
 ---
 name: git-pr
-description: Draft a pull request title and body by analyzing branch commits and the diff versus origin/main, writing output to pr-draft.md. Use when the user wants to open a PR, create a pull request, draft a PR description, or says "I'm done with this branch" / "ready to merge" / "submit my changes" — even if they don't say "pull request" explicitly.
+description: Draft a pull request title and body by analyzing branch commits and the diff versus the project's base branch ($BASE), writing output to pr-draft.md. Use when the user wants to open a PR, create a pull request, draft a PR description, or says "I'm done with this branch" / "ready to merge" / "submit my changes" — even if they don't say "pull request" explicitly.
 license: MIT
 compatibility: opencode
 metadata:
@@ -9,11 +9,23 @@ metadata:
   domain: git
 ---
 
-## What I do
+# git-pr
 
-Analyze the current branch's divergence from `origin/main` and write a PR title + body to `pr-draft.md` at the repository root. The file is the single source of truth for the eventual PR body; do not create a second PR-description artifact.
+> **Rule layout:** two-section-v1
 
-## When to use me
+## Project extensions
+
+### Base branch
+
+This project's base branch ref is `origin/main`. Other base refs may apply when the project's upstream differs (for example `origin/develop`). Throughout this skill, `$BASE` denotes the project's base branch ref; substitute the project's actual base branch ref where `$BASE` appears.
+
+## Mandatory core
+
+### What I do
+
+Analyze the current branch's divergence from the project's base branch (`$BASE`) and write a PR title + body to `pr-draft.md` at the repository root. The file is the single source of truth for the eventual PR body; do not create a second PR-description artifact.
+
+### When to use me
 
 - User wants to open a PR or create a pull request
 - User says "ready to merge", "I'm done with this branch", "submit my changes"
@@ -26,19 +38,19 @@ Do NOT use this skill to run `gh pr create` or any git command that mutates stat
 
 **Pipeline binding:** if this project has the agent roster installed (`.opencode/agents/herald.md` exists), the draft feeds Herald 📯 (Release Manager), who creates the PR; PR creation is not completion — the PR is done only after Inquisitor 🔎 (PR Reviewer) reviews it at the immutable head.
 
-## Arguments
+### Arguments
 
 None. The skill reads the current branch state directly from git.
 
-## Steps
+### Steps
 
 1. Run these in parallel:
     - `git status`
-    - `git log --oneline origin/main...HEAD`
-    - `git diff origin/main...HEAD --stat`
+    - `git log --oneline "$BASE"...HEAD`
+    - `git diff "$BASE"...HEAD --stat`
     - `git log --oneline -5` (recent style reference)
     - `git branch --show-current`
-2. If the diff stat is small (under 20 files), run `git diff origin/main...HEAD` for the full diff. Otherwise, read the most relevant changed files selectively — reading the full diff on a large changeset wastes context; sample the highest-signal files instead. `git diff --cached --check` is a whitespace diagnostic only and is never PR scope evidence.
+2. If the diff stat is small (under 20 files), run `git diff "$BASE"...HEAD` for the full diff. Otherwise, read the most relevant changed files selectively — reading the full diff on a large changeset wastes context; sample the highest-signal files instead. `git diff --cached --check` is a whitespace diagnostic only and is never PR scope evidence.
 3. Check for a plan or ticket file that explains the motivation — the PR Summary should explain the *why*, which usually lives in the plan/ticket Context, not the diff:
    - Look for `plans/*.md` and `plans/*/plan.md` with `Status: active` or `Status: completed`
    - Look for ticket folders matching recent commit refs
@@ -49,9 +61,9 @@ None. The skill reads the current branch state directly from git.
 7. Write the output to `pr-draft.md` at the repository root.
 8. If `.opencode/agents/herald.md` exists in the project, do NOT print a direct `gh pr create` command — report that `pr-draft.md` is ready for Herald 📯 (Release Manager), naming Inquisitor 🔎 (PR Reviewer) review at the immutable head as the completion condition. Otherwise, print the ready-to-run `gh pr create` command with the draft content inlined.
 
-## Format
+### Format
 
-### Title
+#### Title
 
 ```
 type(scope): concise summary under 70 characters
@@ -69,7 +81,7 @@ type(scope): concise summary under 70 characters
 - Imperative mood, lowercase after the colon
 - No trailing period
 
-### Body
+#### Body
 
 ```markdown
 ## Summary
@@ -87,11 +99,11 @@ type(scope): concise summary under 70 characters
 - **Test evidence quality** — a checkbox is ticked ONLY after a real run with recorded literal input→observed output evidence (per the project's Test-Evidence-Before-Done gate). A "logic trace", "it should work", or an UNROUTABLE-but-plausible reading is NOT execution.
 - Keep the body under 20 lines total
 
-### Post-PR evidence contract
+#### Post-PR evidence contract
 
 After the PR exists, retain the same PR body as the sole mutable description surface; do not create or use GitHub comments, reviews, or a second evidence document. Before any test-plan checkbox changes from `- [ ]` to `- [x]`:
 
-1. Obtain the PR number and immutable PR head SHA with `gh pr view <number> --json number,headRefOid`; then inspect the changed-file list and patch with `git diff origin/main...<head-sha>`. A local `HEAD`, branch name, or `git diff --cached --check` alone is insufficient.
+1. Obtain the PR number and immutable PR head SHA with `gh pr view <number> --json number,headRefOid`; then inspect the changed-file list and patch with `git diff "$BASE"...<head-sha>`. A local `HEAD`, branch name, or `git diff --cached --check` alone is insufficient.
 2. Execute the specific test against that commit and record the evidence in a `## Test evidence` section in the PR body using this exact shape:
 
 ````markdown
@@ -99,8 +111,8 @@ After the PR exists, retain the same PR body as the sole mutable description sur
 - Test-plan item: `<exact checkbox text>`
   - PR: `#<number>`
   - Commit under test / immutable head SHA: `<head-sha>`
-  - Base: `origin/main`
-  - Scope command: `git diff origin/main...<head-sha>`
+  - Base: `$BASE`
+  - Scope command: `git diff "$BASE"...<head-sha>`
   - Input: `<literal executed input>`
   - Observed output: `<literal observed output>`
   - Executor: `<person or agent>`
@@ -109,7 +121,7 @@ After the PR exists, retain the same PR body as the sole mutable description sur
 3. Re-read the persisted PR body with `gh pr view <number> --json body` and verify the PR number, immutable head SHA, exact scope command, literal input, observed output, executor, and matching evidence row before ticking the corresponding checkbox. Missing or partial evidence leaves the item unchecked.
 4. **Execution-ownership handoff.** When Cipher 🔓 (Lead Orchestrator) or another execution owner runs a test-plan item but does not own PR-body mutation, that owner must not report the PR complete. It must immediately dispatch Herald 📯 (Release Manager) to persist the complete evidence row, re-read the live PR body, and tick the exact matching checkbox. The item stays `- [ ]`, and no PR-complete report is made, until that handoff completes.
 
-### Breaking changes
+#### Breaking changes
 
 If any commit title has `!` or the diff removes/renames a public interface, add before the test plan:
 
@@ -119,7 +131,7 @@ If any commit title has `!` or the diff removes/renames a public interface, add 
 - Migration: <one-line path>
 ```
 
-## Examples
+### Examples
 
 **Input** (branch commits + diff):
 - `feat(auth): add JWT validation middleware`
@@ -136,7 +148,7 @@ If any commit title has `!` or the diff removes/renames a public interface, add 
 - [ ] Hit it with an expired token → 401, no handler invocation
 ```
 
-## Output file
+### Output file
 
 `pr-draft.md` content:
 
@@ -148,7 +160,7 @@ Title: <title here>
 <body here>
 ```
 
-## Rules
+### Rules
 
 - **Do NOT run `gh pr create`** or any git command that mutates state — only write the draft file.
 - **Do NOT stage, commit, or push** anything.
@@ -156,7 +168,7 @@ Title: <title here>
 - **Do NOT force a PR title to match its branch.** A matching branch is a consistency check; the diff-derived title wins on mismatch and the mismatch must be reported.
 - **Do NOT use prose test items** ("Verify the X works"). Use `- [ ] <actionable item>` form. Herald 📯 (Release Manager) converts prose → checkboxes only if forced; the skill must produce checkboxes from the start.
 - **Do NOT claim unexecuted evidence** in the draft or PR body. A checkbox remains unchecked until its complete post-PR evidence row is persisted and re-read.
-- **Do NOT use `git diff --cached --check` as scope evidence.** Use `git diff origin/main...HEAD` before PR creation and `git diff origin/main...<head-sha>` after the immutable PR head is known.
+- **Do NOT use `git diff --cached --check` as scope evidence.** Use `git diff "$BASE"...HEAD` before PR creation and `git diff "$BASE"...<head-sha>` after the immutable PR head is known.
 - **Do NOT create, post, edit, identify, or delete GitHub comments or reviews.** Test evidence belongs only in the PR body.
 - **If on main/master with no diverging commits** — inform the user, no draft to write.
 - **If the branch has no commits ahead of main** — check for uncommitted changes and suggest running `/git-commit` first.
@@ -166,11 +178,11 @@ Title: <title here>
   ```
   If the roster IS installed, hand off instead: report the draft ready for Herald 📯 (Release Manager) and do not print or run a direct PR-creation command.
 
-## Troubleshooting
+### Troubleshooting
 
-**`fatal: ambiguous argument 'origin/main...HEAD'`**:
-- Cause: branch is `master`, or the upstream tracking branch has a different name (e.g., `origin/develop`).
-- Fix: run `git branch -vv` to confirm the current upstream, then re-run the diff against the correct remote base (e.g., `git diff origin/develop...HEAD`).
+**`fatal: ambiguous argument '$BASE...HEAD'`**:
+- Cause: the project's base branch has a different name than the configured `$BASE` (e.g., the default branch is named differently, or `master` is used).
+- Fix: run `git branch -vv` to confirm the current upstream, then re-run the diff against the correct remote base ref and set `$BASE` accordingly.
 
 **No commits ahead of main**:
 - Cause: branch is at the same commit as `main` — nothing to PR.
@@ -198,4 +210,4 @@ Title: <title here>
 
 **Changeset scope confused with repo-wide tree scope**:
 - Cause: `git ls-tree -r <sha> --name-only | grep '\.py$'` lists every tracked file in the whole tree at that SHA, not the PR's changeset — a Markdown-only PR still lists tracked `.py` files this way.
-- Fix: for changeset language scope, use the diff pipe-grep: `git diff --name-only origin/main...<head-sha> | grep '\.py$'` — empty output means the changeset has no `.py` files.
+- Fix: for changeset language scope, use the diff pipe-grep: `git diff --name-only "$BASE"...<head-sha> | grep '\.py$'` — empty output means the changeset has no `.py` files.

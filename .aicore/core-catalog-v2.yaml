@@ -20,6 +20,14 @@
 #                  adopter-owned fragment (comment lines are ignored before
 #                  matching). There is no `none`: every unit is checkable.
 #
+# rule_documents (optional, per unit): source-relative Markdown paths, each a
+#   declared member of this unit, that carry the two-section ownership layout
+#   (`## Project extensions` + `## Mandatory core`). Present => the unit is a
+#   protected rule unit: every active enrollment must carry a fresh applied
+#   `verified_layout: two-section-v1` review decision, its exact mandatory-core
+#   bytes must equal the selected source revision, and `replacement`/
+#   `destination_owned` modes cannot bypass that convergence.
+#
 # collision_policy (optional, per member; today only on portable story members):
 #   core_wins    - in the story index merge the core row replaces a differing
 #                  destination row inside the existing table, and the engine
@@ -30,7 +38,7 @@
 schema_version: 2
 
 catalog:
-  version: 2.4.0
+  version: 2.5.2
   upstream_repository: JPerezC92/ai-core
   digest_algorithm: sha256
   digest_exclusions:
@@ -52,6 +60,8 @@ units:
     applicability: { always: true }
     install_strategy: copy
     sync_projection: tree
+    rule_documents:
+      - .opencode/skills/git-branch-name/SKILL.md
     members:
       - { id: tree, source: .opencode/skills/git-branch-name, destination: .opencode/skills/git-branch-name }
 
@@ -60,6 +70,8 @@ units:
     applicability: { always: true }
     install_strategy: copy
     sync_projection: tree
+    rule_documents:
+      - .opencode/skills/git-commit/SKILL.md
     members:
       - { id: tree, source: .opencode/skills/git-commit, destination: .opencode/skills/git-commit }
 
@@ -68,6 +80,8 @@ units:
     applicability: { always: true }
     install_strategy: copy
     sync_projection: tree
+    rule_documents:
+      - .opencode/skills/git-pr/SKILL.md
     members:
       - { id: tree, source: .opencode/skills/git-pr, destination: .opencode/skills/git-pr }
 
@@ -76,6 +90,8 @@ units:
     applicability: { always: true }
     install_strategy: copy
     sync_projection: tree
+    rule_documents:
+      - .opencode/skills/op-agent-creator/SKILL.md
     members:
       - { id: tree, source: .opencode/skills/op-agent-creator, destination: .opencode/skills/op-agent-creator }
 
@@ -84,6 +100,8 @@ units:
     applicability: { always: true }
     install_strategy: copy
     sync_projection: tree
+    rule_documents:
+      - .opencode/skills/op-model/SKILL.md
     members:
       - { id: tree, source: .opencode/skills/op-model, destination: .opencode/skills/op-model }
 
@@ -92,6 +110,8 @@ units:
     applicability: { always: true }
     install_strategy: copy
     sync_projection: tree
+    rule_documents:
+      - .opencode/skills/op-skill-creator/SKILL.md
     members:
       - { id: tree, source: .opencode/skills/op-skill-creator, destination: .opencode/skills/op-skill-creator }
 
@@ -100,6 +120,8 @@ units:
     applicability: { always: true }
     install_strategy: copy
     sync_projection: tree
+    rule_documents:
+      - .opencode/skills/plan-enforce/SKILL.md
     members:
       - { id: tree, source: .opencode/skills/plan-enforce, destination: .opencode/skills/plan-enforce }
 
@@ -108,6 +130,8 @@ units:
     applicability: { requires: [ticket_system] }
     install_strategy: copy
     sync_projection: tree
+    rule_documents:
+      - .opencode/skills/query-verification/SKILL.md
     members:
       - { id: tree, source: .opencode/skills/query-verification, destination: .opencode/skills/query-verification }
 
@@ -116,6 +140,8 @@ units:
     applicability: { requires: [ticket_system] }
     install_strategy: copy
     sync_projection: tree
+    rule_documents:
+      - .opencode/skills/ticket-runbook/SKILL.md
     members:
       - { id: tree, source: .opencode/skills/ticket-runbook, destination: .opencode/skills/ticket-runbook }
 
@@ -125,6 +151,8 @@ units:
     applicability: { always: true }
     install_strategy: copy
     sync_projection: file
+    rule_documents:
+      - .opencode/agents/atrium.md
     members:
       - { id: spec, source: .opencode/agents/atrium.md, destination: .opencode/agents/atrium.md }
       - { id: profile, source: agents/atrium/profile.md, destination: agents/atrium/profile.md }
@@ -134,6 +162,8 @@ units:
     applicability: { always: true }
     install_strategy: copy
     sync_projection: file
+    rule_documents:
+      - .opencode/agents/augur.md
     members:
       - { id: spec, source: .opencode/agents/augur.md, destination: .opencode/agents/augur.md }
       - { id: profile, source: agents/augur/profile.md, destination: agents/augur/profile.md }
@@ -143,6 +173,8 @@ units:
     applicability: { any_of: [backend_stack, python_scripts] }
     install_strategy: copy
     sync_projection: file
+    rule_documents:
+      - .opencode/agents/bastion.md
     members:
       - { id: spec, source: .opencode/agents/bastion.md, destination: .opencode/agents/bastion.md }
       - { id: profile, source: agents/bastion/profile.md, destination: agents/bastion/profile.md }
@@ -152,6 +184,8 @@ units:
     applicability: { always: true }
     install_strategy: copy
     sync_projection: file
+    rule_documents:
+      - .opencode/agents/crucible.md
     members:
       - { id: spec, source: .opencode/agents/crucible.md, destination: .opencode/agents/crucible.md }
       - { id: profile, source: agents/crucible/profile.md, destination: agents/crucible/profile.md }
@@ -161,6 +195,8 @@ units:
     applicability: { always: true }
     install_strategy: copy
     sync_projection: file
+    rule_documents:
+      - .opencode/agents/forge.md
     members:
       - { id: spec, source: .opencode/agents/forge.md, destination: .opencode/agents/forge.md }
       - { id: profile, source: agents/forge/profile.md, destination: agents/forge/profile.md }
@@ -170,6 +206,8 @@ units:
     applicability: { always: true }
     install_strategy: copy
     sync_projection: file
+    rule_documents:
+      - .opencode/agents/herald.md
     members:
       - { id: spec, source: .opencode/agents/herald.md, destination: .opencode/agents/herald.md }
       - { id: profile, source: agents/herald/profile.md, destination: agents/herald/profile.md }
@@ -179,6 +217,8 @@ units:
     applicability: { always: true }
     install_strategy: copy
     sync_projection: file
+    rule_documents:
+      - .opencode/agents/inquisitor.md
     members:
       - { id: spec, source: .opencode/agents/inquisitor.md, destination: .opencode/agents/inquisitor.md }
       - { id: profile, source: agents/inquisitor/profile.md, destination: agents/inquisitor/profile.md }
@@ -188,6 +228,8 @@ units:
     applicability: { requires: [ticket_system] }
     install_strategy: copy
     sync_projection: file
+    rule_documents:
+      - .opencode/agents/investigator.md
     members:
       - { id: spec, source: .opencode/agents/investigator.md, destination: .opencode/agents/investigator.md }
       - { id: profile, source: agents/investigator/profile.md, destination: agents/investigator/profile.md }
@@ -197,6 +239,8 @@ units:
     applicability: { requires: [ticket_system] }
     install_strategy: copy
     sync_projection: file
+    rule_documents:
+      - .opencode/agents/ledger.md
     members:
       - { id: spec, source: .opencode/agents/ledger.md, destination: .opencode/agents/ledger.md }
       - { id: profile, source: agents/ledger/profile.md, destination: agents/ledger/profile.md }
@@ -206,6 +250,8 @@ units:
     applicability: { always: true }
     install_strategy: copy
     sync_projection: file
+    rule_documents:
+      - .opencode/agents/lumen.md
     members:
       - { id: spec, source: .opencode/agents/lumen.md, destination: .opencode/agents/lumen.md }
       - { id: profile, source: agents/lumen/profile.md, destination: agents/lumen/profile.md }
@@ -215,6 +261,8 @@ units:
     applicability: { always: true }
     install_strategy: copy
     sync_projection: file
+    rule_documents:
+      - .opencode/agents/marshal.md
     members:
       - { id: spec, source: .opencode/agents/marshal.md, destination: .opencode/agents/marshal.md }
       - { id: profile, source: agents/marshal/profile.md, destination: agents/marshal/profile.md }
@@ -224,6 +272,8 @@ units:
     applicability: { requires: [ticket_system] }
     install_strategy: copy
     sync_projection: file
+    rule_documents:
+      - .opencode/agents/quill.md
     members:
       - { id: spec, source: .opencode/agents/quill.md, destination: .opencode/agents/quill.md }
       - { id: profile, source: agents/quill/profile.md, destination: agents/quill/profile.md }
@@ -233,6 +283,8 @@ units:
     applicability: { requires: [ticket_system] }
     install_strategy: copy
     sync_projection: file
+    rule_documents:
+      - .opencode/agents/scribe.md
     members:
       - { id: spec, source: .opencode/agents/scribe.md, destination: .opencode/agents/scribe.md }
       - { id: profile, source: agents/scribe/profile.md, destination: agents/scribe/profile.md }
@@ -242,6 +294,8 @@ units:
     applicability: { always: true }
     install_strategy: copy
     sync_projection: file
+    rule_documents:
+      - .opencode/agents/sentinel.md
     members:
       - { id: spec, source: .opencode/agents/sentinel.md, destination: .opencode/agents/sentinel.md }
       - { id: profile, source: agents/sentinel/profile.md, destination: agents/sentinel/profile.md }
@@ -251,6 +305,8 @@ units:
     applicability: { always: true }
     install_strategy: copy
     sync_projection: file
+    rule_documents:
+      - .opencode/agents/vault.md
     members:
       - { id: spec, source: .opencode/agents/vault.md, destination: .opencode/agents/vault.md }
       - { id: profile, source: agents/vault/profile.md, destination: agents/vault/profile.md }
@@ -260,6 +316,8 @@ units:
     applicability: { always: true }
     install_strategy: copy
     sync_projection: file
+    rule_documents:
+      - .opencode/agents/warden.md
     members:
       - { id: spec, source: .opencode/agents/warden.md, destination: .opencode/agents/warden.md }
       - { id: profile, source: agents/warden/profile.md, destination: agents/warden/profile.md }
@@ -278,6 +336,8 @@ units:
     applicability: { always: true }
     install_strategy: copy
     sync_projection: file
+    rule_documents:
+      - knowledge/agents.md
     members:
       - { id: file, source: knowledge/agents.md, destination: knowledge/agents.md }
 
@@ -363,13 +423,18 @@ units:
     applicability: { always: true }
     install_strategy: merge
     sync_projection: guarded_file
-    destination_policy: adopter_root_runtime
+    destination_policy: adopter_root_rules
+    rule_documents:
+      - AGENTS.md
     members:
       - { id: root, source: AGENTS.md, destination: AGENTS.md }
     notes: >-
-      Installer merges new roster lines into an existing root file; an adopter
-      may map the logical `root` member to a differently named runtime spec
-      (e.g. CLAUDE.md) via its declaration.
+      Installer prepares a reviewed section-aware root result. It does not
+      append roster lines into mandatory bytes. An adopter may map the logical
+      `root` member to a differently named runtime spec (e.g. CLAUDE.md) via
+      its declaration. `adopter_root_rules` is the two-section successor to
+      `adopter_root_runtime`: an older engine that does not recognize it
+      rejects the catalog instead of ignoring the protected-rule metadata.
 
   - id: opencode-config
     kind: config

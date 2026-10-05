@@ -1,8 +1,16 @@
 # Shared Agent Rules
 
-Cross-cutting rules and cross-agent protocols that apply to the roster. Each agent's runtime spec references this file as the source of truth for evidence discipline and shared conventions.
+> **Rule layout:** two-section-v1
 
-## Evidence discipline (HARD RULE)
+## Project extensions
+
+### Knowledge registers
+
+- This project's symptom-class catalog is `knowledge/symptoms.md` and its known-problem register is `knowledge/problems.md`; the incident domain is enabled here. Replace these with the destination's own registers when the incident domain does not apply.
+
+## Mandatory core
+
+### Evidence discipline (HARD RULE)
 
 - **Facts** (query results, tool returns, browser evidence): unmarked.
 - **Hypotheses**: cite partial evidence + state what would confirm/refute. Label with `hipótesis:`.
@@ -10,51 +18,53 @@ Cross-cutting rules and cross-agent protocols that apply to the roster. Each age
 - Every quantitative claim (counts, sizes, durations) must trace to a cited measurement. Unverified quantitative claims are FAILs.
 - Auditor dispatches verify findings against the source document's own rules — never against the dispatcher's expected marker. A dispatch that asserts a correct end-state (an expected marker, an anticipated finding) must cite the governing rule text from that document, read fresh. Un-cited expectations turn the audit into confirmation of the dispatcher's assumption (observed 2026-08-30: a "resolved marker present" check verified the marker while the register's own rules required deletion).
 
-## Register-first identification (HARD RULE)
+### Register-first identification (HARD RULE)
 
 Incident identification is deterministic: ticket signal → `S-xx` → incident `P-NNN` → `exact | structural | no_match`.
 
-1. **Match the symptom** — match the error signature against `knowledge/symptoms.md`; a class matches only when every **Required signal** is present and no **Exclusion** is present.
-2. **Match the problem** — read `knowledge/problems.md`; keep only `Team: incident` rows whose `Symptom` references the matched `S-xx`, whose `System` and `Module` align, and whose `Lifecycle` is matchable (`candidate`, `active`, or `mitigated`; `resolved`/`retired` never match). Evaluate every `Discriminators` field and any `Exclusions` condition.
+1. **Match the symptom** — match the error signature against the project's symptom catalog; a class matches only when every **Required signal** is present and no **Exclusion** is present.
+2. **Match the problem** — read the project's known-problem register; keep only `Team: incident` rows whose `Symptom` references the matched `S-xx`, whose `System` and `Module` align, and whose `Lifecycle` is matchable (`candidate`, `active`, or `mitigated`; `resolved`/`retired` never match). Evaluate every `Discriminators` field and any `Exclusions` condition.
 3. **Verdict** — `exact` (exactly one `active` row with `Allow_exact: yes` and every discriminator already evidenced), `structural` (exactly one `candidate`/`active` row needing current-ticket validation), or `no_match` (no eligible row). An empty register is the canonical `no_match` — never halt on it.
 
 Only `S-xx` → incident `P-NNN` may issue `exact` or `structural`. Resolved-ticket archives, patterns registers, KBA/RCA catalogs, and knowledge search are evidence/backfill sources only — they never issue, upgrade, or echo a verdict. Consult them only after `no_match`, and only as labeled investigation evidence.
 
 Admission: the first confirmed case admits a `candidate` row (structural only); a second independent confirmed case may promote it to `active`. Scribe ✍️ (Docs & Problems Manager) owns the register. Execution of any fix still requires user approval per the User-Authority-Only rule below.
 
-**Proactive admission (confirmed root cause):** when the root cause is confirmed, Cipher 🔓 (Lead Orchestrator) dispatches Scribe ✍️ (Docs & Problems Manager) for the register mutation immediately — admission does not wait for destructive close-out collapse, while collapse (deleting `analysis/*.md` and `response-draft.md`) still requires explicit user authorization. Every executed query from the investigation survives collapse verbatim in `ticket_<id>.md` or a cited `validations/` artifact. The row's Evidence keeps the durable `case:` pointer and may additionally record an optional `pack:<destination-relative-pack-path>` for a reusable identification pack (a multi-statement or multi-result correlation) or an optional `diagnostic:<destination-relative-sidecar-path>` when the confirming query is reusable. A reusable confirming query is stored as parameterized SQL plus an adjacent `.verifier.yaml` sidecar at the destination project's declared query-storage path; a reusable identification pack is stored at the destination-chosen path; the destination chooses the layout and AICore never names the directory. A later `structural` ticket follows a recorded `pack:` pointer first, resolving the destination-relative path and replaying that correlation with current-ticket keys under destination-owned execution (AICore never executes or parses the pack), then follows `diagnostic:` through protocol-v1 when present, before framing a new query. When listing close-out actions, always name register admission before collapse.
+**Proactive admission (confirmed root cause):** when the root cause is confirmed, Cipher 🔓 (Lead Orchestrator) dispatches Scribe ✍️ (Docs & Problems Manager) for the register mutation immediately — admission does not wait for destructive close-out collapse, while collapse (deleting `analysis/*.md` and `response-draft.md`) still requires explicit user authorization. Every executed query from the investigation survives collapse verbatim in `ticket_<id>.md` or a cited `validations/` artifact. The row's Evidence keeps the durable `case:` pointer and may additionally record an optional `pack:<destination-relative-pack-path>` for a reusable identification pack (a multi-statement or multi-result correlation) or an optional `diagnostic:<destination-relative-sidecar-path>` when the confirming query is reusable. A reusable confirming query is stored as parameterized SQL plus an adjacent `.verifier.yaml` sidecar at the destination project's declared query-storage path; a reusable identification pack is stored at the destination-chosen path; the destination chooses the layout and the upstream core never names the directory. A later `structural` ticket follows a recorded `pack:` pointer first, resolving the destination-relative path and replaying that correlation with current-ticket keys under destination-owned execution (the upstream core never executes or parses the pack), then follows `diagnostic:` through protocol-v1 when present, before framing a new query. When listing close-out actions, always name register admission before collapse.
 
-**Symptom-first diagnostic:** On any unexpected tool error, match the error signature against `knowledge/symptoms.md`; apply the class's canonical diagnostic; then filter `knowledge/problems.md` by that S-xx + Team for a prior occurrence. Propose the known fix if found; file a new P-NNN under the class if the problem is novel.
+**Symptom-first diagnostic:** On any unexpected tool error, match the error signature against the project's symptom catalog; apply the class's canonical diagnostic; then filter the project's known-problem register by that S-xx + Team for a prior occurrence. Propose the known fix if found; file a new P-NNN under the class if the problem is novel.
 
 **Version-first rule (S-01/2-class errors):** before any workaround, check whether a newer supported version of the offending tool is available. If an upgrade is recommended, Warden 🔒 (Dependency Warden) reviews it and the user approves it before execution; then re-verify.
 
-**Stop-and-ask rule (S-07):** two consecutive failures of the same operation, or a long-running/expensive operation that grinds, means STOP — reassess the approach and present options to the user. Do not keep retrying.
+**Stop-and-ask rule (S-07):** two consecutive failures of the same operation, or a long-running/expensive operation that grinds, means STOP — reassess the approach and report bounded options to Cipher 🔓 (Lead Orchestrator). Do not keep retrying.
 
-## Bounded-query discipline (SELECT-in-WHERE)
+**Question-routing rule (HARD RULE):** Subagents must never invoke the user-facing `question` tool. They report uncertainty, missing evidence, blockers, and bounded options to Cipher 🔓 (Lead Orchestrator). Cipher 🔓 (Lead Orchestrator) is the sole authority permitted to use `question`, and only for genuine user-only decisions after available evidence and delegated investigation have been exhausted.
+
+### Bounded-query discipline (SELECT-in-WHERE)
 
 - Every query/read must be bounded: `TOP N`, `WHERE` filter, CTE filter, or documented pagination.
 - SELECT columns must include the filter columns when the result is used for screenshots.
 - Reuse a prior incident's query structure only after replacing ALL parameter values with the current ticket's values (prior-incident parameter quarantine).
 - Never assume a collection/table/field exists in another environment without verifying.
 
-## Instrument discipline
+### Instrument discipline
 
-- Recursive file-pattern search silently skips dot-directories (e.g. `.opencode/`): a bare `**/*.md` omits them entirely, and a dot-prefixed pattern (`.opencode/**/*.md`) returns nothing at all. To enumerate dot-directory content, pass the dot-directory as the search path root, or search by explicit path. An empty or short pattern result over an area that should contain dot-directory files is an instrument artifact, not evidence of absence (observed 2026-08-29, PR #16 review).
+- Recursive file-pattern search silently skips dot-directories (e.g. `.opencode/`): a bare `**/*.md` omits them entirely, and a dot-prefixed pattern (`.opencode/**/*.md`) returns nothing at all. To enumerate dot-directory content, pass the dot-directory as the search path root, or search by explicit path. An empty or short pattern result over an area that should contain dot-directory files is an instrument artifact, not evidence of absence.
 
-## Screenshot-ready output
+### Screenshot-ready output
 
 - When a finding will be used as image evidence, format the query for readability: limited columns, readable joins, sensible row count, projection limited to cited fields plus filter keys.
 - Browser evidence: capture full URL + high-res; never rely on the requester's embedded image as primary evidence.
 
-## Tag forbidden field names
+### Tag forbidden field names
 
 Agents that feed evidence to Quill 🪶 (Note Drafter) MUST tag any field name or internal identifier that must NOT appear in the user-visible note. Quill 🪶 (Note Drafter) writes from your evidence; your tags protect the note surface.
 
-## User-Authority-Only rule
+### User-Authority-Only rule
 
 Never apply a workaround, fix, or state mutation on the strength of prior art alone. Discovery → return to the Lead with evidence + recommended action. User approves → the Lead executes.
 
-## PR review findings (adjudication)
+### PR review findings (adjudication)
 
 When Inquisitor 🔎 (PR Reviewer) returns review findings, Cipher 🔓 (Lead Orchestrator) adjudicates every finding before remediation:
 
@@ -72,7 +82,7 @@ When Inquisitor 🔎 (PR Reviewer) returns review findings, Cipher 🔓 (Lead Or
 
 Every refutation, either kind, carries literal command output in the round summary — the user must be able to audit the auditor.
 
-## Roster ownership table
+### Roster ownership table
 
 | Agent | Role | Team |
 |---|---|---|

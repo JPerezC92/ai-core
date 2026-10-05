@@ -9,11 +9,23 @@ metadata:
   domain: git
 ---
 
-## What I do
+# git-branch-name
+
+> **Rule layout:** two-section-v1
+
+## Project extensions
+
+### Workspace markers
+
+Monorepo detection uses the project's workspace-marker files: `pnpm-workspace.yaml`, `turbo.json`, `lerna.json`, `go.work`, and `[workspace]` in `Cargo.toml`. Inspect these directly when detection appears to miss a workspace.
+
+## Mandatory core
+
+### What I do
 
 Analyze the current git changes and suggest a commitlint-compatible branch name in `type/scope/description` format, ready to be passed to `git checkout -b`.
 
-## When to use me
+### When to use me
 
 - User wants to create a branch or asks "what should I call this branch"
 - User says "I'm starting work on X" or is about to begin a feature, fix, or refactor — even if they don't explicitly say "branch name"
@@ -22,23 +34,23 @@ Analyze the current git changes and suggest a commitlint-compatible branch name 
 
 Do NOT use this skill to create the branch — only suggest the name.
 
-## Steps
+### Steps
 
 1. Run `git status`, `git diff --stat`, `git diff --cached --stat`, `git log --oneline -5`, and `git branch --show-current` in parallel.
 2. If the diff stat is small (under 20 files), run `git diff` and `git diff --cached` for the full diff. Otherwise, selectively read the most relevant changed files.
-3. Detect if the repo is a monorepo (look for `pnpm-workspace.yaml`, `turbo.json`, `lerna.json`, `go.work`, or `[workspace]` in `Cargo.toml`).
+3. Detect if the repo is a monorepo by inspecting the project's workspace-marker files (see Project extensions).
 4. Determine the **type** and **scope** of the changes using the commitlint conventional type set below.
 5. Generate a branch name following the format below.
 6. Print the suggested branch name and a one-line explanation of why.
 7. Print the `git checkout -b <branch-name>` command ready to copy.
 
-## Branch Name Format
+### Branch Name Format
 
 ```
 type/scope/description
 ```
 
-### Type prefixes
+#### Type prefixes
 
 | Prefix | When to use |
 |--------|------------|
@@ -54,7 +66,7 @@ type/scope/description
 | `style` | Code formatting only, not CSS or UI design |
 | `test` | Adding or updating tests only |
 
-### Scope
+#### Scope
 
 - Use one lowercase, kebab-case token. It maps directly to commit scope: `feat/billing-api/add-endpoint` becomes `feat(billing-api): add endpoint`.
 - **Single repo**: use the affected module, feature, or layer, such as `auth`, `api`, `ui`, or `config`.
@@ -65,13 +77,13 @@ type/scope/description
 - **App with both backend and frontend**: use `<app>-api` or `<app>-web` when one side changes; use `<app>` only when one change genuinely spans both sides.
 - **Cross-cutting change**: use the shared concern that caused it, such as `deps`, `ci`, or `repo`; do not name every affected app.
 
-### Short description
+#### Short description
 
 - Lowercase, words separated by hyphens
 - Max 4-5 words — concise but descriptive
 - Use imperative mood (e.g., `add-search-filter`, not `added-search-filter`)
 
-## Examples
+### Examples
 
 ```
 feat/billing-api/add-invoice-endpoint
@@ -82,7 +94,7 @@ ci/repo/update-release-workflow
 chore/deps/upgrade-next-16
 ```
 
-## Rules
+### Rules
 
 - Do NOT create the branch — only suggest the name.
 - Do NOT stage, commit, or push anything.
@@ -90,7 +102,7 @@ chore/deps/upgrade-next-16
 - If there are no changes, check the current branch name and recent commits to suggest a name based on in-progress work.
 - If already on a non-main feature branch, mention the current branch name and whether it already follows the convention.
 
-## Troubleshooting
+### Troubleshooting
 
 - **No changes and on main** — `git status` is clean and HEAD is on `main`/`master`. Fix: check the most recent commit (`git log --oneline -5`) and the open branch list (`git branch --list`) to suggest a continuation name, or ask the user what work they are starting.
-- **Monorepo detection false negative** — workspace marker file may exist but be invisible to the search. Fix: check `pnpm-workspace.yaml`, `turbo.json`, `lerna.json`, `go.work`, or `[workspace]` in `Cargo.toml` directly before deciding the scope.
+- **Monorepo detection false negative** — workspace marker file may exist but be invisible to the search. Fix: check the project's workspace-marker files (see Project extensions) directly before deciding the scope.

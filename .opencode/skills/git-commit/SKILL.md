@@ -9,11 +9,23 @@ metadata:
   domain: git
 ---
 
-## What I do
+# git-commit
+
+> **Rule layout:** two-section-v1
+
+## Project extensions
+
+### Workspace markers
+
+Monorepo detection uses the project's workspace-marker files: `pnpm-workspace.yaml`, `turbo.json`, `lerna.json`, `go.work`, and `[workspace]` in `Cargo.toml`.
+
+## Mandatory core
+
+### What I do
 
 Analyze the current git changes and write a conventional commit message to `commit.txt` at the repository root. The file is the single source of truth for the eventual `git commit -F commit.txt` invocation.
 
-## When to use me
+### When to use me
 
 - User wants to commit, write a commit message, or prepare staged changes
 - User says "commit this", "make a commit", "what should my commit say", or "I'm ready to push" — even without explicitly saying "commit message"
@@ -23,11 +35,11 @@ Do NOT use this skill to run `git commit` or any git command that mutates state 
 
 **Pipeline binding:** if this project has the agent roster installed (`.opencode/agents/herald.md` exists), the message file feeds Herald 📯 (Release Manager), who stages and runs the commit; the commit is not done until Herald executes it with its release gates.
 
-## Steps
+### Steps
 
 1. Run `git status`, `git diff --stat`, `git diff --cached --stat`, `git log --oneline -10`, and `git branch --show-current` in parallel.
 2. If the diff stat is small (under 20 files), run `git diff` and `git diff --cached` for the full diff. Otherwise, selectively read the most relevant changed files.
-3. Detect if the repo is a monorepo (look for `pnpm-workspace.yaml`, `turbo.json`, `lerna.json`, `go.work`, or `[workspace]` in `Cargo.toml`).
+3. Detect if the repo is a monorepo by inspecting the project's workspace-marker files (see Project extensions).
 4. Check if there are staged changes. If yes, write the message for staged changes only. If nothing is staged, write the message for all unstaged changes.
 5. Analyze the commit log from step 1 to detect the existing commit message style (title format, body grouping, naming conventions). Match that style in the new message.
 6. If the current branch matches `type/scope/description` with a type below, default the commit prefix to `type(scope):`; derive the prose description from the diff, not from the hyphenated branch description. If the diff contradicts the branch type or scope, use the diff-derived prefix and tell the user about the mismatch.
@@ -35,11 +47,11 @@ Do NOT use this skill to run `git commit` or any git command that mutates state 
 8. Write the commit message to `commit.txt` at the repository root.
 9. If `.opencode/agents/herald.md` exists in the project, report that `commit.txt` is ready for Herald 📯 (Release Manager) to stage and commit — do not print or suggest a direct `git commit -F commit.txt` invocation. Otherwise, tell the user the commit message was written to `commit.txt`.
 
-## Commit Format
+### Commit Format
 
 Default to **conventional commits** format. If the existing commit log uses a different style, match that style unless a matching convention-compliant branch supplies the default prefix.
 
-### Title
+#### Title
 
 ```
 type(scope): concise summary under 72 characters
@@ -72,7 +84,7 @@ type(scope): concise summary under 72 characters
 - Description starts with a lowercase verb
 - For breaking changes, add `!` after scope: `feat(api)!: remove deprecated endpoint`
 
-### Body
+#### Body
 
 Title focuses on the **why**. Body bullet points describe the **what** changed.
 
@@ -95,7 +107,7 @@ apps/api:
 
 Only include sections for packages that actually have changes.
 
-### Footer
+#### Footer
 
 For breaking changes:
 
@@ -105,7 +117,7 @@ BREAKING CHANGE: description of what breaks and migration path
 
 Skip the body for small, single-scope changes where the title is self-explanatory.
 
-## Examples
+### Examples
 
 **Input** (staged changes in a single-repo TS project):
 - Files: `src/auth/jwt.ts`, `src/auth/jwt.test.ts`
@@ -120,7 +132,7 @@ feat(auth): add JWT validation middleware
 - Cover expired-token path in jwt.test.ts
 ```
 
-## Rules
+### Rules
 
 - Do NOT run `git commit` — only write the message to the file.
 - **Roster present → hand off.** When `.opencode/agents/herald.md` exists, end with the Herald 📯 (Release Manager) handoff; do not print or suggest a direct `git commit` command.
@@ -129,7 +141,7 @@ feat(auth): add JWT validation middleware
 - A matching branch supplies a default prefix only; the diff is authoritative when branch and changes disagree.
 - If there are no changes, inform the user instead of writing an empty file.
 
-## Troubleshooting
+### Troubleshooting
 
 - **No changes to commit** — `git status` is clean. Inform the user there is nothing to commit; do not write an empty `commit.txt`.
 - **`commit.txt` not in `.gitignore`** — the file would be tracked on the next `git add .` and pollute the diff. Fix: add `commit.txt` to `.gitignore` BEFORE writing the file (step 7). Verify with `git check-ignore -v commit.txt`.

@@ -1,6 +1,6 @@
 # Response Draft — Ticket <ID>
 
-Hola, buen día.
+<!-- project/audience-appropriate greeting -->
 
 <draft prose here — customer's language>
 

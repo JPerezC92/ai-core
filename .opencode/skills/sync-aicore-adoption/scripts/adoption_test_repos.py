@@ -66,6 +66,14 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 ENGINE_PATH = SCRIPT_DIR / "sync_aicore_adoption.py"
 
 
+def repository_root() -> Path:
+    """Return the repository root that owns the shipped v2 catalog."""
+    for candidate in Path(__file__).resolve().parents:
+        if (candidate / ".aicore" / "core-catalog-v2.yaml").is_file():
+            return candidate
+    raise AssertionError("repository root with the v2 catalog was not found")
+
+
 def production_engine_inventory(script_dir: Path = SCRIPT_DIR) -> dict[str, str]:
     """Hash the reviewed production engine modules. Test modules are excluded."""
     paths = sorted(
