@@ -137,6 +137,10 @@
             "* &> /etc/*": "deny",
             "* > /boot/*": "deny",
             "* > /usr/*": "deny",
+            "* > /root/*": "deny",
+            "* > /home/*": "deny",
+            "* > /var/*": "deny",
+            "* > /opt/*": "deny",
             "* > /dev/sd*": "deny"
             // NOTE: the OpenCode TUI must be RESTARTED for these changes to take effect.
         }

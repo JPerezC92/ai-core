@@ -115,7 +115,7 @@ After the PR exists, retain the same PR body as the sole mutable description sur
   - Scope command: `git diff "$BASE"...<head-sha>`
   - Input: `<literal executed input>`
   - Observed output: `<literal observed output>`
-   - Executor: `<person or agent>`
+  - Executor: `<person or agent>`
 ````
 
 **Verdict-only observed output.** `Observed output` is the human-readable verdict only — for pytest, the `N passed in Xs` line (and the exit code where relevant). Do not paste progress bars, per-test dots, stack traces, or raw dumps unless the user explicitly asks. A raw dump is not clearer evidence; the verdict line is the durable result.
