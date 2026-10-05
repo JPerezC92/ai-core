@@ -59,7 +59,7 @@
 
 ## Audit
 
-> Filled by the independent auditor before the plan is reported ready or Forge 🔨 (Implementer) is dispatched. An unavailable auditor leaves the plan not-ready; a substitute requires explicit user authorization recorded here.
+> Filled by the independent auditor before the plan is reported ready or Forge 🔨 (Implementer) is dispatched. An unavailable auditor leaves the plan not-ready; a substitute requires explicit user authorization recorded here. Completion evidence is the layered matrix (code architecture, test architecture, execution, model/guidance) on the final candidate; a planning-readiness audit is not the completion audit.
 
 - Auditor: not yet run
 - Verdict: [PENDING]

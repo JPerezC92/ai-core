@@ -91,7 +91,7 @@ Rules for this step:
 2. **Every protected unit, including mirrors, and every other non-mirror unit gets a reviewed prepared result** before controls are written. That result may live outside the destination path. It is not required to occupy the destination before the first write. After controls, only approved paths are written.
 3. **An unreviewed difference blocks here.** If a destination path exists with content differing from the source revision and the owner has not classified it, halt. No destination copy begins.
 4. **`root-runtime-spec` is `adapted`.** The prepared root carries destination-only `Project identity` and `Local version: 1.0.0`. It is not a byte-identical mirror of upstream `AGENTS.md`.
-5. **An absent `knowledge-debt` or `symptom-problem-register` path is not classified `mirror` and is not copied from source records.** Its prepared result is a structural header plus, for the shared unit, the retained reusable symptom catalog. Create that approved absent file only after controls exist. Never overwrite an existing register. Do not import source debt or problem history.
+5. **An absent `knowledge-debt` or `symptom-problem-register` path is destination-owned and is never classified `mirror`.** The prepared debt register comes from the shipped 0-entry `knowledge/debt.template.md` source, and the shared symptom/problem unit additionally retains the reusable symptom catalog. A `mirror` declaration on `knowledge-debt` is rejected as `invalid_declaration`. Create that approved absent file only after controls exist. Never overwrite an existing register. Do not import source debt or problem history.
 
 Prepare these results in the same external set, before approval:
 
@@ -107,16 +107,16 @@ Check the complete intended write set: every adopted, config, manifest, and inde
 
 ### 6. Write controls, then approved content
 
-Write the two frozen control documents first. No adopted-content byte precedes them. Then write only approved paths. The story index is an auxiliary file, not a catalog member. Create an approved absent register only if that path is still absent.
+Write the two frozen control documents first. No adopted-content byte precedes them. Then write only approved paths. The story index is an auxiliary file, not a catalog member. Create an approved absent register only if that path is still absent, using the 0-entry `knowledge/debt.template.md` source for the debt register. Never overwrite an existing register.
 
 - **Reviewed `copy`-and-`mirror` units receive the approved byte-identical result.** Do not copy an unreviewed upstream document, and do not inherit its project extensions:
   - **Agents** enroll as reviewed pairs (`.opencode/agents/<name>.md` + `agents/<name>/profile.md`); `cipher` is CV-only. The spec is mirror only when the prepared document is byte-identical.
   - **Skills** enroll their reviewed directories, excluding `__pycache__/` and `*.pyc`.
-  - **Infra** enrolls every declared member from its approved result. After controls, create an approved absent `knowledge-debt` or problem-register file from its structural header. Do not copy source debt or problem rows. Retain the reusable symptom catalog in the shared unit.
+  - **Infra** enrolls every declared member from its approved result. After controls, create an approved absent `knowledge-debt` register from the 0-entry `knowledge/debt.template.md` source and the problem register from its structural header. A `mirror` mode on `knowledge-debt` is rejected before the write. Do not copy source debt or problem rows. Retain the reusable symptom catalog in the shared unit.
 - **`merge`, `preserve`, and any non-mirror unit keep owner bytes.** Config units receive the externally prepared merge, not a post-copy fix. A `preserve` unit is never overwritten.
 - **A differing `adapted` file receives its frozen prepared result, never an unreviewed overwrite.** That result edits the destination's reviewed bytes outside the destination before the write.
 
-**Stale content fails closed.** If a destination path already exists with content that differs from the source revision, do not silently skip or overwrite. Stop and prepare the classification again. Do not resume or roll back. For a unit with `rule_documents`, the only accepting modes are `mirror`, `adapted`, or machine-valid `not_applicable`, and acceptance requires an applied decision with `verified_layout: two-section-v1` after reading the whole accepted source, the whole target source, and every destination rule surface. `replacement` and `destination_owned` cannot bypass mandatory bytes. A `preserve` member that is absent is created from its structural header or schema; an existing preserve member is never overwritten. An identical present path is left untouched.
+**Stale content fails closed.** If a destination path already exists with content that differs from the source revision, do not silently skip or overwrite. Stop and prepare the classification again. Do not resume or roll back. For a unit with `rule_documents`, the only accepting modes are `mirror`, `adapted`, or machine-valid `not_applicable`, and acceptance requires an applied decision with `verified_layout: two-section-v1` after reading the whole accepted source, the whole target source, and every destination rule surface. `replacement` and `destination_owned` cannot bypass mandatory bytes. The `knowledge-debt` unit is destination-owned: a `mirror` declaration is rejected as `invalid_declaration`, and a `preserve` member that is absent is created from its 0-entry template or schema; an existing preserve member is never overwritten. An identical present path is left untouched.
 
 Do not run `pnpm approve-builds` or the target build.
 

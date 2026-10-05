@@ -6,7 +6,8 @@
             "model": "deepseek/deepseek-v4-flash",
             "color": "warning",
             "permission": {
-                "question": "allow"
+                "question": "allow",
+                "edit": "deny"
             }
         },
         "build": {
@@ -51,22 +52,49 @@
         },
         "bash": {
             "*": "allow",
-            "rm -rf /*": "deny",
-            "rm -rf *": "ask",
             "rm *": "ask",
+            "rm -rf *": "ask",
+            "rm -rf /*": "deny",
+            "rm -rf ~*": "deny",
             "mv *": "ask",
             "cp *": "ask",
             "chmod *": "ask",
             "chown *": "ask",
             "sudo *": "deny",
-            "git push --force *": "deny",
             "git push *": "ask",
+            "git push --force *": "deny",
+            "git push --force": "deny",
+            "git push -f *": "deny",
+            "git push -f": "deny",
             "git reset --hard *": "deny",
             "git clean -fd *": "deny",
             "git branch -D *": "ask",
             "gh pr merge *": "deny",
             "gh repo delete *": "deny",
-            "> /*": "deny",
+            "dd *of=/dev/*": "deny",
+            "mkfs*": "deny",
+            "chmod -R * /*": "deny",
+            "chown -R * /*": "deny",
+            "shutdown*": "deny",
+            "reboot*": "deny",
+            // Read-only tools. Broad allow first, then the narrow deny that
+            // disables its mutating mode under last-match-wins.
+            "jq *": "allow",
+            "rg *": "allow",
+            "rg *--pre*": "deny",
+            "ast-grep *": "allow",
+            "ast-grep *--rewrite*": "deny",
+            "ast-grep *--update-all*": "deny",
+            "ast-grep *-U*": "deny",
+            // `sg` is ast-grep's deprecated alias and collides with util-linux
+            // `sg` (switch-group); deny the name and use `ast-grep` only.
+            "sg *": "deny",
+            // Project virtual environment only: uv run is allowed, uvx is not.
+            "uv run *": "allow",
+            "uv run *ruff*--fix*": "deny",
+            "ruff *--fix*": "deny",
+            "uvx *": "deny",
+            "uv tool run *": "deny",
             // Stash safety gate (plan-enforce) — model agents may
             // `git stash push`/`save` (park work) and `git stash apply`
             // (recover, non-destructive — the entry survives as a durable
@@ -97,7 +125,20 @@
             "git stash list": "allow",
             "git stash show -u": "allow",
             "git stash show -u *": "allow",
-            "mv plans/*-*": "allow"
+            "mv plans/*-*": "allow",
+            // Redirect denies LAST so no later allow can shadow them; narrowed to
+            // catastrophic absolute targets so /tmp and /dev/null stay usable.
+            // (A fork bomb is not expressible as a glob because the shell tool
+            // emits only the inner command nodes; accepted as a documented gap.)
+            "* > /etc/*": "deny",
+            "* >> /etc/*": "deny",
+            "* 2> /etc/*": "deny",
+            "* 2>> /etc/*": "deny",
+            "* &> /etc/*": "deny",
+            "* > /boot/*": "deny",
+            "* > /usr/*": "deny",
+            "* > /dev/sd*": "deny"
+            // NOTE: the OpenCode TUI must be RESTARTED for these changes to take effect.
         }
     },
     "compaction": {

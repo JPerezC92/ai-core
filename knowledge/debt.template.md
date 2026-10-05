@@ -6,7 +6,7 @@ Records of deferred technical or process debt that are **non-blocking** for rele
 
 Each entry MUST include:
 
-- **ID** — unique identifier (e.g. `DEBT-001`)
+- **ID** — unique identifier (the `DEBT` prefix and a zero-padded sequence number)
 - **Date** — when the deferral decision was made
 - **Description** — what is deferred
 - **Direct evidence** — the evidence that justifies deferral
@@ -20,5 +20,3 @@ Each entry MUST include:
 - Clear and retire a debt in the same PR: the PR that clears a debt deletes its entry from this register, and its body and commit carry the Resolution evidence (criteria met, validation and audit results). Git history is the permanent record for retired entries; this register holds open debts only. Never open a dedicated PR whose sole purpose is pruning cleared entries — each debt is retired by exactly one PR: its clearing PR.
 
 ## Register
-
-(open debts: none)

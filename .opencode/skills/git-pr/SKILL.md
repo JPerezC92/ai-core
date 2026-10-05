@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.3.1
+  version: 1.4.0
   domain: git
 ---
 
@@ -115,8 +115,10 @@ After the PR exists, retain the same PR body as the sole mutable description sur
   - Scope command: `git diff "$BASE"...<head-sha>`
   - Input: `<literal executed input>`
   - Observed output: `<literal observed output>`
-  - Executor: `<person or agent>`
+   - Executor: `<person or agent>`
 ````
+
+**Verdict-only observed output.** `Observed output` is the human-readable verdict only — for pytest, the `N passed in Xs` line (and the exit code where relevant). Do not paste progress bars, per-test dots, stack traces, or raw dumps unless the user explicitly asks. A raw dump is not clearer evidence; the verdict line is the durable result.
 
 3. Re-read the persisted PR body with `gh pr view <number> --json body` and verify the PR number, immutable head SHA, exact scope command, literal input, observed output, executor, and matching evidence row before ticking the corresponding checkbox. Missing or partial evidence leaves the item unchecked.
 4. **Execution-ownership handoff.** When Cipher 🔓 (Lead Orchestrator) or another execution owner runs a test-plan item but does not own PR-body mutation, that owner must not report the PR complete. It must immediately dispatch Herald 📯 (Release Manager) to persist the complete evidence row, re-read the live PR body, and tick the exact matching checkbox. The item stays `- [ ]`, and no PR-complete report is made, until that handoff completes.

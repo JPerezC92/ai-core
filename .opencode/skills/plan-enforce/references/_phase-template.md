@@ -34,6 +34,7 @@ HARD RULE — fill every Step / Output / Gate / Abort. No `TBD` placeholders. Ag
 
 - ⬜ <Condition that must be true before next phase begins>
 - ⬜ <Second condition if applicable>
+- ⬜ If this phase replaces, supersedes, or newly wires behavior: a recorded legacy/dead-code sweep with no dead symbol, inert field, or stale mapping.
 - Python `test_*.py` phases: the gate passes only when Crucible 🔥 (Test Architect) ran the declared project-approved whole-suite command with exit 0, Bastion 🧱 (Backend & Scripts Architect) returned `[PASS]`, and Crucible 🔥 (Test Architect) returned `[PASS]` on test architecture; `[FAIL]` or `[UNCERTAIN]` blocks completion.
 
 ## Abort conditions

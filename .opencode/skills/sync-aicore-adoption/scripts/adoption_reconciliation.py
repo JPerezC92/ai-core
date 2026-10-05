@@ -9,7 +9,20 @@ from adoption_contracts import _Snapshot, _need
 from adoption_content import _snapshot_member_digest, _unit_upstream_digest
 from adoption_digests import _locked_destination_digest, _sha256, unit_digest
 from adoption_git import _GitRepo
-from adoption_mapping import _validate_destination
+from adoption_mapping import DEBT_UNIT_ID, _validate_destination
+
+
+def _debt_mirror_disposition(unit_id: str, mode: str) -> str | None:
+    """Return the blocking code for a mirrored destination-owned debt register.
+
+    The debt register ships as a 0-entry template and is destination-owned, so a
+    ``mirror`` mapping is a policy violation rather than a satisfiable current
+    result. Returns ``None`` for every other unit and mode.
+    """
+    if unit_id == DEBT_UNIT_ID and mode == "mirror":
+        return "policy_violation"
+    return None
+
 
 def _disposition(mode: str, upstream_changed: bool, destination_changed: bool) -> str:
     if mode == "not_applicable":

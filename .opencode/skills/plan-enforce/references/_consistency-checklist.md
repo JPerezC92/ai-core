@@ -39,6 +39,13 @@
 - Executor authority is a phase-review item: the reviewer confirms the declared executor holds the role and tool authority to run the command. The validator checks declared traceability only and never inspects permission models.
 - A phase editing a Python `test_*.py` file in reviewed discovery areas lists the destination's approved whole-suite command, assigns Crucible 🔥 (Test Architect) as its executor, and records Bastion 🧱 (Backend & Scripts Architect) `[PASS]`; the gate requires Crucible's test command exit 0 and a separate test-architecture `[PASS]`; `[FAIL]` or `[UNCERTAIN]` blocks completion.
 
+## Completion and findings (analysis)
+
+- Completion evidence is the layered matrix on the current snapshot: code architecture, test architecture, test execution, and model/guidance verdicts, each with its scope and verdict. A passing execution never substitutes for a required architecture verdict, and a planning-readiness audit is never the completion audit. `## Outcome` and goal checkmarks are written only after this evidence and every touched criterion are reconciled.
+- Every admitted finding states the confirmed goal, the governing normative clause, the actual actor and the shipped path it controls (distinct from a helper or fixture), expected versus observed, affected scope, a reproduction or static fact, severity with literal output, and a keep / fix / reject-scope decision.
+- Replaced, superseded, or newly wired behavior carries a recorded legacy/dead-code sweep; no dead symbol, inert field, or stale mapping survives completion.
+- An all-pending-changes analysis dispositions every nonignored modified, deleted, and untracked path as `ship` / `fix` / `drop` from inspected content; manifest absence never proves unrelatedness.
+
 ## user-stories
 
 - `user-stories/index.md` exists and lists every feature file.

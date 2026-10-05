@@ -12,9 +12,9 @@ AGENTS.md                     Lead orchestrator (Cipher 🔓 (Lead Orchestrator)
                               plan-enforce, query-verification, sync-aicore-adoption, ticket-runbook)
 agents/<name>/profile.md      17 persona CVs (incl. cipher)
 knowledge/agents.md           Shared agent rules
-knowledge/debt.md             Accepted-debt register
-knowledge/symptoms.md         Diagnostic Symptom Catalog
-knowledge/problems.md         Known Problem Pattern Register
+knowledge/debt.md             Accepted-debt register (destination-owned; seeded from debt.template.md, never mirrored)
+knowledge/symptoms.md         Diagnostic Symptom Catalog (shared, shipped)
+knowledge/problems.md         Known Problem Pattern Register (shared, ships empty)
 knowledge/query-verification-design.md  Query-verification living design (incident pilot v1 implemented; broader design deferred)
 plans/  user-stories/         Plan lifecycle (plan-enforce)
 output/                       Temporal working space (audits, research, design — gitignored)
@@ -23,7 +23,7 @@ output/                       Temporal working space (audits, research, design �
 ## How to use it in another project
 
 1. Start only from a destination that is already clean and saved. A dirty or uncertain destination aborts `migrate-core-to-project`; the skill does not commit, stash, or clean it. Run it after an approved source refresh. Prepare the complete result outside the destination, freeze approval, then enroll the **complete applicable unit set** (see `AGENTS.md` → Reuse guide). It writes `.aicore/adoption.yaml` and `.aicore/adoption-review.yaml` before content, and installs `.aicore/adoption.lock.yaml` only after an external candidate check. Do not treat enrollment as an application build.
-2. Keep shared rule infrastructure (`knowledge/agents.md`) and the destination's own `plans/` and `user-stories/`. Initialize destination registers from their structural headers. Do not copy AICore debt, symptom history, or problem records into the destination.
+2. Keep shared rule infrastructure (`knowledge/agents.md`). The destination owns its `plans/`, `user-stories/`, and `knowledge/debt.md`: seed an absent debt register from the shipped 0-entry `knowledge/debt.template.md` and preserve the destination's own entries — AICore's filed debt is never copied into a destination, and the debt unit cannot be declared `mirror`. The shared diagnostic catalog does ship: `knowledge/symptoms.md` (symptom-class catalog) and the empty `knowledge/problems.md` (problem-pattern register) are copied as shared infrastructure. Distinguish filed history, which is never copied, from the shared catalog, which is.
 3. If your stack differs, adapt only the project-extensions sections of the stack-specific rulebooks (`atrium.md`, `bastion.md`, `crucible.md`, `lumen.md`) before enrollment, and record that review in `.aicore/adoption-review.yaml`. Do not replace mandatory bytes.
 4. Substitute your real tooling only in destination-owned project extensions or destination configuration. Do not edit protected mandatory text. The core ships neutral on purpose.
 5. Recurring updates run from an AICore checkout, after an approved refresh of the protected upstream tip. Invoke `python3 -B` on the absolute `sync-aicore-adoption` script with explicit upstream, adopter snapshot, declaration, review, and lock options. Save a candidate outside the destination. `check` verifies one explicit snapshot and does not authorize writes. `verify-all` checks every adopter in `.aicore/adopters.yaml`; it may clone into and remove its own temporary directory, and it does not clean a supplied checkout. A local branch that was not refreshed is not live remote truth.
