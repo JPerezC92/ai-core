@@ -34,7 +34,7 @@
      ⬜ = not yet dispositioned — allowed only while no touching plan has completed
      Out-of-scope work is removed from these criteria (not left unchecked) and recorded in the change log.
      Release events (PR opened/reviewed/merged) are not acceptance criteria; record them in the change log.
-     Each criterion is self-contained: it cites the surface it proves by section/symbol, never a plan-only goal, a temporal `plans/`/`output/` path, a volatile test count, or a superseded version. -->
+     Each criterion is self-contained: it cites the surface it proves by section/symbol, never a plan-only goal, a temporal `plans/`/`output/` path, a volatile test count, or a superseded version (or a version number unless that version is the requirement). -->
 
 - ⬜ <criterion 1>
 - ⬜ <criterion 2>
