@@ -13,8 +13,8 @@
 
 ## Goal
 
-- **G:** pytest is AICore's Python test runner, locked in the root UV `dev` group; Crucible 🔥 (Test Architect) runs the approved whole suite and audits its test architecture. Other projects approve their own suite commands.
-  - Done when: `uv run --frozen --group dev pytest -q` collects and passes every `test_*.py` in the project — wherever it lives, with no subdirectory allowlist and no per-file permission edit; pytest remains outside runtime `[project]` dependencies; Crucible 🔥 (Test Architect) reports the execution result and an architecture `[PASS]`.
+- **G:** pytest is AICore's Python test runner, locked in the root UV `dev` group; the approved whole suite runs worker-parallel via `[tool.pytest.ini_options] addopts` with `pytest-xdist` in that group; Crucible 🔥 (Test Architect) runs the approved whole suite and audits its test architecture. Other projects approve their own suite commands.
+  - Done when: `uv run --frozen --group dev pytest -q` collects and passes every `test_*.py` in the project — wherever it lives, with no subdirectory allowlist and no per-file permission edit — with worker distribution active; pytest and pytest-xdist remain outside runtime `[project]` dependencies; Crucible 🔥 (Test Architect) reports the execution result and an architecture `[PASS]`.
 
 ## Scenario
 
@@ -24,6 +24,7 @@
 
 - ✅ pytest is locked only under `[dependency-groups] dev`; `[project].dependencies` stays PyYAML-only; `uv lock --check` exits 0. Evidence: `pyproject.toml` `pytest==9.0.3` in `dev`; `PyYAML==6.0.3` only in `[project].dependencies`; Warden 🔒 (Dependency Warden) downstream `[PASS]` on the dev-group lockfile change (2026-09-27).
 - ✅ The approved whole-suite command `uv run --frozen --group dev pytest -q` collects the delivered configuration/layout owner and passes on the complete clean candidate, with separate test architecture. Evidence: Crucible 🔥 architecture `[PASS]`; the whole suite passes (exact `uv run --frozen --group dev pytest -q`, exit 0). Discovery and the grant are unchanged.
+- ✅ The whole suite runs worker-parallel under the unchanged reviewed command: `[tool.pytest.ini_options]` carries `addopts = ["-n", "auto"]` and `pytest-xdist` is locked only under `[dependency-groups] dev`. Evidence: `pyproject.toml` `[dependency-groups]` and `[tool.pytest.ini_options]`; `uv lock --check` exits 0; `uv run --frozen --group dev pytest -q` exit 0; Warden 🔒 (Dependency Warden) downstream `[PASS]` on the dev-group lockfile change (2026-10-05).
 - ✅ Existing baseline suites are pytest-native: no `unittest.TestCase` inheritance or `unittest.main()` entrypoint. The split must retain those conventions; `unittest.mock` remains allowed. Evidence: baseline Python test classes at commit `f502d54`.
 - ✅ Crucible 🔥 (Test Architect) owns execution and test-architecture review for each project's approved whole suite, including tests outside skill directories. It reports actual execution results separately from architecture `[PASS]`/`[FAIL]`; cancelled or missing review output is never relabeled `[PASS]`. Evidence: `.opencode/agents/crucible.md` 1.5.0 (whole-suite executor + separate execution/architecture reporting + project-wide discovery, no copied UV grant); Warden 🔒 (Dependency Warden) 1.5.0 and Inquisitor 🔎 (PR Reviewer) 1.4.0 aligned (Inquisitor routes test dispatch through Cipher 🔓 (Lead Orchestrator)); Crucible 🔥 (Test Architect) executes the root suite (`uv run --frozen --group dev pytest -q` exit 0) and returns the architecture verdict separately. Earlier narrower run counts are history, not current evidence.
 - ✅ plan-enforce and `AGENTS.md` require the pytest command for Python skill tests and no longer forbid a test framework. Evidence: `AGENTS.md` Conventions; `plan-enforce` test-runner rules.
@@ -39,12 +40,12 @@
 
 ## Change log
 
+- 2026-10-05 — pytest-parallel-execution-20261005: added worker-parallel suite execution via addopts with pytest-xdist in the dev group; reviewed command unchanged.
 - 2026-10-05 — adoption-test-split-debt-guard-20261005: recorded the concern-based test-organization rule and the project-venv rule; repointed runner/layout evidence to their concern modules.
 - 2026-10-05 — sectioned-core-delivery-reconciliation-20261005: delivered the whole-suite Crucible runner with destination-owned runner governance.
 - 2026-09-30 — catalog-driven-adoption: made discovery project-wide (`testpaths = ["."]`) and added the structural runner-policy validator.
 - 2026-09-28 — plan-enforce-story-fold: separated AICore's UV pytest runner from the portable Crucible execution role.
-- 2026-09-27 — python-pytest-20260927: created the feature definition; locked pytest in the `dev` group.
-- before 2026-09-27 — earlier history: see git history for this file.
+- before 2026-09-28 — earlier history: see git history for this file.
 
 ## Resolved decisions
 
@@ -53,3 +54,4 @@
 - 2026-10-01 — runner validation is structural, not heuristic: only the nominated executor's ordered rules are inspected (last-match-wins); broad wildcard grants, malformed JSONC, and unapproved commands fail closed.
 - 2026-10-05 — actual commands and outputs establish evidence; labels and text scanning do not. Architecture review is separate from execution.
 - 2026-10-05 — safety tests label engine/helper/operator scopes and establish actual controlled effects; unsupported concerns are rejected before adding test obligations.
+- 2026-10-05 — parallel execution ships as `[tool.pytest.ini_options] addopts` so the reviewed command literal and its permission grant never drift.
