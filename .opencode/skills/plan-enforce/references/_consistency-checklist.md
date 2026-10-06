@@ -54,6 +54,9 @@
 - A dated `## Change log` entry is present for every plan that touched the story.
 - CREATE of a new story file is forbidden until Cipher 🔓 (Lead Orchestrator) has read `user-stories/index.md`, filtered by epic and affected areas, read candidate bodies, presented UPDATE / rename / CREATE with evidence, and received an explicit user choice.
 - Acceptance-criterion reconciliation (fail-closed): a story touched by the plan carries no `⬜` or `❌` criteria when the plan completes — each is `✅` (evidence-established) or removed as out-of-scope; `❌` (explicitly unmet) blocks completion until satisfied or removed. Out-of-scope work is removed, never left unchecked. Release events (PR opened/reviewed/merged) are not acceptance criteria. This is semantic analysis (evidence-to-checkbox truth), never mechanical auto-checking.
+- Story hygiene (auditor checks, Sentinel-executed; the validator does not parse a checklist): an acceptance criterion or Goal `Done when:` must not depend on a plan-only goal or a temporal `plans/`/`output/` path (a genuine feature-input path is allowed); it must not pin a volatile test count (`N passed`, `N tests`) or cite a superseded spec version, and must not number a surface whose version the touching plan itself bumps; a `file:line` citation is resolved to a section or symbol name.
+- Bounded change log: `## Change log` has at most 5 one-line entries (`<date> — <plan-slug>: <what changed about this feature>`) plus at most one rollup line (`before <date> — earlier history: see git history for this file`); no planning-only or execution narration.
+- Bounded resolved decisions: `## Resolved decisions` holds only decisions that currently govern the feature (design constraints and rationale); plan-execution/scheduling decisions and superseded decisions are absent.
 
 ## Loop rule
 

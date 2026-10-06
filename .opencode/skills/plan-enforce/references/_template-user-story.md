@@ -33,17 +33,23 @@
      ❌ = explicitly unmet — blocks the touching plan's completion until satisfied or removed
      ⬜ = not yet dispositioned — allowed only while no touching plan has completed
      Out-of-scope work is removed from these criteria (not left unchecked) and recorded in the change log.
-     Release events (PR opened/reviewed/merged) are not acceptance criteria; record them in the change log. -->
+     Release events (PR opened/reviewed/merged) are not acceptance criteria; record them in the change log.
+     Each criterion is self-contained: it cites the surface it proves by section/symbol, never a plan-only goal, a temporal `plans/`/`output/` path, a volatile test count, or a superseded version. -->
 
 - ⬜ <criterion 1>
 - ⬜ <criterion 2>
 
 ## Change log
 
-<!-- Dated, append-only. One entry per plan that touched this story. -->
-<!-- Example: - 2026-08-18 — <plan-slug>: <what the plan changed about this feature> -->
+<!-- Bounded, newest last: at most 5 one-line entries, each
+     - YYYY-MM-DD — <plan-slug>: <what changed about this feature>
+     plus at most one rollup line once older entries are dropped:
+     - before YYYY-MM-DD — earlier history: see git history for this file
+     Process/execution narration (planning-only status, phase/gate results, counts) is NOT a change-log entry. -->
 
 ## Resolved decisions
 
-<!-- Optional. Append-only log of locked choices with date stamps. -->
-<!-- Example: - 2026-05-20 — decided X over Y because Z -->
+<!-- Optional. Current, bounded set of decisions that still govern this feature (design constraint + why).
+     Replace superseded decisions; never append without bound. Plan-execution/scheduling and superseded
+     decisions are removed — git history retains them.
+     Example: - 2026-05-20 — decided X over Y because Z -->

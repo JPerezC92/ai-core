@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.16.0
+  version: 1.17.0
 ---
 
 # plan-enforce
@@ -295,8 +295,18 @@ Before planning work that touches features, read `user-stories/index.md` first, 
 
 - **On collision:** stop before creating any plan file. Report the collision with evidence — the existing story's persona/goal/scenario and the intended work's corresponding statements — and ask the user how to proceed. Overlap, contradiction, and extension still stop.
 - **Before any new story file:** present the index-filtered candidates with evidence and the three choices UPDATE / rename / CREATE. Wait for an explicit user choice via the `question` tool. CREATE without that choice is forbidden.
-- **On the user's decision:** append a dated line to the affected story's `## Resolved decisions` recording the resolution.
+- **On the user's decision:** record the resolution in the affected story's `## Resolved decisions`, keeping the set bounded (replace superseded entries; see **Story hygiene**).
 - **Drift watch:** re-run the gate when scope adds a feature mid-plan (see **Goal lifecycle** → Drift watch).
+
+### Story hygiene
+
+A durable story is the current feature definition, not a work log.
+
+- **Self-contained criteria:** every acceptance criterion and Goal `Done when:` states an observable condition and cites the surface it proves. It must not depend on a plan-only goal or a temporal `plans/`/`output/` path. A path that is the feature's genuine input (for example a plan-discovery glob) is allowed.
+- **Current, non-volatile evidence:** a criterion cites the exact command plus verdict, or a durable pin (commit SHA), never a volatile test count (`N passed`, `N tests`); it cites a surface by section or symbol, not by version number, unless that version is the requirement. A criterion must not cite a surface whose version this plan itself bumps. Resolve a `file:line` citation to a section or symbol name; line numbers drift.
+- **Bounded change log:** `## Change log` holds at most 5 recent one-line entries, `<date> — <plan-slug>: <what changed about this feature>`, plus one rollup line `before <date> — earlier history: see git history for this file` when older entries are dropped. Process/execution narration (planning-only status, phase/gate results, counts) is not a change-log entry; git is the permanent record.
+- **Bounded resolved decisions:** `## Resolved decisions` holds only the decisions that currently govern the feature, with their rationale. It is a current set that is replaced as decisions change, never appended without bound; superseded decisions and plan-execution or scheduling decisions are removed. Git history is the permanent record.
+- **Enforcement:** Sentinel 🛡️ (Quality Guardian) audits stories against these rules and reports violations; the rules are auditor checks, not validator-script checks.
 
 ### Create new plan
 
@@ -373,7 +383,7 @@ Git tracks only incomplete plans. Stage plan artifacts only while their plan is 
 
 ### Documentation discipline
 
-Published documents must not cite `plans/` or `output/` paths because plans move to the gitignored archive and output is temporal. Cite a commit SHA, PR number, or ticket ID instead.
+Published documents must not cite `plans/` or `output/` paths because plans move to the gitignored archive and output is temporal. Cite a commit SHA, PR number, or ticket ID instead. The same applies to durable acceptance criteria and Goal `Done when:` — see **Story hygiene**.
 
 ### Examples
 
