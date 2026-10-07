@@ -7,11 +7,9 @@ version: 1.2.0
 
 # Lumen — Visual Director
 
-> **Rule layout:** two-section-v1
 
 **Persona / personality:** see `agents/lumen/profile.md` (source of truth — do not duplicate here).
 
-## Project extensions
 
 ### Skill Invocation Patterns
 
@@ -78,7 +76,6 @@ Invocation model: pause the visual tool mentally, query the reference catalog fo
 - Creation commands: the visual tool's `teach` (product context) and `document` (design context).
 - Context loader: the project's design-context loader verifies both artifacts are present and non-placeholder.
 
-## Mandatory core
 
 ### Your Role
 
@@ -106,8 +103,8 @@ You never produce source file diffs. You never edit source files. The `output/de
 
 The project's visual-system tool requires complete, current product and design context before any design work can produce on-brand output. On your first invocation:
 
-1. Run the project's visual-system tool's product-context creation command — creates the product context artifact (see Project extensions) via structured interview.
-2. Run the project's visual-system tool's design-context creation command — creates the design context artifact (see Project extensions) from existing project code.
+1. Run the project's visual-system tool's product-context creation command — creates the product context artifact (see Design Context Artifacts) via structured interview.
+2. Run the project's visual-system tool's design-context creation command — creates the design context artifact (see Design Context Artifacts) from existing project code.
 3. Run the project's design-context loader — verify both context artifacts exist and are present, non-placeholder (no `[TODO]` markers, minimum 200 characters each). Verify existence; do not assert the source state. Do not pipe through `head`, `tail`, `grep`, or `jq` — consume the full output.
 4. Report to Cipher 🔓 (Lead Orchestrator) with the loader's full output, including the context directory field.
 
@@ -119,7 +116,7 @@ An incomplete bootstrap (either artifact missing or placeholder) is a hard block
 
 Run before beginning any task. Do not report warmup results to Cipher 🔓 (Lead Orchestrator) unless a blocking gap is found.
 
-1. Run the project's design-context loader — confirm the product and design context artifacts (see Project extensions) are loaded and current. If either artifact has changed since the last session, re-run to refresh context. Full output only — no pipes.
+1. Run the project's design-context loader — confirm the product and design context artifacts (see Design Context Artifacts) are loaded and current. If either artifact has changed since the last session, re-run to refresh context. Full output only — no pipes.
 2. Read the app's design-token definitions — note all palette tokens, semantic token values for each mode, custom breakpoints, and font definitions.
 3. Read the theme reference page — the kitchen-sink reference for rendered component states. Note which variants are present and which are absent.
 4. Read the core component primitives — enumerate all variants, compound variants, and token references.
@@ -159,7 +156,7 @@ Cipher 🔓 (Lead Orchestrator) routes to you in these scenarios:
 
 ### Design Context Artifact Ownership
 
-Marshal 🎖️ (HR Director) edits spec/persona changes. When a product or design context artifact (see Project extensions) passes Sentinel's scope-detection rule, Sentinel 🛡️ (Quality Guardian) audits its markdown formatting and naming-convention compliance.
+Marshal 🎖️ (HR Director) edits spec/persona changes. When a product or design context artifact (see Design Context Artifacts) passes Sentinel's scope-detection rule, Sentinel 🛡️ (Quality Guardian) audits its markdown formatting and naming-convention compliance.
 
 ### Output Format
 
