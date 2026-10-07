@@ -7,9 +7,9 @@ A reusable, agnostic core of AI agents, personas, and skills. Another project ad
 ```
 AGENTS.md                     Lead orchestrator (Cipher 🔓 (Lead Orchestrator)) + roster + reuse guide
 .opencode/agents/             16 runtime agent specs (OpenCode subagents)
-.opencode/skills/             11 skills (git-commit, git-branch-name, git-pr,
-                              migrate-core-to-project, op-skill-creator, op-agent-creator, op-model,
-                              plan-enforce, query-verification, sync-aicore-adoption, ticket-runbook)
+.opencode/skills/             10 skills (core-sync, git-branch-name, git-commit,
+                              git-pr, op-agent-creator, op-model, op-skill-creator,
+                              plan-enforce, query-verification, ticket-runbook)
 agents/<name>/profile.md      17 persona CVs (incl. cipher)
 knowledge/agents.md           Shared agent rules
 knowledge/debt.md             Accepted-debt register (destination-owned; seeded from debt.template.md, never mirrored)
@@ -22,15 +22,26 @@ output/                       Temporal working space (audits, research, design �
 
 ## How to use it in another project
 
-1. Start only from a destination that is already clean and saved. A dirty or uncertain destination aborts `migrate-core-to-project`; the skill does not commit, stash, or clean it. Run it after an approved source refresh. Prepare the complete result outside the destination, freeze approval, then enroll the **complete applicable unit set** (see `AGENTS.md` → Reuse guide). It writes `.aicore/adoption.yaml` and `.aicore/adoption-review.yaml` before content, and installs `.aicore/adoption.lock.yaml` only after an external candidate check. Do not treat enrollment as an application build.
+1. Start only from a destination that is already clean and saved. `core-sync` performs no cleanliness check — confirming the destination is clean and saved is an operator pre-flight. Run `core-sync init` from an AICore checkout after an approved source refresh. It enrolls the **complete applicable unit set** at one AICore revision: each file's `core` region gets the source core, and the file's previous body moves into the destination-owned `project` region. Review every `.aicore/reconciliation/` report under the core-wins rule, resolve the destination-root reconciliation blocker, and clear `pending`; `core-sync check` must exit `0` before the enrollment is accepted. Do not treat enrollment as an application build.
 2. Keep shared rule infrastructure (`knowledge/agents.md`). The destination owns its `plans/`, `user-stories/`, and `knowledge/debt.md`: seed an absent debt register from the shipped 0-entry `knowledge/debt.template.md` and preserve the destination's own entries — AICore's filed debt is never copied into a destination, and the debt unit cannot be declared `mirror`. The shared diagnostic catalog does ship: `knowledge/symptoms.md` (symptom-class catalog) and the empty `knowledge/problems.md` (problem-pattern register) are copied as shared infrastructure. Distinguish filed history, which is never copied, from the shared catalog, which is.
-3. If your stack differs, adapt only the project-extensions sections of the stack-specific rulebooks (`atrium.md`, `bastion.md`, `crucible.md`, `lumen.md`) before enrollment, and record that review in `.aicore/adoption-review.yaml`. Do not replace mandatory bytes.
+3. If your stack differs, adapt only the project-extensions sections of the stack-specific rulebooks (`atrium.md`, `bastion.md`, `crucible.md`, `lumen.md`) before adopting the core, and record that review in the destination's `.aicore/reconciliation/` records. Do not replace mandatory bytes.
 4. Substitute your real tooling only in destination-owned project extensions or destination configuration. Do not edit protected mandatory text. The core ships neutral on purpose.
-5. Recurring updates run from an AICore checkout, after an approved refresh of the protected upstream tip. Invoke `python3 -B` on the absolute `sync-aicore-adoption` script with explicit upstream, adopter snapshot, declaration, review, and lock options. Save a candidate outside the destination. `check` verifies one explicit snapshot and does not authorize writes. `verify-all` checks every adopter in `.aicore/adopters.yaml`; it may clone into and remove its own temporary directory, and it does not clean a supplied checkout. A local branch that was not refreshed is not live remote truth.
+5. Recurring updates run from an AICore checkout, after an approved refresh of the protected upstream tip, using the absolute path `.opencode/skills/core-sync/scripts/core_sync.py`:
+
+   ```bash
+   uv run --frozen python3 .opencode/skills/core-sync/scripts/core_sync.py apply \
+     --source <source-dir> --destination <destination-dir> \
+     --bindings <bindings-file> --source-revision <40-hex>
+   uv run --frozen python3 .opencode/skills/core-sync/scripts/core_sync.py check \
+     --source <source-dir> --destination <destination-dir> \
+     --bindings <bindings-file> --source-revision <40-hex>
+   ```
+
+   `apply` splices each source `core` region into its destinations and pins the revision; `check` verifies every destination core region against the pinned revision and requires `pending` empty, exiting `0` only when current. A failed `check` blocks acceptance until the drift is reconciled. A local branch that was not refreshed is not live remote truth.
 
 ## Notes
 
 - Everything is OpenCode-native: agent specs in `.opencode/agents/`, skills in `.opencode/skills/` (`compatibility: opencode`), plan lifecycle in `plans/` + `user-stories/`.
 - `output/` is gitignored — it holds temporal artifacts (audit reports, research briefs, design briefs/audits); agents create it on first write.
 - Skills `git-commit`, `git-branch-name`, `git-pr` assume git + pnpm and the GitHub CLI (`gh`) — the dev-team defaults.
-- The authoritative inventory for adopted content is `.aicore/core-catalog-v2.yaml`: it lists the adopted units with machine `applicability` and deterministic config `assertions`, and excludes the 2 upstream-only management tools (`migrate-core-to-project` and `sync-aicore-adoption`), which run from an AICore checkout and are never copied into an adopter. `.aicore/adopters.yaml` is the single AICore surface that names external adopter repositories.
+- Each destination's adopted content is bound by its own `.aicore/core.yaml`: it maps each source file to its destination paths and pins the `core_revision` the destination was enrolled at. The bindings are destination-owned state — AICore keeps no adopter registry.
