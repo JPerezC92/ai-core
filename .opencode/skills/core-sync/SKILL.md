@@ -42,7 +42,7 @@ uv run --frozen python3 .opencode/skills/core-sync/scripts/core_sync.py init \
 
 - `--source` — directory holding the source files named by the bindings.
 - `--destination` — directory holding the destination files named by the bindings.
-- `--bindings` — the bindings YAML file (schema below).
+- `--bindings` — the bindings YAML file (schema below). For a destination root blocker, use the canonical path `<destination>/.aicore/core.yaml`.
 - `--source-revision` — the 40-character lowercase hex source revision to compare (`check`) or pin (`apply`/`init`).
 - `init --bind SOURCE=DESTINATION` — append a region-mode binding to the loaded bindings file before preflight. Repeatable and idempotent for an identical mapping.
 - `init --bind-raw SOURCE=DESTINATION` — append a raw binding. Repeatable and idempotent for an identical mapping; a destination already mapped to a different source/mode fails closed.
