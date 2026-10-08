@@ -22,7 +22,17 @@
                 "bash": {
                     "*": "deny",
                     "pnpm install": "allow",
-                    "uv run --frozen --group dev pytest -q": "allow"
+                    "uv run --frozen --group dev pytest -q": "allow",
+                    // Read-only discovery so the test architect can inspect the tree
+                    // with `rg`/`ls`. Use Glob/Grep for filesystem discovery. Editing,
+                    // network, and interpreter access stay denied. TUI restart required.
+                    "rg *": "allow",
+                    "rg *--pre*": "deny",
+                    "ls *": "allow",
+                    "wc *": "allow",
+                    "git log *": "allow",
+                    "git show *": "allow",
+                    "git diff *": "allow"
                 }
             }
         }
