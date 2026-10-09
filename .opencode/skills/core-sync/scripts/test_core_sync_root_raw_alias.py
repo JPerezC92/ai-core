@@ -85,3 +85,38 @@ class RootRawAliasTests:
         assert result == uc.EXIT_INVALID
         assert raw_destination_path.is_symlink()
         assert self._snapshot(*unchanged) == unchanged
+
+    def test_init_new_raw_default_root_alias_rejected_before_writes(
+        self, tmp_path: Path
+    ) -> None:
+        source = tmp_path / "source"
+        destination = tmp_path / "destination"
+        source_region_path = _write_file(source, "agent.md", SOURCE_MARKED)
+        source_raw_path = _write_bytes_file(source, "root-payload.bin", b"raw\x00\r\n")
+        root_path = _write_file(destination, "CLAUDE.md", DEST_MARKED)
+        agents_path = destination / "AGENTS.md"
+        bindings_path = tmp_path / "bindings.yaml"
+        uc.save_bindings(
+            bindings_path,
+            _bindings_with_entries(
+                REV_A,
+                [_binding_entry("agent.md", ["CLAUDE.md"])],
+            ),
+        )
+        report_path = _write_file(
+            tmp_path, "reconciliation/init.yaml", "report unchanged\n"
+        )
+        unchanged = self._snapshot(
+            source_region_path,
+            source_raw_path,
+            root_path,
+            bindings_path,
+            report_path,
+        )
+        args = _init_args(source, destination, bindings_path, REV_A)
+        args.extend(["--bind-raw", "root-payload.bin=AGENTS.md"])
+
+        assert not agents_path.exists()
+        assert uc.main(args) == uc.EXIT_INVALID
+        assert not agents_path.exists()
+        assert self._snapshot(*unchanged) == unchanged

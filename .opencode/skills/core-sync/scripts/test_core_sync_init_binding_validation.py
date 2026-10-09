@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from _core_sync_testkit import (
     DEST_PLAIN,
     REV_A,
@@ -108,3 +110,56 @@ class InitBindingValidationTests:
             assert uc._parse_init_binding_spec(
                 f"{source}={destination}", uc.MODE_REGION
             ) == (source, destination, uc.MODE_REGION)
+
+    def test_persisted_nul_binding_paths_rejected_without_traceback(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        source = tmp_path / "source"
+        destination = tmp_path / "destination"
+        source_path = _write_file(source, "agent.md", SOURCE_MARKED)
+        destination_path = _write_file(destination, "agent.md", DEST_PLAIN)
+        root_path = _write_file(destination, "CLAUDE.md", "# Root remains unchanged\n")
+        bindings_path = tmp_path / "bindings.yaml"
+        report_path = uc.reconciliation_report_path(bindings_path)
+        _write_file(tmp_path, "reconciliation/init.yaml", "unchanged report\n")
+        invalid_bindings = (
+            _bindings_with_entries(
+                REV_B,
+                [_binding_entry("agent\x00.md", ["agent.md"])],
+                ["agent.md"],
+                "CLAUDE.md",
+            ),
+            _bindings_with_entries(
+                REV_B,
+                [_binding_entry("agent.md", ["agent\x00.md"])],
+                ["agent.md"],
+                "CLAUDE.md",
+            ),
+            _bindings_with_entries(
+                REV_B,
+                [_binding_entry("agent.md", ["agent.md"])],
+                ["agent.md"],
+                "CLAUDE\x00.md",
+            ),
+        )
+
+        for bindings in invalid_bindings:
+            uc.save_bindings(bindings_path, bindings)
+            unchanged = self._snapshot(
+                [
+                    source_path,
+                    destination_path,
+                    root_path,
+                    bindings_path,
+                    report_path,
+                ]
+            )
+
+            assert uc.main(
+                _init_args(source, destination, bindings_path, REV_A)
+            ) == 2
+            captured = capsys.readouterr()
+            assert captured.out == ""
+            assert "invalid bindings:" in captured.err
+            assert "Traceback" not in captured.err
+            assert self._snapshot(list(unchanged)) == unchanged

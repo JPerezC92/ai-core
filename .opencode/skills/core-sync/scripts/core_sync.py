@@ -39,7 +39,9 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
+import os
 import re
+import stat
 import sys
 from pathlib import Path, PureWindowsPath
 from typing import Literal, NotRequired, Optional, TypedDict
@@ -166,7 +168,7 @@ class ReconciliationEntry(TypedDict):
 
 def _is_safe_relative(path: str) -> bool:
     """Return True when a bindings path is a canonical safe relative POSIX path."""
-    if not path or "\\" in path:
+    if not path or "\x00" in path or "\\" in path:
         return False
     if any(part in ("", ".", "..") for part in path.split("/")):
         return False
@@ -459,13 +461,14 @@ def _parse_init_binding_spec(
 
 def _merge_init_binding_options(
     bindings: Bindings, region_specs: list[str], raw_specs: list[str]
-) -> Optional[str]:
-    """Merge CLI declarations into loaded bindings, rejecting destination conflicts."""
+) -> tuple[Optional[str], set[str]]:
+    """Merge CLI declarations and report raw destinations newly registered here."""
     destination_mappings = {
         destination: (entry["source"], entry["mode"])
         for entry in bindings["bindings"]
         for destination in entry["destinations"]
     }
+    new_raw_destinations: set[str] = set()
     declarations = [
         *((spec, MODE_REGION) for spec in region_specs),
         *((spec, MODE_RAW) for spec in raw_specs),
@@ -473,12 +476,12 @@ def _merge_init_binding_options(
     for spec, mode in declarations:
         declaration = _parse_init_binding_spec(spec, mode)
         if declaration is None:
-            return f"malformed or unsafe binding declaration: {spec!r}"
+            return (f"malformed or unsafe binding declaration: {spec!r}", set())
         source, destination, declaration_mode = declaration
         existing_mapping = destination_mappings.get(destination)
         if existing_mapping is not None:
             if existing_mapping != (source, declaration_mode):
-                return f"destination mapping conflicts for {destination!r}"
+                return (f"destination mapping conflicts for {destination!r}", set())
             continue
 
         matching_entry = next(
@@ -500,7 +503,9 @@ def _merge_init_binding_options(
         else:
             matching_entry["destinations"].append(destination)
         destination_mappings[destination] = (source, declaration_mode)
-    return None
+        if declaration_mode == MODE_RAW:
+            new_raw_destinations.add(destination)
+    return (None, new_raw_destinations)
 
 
 def parse_bindings(text: str) -> Optional[Bindings]:
@@ -677,14 +682,49 @@ def _path_is_within(path: Path, root: Path) -> bool:
     return True
 
 
+def _source_regular_file_inodes(source_dir: Path) -> set[tuple[int, int]]:
+    """Collect regular-file device/inode identities reachable under the source root."""
+    try:
+        root_stat = source_dir.stat()
+    except FileNotFoundError:
+        return set()
+    if stat.S_ISREG(root_stat.st_mode):
+        return {(root_stat.st_dev, root_stat.st_ino)}
+    if not stat.S_ISDIR(root_stat.st_mode):
+        return set()
+
+    inodes: set[tuple[int, int]] = set()
+    visited_directories = {(root_stat.st_dev, root_stat.st_ino)}
+    directories = [source_dir]
+    while directories:
+        directory = directories.pop()
+        with os.scandir(directory) as entries:
+            for entry in entries:
+                try:
+                    entry_stat = entry.stat(follow_symlinks=True)
+                except FileNotFoundError:
+                    if entry.is_symlink():
+                        continue
+                    raise
+                identity = (entry_stat.st_dev, entry_stat.st_ino)
+                if stat.S_ISDIR(entry_stat.st_mode):
+                    if identity not in visited_directories:
+                        visited_directories.add(identity)
+                        directories.append(Path(entry.path))
+                elif stat.S_ISREG(entry_stat.st_mode):
+                    inodes.add(identity)
+    return inodes
+
+
 def _preflight_write_targets(
     command: Literal["check", "apply", "init"],
     source_dir: Path,
     destination_dir: Path,
     bindings_path: Path,
     bindings: Bindings,
+    new_raw_destinations: Optional[set[str]] = None,
 ) -> Optional[str]:
-    """Reject overlapping roots and unsafe resolved write targets before mutation."""
+    """Reject unsafe, aliased, or source-inode write targets before mutation."""
     try:
         resolved_source = source_dir.resolve()
         resolved_destination = destination_dir.resolve()
@@ -695,6 +735,11 @@ def _preflight_write_targets(
         resolved_destination, resolved_source
     ):
         return "source and destination roots overlap"
+
+    try:
+        source_file_inodes = _source_regular_file_inodes(source_dir)
+    except OSError as error:
+        return f"could not inspect source tree for write protection: {error}"
 
     root_path = resolve_root_path(destination_dir, bindings)
     raw_destination_paths = [
@@ -715,6 +760,8 @@ def _preflight_write_targets(
         targets.append((reconciliation_report_path(bindings_path), "report"))
 
     resolved_root: Optional[Path] = None
+    resolved_targets: dict[Path, tuple[Path, Path, str]] = {}
+    target_inodes: dict[tuple[int, int], tuple[Path, Path, str]] = {}
     for target, target_kind in targets:
         try:
             resolved_target = target.resolve()
@@ -722,12 +769,70 @@ def _preflight_write_targets(
             return (
                 f"could not resolve {target_kind} write target {target}: {error}"
             )
+        lexical_target = Path(os.path.abspath(target))
+        previous_target = resolved_targets.get(resolved_target)
+        if previous_target is not None:
+            previous_path, previous_lexical, previous_kind = previous_target
+            if (
+                previous_kind == "root"
+                and target_kind == "destination payload"
+                and target in raw_destination_paths
+            ):
+                return f"root write target aliases raw destination: {target}"
+            same_root_region_target = (
+                lexical_target == previous_lexical
+                and {target_kind, previous_kind} == {"root", "destination payload"}
+                and target not in raw_destination_paths
+            )
+            if not same_root_region_target:
+                return (
+                    "distinct write targets alias after resolution: "
+                    f"{previous_path} and {target}"
+                )
+        else:
+            resolved_targets[resolved_target] = (
+                target,
+                lexical_target,
+                target_kind,
+            )
         if _path_is_within(resolved_target, resolved_source):
             return f"{target_kind} write target resolves inside source tree: {target}"
         if target_kind in ("root", "destination payload") and not _path_is_within(
             resolved_target, resolved_destination
         ):
             return f"{target_kind} write target escapes destination root: {target}"
+        try:
+            target_stat = target.stat()
+        except FileNotFoundError:
+            target_stat = None
+        except OSError as error:
+            return f"could not inspect {target_kind} write target {target}: {error}"
+        if target_stat is not None and stat.S_ISREG(target_stat.st_mode):
+            target_inode = (target_stat.st_dev, target_stat.st_ino)
+            if target_inode in source_file_inodes:
+                return (
+                    f"{target_kind} write target shares a source-tree file inode: "
+                    f"{target}"
+                )
+            previous_inode_target = target_inodes.get(target_inode)
+            if previous_inode_target is not None:
+                previous_path, previous_lexical, previous_kind = previous_inode_target
+                same_root_region_target = (
+                    lexical_target == previous_lexical
+                    and {target_kind, previous_kind}
+                    == {"root", "destination payload"}
+                )
+                if not same_root_region_target:
+                    return (
+                        "distinct write targets share a filesystem inode: "
+                        f"{previous_path} and {target}"
+                    )
+            else:
+                target_inodes[target_inode] = (
+                    target,
+                    lexical_target,
+                    target_kind,
+                )
         if target_kind == "root":
             resolved_root = resolved_target
 
@@ -744,6 +849,54 @@ def _preflight_write_targets(
                 "root write target aliases raw destination: "
                 f"{raw_destination_path}"
             )
+        try:
+            root_stat = root_path.stat()
+            raw_stat = raw_destination_path.stat()
+        except FileNotFoundError:
+            continue
+        except OSError as error:
+            return (
+                "could not inspect root/raw destination alias targets: "
+                f"{error}"
+            )
+        if (
+            stat.S_ISREG(root_stat.st_mode)
+            and stat.S_ISREG(raw_stat.st_mode)
+            and (root_stat.st_dev, root_stat.st_ino)
+            == (raw_stat.st_dev, raw_stat.st_ino)
+        ):
+            return (
+                "root write target aliases raw destination: "
+                f"{raw_destination_path}"
+            )
+
+    if command == "init" and bindings.get("root") is None:
+        agents_path = destination_dir / DEFAULT_ROOT_CANDIDATES[0]
+        if not agents_path.is_file():
+            try:
+                resolved_agents_path = agents_path.resolve()
+            except (OSError, RuntimeError) as error:
+                return f"could not resolve default root candidate {agents_path}: {error}"
+            for destination in new_raw_destinations or set():
+                raw_path = destination_dir / destination
+                if (
+                    raw_path.exists()
+                    or raw_path.is_symlink()
+                    or not raw_path.parent.is_dir()
+                ):
+                    continue
+                try:
+                    resolved_raw_path = raw_path.resolve()
+                except (OSError, RuntimeError) as error:
+                    return (
+                        "could not resolve planned raw destination "
+                        f"{raw_path}: {error}"
+                    )
+                if resolved_raw_path == resolved_agents_path:
+                    return (
+                        "default root would alias newly created raw destination: "
+                        f"{raw_path}"
+                    )
 
     return None
 
@@ -959,7 +1112,7 @@ def run_init(args: argparse.Namespace) -> int:
         print(f"invalid bindings: {args.bindings}", file=sys.stderr)
         return EXIT_INVALID
 
-    declaration_error = _merge_init_binding_options(
+    declaration_error, new_raw_destinations = _merge_init_binding_options(
         bindings, getattr(args, "bind", []), getattr(args, "bind_raw", [])
     )
     if declaration_error is not None:
@@ -970,7 +1123,12 @@ def run_init(args: argparse.Namespace) -> int:
     destination_dir = Path(args.destination)
     bindings_path = Path(args.bindings)
     preflight_error = _preflight_write_targets(
-        "init", source_dir, destination_dir, bindings_path, bindings
+        "init",
+        source_dir,
+        destination_dir,
+        bindings_path,
+        bindings,
+        new_raw_destinations,
     )
     if preflight_error is not None:
         print(f"invalid write target: {preflight_error}", file=sys.stderr)
@@ -994,6 +1152,20 @@ def run_init(args: argparse.Namespace) -> int:
                 destination_path = destination_dir / destination
                 destination_bytes = read_bytes(destination_path)
                 if destination_bytes is None:
+                    if (
+                        destination in new_raw_destinations
+                        and not destination_path.exists()
+                        and not destination_path.is_symlink()
+                    ):
+                        if not destination_path.parent.is_dir():
+                            print(
+                                "missing destination parent: "
+                                f"{destination_path.parent}",
+                                file=sys.stderr,
+                            )
+                            return EXIT_DRIFT
+                        raw_writes.append((destination_path, source_bytes))
+                        continue
                     print(f"missing destination: {destination_path}", file=sys.stderr)
                     return EXIT_DRIFT
                 if destination_bytes == source_bytes:

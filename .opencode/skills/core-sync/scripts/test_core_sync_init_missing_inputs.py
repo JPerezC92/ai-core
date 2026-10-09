@@ -93,11 +93,36 @@ class InitMissingInputsTests:
         assert {path: path.read_bytes() for path in unchanged} == unchanged
         assert not (destination / "missing.md").exists()
 
-    def test_init_missing_raw_destination_returns_one(self, tmp_path: Path) -> None:
+    def test_init_missing_stored_raw_target_returns_one_without_writes(
+        self, tmp_path: Path
+    ) -> None:
         source, destination, bindings_path = _raw_setup(
             tmp_path, destination_content=None
         )
-        assert uc.main(_init_args(source, destination, bindings_path, REV_A)) == 1
+        root_path = _write_file(
+            destination, "CLAUDE.md", "# Root remains unchanged\n"
+        )
+        bindings = uc.load_bindings(bindings_path)
+        assert bindings is not None
+        bindings["root"] = "CLAUDE.md"
+        uc.save_bindings(bindings_path, bindings)
+        source_path = source / "opencode.jsonc"
+        destination_path = destination / "opencode.jsonc"
+        report_path = uc.reconciliation_report_path(bindings_path)
+        unchanged = {
+            source_path: source_path.read_bytes(),
+            bindings_path: bindings_path.read_bytes(),
+            root_path: root_path.read_bytes(),
+        }
+        args = _init_args(source, destination, bindings_path, REV_A)
+        args.extend(["--bind-raw", "opencode.jsonc=opencode.jsonc"])
+
+        assert not destination_path.exists()
+        assert not report_path.exists()
+        assert uc.main(args) == 1
+        assert {path: path.read_bytes() for path in unchanged} == unchanged
+        assert not destination_path.exists()
+        assert not report_path.exists()
 
     def test_init_missing_raw_source_returns_one_without_writing_targets(
         self, tmp_path: Path

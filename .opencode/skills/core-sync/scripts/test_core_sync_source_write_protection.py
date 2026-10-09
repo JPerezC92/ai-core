@@ -208,3 +208,42 @@ class SourceWriteProtectionTests:
         assert result == uc.EXIT_INVALID
         assert report_path.is_symlink()
         assert self._snapshot(*unchanged) == unchanged
+
+    def test_hard_link_target_to_source_file_rejected_without_writes(
+        self, tmp_path: Path
+    ) -> None:
+        source = tmp_path / "source"
+        destination = tmp_path / "destination"
+        source_path = _write_file(source, "agent.md", SOURCE_MARKED)
+        destination.mkdir(parents=True)
+        hard_link_path = destination / "agent.md"
+        hard_link_path.hardlink_to(source_path)
+        other_destination_path = _write_file(destination, "other.md", DEST_PLAIN)
+        root_path = _write_file(destination, "CLAUDE.md", "# Root unchanged\n")
+        bindings_path = tmp_path / "bindings.yaml"
+        uc.save_bindings(
+            bindings_path,
+            _bindings_document(
+                REV_A,
+                "agent.md",
+                ["agent.md", "other.md"],
+                root="CLAUDE.md",
+            ),
+        )
+        report_path = _write_file(
+            tmp_path, "reconciliation/init.yaml", "report unchanged\n"
+        )
+        unchanged = self._snapshot(
+            source_path,
+            hard_link_path,
+            other_destination_path,
+            root_path,
+            bindings_path,
+            report_path,
+        )
+
+        result = self._run("init", source, destination, bindings_path)
+
+        assert result == uc.EXIT_INVALID
+        assert hard_link_path.stat().st_ino == source_path.stat().st_ino
+        assert self._snapshot(*unchanged) == unchanged
