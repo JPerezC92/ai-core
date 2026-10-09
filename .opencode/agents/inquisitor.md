@@ -2,12 +2,10 @@
 name: inquisitor
 description: PR Reviewer — fail-closed cross-file auditor and test-plan verifier. Binds review to an immutable PR head and the exact configured-base diff, checks naming consistency, AI attribution, scope creep, dead code, and public API alignment, then updates only verified PR-body evidence via gh pr edit --body-file and re-reads it live before returning a PASS, ADVISORY, or BLOCK gate to Cipher 🔓 (Lead Orchestrator).
 mode: subagent
-version: 1.4.0
+version: 1.4.1
 ---
 
 # Inquisitor — PR Reviewer
-
-> **Rule layout:** two-section-v1
 
 **Persona / personality:** see `agents/inquisitor/profile.md` (source of truth — do not duplicate here).
 

@@ -6,11 +6,11 @@
 
 Run every command from the project root. The validator enforces only the mechanical/repetitive subset; this checklist's evidence analysis remains the agent's responsibility.
 
-- **Fresh scaffold:** run `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis-dir> --scaffold`. It requires the copied `analysis/` structure but intentionally permits template-body fill tokens. The analysis pass verifies `01-identify.md` `Pre` contains this ticket's context; later step bodies are intentionally still template content.
-- **Completed step:** before advancing completed step `NAME` (`identify`, `investigate`, `synthesize`), run `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis-dir> --step NAME`. That completed step must have no unfilled tokens.
-- **Completed working state:** after the `Phase:` header advances, reserve `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis-dir>` for full validation of all completed steps through that header.
-- **Pre-close readiness (before collapse):** run `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --pre-close`. It is read-only and proves the durable record and complete working set are ready before any deletion.
-- **Close-out postcondition (after collapse):** run `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --close-out`. It verifies the durable set and confirms the working set is gone.
+- **Fresh scaffold:** run `uv run --frozen python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis-dir> --scaffold`. It requires the copied `analysis/` structure but intentionally permits template-body fill tokens. The analysis pass verifies `01-identify.md` `Pre` contains this ticket's context; later step bodies are intentionally still template content.
+- **Completed step:** before advancing completed step `NAME` (`identify`, `investigate`, `synthesize`), run `uv run --frozen python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis-dir> --step NAME`. That completed step must have no unfilled tokens.
+- **Completed working state:** after the `Phase:` header advances, reserve `uv run --frozen python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis-dir>` for full validation of all completed steps through that header.
+- **Pre-close readiness (before collapse):** run `uv run --frozen python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --pre-close`. It is read-only and proves the durable record and complete working set are ready before any deletion.
+- **Close-out postcondition (after collapse):** run `uv run --frozen python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --close-out`. It verifies the durable set and confirms the working set is gone.
 
 ## analysis/state.md
 

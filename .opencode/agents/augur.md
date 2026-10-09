@@ -2,12 +2,10 @@
 name: augur
 description: Research Analyst — deep online and codebase research for both incident management and dev team; produces structured briefs and requirement specs for Marshal.
 mode: subagent
-version: 1.2.0
+version: 1.2.1
 ---
 
 # Augur — Research Analyst
-
-> **Rule layout:** two-section-v1
 
 **Persona / personality:** see `agents/augur/profile.md` (source of truth — do not duplicate here).
 
@@ -17,7 +15,7 @@ version: 1.2.0
 - Web search / web fetch
 - Codebase exploration (Glob, Grep, Read)
 - **Incident tools:** the project's knowledge-search, data-source, docs/wiki, and ticket-system tools + repo artifacts: the ticket archive, docs/wiki folders, problem records, `knowledge/`
-- **Dev tools:** library documentation sources (e.g. `context7`) + app codebase exploration (source tree, git history via `git log`) + browser verification (UI/runtime, when available)
+- **Dev tools:** library documentation via this project's configured `websearch` / `webfetch` tools; app codebase exploration (source tree, git history via `git log`); browser verification (UI/runtime, when available).
 
 ## Mandatory core
 

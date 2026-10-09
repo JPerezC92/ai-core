@@ -5,13 +5,9 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.1.0
+  version: 1.2.0
   source: opencode-docs-skills
 ---
-
-# op-skill-creator
-
-> **Rule layout:** two-section-v1
 
 ## Project extensions
 
@@ -27,7 +23,7 @@ This project's illustrative prefix-rename example is `reservas-fuera-de-rango` �
 
 ### Pre-flight: Autoload guidelines
 
-Load the guidelines below into the working context when they exist in the project. **Missing files degrade gracefully** — see Step 0.5. This skill is self-contained: the essential Quality Checklist is embedded in Step 10, so a project without the reference files can still scaffold valid skills.
+Load the guidelines below into the working context when they exist in the project. **Missing files degrade gracefully** — see Step 0.5. This skill is self-contained: the essential Quality Checklist is embedded in Step 9, so a project without the reference files can still scaffold valid skills.
 
 #### Step 0.1 — Identify scenario
 
@@ -44,7 +40,7 @@ Classify the requested operation as exactly one of:
 |---|---|---|
 | This project's skill-migration reference (see Project extensions) | Field deltas, body renames, metadata defaults | Skip; use the embedded rules in this skill |
 | This project's skills inventory (see Project extensions) | Inventory + uniqueness check + current `state` per skill | Skip; uniqueness checked against the skill directory on disk |
-| The catalog steward agent's Quality Checklist section (see Project extensions) | 23 Core + per-harness augmentations; OC-1/OC-2 for OpenCode | Skip; the checklist is embedded in Step 10 |
+| The catalog steward agent's Quality Checklist section (see Project extensions) | 23 Core + per-harness augmentations; OC-1/OC-2 for OpenCode | Skip; the checklist is embedded in Step 9 |
 
 #### Step 0.3 — Conditionally read
 
@@ -68,7 +64,7 @@ guidelines loaded:
 
 #### Step 0.5 — Missing-file handling (degraded mode)
 
-If any Step 0.2 file is absent, proceed in **degraded mode**: rely on the embedded Quality Checklist (Step 10) and the rules in this skill. Note the gap in the post-edit audit section. Do NOT stop and block on a missing reference file — this skill must be usable in any project that ships it.
+If any Step 0.2 file is absent, proceed in **degraded mode**: rely on the embedded Quality Checklist (Step 9) and the rules in this skill. Note the gap in the post-edit audit section. Do NOT stop and block on a missing reference file — this skill must be usable in any project that ships it.
 
 ### What I do
 
@@ -101,25 +97,22 @@ Create a new OpenCode-native skill under `.opencode/skills/{name}/SKILL.md`.
    - `metadata` is a string-to-string map.
    - When `metadata.author` is present, it MUST be a non-empty string.
    - When `metadata.version` is present, it MUST be a non-empty string (semver recommended but not enforced).
-7. Build the body in the two-section ownership layout. Every generated skill ships:
-   - H1 `# {name}`
-   - the visible marker `> **Rule layout:** two-section-v1`
-   - `## Project extensions` (first ownership H2) — project-specific identity, roles, environment, tooling, or history; keep the section present (empty if nothing applies) rather than omitting it
-   - `## Mandatory core` (second ownership H2) containing the required H3 subsections in order:
-     - `### What I do`
-     - `### When to use me` (lowercase "use")
-     - `### Examples`
-     - `### Troubleshooting`
-   - Optional extra H3/H4 subsections inside either ownership H2 if the user wants them. No operational prose sits outside the two ownership sections.
-   - **If the user adds an arguments subsection**, scaffold it as an extra H3 (e.g. `### Arguments`) inside `## Mandatory core` with the form-fill convention from this project's conventions reference § "Skill argument form-fill convention" (see Project extensions): include an `#### Argument collection form` H4 subsection with a fields table (name, type, description, validation, options), trigger conditions table, and recipe. This ensures every new skill with arguments declares its `question`-tool form schema from the start.
-8. **Step 9 — Consistency check.** Verify that the `description` and `### When to use me` cover every major capability declared in the body sections. Cross-reference the Vault 🔐 (Catalog Steward) Quality Checklist (file loaded in Step 0.2) — specifically item QC-4 (description has WHAT + WHEN + "Use when …") and the relevant body-section completeness items. For example:
-   - If the body has a `### Rewrite or migrate...` subsection, the description and `### When to use me` must mention rewrite/migrate/rename.
-   - If the body has an `### Arguments` subsection, the description or `### When to use me` should mention arguments or inputs.
+7. Build the body as plain Markdown. opencode reads only the frontmatter plus the Markdown body — a skill needs **no H1 title and no `> **Rule layout:**` marker** (opencode's own example starts at `## What I do`). Recommended content as `## ` subsections (H2, no skipped heading level), in order:
+   - `## What I do`
+   - `## When to use me` (lowercase "use")
+   - `## Examples`
+   - `## Troubleshooting`
+   - Optional extra `## ` and `### ` subsections as needed.
+   - Optional: only when the skill must distinguish project-specific configuration from shared rules, add `## Project extensions` then `## Mandatory core` ownership sections; otherwise keep the body flat.
+   - **If the user adds an arguments subsection**, scaffold it as an extra H3 (e.g. `### Arguments`) with the form-fill convention from this project's conventions reference § "Skill argument form-fill convention" (see Project extensions): include an `#### Argument collection form` H4 subsection with a fields table (name, type, description, validation, options), trigger conditions table, and recipe. This ensures every new skill with arguments declares its `question`-tool form schema from the start.
+8. **Step 8 — Consistency check.** Verify that the `description` and the skill's `When to use me` section cover every major capability declared in the body sections. Cross-reference the Vault 🔐 (Catalog Steward) Quality Checklist (file loaded in Step 0.2) — specifically item QC-4 (description has WHAT + WHEN + "Use when …") and the relevant body-section completeness items. For example:
+   - If the body has a `Rewrite or migrate...` section, the description and `When to use me` must mention rewrite/migrate/rename.
+   - If the body has an `Arguments` section, the description or `When to use me` should mention arguments or inputs.
    - If a capability is missing from the description/When to use me, stop and ask the user via a multiple-choice question:
-     - **A.** Auto-update the description and/or `### When to use me` with a recommended addition.
+     - **A.** Auto-update the description and/or `When to use me` with a recommended addition.
      - **B.** Let the user edit manually.
      - **C.** Ignore the mismatch and continue.
-9. **Step 10 — Pre-validation (Quality Checklist subset).** Before writing, run these checks against the fully built skill definition. The file loaded Vault 🔐 (Catalog Steward) spec § "Quality Checklist" is authoritative; reference it for full text:
+9. **Step 9 — Pre-validation (Quality Checklist subset).** Before writing, run these checks against the fully built skill definition. The file loaded Vault 🔐 (Catalog Steward) spec § "Quality Checklist" is authoritative; reference it for full text:
 
    ```
    - [ ] Filename is `SKILL.md` — QC-1
@@ -128,12 +121,12 @@ Create a new OpenCode-native skill under `.opencode/skills/{name}/SKILL.md`.
    - [ ] `description` 1–1024 chars, no `<`, `>`, has WHAT + WHEN + "Use when …" — QC-4
    - [ ] No `claude-` or `anthropic-` prefix — QC-5
    - [ ] No `README.md` in skill dir — QC-6
-   - [ ] At least one `### Examples` entry — QC-11
-   - [ ] At least one `### Troubleshooting` entry with cause + fix pair — QC-12
+   - [ ] At least one Examples section (`## Examples` for flat bodies; `### Examples` under `## Mandatory core`) — QC-11
+   - [ ] At least one Troubleshooting section with cause + fix pair (`## Troubleshooting` flat; `### Troubleshooting` under `## Mandatory core`) — QC-12
    - [ ] No unfilled `{...}` placeholders — QC-13
    - [ ] Total under 5,000 words — QC-14
    - [ ] OpenCode: frontmatter has `compatibility: opencode` exact — OC-1
-   - [ ] OpenCode: body uses the two-section ownership layout — H1 plus the two-section-v1 marker, then H2 `## Project extensions` and H2 `## Mandatory core` in that order; `## Mandatory core` contains the four H3 subsections `### What I do`, `### When to use me` (lowercase "use"), `### Examples`, `### Troubleshooting` (plus optional extra H3/H4 subsections); no operational prose outside the two ownership sections — OC-2
+   - [ ] OpenCode: body is plain Markdown — recommended H2 subsections `## What I do`, `## When to use me` (lowercase "use"), `## Examples`, `## Troubleshooting` (no skipped heading level; H3 only under an optional `## Mandatory core`); NO H1 title and NO `> **Rule layout:**` marker; `## Project extensions` / `## Mandatory core` ownership sections are optional (only when a project-specific vs shared split is needed) — OC-2
    - [ ] SKILL.md < 500 lines; static blocks >30 lines extracted — QC-27
    ```
 
@@ -144,7 +137,7 @@ Create a new OpenCode-native skill under `.opencode/skills/{name}/SKILL.md`.
     - **C.** Abort skill creation.
     - Include a short recommendation for each issue.
 11. Apply the chosen fix and re-run the final prevalidation. Repeat until no issues remain or the user aborts.
-12. **Step 12 — Write file.** Write to `.opencode/skills/{name}/SKILL.md`. If any Quality Checklist check failed in Step 10 and was not explicitly overridden by the user, halt here and ask.
+12. **Step 12 — Write file.** Write to `.opencode/skills/{name}/SKILL.md`. If any Quality Checklist check failed in Step 9 and was not explicitly overridden by the user, halt here and ask.
 13. Re-read the file to confirm it exists, starts with valid frontmatter, and `name` matches the directory.
 
 ### Examples
@@ -153,7 +146,7 @@ Create a skill called `git-release`:
 
 > "Create a skill named git-release that drafts release notes and proposes a version bump."
 
-The creator validates the name, validates the description, collects the body, runs a final prevalidation, writes `.opencode/skills/git-release/SKILL.md`, and confirms the file. The generated `SKILL.md` follows the two-section ownership layout:
+The creator validates the name, validates the description, collects the body, runs a final prevalidation, writes `.opencode/skills/git-release/SKILL.md`, and confirms the file. The generated `SKILL.md` is frontmatter plus a plain Markdown body:
 
 ```markdown
 ---
@@ -161,28 +154,17 @@ name: git-release
 description: Drafts release notes and proposes a version bump. Use when preparing a release or deciding the next version.
 ---
 
-# git-release
-
-> **Rule layout:** two-section-v1
-
-## Project extensions
-
-### Release conventions
-- <project-specific changelog and versioning conventions>
-
-## Mandatory core
-
-### What I do
+## What I do
 Draft release notes and propose a SemVer version bump.
 
-### When to use me
+## When to use me
 - User wants release notes drafted.
 - User wants the next version chosen.
 
-### Examples
+## Examples
 - "Draft the notes for v1.3.0."
 
-### Troubleshooting
+## Troubleshooting
 - **No changes since the last tag:** report that there is nothing to release.
 ```
 
@@ -203,12 +185,10 @@ Use this when the user asks to rewrite, rename, migrate, or add a prefix to an e
    - **Output / asset paths**
      - A. Keep existing output/script paths.
      - B. Update paths to match the new skill name.
-   - **Reference updates**
-     - A. Update references in agent specs and knowledge files.
-     - B. Skip reference updates.
-5. Build a migration preview: list every file to create, move, edit, or delete.
+   - **Reference updates (mandatory):** search applicable skill inventories, agent specs, knowledge files, plans, and user stories for old names/paths; list every match in the preview. If the search finds no applicable reference, record that result. Reference updates are never skipped when matches exist.
+5. Build a migration preview: list every file to create, move, edit, or delete, including every required reference update.
 6. Ask the user to confirm the preview.
-7. Execute the migration: write the new skill, copy/move helper scripts, move/delete the old skill, update references.
+7. Execute the migration: write the new skill, copy/move helper scripts, move/delete the old skill, and update every reference found in the required search.
 8. Run a final prevalidation on the new skill and any edited reference files.
 9. If issues are found, stop and ask the user via a multiple-choice question with recommendations.
 10. Apply the chosen fix and re-run prevalidation. Repeat until no issues remain or the user aborts.
@@ -216,9 +196,9 @@ Use this when the user asks to rewrite, rename, migrate, or add a prefix to an e
 
 ### Troubleshooting
 
-- **Pre-flight file autoload degraded:** the autoload step (Step 0) is conditional — reference files are loaded when present; if any are absent, proceed in degraded mode using the embedded Quality Checklist (Step 10) and note the gap in the post-edit audit section. Silent skip of a present-but-unread file is FORBIDDEN.
+- **Pre-flight file autoload degraded:** the autoload steps (Steps 0.1–0.5) are conditional — reference files are loaded when present; if any are absent, proceed in degraded mode using the embedded Quality Checklist (Step 9) and note the gap in the post-edit audit section. Silent skip of a present-but-unread file is FORBIDDEN.
 - Skill does not show up after creation: verify `SKILL.md` is all caps, frontmatter has `name` and `description`, the name is unique, and permissions in `opencode.json` / `opencode.jsonc` are not set to `deny`.
 - Name rejected: check for uppercase letters, underscores, leading/trailing hyphens, or double hyphens.
 - Description rejected: ensure it is between 1 and 1024 characters.
-- Description / `### When to use me` do not match body capabilities: add the missing capability (e.g., rewrite/migrate) to both sections before writing.
+- Description / `When to use me` do not match body capabilities: add the missing capability (e.g., rewrite/migrate) to both sections before writing.
 - Missing `metadata.author` or `metadata.version`: add the project's default author and `version: 1.0.0` to the `metadata` block unless the user explicitly overrode. See the project-defaults note in the Steps section.

@@ -2,12 +2,10 @@
 name: ledger
 description: Record Keeper — keeps the ticket archive in sync with what was actually posted. Cipher 🔓 (Lead Orchestrator) dispatches Ledger 📒 (Record Keeper) after every approved response (archive sync) and on close (changelog row).
 mode: subagent
-version: 1.4.0
+version: 1.4.1
 ---
 
 # Ledger — Record Keeper
-
-> **Rule layout:** two-section-v1
 
 **Persona / personality:** see `agents/ledger/profile.md` (source of truth — do not duplicate here).
 
@@ -21,8 +19,8 @@ version: 1.4.0
 - Knowledge registers: `knowledge/problems.md` (rows `P-NNN`; `case:` / `pack:` / `diagnostic:` pointers; `Team: incident`) and `knowledge/symptoms.md` (`S-xx`).
 - Close-out authorization phrase: `Close out now`.
 - Ticket validator commands:
-  - `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --pre-close` (read-only)
-  - `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --close-out`
+  - `uv run --frozen python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --pre-close` (read-only)
+  - `uv run --frozen python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --close-out`
 
 ### Learnings
 

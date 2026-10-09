@@ -1,7 +1,5 @@
 # Shared Agent Rules
 
-> **Rule layout:** two-section-v1
-
 ## Project extensions
 
 ### Knowledge registers
@@ -18,6 +16,16 @@
 - Every quantitative claim (counts, sizes, durations) must trace to a cited measurement. Unverified quantitative claims are FAILs.
 - Auditor dispatches verify findings against the source document's own rules — never against the dispatcher's expected marker. A dispatch that asserts a correct end-state (an expected marker, an anticipated finding) must cite the governing rule text from that document, read fresh. Un-cited expectations turn the audit into confirmation of the dispatcher's assumption (observed 2026-08-30: a "resolved marker present" check verified the marker while the register's own rules required deletion).
 
+### Report discipline (HARD RULE)
+
+Every agent report to Cipher 🔓 (Lead Orchestrator) follows the exact output format in its dispatch and leads with the result:
+
+- For audit or verification tasks, lead with the requested verdict (`[PASS]` / `[FAIL]` / `[BLOCK]` / `[UNCERTAIN]` / `[ADVISORY]`), then numbered findings. Each finding cites `file:line` (or the relevant evidence location), the governing rule, and a concrete fix.
+- For other tasks, use the role- and task-specific deliverable; do not force an audit verdict or finding format where it does not apply.
+- Cite evidence; do not dump file excerpts. Omit process narration, repeated summaries, and unrelated recommendations.
+- Hard bound: **≤ 60 lines**. A report over the bound is a failure, not thoroughness — verbosity is never coverage.
+- **Finish or stop-and-report.** If the task cannot be completed, report the exact blocker immediately — never pad with partial progress, present unfinished work as done, or invent a verdict. An incomplete report naming a blocker beats a complete one containing guesses.
+
 ### Register-first identification (HARD RULE)
 
 Incident identification is deterministic: ticket signal → `S-xx` → incident `P-NNN` → `exact | structural | no_match`.
@@ -30,7 +38,7 @@ Only `S-xx` → incident `P-NNN` may issue `exact` or `structural`. Resolved-tic
 
 Admission: the first confirmed case admits a `candidate` row (structural only); a second independent confirmed case may promote it to `active`. Scribe ✍️ (Docs & Problems Manager) owns the register. Execution of any fix still requires user approval per the User-Authority-Only rule below.
 
-**Proactive admission (confirmed root cause):** when the root cause is confirmed, Cipher 🔓 (Lead Orchestrator) dispatches Scribe ✍️ (Docs & Problems Manager) for the register mutation immediately — admission does not wait for destructive close-out collapse, while collapse (deleting `analysis/*.md` and `response-draft.md`) still requires explicit user authorization. Every executed query from the investigation survives collapse verbatim in `ticket_<id>.md` or a cited `validations/` artifact. The row's Evidence keeps the durable `case:` pointer and may additionally record an optional `pack:<destination-relative-pack-path>` for a reusable identification pack (a multi-statement or multi-result correlation) or an optional `diagnostic:<destination-relative-sidecar-path>` when the confirming query is reusable. A reusable confirming query is stored as parameterized SQL plus an adjacent `.verifier.yaml` sidecar at the destination project's declared query-storage path; a reusable identification pack is stored at the destination-chosen path; the destination chooses the layout and the upstream core never names the directory. A later `structural` ticket follows a recorded `pack:` pointer first, resolving the destination-relative path and replaying that correlation with current-ticket keys under destination-owned execution (the upstream core never executes or parses the pack), then follows `diagnostic:` through protocol-v1 when present, before framing a new query. When listing close-out actions, always name register admission before collapse.
+**Proactive admission (confirmed root cause):** when the root cause is confirmed, Cipher 🔓 (Lead Orchestrator) dispatches Scribe ✍️ (Docs & Problems Manager) to prepare an evidence-backed register draft immediately — draft preparation does not wait for destructive close-out collapse. Scribe ✍️ (Docs & Problems Manager) presents the draft for exact user approval (`approved` or `aprobado`); only after approval does Cipher 🔓 (Lead Orchestrator) apply the mutation through the destination's gated tool. Missing workflow/tool means stop and report; never improvise. The approved mutation must complete before collapse, while collapse (deleting `analysis/*.md` and `response-draft.md`) still requires explicit user authorization. Every executed query from the investigation survives collapse verbatim in `ticket_<id>.md` or a cited `validations/` artifact. The row's Evidence keeps the durable `case:` pointer and may additionally record an optional `pack:<destination-relative-pack-path>` for a reusable identification pack (a multi-statement or multi-result correlation) or an optional `diagnostic:<destination-relative-sidecar-path>` when the confirming query is reusable. A reusable confirming query is stored as parameterized SQL plus an adjacent `.verifier.yaml` sidecar at the destination project's declared query-storage path; a reusable identification pack is stored at the destination-chosen path; the destination chooses the layout and the upstream core never names the directory. A later `structural` ticket follows a recorded `pack:` pointer first, resolving the destination-relative path and replaying that correlation with current-ticket keys under destination-owned execution (the upstream core never executes or parses the pack), then follows `diagnostic:` through protocol-v1 when present, before framing a new query. When listing close-out actions, always name register admission before collapse.
 
 **Symptom-first diagnostic:** On any unexpected tool error, match the error signature against the project's symptom catalog; apply the class's canonical diagnostic; then filter the project's known-problem register by that S-xx + Team for a prior occurrence. Propose the known fix if found; file a new P-NNN under the class if the problem is novel.
 

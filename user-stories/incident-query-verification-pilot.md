@@ -22,10 +22,10 @@
 
 ## Acceptance criteria
 
-- ✅ A sidecar verifier is accepted only when it is incident-owned, adjacent to its root-contained SQL source, read-only, bounded, and uses declared named bindings. Evidence: `test_query_verification.py` exits 0, including `test_rejects_absolute_source`, `test_rejects_traversal_source`, and `test_rejects_mutating_source`; the closed contract is `references/protocol-v1.md` in the `query-verification` skill.
-- ✅ Unsafe SQL, path escapes, malformed metadata, untrusted output mismatches, and ambiguous result shapes produce a rejection or `inconclusive` verdict without query execution. Evidence: `test_rejects_mutating_source`, `test_rejects_unknown_sidecar_field`, `test_rejects_malformed_yaml_sidecar`, and the `test_evaluate_*_is_inconclusive` cases in `test_query_verification.py`; the suite exits 0.
+- ✅ A sidecar verifier is accepted only when it is incident-owned, adjacent to its root-contained SQL source, read-only, bounded, and uses declared named bindings. Evidence: `.opencode/skills/query-verification/scripts/test_query_verification_paths.py::QueryVerificationPathTests.test_rejects_absolute_source` and `test_rejects_traversal_source`; `.opencode/skills/query-verification/scripts/test_query_verification_sql_safety.py::QueryVerificationSqlSafetyTests.test_unsafe_source_is_rejected`; `.opencode/skills/query-verification/scripts/test_query_verification_sidecar_schema.py::QueryVerificationSidecarSchemaTests.test_closed_sidecar_schema_rejections`; the closed contract is `references/protocol-v1.md` in the `query-verification` skill.
+- ✅ Unsafe SQL, path escapes, malformed metadata, untrusted output mismatches, and ambiguous result shapes produce a rejection or `inconclusive` verdict without query execution. Evidence: `.opencode/skills/query-verification/scripts/test_query_verification_sql_safety.py::QueryVerificationSqlSafetyTests.test_unsafe_source_is_rejected`; `.opencode/skills/query-verification/scripts/test_query_verification_paths.py::QueryVerificationPathTests.test_rejects_absolute_source` and `test_rejects_traversal_source`; `.opencode/skills/query-verification/scripts/test_query_verification_sidecar_schema.py::QueryVerificationSidecarSchemaTests.test_closed_sidecar_schema_rejections` and `test_rejects_malformed_yaml_sidecar`; evaluator `test_evaluate_*_is_inconclusive` cases in `.opencode/skills/query-verification/scripts/test_query_verification.py`; verification `uv run --frozen --group dev pytest -q` → exit 0.
 - ✅ The evidence record redacts configured values, binds verifier/source/definition digests to the verdict, and does not retain raw adapter output or credentials. Evidence: `test_evaluate_verified_redacts_and_binds_digests` in `test_query_verification.py`; the redaction and digest rules are in `references/protocol-v1.md`.
-- ✅ The optional investigate-step verifier path consumes one existing query-budget unit and never treats a verified symptom as automatic root-cause confirmation. Evidence: the implemented investigate-step verifier-evidence route is recorded in `knowledge/query-verification-design.md`, and `test_validate_runbook.py` exits 0.
+- ✅ The optional investigate-step verifier path consumes one existing query-budget unit and never treats a verified symptom as automatic root-cause confirmation. Evidence: the implemented investigate-step verifier-evidence route is recorded in `knowledge/query-verification-design.md`; `.opencode/skills/ticket-runbook/scripts/test_validate_runbook_step_mode.py::ValidateRunbookStepModeTests.test_filled_investigate_keeps_sidecar_command_examples`; and `.opencode/skills/ticket-runbook/scripts/test_validate_runbook_header_budgets.py::ValidateRunbookHeaderBudgetTests.test_query_budget_compared_to_denominator`.
 - ✅ The skill, protocol, fixtures, and migration entry are available to ticket-enabled destination projects. Evidence: the `query-verification` skill ships `references/protocol-v1.md` and the valid fixture trio, and `knowledge/query-verification-design.md` records the skill and design document as `only if ticket marker` migration items.
 - ✅ The shipped valid adapter-output fixture is independently protocol-valid and its source digest is guarded against fixture/source drift.
 - ✅ Reusable verifier persistence is destination-selected: the destination chooses its query-storage location, the problem row's Evidence records a `diagnostic:` pointer to the sidecar, and a later structural match replays the pair with current-ticket parameters under protocol-v1 (schema unchanged, one query-budget slot). Evidence: `knowledge/query-verification-design.md` Destination-chooses-storage; `knowledge/problems.md` Evidence format.
@@ -48,12 +48,12 @@ Recorded 2026-09-10. Every outcome is evidence-backed; no dependency, lockfile, 
 
 ## Change log
 
+- 2026-10-09 — aicore-all-files-pr-20261008: repointed path, SQL-safety, sidecar-schema, and runbook test evidence to their concern-specific modules.
 - 2026-09-27 — python-pytest-20260927: moved Python skill tests to pytest under Crucible; earlier unittest decisions remain historical.
 - 2026-09-16 — identification-pack-pointer-20260916: recorded that identification packs use `pack:`, not a protocol-v1 change.
 - 2026-09-15 — ticket-runbook-register-admission-20260914: added destination-selected verifier storage and current-case replay.
 - 2026-09-12 — register-first-incident-identification-20260912: mapped the optional verifier route to the investigate step.
-- 2026-09-10 — query-verification-pilot-20260910: created the incident-only safe pilot definition.
-- before 2026-09-10 — earlier history: see git history for this file.
+- before 2026-09-12 — earlier history: see git history for this file.
 
 ## Resolved decisions
 

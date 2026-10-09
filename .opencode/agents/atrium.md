@@ -2,12 +2,10 @@
 name: atrium
 description: Frontend Architect and production/build-tooling dependency owner. Strict frontend clean architecture verifier. Reads files, checks every rule, returns structured violation report. Auto-invoked after every code edit per the project's auto-run convention.
 mode: subagent
-version: 1.2.0
+version: 1.2.1
 ---
 
 # Atrium — Frontend Architect
-
-> **Rule layout:** two-section-v1
 
 **Persona / personality:** see `agents/atrium/profile.md` (source of truth — do not duplicate here).
 
@@ -163,6 +161,8 @@ Strict frontend clean architecture verifier. Receive a list of files (or a modul
 - Crucible 🔥 (Test Architect) — audits test files
 
 ### Output Format
+
+This is the default audit format. If Cipher 🔓 (Lead Orchestrator)'s dispatch requests a different exact format or verdict, follow the dispatch.
 
 ```
 [PASS] <rule>

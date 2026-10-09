@@ -1,1167 +1,149 @@
-"""Tests for validate_runbook.py — proves it catches each violation class and
-validates well-formed working analyses, register-first identification, and the
-close-out collapse.
+"""Tests for runbook scaffold and working-analysis structure validation."""
 
-Run: uv run --frozen --group dev pytest .opencode/skills/ticket-runbook/scripts/test_validate_runbook.py
-"""
+from __future__ import annotations
 
 import contextlib
 import io
-import re
-import shutil
 import sys
-import tempfile
-from datetime import datetime, timedelta
 from pathlib import Path
-
-import pytest
 
 sys.path.insert(0, str(Path(__file__).parent))
 import validate_runbook as vr  # noqa: E402
-
-
-TEMPLATE_ANALYSIS_DIR = Path(__file__).parents[1] / "references" / "analysis"
-
-STEP_FILES = [
-    "01-identify.md",
-    "02-investigate.md",
-    "03-synthesize.md",
-]
-
-_DATETIME_FMT = "%Y-%m-%dT%H:%M"
-
-
-def _state_md(
-    phase: str = "synthesize",
-    verdict: str = "pending",
-    completed: list[str] | None = None,
-) -> str:
-    step_rows = [
-        ("identify", "01-identify.md", "Cipher"),
-        ("investigate", "02-investigate.md", "Investigator"),
-        ("synthesize", "03-synthesize.md", "Cipher"),
-        ("respond", "response-draft.md", "Quill"),
-    ]
-    completed = completed or []
-    rows = ""
-    for name, fname, owner in step_rows:
-        status = "✅" if fname in completed else "⬜"
-        rows += f"| {name} | `{fname}` | {owner} | {status} |\n"
-
-    return (
-        "---\n"
-        f'Phase: "{phase}"\n'
-        'SLA-due: "2099-01-01T00:00"\n'
-        'Updated: "2099-01-01T00:00"\n'
-        'Hypotheses-outstanding: "0/3"\n'
-        'Query-budget: "0/6"\n'
-        f'identification_verdict: "{verdict}"\n'
-        'Same-query-reruns: "0/2"\n'
-        "---\n\n"
-        "# Working analysis — Fixture\n\n"
-        "## Step index\n\n"
-        "| Step | File | Owner | Status |\n"
-        "|---|---|---|---|\n"
-        + rows
-    )
-
-
-def _filled_step(fname: str) -> str:
-    return (
-        f"# {fname}\n\n"
-        "> **Owner:** Investigator\n"
-        "> **Pre:** none\n"
-        "> **Reads:** none\n"
-        "> **Writes:** none\n\n"
-        "## Steps\n\n1. step one\n\n"
-        "## Output\n\n- **Artifact:** filled output\n\n"
-        "## Gate\n\n- \u2b1c done\n\n"
-        "## Abort conditions\n\n- halt if broken\n"
-    )
-
-
-def _make_analysis(
-    d: str,
-    step_files: list[str] | None = None,
-    phase: str = "synthesize",
-    verdict: str = "pending",
-) -> Path:
-    analysis_dir = Path(d) / "analysis"
-    analysis_dir.mkdir()
-    (analysis_dir / "state.md").write_text(
-        _state_md(phase=phase, verdict=verdict), encoding="utf-8"
-    )
-    for fname in (step_files if step_files is not None else STEP_FILES):
-        (analysis_dir / fname).write_text(_filled_step(fname), encoding="utf-8")
-    return analysis_dir
-
-
-def _patch_header(analysis_dir: Path, updates: dict[str, str]) -> None:
-    """Replace existing quoted frontmatter fields using constrained text edits."""
-    state_md = analysis_dir / "state.md"
-    content = state_md.read_text(encoding="utf-8")
-    for field, value in updates.items():
-        pattern = rf'(?m)^{field}: "[^\n]*"$'
-        replacement = f'{field}: "{value}"'
-        content, replacements = re.subn(pattern, replacement, content, count=1)
-        assert replacements == 1, f"state.md has no quoted {field} field"
-    state_md.write_text(content, encoding="utf-8")
-
-
-def _copy_initialized_scaffold(d: str) -> Path:
-    analysis_dir = Path(d) / "analysis"
-    shutil.copytree(TEMPLATE_ANALYSIS_DIR, analysis_dir)
-    updates = {
-        "Phase": "identify",
-        "SLA-due": "2099-01-01T00:00",
-        "Updated": "2000-01-01T00:00",
-        "Hypotheses-outstanding": "0/3",
-        "Query-budget": "0/6",
-        "identification_verdict": "pending",
-        "Same-query-reruns": "0/2",
-    }
-    _patch_header(analysis_dir, updates)
-    return analysis_dir
-
-
-def _fill_template_identify(analysis_dir: Path) -> None:
-    identify = analysis_dir / "01-identify.md"
-    content = identify.read_text(encoding="utf-8")
-    identify.write_text(re.sub(r"<[^>]+>", "fixture", content), encoding="utf-8")
-
-
-REGISTER_HEADER = (
-    "| " + " | ".join(column.upper() for column in vr.REGISTER_COLUMNS) + " |"
+from _ticket_runbook_testkit import (  # noqa: E402
+    STEP_FILES,
+    _copy_initialized_scaffold,
+    _fill_template_identify,
+    _make_analysis,
+    _patch_header,
+    _state_md,
 )
-REGISTER_SEP = "|" + "---|" * len(vr.REGISTER_COLUMNS)
 
 
-def _row(**fields: str) -> str:
-    values = [fields.get(column, "") for column in vr.REGISTER_COLUMNS]
-    return "| " + " | ".join(values) + " |"
+class ValidateRunbookStructureTests:
+    def test_copied_scaffold_passes_scaffold_validation(self, tmp_path: Path) -> None:
+        analysis_dir = _copy_initialized_scaffold(tmp_path)
+        assert vr.validate_scaffold(str(analysis_dir)) == 0
 
+    def test_copied_scaffold_rejects_malformed_phase(self, tmp_path: Path) -> None:
+        analysis_dir = _copy_initialized_scaffold(tmp_path)
+        _patch_header(analysis_dir, {"Phase": "not-a-phase"})
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            result = vr.validate_scaffold(str(analysis_dir))
+        assert result == 1
+        assert stderr.getvalue() == (
+            "PHASE-ERROR: Phase value 'not-a-phase' not in allowed set "
+            "(identify, investigate, synthesize)\n"
+        )
 
-def _register(*rows: str) -> str:
-    return "\n".join(["## Register", "", REGISTER_HEADER, REGISTER_SEP, *rows])
+    def test_copied_scaffold_rejects_missing_step(self, tmp_path: Path) -> None:
+        analysis_dir = _copy_initialized_scaffold(tmp_path)
+        (analysis_dir / "02-investigate.md").unlink()
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            result = vr.validate_scaffold(str(analysis_dir))
+        assert result == 1
+        assert "MISSING-STEP: 02-investigate.md" in stderr.getvalue()
 
+    def test_default_ignores_future_template_tokens(self, tmp_path: Path) -> None:
+        analysis_dir = _copy_initialized_scaffold(tmp_path)
+        _fill_template_identify(analysis_dir)
+        assert vr.validate(str(analysis_dir)) == 0
 
-def _ticket_dir(
-    d: str,
-    with_working: bool = False,
-    with_draft: bool = False,
-    with_dirs: bool = True,
-    image_exists: bool = True,
-    verdict: str = "no_match",
-    known: str = "[]",
-) -> Path:
-    ticket_dir = Path(d) / "ticket"
-    ticket_dir.mkdir()
-    if with_dirs:
-        (ticket_dir / "screenshots").mkdir()
-        (ticket_dir / "validations").mkdir()
-    if with_working:
-        analysis_dir = ticket_dir / "analysis"
-        analysis_dir.mkdir()
-        (analysis_dir / "state.md").write_text("x", encoding="utf-8")
-        (analysis_dir / "01-identify.md").write_text("x", encoding="utf-8")
-    if with_draft:
-        (ticket_dir / "response-draft.md").write_text("x", encoding="utf-8")
-    image = "screenshots/01_source_entity.png"
-    if image_exists and with_dirs:
-        (ticket_dir / image).write_text("x", encoding="utf-8")
-    content = (
-        "---\n"
-        "symptom_ids: []\n"
-        f"known_problem_ids: {known}\n"
-        f"identification_verdict: {verdict}\n"
-        "---\n\n"
-        "#### Imagen1\n"
-        f"- **path:** {image}\n"
-    )
-    (ticket_dir / "ticket_999999.md").write_text(content, encoding="utf-8")
-    return ticket_dir
+    def test_default_rejects_structural_defect_in_present_future_step(
+        self, tmp_path: Path
+    ) -> None:
+        analysis_dir = _copy_initialized_scaffold(tmp_path)
+        _fill_template_identify(analysis_dir)
+        investigate = analysis_dir / "02-investigate.md"
+        investigate.write_text(
+            investigate.read_text(encoding="utf-8").replace(
+                "## Gate", "## Requirements", 1
+            ),
+            encoding="utf-8",
+        )
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            result = vr.validate(str(analysis_dir))
+        assert result == 1
+        assert stderr.getvalue() == (
+            "MISSING-SECTION: 02-investigate.md is missing ## Gate\n"
+        )
 
+    def test_completed_step_token_fails_default_validation(
+        self, tmp_path: Path
+    ) -> None:
+        analysis_dir = _copy_initialized_scaffold(tmp_path)
+        _fill_template_identify(analysis_dir)
+        identify = analysis_dir / "01-identify.md"
+        identify.write_text(
+            identify.read_text(encoding="utf-8") + "\n<unfilled-completed>\n",
+            encoding="utf-8",
+        )
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            result = vr.validate(str(analysis_dir))
+        assert result == 1
+        assert stderr.getvalue() == (
+            "UNFILLED-TOKEN: <unfilled-completed> in 01-identify.md\n"
+        )
 
-def _pre_close_ticket_dir(
-    d: str,
-    verdict: str = "no_match",
-    known: str = "[]",
-) -> Path:
-    """Create a complete pre-close ticket set with filled analysis files."""
-    ticket_dir = _ticket_dir(
-        d,
-        with_draft=True,
-        verdict=verdict,
-        known=known,
-    )
-    _make_analysis(
-        str(ticket_dir),
-        phase="synthesize",
-        verdict="no_match",
-    )
-    return ticket_dir
+    def test_valid_analysis_passes(self, tmp_path: Path) -> None:
+        analysis_dir = _make_analysis(tmp_path)
+        assert vr.validate(str(analysis_dir)) == 0
 
+    def test_missing_step_file(self, tmp_path: Path) -> None:
+        analysis_dir = _make_analysis(tmp_path)
+        (analysis_dir / "02-investigate.md").unlink()
+        violations, warnings = vr.check_step_files_exist(
+            vr.load_step_file_contents(analysis_dir), str(analysis_dir)
+        )
+        assert violations == [
+            "MISSING-STEP: 02-investigate.md not found in " f"{analysis_dir}"
+        ]
+        assert warnings == []
 
-REPO_RELATIVE_IMAGE = "tickets/999999/screenshots/01_source_entity.png"
+    def test_missing_section_in_step_file(self, tmp_path: Path) -> None:
+        analysis_dir = _make_analysis(tmp_path)
+        path = analysis_dir / "02-investigate.md"
+        path.write_text(
+            path.read_text(encoding="utf-8").replace("## Gate", "## Not Gate"),
+            encoding="utf-8",
+        )
+        findings = vr.check_step_files_have_required_sections(
+            vr.load_step_file_contents(analysis_dir)
+        )
+        assert findings == [("02-investigate.md", "## Gate")]
 
-
-def _cite_repo_relative_spelling(d: str, ticket_file: Path) -> None:
-    """Point the ticket citation at a repo-relative spelling of the image.
-
-    Keeps the ticket-relative file in place and also creates the image at the
-    repo-root-relative spelling, so a passing result cannot come from either
-    the ticket-relative file or a repo-root fallback.
-    """
-    repo_copy = Path(d) / REPO_RELATIVE_IMAGE
-    repo_copy.parent.mkdir(parents=True, exist_ok=True)
-    repo_copy.write_text("x", encoding="utf-8")
-    ticket_file.write_text(
-        ticket_file.read_text(encoding="utf-8").replace(
-            "screenshots/01_source_entity.png", REPO_RELATIVE_IMAGE
-        ),
-        encoding="utf-8",
-    )
-
-
-def _filesystem_bytes(root: Path) -> tuple[dict[str, bytes], list[str]]:
-    """Return file bytes and directory names below ``root`` for mutation checks."""
-    files = {
-        str(path.relative_to(root)): path.read_bytes()
-        for path in sorted(root.rglob("*"))
-        if path.is_file()
-    }
-    directories = [
-        str(path.relative_to(root))
-        for path in sorted(root.rglob("*"))
-        if path.is_dir()
-    ]
-    return files, directories
-
-
-class ValidateRunbookTests:
-    # ── Scaffold and structure ───────────────────────────────────────────────
-
-    def test_copied_scaffold_passes_scaffold_validation(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            analysis_dir = _copy_initialized_scaffold(d)
-            assert vr.validate_scaffold(str(analysis_dir)) == 0
-
-    def test_copied_scaffold_rejects_malformed_phase(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            analysis_dir = _copy_initialized_scaffold(d)
-            _patch_header(analysis_dir, {"Phase": "not-a-phase"})
-            stderr = io.StringIO()
-            with contextlib.redirect_stderr(stderr):
-                result = vr.validate_scaffold(str(analysis_dir))
-
-            assert result == 1
-            assert stderr.getvalue() == (
-                "PHASE-ERROR: Phase value 'not-a-phase' not in allowed set "
-                "(identify, investigate, synthesize)\n"
-            )
-
-    def test_copied_scaffold_rejects_missing_step(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            analysis_dir = _copy_initialized_scaffold(d)
-            (analysis_dir / "02-investigate.md").unlink()
-            stderr = io.StringIO()
-            with contextlib.redirect_stderr(stderr):
-                result = vr.validate_scaffold(str(analysis_dir))
-
-            assert result == 1
-            assert "MISSING-STEP: 02-investigate.md" in stderr.getvalue()
-
-    def test_default_ignores_future_template_tokens(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            analysis_dir = _copy_initialized_scaffold(d)
-            _fill_template_identify(analysis_dir)
-            assert vr.validate(str(analysis_dir)) == 0
-
-    def test_default_rejects_structural_defect_in_present_future_step(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            analysis_dir = _copy_initialized_scaffold(d)
-            _fill_template_identify(analysis_dir)
-            investigate = analysis_dir / "02-investigate.md"
-            investigate.write_text(
-                investigate.read_text(encoding="utf-8").replace(
-                    "## Gate", "## Requirements", 1
-                ),
-                encoding="utf-8",
-            )
-            stderr = io.StringIO()
-            with contextlib.redirect_stderr(stderr):
-                result = vr.validate(str(analysis_dir))
-
-            assert result == 1
-            assert (
-                stderr.getvalue()
-                == "MISSING-SECTION: 02-investigate.md is missing ## Gate\n"
-            )
-
-    def test_completed_step_token_fails_default_and_strict_validation(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            analysis_dir = _copy_initialized_scaffold(d)
-            _fill_template_identify(analysis_dir)
-            identify = analysis_dir / "01-identify.md"
-            identify.write_text(
-                identify.read_text(encoding="utf-8") + "\n<unfilled-completed>\n",
-                encoding="utf-8",
-            )
-            default_stderr = io.StringIO()
-            with contextlib.redirect_stderr(default_stderr):
-                default_result = vr.validate(str(analysis_dir))
-
-            assert default_result == 1
-            assert (
-                default_stderr.getvalue()
-                == "UNFILLED-TOKEN: <unfilled-completed> in 01-identify.md\n"
-            )
-            step_stderr = io.StringIO()
-            with contextlib.redirect_stderr(step_stderr):
-                step_result = vr.validate_step(str(analysis_dir), "identify")
-
-            assert step_result == 1
-            assert (
-                step_stderr.getvalue()
-                == "UNFILLED-TOKEN: <unfilled-completed> in 01-identify.md\n"
-            )
-
-    def test_valid_analysis_passes(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            analysis_dir = _make_analysis(d)
-            assert vr.validate(str(analysis_dir)) == 0
-
-    def test_missing_step_file(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            analysis_dir = _make_analysis(d)
-            (analysis_dir / "02-investigate.md").unlink()
-            violations, warnings = vr.check_step_files_exist(
-                vr.load_step_file_contents(analysis_dir), str(analysis_dir)
-            )
-            assert violations == [
-                "MISSING-STEP: 02-investigate.md not found in "
-                f"{analysis_dir}"
-            ]
-            assert warnings == []
-
-    def test_missing_section_in_step_file(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            analysis_dir = _make_analysis(d)
-            p = analysis_dir / "02-investigate.md"
-            p.write_text(
-                p.read_text(encoding="utf-8").replace(
-                    "## Gate", "## Not Gate"
-                ),
-                encoding="utf-8",
-            )
-            findings = vr.check_step_files_have_required_sections(
-                vr.load_step_file_contents(analysis_dir)
-            )
-            assert findings == [("02-investigate.md", "## Gate")]
-
-    def test_unfilled_token_flagged(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            analysis_dir = _make_analysis(d)
-            p = analysis_dir / "01-identify.md"
-            p.write_text(
-                p.read_text(encoding="utf-8") + "\n<fill>\n", encoding="utf-8"
-            )
-            findings = vr.check_step_files_have_required_sections(
-                vr.load_step_file_contents(analysis_dir)
-            )
-            assert findings == [("01-identify.md", "UNFILLED-TOKEN: <fill>")]
+    def test_unfilled_token_flagged(self, tmp_path: Path) -> None:
+        analysis_dir = _make_analysis(tmp_path)
+        path = analysis_dir / "01-identify.md"
+        path.write_text(
+            path.read_text(encoding="utf-8") + "\n<fill>\n", encoding="utf-8"
+        )
+        findings = vr.check_step_files_have_required_sections(
+            vr.load_step_file_contents(analysis_dir)
+        )
+        assert findings == [("01-identify.md", "UNFILLED-TOKEN: <fill>")]
 
     def test_state_html_comment_is_not_unfilled_token(self) -> None:
         comment = (
             "<!-- Query-budget is used/limit, default 6; "
             "exhausted when used equals limit. -->"
         )
-        findings = vr._check_step_body_fill_markers(
+        assert vr._check_step_body_fill_markers(
             _state_md() + "\n" + comment + "\n", "state.md"
-        )
-        assert findings == []
+        ) == []
 
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _pre_close_ticket_dir(d)
-            state = ticket_dir / "analysis" / "state.md"
-            state.write_text(
-                state.read_text(encoding="utf-8") + "\n" + comment + "\n",
-                encoding="utf-8",
-            )
-            assert vr.validate_pre_close(str(ticket_dir), d) == 0
-
-    def test_leftover_fill_token_in_state_still_fails(self) -> None:
-        findings = vr._check_step_body_fill_markers(
+    def test_leftover_fill_token_in_state_is_flagged(self) -> None:
+        assert vr._check_step_body_fill_markers(
             _state_md() + "\n<unfinished>\n", "state.md"
-        )
-        assert findings == [("state.md", "UNFILLED-TOKEN: <unfinished>")]
+        ) == [("state.md", "UNFILLED-TOKEN: <unfinished>")]
 
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _pre_close_ticket_dir(d)
-            state = ticket_dir / "analysis" / "state.md"
-            state.write_text(
-                state.read_text(encoding="utf-8") + "\n<unfinished>\n",
-                encoding="utf-8",
-            )
-            violations = vr.evaluate_pre_close(
-                vr.load_close_out_snapshot(ticket_dir), []
-            )
-            assert any(
-                "UNFILLED-TOKEN: <unfinished>" in item for item in violations
-            ), violations
-            stderr = io.StringIO()
-            with contextlib.redirect_stderr(stderr):
-                result = vr.validate_pre_close(str(ticket_dir), d)
-            assert result == 1
-            assert "UNFILLED-TOKEN: <unfinished>" in stderr.getvalue()
-
-    # ── Header enums and budgets ─────────────────────────────────────────────
-
-    def test_hypothesis_cap_violation(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            analysis_dir = _make_analysis(d)
-            _patch_header(
-                analysis_dir,
-                {
-                    "Hypotheses-outstanding": (
-                        f"{vr.KILL_MAX_HYPOTHESES + 1}/{vr.KILL_MAX_HYPOTHESES}"
-                    )
-                },
-            )
-            header = vr.load_state_header(analysis_dir / "state.md")
-            assert vr.check_kill_switches(header) == [
-                "KILL-1: hypothesis cap exceeded (4 > 3)"
-            ]
-
-    def test_query_budget_violation(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            analysis_dir = _make_analysis(d)
-            _patch_header(
-                analysis_dir,
-                {
-                    "Query-budget": (
-                        f"{vr.KILL_MAX_QUERIES + 1}/{vr.KILL_MAX_QUERIES}"
-                    )
-                },
-            )
-            header = vr.load_state_header(analysis_dir / "state.md")
-            assert vr.check_kill_switches(header) == [
-                "KILL-2: query budget exhausted (7 > 6)"
-            ]
-
-    @pytest.mark.parametrize(
-        "budget,expected",
-        [
-            ("6/6", []),
-            ("7/6", ["KILL-2: query budget exhausted (7 > 6)"]),
-            ("7/7", []),
-            ("14/14", []),
-        ],
-    )
-    def test_query_budget_compared_to_denominator(
-        self, budget: str, expected: list[str]
-    ) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            analysis_dir = _make_analysis(d)
-            _patch_header(analysis_dir, {"Query-budget": budget})
-            header = vr.load_state_header(analysis_dir / "state.md")
-            assert vr.check_kill_switches(header) == expected
-
-    def test_rerun_violation(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            analysis_dir = _make_analysis(d)
-            _patch_header(
-                analysis_dir,
-                {
-                    "Same-query-reruns": (
-                        f"{vr.KILL_MAX_RERUNS + 1}/{vr.KILL_MAX_RERUNS}"
-                    )
-                },
-            )
-            header = vr.load_state_header(analysis_dir / "state.md")
-            assert vr.check_kill_switches(header) == [
-                "KILL-3: re-run cap exceeded (3 > 2)"
-            ]
-
-    def test_identification_verdict_invalid_enum(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            analysis_dir = _make_analysis(d)
-            _patch_header(
-                analysis_dir, {"identification_verdict": "bogus"}
-            )
-            header = vr.load_state_header(analysis_dir / "state.md")
-            assert vr.check_identification_verdict(header) == [
-                "VERDICT-1: identification_verdict value 'bogus' not in "
-                "allowed set (exact, no_match, pending, structural)"
-            ]
-
-    def test_phase_invalid_enum(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            analysis_dir = _make_analysis(d)
-            _patch_header(analysis_dir, {"Phase": "not-a-phase"})
-            header = vr.load_state_header(analysis_dir / "state.md")
-            assert vr.check_phase(header) == [
-                "PHASE-ERROR: Phase value 'not-a-phase' not in allowed set "
-                "(identify, investigate, synthesize)"
-            ]
-
-    def test_concurrent_session_warning(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            analysis_dir = _make_analysis(d)
-            five_min_ago = datetime.now() - timedelta(minutes=5)
-            _patch_header(
-                analysis_dir,
-                {"Updated": five_min_ago.strftime(_DATETIME_FMT)},
-            )
-            header = vr.load_state_header(analysis_dir / "state.md")
-            warning = vr.check_concurrent_session(header)
-            assert warning is not None
-            assert "CONCURRENT" in warning
-
-    # ── Step modes ───────────────────────────────────────────────────────────
-
-    def test_step_flag_on_present_step(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            analysis_dir = _make_analysis(d, STEP_FILES)
-            assert vr.validate_step(str(analysis_dir), "investigate") == 0
-
-    def test_filled_investigate_keeps_sidecar_command_examples(self) -> None:
-        sidecar_cli = (
-            "python3 .opencode/skills/query-verification/scripts/"
-            "query_verification.py validate --query-root <sidecar-parent-dir> "
-            "--sidecar <sidecar-path>"
-        )
-        with tempfile.TemporaryDirectory() as d:
-            analysis_dir = _make_analysis(d, phase="investigate")
-            investigate = analysis_dir / "02-investigate.md"
-            investigate.write_text(
-                _filled_step("02-investigate.md") + "\n" + sidecar_cli + "\n",
-                encoding="utf-8",
-            )
-            assert vr.validate_step(str(analysis_dir), "investigate") == 0
-
-    def test_unfilled_output_fill_fails_step_investigate(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            analysis_dir = _make_analysis(d, phase="investigate")
-            investigate = analysis_dir / "02-investigate.md"
-            investigate.write_text(
-                _filled_step("02-investigate.md") + "\n<fill>\n",
-                encoding="utf-8",
-            )
-            stderr = io.StringIO()
-            with contextlib.redirect_stderr(stderr):
-                result = vr.validate_step(str(analysis_dir), "investigate")
-            assert result == 1
-            assert "UNFILLED-TOKEN: <fill>" in stderr.getvalue()
-
-    def test_step_flag_on_missing_step(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            analysis_dir = _make_analysis(d, STEP_FILES[:1])
-            buf = io.StringIO()
-            with contextlib.redirect_stderr(buf):
-                result = vr.validate_step(str(analysis_dir), "synthesize")
-            assert result == 1
-            assert "STEP-NOT-WRITTEN" in buf.getvalue()
-
-    def test_partial_analysis_default_passes_with_warning(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            analysis_dir = _make_analysis(
-                d, STEP_FILES[:2], phase="investigate"
-            )
-            buf = io.StringIO()
-            with contextlib.redirect_stderr(buf):
-                result = vr.validate(str(analysis_dir))
-            assert result == 0
-            assert "INCOMPLETE-ANALYSIS" in buf.getvalue()
-
-    # ── Register-first identification ────────────────────────────────────────
-
-    def test_parse_problem_register_empty(self) -> None:
-        content = (
-            "## Register\n\n"
-            "| ID | Date | Team | Symptom | System | Module | Problem | "
-            "Discriminators | Exclusions | Evidence | Root cause | Lifecycle | "
-            "Allow_exact | Status |\n"
-            "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n\n"
-            "(no entries yet)"
-        )
-        assert vr.parse_problem_register(content) == []
-
-    def test_parse_problem_register_rows(self) -> None:
-        row = _row(
-            id="P-001",
-            date="2026-01-01",
-            team="incident",
-            symptom="S-05, S-07",
-            system="sys",
-            module="mod",
-            problem="slow CDN",
-            discriminators="host=cdn-a",
-            exclusions="host=cdn-b",
-            evidence="log:42",
-            root_cause="cache miss",
-            lifecycle="candidate",
-            allow_exact="no",
-            status="open",
-        )
-        rows = vr.parse_problem_register(_register(row))
-        assert len(rows) == 1
-        assert rows[0]["id"] == "P-001"
-        assert rows[0]["team"] == "incident"
-        assert rows[0]["symptom"] == "S-05, S-07"
-        assert rows[0]["lifecycle"] == "candidate"
-        assert rows[0]["allow_exact"] == "no"
-
-    def test_register_schema_rejects_bad_lifecycle(self) -> None:
-        row = _row(
-            id="P-001",
-            date="2026-01-01",
-            team="incident",
-            symptom="S-05",
-            lifecycle="bogus",
-            allow_exact="no",
-            status="open",
-        )
-        violations = vr.check_register_rows(_register(row))
-        assert any("REGISTER-3" in item for item in violations), violations
-
-    def test_register_schema_rejects_bad_column_count(self) -> None:
-        content = "## Register\n\n| P-001 | 2026-01-01 | incident |\n"
-        violations = vr.check_register_rows(content)
-        assert any("REGISTER-1" in item for item in violations), violations
-
-    def test_empty_register_verdict_no_match_ok(self) -> None:
-        assert vr.check_identification_consistency("no_match", [], []) == []
-
-    def test_empty_register_verdict_exact_rejected(self) -> None:
-        violations = vr.check_identification_consistency(
-            "exact", ["P-001"], []
-        )
-        assert any("VERDICT-4" in item for item in violations), violations
-
-    def test_exact_requires_cited_p_nnn(self) -> None:
-        assert vr.check_identification_consistency("exact", [], []) == [
-            "VERDICT-3: exact requires a cited incident P-NNN"
-        ]
-
-    def test_exact_requires_active_and_allow_exact(self) -> None:
-        candidate = _row(
-            id="P-001",
-            date="2026-01-01",
-            team="incident",
-            symptom="S-05",
-            lifecycle="candidate",
-            allow_exact="no",
-            status="open",
-        )
-        violations = vr.check_identification_consistency(
-            "exact", ["P-001"], vr.parse_problem_register(_register(candidate))
-        )
-        assert any("VERDICT-6" in item for item in violations), violations
-        assert any("VERDICT-7" in item for item in violations), violations
-
-        active = _row(
-            id="P-002",
-            date="2026-01-01",
-            team="incident",
-            symptom="S-05",
-            lifecycle="active",
-            allow_exact="yes",
-            status="open",
-        )
-        assert (
-            vr.check_identification_consistency(
-                "exact", ["P-002"], vr.parse_problem_register(_register(active))
-            )
-            == []
-        )
-
-    def test_structural_requires_candidate_or_active(self) -> None:
-        mitigated = _row(
-            id="P-001",
-            date="2026-01-01",
-            team="incident",
-            symptom="S-05",
-            lifecycle="mitigated",
-            allow_exact="no",
-            status="open",
-        )
-        violations = vr.check_identification_consistency(
-            "structural", ["P-001"], vr.parse_problem_register(_register(mitigated))
-        )
-        assert any("VERDICT-8" in item for item in violations), violations
-
-        candidate = _row(
-            id="P-002",
-            date="2026-01-01",
-            team="incident",
-            symptom="S-05",
-            lifecycle="candidate",
-            allow_exact="no",
-            status="open",
-        )
-        assert (
-            vr.check_identification_consistency(
-                "structural",
-                ["P-002"],
-                vr.parse_problem_register(_register(candidate)),
-            )
-            == []
-        )
-
-    def test_no_match_rejects_cited_p_nnn(self) -> None:
-        active = _row(
-            id="P-001",
-            date="2026-01-01",
-            team="incident",
-            symptom="S-05",
-            lifecycle="active",
-            allow_exact="yes",
-            status="open",
-        )
-        violations = vr.check_identification_consistency(
-            "no_match", ["P-001"], vr.parse_problem_register(_register(active))
-        )
-        assert violations == [
-            "VERDICT-2: no_match must not cite a P-NNN (cited: ['P-001'])"
-        ]
-
-    def test_parse_ticket_record(self) -> None:
-        content = (
-            "---\n"
-            "symptom_ids: [S-05, S-07]\n"
-            "known_problem_ids: [P-001]\n"
-            "identification_verdict: structural\n"
-            "---\n\n# ticket\n"
-        )
-        record = vr.parse_ticket_record(content, "ticket_1.md")
-        assert record["symptom_ids"] == ["S-05", "S-07"]
-        assert record["known_problem_ids"] == ["P-001"]
-        assert record["identification_verdict"] == "structural"
-
-    # ── Pre-close readiness ──────────────────────────────────────────────────
-
-    def test_pre_close_passes_pure_and_public_validation(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _pre_close_ticket_dir(d)
-            snapshot = vr.load_close_out_snapshot(ticket_dir)
-
-            assert vr.evaluate_pre_close(snapshot, []) == []
-            assert vr.validate_pre_close(str(ticket_dir), d) == 0
-
-    def test_pre_close_is_byte_for_byte_non_mutating(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _pre_close_ticket_dir(d)
-            before = _filesystem_bytes(ticket_dir)
-
-            assert vr.validate_pre_close(str(ticket_dir), d) == 0
-
-            assert _filesystem_bytes(ticket_dir) == before
-
-    def test_pre_close_rejects_zero_ticket_records(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _pre_close_ticket_dir(d)
-            (ticket_dir / "ticket_999999.md").unlink()
-            stderr = io.StringIO()
-
-            with contextlib.redirect_stderr(stderr):
-                result = vr.validate_pre_close(str(ticket_dir), d)
-
-            assert result == 1
-            assert "PRE-CLOSE-0" in stderr.getvalue()
-
-    def test_pre_close_rejects_multiple_ticket_records(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _pre_close_ticket_dir(d)
-            source = ticket_dir / "ticket_999999.md"
-            (ticket_dir / "ticket_111111.md").write_bytes(source.read_bytes())
-            snapshot = vr.load_close_out_snapshot(ticket_dir)
-
-            assert snapshot["ticket_file_names"] == [
-                "ticket_111111.md",
-                "ticket_999999.md",
-            ]
-            violations = vr.evaluate_pre_close(snapshot, [])
-            assert any("PRE-CLOSE-1" in item for item in violations), violations
-            stderr = io.StringIO()
-            with contextlib.redirect_stderr(stderr):
-                result = vr.validate_pre_close(str(ticket_dir), d)
-            assert result == 1
-            assert "PRE-CLOSE-1" in stderr.getvalue()
-
-    def test_pre_close_rejects_missing_or_unexpected_analysis_file(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _pre_close_ticket_dir(d)
-            analysis_dir = ticket_dir / "analysis"
-            (analysis_dir / "02-investigate.md").unlink()
-            (analysis_dir / "04-unexpected.md").write_text(
-                "unexpected", encoding="utf-8"
-            )
-
-            violations = vr.evaluate_pre_close(
-                vr.load_close_out_snapshot(ticket_dir), []
-            )
-
-            assert any(
-                "required analysis file missing: 02-investigate.md" in item
-                for item in violations
-            ), violations
-            assert any(
-                "unexpected analysis file present: 04-unexpected.md" in item
-                for item in violations
-            ), violations
-
-    def test_pre_close_rejects_missing_response_draft(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _pre_close_ticket_dir(d)
-            (ticket_dir / "response-draft.md").unlink()
-            violations = vr.evaluate_pre_close(
-                vr.load_close_out_snapshot(ticket_dir), []
-            )
-
-            assert "PRE-CLOSE-3: response-draft.md not found" in violations
-
-    @pytest.mark.parametrize(
-        "directory,code",
-        [
-            ("screenshots", "PRE-CLOSE-4"),
-            ("validations", "PRE-CLOSE-5"),
-        ],
-    )
-    def test_pre_close_rejects_each_missing_durable_directory(
-        self, directory: str, code: str
-    ) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _pre_close_ticket_dir(d)
-            shutil.rmtree(ticket_dir / directory)
-            violations = vr.evaluate_pre_close(
-                vr.load_close_out_snapshot(ticket_dir), []
-            )
-            assert any(code in item for item in violations), violations
-
-    def test_pre_close_rejects_missing_cited_path(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _pre_close_ticket_dir(d)
-            (ticket_dir / "screenshots" / "01_source_entity.png").unlink()
-            violations = vr.evaluate_pre_close(
-                vr.load_close_out_snapshot(ticket_dir), []
-            )
-
-            assert any("PRE-CLOSE-7" in item for item in violations), violations
-
-    def test_pre_close_rejects_cited_path_outside_ticket_root(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _pre_close_ticket_dir(d)
-            outside = Path(d) / "outside.png"
-            outside.write_text("x", encoding="utf-8")
-            ticket_file = ticket_dir / "ticket_999999.md"
-            ticket_file.write_text(
-                ticket_file.read_text(encoding="utf-8").replace(
-                    "screenshots/01_source_entity.png", "../outside.png"
-                ),
-                encoding="utf-8",
-            )
-            violations = vr.evaluate_pre_close(
-                vr.load_close_out_snapshot(ticket_dir), []
-            )
-
-            assert any("PRE-CLOSE-6" in item for item in violations), violations
-
-    def test_pre_close_rejects_unparseable_ticket_record(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _pre_close_ticket_dir(d)
-            (ticket_dir / "ticket_999999.md").write_text(
-                "not frontmatter", encoding="utf-8"
-            )
-            violations = vr.evaluate_pre_close(
-                vr.load_close_out_snapshot(ticket_dir), []
-            )
-
-            assert any("PRE-CLOSE-8" in item for item in violations), violations
-
-    def test_pre_close_rejects_identification_register_mismatch(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _pre_close_ticket_dir(
-                d, verdict="exact", known="[P-001]"
-            )
-            violations = vr.evaluate_pre_close(
-                vr.load_close_out_snapshot(ticket_dir), []
-            )
-
-            assert any("VERDICT-4" in item for item in violations), violations
-
-    def test_pre_close_requires_completed_synthesize_state(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _pre_close_ticket_dir(d)
-            _patch_header(ticket_dir / "analysis", {"Phase": "investigate"})
-            violations = vr.evaluate_pre_close(
-                vr.load_close_out_snapshot(ticket_dir), []
-            )
-
-            assert "PRE-CLOSE-10: state.md Phase must be 'synthesize'" in violations
-
-    @pytest.mark.parametrize(
-        "case,expected",
-        [
-            ("token", "UNFILLED-TOKEN"),
-            ("counter", "KILL-2"),
-            ("section", "MISSING-SECTION"),
-        ],
-    )
-    def test_pre_close_reuses_token_counter_and_section_checks(
-        self, case: str, expected: str
-    ) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _pre_close_ticket_dir(d)
-            analysis_dir = ticket_dir / "analysis"
-            if case == "token":
-                target = analysis_dir / "03-synthesize.md"
-                target.write_text(
-                    target.read_text(encoding="utf-8") + "\n<unfinished>\n",
-                    encoding="utf-8",
-                )
-            elif case == "counter":
-                _patch_header(analysis_dir, {"Query-budget": "7/6"})
-            else:
-                target = analysis_dir / "03-synthesize.md"
-                target.write_text(
-                    target.read_text(encoding="utf-8").replace(
-                        "## Gate", "## Not Gate"
-                    ),
-                    encoding="utf-8",
-                )
-            violations = vr.evaluate_pre_close(
-                vr.load_close_out_snapshot(ticket_dir), []
-            )
-            assert any(expected in item for item in violations), violations
-
-    def test_pre_close_accepts_authorized_raised_query_budget(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _pre_close_ticket_dir(d)
-            _patch_header(ticket_dir / "analysis", {"Query-budget": "14/14"})
-            violations = vr.evaluate_pre_close(
-                vr.load_close_out_snapshot(ticket_dir), []
-            )
-            assert not any("KILL-2" in item for item in violations), violations
-            assert vr.validate_pre_close(str(ticket_dir), d) == 0
-
-    def test_pre_close_rejects_query_budget_over_denominator(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _pre_close_ticket_dir(d)
-            _patch_header(ticket_dir / "analysis", {"Query-budget": "7/6"})
-            stderr = io.StringIO()
-            with contextlib.redirect_stderr(stderr):
-                result = vr.validate_pre_close(str(ticket_dir), d)
-            assert result == 1
-            assert "KILL-2" in stderr.getvalue()
-
-    @pytest.mark.parametrize(
-        "conflicting_mode",
-        [
-            ["--close-out"],
-            ["--scaffold"],
-            ["--step", "identify"],
-        ],
-    )
-    def test_cli_modes_are_mutually_exclusive(
-        self, conflicting_mode: list[str]
-    ) -> None:
+    def test_partial_analysis_default_passes_with_warning(self, tmp_path: Path) -> None:
+        analysis_dir = _make_analysis(tmp_path, STEP_FILES[:2], phase="investigate")
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):
-            with pytest.raises(SystemExit) as raised:
-                vr._build_parser().parse_args(
-                    ["ticket", "--pre-close", *conflicting_mode]
-                )
-
-        assert raised.value.code == 2
-        assert "not allowed with argument" in stderr.getvalue()
-
-    def test_parser_accepts_every_prior_mode(self) -> None:
-        parser = vr._build_parser()
-
-        assert parser.parse_args(["analysis"]).analysis_dir == "analysis"
-        assert parser.parse_args(["analysis", "--scaffold"]).scaffold
-        assert (
-            parser.parse_args(["analysis", "--step", "identify"]).step
-            == "identify"
-        )
-        assert parser.parse_args(["ticket", "--close-out"]).close_out
-
-    # ── Close-out collapse ───────────────────────────────────────────────────
-
-    def test_close_out_pass(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _ticket_dir(d)
-            snapshot = vr.load_close_out_snapshot(ticket_dir)
-            assert vr.evaluate_close_out(snapshot) == []
-            assert vr.validate_close_out(str(ticket_dir), str(ticket_dir)) == 0
-
-    def test_close_out_working_files_remain(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _ticket_dir(d, with_working=True)
-            snapshot = vr.load_close_out_snapshot(ticket_dir)
-            violations = vr.evaluate_close_out(snapshot)
-            assert any("CLOSE-1" in item for item in violations), violations
-            assert vr.validate_close_out(str(ticket_dir), str(ticket_dir)) == 1
-
-    def test_close_out_response_draft_remains(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _ticket_dir(d, with_draft=True)
-            snapshot = vr.load_close_out_snapshot(ticket_dir)
-            violations = vr.evaluate_close_out(snapshot)
-            assert any("CLOSE-2" in item for item in violations), violations
-
-    def test_close_out_missing_durable_dirs(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _ticket_dir(d, with_dirs=False)
-            snapshot = vr.load_close_out_snapshot(ticket_dir)
-            violations = vr.evaluate_close_out(snapshot)
-            assert any("CLOSE-3" in item for item in violations), violations
-            assert any("CLOSE-4" in item for item in violations), violations
-
-    def test_close_out_missing_ticket(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = Path(d) / "ticket"
-            ticket_dir.mkdir()
-            snapshot = vr.load_close_out_snapshot(ticket_dir)
-            assert any(
-                "CLOSE-0" in item for item in vr.evaluate_close_out(snapshot)
-            )
-            buf = io.StringIO()
-            with contextlib.redirect_stderr(buf):
-                result = vr.validate_close_out(str(ticket_dir), str(ticket_dir))
-            assert result == 2
-            assert "CLOSE-SKIPPED" in buf.getvalue()
-
-    def test_close_out_rejects_multiple_ticket_records(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _ticket_dir(d)
-            source = ticket_dir / "ticket_999999.md"
-            (ticket_dir / "ticket_111111.md").write_bytes(source.read_bytes())
-            snapshot = vr.load_close_out_snapshot(ticket_dir)
-            violations = vr.evaluate_close_out(snapshot)
-
-            assert any("CLOSE-6" in item for item in violations), violations
-            assert vr.validate_close_out(str(ticket_dir), d) == 1
-
-    def test_close_out_fails_before_and_passes_after_collapse(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _pre_close_ticket_dir(d)
-
-            assert vr.validate_close_out(str(ticket_dir), d) == 1
-
-            shutil.rmtree(ticket_dir / "analysis")
-            (ticket_dir / "response-draft.md").unlink()
-            assert vr.validate_close_out(str(ticket_dir), d) == 0
-
-    def test_close_out_missing_image_path(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _ticket_dir(d, image_exists=False)
-            snapshot = vr.load_close_out_snapshot(ticket_dir)
-            violations = vr.evaluate_close_out(snapshot)
-            assert any("CLOSE-5" in item for item in violations), violations
-
-    # ── Ticket-relative path-citation unification ────────────────────────────
-
-    def test_ticket_relative_cited_path_passes_pre_close(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _pre_close_ticket_dir(d)
-            snapshot = vr.load_close_out_snapshot(ticket_dir)
-
-            assert snapshot["unsafe_ticket_paths"] == []
-            assert snapshot["missing_ticket_paths"] == []
-            assert vr.validate_pre_close(str(ticket_dir), d) == 0
-
-    def test_ticket_relative_cited_path_passes_close_out(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _ticket_dir(d)
-            snapshot = vr.load_close_out_snapshot(ticket_dir)
-
-            assert snapshot["missing_image_paths"] == []
-            assert vr.validate_close_out(str(ticket_dir), str(ticket_dir)) == 0
-
-    def test_repo_relative_spelling_fails_pre_close(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _pre_close_ticket_dir(d)
-            _cite_repo_relative_spelling(
-                d, ticket_dir / "ticket_999999.md"
-            )
-            snapshot = vr.load_close_out_snapshot(ticket_dir)
-
-            assert (ticket_dir / "screenshots" / "01_source_entity.png").is_file()
-            assert (Path(d) / REPO_RELATIVE_IMAGE).is_file()
-            assert snapshot["unsafe_ticket_paths"] == []
-            violations = vr.evaluate_pre_close(snapshot, [])
-
-            assert any("PRE-CLOSE-7" in item for item in violations), violations
-            stderr = io.StringIO()
-            with contextlib.redirect_stderr(stderr):
-                result = vr.validate_pre_close(str(ticket_dir), d)
-
-            assert result == 1
-            assert "PRE-CLOSE-7" in stderr.getvalue()
-
-    def test_repo_relative_spelling_fails_close_out(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _ticket_dir(d)
-            _cite_repo_relative_spelling(
-                d, ticket_dir / "ticket_999999.md"
-            )
-            snapshot = vr.load_close_out_snapshot(ticket_dir)
-
-            assert (ticket_dir / "screenshots" / "01_source_entity.png").is_file()
-            assert (Path(d) / REPO_RELATIVE_IMAGE).is_file()
-            violations = vr.evaluate_close_out(snapshot)
-
-            assert any("CLOSE-5" in item for item in violations), violations
-            assert vr.validate_close_out(str(ticket_dir), d) == 1
-
-    def test_close_out_rejects_parent_escape_via_close_5(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _ticket_dir(d)
-            outside = Path(d) / "outside.png"
-            outside.write_text("x", encoding="utf-8")
-            ticket_file = ticket_dir / "ticket_999999.md"
-            ticket_file.write_text(
-                ticket_file.read_text(encoding="utf-8").replace(
-                    "screenshots/01_source_entity.png", "../outside.png"
-                ),
-                encoding="utf-8",
-            )
-            snapshot = vr.load_close_out_snapshot(ticket_dir)
-
-            assert snapshot["unsafe_ticket_paths"] == ["../outside.png"]
-            violations = vr.evaluate_close_out(snapshot)
-
-            assert any("CLOSE-5" in item for item in violations), violations
-            assert vr.validate_close_out(str(ticket_dir), d) == 1
-
-    def test_directory_citation_fails_pre_close_and_close_out(self) -> None:
-        with tempfile.TemporaryDirectory() as d:
-            ticket_dir = _pre_close_ticket_dir(d)
-            (ticket_dir / "screenshots" / "frames").mkdir()
-            ticket_file = ticket_dir / "ticket_999999.md"
-            ticket_file.write_text(
-                ticket_file.read_text(encoding="utf-8").replace(
-                    "screenshots/01_source_entity.png", "screenshots/frames"
-                ),
-                encoding="utf-8",
-            )
-            snapshot = vr.load_close_out_snapshot(ticket_dir)
-
-            assert (ticket_dir / "screenshots" / "frames").is_dir()
-            assert snapshot["unsafe_ticket_paths"] == []
-            pre_close = vr.evaluate_pre_close(snapshot, [])
-            assert any("PRE-CLOSE-7" in item for item in pre_close), pre_close
-            assert vr.validate_pre_close(str(ticket_dir), d) == 1
-
-            shutil.rmtree(ticket_dir / "analysis")
-            (ticket_dir / "response-draft.md").unlink()
-            close_out = vr.evaluate_close_out(
-                vr.load_close_out_snapshot(ticket_dir)
-            )
-
-            assert any("CLOSE-5" in item for item in close_out), close_out
-            assert vr.validate_close_out(str(ticket_dir), d) == 1
-
-
+            result = vr.validate(str(analysis_dir))
+        assert result == 0
+        assert "INCOMPLETE-ANALYSIS" in stderr.getvalue()

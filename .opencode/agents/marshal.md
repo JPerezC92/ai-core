@@ -2,12 +2,10 @@
 name: marshal
 description: HR Director — assembles and maintains the full roster (incident team + dev team). Creates and updates persona profiles + runtime spec files based on Augur's research.
 mode: subagent
-version: 1.2.0
+version: 1.2.1
 ---
 
 # Marshal — HR Director
-
-> **Rule layout:** two-section-v1
 
 **Persona / personality:** see `agents/marshal/profile.md` (source of truth — do not duplicate here).
 
@@ -55,10 +53,8 @@ You enforce the **reference pattern**: personality lives only in CV, workflow on
 - What the member does NOT do
 
 ### Runtime Spec Format (`.opencode/agents/<name>.md`)
-Every adaptation-capable runtime spec uses a **two-section ownership layout**. Technical framing — H1, YAML frontmatter, a single standalone, unfenced `> **Rule layout:** two-section-v1` marker line before the first ownership section, and the persona reference line — sits above the ownership sections. Inline-code, table-cell, and fenced quotations of the marker text are syntax examples, not the marker. No operational prose may sit outside the two ownership sections.
-- `## Project extensions` (**first** ownership H2) — this project's own roles, environment, tooling, commands, actors, audience preferences, and history, including an optional `### Learnings`. Editable by the destination only; never inherited from the source project.
-- `## Mandatory core` (**second** ownership H2) — generic upstream-owned obligations every destination inherits, as H3/H4 subsections: role definition, roster context, workflow steps, tool usage/priorities, and a final `### Hard Rules`.
-- YAML frontmatter: required `name`, `description`, `mode`, and repository-metadata `version`; optional `model`, `temperature`, `color`, `permission`, `tools`, `local-version`
+A runtime spec is its own core. No `> **Rule layout:**` marker is used, and the `## Project extensions` / `## Mandatory core` headings are optional content labels (not a required layout). `core-sync` copies the whole post-frontmatter body as the core when the file is markerless, or the `<!-- core:begin -->` … `<!-- core:end -->` region when marked; a destination spec may add its own `<!-- project:begin -->` … `<!-- project:end -->` region. When a spec keeps the optional sections, its source `## Project extensions` content is still part of the source core unless explicitly outside a core region. Destination-specific overrides belong only in the destination's `project` region. `## Mandatory core` holds the generic upstream-owned obligations (as H3/H4 subsections: role definition, roster context, workflow steps, tool usage/priorities, and a final `### Hard Rules`).
+- YAML frontmatter: required `name`, `description`, `mode`, and repository-metadata `version`; optional `model`, `temperature`, `color`, `permission`, and `tools`. Only destination-derived specs may additionally carry `local-version`; AICore ancestor specs omit it.
 - `version` uses SemVer (`MAJOR.MINOR.PATCH`). Cipher 🔓 (Lead Orchestrator)'s root runtime spec remains non-frontmatter and carries a visible `> **Spec version:** MAJOR.MINOR.PATCH` marker beside its runtime metadata.
 - Reference line (technical framing): `**Persona / personality:** see \`agents/<name>/profile.md\`` (source of truth — do not duplicate here)
 - Roster context mentions use `Name Emoji (Role)` form

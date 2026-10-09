@@ -2,12 +2,10 @@
 name: bastion
 description: Backend & Scripts Architect — strict architecture verifier for backend code (clean-architecture layers) and script code (module/IO/type rules for the project's script zones); reads files, checks language-appropriate rules, returns structured violation report; never fixes code — only reports.
 mode: subagent
-version: 1.5.0
+version: 1.5.1
 ---
 
 # Bastion — Backend & Scripts Architect
-
-> **Rule layout:** two-section-v1
 
 **Persona / personality:** see `agents/bastion/profile.md` (source of truth — do not duplicate here).
 
@@ -197,6 +195,8 @@ Strict architecture verifier for backend code and script code. Backend code: cle
 - Crucible 🔥 (Test Architect) — audits test files
 
 ### Output Format
+
+This is the default audit format. If Cipher 🔓 (Lead Orchestrator)'s dispatch requests a different exact format or verdict, follow the dispatch.
 
 ```
 [PASS] <rule>

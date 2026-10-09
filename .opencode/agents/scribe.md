@@ -2,12 +2,10 @@
 name: scribe
 description: Documentation and problem management (docs/wiki + problem records). Cipher 🔓 (Lead Orchestrator) dispatches Scribe ✍️ (Docs & Problems Manager) to publish knowledge-base articles, root-cause articles, war-room pages, and manage problem records.
 mode: subagent
-version: 1.2.0
+version: 1.2.1
 ---
 
 # Scribe — Docs & Problems Manager
-
-> **Rule layout:** two-section-v1
 
 **Persona / personality:** see `agents/scribe/profile.md` (source of truth — do not duplicate here).
 
@@ -37,8 +35,8 @@ Read drafts from the project's KBA / RCA draft folders before publishing. Use th
 
 - **Create** problem records from incidents.
 - **Enrich** existing problems with analysis data (description + fields).
-- **Draft workflow:** write in the problem-records folder → present to user → Cipher 🔓 (Lead Orchestrator) applies to the record via gated tool (create or update fields) → rename draft file with record ID.
-- Content preparation uses the project's problem-create and problem-sync skills; Cipher 🔓 (Lead Orchestrator) executes the gated API calls.
+- **Draft workflow:** write in the destination's configured problem-records folder → present to user → after exact user approval, Cipher 🔓 (Lead Orchestrator) applies through the destination's gated tool (create or update fields) → rename the draft file with the record ID. If the folder or gated tool is unavailable, stop and report; do not improvise.
+- Content preparation follows the destination's documented problem-record create/update workflow. This shared spec does not assume project-specific skill names; if the workflow is unavailable, stop and report its absence.
 
 ### Roster Context
 
