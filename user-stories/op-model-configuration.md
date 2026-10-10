@@ -14,7 +14,7 @@
 ## Goal
 
 - **G:** Resolve live available models into typed records and surgically configure the selected agent only after deterministic provider selection.
-  - Done when: model records have a complete typed contract, parsing and matching preserve their documented output, ambiguous providers require a user choice, and the final config edit remains surgical and validated.
+  - Done when: model records have a complete typed contract, parsing and matching preserve their documented output, ambiguous providers require a user choice, and the final config edit remains surgical and validated. Evidence: `.opencode/skills/op-model/SKILL.md` `### Steps` items 2–9; `.opencode/skills/op-model/scripts/models.py` `ModelRecord`, `parse_records`, `matches`, and `main`.
 
 ## Scenario
 
@@ -23,12 +23,13 @@
 ## Acceptance criteria
 
 - ✅ `models.py` declares and consistently uses a `TypedDict` covering `config`, `id`, `provider`, `name`, `cost_in`, and `cost_out`; `_num` has a typed parameter. Evidence: `.opencode/skills/op-model/scripts/models.py` `ModelRecord(TypedDict)` and `def _num(value: object) -> float:`; Bastion 🧱 (Backend & Scripts Architect) `[PASS]`.
-- ✅ Deterministic checks preserve block parsing, malformed-block skipping, normalization, config/name matching, provider grouping, sorting, JSON-lines output, and no-match behavior. Evidence: Forge's syntax and deterministic parse/match checks exit 0; Bastion re-ran them clean on the final file.
-- ✅ The skill continues to use live `opencode models` output as the only model-name authority and requires a user choice when multiple providers match. Evidence: the change is annotation-only; `op-model/SKILL.md` `1.0.1` Steps and provider-choice policy are unchanged; Vault 🔐 (Catalog Steward) `[PASS]`.
-- ✅ Config editing remains surgical, parse-verified, and followed by a restart instruction; no model is invented or selected from memory. Evidence: `op-model/SKILL.md` config-edit and verification sections unchanged; Vault 🔐 (Catalog Steward) `[PASS]`.
+- ✅ Deterministic checks preserve block parsing, malformed-block skipping, normalization, config/name matching, provider grouping, sorting, JSON-lines output, and no-match behavior. Evidence: durable checkpoint `64fae1bf4aa5978e5a8a14ce63a30fca11905660` records the deterministic behavior checks and Bastion 🧱 (Backend & Scripts Architect) `[PASS]`; `.opencode/skills/op-model/scripts/models.py` symbols `ModelRecord(TypedDict)`, `parse_records`, `matches`, and `main`.
+- ✅ The skill uses live `opencode models` output as the only model-name authority and requires a user choice when multiple providers match. Evidence: `.opencode/skills/op-model/SKILL.md` `### Steps` items 2–3.
+- ✅ Config editing remains surgical, parse-verified, and followed by a restart instruction; a missing config is created only after the user confirms the exact preview; no model is invented or selected from memory. Evidence: `.opencode/skills/op-model/SKILL.md` `### Steps` items 4–9; Vault 🔐 (Catalog Steward) current catalog audit `[PASS]`, 2026-10-09.
 
 ## Change log
 
+- 2026-10-09 — aicore-all-files-pr-20261008: made confirmation of the exact preview an explicit prerequisite for creating a missing config, alongside the existing surgical model edit.
 - 2026-09-14 — skill-debt-resolution-20260914: created the feature definition; added the `ModelRecord` typed record contract (`op-model` 1.0.1).
 
 ## Resolved decisions

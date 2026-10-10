@@ -5,20 +5,15 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.0.1
-  dependencies:
-    - PyYAML==6.0.3
+  version: 1.0.2
+  dependencies: PyYAML==6.0.3
 ---
-
-# query-verification
-
-> **Rule layout:** two-section-v1
 
 ## Project extensions
 
 ### Query-verification script
 
-This project's query-verification script is `python3 .opencode/skills/query-verification/scripts/query_verification.py`, invoked with the `validate` or `evaluate` subcommand.
+This project's query-verification script is `uv run --frozen python3 .opencode/skills/query-verification/scripts/query_verification.py`, invoked with the `validate` or `evaluate` subcommand.
 
 ### Example paths and references
 

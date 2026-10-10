@@ -1,16 +1,12 @@
 ---
 name: op-agent-creator
-description: Scaffold a new OpenCode agent (primary or subagent) by collecting mode, system prompt, and permission model; validating name, description, and frontmatter against the OpenCode agent guidelines; and writing the agent markdown to .opencode/agents/{name}.md. Use when the user wants to create a new OpenCode agent, define a custom subagent, add a primary agent, set up an agent with restricted tool access, or migrate a Claude Code agent spec to OpenCode format.
+description: Create or modify an OpenCode agent (primary or subagent) by collecting mode, system prompt, and permission model; validating name, description, and frontmatter; and writing `.opencode/agents/{name}.md`. Use when the user wants to create, update, rename, or migrate a Claude Code agent to OpenCode.
 license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.1.0
+  version: 1.2.1
 ---
-
-# op-agent-creator
-
-> **Rule layout:** two-section-v1
 
 ## Project extensions
 
@@ -32,7 +28,7 @@ An existing Claude Code agent spec lives at `.claude/agents/{name}.md`. Migratin
 | `color` | `color` |
 | (no mode field) | `mode: subagent` (default — Claude Code agents are all subagent-equivalent in OpenCode terms) |
 
-Old-file cleanup for this harness: delete `.claude/agents/{name}.md`, move it to `.claude/agents/_deprecated/{name}.md`, or keep it as-is. Persona-CV handling, preview, confirmation, execution, and prevalidation steps for this sub-flow are described in the Mandatory core migration workflow. The `op-agent-creator` does NOT modify `.claude/agents/*.md` (that is Marshal 🎖️ (HR Director) territory).
+Source-harness cleanup is outside this skill's write scope: preserve `.claude/agents/{name}.md` and mark it read-only in the migration preview. Any later deletion or move is a separate owner-run operation. Persona-CV handling, preview, confirmation, execution, and prevalidation steps for this sub-flow are described in the Mandatory core migration workflow. The `op-agent-creator` does NOT modify `.claude/agents/*.md` (that is Marshal 🎖️ (HR Director) territory).
 
 ### Example model identifiers
 
@@ -50,7 +46,7 @@ Classify the requested operation as exactly one of:
 
 - `create` — new agent at `.opencode/agents/<name>.md` (no prior file exists)
 - `modify` — existing OpenCode agent being edited; the current `<name>.md` exists at the path
-- `migrate` — copying an agent from another harness's agent directory to `.opencode/agents/<name>.md`
+- `migrate` — copying a Claude Code agent from `.claude/agents/<name>.md` to `.opencode/agents/<name>.md`
 - `rename` / `add-prefix` — net effect is create + delete; treat as `modify` of the source plus `create` of the target
 
 #### Step 0.2 — Read when present (regardless of scenario)
@@ -67,7 +63,7 @@ Classify the requested operation as exactly one of:
 | Trigger | File | Why |
 |---|---|---|
 | Scenario = `modify` | `.opencode/agents/<name>.md` | Surface current spec before rewriting; preserve tone/structure unless explicitly changing |
-| Scenario = `migrate` | The source agent's file (and `agents/<name>/profile.md`) | Source of truth for the conversion; persona CV preserved separately by Marshal 🎖️ |
+| Scenario = `migrate` | The Claude Code agent's file (and `agents/<name>/profile.md`) | Source of truth for the conversion; persona CV preserved separately by Marshal 🎖️ |
 | Agent will have specific permission keys | another existing agent as live reference (consulted at write-time) | Permission-key semantics reference |
 
 #### Step 0.4 — Acknowledge each loaded file
@@ -89,7 +85,7 @@ If any Step 0.2 file is absent, proceed in **degraded mode**: rely on the embedd
 
 ### What I do
 
-Create a new OpenCode-native agent under `.opencode/agents/{name}.md`. The agent can be a **primary agent** (user-switchable via the Tab key) or a **subagent** (invoked via `@mention` or by another agent's Task tool). I collect the mode, system prompt body, permission model, and optional config (model, temperature, color, hidden flag, etc.); validate everything against the OpenCode agent guidelines; and write the agent markdown file. I also cover migrating an existing agent spec from another harness to its OpenCode equivalent in a separate, non-default sub-flow.
+Create a new OpenCode-native agent under `.opencode/agents/{name}.md`. The agent can be a **primary agent** (user-switchable via the Tab key) or a **subagent** (invoked via `@mention` or by another agent's Task tool). I collect the mode, system prompt body, permission model, and optional config (model, temperature, color, hidden flag, etc.); validate against OpenCode guidelines; and write the agent markdown file. A separate, non-default sub-flow migrates Claude Code agent specs to OpenCode.
 
 ### When to use me
 
@@ -97,7 +93,7 @@ Create a new OpenCode-native agent under `.opencode/agents/{name}.md`. The agent
 - User wants to define a custom subagent for a specific task.
 - User wants to add a primary agent with a custom model or toolset.
 - User wants to set up an agent with restricted tool access (read-only, no bash, sandboxed, etc.).
-- User wants to migrate an agent spec from another harness to OpenCode format.
+- User wants to migrate a Claude Code agent spec to OpenCode format.
 - Keywords: "agent", "subagent", "primary agent", "OpenCode agent", "custom agent", "@ mention", "Task tool", "permission model", "tool access", "restricted agent", "hidden agent".
 
 ### Steps
@@ -135,9 +131,8 @@ Create a new OpenCode-native agent under `.opencode/agents/{name}.md`. The agent
    - [ ] Total under 5,000 words; body under 500 lines; static blocks >30 lines extracted — QC-14 / QC-27 (adapted)
    - [ ] Contract: frontmatter has `name`, `description`, and `mode` (`primary` | `subagent`)
    - [ ] Contract: frontmatter has repository-metadata `version` in SemVer MAJOR.MINOR.PATCH form (`local-version` only on destination-derived specs)
-   - [ ] Contract: technical framing present — H1, the visible marker line > **Rule layout:** two-section-v1, and, for a governed roster spec, a persona reference line to agents/<name>/profile.md
-   - [ ] Contract: exactly two ownership H2 sections in order — ## Project extensions then ## Mandatory core — with no operational prose outside them
-   - [ ] Contract: ### Hard Rules is the last subsection of ## Mandatory core
+   - [ ] Contract: technical framing present — H1 and, for a governed roster spec, a persona reference line to agents/<name>/profile.md (no `> **Rule layout:**` marker)
+   - [ ] Contract: the body is the core — no marker and no required ownership sections; if `## Project extensions` / `## Mandatory core` sections are kept, `### Hard Rules` is the last subsection of `## Mandatory core`
    ```
 
    If any check FAILS, fix or surface to user via the `question` tool before the write step (Step 10).
@@ -250,54 +245,13 @@ Each permission key accepts either a shorthand action (`"allow" | "ask" | "deny"
 
 ### Examples
 
-Every generated agent uses the two-section ownership layout: H1, the visible `> **Rule layout:** two-section-v1` marker, then exactly two ownership H2 sections — `## Project extensions` then `## Mandatory core` — with `### Hard Rules` last. A **governed roster spec** (one backed by a persona CV at `agents/<name>/profile.md`) additionally carries the persona reference line; a custom agent without a CV omits it.
+Every generated agent's body is the core. No `> **Rule layout:**` marker is used, and the `## Project extensions` / `## Mandatory core` heading sections are optional content labels (not a required layout). A **governed roster spec** (one backed by a persona CV at `agents/<name>/profile.md`) carries the persona reference line; a custom agent without a CV omits it.
 
-Only technical framing may precede `## Project extensions`: the H1, the marker, an optional `> **Spec version:**`/version line, and (for a governed spec) the persona reference line. A role description belongs in `### Your Role` under `## Mandatory core` — never as prose in the framing, which the layout checker rejects as operational prose outside the ownership sections.
+Technical framing (the H1, an optional `> **Spec version:**`/version line, and the persona reference line) precedes the body. If the optional `## Project extensions` / `## Mandatory core` sections are kept, a role description belongs in `### Your Role` under `## Mandatory core`, and `### Hard Rules` is the last subsection.
 
 #### Governed roster spec (primary) — `code-reviewer`
 
-`.opencode/agents/code-reviewer.md`:
-
-```markdown
----
-name: code-reviewer
-description: Reviews code for quality and best practices. Use when a diff needs a quality, bug, performance, or security review.
-mode: primary
-version: 1.0.0
-model: provider/model-id
-temperature: 0.1
-permission:
-  edit: deny
-  bash:
-    "*": ask
-    "git diff": allow
-    "git log*": allow
-    "grep *": allow
----
-
-# Code Reviewer — Quality Reviewer
-
-> **Rule layout:** two-section-v1
-
-**Persona / personality:** see `agents/code-reviewer/profile.md` (source of truth — do not duplicate here).
-
-## Project extensions
-
-### Review conventions
-- Code quality and best practices
-- Performance implications
-
-## Mandatory core
-
-### Your Role
-
-Review diffs and return constructive feedback without making direct changes.
-
-### Hard Rules
-
-- Never edit source — report only.
-- Never approve a change you have not read in full.
-```
+See `references/governed-roster-code-reviewer.md` for the complete rendered `.opencode/agents/code-reviewer.md` example. It is illustrative; validate new specs against the current Runtime Spec Format and SP-3 rules.
 
 #### Custom subagent — `docs-writer`
 
@@ -314,8 +268,6 @@ permission:
 ---
 
 # Docs Writer
-
-> **Rule layout:** two-section-v1
 
 ## Project extensions
 
@@ -354,8 +306,6 @@ permission:
 
 # Internal Helper
 
-> **Rule layout:** two-section-v1
-
 ## Project extensions
 
 ### Diagnostics scope
@@ -373,26 +323,21 @@ Run system-level diagnostics and return findings.
 - Never run destructive commands.
 ```
 
-### Migration: another harness → OpenCode
+### Migration: Claude Code → OpenCode
 
-Use this when the user has an existing agent spec from another harness and wants an OpenCode equivalent. **This sub-flow is never auto-applied** — the user must explicitly request the migration. The concrete Claude Code field mapping and cleanup options live in Project extensions.
+Use this when the user has an existing Claude Code agent spec and wants an OpenCode equivalent. **This sub-flow is never auto-applied** — the user must explicitly request the migration. The Claude Code field mapping and source-read-only rule live in Project extensions.
 
 #### Steps
 
-1. Read the existing source-harness file (frontmatter + body).
-2. Map the source-harness fields to OpenCode fields (see Project extensions for the concrete Claude Code mapping).
-3. Ask the user via multiple-choice question:
-   - **Old file cleanup**
-     - A. Delete the old source-harness agent file
-     - B. Move the old file to the source harness's `_deprecated/` directory
-     - C. Keep the old file as-is
-   - **Persona CV handling** (if `agents/{name}/profile.md` exists)
-     - A. Keep the CV; OpenCode agent body references it via a single persona reference line
-     - B. Drop the CV; consolidate persona into the OpenCode agent body — **only for a custom (non-roster) agent**. When the target is a governed roster spec this option is unavailable: the CV/runtime split is mandatory — persona lives only in the persona CV and the runtime spec references it via the single line. Never duplicate persona content into a roster spec body.
-     - C. Stop — migration requires human review of persona content
-4. Build a migration preview: list every file to create, move, edit, or delete.
+1. Read the existing Claude Code agent file (frontmatter + body).
+2. Map its fields to OpenCode fields (see Project extensions for the concrete Claude Code mapping).
+3. Keep the Claude Code agent file read-only. Ask the user via multiple-choice question about **Persona CV handling** (if `agents/{name}/profile.md` exists):
+   - A. Keep the CV; OpenCode agent body references it via a single persona reference line.
+   - B. Drop the CV; consolidate persona into the OpenCode agent body — **only for a custom (non-roster) agent**. When the target is a governed roster spec this option is unavailable: the CV/runtime split is mandatory — persona lives only in the persona CV and the runtime spec references it via the single line. Never duplicate persona content into a roster spec body.
+   - C. Stop — migration requires human review of persona content.
+4. Build a migration preview: list every OpenCode file to create or edit, and show the Claude Code source file as read-only/unchanged.
 5. Ask the user to confirm the preview.
-6. Execute the migration: write `.opencode/agents/{name}.md`, copy/move the old file as chosen, update the body to reference the CV (if option A above).
+6. Execute the migration: write `.opencode/agents/{name}.md` and update its body to reference the CV (if option A above); never move, edit, or delete the Claude Code source file.
 7. Run a final prevalidation on the new agent and any edited reference files.
 8. If issues are found, stop and ask the user via multiple-choice question with recommendations.
 9. Apply the chosen fix and re-run prevalidation. Repeat until no issues remain or the user aborts.

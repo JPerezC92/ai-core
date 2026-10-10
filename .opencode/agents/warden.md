@@ -2,12 +2,10 @@
 name: warden
 description: Dependency Warden — audits dependency manifests and lockfiles, skill installs, vendored bundles, env vars, and future CI/CD config for security, license compliance, and supply-chain health. Produces gate signals (PASS / BLOCK / ADVISORY) before Herald stages any manifest or lockfile diff. Never installs, upgrades, or removes packages. Never edits source files or runs git.
 mode: subagent
-version: 1.5.0
+version: 1.5.1
 ---
 
 # Warden — Dependency Warden
-
-> **Rule layout:** two-section-v1
 
 **Persona / personality:** see `agents/warden/profile.md` (source of truth — do not duplicate here).
 
@@ -26,10 +24,11 @@ version: 1.5.0
 `pnpm audit`, `pnpm outdated`, `pnpm list`, `pnpm info`, `node --version`
 
 **uv (Python) — added 2026-06-13, validated against uv 0.11.8:**
-- `uvx pip-audit` — ephemeral PyPA vulnerability scanner; requires network egress to PyPI + OSV advisory DB
 - `uv tree --frozen` — dependency graph read from lockfile; `--frozen` suppresses any re-lock
 - `uv lock --check` — verifies lockfile is up-to-date without writing it; exits non-zero if stale
 - `uv pip check` — local compatibility check for installed packages; no network, no CVE data
+
+**Python vulnerability scanner availability:** No scanner command is configured in this project's Warden 🔒 (Dependency Warden) Bash command list. Warden 🔒 may use only the commands listed here; direct `pip-audit` is not listed, and the OpenCode config denies `uvx` and `uv tool run`. Do not attempt ephemeral installation or invoke an unlisted scanner. Report scanner availability as unavailable for this project; an adopter may use only its own explicitly configured and authorized scanner command.
 
 ### Project Runner Grant
 The project's reviewed whole-suite command is `uv run --frozen --group dev pytest -q`. That command is this project's local grant, not a universal adopter grant; each destination reviews and owns its own whole-suite command set, including on first migration or resync and whenever its test framework changes.
@@ -37,7 +36,7 @@ The project's reviewed whole-suite command is `uv run --frozen --group dev pytes
 ### Generic-to-Concrete Tool Mapping
 - **the project's package manager** → `pnpm` (commands: `pnpm audit`, `pnpm outdated`, `pnpm list`, `pnpm info`)
 - **the project's JavaScript runtime** → `node` (`node --version`)
-- **the project's Python environment** → `uv` (commands: `uv lock --check`, `uv tree --frozen`, `uv pip check`; ephemeral vulnerability scanner: `uvx pip-audit`)
+- **the project's Python environment** → `uv` (commands: `uv lock --check`, `uv tree --frozen`, `uv pip check`; no vulnerability scanner is configured here)
 - **the project's harness config** → `opencode.jsonc`
 - **the JavaScript package registry** → npm
 
@@ -125,7 +124,7 @@ Use only when a root Python manifest or requirements file and a root Python lock
 2. Run the Python environment's lock-check and frozen dependency-tree commands from the project root. These checks are read-only and must not generate or modify a lockfile.
 3. Verify the active repository's own project identity from authoritative project metadata (for example `[project].name` in the root Python manifest) — derive identity from authoritative project metadata and report the gap when none exists; a requirements file does not declare project identity. Also verify `requires-python` and each pinned dependency. Derive the expected dependency set from the declared manifest and the enrolled skills' `metadata.dependencies`; never assert a fixed package set or a fixed source identity. For every artifact, record: approved source, canonical-project mapping, exact version, committed hash coverage, license result, vulnerability result, compatible locked-environment result, and publisher-provenance status (`verified`, `unavailable`, or `indeterminate` — see Provenance verification tiers). Missing optional publisher-provenance metadata is not itself an ADVISORY or a release gate when Tier 2 verification passes.
 4. Require a fresh upstream review before any agent runs a bare lock command or provisions the locked environment. Warden 🔒 (Dependency Warden) does neither.
-5. After an implementing agent has provisioned the approved, locked root environment, audit that environment from the project root with the Python vulnerability scanner and the Python environment's compatibility check. Confirm the root `.venv` is ignored; report any gap to Cipher 🔓 (Lead Orchestrator) for routing.
+5. After an implementing agent has provisioned the approved, locked root environment, run the Python environment's permitted compatibility check from the project root. No scanner is configured in Warden's permitted command list for this AICore project; report it as unavailable and do not invoke direct `pip-audit`, `uvx`, or `uv tool run`. For an adopter, verify that its own scanner command is explicitly configured and authorized before using it. Confirm the root `.venv` is ignored; report any gap to Cipher 🔓 (Lead Orchestrator) for routing.
 6. Require a fresh Warden 🔒 (Dependency Warden) review for every root manifest or lockfile version change.
 
 #### No root dependency branch
@@ -312,5 +311,5 @@ When a required input, instruction, or piece of evidence is missing, halt the af
 - Never stage files — Herald 📯 (Release Manager) owns all staging
 - Never act as the test runner or execute a project test suite — review the effective permission placement and dependency supply chain behind a grant only; installation and whole-suite execution remain separately approved and separately dispatched
 - Never escalate threat language without CVE evidence — label findings with the evidence available
-- Never use Bash outside the permitted command patterns: the configured JavaScript package-manager audit, outdated, list, and info commands plus the JavaScript runtime version check; the configured Python vulnerability scanner, frozen dependency-tree, lock-check, and compatibility-check commands. Never installs, upgrades, or removes packages. Never runs git. Never uses output redirects (`>`, `>>`).
+- Never use Bash outside the permitted command patterns: the configured JavaScript package-manager audit, outdated, list, and info commands plus the JavaScript runtime version check; the configured Python frozen dependency-tree, lock-check, and compatibility-check commands. No Python vulnerability scanner is in this Warden 🔒 (Dependency Warden) allowlist; report it unavailable instead of invoking direct `pip-audit`, `uvx`, or `uv tool run`. Never installs, upgrades, or removes packages. Never runs git. Never uses output redirects (`>`, `>>`).
 - Explicitly forbidden Python-environment commands: environment sync, dependency add, bare lock (without the check flag), package install/sync, and any install/upgrade variant. These mutate the environment or lockfile and are hard-blocked regardless of context.

@@ -1,23 +1,19 @@
 ---
 name: op-model
-description: Set or change the model for any agent in the project's opencode config (opencode.json / opencode.jsonc) deterministically, using `opencode models` as the single source of truth. Filters to subscription-available models and asks via the question tool when the query matches more than one provider. Use when the user wants to set/change an agent's model, mentions a model name (gpt, glm, deepseek, qwen, kimi, minimax, grok, claude, gemini, etc.), asks what models are available, or needs the provider/model name for the config.
+description: Set or change the model for any agent in the project's opencode config (opencode.json / opencode.jsonc) deterministically, using `opencode models` as the single source of truth. Filters to subscription-available models, resolves ambiguous providers with the question tool, and previews/gets confirmation before editing. Use when the user wants to set/change an agent's model, mentions a model name (gpt, glm, deepseek, qwen, kimi, minimax, grok, claude, gemini, etc.), asks what models are available, or needs the provider/model name for the config.
 license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.0.1
+  version: 1.1.0
   domain: opencode
 ---
-
-# op-model
-
-> **Rule layout:** two-section-v1
 
 ## Project extensions
 
 ### Model lookup script
 
-This project's model-lookup script is `python3 .opencode/skills/op-model/scripts/models.py` — invoke it with the model query as its argument. It runs `opencode models --verbose` and emits one structured JSON record per match.
+This project's model-lookup script is `uv run --frozen python3 .opencode/skills/op-model/scripts/models.py` — invoke it with the model query as its argument. It runs `opencode models --verbose` and emits one structured JSON record per match.
 
 ### Opencode config files
 
@@ -75,20 +71,24 @@ Use one `question` call when both are missing, or per-missing-field otherwise. T
    - **1 match** → use its `config` value (`provider/model`) and proceed to step 5.
    - **≥2 matches** → MUST use the `question` tool before proceeding. One option per matching provider, each labeled with the full config name and human name (e.g. `<provider>/<model> — <Human Name>` for each provider). Proceed only with the provider the user picks. NEVER auto-pick a provider silently — that is a FAIL.
 
-4. **Locate the config file.** Find the project's opencode config file (see Project extensions for this project's file names and override variable). If it does not exist, create the project's opencode config file in the repo root with a minimal valid shape.
+4. **Locate the config file.** Find the project's opencode config file (see Project extensions for this project's file names and override variable). If it does not exist, prepare a minimal valid shape in memory; do not write it yet.
 
-5. **Edit surgically.** Open the config and set `agent.<agent>.model` to the chosen `provider/model` value:
+5. **Read and capture current state.** Read the config file before acting. If it exists, JSON5-parse it and record the current `agent.<agent>.model` value (or that the key is absent). If it does not exist, record that the proposed change creates a new config.
+
+6. **Preview → confirm.** Show the exact config path, agent, current value, and proposed `provider/model` value. Ask the user with the `question` tool whether to apply the change or leave the config unchanged. Do not write until the user confirms. If the current value already equals the chosen value, report a no-op and skip the write.
+
+7. **Edit surgically after confirmation.** Set `agent.<agent>.model` to the confirmed `provider/model` value:
    - If the `agent` object exists, change ONLY the `model` line. Preserve every other key in that agent block (`color`, `temperature`, `permission`, etc.).
    - If the `agent` object exists but the named agent is missing, add `"<agent>": { "model": "<provider/model>" }`.
    - If the `agent` object does not exist, add `"agent": { "<agent>": { "model": "<provider/model>" } }`.
    - Preserve all other top-level keys and comments in the file.
 
-6. **Verify.**
+8. **Verify.**
    - JSON5-parse the edited file (strip line comments and trailing commas, then strict-parse) — must succeed.
    - Re-run this skill's model-lookup script against the model query and confirm the chosen `provider/model` is still present in the output.
    - Re-read the config file and confirm the `model` value matches exactly.
 
-7. **Report.** State `<agent> → <provider/model> (<human name>). Restart the opencode TUI to apply.` Do NOT commit unless the user explicitly asks.
+9. **Report.** State `<agent> → <provider/model> (<human name>). Restart the opencode TUI to apply.` Do NOT commit unless the user explicitly asks.
 
 ### Examples
 
@@ -97,11 +97,12 @@ Use one `question` call when both are missing, or per-missing-field otherwise. T
 1. The model-lookup script returns three records (one per matching provider).
 2. Because there are ≥2 matches, the skill opens the `question` tool with those three options (full config name + human name).
 3. User picks one provider's config name.
-4. The skill edits `agent.plan.model` in the project's opencode config to that config name, preserving `color` and other keys.
-5. Verifies JSON5 + re-runs the lookup script to confirm the chosen name still appears.
-6. Reports: "plan → <provider/model> (<Human Name>). Restart the opencode TUI to apply."
+4. The skill reads the config and previews the exact current → proposed model change.
+5. The skill asks for explicit confirmation; it edits only after the user confirms.
+6. It verifies JSON5 + re-runs the lookup script to confirm the chosen name still appears.
+7. Reports: "plan → <provider/model> (<Human Name>). Restart the opencode TUI to apply."
 
-**Single match:** user says "make build use <model query>". The lookup script returns exactly one match — no question needed. Edit `agent.build.model`, verify, report.
+**Single match:** user says "make build use <model query>". The lookup script returns exactly one match, so no provider-selection question is needed. Read and preview `agent.build.model`, get confirmation, then edit, verify, and report.
 
 **No match:** user says "set plan to <model query>". The script returns "No match" and exits non-zero — it is not covered by any authenticated provider (filtered out by subscription). Report no match + suggest the closest available config names. Do NOT edit.
 
@@ -112,7 +113,8 @@ Use one `question` call when both are missing, or per-missing-field otherwise. T
 - **Model not in the script output:** it is not covered by the user's active subscriptions/credentials. Do NOT write it to the config. Show the closest available names and let the user pick from those instead.
 - **Script errors or exits non-zero:** read the error message; if `opencode models --verbose` itself fails, resolve the opencode CLI issue first (PATH, auth). Never proceed on partial/empty data.
 - **Query matches multiple providers:** NEVER pick one silently. Use the `question` tool with one labeled option per provider and proceed only on the user's choice.
-- **Config file missing:** create the project's opencode config file in the repo root with a minimal valid shape (the `$schema` line plus the `agent` block being added).
+- **Config file missing:** prepare the minimal valid config in memory, then show the exact config path and proposed content/change as the preview. Obtain the user's explicit confirmation before creating the config; if declined, make no change.
+- **User declines the preview:** make no change; report that the config remains unchanged.
 - **JSON5 parse fails after edit:** restore the previous file state (the skill made only a surgical change; revert it), verify the original parses, and redo the edit. Never leave the config in an unparseable state.
 - **Config uses a strict-JSON file (no comments):** edit accordingly — do not introduce `//` comments or trailing commas into a strict-JSON file.
 - **Model name is a brand/family, not an exact ID:** the user may name a family when several variants exist. The script's broad match lists all variants; present them via the `question` tool and let the user pick the exact one.

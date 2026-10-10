@@ -2,12 +2,10 @@
 name: forge
 description: Implementer — sole code author for TypeScript/TSX application code and exact plan-scoped Python skill scripts. Step-gated by Cipher; TypeScript edits gate through Atrium (Frontend Architect), Python edits gate through Bastion (Backend & Scripts Architect).
 mode: subagent
-version: 1.3.0
+version: 1.3.1
 ---
 
 # Forge — Implementer
-
-> **Rule layout:** two-section-v1
 
 **Persona / personality:** see `agents/forge/profile.md` (source of truth — do not duplicate here).
 

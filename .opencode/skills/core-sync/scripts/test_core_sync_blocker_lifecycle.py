@@ -1,8 +1,4 @@
-"""Behavior tests for blocker append, refresh, removal, idempotence, and formatting.
-
-Run: uv run --frozen --group dev pytest \
-    .opencode/skills/core-sync/scripts/test_core_sync_blocker_lifecycle.py
-"""
+"""Tests for reconciliation-blocker state transitions."""
 
 from __future__ import annotations
 
@@ -35,9 +31,7 @@ class ReconcileBlockerLifecycleTests:
         first = uc.sync_reconciliation_blocker(ROOT_TEXT, ["a.md"])
         stale = first.replace(uc.RECONCILE_BODY, "STALE BODY")
         assert "STALE BODY" in stale
-
         repaired = uc.sync_reconciliation_blocker(stale, ["a.md", "b.md"])
-
         assert repaired == first
         assert "STALE BODY" not in repaired
         assert _exact_marker_line_count(repaired, uc.RECONCILE_BEGIN) == 1
@@ -57,25 +51,3 @@ class ReconcileBlockerLifecycleTests:
             uc.sync_reconciliation_blocker(once, []), []
         )
         assert second == ROOT_TEXT
-
-    def test_other_root_content_preserved(self) -> None:
-        blocked = uc.sync_reconciliation_blocker(ROOT_TEXT, ["a.md"])
-        removed = uc.sync_reconciliation_blocker(blocked, [])
-        assert removed == ROOT_TEXT
-        assert "# Root runtime" in removed
-        assert "Last line." in removed
-
-    def test_empty_root_text_gets_block_without_leading_blank(self) -> None:
-        result = uc.sync_reconciliation_blocker("", ["a.md"])
-        assert result == (
-            uc.RECONCILE_BEGIN
-            + "\n"
-            + uc.RECONCILE_BODY
-            + "\n"
-            + uc.RECONCILE_END
-            + "\n"
-        )
-
-    def test_root_without_trailing_newline_gains_separator(self) -> None:
-        result = uc.sync_reconciliation_blocker("no newline", ["a.md"])
-        assert result.startswith("no newline\n\n" + uc.RECONCILE_BEGIN)

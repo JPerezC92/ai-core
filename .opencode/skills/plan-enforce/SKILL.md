@@ -8,10 +8,6 @@ metadata:
   version: 1.17.0
 ---
 
-# plan-enforce
-
-> **Rule layout:** two-section-v1
-
 ## Project extensions
 
 ### Protected upstream base ref
@@ -220,148 +216,83 @@ When the plan's work is done and its audits have passed — before the release P
 
 ### Simplicity discipline
 
-Every plan artifact is challenged for removability before it is rendered.
+Challenge every artifact for removal or merger before rendering. Every dispatch-table phase traces to ≥1 goal; remove or merge untraced phases. Remove files, phases, and steps not demanded by a goal or explicit request. Programming plans record cuts/mergers and reasons in `## Design decisions`. More than 5 goals or any non-single-observable goal triggers a soft bloat flag at confirmation; the user chooses whether to trim, split, or accept it.
 
-- **Phase-to-goal trace:** every phase in the dispatch table traces to ≥1 goal ID. A phase with no goal is speculative — remove it or merge it into another phase.
-- **Reduction pass before render:** before presenting a plan, phase, step, or new file, challenge it: "removable or mergeable while meeting the goals?" If yes, remove or merge it. Programming plans record the reduction outcome in `## Design decisions` (what was cut or merged, and why).
-- **Speculative artifacts forbidden:** do not plan files, phases, or steps that no goal and no explicit user request demands. "Might be useful later" is not a goal.
-- **Soft goal-bloat flag:** more than 5 goals, or any goal that is not a single observable condition, triggers the soft flag. Report it in the Markdown presentation before the concise confirmation question; the user decides whether to trim, split, or accept. The flag is a notification, not a hard limit.
-- **Evidence-bounded finding admission:** an admitted finding states the confirmed goal, the governing normative clause, the actual responsible actor and the shipped path it controls (distinct from a helper or fixture), expected versus observed behavior, affected scope, a reproduction or static fact, severity with literal output, and an explicit keep / fix / reject-scope decision. Review classifies it as a requirement defect, documentation drift, or supplemental concern; a speculative blocker is never admitted, and the flow is judged once, not through an unbounded helper or test matrix.
-- **Legacy revalidation:** whenever behavior is replaced, superseded, or newly wired, search for the superseded implementation, remove dead code and stale wiring, and record the sweep as completion evidence. No validated-but-unread field, dead symbol, or stale mapping survives a completed change.
+Admit a finding only with its confirmed goal, governing clause, responsible actor and shipped path (not a helper/fixture), expected-versus-observed behavior, scope, reproduction/static fact, literal severity output, and keep/fix/reject-scope decision. Classify it as a requirement defect, documentation drift, or supplemental concern; reject speculative blockers and judge the flow once, not through unbounded helpers or test matrices. When behavior is replaced, superseded, or newly wired, search for and remove dead code/stale wiring and record the sweep at completion; no validated-but-unread field, dead symbol, or stale mapping survives.
 
 ### Dispatch bundle contract
 
-Every subagent dispatch prompt carries the complete context the subagent needs. The bundle MUST contain, verbatim:
+Every subagent dispatch prompt MUST contain verbatim: (1) the plan Subject; (2) the full `## Goals` block, checkboxes included; (3) the full phase runbook; and (4) each prior-phase Output value consumed by that phase's Reads. "See phase-01 output," summarized goals, or paraphrased phase content do not qualify. Verify all four before dispatch; if anything is missing, rebuild and do not dispatch.
 
-1. **Subject** — the plan subject line from `plan.md`.
-2. **Goals** — the full `## Goals` block from `plan.md`, checkboxes included.
-3. **Phase file** — the full `phase-NN-<owner>.md` content for the phase being dispatched.
-4. **Re-pasted data values** — every data value from prior-phase Outputs that the phase's Reads list consumes (IDs, lists, paths, query results, decision strings). Re-paste the values into the prompt; "see phase-01 output" without the values is not sufficient.
-
-**Fail-closed bundle check:** before every dispatch, verify all four parts are present in the prompt. If any part is missing or paraphrased, do NOT dispatch — rebuild the bundle. A summarized goal or a paraphrased phase step is a failed bundle, because the subagent acts on the words in the prompt, not on the plan file. Every dispatch prompt must also carry the question-routing prohibition and the stop-and-report contract verbatim: subagents must never invoke the user-facing `question` tool; a subagent that lacks a required input, instruction, or piece of evidence halts the affected operation and returns a structured report to Cipher 🔓 (Lead Orchestrator) — the task as received, the exact missing item, what it inspected, bounded options, and a recommended default — and never guesses, assumes, silently continues, or stalls.
+Include verbatim the question prohibition and stop-report contract: never invoke the user-facing `question` tool. If required input, instruction, or evidence is missing, halt and report to Cipher 🔓 (Lead Orchestrator) the task as received, exact missing item, inspected sources, bounded options, and recommended default. Never guess, assume, silently continue, or stall.
 
 ### Template selection
 
-Choose the plan template before creating files; the choice is confirmed in the goals-confirmation gate.
-
-- **Auto-detect programming:** a plan is a programming plan when ANY phase writes code — any write path under the application source tree (e.g. `src/`), backend tooling paths, `scripts/`, `.opencode/skills/**/scripts/`, or the project's ticket tooling. Detection is path-based, not subject-based.
-- **Programming plan** → the programming plan template (see Project extensions) (goals with `Done when:` criteria, Current state, Behavior change, Design decisions, Goals column per phase, per-phase Verify commands).
-- **Non-programming plan** → the base plan template (see Project extensions).
-- **Confirm:** the detected type is confirmed in the same `question` call as the goals (see **Goal lifecycle** → Confirm). Never silently pick a template.
+Choose and confirm the template at the goals gate, before creating files. Detect programming plans by paths, not subject: any code write under application source, backend tooling, `scripts/`, `.opencode/skills/**/scripts/`, or ticket tooling qualifies. Use the programming template (goals with `Done when:`, Current state, Behavior change, Design decisions, per-phase Goals and Verify commands); otherwise use the base template. Confirm the type in the same `question` call as the goals; never choose silently.
 
 ### Verification command executors
 
-Every phase runbook's `## Verify commands` section is one canonical Markdown table with exactly two columns — `Executor` and `Command`:
+Every phase runbook has one non-empty `## Verify commands` Markdown table with exactly two columns, `Executor` and `Command`; each command has exactly one non-empty executor. The static validator checks table shape and traceability only, never permission models. Phase review separately verifies that each executor has the role and tool authority to run the command.
 
 | Executor | Command |
 |---|---|
 | <Name Emoji (Role)> | `<shell command>` |
 
-- Each command is paired with exactly one declared executor. An empty table, a missing or extra column, or a row with a missing executor or command is invalid.
-- The static validator (see Project extensions) enforces declared traceability only — that a non-empty `Executor`/`Command` table exists with each command paired to an executor. It never parses or inspects an agent permission model.
-- Phase review audits executor authority: the reviewer confirms the declared executor holds the role and tool authority to run the command. Authority is a review judgment, not a mechanical check.
-
 #### Non-TypeScript test files
 
-- Crucible 🔥 (Test Architect) is the executor of each declared project-approved test command. Forge 🔨 (Implementer) writes the tests. Bastion 🧱 (Backend & Scripts Architect) audits applicable Python implementation.
-- A plan that edits a Python test file in the project's reviewed discovery areas must list the project's reviewed whole-suite command (see Project extensions for this project's command), obtain Bastion 🧱 (Backend & Scripts Architect) `[PASS]` on applicable implementation edits, and dispatch Crucible 🔥 (Test Architect) to run that command and return `[PASS]` or `[FAIL]`.
-- `[UNCERTAIN]` is not acceptable for a Python test file in the reviewed discovery areas. Cipher 🔓 (Lead Orchestrator) checks the exact reviewed command before dispatch. Project runner permissions live in that project's root opencode config (see Project extensions) under `agent.crucible.permission`; they are command-text gates, not a sandbox.
-- This does not change the existing TypeScript / Atrium 🏛️ (Frontend Architect) and Crucible 🔥 (Test Architect) test-file gates.
+Crucible 🔥 (Test Architect) executes each declared approved test command; Forge 🔨 (Implementer) writes tests; Bastion 🧱 (Backend & Scripts Architect) audits applicable Python implementation. A plan editing a Python test in reviewed discovery areas must list the reviewed whole-suite command (Project extensions), obtain Bastion 🧱 (Backend & Scripts Architect) `[PASS]` on applicable implementation edits, then dispatch Crucible 🔥 (Test Architect) to return `[PASS]` or `[FAIL]`. `[UNCERTAIN]` is not acceptable. Cipher 🔓 (Lead Orchestrator) checks the exact command before dispatch; runner permissions are in the root opencode config under `agent.crucible.permission` and gate command text, not sandbox execution. Existing TypeScript / Atrium 🏛️ (Frontend Architect) and Crucible 🔥 (Test Architect) gates remain unchanged.
 
 ### User stories
 
-User stories are the durable per-feature registry — one file per feature, `user-stories/<feature-slug>.md`, built from the user-story template (see Project extensions). Plans are temporal and never carry the durable definition; the story does.
-
-- **Index first:** `user-stories/index.md` is the single structural reference point. The collision gate and feature matching read the index first, filter candidates by epic / affected areas, then read the candidate bodies.
-- **Before any new story file:** Cipher 🔓 (Lead Orchestrator) reads `user-stories/index.md`, filters by epic and affected areas, reads candidate bodies, presents UPDATE / rename / CREATE with evidence, and waits for an explicit user choice via the `question` tool. CREATE without that choice is forbidden. Cipher 🔓 (Lead Orchestrator) may not CREATE on its own say-so.
-- **CREATE:** create `user-stories/<feature-slug>.md` only after that explicit CREATE choice, when a plan touches a feature that has no story yet.
-- **UPDATE:** update the affected story in the same step as the plan work — the body reflects the CURRENT feature definition; append a dated `## Change log` entry per plan that touched it.
-- **COLLIDE:** when the intended work overlaps, contradicts, or extends an existing story, stop and run the collision gate (see **User-story collision gate**).
-- **Durable:** stories are never archived or deleted with plans. Plan archival moves `plans/` artifacts only; `user-stories/` stays.
-- **Link:** cite the story from `plan.md` — one line under `## Critical files / tools` per touched feature.
-- **Trace:** every plan `## Goals` entry traces to a story acceptance criterion (or to `plan.md` Context/Goals for stories-skipping plans).
+Stories are the durable per-feature definitions (`user-stories/<feature-slug>.md`); plans are temporal. Read `user-stories/index.md` first, filter by epic/affected areas, then read candidate bodies. Before creating any story, Cipher 🔓 (Lead Orchestrator) presents evidence-backed UPDATE / rename / CREATE choices and waits for explicit user choice via `question`; CREATE without that choice or Cipher's own say-so is forbidden. Create only for a feature without a story after explicit CREATE. Update the affected story with the plan work to reflect the current feature and append a dated `## Change log` entry. On overlap, contradiction, or extension, run the collision gate. Stories are never archived/deleted with plans. Cite each touched story under `plan.md` → `## Critical files / tools`; trace each goal to a story acceptance criterion, or to plan Context/Goals when stories are skipped.
 
 ### User-story scope
 
-Which plans carry a user story?
-
-- **Programming plans ALWAYS carry a story** for every feature they touch (any write path under the application source tree, backend tooling paths, `scripts/`, `.opencode/skills/**/scripts/`, or the project's ticket tooling).
-- **Non-programming plans that change feature-visible behavior** are flagged at the goals gate (see **Goal lifecycle** → Confirm) and confirmed with the user: does the behavior change need a story?
-- **Pure docs / process / tooling plans skip** — the plan's `## Context` / `## Goals` block is the record; no story is created.
+Programming plans ALWAYS carry a story for each feature touched by writes under application source, backend tooling, `scripts/`, `.opencode/skills/**/scripts/`, or ticket tooling. At the goals gate, flag non-programming changes to feature-visible behavior and confirm whether a story is needed. Pure docs/process/tooling plans skip stories; `## Context` / `## Goals` record the work.
 
 ### User-story collision gate
 
-Before planning work that touches features, read `user-stories/index.md` first, filter candidates by epic / affected areas, then read the candidate bodies and learn the current definitions. Scan the intended work for collisions with an existing story: overlap (same scenario), contradiction (opposing behavior), or extension (supersedes or broadens a defined feature).
-
-- **On collision:** stop before creating any plan file. Report the collision with evidence — the existing story's persona/goal/scenario and the intended work's corresponding statements — and ask the user how to proceed. Overlap, contradiction, and extension still stop.
-- **Before any new story file:** present the index-filtered candidates with evidence and the three choices UPDATE / rename / CREATE. Wait for an explicit user choice via the `question` tool. CREATE without that choice is forbidden.
-- **On the user's decision:** record the resolution in the affected story's `## Resolved decisions`, keeping the set bounded (replace superseded entries; see **Story hygiene**).
-- **Drift watch:** re-run the gate when scope adds a feature mid-plan (see **Goal lifecycle** → Drift watch).
+Read the index, filter by epic/affected areas, read candidate bodies, and check for overlap (same scenario), contradiction, or extension (superseding/broadening a feature). On any collision, stop before creating a plan; report the existing persona/goal/scenario and corresponding intended statements, then ask the user how to proceed. Before creating a story, present the filtered choices UPDATE / rename / CREATE with evidence and wait for explicit `question`-tool choice. Record the decision in the affected story's bounded `## Resolved decisions`, replacing superseded entries. Re-run this gate when scope adds a feature.
 
 ### Story hygiene
 
-A durable story is the current feature definition, not a work log.
+Stories define current features, not work history. Every acceptance criterion and Goal `Done when:` states an observable condition and cites the proving surface; no plan-only goal or temporal `plans/`/`output/` dependency is allowed, except a genuine feature input. Cite evidence by exact command+verdict or durable commit SHA, never volatile test counts; cite section/symbol rather than version unless version is the requirement, never a version this plan bumps, and replace `file:line` with section/symbol.
 
-- **Self-contained criteria:** every acceptance criterion and Goal `Done when:` states an observable condition and cites the surface it proves. It must not depend on a plan-only goal or a temporal `plans/`/`output/` path. A path that is the feature's genuine input (for example a plan-discovery glob) is allowed.
-- **Current, non-volatile evidence:** a criterion cites the exact command plus verdict, or a durable pin (commit SHA), never a volatile test count (`N passed`, `N tests`); it cites a surface by section or symbol, not by version number, unless that version is the requirement. A criterion must not cite a surface whose version this plan itself bumps. Resolve a `file:line` citation to a section or symbol name; line numbers drift.
-- **Bounded change log:** `## Change log` holds at most 5 recent one-line entries, `<date> — <plan-slug>: <what changed about this feature>`, plus one rollup line `before <date> — earlier history: see git history for this file` when older entries are dropped. Process/execution narration (planning-only status, phase/gate results, counts) is not a change-log entry; git is the permanent record.
-- **Bounded resolved decisions:** `## Resolved decisions` holds only the decisions that currently govern the feature, with their rationale. It is a current set that is replaced as decisions change, never appended without bound; superseded decisions and plan-execution or scheduling decisions are removed. Git history is the permanent record.
-- **Enforcement:** Sentinel 🛡️ (Quality Guardian) audits stories against these rules and reports violations; the rules are auditor checks, not validator-script checks.
+Keep at most 5 recent one-line `## Change log` entries (`<date> — <plan-slug>: <feature change>`) plus `before <date> — earlier history: see git history for this file` when rolling up. Exclude process narration. `## Resolved decisions` contains only current governing decisions with rationale; replace superseded and remove execution/scheduling decisions. Git history is permanent. Sentinel 🛡️ (Quality Guardian) audits these rules; the validator does not.
 
 ### Create new plan
 
-1. Run the initial inventory.
-2. Choose subfolder layout unless the task has one owner, one file edit, no phase handoff, no external mutation, and at most 30 instruction lines.
-3. Derive the task slug, phase list, and full write/delete manifest in memory.
-4. Detect the goals from the task description: numbered `G1..Gn`, each stating what must be true when the plan is done (see **Goal lifecycle** → Detect).
-5. Run the goals-confirmation gate: first present the goals and classification in Markdown (see **Goal lifecycle** → Present), then run one short `question` call confirming them BEFORE any file creation (see **Goal lifecycle** → Confirm).
-6. Select the template: the programming plan template for programming plans, the base plan template otherwise (see **Template selection** and Project extensions).
-7. Run the user-story gate: read `user-stories/index.md`, filter by epic and affected areas, read candidate bodies, and for each feature run UPDATE / rename / CREATE / COLLIDE (see **User stories** + **User-story collision gate**). Do not create a new story file until the user makes an explicit UPDATE / rename / CREATE choice. On overlap, contradiction, or extension, stop before creating any plan file and ask the user. If the plan skips stories (see **User-story scope**), record that in the plan's Context.
-8. Run the post-scope collision check. Stop on overlap; do not create files.
-9. Create `plans/<task-slug>-YYYYMMDD/plan.md` from the selected template and one `phase-NN-<owner>.md` from the phase template (see Project extensions) per phase. Record the derived write/delete manifest in the plan's `## Write/delete manifest` section; its `Action`/`Path` rows must equal the union of the phases' `**Writes:**` paths, because the validator enforces that equality.
-10. Fill each phase's Owner, Pre, Reads, Writes, Steps, Output, Verify commands, Gate, and Abort conditions. Do not leave `TBD` in Steps, Output, Gate, or Abort.
-11. Add one verification checkbox per phase output and confirm every checkbox traces to a phase output.
-12. Run the post-write self-verification loop (see **Post-write self-verification loop**) on every written file.
-13. After self-verification, send the execution-review message (see **Execution-review message**) and stop. Do not dispatch Forge 🔨 (Implementer) in this turn. Do not treat `ExitPlanMode` as authorization to implement.
+1. Run the initial inventory; choose subfolder layout unless there is one owner, one edited file, no handoff/external mutation, and ≤30 instruction lines.
+2. Derive slug, phases, and complete write/delete manifest in memory. Detect numbered `G1..Gn` observable goals (see **Goal lifecycle**).
+3. Present goals and classification in Markdown, then make one short confirming `question` call before any file creation. Select the path-detected template and confirm its type with the goals.
+4. Run the user-story gate: read/filter `user-stories/index.md`, review candidate bodies, and decide UPDATE / rename / CREATE / COLLIDE per feature. Wait for explicit story choice before creating; stop before plan creation on collision. Record skipped stories in Context.
+5. Run the post-scope collision check; stop on overlap.
+6. Create `plans/<task-slug>-YYYYMMDD/plan.md` and one phase-template `phase-NN-<owner>.md` per phase. Record the full manifest; `Action`/`Path` rows must equal the union of phase `**Writes:**` paths.
+7. Complete each phase's Owner, Pre, Reads, Writes, Steps, Output, Verify commands, Gate, and Abort conditions; no `TBD` in Steps/Output/Gate/Abort. Add one verification checkbox per phase output and trace every checkbox.
+8. Run the post-write self-verification loop on every written file. After it passes, send the execution-review message and stop. Do not dispatch Forge 🔨 (Implementer) in this turn or treat `ExitPlanMode` as implementation authorization.
 
 ### Execution-review message
 
-After plan files are written and the post-write self-verification loop is clean, Cipher 🔓 (Lead Orchestrator) sends one human-readable last message and stops.
-
-- Write **prose**, per goal, in this order: Issue, Goal, How, Files.
-- `plan.md` uses the same per-goal layout. `## Context` is the overall issue.
-- A recap file table may follow the prose. It must not replace the per-goal prose.
-- Dense dumps and table-only briefs are a violation.
-- Do not dispatch Forge 🔨 (Implementer) in the same turn as this message.
-- Do not ask a corrective, release, or scope-change question in the same turn as this message without that file list.
-
-Forge 🔨 (Implementer) starts only on a later user turn that explicitly authorizes execution after this message, plus independent-audit `[PASS]` and the stash gate.
+After written plans pass self-verification, Cipher 🔓 (Lead Orchestrator) sends one readable final message and stops. Use prose per goal, in order: Issue, Goal, How, Files; `plan.md` uses the same layout and `## Context` states the overall issue. An optional file table follows, never replaces, the prose; dense dumps/table-only briefs fail. Do not dispatch Forge 🔨 (Implementer) in this turn or ask corrective, release, or scope questions without the file list. Forge 🔨 (Implementer) may start only on a later user turn explicitly authorizing execution, after independent-audit `[PASS]` and the stash gate.
 
 ### Post-write self-verification loop
 
-Run after every file write (`plan.md`, each phase file, story create/update, index update), and after every Forge 🔨 (Implementer) dispatch that mutates plan artifacts. Iterate until a full pass finds zero violations:
+Run after every plan/phase/story/index write and every Forge 🔨 (Implementer) dispatch that mutates plan artifacts; repeat until clean:
 
-1. **Re-read** every file just written: `plan.md`, each `phase-NN-<owner>.md`, `user-stories/<slug>.md`, `user-stories/index.md`.
-2. **Mechanical pass** — for an active subfolder plan that creates or modifies a user story or `user-stories/index.md`, run the plan validator script (see Project extensions) with `<plan-dir> --stories user-stories` so index mirroring runs. For a no-stories path, run it with `<plan-dir>` without `--stories`; use `<plan.md> --single-file` for the single-file layout. It enforces the repetitive subset: Status enum, `Completed:` line, required sections, phase sections/labels, phase executor-command table presence/shape, unfilled `<...>`/`TBD`/date placeholders, index mirroring, goal trace, manifest equality, verification parity, and the completed-plan audit gate. Fix anything it reports.
-3. **Analysis pass** — re-read each file against the consistency checklist (see Project extensions). Verify every value matches evidence: goals match the confirmed list, each goal lists Issue, How, and Files, every phase traces to ≥1 goal and references an existing phase file, verification checkboxes trace to phase outputs, `## Writes` matches the manifest, story title/status mirror the index, and touched stories carry no `⬜` acceptance criteria at completion (see **Acceptance-criterion reconciliation**). Never invent a value to satisfy a check — stop and ask.
-4. **Repeat** until a clean pass, then report the pass count in chat as `self-verification passes: N`.
-5. **Cap (S-07):** after 3 iterations, or the same violation persisting twice unchanged, stop-and-ask instead of looping.
+1. Re-read each written `plan.md`, phase file, story, and index.
+2. Mechanical pass: active subfolder plans touching stories/index use `<plan-dir> --stories user-stories`; no-story plans use `<plan-dir>`; single-file plans use `<plan.md> --single-file`. Fix validator findings for Status/Completed, required sections and labels, executor-command tables, placeholders, index mirroring, goal trace, manifest equality, verification parity, and completed-plan audit gate.
+3. Analysis pass against the consistency checklist: evidence-match confirmed goals; each goal has Issue/How/Files; phase-to-goal and phase-file links exist; verification checkboxes trace to outputs; phase Writes equal the manifest; story title/status mirror the index; no touched story has `⬜` criteria at completion. Never invent a value; stop and ask.
+4. Repeat to zero findings and report `self-verification passes: N`. After 3 iterations or the same unchanged violation twice, stop-and-ask (S-07).
 
-The plan validator script is a helper, not the authority — it catches repetitive mechanical drift; semantic correctness is the analysis pass.
+The validator catches repetitive mechanical drift; the analysis pass owns semantic correctness.
 
 #### Independent audit gate
 
-A plan is never reported ready and Forge 🔨 (Implementer) is never dispatched on the writing agent's own word. Before a ready report or a Forge 🔨 (Implementer) dispatch, dispatch an independent auditor over the plan against the consistency checklist (see Project extensions):
-
-- **Auditor:** Sentinel 🛡️ (Quality Guardian) by default; Vault 🔐 (Catalog Steward) for catalog-heavy plans.
-- **Record:** write the outcome into `plan.md` under `## Audit` with `- Auditor:`, `- Verdict:`, `- Findings:`, and `- Date:`. The verdict is one of `[PENDING]`, `[PASS]`, `[FAIL]`.
-- **Gate:** the plan is not ready and Forge 🔨 (Implementer) is not dispatched until the verdict is `[PASS]` with a non-empty auditor and a date.
-- **Fail-closed:** if no auditor is available, the plan stays not-ready. A substitute auditor requires explicit user authorization, recorded in `## Audit`. Never self-audit, never invent a verdict, and never downgrade a `[FAIL]` to unblock dispatch.
-- **Planning versus completion:** a planning-readiness audit and a completion audit are distinct. The completion audit evaluates the finished work at its final candidate and is required before `## Outcome`, goal checkmarks, and archive; planning `[PASS]` or an execution-only result never substitutes for it.
+Never report readiness or dispatch Forge 🔨 (Implementer) on the writer's own word. Before either, dispatch an independent checklist audit (see Project extensions): Sentinel 🛡️ (Quality Guardian) by default, Vault 🔐 (Catalog Steward) for catalog-heavy plans. Record `Auditor`, `Verdict`, `Findings`, and `Date` under `## Audit`; verdict is `[PENDING]`, `[PASS]`, or `[FAIL]`. Readiness/dispatch requires `[PASS]`, non-empty auditor, and date. If unavailable, remain not-ready; a substitute requires explicit user authorization recorded in the audit. Never self-audit, invent a verdict, or downgrade `[FAIL]`. Planning and completion audits are distinct: completion evaluates the final candidate and is required before `## Outcome`, goal checkmarks, and archive; planning `[PASS]` or execution alone cannot substitute.
 
 ### All-changes disposition
 
-When asked to analyze all pending changes, enumerate every nonignored modified, deleted, and untracked path and give each an evidence-based `ship`, `fix`, or `drop` disposition before asking any scope question. Inspect the path's content first; manifest absence never proves a path is unrelated, and a pre-existing path is not automatically out of scope. Do not defer to a scope question while an inspected path still lacks a disposition, and never claim completion beyond the reviewed scope.
+For an all-pending-changes analysis, inspect and disposition every nonignored modified/deleted/untracked path as evidence-based `ship`, `fix`, or `drop` before any scope question. Manifest absence or pre-existence does not prove unrelatedness. Do not defer while any inspected path lacks disposition or claim beyond reviewed scope.
 
 ### Plan lifecycle rules
 
@@ -383,26 +314,12 @@ Git tracks only incomplete plans. Stage plan artifacts only while their plan is 
 
 ### Documentation discipline
 
-Published documents must not cite `plans/` or `output/` paths because plans move to the gitignored archive and output is temporal. Cite a commit SHA, PR number, or ticket ID instead. The same applies to durable acceptance criteria and Goal `Done when:` — see **Story hygiene**.
+Published documents, durable criteria, and Goal `Done when:` must not cite temporal `plans/` or `output/` paths; cite a commit SHA, PR number, or ticket ID instead (see **Story hygiene**).
 
 ### Examples
 
-**New multi-phase task:** derive all phase writes in memory, run the collision check, then create a subfolder plan and phase runbooks.
-
-**Existing plan before Forge 🔨 (Implementer) dispatch:** read every phase `## Writes` block, compare it with the inventory, and dispatch only after no overlap is found.
-
-**Stale non-overlapping stash:** offer the user reconciliation options (e.g. `git stash apply` in their terminal) or leaving the stash untouched; never erase or replay it in the caller repository.
-
-**Post-merge cleanup:** pass the user-confirmed `$PR_NUMBER` and `$BRANCH`, then run the `User confirms PR merge` row; `$HEAD_REF_OID`, `$MERGE_BASE`, `$PATHS_FILE`, and `$CHANGED_PATHS` are derived inside that sequence.
-
-**Goals lifecycle trace (present → confirm → drift → resume):** the user describes a task; goals are detected (`G1..Gn`), displayed as a readable Markdown goal list with a separate plan classification, then confirmed by one short `question` call. The confirmed goals are persisted as `## Goals` checkboxes. Mid-plan, a scope change drifts from a confirmed goal — work stops, the user is notified with evidence, and on their call the goal is updated with a dated line in `## Resolved decisions`. At completion — pre-release, after audits pass — the goals resume is presented in chat (`✅`/`❌` per goal), `## Outcome` is written, the plan is archived locally, and when the plan was ever tracked its deletions ride the completing PR. No post-merge archive step exists.
+**New multi-phase task:** derive all phase writes and check collisions before creating a subfolder plan. **Existing plan:** compare every phase `## Writes` block with the inventory before Forge 🔨 (Implementer) dispatch. **Stale non-overlapping stash:** offer user-run `git stash apply` or leave it untouched; never erase/replay it. **Post-merge cleanup:** use the confirmed `$PR_NUMBER`/`$BRANCH` and the lifecycle row's derived variables/proof.
 
 ### Troubleshooting
 
-**Live main SHA unavailable:** resolve the repository remote or authentication problem, then rerun the initial inventory. Do not proceed with a cached SHA.
-
-**Manifest overlaps a stash path:** change the planned write/delete scope or leave the plan blocked. The stash is never erased; the user may recover it later with `git stash apply` in their terminal.
-
-**Branch cleanup blocked:** a head/branch mismatch, an unchecked path extraction, or a non-empty parity diff means the branch is not proven merged — do not delete it; re-fetch and re-evaluate.
-
-**Permission denies stash inventory:** confirm the project's opencode config (see Project extensions) retains targeted destructive-path denies followed by explicit read-only allows for `git stash list` and `git stash show -u`.
+**Live main SHA unavailable:** Cause: remote/authentication failure. Fix: resolve it and rerun inventory; never use a cached SHA. **Stash overlap:** Cause: a planned path intersects a stash path. Fix: change scope or stay blocked; never erase the stash (the user may run `git stash apply`). **Cleanup proof fails:** Cause: mismatch, unchecked extraction, or non-empty parity diff. Fix: do not delete; re-fetch and reevaluate. **Stash inventory denied:** Cause: permissions block the inventory. Fix: ensure config retains targeted destructive denies followed by read-only allows for `git stash list` and `git stash show -u`.

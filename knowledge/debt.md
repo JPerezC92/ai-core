@@ -21,4 +21,4 @@ Each entry MUST include:
 
 ## Register
 
-(open debts: none)
+No accepted debts are currently open.

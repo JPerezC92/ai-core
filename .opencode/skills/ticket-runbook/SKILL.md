@@ -5,20 +5,15 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.4.0
-  dependencies:
-    - PyYAML==6.0.3
+  version: 2.4.1
+  dependencies: PyYAML==6.0.3
 ---
-
-# ticket-runbook
-
-> **Rule layout:** two-section-v1
 
 ## Project extensions
 
 ### Validator script
 
-This project's ticket-runbook validator script is `python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py`.
+This project's ticket-runbook validator script is `uv run --frozen python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py`.
 
 ### Working-set and record templates
 
@@ -135,7 +130,7 @@ After the analysis scaffolds and validates:
 
 #### 6. Register admission (confirmed root cause; non-destructive)
 
-Runs as soon as the root cause is confirmed — it does not wait for the close-out authorization (see Project extensions). Cipher 🔓 (Lead Orchestrator) dispatches Scribe ✍️ (Docs & Problems Manager) immediately; Scribe ✍️ (Docs & Problems Manager) performs the applicable register mutation:
+Preparation starts as soon as the root cause is confirmed — it does not wait for the close-out authorization (see Project extensions). Cipher 🔓 (Lead Orchestrator) dispatches Scribe ✍️ (Docs & Problems Manager) to prepare an evidence-backed register draft. Scribe ✍️ (Docs & Problems Manager) presents it for exact user approval (`approved` or `aprobado`); only after that approval does Cipher 🔓 (Lead Orchestrator) apply the mutation through the destination's gated tool. If the destination workflow or tool is unavailable, stop and report; do not improvise. Complete the approved register mutation before destructive collapse:
 
 1. Create the missing `S-xx` symptom class in the project's symptom register (see Project extensions) when no class matches the confirmed failure signature.
 2. Admit a novel cause as a `candidate` `P-NNN` row in the project's problem register (see Project extensions) when no eligible problem exists.
@@ -148,7 +143,7 @@ This step is not destructive and never gates on file deletion.
 
 #### 7. Close-out (two-stage: readiness gate, then authorized collapse)
 
-Register admission (step 6) already ran when the root cause was confirmed; this step only confirms that earlier mutation — it never re-admits. The durable set is the durable ticket record plus the project's screenshots and validations directories (see Project extensions), and every other cited evidence file. At close, run this order without skipping or reordering:
+Register-admission preparation starts at step 6; the approved mutation must be applied before collapse. This step only confirms that earlier mutation — it never re-admits. If approval or the destination's gated tool is missing, halt before collapse. The durable set is the durable ticket record plus the project's screenshots and validations directories (see Project extensions), and every other cited evidence file. At close, run this order without skipping or reordering:
 
 1. Complete posted-response synchronization: the responses section (see Project extensions) of the durable ticket record mirrors the latest posted response (never the draft).
 2. Run the validator script (see Project extensions) with `<ticket-folder> --pre-close`. This mode is read-only and requires: exactly one durable ticket record; the complete project analysis working set (state + step files; see Project extensions — nothing missing, nothing unexpected); the project's response-draft file; the project's screenshots and validations directories; a completed `synthesize` phase; every machine-addressable `path:` citation in the ticket record spelled ticket-folder-relative (the project's screenshot path spelling; see Project extensions) and resolving to an existing file inside the ticket folder; and valid identification/register consistency. Abort on any non-zero exit.

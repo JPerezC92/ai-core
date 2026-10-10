@@ -14,7 +14,7 @@
 ## Goal
 
 - **G:** A user-confirmed merged branch is deleted only after a fail-closed proof that its content is in `origin/main`, for merge-commit, squash, and rebase merges alike.
-  - Done when: the shared plan-enforce/Herald sequence requires live `MERGED` PR metadata, an immutable head pin, merge-commit ancestry when present, branch-tip ancestry for `git branch -d`, and per-path content parity (`git diff --quiet --exit-code`) before any `git branch -D`, with every metadata, fetch, extraction, ancestry, or diff error blocking deletion.
+  - Done when: the shared plan-enforce/Herald 📯 (Release Manager) sequence requires live `MERGED` PR metadata, an immutable head pin, merge-commit ancestry when present, branch-tip ancestry for `git branch -d`, and per-path content parity (`git diff --quiet --exit-code`) before any `git branch -D`, with every metadata, fetch, extraction, ancestry, or diff error blocking deletion. Evidence: `.opencode/skills/plan-enforce/SKILL.md` `User confirms PR merge` lifecycle rule; `.opencode/agents/herald.md` `#### Execution steps` item 8 and `#### PR lifecycle`.
 
 ## Scenario
 
@@ -23,12 +23,13 @@
 ## Acceptance criteria
 
 - ✅ The plan-enforce `User confirms PR merge` rule requires live `MERGED` metadata, an immutable `headRefOid` pin matched to `$BRANCH`, merge-commit ancestry when present, branch-tip ancestry for `git branch -d`, and per-path content parity (`git diff --name-only -z` into `CHANGED_PATHS` plus `git diff --quiet --exit-code` exiting 0) before `git branch -D`. Evidence: `.opencode/skills/plan-enforce/SKILL.md`, row `User confirms PR merge`.
-- ✅ Herald 📯 (Release Manager) implements the same fail-closed sequence and keeps user-only merge authority. Evidence: `.opencode/agents/herald.md` `1.4.0`, `### Execution steps` item 8 and `### PR lifecycle` hard rules.
-- ✅ Any metadata, fetch, head-mismatch, merge-base, path-extraction, ancestry, or diff error blocks deletion; `git branch -D` is authorized only after the content-parity proof, and the local delete is `-d` on the ancestry path. Evidence: both files above; the earlier unconditional-`-D` defect was caught by Sentinel 🛡️ (Quality Guardian) and fixed.
+- ✅ Herald 📯 (Release Manager) implements the same fail-closed sequence and keeps user-only merge authority. Evidence: `.opencode/agents/herald.md` `#### Execution steps` item 8 and `#### PR lifecycle` hard rules.
+- ✅ Any metadata, fetch, head-mismatch, merge-base, path-extraction, ancestry, or diff error blocks deletion; `git branch -D` is authorized only after the content-parity proof, the local delete is `-d` on the ancestry path, and the remote branch is deleted only when it still exists. Evidence: `.opencode/skills/plan-enforce/SKILL.md` `User confirms PR merge` lifecycle rule and `.opencode/agents/herald.md` `#### Execution steps` item 8 / `#### PR lifecycle`.
 - ✅ The plan-enforce skill discovers the capability from its trigger metadata. Evidence: `.opencode/skills/plan-enforce/SKILL.md` frontmatter description and `## When to use me` (user-confirmed PR merge trigger).
 
 ## Change log
 
+- 2026-10-09 — aicore-all-files-pr-20261008: made remote-branch deletion conditional on its continued existence as part of the fail-closed cleanup contract.
 - 2026-09-15 — debt-001-citation-currency-20260915: created the feature definition for merge-style-aware, fail-closed post-merge branch cleanup.
 
 ## Resolved decisions
