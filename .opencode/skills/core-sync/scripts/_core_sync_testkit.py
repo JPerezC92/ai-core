@@ -6,8 +6,10 @@ and helper shared by more than one behavior module lives here instead.
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
+from typing import TypedDict, cast
 
 sys.path.insert(0, str(Path(__file__).parent))
 import core_sync as uc  # noqa: E402
@@ -61,6 +63,13 @@ RAW_SOURCE_BYTES = b'{\n  "theme": "dark",\n  "model": "sample"\n}\n'
 
 ROOT_TEXT = "# Root runtime\n\nIntro paragraph.\n\nLast line.\n"
 
+
+class _FixtureClearance(TypedDict):
+    """Valid schema-1 clearance metadata maintained by source fixtures."""
+
+    schema: int
+    cleared: list[str]
+
 EXPECTED_RECONCILE_BODY = (
     "> **⚠️ ACTION REQUIRED — core reconciliation. This project is not current "
     "until this is done.**\n"
@@ -109,11 +118,47 @@ EXPECTED_RECONCILE_BODY = (
 )
 
 
+def _ensure_fixture_clearance(source_dir: Path, relative_path: str) -> None:
+    """Pre-clear a written source fixture without repairing malformed metadata."""
+    if relative_path == uc.CLEARANCE_REL:
+        return
+
+    clearance_path = source_dir / uc.CLEARANCE_REL
+    clearance: _FixtureClearance
+    if clearance_path.exists():
+        try:
+            data: object = json.loads(
+                clearance_path.read_text(encoding="utf-8")
+            )
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            return
+        if (
+            not isinstance(data, dict)
+            or type(data.get("schema")) is not int
+            or data.get("schema") != uc.SCHEMA_VERSION
+            or not isinstance(data.get("cleared"), list)
+            or not all(isinstance(item, str) for item in data["cleared"])
+        ):
+            return
+        clearance = cast(_FixtureClearance, data)
+    else:
+        clearance = {"schema": uc.SCHEMA_VERSION, "cleared": []}
+
+    source_path = Path(relative_path).as_posix()
+    if source_path not in clearance["cleared"]:
+        clearance["cleared"].append(source_path)
+        clearance_path.write_text(
+            json.dumps(clearance, indent=2) + "\n", encoding="utf-8"
+        )
+
+
 def _write_file(base: Path, relative: str, content: str) -> Path:
     """Write a fixture file under a base directory, creating parents."""
     path = base / relative
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
+    if base.name == "source":
+        _ensure_fixture_clearance(base, relative)
     return path
 
 
@@ -122,6 +167,8 @@ def _write_bytes_file(base: Path, relative: str, content: bytes) -> Path:
     path = base / relative
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(content)
+    if base.name == "source":
+        _ensure_fixture_clearance(base, relative)
     return path
 
 

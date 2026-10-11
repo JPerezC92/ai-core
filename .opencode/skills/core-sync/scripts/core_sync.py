@@ -39,6 +39,7 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import stat
@@ -65,6 +66,7 @@ FENCE_OPEN_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
 SCHEMA_VERSION = 1
 RECONCILIATION_DIRNAME = "reconciliation"
 RECONCILIATION_FILENAME = "init.yaml"
+CLEARANCE_REL = "distribution-clearance.json"
 
 RECONCILE_BEGIN = "<!-- core:reconcile:begin -->"
 RECONCILE_END = "<!-- core:reconcile:end -->"
@@ -155,7 +157,7 @@ class RegionSplit(TypedDict):
 
 
 class MalformedSourceMarkers(ValueError):
-    """A region-mode source contains core marker lines without one valid pair."""
+    """A region-mode source has core or project marker lines without one valid core pair."""
 
 
 class ReconciliationEntry(TypedDict):
@@ -238,6 +240,15 @@ def _has_exact_core_marker_lines(content: str) -> bool:
     )
 
 
+def _has_exact_project_marker_lines(content: str) -> bool:
+    """Return whether either exact project marker occurs outside a code fence."""
+    lines = content.splitlines()
+    return bool(
+        _exact_marker_line_indices(lines, PROJECT_BEGIN)
+        or _exact_marker_line_indices(lines, PROJECT_END)
+    )
+
+
 def split_regions(content: str) -> Optional[RegionSplit]:
     """Split content into the bytes around and inside its single core region."""
     markers = find_markers(content)
@@ -284,12 +295,16 @@ def extract_source_core(content: str) -> str:
 
     A valid marker pair yields its region. A markerless source uses its whole
     post-frontmatter body; any malformed exact core marker set raises
-    `MalformedSourceMarkers` instead of falling back to markerless behavior.
+    `MalformedSourceMarkers` instead of falling back to markerless behavior. A
+    source carrying project markers without a valid core pair is malformed, so
+    project content is never read as core.
     """
     region_split = split_regions(content)
     if region_split is not None:
         return region_split["region"]
-    if _has_exact_core_marker_lines(content):
+    if _has_exact_core_marker_lines(content) or _has_exact_project_marker_lines(
+        content
+    ):
         raise MalformedSourceMarkers("source core markers are malformed")
     _, body = split_frontmatter(content)
     return body
@@ -613,6 +628,45 @@ def load_bindings(path: Path) -> Optional[Bindings]:
     return parse_bindings(text)
 
 
+def load_clearance(source_dir: Path) -> tuple[Optional[set[str]], bool]:
+    """Read the source distribution-clearance file at the IO boundary.
+
+    Returns `(None, False)` when the file is absent, `(None, True)` when it is
+    present but malformed, or the cleared path set and `True` when valid.
+    """
+    path = source_dir / CLEARANCE_REL
+    if not path.exists():
+        return (None, False)
+    text = read_text(path)
+    if text is None:
+        return (None, True)
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        return (None, True)
+    if (
+        not isinstance(data, dict)
+        or type(data.get("schema")) is not int
+        or data.get("schema") != SCHEMA_VERSION
+        or not isinstance(data.get("cleared"), list)
+        or not all(isinstance(item, str) for item in data["cleared"])
+    ):
+        return (None, True)
+    return (set(data["cleared"]), True)
+
+
+def uncleared_sources(bindings: Bindings, cleared: set[str]) -> list[str]:
+    """Return distinct bound sources absent from clearance in bindings order."""
+    uncleared: list[str] = []
+    seen: set[str] = set()
+    for entry in bindings["bindings"]:
+        source = entry["source"]
+        if source not in cleared and source not in seen:
+            seen.add(source)
+            uncleared.append(source)
+    return uncleared
+
+
 def write_text(path: Path, content: str) -> None:
     """Write UTF-8 text to a path at the IO boundary."""
     with path.open("w", encoding="utf-8", newline="") as file:
@@ -928,8 +982,8 @@ def read_region_split(path: Path) -> Optional[RegionSplit]:
 def read_source_core(path: Path) -> Optional[str]:
     """Read a source file's core at the IO boundary.
 
-    Raises `MalformedSourceMarkers` when the source has exact core marker lines
-    outside fences but no single ordered pair.
+    Raises `MalformedSourceMarkers` when the source has exact core or project
+    marker lines outside fences but no single ordered core pair.
     """
     content = read_text(path)
     if content is None:
@@ -946,12 +1000,33 @@ def run_check(args: argparse.Namespace) -> int:
 
     source_dir = Path(args.source)
     destination_dir = Path(args.destination)
+    cleared, clearance_exists = load_clearance(source_dir)
     preflight_error = _preflight_write_targets(
         "check", source_dir, destination_dir, Path(args.bindings), bindings
     )
     if preflight_error is not None:
         print(f"invalid write target: {preflight_error}", file=sys.stderr)
         return EXIT_INVALID
+
+    if not clearance_exists:
+        print(
+            f"missing clearance file: {source_dir / CLEARANCE_REL}",
+            file=sys.stderr,
+        )
+        return EXIT_DRIFT
+    if cleared is None:
+        print(
+            f"invalid clearance file: {source_dir / CLEARANCE_REL}",
+            file=sys.stderr,
+        )
+        return EXIT_INVALID
+    names = uncleared_sources(bindings, cleared)
+    if names:
+        print(
+            f"source not cleared for distribution: {', '.join(names)}",
+            file=sys.stderr,
+        )
+        return EXIT_DRIFT
 
     source_cores: dict[str, str] = {}
     for entry in bindings["bindings"]:
@@ -1039,12 +1114,33 @@ def run_apply(args: argparse.Namespace) -> int:
     source_dir = Path(args.source)
     destination_dir = Path(args.destination)
     bindings_path = Path(args.bindings)
+    cleared, clearance_exists = load_clearance(source_dir)
     preflight_error = _preflight_write_targets(
         "apply", source_dir, destination_dir, bindings_path, bindings
     )
     if preflight_error is not None:
         print(f"invalid write target: {preflight_error}", file=sys.stderr)
         return EXIT_INVALID
+
+    if not clearance_exists:
+        print(
+            f"missing clearance file: {source_dir / CLEARANCE_REL}",
+            file=sys.stderr,
+        )
+        return EXIT_DRIFT
+    if cleared is None:
+        print(
+            f"invalid clearance file: {source_dir / CLEARANCE_REL}",
+            file=sys.stderr,
+        )
+        return EXIT_INVALID
+    names = uncleared_sources(bindings, cleared)
+    if names:
+        print(
+            f"source not cleared for distribution: {', '.join(names)}",
+            file=sys.stderr,
+        )
+        return EXIT_DRIFT
 
     writes: list[tuple[Path, str]] = []
     raw_writes: list[tuple[Path, bytes]] = []
@@ -1122,6 +1218,7 @@ def run_init(args: argparse.Namespace) -> int:
     source_dir = Path(args.source)
     destination_dir = Path(args.destination)
     bindings_path = Path(args.bindings)
+    cleared, clearance_exists = load_clearance(source_dir)
     preflight_error = _preflight_write_targets(
         "init",
         source_dir,
@@ -1133,6 +1230,26 @@ def run_init(args: argparse.Namespace) -> int:
     if preflight_error is not None:
         print(f"invalid write target: {preflight_error}", file=sys.stderr)
         return EXIT_INVALID
+
+    if not clearance_exists:
+        print(
+            f"missing clearance file: {source_dir / CLEARANCE_REL}",
+            file=sys.stderr,
+        )
+        return EXIT_DRIFT
+    if cleared is None:
+        print(
+            f"invalid clearance file: {source_dir / CLEARANCE_REL}",
+            file=sys.stderr,
+        )
+        return EXIT_INVALID
+    names = uncleared_sources(bindings, cleared)
+    if names:
+        print(
+            f"source not cleared for distribution: {', '.join(names)}",
+            file=sys.stderr,
+        )
+        return EXIT_DRIFT
 
     writes: list[tuple[Path, str]] = []
     raw_writes: list[tuple[Path, bytes]] = []

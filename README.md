@@ -1,26 +1,69 @@
 # AICore
 
-A reusable, agnostic core of AI agents, personas, and skills. Another project adopts it **atomically** — one AICore revision for the complete applicable unit set — and customizes it there; the core itself stays neutral.
+A reusable, agnostic **agentic orchestration core** for [OpenCode](https://opencode.ai): a lead-orchestrator runtime, a role-separated specialist roster, a skill library, shared evidence rules, and a plan-first lifecycle. Another project adopts it **atomically** — one AICore revision for the complete applicable unit set — and customizes it there; the core itself stays neutral.
+
+## What you get
+
+- **One lead, many specialists** — Cipher 🔓 (Lead Orchestrator) triages every request, dispatches roster agents in parallel or sequence, and synthesizes a single root cause / verdict / plan. Subagents never address the user; they report to the lead in a fixed, bounded format.
+- **Evidence discipline** — facts vs. labeled `hipótesis:` vs. forbidden assumptions; every quantitative claim traces to a cited measurement, every report leads with a verdict and stays ≤ 60 lines (`knowledge/agents.md`).
+- **Safety rails** — a least-privilege permission model in `opencode.jsonc`: force-push, PR merges, `sudo`, system-path `rm -rf`, and env-file reads are denied; the `plan` agent cannot edit files; irreversible actions are User-Authority-Only.
+- **Plan-first workflow** — the `plan-enforce` skill requires a plan artifact in `plans/` plus a user story before Forge 🔨 (Implementer) writes code, and verifies a confirmed PR merge before branch cleanup.
+- **Automatic architecture gates** — Atrium 🏛️ (Frontend Architect) audits after every frontend edit, Crucible 🔥 (Test Architect) after every test-file edit, Inquisitor 🔎 (PR Reviewer) at every PR head, Warden 🔒 (Dependency Warden) before any manifest change.
+- **Skill library** — core distribution (`core-sync`), git workflow (`git-branch-name`, `git-commit`, `git-pr`), OpenCode authoring (`op-agent-creator`, `op-skill-creator`, `op-model`), and incident tooling (`ticket-runbook`, `query-verification`).
+- **Knowledge registers** — shared agent rules, an accepted-debt register, a diagnostic symptom catalog, a known-problem register, and living design docs.
+- **Tested tooling** — 338 pytest tests cover the Python machinery (core-sync, runbook validators, query verification); the suite runs worker-parallel.
+- **Atomic, versioned distribution** — `core-sync` splices protected `core` regions into destination projects, pins the source revision in the destination's own bindings file, and keeps acceptance blocked on any drift.
+
+## Roster
+
+| Agent | Role | Team |
+|---|---|---|
+| Cipher 🔓 | Lead Orchestrator | cross-cutting |
+| Augur 🔮 | Research Analyst | cross-cutting |
+| Marshal 🎖️ | HR Director | cross-cutting |
+| Vault 🔐 | Catalog Steward | cross-cutting |
+| Investigator 🔍 | Incident Investigator | incident |
+| Ledger 📒 | Record Keeper | incident |
+| Quill 🪶 | Note Drafter | incident |
+| Scribe ✍️ | Docs & Problems Manager | incident |
+| Atrium 🏛️ | Frontend Architect | dev |
+| Bastion 🧱 | Backend & Scripts Architect | dev |
+| Crucible 🔥 | Test Architect | dev |
+| Forge 🔨 | Implementer | dev |
+| Herald 📯 | Release Manager | dev |
+| Inquisitor 🔎 | PR Reviewer | dev |
+| Lumen ✨ | Visual Director | dev |
+| Sentinel 🛡️ | Quality Guardian | dev |
+| Warden 🔒 | Dependency Warden | dev |
+
+Persona CVs live at `agents/<name>/profile.md`; runtime specs at `.opencode/agents/<name>.md` (Cipher's runtime spec is the root `AGENTS.md` by design). The spec carries workflow only, the CV carries personality — they never duplicate each other.
 
 ## What's inside
 
 ```
-AGENTS.md                     Lead orchestrator (Cipher 🔓 (Lead Orchestrator)) + roster + reuse guide
-.opencode/agents/             16 runtime agent specs (OpenCode subagents)
-.opencode/skills/             10 skills (core-sync, git-branch-name, git-commit,
-                              git-pr, op-agent-creator, op-model, op-skill-creator,
-                              plan-enforce, query-verification, ticket-runbook)
+AGENTS.md                     Cipher's runtime spec: mandatory core + roster + reuse guide
+opencode.jsonc                OpenCode config: agent/model bindings, permission model, MCP servers
+magic-context.jsonc           magic-context disabled — native OpenCode compaction owns context
+.opencode/agents/             16 subagent runtime specs (OpenCode subagents)
+.opencode/skills/             10 skills (core-sync, git-branch-name, git-commit, git-pr,
+                              op-agent-creator, op-model, op-skill-creator, plan-enforce,
+                              query-verification, ticket-runbook) — each with SKILL.md + scripts/
 agents/<name>/profile.md      17 persona CVs (incl. cipher)
-knowledge/agents.md           Shared agent rules
-knowledge/debt.md             Accepted-debt register (destination-owned; seeded from debt.template.md, never mirrored)
-knowledge/symptoms.md         Diagnostic Symptom Catalog (shared, shipped)
-knowledge/problems.md         Known Problem Pattern Register (shared, ships empty)
-knowledge/query-verification-design.md  Query-verification living design (incident pilot v1 implemented; broader design deferred)
-plans/  user-stories/         Plan lifecycle (plan-enforce)
+knowledge/agents.md           Shared agent rules (evidence/report discipline, hard rules)
+knowledge/debt.md             Accepted-debt register (destination-owned; seeded from debt.template.md,
+                              never mirrored)
+knowledge/debt.template.md    0-entry seed for a destination's own debt register
+knowledge/symptoms.md         Diagnostic symptom-class catalog (shared, shipped)
+knowledge/problems.md         Known-problem register (shared, ships empty)
+knowledge/query-verification-design.md  Query-verification living design (pilot v1 implemented)
+plans/  user-stories/         Plan lifecycle artifacts (plan-enforce)
+pyproject.toml  uv.lock       Python toolchain (uv; pytest + pytest-xdist in the dev group)
 output/                       Temporal working space (audits, research, design — gitignored)
 ```
 
-## How to use it in another project
+## Using it in another project
+
+### Existing project — atomic adoption via `core-sync`
 
 1. Start only from a destination that is already clean and saved. `core-sync` performs no cleanliness check — confirming the destination is clean and saved is an operator pre-flight. Run `core-sync init` from an AICore checkout after an approved source refresh. It enrolls the **complete applicable unit set** at one AICore revision: each file's `core` region gets the source core, and the file's previous body moves into the destination-owned `project` region. Review every `.aicore/reconciliation/` report under the core-wins rule, resolve the destination-root reconciliation blocker, and clear `pending`; `core-sync check` must exit `0` before the enrollment is accepted. Do not treat enrollment as an application build.
 2. Keep shared rule infrastructure (`knowledge/agents.md`). The destination owns its `plans/`, `user-stories/`, and `knowledge/debt.md`: seed an absent debt register from the shipped 0-entry `knowledge/debt.template.md` and preserve the destination's own entries — AICore's filed debt is never copied into a destination, and the debt unit cannot be declared `mirror`. The shared diagnostic catalog does ship: `knowledge/symptoms.md` (symptom-class catalog) and the empty `knowledge/problems.md` (problem-pattern register) are copied as shared infrastructure. Distinguish filed history, which is never copied, from the shared catalog, which is.
@@ -39,9 +82,22 @@ output/                       Temporal working space (audits, research, design �
 
    `apply` splices each source `core` region into its destinations and pins the revision; `check` verifies every destination core region against the pinned revision and requires `pending` empty, exiting `0` only when current. A failed `check` blocks acceptance until the drift is reconciled. A local branch that was not refreshed is not live remote truth.
 
+### New project — start from this repository
+
+Clone AICore, then clear the destination-owned state so the fresh project starts clean: `plans/`, `user-stories/`, `output/`, `knowledge/debt.md` entries (keep the template), `commit.txt`, `pr-draft.md`, and AICore's git history. Customize the project-extensions sections (stack rulebooks, `knowledge/`, MCP servers, models) to your stack, then keep the core regions untouched so future `core-sync apply` updates stay possible.
+
+## Development
+
+- **Environment** — `python3` (not `python`), Python ≥ 3.13, managed with `uv`. Every Python command runs through the project environment: `uv run --frozen …`, never a bare or global interpreter.
+- **Tests** — `uv run --frozen --group dev pytest -q` runs the whole suite (338 tests, worker-parallel via pytest-xdist). Skill tests live beside their scripts: `.opencode/skills/<skill>/scripts/test_*.py`.
+- **Authoring** — use the `op-skill-creator` and `op-agent-creator` skills to scaffold skills/agents, and `op-model` to change agent models deterministically.
+- **Config changes** — the OpenCode TUI must be restarted after any `opencode.jsonc` permission change; active sessions do not reload it.
+- **Plan discipline** — non-trivial work starts with the `plan-enforce` skill (plan artifact in `plans/` + user story); specs never bump synced version numbers locally — destination-local changes live in git history and the user-story change log.
+
 ## Notes
 
 - Everything is OpenCode-native: agent specs in `.opencode/agents/`, skills in `.opencode/skills/` (`compatibility: opencode`), plan lifecycle in `plans/` + `user-stories/`.
 - `output/` is gitignored — it holds temporal artifacts (audit reports, research briefs, design briefs/audits); agents create it on first write.
-- Skills `git-commit`, `git-branch-name`, `git-pr` assume git + pnpm and the GitHub CLI (`gh`) — the dev-team defaults.
+- Skills `git-commit` and `git-pr` write `commit.txt` / `pr-draft.md` (both gitignored) and, with `git-branch-name`, assume git + pnpm and the GitHub CLI (`gh`) — the dev-team defaults.
 - Each destination's adopted content is bound by its own `.aicore/core.yaml`: it maps each source file to its destination paths and pins the `core_revision` the destination was enrolled at. The bindings are destination-owned state — AICore keeps no adopter registry.
+- This project uses the local memories.sh store via the `memories` MCP server as a **cache** of repo-derivable facts; durable knowledge belongs in repo surfaces (`knowledge/`, skill Troubleshooting), never memory-only.

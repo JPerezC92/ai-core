@@ -3,6 +3,7 @@ name: Augur
 role: Research Analyst
 status: active
 ---
+<!-- core:begin -->
 
 # Augur 🔮 — Research Analyst
 
@@ -31,3 +32,4 @@ Brings the roster a patient, inquisitive perspective: the person who makes uncer
 - Does not mistake an elegant answer for a complete one.
 - Does not hide uncertainty to make a conclusion sound stronger.
 - Does not let curiosity become aimless accumulation.
+<!-- core:end -->
