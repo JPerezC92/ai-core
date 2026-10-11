@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.3.0
+  version: 1.4.0
 ---
 
 ## Project extensions
@@ -119,7 +119,7 @@ Create a new OpenCode-native agent under `.opencode/agents/{name}.md`. The agent
      - **A.** Auto-update the description with a recommended addition
      - **B.** Let the user edit manually
      - **C.** Ignore the mismatch and continue
-6. **Step 6 — Pre-validation (agent-contract subset).** Before writing, run these checks against the fully built agent definition. The agent runtime-spec contract (Marshal 🎖️ (HR Director)'s Runtime Spec Format; Sentinel 🛡️ (Quality Guardian) rule SP-3) is authoritative; reference it for full text:
+6. **Step 6 — Pre-validation (agent-contract subset).** Generated specs must cite `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)` and must not tell a language section to suspend it. Before writing, run these checks against the fully built agent definition. The agent runtime-spec contract (Marshal 🎖️ (HR Director)'s Runtime Spec Format; Sentinel 🛡️ (Quality Guardian) rule SP-3) is authoritative; reference it for full text:
 
    ```
    - [ ] File is `.opencode/agents/<name>.md` — a single markdown file, not a folder — QC-1 (adapted)
@@ -132,7 +132,8 @@ Create a new OpenCode-native agent under `.opencode/agents/{name}.md`. The agent
    - [ ] Contract: frontmatter has `name`, `description`, and `mode` (`primary` | `subagent`)
    - [ ] Contract: frontmatter has repository-metadata `version` in SemVer MAJOR.MINOR.PATCH form (`local-version` only on destination-derived specs)
     - [ ] Contract: technical framing present — H1 inside the core region and, for a governed roster spec, a persona reference line to agents/<name>/profile.md (no `> **Rule layout:**` marker)
-    - [ ] Contract: follow Marshal 🎖️ (HR Director)'s Runtime Spec Format and Sentinel 🛡️ (Quality Guardian) SP-3 — do not invent a competing layout. Exactly one `<!-- core:begin -->` … `<!-- core:end -->` pair immediately after the frontmatter closing `---`. Governed roster specs use all eight H3s in order under `## Mandatory core`: Your Role, Roster Context, Rulebook, Workflow, Tools and References, Output Format, Stop and Report, Hard Rules. Custom non-roster specs omit the persona line and `### Roster Context` explicitly and keep the other seven in core. Optional project markers only for evidenced local configuration, actual local grants, selected bindings, or local history. `### Hard Rules` is the last H3. A command named in the body is a reference form, not a grant; the frontmatter `permission` block is the configured grant.
+   - [ ] Contract: if the Rulebook states language-specific rules, it opens with a language-agnostic subsection before the first language section, and no language section suspends the clean-architecture contract (SP-11, SP-12)
+     - [ ] Contract: follow Marshal 🎖️ (HR Director)'s Runtime Spec Format and Sentinel 🛡️ (Quality Guardian) SP-3 — do not invent a competing layout. Exactly one `<!-- core:begin -->` … `<!-- core:end -->` pair immediately after the frontmatter closing `---`. Governed roster specs use all eight H3s in order under `## Mandatory core`: Your Role, Roster Context, Rulebook, Workflow, Tools and References, Output Format, Stop and Report, Hard Rules. Custom non-roster specs omit the persona line and `### Roster Context` explicitly and keep the other seven in core. Optional project markers only for evidenced local configuration, actual local grants, selected bindings, or local history. `### Hard Rules` is the last H3. A command named in the body is a reference form, not a grant; the frontmatter `permission` block is the configured grant.
    ```
 
    If any check FAILS, fix or surface to user via the `question` tool before the write step (Step 10).

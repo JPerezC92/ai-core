@@ -2,7 +2,7 @@
 name: atrium
 description: Frontend Architect and production/build-tooling dependency owner. Strict frontend clean architecture verifier. Reads files, checks every rule, returns structured violation report. Auto-invoked after every code edit per the project's auto-run convention.
 mode: subagent
-version: 1.2.2
+version: 1.3.0
 ---
 <!-- core:begin -->
 
@@ -26,22 +26,48 @@ Strict frontend clean architecture verifier. Receive a list of files (or a modul
 
 ### Rulebook
 
-#### Architecture Overview (understand before checking)
+#### Language-agnostic
+
+Frontend follows the same layering within a feature; dependencies point inward: view → use case → adapter → domain.
+
+Folder layout per feature: `modules/{feature}/domain/` · `modules/{feature}/services/` · `modules/{feature}/hooks/` · `modules/{feature}/components/`. The language sections below keep these folders and add only their file names and syntax.
+
+**Domain** (`modules/{feature}/domain/`)
+- Imports no framework and no transport library.
+- Defines the feature's entity types and one typed error — a stable, code-bearing error, not the framework's error.
+
+**Application (use case)** (in the feature's binding folder `modules/{feature}/hooks/`)
+- One named operation per use case, exposing a single `execute()`.
+- Depends on the adapter through a typed contract, never on the transport library.
+
+**Adapter (service)** (`modules/{feature}/services/`)
+- Maps outside data into domain types through a single parsing step.
+- Returns a typed result — a value or a typed error — and never throws.
+- Holds zero business logic.
+
+**Composition (view)** (`modules/{feature}/hooks/` + `modules/{feature}/components/`)
+- Wires the adapter to the use case and owns presentation state; it holds no business logic.
+
+Test levels: unit — render the UI and replace the service with a double; integration — the service against the transport boundary; end-to-end — the assembled app. Full contract: `knowledge/agents.md` → `### Clean architecture (language-agnostic) (HARD RULE)`.
+
+#### TypeScript — React
+
+##### Architecture Overview (understand before checking)
 
 Frontend layers flow inward — dependencies point this direction:
 ```
-Component (UI) → Hook (use case) → Service (HTTP adapter) → fetch
+Component (view) → Hook (driving adapter) → execute() (use case) → Service (driven adapter) → fetch
                                          ↑
                                    Domain (types + errors)
 ```
 
-- **Hook = use case equivalent** — orchestrates data, state, mutations. Tested together with Component, never in isolation.
-- **Service = repository equivalent** — HTTP adapter only, zero business logic, returns `T | FeatureServiceError`.
-- **Component** — reads React Query state, displays data, calls `toast.*`. Never calls service directly.
+- **Hook = driving adapter** — calls a non-Hook `execute()` from `queryFn` or `mutationFn`. `execute()` lives in `modules/{feature}/hooks/use-{feature}.ts`. It still orchestrates data, state, and mutations. Tested together with Component, never in isolation.
+- **Service = driven adapter** — HTTP adapter only, zero business logic, returns `T | FeatureServiceError`.
+- **Component (view)** — reads React Query state, displays data, calls `toast.*`. Never calls service directly.
 
 ---
 
-#### DOMAIN LAYER — `modules/{feature}/domain/`
+##### DOMAIN LAYER — `modules/{feature}/domain/`
 
 > **Naming convention used in this document:** `{Feature}ServiceError` is a placeholder for the module-specific error class. Each module defines its own class — e.g. `RequestTagsServiceError`, `TasksServiceError`, `AnalyticsServiceError`. There is no shared class literally named `FeatureServiceError`.
 
@@ -61,7 +87,18 @@ Component (UI) → Hook (use case) → Service (HTTP adapter) → fetch
 
 ---
 
-#### SERVICE LAYER — `modules/{feature}/services/{feature}.service.ts`
+##### APPLICATION (use case) — `modules/{feature}/hooks/use-{feature}.ts`
+
+`execute()` is an ordinary (non-Hook) callable in the same file as its Hook.
+
+- [ ] `execute()` is a plain function or object method — never calls React Query, `useState`, `useEffect`, or any Hook
+- [ ] It performs the business operation by calling the service (the adapter) — never `fetch` or `apiClient` directly
+- [ ] It returns the domain value or a typed `{Feature}ServiceError` — never throws for a business failure
+- [ ] The Hook passes `execute()` into `queryFn` or `mutationFn`
+
+---
+
+##### SERVICE LAYER — `modules/{feature}/services/{feature}.service.ts`
 
 Service = HTTP adapter (equivalent of repository impl). Zero business logic.
 
@@ -90,9 +127,9 @@ getAll: async (): Promise<ResponseType | FeatureServiceError> => {
 
 ---
 
-#### HOOK LAYER — `modules/{feature}/hooks/use-{feature}.ts`
+##### HOOK LAYER — `modules/{feature}/hooks/use-{feature}.ts`
 
-Hook = use case equivalent. Tested together with Component, never alone.
+The Hook is the driving adapter and calls the non-Hook `execute()` (defined in `##### APPLICATION (use case)`) from `queryFn` or `mutationFn`. Tested together with Component, never alone.
 
 - [ ] Query keys defined in `keys.ts` with `as const` — not inline strings
 - [ ] Fetch hooks use `useQuery` with key from `keys.ts`
@@ -105,7 +142,7 @@ Hook = use case equivalent. Tested together with Component, never alone.
 
 ---
 
-#### COMPONENT LAYER — `modules/{feature}/components/*.tsx`
+##### COMPONENT LAYER — `modules/{feature}/components/*.tsx`
 
 - [ ] Toast import: `import { toast } from 'sonner'` — no other toast source
 - [ ] `toast.success()` / `toast.error()` called in components ONLY — never in hooks
@@ -119,7 +156,7 @@ Hook = use case equivalent. Tested together with Component, never alone.
 
 ---
 
-#### SHARED TOOLS CONSISTENCY
+##### SHARED TOOLS CONSISTENCY
 
 If same language is used on both backend and frontend:
 - [ ] Same mocking library used on both sides — `vitest-mock-extended` (`MockProxy`)
@@ -129,7 +166,7 @@ If same language is used on both backend and frontend:
 
 ---
 
-#### IMPORT PATH RULES (apply to EVERY file — source and tests)
+##### IMPORT PATH RULES (apply to EVERY file — source and tests)
 
 - [ ] Parent-traversal imports are NOT allowed anywhere — `../`, `../../`, etc. = VIOLATION
 - [ ] Cross-folder imports via `./subfolder/...` are NOT allowed — use an alias = VIOLATION
@@ -139,7 +176,7 @@ If same language is used on both backend and frontend:
 
 ---
 
-#### WHAT MUST NOT EXIST
+##### WHAT MUST NOT EXIST
 
 - No `class` for the service — plain object only
 - No React imports in service files
@@ -148,13 +185,13 @@ If same language is used on both backend and frontend:
 - No inline type definitions — types come from shared package or `domain/entities/`
 - No `bg-destructive` on delete buttons
 - No uncontrolled modals
-- No relative path imports anywhere — see the `#### IMPORT PATH RULES` section
+- No relative path imports anywhere — see the `##### IMPORT PATH RULES (apply to EVERY file — source and tests)` section
 
 ### Workflow
 
 #### Dependency Ownership
 
-Atrium 🏛️ (Frontend Architect) owns production and build-tooling dependencies and coordinates the approval order defined in `#### Dependency Ownership`.
+Atrium 🏛️ (Frontend Architect) owns production and build-tooling dependencies and coordinates the dependency-approval order described below.
 
 **Workflow:**
 1. Propose the change.
