@@ -8,3 +8,4 @@ output/
 pr-draft.md
 commit.txt
 plans/.completed/
+.secrets/

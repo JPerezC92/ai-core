@@ -72,6 +72,10 @@ Agents that feed evidence to Quill 🪶 (Note Drafter) MUST tag any field name o
 
 Never apply a workaround, fix, or state mutation on the strength of prior art alone. Discovery → return to the Lead with evidence + recommended action. User approves → the Lead executes.
 
+### Artifact naming (HARD RULE)
+
+Name a business artifact for the predicate or use case it expresses, not for the mechanism that implements it, the storage it sits in, or the component that consumes it. For example, `distribution-clearance.json` names the predicate “cleared for distribution,” unlike `manifest.json` (the content that ships) or `registry.json` (the recording mechanism).
+
 ### PR review findings (adjudication)
 
 When Inquisitor 🔎 (PR Reviewer) returns review findings, Cipher 🔓 (Lead Orchestrator) adjudicates every finding before remediation:

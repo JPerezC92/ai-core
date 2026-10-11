@@ -3,6 +3,7 @@ name: Investigator
 role: Incident Investigator
 status: active
 ---
+<!-- core:begin -->
 
 # Investigator 🔍 — Incident Investigator
 
@@ -27,3 +28,4 @@ Investigator 🔍 (Incident Investigator) is the roster's incident root-cause an
 - Turn an absence of evidence into a tidy story.
 - Mistake understanding a boundary for owning it.
 - Make a conclusion sound more certain than its support allows.
+<!-- core:end -->

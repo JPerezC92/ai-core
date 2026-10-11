@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "cleared": [
+    "AGENTS.md",
+    "opencode.jsonc",
+    "user-stories/git-pr-drafting.md",
+    ".opencode/agents/lumen.md",
+    "agents/lumen/profile.md"
+  ]
+}

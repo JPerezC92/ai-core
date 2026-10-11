@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.2.1
+  version: 1.3.0
 ---
 
 ## Project extensions
@@ -131,8 +131,8 @@ Create a new OpenCode-native agent under `.opencode/agents/{name}.md`. The agent
    - [ ] Total under 5,000 words; body under 500 lines; static blocks >30 lines extracted — QC-14 / QC-27 (adapted)
    - [ ] Contract: frontmatter has `name`, `description`, and `mode` (`primary` | `subagent`)
    - [ ] Contract: frontmatter has repository-metadata `version` in SemVer MAJOR.MINOR.PATCH form (`local-version` only on destination-derived specs)
-   - [ ] Contract: technical framing present — H1 and, for a governed roster spec, a persona reference line to agents/<name>/profile.md (no `> **Rule layout:**` marker)
-   - [ ] Contract: the body is the core — no marker and no required ownership sections; if `## Project extensions` / `## Mandatory core` sections are kept, `### Hard Rules` is the last subsection of `## Mandatory core`
+    - [ ] Contract: technical framing present — H1 inside the core region and, for a governed roster spec, a persona reference line to agents/<name>/profile.md (no `> **Rule layout:**` marker)
+    - [ ] Contract: follow Marshal 🎖️ (HR Director)'s Runtime Spec Format and Sentinel 🛡️ (Quality Guardian) SP-3 — do not invent a competing layout. Exactly one `<!-- core:begin -->` … `<!-- core:end -->` pair immediately after the frontmatter closing `---`. Governed roster specs use all eight H3s in order under `## Mandatory core`: Your Role, Roster Context, Rulebook, Workflow, Tools and References, Output Format, Stop and Report, Hard Rules. Custom non-roster specs omit the persona line and `### Roster Context` explicitly and keep the other seven in core. Optional project markers only for evidenced local configuration, actual local grants, selected bindings, or local history. `### Hard Rules` is the last H3. A command named in the body is a reference form, not a grant; the frontmatter `permission` block is the configured grant.
    ```
 
    If any check FAILS, fix or surface to user via the `question` tool before the write step (Step 10).
@@ -243,11 +243,19 @@ Ask the user for each field, then build the frontmatter:
 
 Each permission key accepts either a shorthand action (`"allow" | "ask" | "deny"`) or a pattern→action object for fine-grained control. **Last matching rule wins.**
 
+This table names which keys gate which tools. It is a reference, not a grant. Example command strings elsewhere in this skill are reference forms. They do not authorize installing packages, changing permission config, selecting a runner, or executing a command. The grant that is actually configured is the `permission` block written into that agent's frontmatter (plus any evidenced local grant in a project region). Do not treat a reference command as permission to edit `opencode.json` / `opencode.jsonc`.
+
 ### Examples
 
-Every generated agent's body is the core. No `> **Rule layout:**` marker is used, and the `## Project extensions` / `## Mandatory core` heading sections are optional content labels (not a required layout). A **governed roster spec** (one backed by a persona CV at `agents/<name>/profile.md`) carries the persona reference line; a custom agent without a CV omits it.
+Generated agent files follow the region-delimited eight-section contract in Marshal 🎖️ (HR Director)'s Runtime Spec Format (`.opencode/agents/marshal.md`) and Sentinel 🛡️ (Quality Guardian) SP-3. Cite those sources; do not treat this skill as a competing standard. No `> **Rule layout:**` marker is used.
 
-Technical framing (the H1, an optional `> **Spec version:**`/version line, and the persona reference line) precedes the body. If the optional `## Project extensions` / `## Mandatory core` sections are kept, a role description belongs in `### Your Role` under `## Mandatory core`, and `### Hard Rules` is the last subsection.
+Exactly one `<!-- core:begin -->` … `<!-- core:end -->` pair sits immediately after the frontmatter closing `---`. Technical framing is inside that core: an H1, and — for a governed roster spec only — the persona reference line `**Persona / personality:** see \`agents/<name>/profile.md\``. Then `## Mandatory core`. `### Hard Rules` is the last H3. When there is no evidenced local content, omit the project pair and end the core at EOF.
+
+A **governed roster spec** (persona CV at `agents/<name>/profile.md`) uses the persona line and all eight H3s in order: `Your Role`, `Roster Context`, `Rulebook`, `Workflow`, `Tools and References`, `Output Format`, `Stop and Report`, `Hard Rules`. Persona content stays in the CV; the runtime spec does not duplicate it.
+
+A **custom non-roster agent** (no CV) omits the persona reference line and `### Roster Context` explicitly, and still keeps `Your Role`, `Rulebook`, `Workflow`, `Tools and References`, `Output Format`, `Stop and Report`, and `Hard Rules` inside the core markers.
+
+Reusable review, documentation, and diagnostic rules belong in core. Add `<!-- project:begin -->` … `<!-- project:end -->` only when the spec actually contains evidenced local configuration, actual local grants, selected operational bindings, or local history. A command named in the body is a reference form. The frontmatter `permission` block is the configured grant. Writing a reference command does not authorize installing packages, editing permission config, or running that command.
 
 #### Governed roster spec (primary) — `code-reviewer`
 
@@ -267,25 +275,47 @@ permission:
   bash: deny
 ---
 
+<!-- core:begin -->
 # Docs Writer
 
-## Project extensions
-
-### Documentation standards
-- Clear explanations
-- Proper structure
-- Code examples
+Custom non-roster agent: no persona CV, so this spec omits the persona reference line and `### Roster Context`.
 
 ## Mandatory core
 
 ### Your Role
 
-Create clear, comprehensive documentation.
+Create clear, comprehensive documentation. Do not edit application source.
+
+### Rulebook
+
+- Write clear explanations with a stable heading structure.
+- Include a code example when the documented behavior is procedural.
+- These documentation rules are reusable; they stay in core. This example has no local configuration, so it has no project region.
+
+### Workflow
+
+1. Read the existing doc and the change that must be documented.
+2. Draft the update.
+3. Return the draft for human review before any publish step.
+
+### Tools and References
+
+- Read existing docs and the source that grounds them.
+- This example's configured grant is the frontmatter `permission` block (`bash: deny`). A command named in prose is a reference form only — it does not authorize running the command or changing permission config.
+
+### Output Format
+
+Return the documentation draft, the path it belongs in, and what a human must review before publish.
+
+### Stop and Report
+
+If the source behavior is missing or contradicted, stop and report the gap. Do not invent the missing behavior.
 
 ### Hard Rules
 
 - Never edit source code.
 - Never publish without human review.
+<!-- core:end -->
 ```
 
 #### Hidden subagent — `internal-helper`
@@ -304,23 +334,46 @@ permission:
   bash: ask
 ---
 
+<!-- core:begin -->
 # Internal Helper
 
-## Project extensions
-
-### Diagnostics scope
-- System-level diagnostics
+Custom non-roster agent: no persona CV, so this spec omits the persona reference line and `### Roster Context`.
 
 ## Mandatory core
 
 ### Your Role
 
-Run system-level diagnostics and return findings.
+Run system-level diagnostics and return findings. Do not edit files.
+
+### Rulebook
+
+- Limit diagnostics to the requested system-level question.
+- These diagnostic rules are reusable; they stay in core. This example has no local configuration, so it has no project region.
+
+### Workflow
+
+1. Read the diagnostic question and the allowed scope.
+2. Collect only the evidence that question needs.
+3. Return findings. Do not widen the scope.
+
+### Tools and References
+
+- Read-only inspection tools are the reference set for this role.
+- This example's configured grant is the frontmatter `permission` block (`edit: deny`, `bash: ask`). Naming a command here is not a grant to run it, install packages, or edit permission config.
+
+### Output Format
+
+Return each finding with the evidence that supports it and any gap that blocked a check.
+
+### Stop and Report
+
+If the question or scope is missing, stop and report the gap. Do not guess a diagnostic target.
 
 ### Hard Rules
 
 - Never edit files.
 - Never run destructive commands.
+<!-- core:end -->
 ```
 
 ### Migration: Claude Code → OpenCode
@@ -365,3 +418,4 @@ Use this when the user has an existing Claude Code agent spec and wants an OpenC
 - **`prompt` file not found**: when using `prompt: "{file:./prompts/foo.txt}"`, the path is relative to the directory containing `opencode.json` / `opencode.jsonc` (not the agent file). For project-local config, this is the project root.
 - **Body not being used as system prompt**: if `prompt` is set to an external file, the body markdown is ignored. Remove `prompt` (or set it to empty) to use the body.
 - **Mode mismatch with hidden flag**: `hidden: true` is only valid with `mode: subagent`. The `op-agent-creator` rejects `hidden` set on primary agents.
+- **Missing core markers or eight-section contract**: the written file must match Marshal 🎖️ (HR Director)'s Runtime Spec Format and Sentinel 🛡️ (Quality Guardian) SP-3 (Step 6). A markerless body, optional heading layout, or reusable rules parked in a project region fails prevalidation. Fix the shape; do not treat a reference command in the body as permission to change grants.

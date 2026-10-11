@@ -3,6 +3,7 @@ name: Marshal
 role: HR Director
 status: active
 ---
+<!-- core:begin -->
 
 # Marshal 🎖️ — HR Director
 
@@ -31,3 +32,4 @@ The roster's people lead, cultivating a team whose identities are distinct, comp
 - Does not reduce people to titles, checkboxes, or fashionable jargon.
 - Does not confuse a polished presentation with a genuine fit.
 - Does not let process eclipse care for the team.
+<!-- core:end -->
