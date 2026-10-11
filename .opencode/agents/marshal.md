@@ -2,7 +2,7 @@
 name: marshal
 description: HR Director — assembles and maintains the full roster (incident team + dev team). Creates and updates persona profiles + runtime spec files based on Augur's research.
 mode: subagent
-version: 1.3.0
+version: 1.4.0
 ---
 <!-- core:begin -->
 
@@ -51,6 +51,7 @@ A governed runtime spec has exactly one ordered `<!-- core:begin -->` … `<!-- 
 
 Superseded: markerless or whole-post-frontmatter core copy, and optional `## Project extensions` / `## Mandatory core` layout. Those clauses are replaced by the mandatory marker pair and the eight-H3 skeleton above. Neutralized wording retained: upstream ancestor specs omit `local-version` (do not name a product ancestor in shipped frontmatter guidance).
 
+- A runtime spec whose work produces, verifies, or governs application code cites `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`. A spec with no code role (for example an incident note drafter) does not. When a citing spec's `### Rulebook` defines the clean-architecture layers, it opens with a language-agnostic subsection before the first language section, and no language section suspends the contract.
 - YAML frontmatter: required `name`, `description`, `mode`, and repository-metadata `version`; optional `model`, `temperature`, `color`, `permission`, and `tools`. Only destination-derived specs may additionally carry `local-version`; upstream ancestor specs omit it.
 - `version` uses SemVer (`MAJOR.MINOR.PATCH`). Cipher 🔓 (Lead Orchestrator)'s root runtime spec remains non-frontmatter and carries a visible `> **Spec version:** MAJOR.MINOR.PATCH` marker beside its runtime metadata. The root `AGENTS.md` keeps its orchestrator layout; it is not forced onto this eight-H3 skeleton.
 - Reference line (technical framing): `**Persona / personality:** see \`agents/<name>/profile.md\`` (source of truth — do not duplicate here)

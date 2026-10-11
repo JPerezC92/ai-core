@@ -26,6 +26,15 @@ Every agent report to Cipher 🔓 (Lead Orchestrator) follows the exact output f
 - Hard bound: **≤ 60 lines**. A report over the bound is a failure, not thoroughness — verbosity is never coverage.
 - **Finish or stop-and-report.** If the task cannot be completed, report the exact blocker immediately — never pad with partial progress, present unfinished work as done, or invent a verdict. An incomplete report naming a blocker beats a complete one containing guesses.
 
+### Clean architecture (language-agnostic) (HARD RULE)
+
+- The same layers apply in every language. A language or library name is never a layer. Backend names its layers **domain**, **application**, **infrastructure**; dependencies point inward.
+- Folder layout follows the layers: backend `domain/`, `application/` (one file per use case), `infrastructure/`; frontend `modules/{feature}/domain|services|hooks|components`. A language section names its own use-case location (for example `application/use-cases/`, `application/use_cases/`, or the module that holds the operation) and adds syntax, not new layers.
+- Domain holds no framework and no infrastructure. A use case is a named operation with a single `execute()`; it depends on ports, not on a framework. An adapter maps outside data to domain data. Composition wires adapters to use cases at the edge.
+- Test levels: unit exercises the smallest unit with its collaborators replaced by doubles (backend: the use case `execute()` with its ports; frontend: the component together with its real presentation binding, with the service mocked), asserting values, not thrown errors; integration exercises an adapter across its boundary (a real isolated dependency, or the boundary stubbed at the transport); end to end exercises the assembled entry point.
+- Language sections carry the concrete syntax and library mapping. A language section must not rename a layer or state that this contract is suspended for that language.
+- A pure helper does not need an artificial use-case wrapper. A module that decides policy and calls infrastructure does.
+
 ### Register-first identification (HARD RULE)
 
 Incident identification is deterministic: ticket signal → `S-xx` → incident `P-NNN` → `exact | structural | no_match`.
