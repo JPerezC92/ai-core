@@ -14,17 +14,20 @@ from core_sync_pkg.domain.ports import (
     UseCaseResult,
 )
 from core_sync_pkg.domain.bindings import (
+    _non_region_destination_paths,
     _normalize_pending,
-    _raw_destination_paths,
     uncleared_sources,
 )
-from core_sync_pkg.domain.constants import CLEARANCE_REL, MODE_RAW
+from core_sync_pkg.domain.constants import CLEARANCE_REL, MODE_MERGE, MODE_RAW
 from core_sync_pkg.domain.errors import (
     CODE_DRIFT,
     CODE_INVALID,
     DomainError,
+    MalformedJsonc,
     MalformedSourceMarkers,
 )
+from core_sync_pkg.domain.jsonc import parse_object
+from core_sync_pkg.domain.merge import is_merged
 from core_sync_pkg.domain.regions import split_regions
 
 
@@ -107,7 +110,7 @@ class VerifyDestinations:
 
         source_cores: dict[str, str] = {}
         for entry in bindings["bindings"]:
-            if mode_of.get(entry["source"]) == MODE_RAW:
+            if mode_of.get(entry["source"]) in (MODE_RAW, MODE_MERGE):
                 continue
             source_path = source_dir / entry["source"]
             try:
@@ -120,20 +123,20 @@ class VerifyDestinations:
                 return DomainError(CODE_DRIFT, f"missing source: {source_path}")
             source_cores[entry["source"]] = source_core
 
-        raw_destinations = _raw_destination_paths(bindings, mode_of)
-        stale_raw_pending = [
-            path for path in bindings["pending"] if path in raw_destinations
+        non_region_destinations = _non_region_destination_paths(bindings, mode_of)
+        stale_non_region_pending = [
+            path for path in bindings["pending"] if path in non_region_destinations
         ]
         normalized_pending = _normalize_pending(
-            bindings["pending"], raw_destinations
+            bindings["pending"], non_region_destinations
         )
         self._root_runtime.write_blocker(
             self._root_runtime.resolve(destination_dir, bindings),
             normalized_pending,
         )
 
-        if stale_raw_pending:
-            paths = ", ".join(stale_raw_pending)
+        if stale_non_region_pending:
+            paths = ", ".join(stale_non_region_pending)
             return DomainError(
                 CODE_DRIFT,
                 "stale raw-bound pending paths cannot be reconciled: "
@@ -167,6 +170,44 @@ class VerifyDestinations:
                     if destination_bytes != source_bytes:
                         return DomainError(
                             CODE_DRIFT, f"raw drift: {destination_path}"
+                        )
+                continue
+            if mode_of.get(entry["source"]) == MODE_MERGE:
+                source_text = self._source_reader.read_text(source_path)
+                if source_text is None:
+                    return DomainError(
+                        CODE_DRIFT, f"missing source: {source_path}"
+                    )
+                try:
+                    parse_object(source_text)
+                except MalformedJsonc:
+                    return DomainError(
+                        CODE_INVALID, f"invalid JSONC: {source_path}"
+                    )
+                for destination in entry["destinations"]:
+                    destination_path = destination_dir / destination
+                    if not self._paths.is_file(destination_path):
+                        return DomainError(
+                            CODE_DRIFT,
+                            f"missing destination: {destination_path}",
+                        )
+                    destination_text = self._destination_writer.read_text(
+                        destination_path
+                    )
+                    if destination_text is None:
+                        return DomainError(
+                            CODE_DRIFT,
+                            f"missing destination: {destination_path}",
+                        )
+                    try:
+                        merged = is_merged(source_text, destination_text)
+                    except MalformedJsonc:
+                        return DomainError(
+                            CODE_INVALID, f"invalid JSONC: {destination_path}"
+                        )
+                    if not merged:
+                        return DomainError(
+                            CODE_DRIFT, f"merge drift: {destination_path}"
                         )
                 continue
             source_core = source_cores[entry["source"]]

@@ -15,13 +15,14 @@ from core_sync_pkg.domain.ports import (
 )
 from core_sync_pkg.domain.bindings import (
     _merge_init_binding_options,
-    _parse_init_binding_spec,
+    _non_region_destination_paths,
     _normalize_pending,
-    _raw_destination_paths,
+    _parse_init_binding_spec,
     uncleared_sources,
 )
 from core_sync_pkg.domain.constants import (
     CLEARANCE_REL,
+    MODE_MERGE,
     MODE_RAW,
     MODE_REGION,
     ROLE_ROOT,
@@ -30,9 +31,12 @@ from core_sync_pkg.domain.errors import (
     CODE_DRIFT,
     CODE_INVALID,
     DomainError,
+    MalformedJsonc,
     MalformedSourceMarkers,
 )
+from core_sync_pkg.domain.jsonc import parse_object
 from core_sync_pkg.domain.markers import _has_exact_core_marker_lines
+from core_sync_pkg.domain.merge import merge_top_level
 from core_sync_pkg.domain.reconciliation import ReconciliationEntry
 from core_sync_pkg.domain.regions import (
     outside_bytes,
@@ -138,7 +142,7 @@ class EnrollDestinations:
                 if not self._paths.exists(destination_dir / destination):
                     if record.mode == MODE_RAW:
                         bulk_new_raw.add(destination)
-                    else:
+                    elif record.mode == MODE_REGION:
                         bulk_new_region.add(destination)
             if root_destination is not None:
                 bindings["root"] = root_destination
@@ -207,7 +211,7 @@ class EnrollDestinations:
         raw_writes: list[tuple[Path, bytes]] = []
         entries: list[ReconciliationEntry] = []
         pending = _normalize_pending(
-            bindings["pending"], _raw_destination_paths(bindings, mode_of)
+            bindings["pending"], _non_region_destination_paths(bindings, mode_of)
         )
 
         for entry in bindings["bindings"]:
@@ -244,6 +248,37 @@ class EnrollDestinations:
                     if destination_bytes == source_bytes:
                         continue
                     raw_writes.append((destination_path, source_bytes))
+                continue
+            if mode_of.get(entry["source"]) == MODE_MERGE:
+                source_text = self._source_reader.read_text(source_path)
+                if source_text is None:
+                    return DomainError(
+                        CODE_DRIFT, f"missing source: {source_path}"
+                    )
+                try:
+                    parse_object(source_text)
+                except MalformedJsonc:
+                    return DomainError(
+                        CODE_INVALID, f"invalid JSONC: {source_path}"
+                    )
+                for destination in entry["destinations"]:
+                    destination_path = destination_dir / destination
+                    destination_text = self._destination_writer.read_text(
+                        destination_path
+                    )
+                    if destination_text is None:
+                        return DomainError(
+                            CODE_DRIFT,
+                            f"missing destination: {destination_path}",
+                        )
+                    try:
+                        merged_text = merge_top_level(source_text, destination_text)
+                    except MalformedJsonc:
+                        return DomainError(
+                            CODE_INVALID, f"invalid JSONC: {destination_path}"
+                        )
+                    if merged_text != destination_text:
+                        writes.append((destination_path, merged_text))
                 continue
             try:
                 source_core = self._source_reader.read_core(source_path)

@@ -7,6 +7,7 @@ from typing import NotRequired, Optional, TypedDict
 import yaml
 
 from core_sync_pkg.domain.constants import (
+    MODE_MERGE,
     MODE_RAW,
     MODE_REGION,
     REVISION_RE,
@@ -202,21 +203,23 @@ def _serialize_binding_entry(entry: BindingEntry) -> dict[str, object]:
     }
 
 
-def _raw_destination_paths(
+def _non_region_destination_paths(
     bindings: Bindings, mode_of: dict[str, str]
 ) -> set[str]:
-    """Return destinations whose source is declared raw in clearance."""
+    """Return destinations whose source is declared raw or merge in clearance."""
     return {
         destination
         for entry in bindings["bindings"]
-        if mode_of.get(entry["source"]) == MODE_RAW
+        if mode_of.get(entry["source"]) in (MODE_RAW, MODE_MERGE)
         for destination in entry["destinations"]
     }
 
 
-def _normalize_pending(pending: list[str], raw_destinations: set[str]) -> list[str]:
+def _normalize_pending(
+    pending: list[str], non_region_destinations: set[str]
+) -> list[str]:
     """Return pending paths that still have a region to reconcile."""
-    return [path for path in pending if path not in raw_destinations]
+    return [path for path in pending if path not in non_region_destinations]
 
 
 def uncleared_sources(bindings: Bindings, cleared: set[str]) -> list[str]:

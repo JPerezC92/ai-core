@@ -11,8 +11,8 @@ A reusable, agnostic **agentic orchestration core** for [OpenCode](https://openc
 - **Automatic architecture gates** — Atrium 🏛️ (Frontend Architect) audits after every frontend edit, Crucible 🔥 (Test Architect) after every test-file edit, Inquisitor 🔎 (PR Reviewer) at every PR head, Warden 🔒 (Dependency Warden) before any manifest change.
 - **Skill library** — core distribution (`core-sync`), git workflow (`git-branch-name`, `git-commit`, `git-pr`), OpenCode authoring (`op-agent-creator`, `op-skill-creator`, `op-model`), and incident tooling (`ticket-runbook`, `query-verification`).
 - **Knowledge registers** — shared agent rules, an accepted-debt register, a diagnostic symptom catalog, a known-problem register, and living design docs.
-- **Tested tooling** — 439 pytest tests cover the Python machinery (core-sync, plan validators, runbook validators, query verification); the suite runs worker-parallel.
-- **Atomic, versioned distribution** — `core-sync` splices protected `core` regions into destination projects, pins the source revision in the destination's own bindings file, and keeps acceptance blocked on any drift.
+- **Tested tooling** — 514 pytest tests cover the Python machinery (core-sync, plan validators, runbook validators, query verification); the suite runs worker-parallel.
+- **Atomic, versioned distribution** — `core-sync` splices protected `core` regions into destination projects, byte-copies whole files, or merges a JSON/JSONC config's top-level keys (source keys winning, destination keys and comments kept), pins the source revision in the destination's own bindings file, and keeps acceptance blocked on any drift.
 
 ## Roster
 
@@ -80,7 +80,7 @@ output/                       Temporal working space (audits, research, design �
      --bindings <bindings-file> --source-revision <40-hex>
    ```
 
-   `apply` splices each source `core` region into its destinations and pins the revision; `check` verifies every destination core region against the pinned revision and requires `pending` empty, exiting `0` only when current. A failed `check` blocks acceptance until the drift is reconciled. A local branch that was not refreshed is not live remote truth.
+   `apply` splices each source `core` region into its destinations (and byte-copies raw bindings or merges a JSON/JSONC config's top-level keys) and pins the revision; `check` verifies every destination core region against the pinned revision and requires `pending` empty, exiting `0` only when current. A failed `check` blocks acceptance until the drift is reconciled. A local branch that was not refreshed is not live remote truth.
 
 ### New project — start from this repository
 
@@ -89,7 +89,7 @@ Clone AICore, then clear the destination-owned state so the fresh project starts
 ## Development
 
 - **Environment** — `python3` (not `python`), Python ≥ 3.13, managed with `uv`. Every Python command runs through the project environment: `uv run --frozen …`, never a bare or global interpreter.
-- **Tests** — `uv run --frozen --group dev pytest -q` runs the whole suite (439 tests, worker-parallel via pytest-xdist). Skill tests live beside their scripts: `.opencode/skills/<skill>/scripts/test_*.py`.
+- **Tests** — `uv run --frozen --group dev pytest -q` runs the whole suite (514 tests, worker-parallel via pytest-xdist). Skill tests live beside their scripts: `.opencode/skills/<skill>/scripts/test_*.py`.
 - **Authoring** — use the `op-skill-creator` and `op-agent-creator` skills to scaffold skills/agents, and `op-model` to change agent models deterministically.
 - **Config changes** — the OpenCode TUI must be restarted after any `opencode.jsonc` permission change; active sessions do not reload it.
 - **Plan discipline** — non-trivial work starts with the `plan-enforce` skill (plan artifact in `plans/` + user story); specs never bump synced version numbers locally — destination-local changes live in git history and the user-story change log.

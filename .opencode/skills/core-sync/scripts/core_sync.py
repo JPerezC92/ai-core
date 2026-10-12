@@ -1,4 +1,4 @@
-"""Core update tool with two per-binding modes: `region` and `raw`.
+"""Core update tool with three per-binding modes: `region`, `raw`, and `merge`.
 
 In `region` mode (the default), `check` verifies that each destination file's
 `core` region byte-matches the pinned source core; `apply` splices the source
@@ -7,8 +7,15 @@ destinations (frontmatter kept verbatim, source core pasted between the core
 markers, the previous body moved into a new project region) and refreshes
 already-marked destinations. In `raw` mode, the binding has no markers: `init`
 and `apply` write the source file to the destination byte-for-byte, and `check`
-verifies byte-equality. Raw destinations carry no project region, no `pending`
-entry, and no reconciliation report.
+verifies byte-equality. In `merge` mode, the binding has no markers either:
+`init` and `apply` merge the top-level keys of a JSON/JSONC object source into
+the destination (source keys win; destination-only keys, comments, and
+formatting outside replaced or inserted keys are preserved), and `check`
+verifies that every source top-level key is present in the destination with the
+source value. Raw and merge destinations carry no project region, no `pending`
+entry, and no reconciliation report; a raw target is created only for a newly
+registered mapping (via `--bind-raw` or `--bind-cleared`) when its parent
+directory exists; a merge target is never created.
 
 The source tree is read-only; the only writes are the destination files, a
 reconciliation report, the bindings file, and the destination root runtime
@@ -18,9 +25,9 @@ While the bindings `pending` list contains region-mode paths, `check`/`apply`/
 `init` keep a marker-delimited blocker block in the destination root runtime file
 (the `root` bindings field, else `AGENTS.md` when present, else `CLAUDE.md`)
 telling the destination project to reconcile its `project` region and clear
-`pending`. `apply` and `init` remove raw-mode paths from persisted `pending`;
-`check` excludes them from the blocker and rejects stale raw entries without
-changing bindings.
+`pending`. `apply` and `init` remove non-region-mode paths (raw or merge) from
+persisted `pending`; `check` excludes them from the blocker and rejects stale
+non-region entries without changing bindings.
 
 Usage:
     uv run --frozen python3 .opencode/skills/core-sync/scripts/core_sync.py check --source DIR --destination DIR \
@@ -32,8 +39,8 @@ Usage:
 
 Exit codes:
     0 — current (check), applied (apply), or initialized (init)
-    1 — drift (stale revision, region mismatch, missing destination)
-    2 — malformed input (bad bindings, invalid markers)
+    1 — drift (stale revision, region/raw/merge mismatch, missing destination)
+    2 — malformed input (bad bindings, invalid markers, malformed JSONC)
 
 This module is the documented entry point and public facade. The layered
 implementation lives in `core_sync_pkg` (domain / application / infrastructure

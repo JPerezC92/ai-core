@@ -2,7 +2,7 @@
   "schema": 2,
   "cleared": {
     "AGENTS.md": { "mode": "region", "role": "root" },
-    "opencode.jsonc": { "mode": "raw" },
+    "opencode.jsonc": { "mode": "merge" },
     "user-stories/git-pr-drafting.md": { "mode": "raw" },
     ".opencode/agents/lumen.md": { "mode": "region" },
     "agents/lumen/profile.md": { "mode": "region" },

@@ -11,11 +11,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 import pytest  # noqa: E402
 
 from _core_sync_testkit import (  # noqa: E402
+    MERGE_DESTINATION,
+    MERGE_SOURCE,
     REV_A,
     _write_bytes_file,
     _write_file,
 )
+from core_sync_pkg.domain.jsonc import parse_object  # noqa: E402
+from core_sync_pkg.domain.reconciliation import (  # noqa: E402
+    reconciliation_report_path,
+)
 from core_sync_pkg.infrastructure.composition import main  # noqa: E402
+from core_sync_pkg.infrastructure.stores import load_bindings  # noqa: E402
 
 CLEARANCE = "distribution-clearance.json"
 AGENT_MARKED = (
@@ -129,3 +136,35 @@ class BindClearedEnrollmentTests:
 
         assert code == 0
         assert "CLAUDE.md" in bindings.read_text(encoding="utf-8")
+
+    def test_cleared_merge_source_enrolled_in_bulk(self, tmp_path: Path) -> None:
+        source = tmp_path / "source"
+        destination = tmp_path / "destination"
+        _write_bytes_file(
+            source, "opencode.jsonc", MERGE_SOURCE.encode(), mode="merge"
+        )
+        _write_file(destination, "opencode.jsonc", MERGE_DESTINATION)
+        bindings = tmp_path / "bindings.yaml"
+
+        code = main(
+            [
+                "init",
+                "--source", str(source),
+                "--destination", str(destination),
+                "--bindings", str(bindings),
+                "--source-revision", REV_A,
+                "--bind-cleared",
+            ]
+        )
+
+        assert code == 0
+        written = (destination / "opencode.jsonc").read_text(encoding="utf-8")
+        assert parse_object(written) == {
+            "theme": "dark",
+            "shared": "source",
+            "custom": 42,
+        }
+        updated = load_bindings(bindings)
+        assert updated is not None
+        assert updated["pending"] == []
+        assert not reconciliation_report_path(bindings).exists()
