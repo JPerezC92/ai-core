@@ -7,6 +7,11 @@
 > **Epic:** <epic-slug> (optional — leave empty when no epic)
 > **Affected areas:** <matching handle, e.g. `src/`, `.opencode/skills/plan-enforce/`, a backend tooling path>
 
+<!-- Status vocabulary: `draft` is work in progress and is NOT an approved planning contract;
+     `active` is the approved contract `plan-enforce` derives goals from;
+     `superseded` is retained history replaced by another story. Approval is a behavioral
+     contract only — it is not implementation evidence, a permission grant, or execution authorization. -->
+
 ## Persona
 
 > Who is the feature for? One actor, with their role in context.
@@ -28,10 +33,11 @@
 
 ## Acceptance criteria
 
-<!-- Reconciliation (fail-closed): once a plan touching this story completes, no criterion may remain `⬜`.
+<!-- Reconciliation (approved-criteria scope, fail-closed): at plan completion only the criteria the plan
+     selected to deliver, materially changed, or regressed are reconciled.
      ✅ = evidence-established (a completed goal's Done when:, a passing command, or a recorded outcome)
      ❌ = explicitly unmet — blocks the touching plan's completion until satisfied or removed
-     ⬜ = not yet dispositioned — allowed only while no touching plan has completed
+     ⬜ = a legitimate commitment the plan did not select — it remains and does not block completion
      Out-of-scope work is removed from these criteria (not left unchecked) and recorded in the change log.
      Release events (PR opened/reviewed/merged) are not acceptance criteria; record them in the change log.
      Each criterion is self-contained: it cites the surface it proves by section/symbol, never a plan-only goal, a temporal `plans/`/`output/` path, a volatile test count, or a superseded version (or a version number unless that version is the requirement). -->
@@ -43,6 +49,9 @@
 
 <!-- Bounded, newest last: at most 5 one-line entries, each
      - YYYY-MM-DD — <plan-slug>: <what changed about this feature>
+     For a story-only revision made by the `user-story` skill with no plan, use the literal
+     `story revision` in place of the plan slug — never invent a plan slug:
+     - YYYY-MM-DD — story revision: <what changed about this feature>
      plus at most one rollup line once older entries are dropped:
      - before YYYY-MM-DD — earlier history: see git history for this file
      Process/execution narration (planning-only status, phase/gate results, counts) is NOT a change-log entry. -->

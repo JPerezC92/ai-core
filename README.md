@@ -11,7 +11,7 @@ A reusable, agnostic **agentic orchestration core** for [OpenCode](https://openc
 - **Automatic architecture gates** — Atrium 🏛️ (Frontend Architect) audits after every frontend edit, Crucible 🔥 (Test Architect) after every test-file edit, Inquisitor 🔎 (PR Reviewer) at every PR head, Warden 🔒 (Dependency Warden) before any manifest change.
 - **Skill library** — core distribution (`core-sync`), git workflow (`git-branch-name`, `git-commit`, `git-pr`), OpenCode authoring (`op-agent-creator`, `op-skill-creator`, `op-model`), and incident tooling (`ticket-runbook`, `query-verification`).
 - **Knowledge registers** — shared agent rules, an accepted-debt register, a diagnostic symptom catalog, a known-problem register, and living design docs.
-- **Tested tooling** — 338 pytest tests cover the Python machinery (core-sync, runbook validators, query verification); the suite runs worker-parallel.
+- **Tested tooling** — 439 pytest tests cover the Python machinery (core-sync, plan validators, runbook validators, query verification); the suite runs worker-parallel.
 - **Atomic, versioned distribution** — `core-sync` splices protected `core` regions into destination projects, pins the source revision in the destination's own bindings file, and keeps acceptance blocked on any drift.
 
 ## Roster
@@ -45,9 +45,9 @@ AGENTS.md                     Cipher's runtime spec: mandatory core + roster + r
 opencode.jsonc                OpenCode config: agent/model bindings, permission model, MCP servers
 magic-context.jsonc           magic-context disabled — native OpenCode compaction owns context
 .opencode/agents/             16 subagent runtime specs (OpenCode subagents)
-.opencode/skills/             10 skills (core-sync, git-branch-name, git-commit, git-pr,
+.opencode/skills/             11 skills (core-sync, git-branch-name, git-commit, git-pr,
                               op-agent-creator, op-model, op-skill-creator, plan-enforce,
-                              query-verification, ticket-runbook) — each with SKILL.md + scripts/
+                              query-verification, ticket-runbook, user-story) — each with SKILL.md + scripts/
 agents/<name>/profile.md      17 persona CVs (incl. cipher)
 knowledge/agents.md           Shared agent rules (evidence/report discipline, hard rules)
 knowledge/debt.md             Accepted-debt register (destination-owned; seeded from debt.template.md,
@@ -89,7 +89,7 @@ Clone AICore, then clear the destination-owned state so the fresh project starts
 ## Development
 
 - **Environment** — `python3` (not `python`), Python ≥ 3.13, managed with `uv`. Every Python command runs through the project environment: `uv run --frozen …`, never a bare or global interpreter.
-- **Tests** — `uv run --frozen --group dev pytest -q` runs the whole suite (338 tests, worker-parallel via pytest-xdist). Skill tests live beside their scripts: `.opencode/skills/<skill>/scripts/test_*.py`.
+- **Tests** — `uv run --frozen --group dev pytest -q` runs the whole suite (439 tests, worker-parallel via pytest-xdist). Skill tests live beside their scripts: `.opencode/skills/<skill>/scripts/test_*.py`.
 - **Authoring** — use the `op-skill-creator` and `op-agent-creator` skills to scaffold skills/agents, and `op-model` to change agent models deterministically.
 - **Config changes** — the OpenCode TUI must be restarted after any `opencode.jsonc` permission change; active sessions do not reload it.
 - **Plan discipline** — non-trivial work starts with the `plan-enforce` skill (plan artifact in `plans/` + user story); specs never bump synced version numbers locally — destination-local changes live in git history and the user-story change log.
