@@ -16,6 +16,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 from core_sync_pkg.domain.bindings import BindingEntry, Bindings  # noqa: E402
 from core_sync_pkg.domain.constants import (  # noqa: E402
     CLEARANCE_REL,
+    CLEARANCE_SCHEMA,
+    MODE_RAW,
+    MODE_REGION,
     SCHEMA_VERSION,
     BindingMode,
 )
@@ -75,10 +78,10 @@ ROOT_TEXT = "# Root runtime\n\nIntro paragraph.\n\nLast line.\n"
 
 
 class _FixtureClearance(TypedDict):
-    """Valid schema-1 clearance metadata maintained by source fixtures."""
+    """Valid schema-2 clearance metadata maintained by source fixtures."""
 
     schema: int
-    cleared: list[str]
+    cleared: dict[str, dict[str, str]]
 
 EXPECTED_RECONCILE_BODY = (
     "> **⚠️ ACTION REQUIRED — core reconciliation. This project is not current "
@@ -128,7 +131,9 @@ EXPECTED_RECONCILE_BODY = (
 )
 
 
-def _ensure_fixture_clearance(source_dir: Path, relative_path: str) -> None:
+def _ensure_fixture_clearance(
+    source_dir: Path, relative_path: str, mode: str = "region"
+) -> None:
     """Pre-clear a written source fixture without repairing malformed metadata."""
     if relative_path == CLEARANCE_REL:
         return
@@ -145,18 +150,18 @@ def _ensure_fixture_clearance(source_dir: Path, relative_path: str) -> None:
         if (
             not isinstance(data, dict)
             or type(data.get("schema")) is not int
-            or data.get("schema") != SCHEMA_VERSION
-            or not isinstance(data.get("cleared"), list)
-            or not all(isinstance(item, str) for item in data["cleared"])
+            or data.get("schema") != CLEARANCE_SCHEMA
+            or not isinstance(data.get("cleared"), dict)
+            or not all(isinstance(item, dict) for item in data["cleared"].values())
         ):
             return
         clearance = cast(_FixtureClearance, data)
     else:
-        clearance = {"schema": SCHEMA_VERSION, "cleared": []}
+        clearance = {"schema": CLEARANCE_SCHEMA, "cleared": {}}
 
     source_path = Path(relative_path).as_posix()
     if source_path not in clearance["cleared"]:
-        clearance["cleared"].append(source_path)
+        clearance["cleared"][source_path] = {"mode": mode}
         clearance_path.write_text(
             json.dumps(clearance, indent=2) + "\n", encoding="utf-8"
         )
@@ -172,13 +177,15 @@ def _write_file(base: Path, relative: str, content: str) -> Path:
     return path
 
 
-def _write_bytes_file(base: Path, relative: str, content: bytes) -> Path:
+def _write_bytes_file(
+    base: Path, relative: str, content: bytes, mode: str = MODE_RAW
+) -> Path:
     """Write a raw-byte fixture file under a base directory, creating parents."""
     path = base / relative
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(content)
     if base.name == "source":
-        _ensure_fixture_clearance(base, relative)
+        _ensure_fixture_clearance(base, relative, mode=mode)
     return path
 
 

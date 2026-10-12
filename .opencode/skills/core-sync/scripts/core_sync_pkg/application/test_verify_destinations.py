@@ -18,6 +18,7 @@ from core_sync_pkg.application.verify_destinations import (  # noqa: E402
     VerifyDestinations,
 )
 from core_sync_pkg.domain.bindings import BindingEntry, Bindings  # noqa: E402
+from core_sync_pkg.domain.clearance import ClearanceRecord
 from core_sync_pkg.domain.constants import BindingMode, CommandName  # noqa: E402
 from core_sync_pkg.domain.errors import (  # noqa: E402
     CODE_DRIFT,
@@ -108,15 +109,31 @@ class FakeDestinationWriter:
         self.byte_writes.append((path, content))
 
 
-class FakeClearanceRecord:
+class FakeClearanceStore:
     """In-memory ClearanceRecord double returning configured clearance state."""
 
-    def __init__(self, cleared: set[str] | None, exists: bool = True) -> None:
+    def __init__(
+        self,
+        cleared: set[str] | None,
+        exists: bool = True,
+        modes: dict[str, str] | None = None,
+    ) -> None:
         self.cleared = cleared
         self.exists = exists
+        self.modes = modes or {}
 
-    def load(self, source_dir: Path) -> tuple[set[str] | None, bool]:
-        return self.cleared, self.exists
+    def load(
+        self, source_dir: Path
+    ) -> tuple[dict[str, ClearanceRecord] | None, bool]:
+        records = (
+            None
+            if self.cleared is None
+            else {
+                path: ClearanceRecord(mode=self.modes.get(path, "region"))
+                for path in self.cleared
+            }
+        )
+        return records, self.exists
 
 
 class FakeRootRuntimeFile:
@@ -168,6 +185,7 @@ class FakeFilesystemPaths:
         bindings_path: Path,
         bindings: Bindings,
         new_raw_destinations: set[str] | None = None,
+        mode_of: dict[str, str] | None = None,
     ) -> str | None:
         return self.preflight_error
 
@@ -204,6 +222,7 @@ def _run(
     text: dict[Path, str] | None = None,
     binary: dict[Path, bytes] | None = None,
     cleared: set[str] | None = None,
+    modes: dict[str, str] | None = None,
     clearance_exists: bool = True,
     files: set[Path] | None = None,
     preflight_error: str | None = None,
@@ -214,7 +233,7 @@ def _run(
         FakeBindingsStore(bindings),
         FakeSourceCoreReader(cores=cores, raws=raws),
         FakeDestinationWriter(text=text, binary=binary),
-        FakeClearanceRecord(cleared=cleared, exists=clearance_exists),
+        FakeClearanceStore(cleared=cleared, exists=clearance_exists, modes=modes),
         FakeRootRuntimeFile(),
         FakeFilesystemPaths(files=files, preflight_error=preflight_error),
     )
@@ -255,6 +274,7 @@ class VerifyDestinationsTests:
             raws={SOURCE_DIR / "opencode.jsonc": b"SOURCE"},
             binary={DEST_DIR / "opencode.jsonc": b"DIFFERENT"},
             cleared={"opencode.jsonc"},
+            modes={"opencode.jsonc": "raw"},
         )
         assert isinstance(result, DomainError)
         assert result.code == CODE_DRIFT

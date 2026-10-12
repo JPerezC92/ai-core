@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.4.0
+  version: 2.0.0
 ---
 
 ## What I do
@@ -38,6 +38,7 @@ uv run --frozen python3 .opencode/skills/core-sync/scripts/core_sync.py init \
   --source <source-dir> --destination <destination-dir> \
   --bindings <bindings-file> --source-revision <40-hex>
   [--bind <source>=<destination>]... [--bind-raw <source>=<destination>]...
+  [--bind-cleared] [--root <destination-root-path>]
 ```
 
 - `--source` — directory holding the source files named by the bindings.
@@ -45,15 +46,17 @@ uv run --frozen python3 .opencode/skills/core-sync/scripts/core_sync.py init \
 - `--bindings` — the bindings YAML file (schema below). For a destination root blocker, use the canonical path `<destination>/.aicore/core.yaml`.
 - `--source-revision` — the 40-character lowercase hex source revision to compare (`check`) or pin (`apply`/`init`).
 - `init --bind SOURCE=DESTINATION` — append a region-mode binding to the loaded bindings file before preflight. Repeatable and idempotent for an identical mapping.
-- `init --bind-raw SOURCE=DESTINATION` — append a raw binding. Repeatable and idempotent for an identical mapping; a destination already mapped to a different source/mode fails closed.
+- `init --bind-raw SOURCE=DESTINATION` — append a raw binding. Repeatable and idempotent for an identical mapping; a destination already mapped to a different source fails closed.
+- `init --bind-cleared` — enroll every source in `distribution-clearance.json` that is not already bound, using its declared `mode`. Ordinary sources map to the same relative path; the `role: root` source maps to the destination instruction root. Absent bindings are initialized; new region/raw targets and parents are created after preflight; existing mappings are preserved.
+- `init --root PATH` — set the destination path for the root-role source when it is not already mapped and detection must be overridden.
 - Binding conflict detection is metadata-only: different existing destination bytes never block synchronization. Region `init` preserves old destination content in the `project` region and sets `pending`; raw mode overwrites the target byte-for-byte as explicitly selected.
-- These flags let the script update binding metadata and synchronized content together; do not hand-edit destination payload files or copy files manually. The bindings file must already exist. Raw destinations must exist before `apply` and before `init` for mappings already stored in the bindings file. During `init --bind-raw`, only an absent destination belonging to a newly registered mapping may be created, and only when its parent directory already exists; a missing parent or a missing target on a stored mapping returns exit `1` without writes. Repeating a declaration for a stored mapping does not make it new.
+- These flags let the script update binding metadata and synchronized content together; do not hand-edit destination payload files or copy files manually. Without `--bind-cleared` the bindings file must already exist; with it, an absent file is initialized from an empty routing document. Raw destinations must exist before `apply` and before `init` for mappings already stored in the bindings file. During `init --bind-raw`, only an absent destination belonging to a newly registered mapping may be created, and only when its parent directory already exists; a missing parent or a missing target on a stored mapping returns exit `1` without writes. Repeating a declaration for a stored mapping does not make it new.
 
 For a region binding, `init` rebuilds a markerless destination as frontmatter + a `core` region holding the source core + a `project` region holding the destination's previous body, then records that region path in `pending`. CLI binding flags are merged into the existing bindings file before this enrollment. For a raw binding, `init` copies the source bytes exactly and creates no regions, report, or `pending` entry; the newly registered target is created as a byte-exact file only when its parent already exists. `apply` re-splices region cores and copies raw sources as bytes; both `apply` and `init` remove obsolete `pending` paths that are now bound raw. `check` verifies both modes, reports stale raw `pending` paths until a write command normalizes them, and syncs the blocker for region paths (see below).
 
 ## Binding modes
 
-Each bindings entry runs in one of two modes, selected by its optional `mode` field.
+Each bound source runs in one of two modes, resolved from its `distribution-clearance.json` record (source-owned): `region` splices the source core region between destination markers; `raw` copies the whole source byte-for-byte.
 
 - **`region`** (the default) — the marker model described under *Marker contract*. `init` enrolls a markerless destination and `apply` splices only the bytes strictly between the destination's `core` markers. The destination carries a `project` region, and `init` records its path in `pending`.
 - **`raw`** — whole-file copy with no markers. `init` and `apply` write the source file to the destination byte-for-byte, and `check` verifies byte equality. A raw destination carries **no `project` region**, creates **no reconciliation report**, and never creates a `pending` entry; valid raw entries do not take part in region reconciliation or its blocker. If a path remains in `pending` from a prior region binding after switching it to raw, `check` reports that stale state (exit `1`) without treating it as destination reconciliation; `apply`/`init` clear it. `check` also exits `1` when a raw source/destination is missing or bytes differ, and `2` for an unknown `mode`.
@@ -73,9 +76,9 @@ A region-mode source is markerless only when it has no exact core markers or pro
 
 ## Bindings schema
 
-`schema: 1`. `core_revision` is the pinned 40-hex source revision or `null`. Each `bindings` entry maps one `source` to one or more `destinations`; source and destination paths must be canonical safe relative POSIX paths and must not contain NUL characters (no absolute paths, empty/`.`/`..` components, backslashes, or Windows drive/root prefixes), and destination paths must be unique. Invalid persisted paths are rejected as malformed bindings (exit `2`) before filesystem operations use them. Each entry may set an optional `mode` of `region` (the default) or `raw`; any other value is malformed input (exit `2`). `pending` lists outstanding paths; `check` requires it to be empty. A region or raw binding whose `source` is absent from the source-side `distribution-clearance.json` (`schema: 1`, read from `--source`) is not cleared for distribution and cannot be synchronized; a path joins that file only after its test or review passes. Region entries are serialized without the default `mode`; a raw entry is serialized with `mode: raw` so the mode survives a later `apply`/`init`.
+`schema: 1`. `core_revision` is the pinned 40-hex source revision or `null`. Each `bindings` entry maps one `source` to one or more `destinations`; source and destination paths must be canonical safe relative POSIX paths and must not contain NUL characters (no absolute paths, empty/`.`/`..` components, backslashes, or Windows drive/root prefixes), and destination paths must be unique. Invalid persisted paths are rejected as malformed bindings (exit `2`) before filesystem operations use them. A binding carries no `mode`: the distribution mode is owned by source clearance (below). A `mode` key present in an existing binding is ignored and dropped on the next save. `pending` lists outstanding paths; `check` requires it to be empty. A region or raw binding whose `source` is absent from the source-side `distribution-clearance.json` (`schema: 2`, read from `--source`) is not cleared for distribution and cannot be synchronized. That file maps each cleared path to a record `{ "mode": "region"|"raw", "role"?: "root" }`; the declared mode is authoritative for distribution, so an explicit `--bind`/`--bind-raw` declaration whose mode conflicts with the source record fails closed (exit `2`), and a legacy schema-1 document is rejected. A path joins that file only after its test or review passes.
 
-`root` (optional) is the destination root runtime file, relative to the destination directory (e.g. `CLAUDE.md`). When absent it defaults to `AGENTS.md` when that file exists in the destination, else `CLAUDE.md`. When present, it must follow the same canonical safe relative POSIX and NUL-free path rules as `source` and `destinations`; malformed values are rejected before filesystem operations. When the resolved root file is missing, the blocker is skipped silently. Destination projects use `.aicore/core.yaml` as the canonical bindings path when a root blocker may be generated; that pairs with `.aicore/reconciliation/init.yaml`.
+`root` (optional) is the destination root runtime file, relative to the destination directory (e.g. `CLAUDE.md`). When absent it is detected from the destination instruction files in priority order: `AGENTS.md`/`agents.md`, then `CLAUDE.md`/`claude.md`, then `instructions.md`; the detected spelling is preserved. When present, it must follow the same canonical safe relative POSIX and NUL-free path rules as `source` and `destinations`; malformed values are rejected before filesystem operations. When the resolved root file is missing, the blocker is skipped silently. Destination projects use `.aicore/core.yaml` as the canonical bindings path when a root blocker may be generated; that pairs with `.aicore/reconciliation/init.yaml`.
 
 ```yaml
 schema: 1
@@ -88,7 +91,6 @@ bindings:
   - source: opencode.jsonc
     destinations:
       - opencode.jsonc
-    mode: raw
 pending: []
 ```
 
@@ -147,7 +149,7 @@ To mirror only a markerless whole-file config, add its mapping with `--bind-raw`
 - **Raw byte drift (`check` exits 1):** the destination file differs from its source. Run `apply` or `init` with the intended source revision, then run `check` again.
 - **Raw destination missing (exit 1):** `apply` and `check` always require the target to exist. `init` also requires an existing target for a raw mapping already stored in YAML; only a newly registered `--bind-raw` mapping can create an absent target, and its parent directory must already exist. A missing parent fails before writes. Repeating a declaration for an existing mapping does not enable creation.
 - **Stale raw-bound pending path (`check` exits 1):** the binding changed from region to raw while the destination was listed in `pending`. Run `apply` or `init` to remove the obsolete reconciliation entry; `check` does not mutate the bindings file.
-- **Conflicting binding declaration (`init` exits 2):** the requested destination path is already mapped to a different source or mode. This is a bindings-metadata conflict, not a destination-content conflict; same mappings are idempotent, region content is reconciled through the `project` region/blocker, and raw content is replaced by its selected whole-file source.
+- **Conflicting binding declaration (`init` exits 2):** the requested destination path is already mapped to a different source. This is a bindings-metadata conflict, not a destination-content conflict; same mappings are idempotent, region content is reconciled through the `project` region/blocker, and raw content is replaced by its selected whole-file source.
 - **Source not cleared for distribution (exit 1):** the bound `source` is absent from `distribution-clearance.json`. Run the file's test or review, then add its path; that file is the clearance record, not a content manifest.
 - **Source project markers without a core pair (exit 2):** add the ordered `<!-- core:begin -->` … `<!-- core:end -->` pair, or remove the stray project markers from a genuinely markerless source.
 - **Malformed source/destination markers (`exit 2`):** genuinely markerless region sources have no exact core or project marker lines outside fences; sources with core markers need one ordered pair, and region destinations must already have one pair. Correct the markers or use a genuinely markerless source.

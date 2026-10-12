@@ -36,7 +36,7 @@ class BindingModeSerializationTests:
         )
         assert "mode:" not in text
 
-    def test_raw_mode_round_trips_through_serialization(self) -> None:
+    def test_binding_mode_is_not_persisted(self) -> None:
         text = serialize_bindings(
             {
                 "schema": 1,
@@ -52,7 +52,7 @@ class BindingModeSerializationTests:
                 "root": None,
             }
         )
-        assert "mode: raw" in text
+        assert "mode" not in text
         loaded = parse_bindings(text)
         assert loaded is not None
-        assert loaded["bindings"][0]["mode"] == "raw"
+        assert loaded["bindings"][0]["mode"] == "region"

@@ -88,7 +88,7 @@ def _merge_init_binding_options(
 ) -> tuple[Optional[str], set[str]]:
     """Merge CLI declarations and report raw destinations newly registered here."""
     destination_mappings = {
-        destination: (entry["source"], entry["mode"])
+        destination: entry["source"]
         for entry in bindings["bindings"]
         for destination in entry["destinations"]
     }
@@ -102,9 +102,9 @@ def _merge_init_binding_options(
         if declaration is None:
             return (f"malformed or unsafe binding declaration: {spec!r}", set())
         source, destination, declaration_mode = declaration
-        existing_mapping = destination_mappings.get(destination)
-        if existing_mapping is not None:
-            if existing_mapping != (source, declaration_mode):
+        existing_source = destination_mappings.get(destination)
+        if existing_source is not None:
+            if existing_source != source:
                 return (f"destination mapping conflicts for {destination!r}", set())
             continue
 
@@ -112,7 +112,7 @@ def _merge_init_binding_options(
             (
                 entry
                 for entry in bindings["bindings"]
-                if entry["source"] == source and entry["mode"] == declaration_mode
+                if entry["source"] == source
             ),
             None,
         )
@@ -126,7 +126,7 @@ def _merge_init_binding_options(
             )
         else:
             matching_entry["destinations"].append(destination)
-        destination_mappings[destination] = (source, declaration_mode)
+        destination_mappings[destination] = source
         if declaration_mode == MODE_RAW:
             new_raw_destinations.add(destination)
     return (None, new_raw_destinations)
@@ -195,22 +195,21 @@ def serialize_bindings(bindings: Bindings) -> str:
 
 
 def _serialize_binding_entry(entry: BindingEntry) -> dict[str, object]:
-    """Render one binding entry, emitting `mode` only when it is not the default."""
-    item: dict[str, object] = {
+    """Render one binding entry; the distribution mode lives in source clearance."""
+    return {
         "source": entry["source"],
         "destinations": list(entry["destinations"]),
     }
-    if entry["mode"] != MODE_REGION:
-        item["mode"] = entry["mode"]
-    return item
 
 
-def _raw_destination_paths(bindings: Bindings) -> set[str]:
-    """Return every destination currently bound in raw mode."""
+def _raw_destination_paths(
+    bindings: Bindings, mode_of: dict[str, str]
+) -> set[str]:
+    """Return destinations whose source is declared raw in clearance."""
     return {
         destination
         for entry in bindings["bindings"]
-        if entry["mode"] == MODE_RAW
+        if mode_of.get(entry["source"]) == MODE_RAW
         for destination in entry["destinations"]
     }
 

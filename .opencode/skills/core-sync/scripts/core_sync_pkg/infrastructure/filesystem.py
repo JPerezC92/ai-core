@@ -64,11 +64,20 @@ def read_source_core(path: Path) -> str | None:
     return extract_source_core(content)
 
 
+def detect_root(destination_dir: Path) -> str | None:
+    """Return the destination instruction-root filename by case-aware priority."""
+    for candidate in DEFAULT_ROOT_CANDIDATES:
+        if (destination_dir / candidate).is_file():
+            return candidate
+    return None
+
+
 def resolve_root_path(destination_dir: Path, bindings: Bindings) -> Path:
     """Resolve the destination root runtime file at the IO boundary.
 
-    Uses the explicit `root` bindings field when present; otherwise defaults to
-    `AGENTS.md` when it exists in the destination, else `CLAUDE.md`.
+    Uses the explicit `root` bindings field when present; otherwise detects the
+    destination instruction file in case-aware priority order (AGENTS/agents,
+    CLAUDE/claude, instructions), preserving the actual filename.
     """
     root = bindings.get("root")
     if root is not None:
@@ -121,6 +130,7 @@ def preflight_write_targets(
     bindings_path: Path,
     bindings: Bindings,
     new_raw_destinations: set[str] | None = None,
+    mode_of: dict[str, str] | None = None,
 ) -> str | None:
     """Reject unsafe, aliased, or source-inode write targets before mutation."""
     try:
@@ -140,10 +150,11 @@ def preflight_write_targets(
         return f"could not inspect source tree for write protection: {error}"
 
     root_path = resolve_root_path(destination_dir, bindings)
+    mode_by_source = mode_of or {}
     raw_destination_paths = [
         destination_dir / destination
         for entry in bindings["bindings"]
-        if entry["mode"] == MODE_RAW
+        if mode_by_source.get(entry["source"]) == MODE_RAW
         for destination in entry["destinations"]
     ]
     targets: list[tuple[Path, str]] = [(root_path, "root")]
@@ -330,6 +341,12 @@ class LocalFilesystemPaths:
     def is_symlink(self, path: Path) -> bool:
         return path.is_symlink()
 
+    def detect_root(self, destination_dir: Path) -> str | None:
+        return detect_root(destination_dir)
+
+    def ensure_dir(self, path: Path) -> None:
+        path.mkdir(parents=True, exist_ok=True)
+
     def preflight_write_targets(
         self,
         command: CommandName,
@@ -338,6 +355,7 @@ class LocalFilesystemPaths:
         bindings_path: Path,
         bindings: Bindings,
         new_raw_destinations: set[str] | None = None,
+        mode_of: dict[str, str] | None = None,
     ) -> str | None:
         return preflight_write_targets(
             command,
@@ -346,6 +364,7 @@ class LocalFilesystemPaths:
             bindings_path,
             bindings,
             new_raw_destinations,
+            mode_of,
         )
 
 

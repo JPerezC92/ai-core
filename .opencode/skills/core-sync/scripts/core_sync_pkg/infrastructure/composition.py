@@ -25,7 +25,7 @@ from core_sync_pkg.infrastructure.filesystem import (
     LocalSourceCoreReader,
 )
 from core_sync_pkg.infrastructure.stores import (
-    JsonClearanceRecord,
+    JsonClearanceStore,
     YamlBindingsStore,
 )
 
@@ -79,6 +79,17 @@ def _build_parser() -> argparse.ArgumentParser:
                 metavar="SOURCE=DEST",
                 help="add a raw-mode source and destination mapping (repeatable)",
             )
+            subparser.add_argument(
+                "--bind-cleared",
+                action="store_true",
+                help="enroll every cleared source not already bound",
+            )
+            subparser.add_argument(
+                "--root",
+                default=None,
+                metavar="PATH",
+                help="destination instruction-root path for the source root",
+            )
     return parser
 
 
@@ -89,7 +100,7 @@ def _build_use_case(
     bindings_store = YamlBindingsStore()
     source_reader = LocalSourceCoreReader()
     destination_writer = LocalDestinationWriter()
-    clearance = JsonClearanceRecord()
+    clearance = JsonClearanceStore()
     root_runtime = LocalRootRuntimeFile()
     paths = LocalFilesystemPaths()
     if command == "check":
@@ -145,6 +156,8 @@ def main(argv: list[str] | None = None) -> int:
                 args.source_revision,
                 getattr(args, "bind", []),
                 getattr(args, "bind_raw", []),
+                getattr(args, "bind_cleared", False),
+                getattr(args, "root", None),
             )
     except OSError as error:
         print(f"core-sync I/O error: {error}", file=sys.stderr)

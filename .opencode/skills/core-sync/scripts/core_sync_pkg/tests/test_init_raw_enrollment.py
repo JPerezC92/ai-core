@@ -62,7 +62,7 @@ class RawInitEnrollmentTests:
         assert updated is not None
         assert updated["bindings"] == [
             _binding_entry(
-                "git-pr-drafting.md", ["user-stories/git-pr-drafting.md"], "raw"
+                "git-pr-drafting.md", ["user-stories/git-pr-drafting.md"]
             )
         ]
         assert updated["pending"] == []
