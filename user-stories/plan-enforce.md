@@ -102,8 +102,8 @@
 ## Change log
 
 - before 2026-10-07 — earlier history: see git history for this file
-- 2026-10-07 — core-format-consistency: aligned skill/agent authoring guidance with optional ownership headings, corrected stale checklist references, added read/preview/confirm before configuration writes, tightened Crucible's read-only discovery grant, and made dispatch/report output bounded and task-specific.
-- 2026-10-11 — regionize-agents-20261010: authoring evidence now cites the standardized agent Rulebook and Workflow sections.
-- 2026-10-11 — workflow-contract: approved story-first planning, criterion-scoped completion, contract-sized phases, documentation coupling, expected-red checkpoints, and required rework for nonconforming planned files.
-- 2026-10-11 — planning-workflow-20261011: delivered approved-story input, bounded discovery, contract-sized phases, semantic review + two-failure reassessment, expected-red checkpoint, criterion-scoped completion, same-change documentation, and the Sentinel story-audit alignment; validator reworked into layers with the path preserved.
-- 2026-10-12 — story revision: split behavioural criteria from `## Proof`, moved pre-decided planning policy into `## Constraints`, and dropped test symbols and config literals from criterion text.
+- 2026-10-07 — core-format-consistency (PR #52): aligned skill/agent authoring guidance with optional ownership headings, corrected stale checklist references, added read/preview/confirm before configuration writes, tightened Crucible's read-only discovery grant, and made dispatch/report output bounded and task-specific.
+- 2026-10-11 — regionize-agents-20261010 (PR #53): authoring evidence now cites the standardized agent Rulebook and Workflow sections.
+- 2026-10-11 — workflow-contract (PR #57): approved story-first planning, criterion-scoped completion, contract-sized phases, documentation coupling, expected-red checkpoints, and required rework for nonconforming planned files.
+- 2026-10-11 — planning-workflow-20261011 (PR #57): delivered approved-story input, bounded discovery, contract-sized phases, semantic review + two-failure reassessment, expected-red checkpoint, criterion-scoped completion, same-change documentation, and the Sentinel story-audit alignment; validator reworked into layers with the path preserved.
+- 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof`, moved pre-decided planning policy into `## Constraints`, and dropped test symbols and config literals from criterion text.

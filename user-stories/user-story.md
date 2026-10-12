@@ -58,6 +58,6 @@
 ## Change log
 
 - before 2026-10-11 — earlier history: see git history for this file
-- 2026-10-11 — planning-workflow-20261011: delivered the standalone skill (catalogue reconciliation, evidence-backed ownership, semantic collision analysis, draft-vs-approved, approved-criteria handoff); implemented in `.opencode/skills/user-story/SKILL.md`.
-- 2026-10-11 — user-story: standalone collaborative contract discussion, catalogue-wide collision review, and approved-criteria planning handoff.
-- 2026-10-12 — story revision: split behavioural acceptance criteria from `## Proof`, replaced `## Resolved decisions` with a labelled `## Constraints` contract, and moved the canonical story template and story-hygiene checklist under the `user-story` skill.
+- 2026-10-11 — planning-workflow-20261011 (PR #57): delivered the standalone skill (catalogue reconciliation, evidence-backed ownership, semantic collision analysis, draft-vs-approved, approved-criteria handoff); implemented in `.opencode/skills/user-story/SKILL.md`.
+- 2026-10-11 — user-story (PR #57): standalone collaborative contract discussion, catalogue-wide collision review, and approved-criteria planning handoff.
+- 2026-10-12 — story revision (PR #59): split behavioural acceptance criteria from `## Proof`, replaced `## Resolved decisions` with a labelled `## Constraints` contract, and moved the canonical story template and story-hygiene checklist under the `user-story` skill.

@@ -66,7 +66,7 @@
 ## Change log
 
 - before 2026-10-11 — earlier history: see git history for this file
-- 2026-10-11 — clean-architecture-contract-20261011: made the contract language-agnostic, grouped rulebooks by language, and kept library mappings explicit.
-- 2026-10-11 — workflow-contract: approved bounded architecture review, correct gate routing, explicit dependency/error boundaries, and required rework for nonconforming planned files.
-- 2026-10-12 — implementation-enforcement-20261012: delivered per-owner gate routing and impact-bounded reads (`forge.md`), snapshot-bound read-based review (`atrium`/`bastion`/`crucible`/`sentinel`), the dependency/runtime-port/error/serialization distinctions (`knowledge/agents.md`, `bastion.md`), and the preservation-vs-retirement + nonconforming-planned-file rules.
-- 2026-10-12 — story revision: split behavioural criteria from `## Proof` and moved pre-decided architectural policy into `## Constraints`.
+- 2026-10-11 — clean-architecture-contract-20261011 (PR #54): made the contract language-agnostic, grouped rulebooks by language, and kept library mappings explicit.
+- 2026-10-11 — workflow-contract (PR #57): approved bounded architecture review, correct gate routing, explicit dependency/error boundaries, and required rework for nonconforming planned files.
+- 2026-10-12 — implementation-enforcement-20261012 (PR #57): delivered per-owner gate routing and impact-bounded reads (`forge.md`), snapshot-bound read-based review (`atrium`/`bastion`/`crucible`/`sentinel`), the dependency/runtime-port/error/serialization distinctions (`knowledge/agents.md`, `bastion.md`), and the preservation-vs-retirement + nonconforming-planned-file rules.
+- 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof` and moved pre-decided architectural policy into `## Constraints`.

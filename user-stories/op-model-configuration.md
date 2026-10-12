@@ -47,6 +47,6 @@
 ## Change log
 
 - before 2026-09-14 — earlier history: see git history for this file
-- 2026-09-14 — skill-debt-resolution-20260914: created the feature definition; added the `ModelRecord` typed record contract (`op-model` 1.0.1).
-- 2026-10-09 — aicore-all-files-pr-20261008: made confirmation of the exact preview an explicit prerequisite for creating a missing config, alongside the existing surgical model edit.
-- 2026-10-12 — story revision: separated behavioural criteria from proof and dropped the typed-record parser contract from the feature definition.
+- 2026-09-14 — skill-debt-resolution-20260914 (PR #36): created the feature definition; added the `ModelRecord` typed record contract (`op-model` 1.0.1).
+- 2026-10-09 — aicore-all-files-pr-20261008 (PR #51): made confirmation of the exact preview an explicit prerequisite for creating a missing config, alongside the existing surgical model edit.
+- 2026-10-12 — story revision (PR #59): separated behavioural criteria from proof and dropped the typed-record parser contract from the feature definition.

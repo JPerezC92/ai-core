@@ -104,8 +104,8 @@
 ## Change log
 
 - before 2026-10-11 — earlier history: see git history for this file
-- 2026-10-11 — core-sync-clean-arch-20261011: refactored the sync tool into clean-architecture layers and realigned the source-version contract after the project upgrade.
-- 2026-10-11 — regionize-agents-20261010: restored inherited agent rulebooks to distributed cores and standardized the governed section contract.
-- 2026-10-11 — clearance-v2-bulk-init-20261011: source-owned clearance schema (mode + root role), `init --bind-cleared` bulk enrollment, and destination instruction-root detection.
-- 2026-10-12 — core-sync-merge-mode-20261012: added the `merge` binding mode for JSON/JSONC top-level-key merge and reclassified the opencode config from raw to merge.
-- 2026-10-12 — story revision: split behavioural criteria from `## Proof`, moved synchronization authority policy into `## Constraints`, and dropped test symbols and inline verification commands from criterion text.
+- 2026-10-11 — core-sync-clean-arch-20261011 (PR #55): refactored the sync tool into clean-architecture layers and realigned the source-version contract after the project upgrade.
+- 2026-10-11 — regionize-agents-20261010 (PR #53): restored inherited agent rulebooks to distributed cores and standardized the governed section contract.
+- 2026-10-11 — clearance-v2-bulk-init-20261011 (PR #56): source-owned clearance schema (mode + root role), `init --bind-cleared` bulk enrollment, and destination instruction-root detection.
+- 2026-10-12 — core-sync-merge-mode-20261012 (PR #58): added the `merge` binding mode for JSON/JSONC top-level-key merge and reclassified the opencode config from raw to merge.
+- 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof`, moved synchronization authority policy into `## Constraints`, and dropped test symbols and inline verification commands from criterion text.

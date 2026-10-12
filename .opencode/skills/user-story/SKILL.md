@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.1.0
+  version: 1.2.0
 ---
 
 ## What I do
@@ -54,7 +54,7 @@ I settle **what the feature is** — never **how or when it is built**. Approval
 - **Scenario** — trigger, action, result.
 - **Acceptance criteria** — self-contained observable conditions at a boundary; they pass the churn test and carry no internal symbols, module paths, function signatures, test class names, or file inventories. No plan-only goal, temporal `plans/`/`output/` path, volatile test count, or superseded version.
 - **Proof** — where each criterion is demonstrated (`<AC-id> → <section or symbol> · <command/verdict>`); may go stale without invalidating the contract and never sets a criterion's status.
-- **Change log** — bounded to 5 recent one-line entries plus an optional rollup; a story-only revision records `story revision` in place of a plan slug; never invent a plan slug.
+- **Change log** — bounded to 5 recent one-line entries plus an optional rollup. Each entry carries a **durable anchor** — a commit SHA, PR number, or ticket ID — because `plans/` and `output/` are temporal and untracked. The label is the plan slug when one governed the work, otherwise the literal `story revision`; never invent a plan slug.
 - **Constraints** — pre-decided restrictions the plan must respect, never deliver; each carries `— because <reason>`. `## Resolved decisions` is retired and is not written.
 
 ### Draft versus approved

@@ -2,7 +2,7 @@
 name: sentinel
 description: Quality Guardian — line-by-line auditor of all in-scope agent documents, plans/, user-stories/, and knowledge/agents.md. Auto-fixes mechanical violations and reports judgment calls. Does NOT audit ticket data, docs/wiki, problem records, code, configuration, lockfiles, or temporal output.
 mode: subagent
-version: 1.13.0
+version: 1.14.0
 ---
 <!-- core:begin -->
 
@@ -135,7 +135,7 @@ Applies to `user-stories/*.md`. These are the story-hygiene checks Sentinel 🛡
 1. **Self-contained criteria** — a criterion or Goal `Done when:` depends on a plan-only goal or a temporal `plans/`/`output/` path. A path that is the feature's genuine input is allowed.
 2. **Current, non-volatile evidence** — a criterion pins a volatile test count (`N passed`, `N tests`) or cites a superseded spec version, or numbers a surface unless that version is the requirement (including a surface whose version the touching plan itself bumps); or a `file:line` citation is not resolved to a section or symbol name. Expected: the exact command plus verdict, or a durable pin (commit SHA), and a section or symbol name.
 3. **Stale or falsely checked criterion** — a story touched by a completing plan carries a `⬜` or `❌` criterion that the plan committed to deliver or materially changed, or a committed criterion checked without evidence (see the stale-acceptance-criterion judgment call). A legitimate commitment the plan did not select may remain `⬜`. Sentinel 🛡️ never auto-checks a box.
-4. **Bounded change log** — a `## Change log` holds more than 5 one-line entries, or, when older entries were dropped, lacks the single rollup line `before <date> — earlier history: see git history for this file`, or contains planning-only or execution narration.
+4. **Bounded change log** — a `## Change log` holds more than 5 one-line entries, or, when older entries were dropped, lacks the single rollup line `before <date> — earlier history: see git history for this file`, or contains planning-only or execution narration. Each entry must be `<date> — <label> (<anchor>): <what changed>` where `<anchor>` is a commit SHA, PR number, or ticket ID — a temporal `plans/` or `output/` path, or an anchor that does not resolve, is a finding. The label is optional context and is never the anchor.
 5. **Bounded constraints** — a `## Constraints` entry is missing its `— because <reason>` rationale, is a plan-execution or scheduling decision (for example `PLANNING ONLY`, "user authorizes/chooses/requests the plan"), or is superseded, rather than a pre-decided restriction that currently governs the feature. `## Resolved decisions` is retired and is not written.
 6. **Unresolvable proof reference** — a criterion lacks an `AC<n>` id, an `AC<n>` in `## Proof` has no matching criterion, or the count of `## Proof` lines differs from the count of criteria.
 

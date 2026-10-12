@@ -86,10 +86,16 @@
 ## Change log
 
 <!-- Bounded, newest last: at most 5 one-line entries, each
-     - YYYY-MM-DD — <plan-slug>: <what changed about this feature>
-     For a story-only revision made by the `user-story` skill with no plan, use the literal
-     `story revision` in place of the plan slug — never invent a plan slug:
-     - YYYY-MM-DD — story revision: <what changed about this feature>
+     - YYYY-MM-DD — <label> (<anchor>): <what changed about this feature>
+
+     <anchor> is REQUIRED and must resolve to a commit SHA (git history), a PR number,
+     or a ticket ID. `plans/` and `output/` are TEMPORAL and are never the anchor — a
+     plan folder is untracked and dies with the machine. The label is optional human
+     context: the plan slug when one governed the work, otherwise the literal
+     `story revision`. A plan slug is never invented.
+     - YYYY-MM-DD — <plan-slug> (PR #NN): <what changed about this feature>
+     - YYYY-MM-DD — story revision (PR #NN): <what changed about this feature>
+
      plus at most one rollup line once older entries are dropped:
      - before YYYY-MM-DD — earlier history: see git history for this file
      Process/execution narration (planning-only status, phase/gate results, counts) is NOT a change-log entry. -->

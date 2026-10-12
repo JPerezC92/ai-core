@@ -53,8 +53,8 @@
 ## Change log
 
 - before 2026-09-15 — earlier history: see git history for this file
-- 2026-09-15 — ticket-runbook-register-admission-20260914: added destination-selected verifier storage and current-case replay.
-- 2026-09-16 — identification-pack-pointer-20260916: recorded that identification packs use `pack:`, not a protocol-v1 change.
-- 2026-09-27 — python-pytest-20260927: moved Python skill tests to pytest under Crucible 🔥 (Test Architect); earlier unittest decisions remain historical.
-- 2026-10-10 — aicore-all-files-pr-20261008: repointed path, SQL-safety, sidecar-schema, and runbook test evidence to concern-specific modules; added direct valid-fixture/source-digest evidence.
-- 2026-10-12 — story revision: split behavioural criteria from `## Proof`, retired `## Resolved decisions` in favour of `## Constraints`, and removed the advisory-dispositions audit history from the contract.
+- 2026-09-15 — ticket-runbook-register-admission-20260914 (PR #38): added destination-selected verifier storage and current-case replay.
+- 2026-09-16 — identification-pack-pointer-20260916 (PR #42): recorded that identification packs use `pack:`, not a protocol-v1 change.
+- 2026-09-27 — python-pytest-20260927 (PR #43): moved Python skill tests to pytest under Crucible 🔥 (Test Architect); earlier unittest decisions remain historical.
+- 2026-10-10 — aicore-all-files-pr-20261008 (PR #51): repointed path, SQL-safety, sidecar-schema, and runbook test evidence to concern-specific modules; added direct valid-fixture/source-digest evidence.
+- 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof`, retired `## Resolved decisions` in favour of `## Constraints`, and removed the advisory-dispositions audit history from the contract.

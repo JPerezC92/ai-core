@@ -54,8 +54,9 @@
 
 ## Bounded change log
 
-- `## Change log` has at most 5 one-line entries (`<date> — <plan-slug>: <what changed about this feature>`) plus at most one rollup line (`before <date> — earlier history: see git history for this file`).
-- A story-only revision records `story revision` in place of a plan slug; a plan slug is never invented.
+- `## Change log` has at most 5 one-line entries (`<date> — <label> (<anchor>): <what changed about this feature>`) plus at most one rollup line (`before <date> — earlier history: see git history for this file`).
+- **Durable anchor (mandatory):** every entry carries an `<anchor>` that resolves to a commit SHA (git history), a PR number, or a ticket ID. A temporal `plans/` or `output/` path is never the anchor — those are untracked and machine-local. An entry whose anchor does not resolve is a finding.
+- A story-only revision records `story revision` in place of a plan slug; a plan slug is never invented. The label is optional context and is never the traceability anchor.
 - No planning-only or execution narration.
 
 ## Authority

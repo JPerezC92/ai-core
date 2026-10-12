@@ -361,7 +361,7 @@ Documentation ships with the change, in the same plan: every behavior change car
 - **Manifest** lists each affected documentation path as an `Add` / `Modify` / `Delete` row, exactly like code paths; the union of phase `**Writes:**` must equal it, and each row appears in at least one phase's writes.
 - **Completion** reviews each documented path against the delivered behavior, reading the actual documentation content — never the plan's description of it. A shipped behavior change whose documentation is missing or contradicts the delivered behavior blocks `## Outcome` and archival (see **Acceptance-criterion reconciliation**).
 
-Published documents, durable criteria, and Goal `Done when:` must not cite temporal `plans/` or `output/` paths; cite a commit SHA, PR number, or ticket ID instead (see `.opencode/skills/user-story/references/_consistency-checklist.md`).
+Published documents, durable criteria, Goal `Done when:`, and every `## Change log` entry must not cite temporal `plans/` or `output/` paths; cite a commit SHA, PR number, or ticket ID instead (see `.opencode/skills/user-story/references/_consistency-checklist.md`). Plans are untracked and machine-local: a plan folder is never a traceability anchor.
 
 ### Examples
 
