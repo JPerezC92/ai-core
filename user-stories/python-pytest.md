@@ -62,6 +62,6 @@
 - before 2026-09-27 — earlier history: see git history for this file
 - 2026-09-27 — python-pytest-20260927 (PR #43): adopted pytest as the Python runner with whole-project discovery and the reviewed whole-suite command.
 - 2026-10-07 — core-sync-review (PR #52): narrowed Crucible's discovery permissions, aligned AICore Python invocation examples with `uv run --frozen`, and split mixed core-sync test concerns.
-- 2026-10-09 — aicore-all-files-pr-20261008 (PR #51): applied the frozen-environment Python invocation contract across the full ticket-runbook and query-verification skill roots.
+- 2026-10-09 — aicore-all-files-pr-20261008 (PR #52): applied the frozen-environment Python invocation contract across the full ticket-runbook and query-verification skill roots.
 - 2026-10-11 — regionize-agents-20261010 (PR #53): inherited test and backend reference rulebooks now ship in core; runner selection and executable grants stay project-owned.
 - 2026-10-12 — story revision (PR #59): split behavioural criteria from proof, removed the enumerated test-file inventory from `Done when:`, and promoted pre-decided runner policy into `## Constraints`.

@@ -47,6 +47,6 @@
 ## Change log
 
 - before 2026-09-15 — earlier history: see git history for this file
-- 2026-09-15 — debt-001-citation-currency-20260915 (PR #38): created the feature definition for merge-style-aware, fail-closed post-merge branch cleanup.
-- 2026-10-09 — aicore-all-files-pr-20261008 (PR #51): made remote-branch deletion conditional on its continued existence as part of the fail-closed cleanup contract.
+- 2026-09-15 — debt-001-citation-currency-20260915 (PR #40): created the feature definition for merge-style-aware, fail-closed post-merge branch cleanup.
+- 2026-10-09 — aicore-all-files-pr-20261008 (PR #52): made remote-branch deletion conditional on its continued existence as part of the fail-closed cleanup contract.
 - 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof` and moved the fail-closed deletion policy into `## Constraints`.

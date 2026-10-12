@@ -69,5 +69,5 @@
 - 2026-09-16 — ticket-runbook-pre-close-20260915 (PR #41): delivered the two-stage non-destructive close-out and the unified ticket-folder `path:` form.
 - 2026-09-16 — identification-pack-pointer-20260916 (PR #42): added the optional `pack:` Evidence pointer for destination-owned identification packs.
 - 2026-09-27 — runbook-budget-and-plan-review-20260927 (PR #44): added HTML-comment fill-token ignore, sidecar instruction excludes, and the denominator-authoritative Query-budget KILL-2 (`ticket-runbook` 2.4.0).
-- 2026-10-09 — aicore-all-files-pr-20261008 (PR #51): replaced version-pinned Query-budget evidence, made approval before gated register mutation explicit, and repointed register/pre-close/close-out/path evidence to current concern-focused modules.
+- 2026-10-09 — aicore-all-files-pr-20261008 (PR #52): replaced version-pinned Query-budget evidence, made approval before gated register mutation explicit, and repointed register/pre-close/close-out/path evidence to current concern-focused modules.
 - 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof`, generalized the working-set and close-out contracts, and moved register-first policy into `## Constraints`.
