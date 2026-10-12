@@ -12,7 +12,17 @@ from pathlib import Path
 from typing import TypedDict, cast
 
 sys.path.insert(0, str(Path(__file__).parent))
-import core_sync as uc  # noqa: E402
+
+from core_sync_pkg.domain.bindings import BindingEntry, Bindings  # noqa: E402
+from core_sync_pkg.domain.constants import (  # noqa: E402
+    CLEARANCE_REL,
+    SCHEMA_VERSION,
+    BindingMode,
+)
+from core_sync_pkg.domain.reconciliation import (  # noqa: E402
+    sync_reconciliation_blocker,
+)
+from core_sync_pkg.infrastructure.stores import save_bindings  # noqa: E402
 
 REV_A = "a" * 40
 REV_B = "b" * 40
@@ -120,10 +130,10 @@ EXPECTED_RECONCILE_BODY = (
 
 def _ensure_fixture_clearance(source_dir: Path, relative_path: str) -> None:
     """Pre-clear a written source fixture without repairing malformed metadata."""
-    if relative_path == uc.CLEARANCE_REL:
+    if relative_path == CLEARANCE_REL:
         return
 
-    clearance_path = source_dir / uc.CLEARANCE_REL
+    clearance_path = source_dir / CLEARANCE_REL
     clearance: _FixtureClearance
     if clearance_path.exists():
         try:
@@ -135,14 +145,14 @@ def _ensure_fixture_clearance(source_dir: Path, relative_path: str) -> None:
         if (
             not isinstance(data, dict)
             or type(data.get("schema")) is not int
-            or data.get("schema") != uc.SCHEMA_VERSION
+            or data.get("schema") != SCHEMA_VERSION
             or not isinstance(data.get("cleared"), list)
             or not all(isinstance(item, str) for item in data["cleared"])
         ):
             return
         clearance = cast(_FixtureClearance, data)
     else:
-        clearance = {"schema": uc.SCHEMA_VERSION, "cleared": []}
+        clearance = {"schema": SCHEMA_VERSION, "cleared": []}
 
     source_path = Path(relative_path).as_posix()
     if source_path not in clearance["cleared"]:
@@ -173,18 +183,18 @@ def _write_bytes_file(base: Path, relative: str, content: bytes) -> Path:
 
 
 def _binding_entry(
-    source: str, destinations: list[str], mode: uc.BindingMode = "region"
-) -> uc.BindingEntry:
+    source: str, destinations: list[str], mode: BindingMode = "region"
+) -> BindingEntry:
     """Build one bindings entry with an explicit mode."""
     return {"source": source, "destinations": list(destinations), "mode": mode}
 
 
 def _bindings_with_entries(
     revision: str,
-    entries: list[uc.BindingEntry],
+    entries: list[BindingEntry],
     pending: list[str] | None = None,
     root: str | None = None,
-) -> uc.Bindings:
+) -> Bindings:
     """Build a valid bindings document from explicit binding entries."""
     return {
         "schema": 1,
@@ -201,8 +211,8 @@ def _bindings_document(
     destinations: list[str],
     pending: list[str] | None = None,
     root: str | None = None,
-    mode: uc.BindingMode = "region",
-) -> uc.Bindings:
+    mode: BindingMode = "region",
+) -> Bindings:
     """Build a valid single-entry bindings document for a fixture."""
     return _bindings_with_entries(
         revision,
@@ -279,10 +289,10 @@ def _region_fixture(
     if root_file is not None:
         root_text = "# Root\n\nContent.\n"
         if preexisting_block:
-            root_text = uc.sync_reconciliation_blocker(root_text, ["agent.md"])
+            root_text = sync_reconciliation_blocker(root_text, ["agent.md"])
         _write_file(destination, root_file, root_text)
     bindings_path = tmp_path / "bindings.yaml"
-    uc.save_bindings(
+    save_bindings(
         bindings_path,
         _bindings_document(REV_A, "agent.md", ["agent.md"], pending, root),
     )
@@ -306,7 +316,7 @@ def _raw_setup(
     else:
         _write_bytes_file(destination, "opencode.jsonc", destination_content)
     bindings_path = tmp_path / "bindings.yaml"
-    uc.save_bindings(
+    save_bindings(
         bindings_path,
         _bindings_with_entries(
             pinned,
