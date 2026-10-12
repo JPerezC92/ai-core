@@ -15,7 +15,7 @@
 
 ## Goals
 
-> Required. Numbered checkboxes tracked from confirmation to completion — each goal states what must be true when the plan is done. `## Context` is the overall issue. Each goal lists Issue, How, and Files.
+> Required. Numbered checkboxes tracked from confirmation to completion — each goal states what must be true when the plan is done. `## Context` is the overall issue. Each goal lists Issue, How, and Files, and traces to a selected acceptance criterion of the approved story (or to `## Context` / `## Goals` when stories are skipped). Planning starts from the approved story and its selected criteria — never from invented feature intent.
 
 - ⬜ **G1:** <goal 1 — what must be true when this plan is done>
   - Issue: <the problem this goal fixes>
@@ -29,6 +29,16 @@
 ## Body
 
 <!-- Tables and bullets, not prose. Task-specific content goes here. -->
+<!-- Include the bounded discovery evidence (affected code/documentation/dependencies, with paths read) before the combined scope confirmation. -->
+
+## Documentation
+
+<!-- Include when the plan ships a behavior-visible change. Same-change documentation: list every affected documentation surface (README, knowledge/ registers, skill prose, user stories, reference docs) with its owner and what changes. Every row is also a Write/delete manifest path, and each is reviewed against the delivered behavior at completion. -->
+<!-- Remove this section when no documentation is affected. -->
+
+| Surface | Owner | Change |
+|---|---|---|
+| `path/to/doc` | <Name Emoji (Role)> | <what changes> |
 
 ## Source of truth chain
 
@@ -100,5 +110,7 @@ The subfolder pattern is the **default**. Single-file is an **exception**, allow
 ```
 Status / Started / Subject / Layout: single-file / Context / Goals / Body / Critical files / Verification / Out of scope
 ```
+
+A single-file body also includes `Documentation` when the plan ships a behavior-visible change (same-change documentation; see the section above).
 
 **Fall-through rule:** If unsure → subfolder, never single-file.

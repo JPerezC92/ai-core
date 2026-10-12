@@ -15,7 +15,7 @@
 
 ## Goals
 
-> Every programming goal carries Issue, How, Files, and a `Done when:` criterion — the observable condition that proves the goal is met. `## Context` is the overall issue.
+> Every programming goal carries Issue, How, Files, and a `Done when:` criterion — the observable condition that proves the goal is met. `## Context` is the overall issue. Planning starts from the approved story and its selected criteria: trace each goal to a selected acceptance criterion of the approved story (or to `## Context` / `## Goals` when stories are skipped) — never to invented feature intent.
 
 - ⬜ **G1:** <goal 1>
   - Issue: <the problem this goal fixes>
@@ -30,7 +30,7 @@
 
 ## Current state
 
-> REQUIRED. Evidence table of the codebase state this plan starts from. No prose claims without a file + line or command output.
+> REQUIRED. Evidence table of the codebase state this plan starts from, populated by bounded discovery before the combined scope confirmation (affected code, documentation, and dependencies, with the paths read). No prose claims without a file + line or command output.
 
 | Area | Current file / behavior | Evidence (file + line / command output) |
 |---|---|---|
@@ -48,6 +48,14 @@
 
 - <decision 1> — <rationale> (simplest alternative considered: <alternative>, rejected because <reason>)
 
+## Documentation
+
+> Include when the plan ships a behavior-visible change. Same-change documentation: list every affected documentation surface (README, `knowledge/` registers, skill prose, user stories, reference docs) with its owner and what changes. Every row is also a Write/delete manifest path, and each is reviewed against the delivered behavior at completion. Remove this section when no documentation is affected.
+
+| Surface | Owner | Change |
+|---|---|---|
+| `path/to/doc` | <Name Emoji (Role)> | <what changes> |
+
 ## Write/delete manifest
 
 > One row per path this plan creates, changes, or deletes; `Action` is `Modify`, `Add`, or `Delete`, and `Path` is a single repo-relative path. The union of every phase runbook's `**Writes:**` paths must equal this set — the validator enforces it, so a `Delete` path is also listed in the deleting phase's `**Writes:**`.
@@ -62,7 +70,7 @@
 |---|---|---|---|---|---|
 | 1 | <phase name> | <Agent> | `phase-01-<owner>.md` | <artifact path> | G1 |
 
-> Every phase traces to ≥ 1 goal ID. A phase with no Goals column entry is speculative — remove or merge it.
+> Every phase traces to ≥ 1 goal ID. A phase with no Goals column entry is speculative — remove or merge it. Each phase is contract-sized: one coherent responsibility with its interfaces, allowed writes, outputs, and gates — never sized by an arbitrary file count.
 
 ## Critical files / tools
 
@@ -86,6 +94,7 @@
 -->
 
 - Python `test_*.py` edits in reviewed discovery areas: list the project's approved whole-suite command, assign Crucible 🔥 (Test Architect) as executor, obtain Bastion 🧱 (Backend & Scripts Architect) `[PASS]`, and require Crucible 🔥 (Test Architect) `[PASS]` or `[FAIL]` — `[UNCERTAIN]` is not acceptable for this scope.
+- A behavior slice may record an expected red checkpoint: the designated executor runs the new failing test through its authorized command and records the red result. Expected red is never a goal `✅`, a phase gate PASS, or an acceptance `✅`; the phase still requires final green, the applicable architecture verdicts, and the reviewed whole-suite gate.
 
 ## Audit
 

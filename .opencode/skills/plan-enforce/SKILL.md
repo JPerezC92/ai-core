@@ -156,11 +156,12 @@ Extract the goals from the task description before writing any plan file:
 
 #### Present (pre-file gate)
 
-Before invoking the `question` tool, send one regular Markdown message that visibly separates the decision inputs:
+Before invoking the `question` tool, run bounded discovery (see **Bounded discovery before scope confirmation**) and send one regular Markdown message that visibly separates the decision inputs of the combined scope confirmation:
 
-1. Under `**Goals**`, render every detected `G1..Gn` goal as its own Markdown bullet with its full observable condition.
+1. Under `**Goals**`, render every detected `G1..Gn` goal as its own Markdown bullet with its full observable condition, each traced to a selected criterion of the approved story (or `## Context` when stories are skipped).
 2. Under `**Plan classification**`, render the detected plan type, user-story scope (create, update, or skipped with reason), and goal-bloat status (`none` or the triggered soft flag).
-3. Do not place the full goal list, plan type, user-story scope, or goal-bloat detail in the `question` text. The user must be able to scan them outside the compact question control.
+3. Under `**Discovery**`, render the affected code, documentation, and dependency evidence found, with the paths read.
+4. Do not place the full goal list, plan type, user-story scope, discovery evidence, or goal-bloat detail in the `question` text. The user must be able to scan them outside the compact question control.
 
 #### Confirm (pre-file gate)
 
@@ -193,13 +194,14 @@ Watch for goal drift on every phase close, every scope change, and every collate
 
 #### Acceptance-criterion reconciliation (fail-closed)
 
-A user story a plan touches may not carry undetermined criteria past plan completion. When the plan's work is done, every acceptance criterion in every story this plan created or updated must be dispositioned:
+A plan reconciles only the acceptance criteria it **committed to deliver** — the selected criteria of the approved story that its goals trace to — the criteria it **materially changes**, and any regression it introduced. Other legitimate story commitments the plan did not select stay `⬜` and do not block completion:
 
-- `✅` — the criterion is established by verified evidence (a completed goal's `Done when:`, a passing verify command, or a recorded outcome). No fulfilled criterion may remain `⬜`.
-- `❌` — the criterion is explicitly known to be unmet. A `❌` blocks plan completion and archival until the criterion is satisfied or removed.
-- Out-of-scope work is removed from the story's acceptance criteria (not left unchecked) and recorded as a dated change-log line, optionally pointing at a follow-up story.
+- `✅` — a committed or materially-changed criterion established by verified evidence (a completed goal's `Done when:`, a passing verify command, or a recorded outcome). No committed criterion may remain `⬜` at completion.
+- `❌` — a committed criterion explicitly known to be unmet. A `❌`, an unmet committed criterion, or a regression the plan introduced blocks `## Outcome` and archival until satisfied or removed.
+- A committed or materially-changed criterion removed as out-of-scope is deleted from the story (not left unchecked) and recorded as a dated change-log line, optionally pointing at a follow-up story.
+- A criterion the plan did not select is not reconciled: leaving it `⬜` is not a defect, and no blanket "every touched-story criterion" disposition applies.
 
-There is no "left as pending" state for a criterion in a touched story: an `⬜` after a touching plan completes is a stale-story defect. Release events (PR opened/reviewed/merged) are release history, not feature acceptance criteria; a feature criterion may state the release policy (e.g. "merge remains user-only") but never a specific PR/review/merge event.
+Reconciliation is fail-closed on adverse evidence: `## Outcome` and the archive move stay blocked while a committed criterion lacks evidence, a regression the plan introduced is unresolved, or the final-snapshot evidence is missing or adverse. Release events (PR opened/reviewed/merged) are release history, not feature acceptance criteria; a feature criterion may state the release policy (e.g. "merge remains user-only") but never a specific PR/review/merge event.
 
 #### Resume (completion)
 
@@ -207,7 +209,7 @@ When the plan's work is done and its audits have passed — before the release P
 
 - Confirm `## Audit` records an independent auditor's `[PASS]` with `Auditor`, `Findings`, and `Date` (see **Independent audit gate**); `[PENDING]`, `[FAIL]`, or a missing audit blocks completion.
 - Evaluate completion evidence as a layered matrix on the current snapshot: code architecture, test architecture, test execution, and model/guidance verdicts — each with its scope and verdict. A passing execution result never stands in for a required architecture verdict, and a missing or adverse layer blocks completion. A planning-readiness audit is never reused as the completion audit. Adjudicate any adverse finding before marking a goal or criterion complete, writing `## Outcome`, or archiving.
-- Run acceptance-criterion reconciliation (see **Acceptance-criterion reconciliation**) over every touched story; block `## Outcome` and the archive move until no `⬜` or `❌` criterion remains — each is `✅` or removed as out-of-scope.
+- Run acceptance-criterion reconciliation (see **Acceptance-criterion reconciliation**) over the criteria this plan committed to deliver and materially changed, plus any regression it introduced; block `## Outcome` and the archive move while any committed criterion is unmet, any relevant regression is open, or the final-snapshot evidence is missing or adverse. Unselected story criteria stay `⬜` and do not block.
 - Present the goals resume in chat: one line per goal, `✅` when met, `❌` when not, each with a 1-line evidence note.
 - Write `## Outcome` into `plan.md` — what the plan produced, per goal — BEFORE moving the plan to `plans/.completed/`.
 - Set `Status: completed`, append `Completed: YYYY-MM-DD HH:MM`, and move the plan to `plans/.completed/` (folder or file per layout). All of this happens pre-release; the merged PR number or merge SHA may be appended to the local archive copy afterwards as free metadata.
@@ -244,28 +246,60 @@ Crucible 🔥 (Test Architect) executes each declared approved test command; For
 
 ### User stories
 
-Stories are the durable per-feature definitions (`user-stories/<feature-slug>.md`); plans are temporal. Read `user-stories/index.md` first, filter by epic/affected areas, then read candidate bodies. Before creating any story, Cipher 🔓 (Lead Orchestrator) presents evidence-backed UPDATE / rename / CREATE choices and waits for explicit user choice via `question`; CREATE without that choice or Cipher's own say-so is forbidden. Create only for a feature without a story after explicit CREATE. Update the affected story with the plan work to reflect the current feature and append a dated `## Change log` entry. On overlap, contradiction, or extension, run the collision gate. Stories are never archived/deleted with plans. Cite each touched story under `plan.md` → `## Critical files / tools`; trace each goal to a story acceptance criterion, or to plan Context/Goals when stories are skipped.
+Stories are the durable per-feature definitions (`user-stories/<feature-slug>.md`); plans are temporal. Pre-plan behavior discussion, story ownership, creation, revision, and collision analysis belong to the `user-story` skill, and the `## user-stories` section of `.opencode/skills/plan-enforce/references/_consistency-checklist.md` is the canonical story format/hygiene contract. Planning only consumes an approved (`active`) story and the selected criteria it hands over — never a `draft`, and never a story choice renegotiated here. If no approved story owns a feature the plan will write, stop and route that feature to `user-story` before creating plan files. Cite each touched story under `plan.md` → `## Critical files / tools`; trace each goal to a selected acceptance criterion, or to `## Context` / `## Goals` when stories are skipped. Stories are never archived or deleted with plans.
 
 ### User-story scope
 
 Programming plans ALWAYS carry a story for each feature touched by writes under application source, backend tooling, `scripts/`, `.opencode/skills/**/scripts/`, or ticket tooling. At the goals gate, flag non-programming changes to feature-visible behavior and confirm whether a story is needed. Pure docs/process/tooling plans skip stories; `## Context` / `## Goals` record the work.
 
-### User-story collision gate
+### Planning input — approved story and selected criteria
 
-Read the index, filter by epic/affected areas, read candidate bodies, and check for overlap (same scenario), contradiction, or extension (superseding/broadening a feature). On any collision, stop before creating a plan; report the existing persona/goal/scenario and corresponding intended statements, then ask the user how to proceed. Before creating a story, present the filtered choices UPDATE / rename / CREATE with evidence and wait for explicit `question`-tool choice. Record the decision in the affected story's bounded `## Resolved decisions`, replacing superseded entries. Re-run this gate when scope adds a feature.
+Planning starts from the **approved story** and the selected criteria it hands over — never from an invented feature intent. `user-story` owns the feature contract (see **User stories**); planning consumes it:
 
-### Story hygiene
+- Read the approved (`active`) story body and the criteria selected for delivery. These are the source of feature intent: the task phrasing never overrides the story.
+- Trace every goal to a selected acceptance criterion of the approved story, or to `## Context` / `## Goals` when stories are skipped (see **User stories**).
+- A `draft` story is in-progress discussion, not a planning contract — do not plan from it.
+- If no approved story owns a feature the plan will write, stop and route that feature to `user-story` before creating plan files.
 
-Stories define current features, not work history. Every acceptance criterion and Goal `Done when:` states an observable condition and cites the proving surface; no plan-only goal or temporal `plans/`/`output/` dependency is allowed, except a genuine feature input. Cite evidence by exact command+verdict or durable commit SHA, never volatile test counts; cite section/symbol rather than version unless version is the requirement, never a version this plan bumps, and replace `file:line` with section/symbol.
+### Bounded discovery before scope confirmation
 
-Keep at most 5 recent one-line `## Change log` entries (`<date> — <plan-slug>: <feature change>`) plus `before <date> — earlier history: see git history for this file` when rolling up. Exclude process narration. `## Resolved decisions` contains only current governing decisions with rationale; replace superseded and remove execution/scheduling decisions. Git history is permanent. Sentinel 🛡️ (Quality Guardian) audits these rules; the validator does not.
+Before the **combined scope confirmation** (goals, plan type, goal-bloat, user-story scope — see **Goal lifecycle** and **Create new plan**), run a bounded, read-only discovery pass and fold its evidence into that same confirmation:
+
+1. **Affected code.** Locate and read the modules, services, public interfaces, and call sites the selected criteria touch. Never plan against a path you have not inspected.
+2. **Affected documentation.** Identify every durable documentation surface the behavior change alters (README, `knowledge/` registers, skill prose, user stories, reference docs) and name its owner. Same-change documentation is planned here, not after the fact (see **Documentation discipline**).
+3. **Affected dependencies.** Identify packages, contracts, and cross-module interfaces the change reads or alters, with their version or interface constraints.
+4. **Planned-file design conformance.** Read every file the manifest will modify or add and assess its current design against the approved contract (`knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)` and the applicable language profile). A planned file that does not conform is reworked within this plan: its necessary supporting files, tests, and documentation enter the manifest before execution. Existing nonconformance is not a legacy exemption; a small behavioral patch never substitutes for necessary design correction, and the rework does not expand into an unrelated repository-wide migration.
+5. **Bound the pass.** Discovery is scoped to the selected criteria and their direct dependents; it names the paths read and the evidence found. It never edits files, installs dependencies, or widens into unrelated subsystems.
+
+Record the discovery evidence in the plan (`## Current state` for programming plans, `## Body` otherwise) and present it with the goals. Discovery is not a substitute for confirmation — it feeds the same single confirmation round.
+
+### Contract-sized phases
+
+Each phase is **contract-sized**: it names one coherent responsibility and the exact interfaces it produces or consumes, its allowed writes, its outputs, and the gates that close it. Size a phase by responsibility, never by an arbitrary file count.
+
+- **Responsibilities** — one outcome per phase; split a phase that carries two unrelated outcomes.
+- **Interfaces** — the public paths, export/function names, and data shapes the phase produces and consumes, stated explicitly in the `Reads` / `Writes` / `Output` block.
+- **Allowed writes** — the exact repo-relative paths in the phase `**Writes:**` block; no phase writes outside them.
+- **Outputs** — the artifact and its schema/shape.
+- **Gates** — the conditions that must be true before the next phase begins.
+
+Phases state behavior and contracts, not private implementation: never prewrite private helper bodies, line-by-line algorithms, or internal variable names. A phase that lists a number of files instead of a responsibility is mis-sized — re-cut it by contract.
+
+### Expected-red intermediate checkpoint
+
+A behavior slice (a test-first slice inside a phase) may record its intended failing test as an **expected red** checkpoint: the designated executor runs the newly added test through its authorized command and records the red result (a non-zero exit carrying the expected failure) as evidence the test exercises the intended behavior. Expected red is an intermediate checkpoint only.
+
+- Expected red is never a goal `✅`, a phase gate PASS, or an acceptance `✅`; it proves the test can fail, not that the behavior works.
+- The phase still requires final green: the same executor's command exits 0 with the test passing.
+- Applicable architecture verdicts (Atrium 🏛️ (Frontend Architect) / Bastion 🧱 (Backend & Scripts Architect) / Crucible 🔥 (Test Architect)) and the reviewed whole-suite gate (Project extensions) remain required at the phase gate and at completion; expected red substitutes for none of them.
+- Only the designated executor's authorized command captures the red result; the implementer does not run tests outside its grant.
 
 ### Create new plan
 
 1. Run the initial inventory; choose subfolder layout unless there is one owner, one edited file, no handoff/external mutation, and ≤30 instruction lines.
 2. Derive slug, phases, and complete write/delete manifest in memory. Detect numbered `G1..Gn` observable goals (see **Goal lifecycle**).
-3. Present goals and classification in Markdown, then make one short confirming `question` call before any file creation. Select the path-detected template and confirm its type with the goals.
-4. Run the user-story gate: read/filter `user-stories/index.md`, review candidate bodies, and decide UPDATE / rename / CREATE / COLLIDE per feature. Wait for explicit story choice before creating; stop before plan creation on collision. Record skipped stories in Context.
+3. Run bounded discovery (affected code/documentation/dependencies) before the confirmation; then present goals, classification, and discovery evidence in Markdown, and make one short confirming `question` call before any file creation. Select the path-detected template and confirm its type with the goals.
+4. Run the user-story gate: consume the approved story and its selected criteria from `user-story` (never renegotiate the choice), read/filter `user-stories/index.md`, and review candidate bodies for overlap; route any needed CREATE/UPDATE back to `user-story`. Wait for the approved story before creating; stop before plan creation on collision. Record skipped stories in Context.
 5. Run the post-scope collision check; stop on overlap.
 6. Create `plans/<task-slug>-YYYYMMDD/plan.md` and one phase-template `phase-NN-<owner>.md` per phase. Record the full manifest; `Action`/`Path` rows must equal the union of phase `**Writes:**` paths.
 7. Complete each phase's Owner, Pre, Reads, Writes, Steps, Output, Verify commands, Gate, and Abort conditions; no `TBD` in Steps/Output/Gate/Abort. Add one verification checkbox per phase output and trace every checkbox.
@@ -281,14 +315,18 @@ Run after every plan/phase/story/index write and every Forge 🔨 (Implementer) 
 
 1. Re-read each written `plan.md`, phase file, story, and index.
 2. Mechanical pass: active subfolder plans touching stories/index use `<plan-dir> --stories user-stories`; no-story plans use `<plan-dir>`; single-file plans use `<plan.md> --single-file`. Fix validator findings for Status/Completed, required sections and labels, executor-command tables, placeholders, index mirroring, goal trace, manifest equality, verification parity, and completed-plan audit gate.
-3. Analysis pass against the consistency checklist: evidence-match confirmed goals; each goal has Issue/How/Files; phase-to-goal and phase-file links exist; verification checkboxes trace to outputs; phase Writes equal the manifest; story title/status mirror the index; no touched story has `⬜` criteria at completion. Never invent a value; stop and ask.
+3. Analysis pass against the consistency checklist: evidence-match confirmed goals; each goal has Issue/How/Files; phase-to-goal and phase-file links exist; verification checkboxes trace to outputs; phase Writes equal the manifest; story title/status mirror the index; every criterion this plan committed to deliver or materially changed is reconciled, while unselected criteria `⬜` are left untouched. This semantic writer self-review reads the actual in-scope content — the real files, diffs, and command output — never the plan's or template's description of it. Never invent a value; stop and ask.
 4. Repeat to zero findings and report `self-verification passes: N`. After 3 iterations or the same unchanged violation twice, stop-and-ask (S-07).
 
-The validator catches repetitive mechanical drift; the analysis pass owns semantic correctness.
+The validator catches repetitive mechanical drift; the writer's semantic self-review owns correctness by reading the actual content, not a summary of it.
 
 #### Independent audit gate
 
 Never report readiness or dispatch Forge 🔨 (Implementer) on the writer's own word. Before either, dispatch an independent checklist audit (see Project extensions): Sentinel 🛡️ (Quality Guardian) by default, Vault 🔐 (Catalog Steward) for catalog-heavy plans. Record `Auditor`, `Verdict`, `Findings`, and `Date` under `## Audit`; verdict is `[PENDING]`, `[PASS]`, or `[FAIL]`. Readiness/dispatch requires `[PASS]`, non-empty auditor, and date. If unavailable, remain not-ready; a substitute requires explicit user authorization recorded in the audit. Never self-audit, invent a verdict, or downgrade `[FAIL]`. Planning and completion audits are distinct: completion evaluates the final candidate and is required before `## Outcome`, goal checkmarks, and archive; planning `[PASS]` or execution alone cannot substitute.
+
+- **Semantic review.** The neutral independent auditor reads the actual in-scope content — the real files, diffs, and command output — never the writer's summary of it. Mechanical checklist items and semantic/judgment items are reviewed separately; a mechanical pass never stands in for a semantic `[PASS]`.
+- **Handoff discipline.** An audit handoff separates **user decisions** (what the user chose), **facts** (what the repository and commands show), and **interpretations** (the auditor's reading of ambiguous evidence). The auditor flags any interpretation presented as fact and any decision attributed to the user without an explicit record.
+- **Two-failure reassessment.** Two failed planning audits on the same plan trigger a coherent reassessment of the plan's discovery, scope, phase cuts, or premises — not a cosmetic edit to satisfy the next auditor. The reassessment may rework goals, discovery evidence, or phase boundaries; it never waives the independent `[PASS]` gate: readiness/dispatch still require a fresh independent auditor `[PASS]`.
 
 ### All-changes disposition
 
@@ -314,7 +352,13 @@ Git tracks only incomplete plans. Stage plan artifacts only while their plan is 
 
 ### Documentation discipline
 
-Published documents, durable criteria, and Goal `Done when:` must not cite temporal `plans/` or `output/` paths; cite a commit SHA, PR number, or ticket ID instead (see **Story hygiene**).
+Documentation ships with the change, in the same plan: every behavior change carries its affected documentation through discovery, the manifest, and completion.
+
+- **Discovery** names every affected documentation surface (README, `knowledge/` registers, skill prose, user stories, reference docs) and its owner, with the evidence that the surface is affected (see **Bounded discovery before scope confirmation**).
+- **Manifest** lists each affected documentation path as an `Add` / `Modify` / `Delete` row, exactly like code paths; the union of phase `**Writes:**` must equal it, and each row appears in at least one phase's writes.
+- **Completion** reviews each documented path against the delivered behavior, reading the actual documentation content — never the plan's description of it. A shipped behavior change whose documentation is missing or contradicts the delivered behavior blocks `## Outcome` and archival (see **Acceptance-criterion reconciliation**).
+
+Published documents, durable criteria, and Goal `Done when:` must not cite temporal `plans/` or `output/` paths; cite a commit SHA, PR number, or ticket ID instead (see the `## user-stories` section of `.opencode/skills/plan-enforce/references/_consistency-checklist.md`).
 
 ### Examples
 
