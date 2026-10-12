@@ -1,6 +1,10 @@
-# Plan / Phase / Story — consistency checklist
+# Plan / Phase / Audit / Completion — consistency checklist
 
-> Canonical contract for artifacts written by the `plan-enforce` and `user-story` skills. Applied at write-time by the skills' post-write self-verification loop (analysis) and mechanically by `scripts/validate_plan.py` (repetitive subset). Sentinel 🛡️ (Quality Guardian) audits `plans/` and `user-stories/` against this same checklist — keep the two in lockstep.
+> Canonical contract for plan, phase, audit, and completion artifacts written by the `plan-enforce` skill. Applied at write-time by that skill's post-write self-verification loop (analysis) and mechanically by `scripts/validate_plan.py` (repetitive subset). Sentinel 🛡️ (Quality Guardian) audits `plans/` against this same checklist — keep the two in lockstep.
+>
+> User-story artifacts are governed by the `user-story` skill's own contract at
+> `.opencode/skills/user-story/references/_consistency-checklist.md`. Ticket working
+> artifacts are governed by `.opencode/skills/ticket-runbook/references/_consistency-checklist.md`.
 
 ## plan.md
 
@@ -48,16 +52,11 @@
 
 ## user-stories
 
-- `user-stories/index.md` exists and lists every feature file.
-- Each story's `Title` and `Status` mirror the corresponding `index.md` columns.
-- No unfilled `<...>`, `TODO`, or `TBD` placeholders.
-- A dated `## Change log` entry is present for every plan that touched the story.
-- Story creation and ownership decisions belong to the `user-story` skill: CREATE of a new story file is forbidden until that skill has reconciled `user-stories/index.md` with the files, read every candidate body, presented grounded UPDATE / rename / CREATE / supersession choices, and received an explicit user choice. `plan-enforce` consumes an approved story and never renegotiates the story choice.
-- Approved vs draft: only an approved (`active`) story is a planning contract; a `draft` is in-progress discussion and is not consumed by `plan-enforce`. Approval establishes feature behavior only — it is not implementation evidence, a permission grant, or execution authorization.
-- Approved-criteria completion scope (fail-closed): a plan that touches a story reconciles only the acceptance criteria it committed to deliver, the criteria it materially changed, and any regression it introduced. Each reconciled criterion is `✅` (evidence-established) or removed as out-of-scope with a change-log entry; `❌` (explicitly unmet) blocks completion until satisfied or removed. Remaining legitimate story commitments the plan did not select stay `⬜` and do not block completion. Release events (PR opened/reviewed/merged) are not acceptance criteria. This is semantic analysis (evidence-to-checkbox truth), never mechanical auto-checking.
-- Story hygiene (auditor checks, Sentinel-executed; the validator does not parse a checklist): an acceptance criterion or Goal `Done when:` must not depend on a plan-only goal or a temporal `plans/`/`output/` path (a genuine feature-input path is allowed); it must not pin a volatile test count (`N passed`, `N tests`) or cite a superseded spec version, and must not number a surface unless that version is the requirement (including a surface whose version the touching plan itself bumps); a `file:line` citation is resolved to a section or symbol name.
-- Bounded change log: `## Change log` has at most 5 one-line entries (`<date> — <plan-slug>: <what changed about this feature>`) plus at most one rollup line (`before <date> — earlier history: see git history for this file`); no planning-only or execution narration.
-- Bounded resolved decisions: `## Resolved decisions` holds only decisions that currently govern the feature (design constraints and rationale); plan-execution/scheduling decisions and superseded decisions are absent.
+Story format and hygiene are owned by the `user-story` skill — see
+`.opencode/skills/user-story/references/_consistency-checklist.md`. `plan-enforce`
+consumes an approved (`active`) story and its selected criteria and never renegotiates
+the story choice. Approved-criteria completion scope, the behaviour/proof separation,
+and the `## Constraints` contract are defined there.
 
 ## Loop rule
 

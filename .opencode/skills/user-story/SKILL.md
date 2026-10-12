@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.0.0
+  version: 1.2.0
 ---
 
 ## What I do
@@ -25,8 +25,9 @@ I settle **what the feature is** — never **how or when it is built**. Approval
 
 - Catalogue index: `user-stories/index.md`
 - Story files: `user-stories/<feature-slug>.md`
-- Canonical story template: `.opencode/skills/plan-enforce/references/_template-user-story.md`
-- Consistency checklist: `.opencode/skills/plan-enforce/references/_consistency-checklist.md`
+- Canonical story template: `references/_template-user-story.md`
+- Consistency checklist: `references/_consistency-checklist.md`
+- Classification guide (what belongs in a contract): `references/_classification-guide.md`
 - Handoff consumer: `.opencode/skills/plan-enforce/SKILL.md` (`### User stories`)
 
 ## Steps
@@ -43,7 +44,7 @@ I settle **what the feature is** — never **how or when it is built**. Approval
 5. **Preview the delta.** Show the exact contract change — fields added, removed, or reworded — before writing. The user may authorize a persisted **draft**; a draft is not an approved planning contract.
 6. **Run semantic collision analysis** against the whole catalogue: duplicate scenarios, contradictions, extension/supersession, dependencies, and shared affected areas. Report each collision with the paired statements and a recommended disposition. Unresolved contradictions block approval and handoff. This requires reading the stories — a keyword scan is not sufficient.
 7. **Obtain explicit approval.** Ask for approval only after the collision review reports no unresolved contradiction. Approval establishes the contract; it does not establish implementation acceptance, grant permissions, or authorize execution. An existing approved contract is never silently overwritten while alternatives are discussed.
-8. **Persist and mirror.** Write the approved contract to `user-stories/<feature-slug>.md` using the canonical template, with a bounded `## Change log` entry and only currently governing `## Resolved decisions`. Mirror `Title`/`Status`/`Epic`/`Affected areas` into `user-stories/index.md`.
+8. **Persist and mirror.** Write the approved contract to `user-stories/<feature-slug>.md` using the canonical template: behavioural acceptance criteria that pass the churn test, a `## Proof` section recording where each criterion is demonstrated, a bounded `## Change log` entry, and only currently governing `## Constraints` each carrying `— because <reason>`. Mirror `Title`/`Status`/`Epic`/`Affected areas` into `user-stories/index.md`.
 9. **Hand off to `plan-enforce`.** Provide the approved story, the selected delivery criteria, governing constraints, and dependencies. Preserve remaining legitimate commitments as `⬜`. `plan-enforce` owns goal traceability and completion reconciliation — I do not create a competing completion policy and never archive a plan.
 
 ### Contract fields
@@ -51,9 +52,10 @@ I settle **what the feature is** — never **how or when it is built**. Approval
 - **Persona** — one actor, with their role in context.
 - **Goal** — an observable condition, with a `Done when:` criterion.
 - **Scenario** — trigger, action, result.
-- **Acceptance criteria** — self-contained observable conditions; no plan-only goal, temporal `plans/`/`output/` path, volatile test count, or superseded version.
-- **Change log** — bounded to 5 recent one-line entries plus an optional rollup; a story-only revision records `story revision` in place of a plan slug; never invent a plan slug.
-- **Resolved decisions** — current governing design decisions with rationale only.
+- **Acceptance criteria** — self-contained observable conditions at a boundary; they pass the churn test and carry no internal symbols, module paths, function signatures, test class names, or file inventories. No plan-only goal, temporal `plans/`/`output/` path, volatile test count, or superseded version.
+- **Proof** — where each criterion is demonstrated (`<AC-id> → <section or symbol> · <command/verdict>`); may go stale without invalidating the contract and never sets a criterion's status.
+- **Change log** — bounded to 5 recent one-line entries plus an optional rollup. Each entry carries a **durable anchor** — a commit SHA, PR number, or ticket ID — because `plans/` and `output/` are temporal and untracked. The label is the plan slug when one governed the work, otherwise the literal `story revision`; never invent a plan slug.
+- **Constraints** — pre-decided restrictions the plan must respect, never deliver; each carries `— because <reason>`. `## Resolved decisions` is retired and is not written.
 
 ### Draft versus approved
 

@@ -3,7 +3,7 @@
 > **Created:** 2026-09-10
 > **Title:** Incident query-verification pilot
 > **Status:** active
-> **version:** 1.0.0
+> **version:** 1.1.0
 > **Epic:** incident-diagnostics
 > **Affected areas:** `.opencode/skills/query-verification/`, `.opencode/skills/ticket-runbook/`, `.opencode/agents/crucible.md`, `knowledge/`
 
@@ -22,44 +22,39 @@
 
 ## Acceptance criteria
 
-- ✅ A sidecar verifier is accepted only when it is incident-owned, adjacent to its root-contained SQL source, read-only, bounded, and uses declared named bindings. Evidence: `.opencode/skills/query-verification/scripts/test_query_verification_paths.py::QueryVerificationPathTests.test_rejects_absolute_source` and `test_rejects_traversal_source`; `.opencode/skills/query-verification/scripts/test_query_verification_sql_safety.py::QueryVerificationSqlSafetyTests.test_unsafe_source_is_rejected`; `.opencode/skills/query-verification/scripts/test_query_verification_sidecar_schema.py::QueryVerificationSidecarSchemaTests.test_closed_sidecar_schema_rejections`; the closed contract is `references/protocol-v1.md` in the `query-verification` skill.
-- ✅ Unsafe SQL, path escapes, malformed metadata, untrusted output mismatches, and ambiguous result shapes produce a rejection or `inconclusive` verdict without query execution. Evidence: `.opencode/skills/query-verification/scripts/test_query_verification_sql_safety.py::QueryVerificationSqlSafetyTests.test_unsafe_source_is_rejected`; `.opencode/skills/query-verification/scripts/test_query_verification_paths.py::QueryVerificationPathTests.test_rejects_absolute_source` and `test_rejects_traversal_source`; `.opencode/skills/query-verification/scripts/test_query_verification_sidecar_schema.py::QueryVerificationSidecarSchemaTests.test_closed_sidecar_schema_rejections` and `test_rejects_malformed_yaml_sidecar`; evaluator `test_evaluate_*_is_inconclusive` cases in `.opencode/skills/query-verification/scripts/test_query_verification.py`; verification `uv run --frozen --group dev pytest -q` → exit 0.
-- ✅ The evidence record redacts configured values, binds verifier/source/definition digests to the verdict, and does not retain raw adapter output or credentials. Evidence: `test_evaluate_verified_redacts_and_binds_digests` in `test_query_verification.py`; the redaction and digest rules are in `references/protocol-v1.md`.
-- ✅ The optional investigate-step verifier path consumes one existing query-budget unit and never treats a verified symptom as automatic root-cause confirmation. Evidence: the implemented investigate-step verifier-evidence route is recorded in `knowledge/query-verification-design.md`; `.opencode/skills/ticket-runbook/scripts/test_validate_runbook_step_mode.py::ValidateRunbookStepModeTests.test_filled_investigate_keeps_sidecar_command_examples`; and `.opencode/skills/ticket-runbook/scripts/test_validate_runbook_header_budgets.py::ValidateRunbookHeaderBudgetTests.test_query_budget_compared_to_denominator`.
-- ✅ The skill, protocol, fixtures, and migration entry are available to ticket-enabled destination projects. Evidence: the `query-verification` skill ships `references/protocol-v1.md` and the valid fixture trio, and `knowledge/query-verification-design.md` records the skill and design document as `only if ticket marker` migration items.
-- ✅ The shipped valid adapter-output fixture is independently protocol-valid and its source digest is guarded against fixture/source drift. Evidence: `.opencode/skills/query-verification/scripts/test_query_verification.py` `QueryVerificationEvaluationTests.test_valid_fixture_evaluation_writes_verified_evidence`; `.opencode/skills/query-verification/scripts/_query_verification_testkit.py` `_load_static_adapter` checks that the fixture's `source_digest` equals the digest of the SQL fixture before evaluation; `.opencode/skills/query-verification/scripts/test_query_verification_fixtures.py` `QueryVerificationFixtureTests.test_valid_fixture_trio_passes_validation`. Verification: `uv run --frozen --group dev pytest -q` → exit 0.
-- ✅ Reusable verifier persistence is destination-selected: the destination chooses its query-storage location, the problem row's Evidence records a `diagnostic:` pointer to the sidecar, and a later structural match replays the pair with current-ticket parameters under protocol-v1 (schema unchanged, one query-budget slot). Evidence: `knowledge/query-verification-design.md` Destination-chooses-storage; `knowledge/problems.md` Evidence format.
-- ✅ Protocol-v1 remains the only `diagnostic:` contract (one read-only SELECT, one row, three-state verdict). Identification packs use a separate `pack:` Evidence pointer and are not evaluated by `query_verification.py`. Evidence: `protocol-v1.md` byte-identical to `f0fb4874eb8110e03684adcf845dff5d6f3dbb95`; `test_query_verification.py` suite OK; `ticket-runbook/SKILL.md` verifier-step guidance; `knowledge/problems.md` Evidence format.
+- ✅ **AC1:** A sidecar verifier is accepted only when it is incident-owned, adjacent to its root-contained SQL source, read-only, bounded, and uses declared named bindings.
+- ✅ **AC2:** Unsafe SQL, path escapes, malformed metadata, untrusted output mismatches, and ambiguous result shapes produce a rejection or `inconclusive` verdict without query execution.
+- ✅ **AC3:** The evidence record redacts configured values, binds verifier/source/definition digests to the verdict, and retains neither raw adapter output nor credentials.
+- ✅ **AC4:** The optional investigate-step verifier path consumes one existing query-budget unit and never treats a verified symptom as automatic root-cause confirmation.
+- ✅ **AC5:** The skill, protocol, fixtures, and migration entry are available to ticket-enabled destination projects.
+- ✅ **AC6:** The shipped valid adapter-output fixture is independently protocol-valid and its source digest is guarded against fixture/source drift.
+- ✅ **AC7:** Reusable verifier persistence is destination-selected: the destination chooses its query-storage location, the problem row's Evidence records a pointer to the sidecar, and a later structural match replays the pair with current-ticket parameters under the same protocol (schema unchanged, one query-budget slot).
+- ✅ **AC8:** The diagnostic-query protocol remains the only sidecar contract — one read-only SELECT, one row, three-state verdict. Identification packs use a separate Evidence pointer and are not evaluated by the diagnostic evaluator.
 
-## Advisory dispositions
+## Proof
 
-Recorded 2026-09-10. Every outcome is evidence-backed; no dependency, lockfile, register, protocol, or ticket behavior changed.
+- AC1 → `.opencode/skills/query-verification/references/protocol-v1.md` closed contract · `test_query_verification_paths.py` path tests · `test_query_verification_sql_safety.py` unsafe-source rejection · `test_query_verification_sidecar_schema.py` closed-schema rejections
+- AC2 → `test_query_verification_sql_safety.py` · `test_query_verification_paths.py` · `test_query_verification_sidecar_schema.py` · evaluator `test_evaluate_*_is_inconclusive` cases
+- AC3 → `test_query_verification.py` redaction-and-digest evaluation case · `references/protocol-v1.md` redaction and digest rules
+- AC4 → `knowledge/query-verification-design.md` investigate-step verifier route · `test_validate_runbook_step_mode.py` · `test_validate_runbook_header_budgets.py`
+- AC5 → `.opencode/skills/query-verification/` ships `references/protocol-v1.md` plus the valid fixture trio · `knowledge/query-verification-design.md` migration entry
+- AC6 → `test_query_verification.py` valid-fixture evaluation case · `_query_verification_testkit.py` static-adapter source-digest guard · `test_query_verification_fixtures.py` fixture-trio validation
+- AC7 → `knowledge/query-verification-design.md` destination-chooses-storage · `knowledge/problems.md` `## Entry format` → Evidence
+- AC8 → `references/protocol-v1.md` · `test_query_verification.py` suite · `.opencode/skills/ticket-runbook/SKILL.md` verifier-step guidance · `knowledge/problems.md` Evidence format
 
-| Advisory | Disposition | Evidence |
-|---|---|---|
-| The shipped valid adapter fixture was not independently usable | **Resolved.** `source_digest` equals the SHA-256 of the unchanged `incident-check.sql` bytes (`sha256:1e098701a3d6952bf6bae5a05d899527051e40f384e344e607981f4ffb7a218a`); the fixture trio evaluates directly to `verified`. | The query-verification suite exits 0 with a drift assertion that fails on fixture/source digest divergence. |
-| Vault 🔐 (Catalog Steward) extraction rule QC-27 required a literal `.md` path | **Resolved.** QC-27 accepts named, non-executable Markdown/YAML/JSON/other machine-readable reference artifacts when explicitly referenced; executable code stays in `scripts/`; opaque or unnamed artifacts are rejected. | Vault 🔐 (Catalog Steward) runtime spec `1.1.0`. |
-| README register labels and skill count were stale | **Resolved.** Labels now match the register H1s (`Diagnostic Symptom Catalog`, `Known Problem Pattern Register`); a note explains the manifest's self-exclusion of `migrate-core-to-project` (9 skill rows vs 10 inventory). | `README.md`; migration selection unchanged. |
-| A plan phase could name a verification command without a traceable executor | **Resolved.** `plan-enforce` `1.12.1` requires one canonical `Executor`/`Command` table per phase; the validator enforces table presence/shape (declared traceability only) and phase review audits executor authority. | 50 validator tests pass, including 8 executor-command table cases (7 rejection + 1 acceptance). |
-| Python stdlib `unittest` test gating had no owner | **Resolved — superseded by the Crucible 🔥 (Test Architect) Python-audit branch (2026-09-10).** Bastion 🧱 (Backend & Scripts Architect) `1.1.0` originally owned the gate: a declared runnable `python3` command plus Bastion 🧱 (Backend & Scripts Architect) [PASS], with Crucible 🔥 (Test Architect) dispatched and its actual applicability verdict recorded without relabeling. `pytest` is not added. | Original gate: Bastion 🧱 (Backend & Scripts Architect) runtime spec `1.1.0`. Superseding gate: `.opencode/agents/crucible.md` `1.1.0` (`## PYTHON STDLIB UNITTEST TESTS`), `.opencode/agents/bastion.md` `1.2.0`, and `plan-enforce` `1.12.1`. |
-| `__pycache__` bytecode and register title edits | **No action.** `__pycache__/` is gitignored; the `knowledge/symptoms.md` and `knowledge/problems.md` title edits belong to the completed `query-verification-naming-20260910` plan and were not modified here. | Root `.gitignore`; register H1s unchanged. |
+## Constraints
 
-**Recorded audit verdicts:** Vault 🔐 (Catalog Steward) ADVISORY (gate items pass, findings corrected); Sentinel 🛡️ (Quality Guardian) ADVISORY (mechanical naming fixes applied; no blocking defect); Bastion 🧱 (Backend & Scripts Architect) PASS; Crucible 🔥 (Test Architect) `[UNCERTAIN]` (TypeScript rules inapplicable, recorded as-is; superseded 2026-09-10 — see Resolved decisions).
+- AICore never connects to a database and never executes a diagnostic query — because the pilot must not acquire production credentials or query-execution authority.
+- The protocol is sidecar-only and incident-only; Dev workflow integration and centralized catalogs are out of scope — because the pilot establishes one narrow, auditable route before any generalization.
+- A verified symptom is never automatic root-cause confirmation — because symptom presence and cause are different claims.
+- Identification packs use a separate Evidence pointer and are not evaluated by the diagnostic evaluator — because a multi-statement correlation is not a single-query protocol-v1 verdict.
+- The shipped adapter-output fixture's source digest is asserted against its SQL fixture — because a drifted fixture silently proves nothing.
 
 ## Change log
 
-- 2026-10-10 — aicore-all-files-pr-20261008: repointed path, SQL-safety, sidecar-schema, and runbook test evidence to concern-specific modules; added direct valid-fixture/source-digest evidence.
-- 2026-09-27 — python-pytest-20260927: moved Python skill tests to pytest under Crucible; earlier unittest decisions remain historical.
-- 2026-09-16 — identification-pack-pointer-20260916: recorded that identification packs use `pack:`, not a protocol-v1 change.
-- 2026-09-15 — ticket-runbook-register-admission-20260914: added destination-selected verifier storage and current-case replay.
-- 2026-09-12 — register-first-incident-identification-20260912: mapped the optional verifier route to the investigate step.
-- before 2026-09-12 — earlier history: see git history for this file.
-
-## Resolved decisions
-
-- 2026-09-10 — the pilot accepts normalized output from a destination-owned trusted adapter; AICore does not connect to databases or execute diagnostic queries.
-- 2026-09-10 — the pilot is incident-only and sidecar-only; Dev workflow integration and centralized catalogs are out of scope.
-- 2026-09-12 — this story keeps its completed verifier contract; the optional verifier remains symptom evidence only on the investigate step.
-- 2026-09-15 — the destination chooses verifier storage; the problem row points to the sidecar when one exists; a later structural match replays it with current-case parameters.
-- 2026-09-16 — identification packs use a separate `pack:` Evidence pointer; protocol-v1 is unchanged.
-- 2026-09-27 — Python skill-test architecture is pytest via Crucible; the historical unittest decisions are not relabeled.
+- before 2026-09-15 — earlier history: see git history for this file
+- 2026-09-15 — ticket-runbook-register-admission-20260914 (PR #38): added destination-selected verifier storage and current-case replay.
+- 2026-09-16 — identification-pack-pointer-20260916 (PR #42): recorded that identification packs use `pack:`, not a protocol-v1 change.
+- 2026-09-27 — python-pytest-20260927 (PR #43): moved Python skill tests to pytest under Crucible 🔥 (Test Architect); earlier unittest decisions remain historical.
+- 2026-10-10 — aicore-all-files-pr-20261008 (PR #52): repointed path, SQL-safety, sidecar-schema, and runbook test evidence to concern-specific modules; added direct valid-fixture/source-digest evidence.
+- 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof`, retired `## Resolved decisions` in favour of `## Constraints`, and removed the advisory-dispositions audit history from the contract.

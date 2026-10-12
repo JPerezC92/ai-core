@@ -3,7 +3,7 @@
 > **Created:** 2026-09-27
 > **Title:** Python pytest test runner
 > **Status:** active
-> **version:** 1.1.0
+> **version:** 1.2.0
 > **Epic:** developer-tooling
 > **Affected areas:** `pyproject.toml`, `uv.lock`, `.opencode/agents/crucible.md`, `.opencode/agents/bastion.md`, `.opencode/agents/ledger.md`, `.opencode/skills/plan-enforce/`, `.opencode/skills/ticket-runbook/`, `.opencode/skills/query-verification/`, `.opencode/skills/*/scripts/test_*.py`, `AGENTS.md`, `opencode.jsonc`
 
@@ -13,49 +13,55 @@
 
 ## Goal
 
-- **G:** pytest is AICore's Python test runner, locked in the root UV `dev` group; the approved whole suite runs worker-parallel via `[tool.pytest.ini_options] addopts` with `pytest-xdist` in that group; Crucible 🔥 (Test Architect) runs the approved whole suite and audits its test architecture. Other projects approve their own suite commands.
-  - Done when: `uv run --frozen --group dev pytest -q` collects and passes `test_*.py` files under the project root, except the configured `norecursedirs`; there is no positive subdirectory allowlist or per-file permission edit; worker distribution is active; pytest and pytest-xdist remain outside runtime `[project]` dependencies; filesystem cases use pytest `tmp_path`; and Crucible 🔥 (Test Architect) reports suite execution separately from architecture `[PASS]`. AICore's skill test layout is behavior-focused:
-    - Core-sync (`.opencode/skills/core-sync/scripts/`): `test_core_sync_init_raw_mode.py`, `test_core_sync_init_raw_enrollment.py`, `test_core_sync_blocker_lifecycle.py`, `test_core_sync_blocker_formatting.py`.
-    - Plan-enforce (`.opencode/skills/plan-enforce/scripts/`): `test_validate_plan.py`, `test_validate_plan_cli.py`, `test_validate_plan_phase_structure.py`, `test_validate_plan_story_index.py`, `test_validate_plan_goal_trace.py`, `test_validate_plan_manifest.py`, `test_validate_plan_verification_parity.py`, `test_validate_plan_audit_gate.py`.
-    - Query-verification (`.opencode/skills/query-verification/scripts/`): `test_query_verification.py`, `test_query_verification_fixtures.py`, `test_query_verification_paths.py`, `test_query_verification_sql_safety.py`, `test_query_verification_sidecar_schema.py`, `test_query_verification_execution_surface.py`.
-    - Ticket-runbook (`.opencode/skills/ticket-runbook/scripts/`): `test_validate_runbook.py`, `test_validate_runbook_header_budgets.py`, `test_validate_runbook_concurrent_session.py`, `test_validate_runbook_step_mode.py`, `test_validate_runbook_register_first.py`, `test_validate_runbook_pre_close.py`, `test_validate_runbook_close_out.py`, `test_validate_runbook_paths.py`, `test_validate_runbook_cli.py`.
-    - Shared helper paths: `.opencode/skills/plan-enforce/scripts/_validate_plan_testkit.py`, `.opencode/skills/query-verification/scripts/_query_verification_testkit.py`, `.opencode/skills/ticket-runbook/scripts/_ticket_runbook_testkit.py`.
-  - Evidence: `pyproject.toml` `[tool.pytest.ini_options]`; `.opencode/agents/crucible.md` `### Test Execution` and `### Test Organization by Concern`; `.opencode/agents/bastion.md` `#### TYPE HINTS`; the named modules and helpers; `.opencode/skills/plan-enforce/SKILL.md` `#### Non-TypeScript test files`; `AGENTS.md` `### Environment constraints`.
+- **G:** AICore's Python tests run as one reviewed, project-wide suite, and Crucible 🔥 (Test Architect) reports running it separately from judging its architecture. Other projects approve their own runner.
+  - Done when: the approved whole-suite command collects and passes every Python test under the project root except the configured exclusions; a test added anywhere under the root joins without a configuration or permission edit; the suite runs in parallel under the unchanged reviewed command; the runner is not a dependency of the shipped package; filesystem cases use temporary directories; and Crucible 🔥 (Test Architect) returns execution results separately from an architecture verdict.
 
 ## Scenario
 
-- A programming phase edits or adds a Python test. The phase runbook declares the project's approved whole-suite command (AICore: `uv run --frozen --group dev pytest -q`) in the executor-command table. Bastion 🧱 (Backend & Scripts Architect) audits applicable Python implementation. Crucible 🔥 (Test Architect) runs the suite and returns its test-architecture verdict; a test added under the project root outside configured `norecursedirs` joins the suite without editing `pyproject.toml` or the grant, because discovery is project-wide rather than a positive list of directories.
+- A programming phase edits or adds a Python test. The phase runbook declares the project's approved whole-suite command in the executor-command table. Bastion 🧱 (Backend & Scripts Architect) audits applicable Python implementation. Crucible 🔥 (Test Architect) runs the suite and returns its test-architecture verdict; a test added under the project root outside the configured exclusions joins the suite without editing `pyproject.toml` or the grant, because discovery is project-wide rather than a positive list of directories.
 
 ## Acceptance criteria
 
-- ✅ pytest is locked only under `[dependency-groups].dev`; `[project].dependencies` stays PyYAML-only; `uv lock --check` exits 0. Evidence: `pyproject.toml` `[dependency-groups].dev` contains `pytest` and `pytest-xdist`, while `[project].dependencies` contains `PyYAML`; verification `uv lock --check` → exit 0; Warden 🔒 (Dependency Warden) downstream `[PASS]` (2026-09-27).
-- ✅ The approved whole-suite command `uv run --frozen --group dev pytest -q` collects the delivered configuration/layout owner and passes on the complete clean candidate, with separate test architecture. Evidence: Crucible 🔥 (Test Architect) architecture `[PASS]`; current verification `uv run --frozen --group dev pytest -q` → exit 0. Discovery and the grant are unchanged.
-- ✅ The whole suite runs worker-parallel under the unchanged reviewed command: `[tool.pytest.ini_options]` carries `addopts = ["-n", "auto"]` and `pytest-xdist` is locked only under `[dependency-groups] dev`. Evidence: `pyproject.toml` `[dependency-groups]` and `[tool.pytest.ini_options]`; verification `uv lock --check` → exit 0 and `uv run --frozen --group dev pytest -q` → exit 0; Warden 🔒 (Dependency Warden) downstream `[PASS]` (2026-10-05).
-- ✅ Existing baseline suites are pytest-native: no `unittest.TestCase` inheritance or `unittest.main()` entrypoint; `unittest.mock` remains allowed. Evidence: baseline test source at commit `f502d54`; current whole-suite verification `uv run --frozen --group dev pytest -q` → exit 0.
-- ✅ Crucible 🔥 (Test Architect) owns execution and test-architecture review for each project's approved whole suite, including tests outside skill directories. It reports actual execution results separately from architecture `[PASS]`/`[FAIL]`; cancelled or missing review output is never relabeled `[PASS]`. Evidence: `.opencode/agents/crucible.md` `### Test Execution` and `### Test Organization by Concern`; verification `uv run --frozen --group dev pytest -q` → exit 0 with separate Crucible 🔥 (Test Architect) architecture `[PASS]`.
-- ✅ plan-enforce and `AGENTS.md` require the pytest command for Python skill tests and no longer forbid a test framework. Evidence: `AGENTS.md` Conventions; `.opencode/skills/plan-enforce/SKILL.md` `#### Non-TypeScript test files`; verification `uv run --frozen --group dev pytest -q` → exit 0.
-- ✅ AICore's root `opencode.jsonc` permits Crucible 🔥 (Test Architect) to execute the reviewed whole-suite command and grants only narrow read-only discovery commands (`rg`, `ls`, `wc`, read-only Git); filesystem discovery remains on Glob/Grep, not a broad `find` grant. The shared Crucible 🔥 (Test Architect) spec carries no executable grant; each destination's harness config owns its permissions, and a raw binding explicitly selects byte-for-byte replacement. Evidence: `.opencode/agents/crucible.md` `### Bash Grant Scope`; `opencode.jsonc`; verification `opencode debug config > /dev/null` → exit 0 and `uv run --frozen --group dev pytest -q` → exit 0.
-- ✅ Whole-project discovery is project-wide, not a directory allowlist: `pyproject.toml` uses `testpaths = ["."]`, `python_files = ["test_*.py"]`, `python_classes = ["*Tests"]`, and the listed `norecursedirs`. The suite collects test modules beneath hidden `.opencode/skills/`. Evidence: `pyproject.toml` `[tool.pytest.ini_options]`, the `.opencode/skills/core-sync/scripts/test_core_sync_*.py` paths, and verification `uv run --frozen --group dev pytest -q` → exit 0; Crucible 🔥 (Test Architect) architecture `[PASS]`.
-- ✅ Destination runner / no-tests authority remains project-owned: AICore's approved whole-suite command is never imposed on another project, and each destination reviews and owns its own runner policy. Evidence: `.opencode/agents/warden.md` `### Project Runner Grant`; `.opencode/agents/crucible.md` `### Test Execution` and `### Bash Grant Scope`; verification `uv run --frozen --group dev pytest -q` → exit 0.
-- ✅ Focused native pytest owners deliver all unique surviving behavior with temporary IO. Evidence: the concern-specific `.opencode/skills/core-sync/scripts/test_core_sync_*.py` modules cover markers, source-core, region/raw/stale-pending check, region/raw apply, multi-destination, region/raw init, raw enrollment in `test_core_sync_init_raw_enrollment.py`, blocker formatting in `test_core_sync_blocker_formatting.py`, reconciliation blocker, blocker wiring, binding-mode validation/serialization/coexistence, root-binding validation/serialization, and pending normalization; the former `core-sync` monolith and the adoption monoliths stay deleted. Verification: `uv run --frozen --group dev pytest -q` → exit 0; Crucible 🔥 (Test Architect) architecture `[PASS]`.
-- ✅ Core-sync filesystem tests isolate source/destination reads and writes under `tmp_path`; they do not depend on production data or the host repository's Git state. Evidence: `.opencode/skills/core-sync/scripts/_core_sync_testkit.py` and the concern-specific `test_core_sync_*.py` modules; Bastion 🧱 (Backend & Scripts Architect) `[PASS]`, Crucible 🔥 (Test Architect) architecture `[PASS]`; verification `uv run --frozen --group dev pytest -q` → exit 0.
-- ✅ The delivered source separates AICore's UV environment from portable mandatory executor/review rules and preserves destination suite/installation authority. Evidence: `AGENTS.md` `### Environment constraints`, `## Project extensions`, and `## Mandatory core`; Sentinel 🛡️ (Quality Guardian) targeted review of those sections `[PASS]` (2026-10-09; cited sections only).
-- ✅ Inherited test and backend reference rulebooks ship in core; the actual approved runner, selected bindings, and executable grants remain project-owned. Evidence: `.opencode/agents/crucible.md` `### Rulebook` and `### Local Permissions`; `.opencode/agents/bastion.md` `### Rulebook`; verification: `uv run --frozen --group dev pytest -q` → exit 0.
-- ✅ Test organization is by behavioral concern and enforced: one behavior per test module **and** per class; a module or class verifying more than one distinct behavior must be split, with no line cap (behavior, not size, sets the boundary); every test-architecture verdict confirms this and names any offender. Shared builders remain in underscore-prefixed testkit modules outside pytest discovery, and filesystem cases use `tmp_path`. Evidence: `.opencode/agents/crucible.md` `### Test Organization by Concern`; concern-specific modules and helpers named in Goal `Done when`; Bastion 🧱 (Backend & Scripts Architect) `[PASS]` for the plan-scoped test sources. Verification: `uv run --frozen --group dev pytest -q` → exit 0; Crucible 🔥 (Test Architect) architecture `[PASS]`.
-- ✅ Every AICore Python command runs through the project virtual environment via `uv run --frozen`; no AICore-owned validator example invokes a bare/global interpreter. Evidence: `AGENTS.md` `### Environment constraints`; validator and query examples use `uv run --frozen python3 …`; current suite verification `uv run --frozen --group dev pytest -q` → exit 0.
+- ✅ **AC1:** The approved whole-suite command runs the complete Python suite and passes on a clean candidate.
+- ✅ **AC2:** Any test placed under the project root outside the configured exclusions joins the suite without editing configuration or permissions.
+- ✅ **AC3:** The suite runs in parallel under the unchanged reviewed command.
+- ✅ **AC4:** The test runner and its parallelism helper are not dependencies of the shipped package.
+- ✅ **AC5:** Crucible 🔥 (Test Architect) owns execution and test-architecture review for each project's approved whole suite, including tests outside skill directories, and reports them as separate verdicts; a cancelled or missing review is never reported as passing.
+- ✅ **AC6:** AICore's harness config grants Crucible 🔥 (Test Architect) exactly the reviewed whole-suite command plus narrow read-only discovery, and the shared spec carries no executable grant of its own.
+- ✅ **AC7:** The approved runner is project-owned: AICore's command is never imposed on another project, and each destination reviews and owns its own runner policy.
+- ✅ **AC8:** Each test module and each test class covers one behavioural concern; shared builders live in undiscovered helper modules and filesystem cases use temporary directories rather than production data or host Git state.
+- ✅ **AC9:** Every Python command runs through the project virtual environment; no AICore-owned example invokes a bare or global interpreter.
+- ✅ **AC10:** `plan-enforce` and `AGENTS.md` require the approved command for Python skill tests and do not forbid the chosen framework.
+
+## Proof
+
+- AC1 → `.opencode/skills/plan-enforce/SKILL.md` `#### Non-TypeScript test files` · `uv run --frozen --group dev pytest -q` → exit 0 · Crucible 🔥 (Test Architect) architecture `[PASS]`
+- AC2 → `pyproject.toml` `[tool.pytest.ini_options]` `testpaths`, `python_files`, `python_classes`, `norecursedirs` · `uv run --frozen --group dev pytest -q` → exit 0
+- AC3 → `pyproject.toml` `[tool.pytest.ini_options]` `addopts` · `uv.lock` `pytest-xdist` · Warden 🔒 (Dependency Warden) `[PASS]` 2026-10-05
+- AC4 → `pyproject.toml` `[dependency-groups].dev` vs `[project].dependencies` · `uv lock --check` → exit 0 · Warden 🔒 (Dependency Warden) `[PASS]` 2026-09-27
+- AC5 → `.opencode/agents/crucible.md` `### Test Execution`, `### Test Organization by Concern`
+- AC6 → `.opencode/agents/crucible.md` `### Bash Grant Scope`, `### Local Permissions` · `opencode.jsonc` · `opencode debug config > /dev/null` → exit 0
+- AC7 → `.opencode/agents/warden.md` `#### Bash Grant Registry` · `.opencode/agents/crucible.md` `### Test Execution`
+- AC8 → `.opencode/agents/crucible.md` `### Test Organization by Concern` · underscore-prefixed testkit modules · `tmp_path`
+- AC9 → `AGENTS.md` `### Environment constraints` · validator and query examples
+- AC10 → `AGENTS.md` Conventions · `.opencode/skills/plan-enforce/SKILL.md` `#### Non-TypeScript test files`
+
+## Constraints
+
+- pytest is the single Python test runner, locked in the root `dev` group — because one reviewed runner keeps the executor grant and the command literal from drifting apart.
+- Parallelism ships as pytest configuration rather than a separate command — because the reviewed command literal and its permission grant must not drift.
+- Runtime `[project].dependencies` stays PyYAML-only — because skill test tooling must never become a downstream runtime requirement.
+- Whole-suite discovery is project-wide, not a directory allowlist — because a positive list forces a configuration edit for every new test location.
+- Test organization is one behavioural concern per module and per class, with no line cap — because behaviour, not size, sets the boundary.
+- Baseline suites are pytest-native, with no `unittest.TestCase` inheritance or `unittest.main()` entrypoint — because mixing frameworks splits the executor grant and the runner policy.
+- Runner validation is structural, not heuristic — because text scanning cannot establish that a grant is narrow or that a command is the reviewed one.
+- Architecture review is separate from execution — because a passing suite never establishes architectural conformance.
 
 ## Change log
 
-- 2026-10-11 — regionize-agents-20261010: inherited test and backend reference rulebooks now ship in core; runner selection and executable grants stay project-owned.
-- 2026-10-09 — aicore-all-files-pr-20261008: applied the frozen-environment Python invocation contract across the full ticket-runbook and query-verification skill roots.
-- 2026-10-07 — core-sync-review: narrowed Crucible 🔥 (Test Architect)'s discovery permissions, aligned AICore Python invocation examples with `uv run --frozen`, and split mixed core-sync test concerns.
-- before 2026-10-07 — earlier history: see git history for this file
-
-## Resolved decisions
-
-- 2026-09-27 — pytest is the single Python test runner, locked in the root `dev` group; runtime dependencies stay PyYAML-only.
-- 2026-09-30 — whole-suite runner governance is project-owned; AICore's approved command is never imposed on another project.
-- 2026-10-01 — runner validation is structural, not heuristic: only the nominated executor's ordered rules are inspected (last-match-wins); broad wildcard grants, malformed JSONC, and unapproved commands fail closed.
-- 2026-10-05 — actual commands and outputs establish evidence; labels and text scanning do not. Architecture review is separate from execution.
-- 2026-10-05 — safety tests label engine/helper/operator scopes and establish actual controlled effects; unsupported concerns are rejected before adding test obligations.
-- 2026-10-05 — parallel execution ships as `[tool.pytest.ini_options] addopts` so the reviewed command literal and its permission grant never drift.
+- before 2026-09-27 — earlier history: see git history for this file
+- 2026-09-27 — python-pytest-20260927 (PR #43): adopted pytest as the Python runner with whole-project discovery and the reviewed whole-suite command.
+- 2026-10-07 — core-sync-review (PR #52): narrowed Crucible's discovery permissions, aligned AICore Python invocation examples with `uv run --frozen`, and split mixed core-sync test concerns.
+- 2026-10-09 — aicore-all-files-pr-20261008 (PR #52): applied the frozen-environment Python invocation contract across the full ticket-runbook and query-verification skill roots.
+- 2026-10-11 — regionize-agents-20261010 (PR #53): inherited test and backend reference rulebooks now ship in core; runner selection and executable grants stay project-owned.
+- 2026-10-12 — story revision (PR #59): split behavioural criteria from proof, removed the enumerated test-file inventory from `Done when:`, and promoted pre-decided runner policy into `## Constraints`.

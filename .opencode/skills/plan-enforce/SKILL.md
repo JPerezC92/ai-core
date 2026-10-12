@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.17.0
+  version: 1.18.0
 ---
 
 ## Project extensions
@@ -26,15 +26,16 @@ This project's Python test-file pattern is `test_*.py`. This project's root open
 
 This project's plan validator script is `uv run --frozen python3 .opencode/skills/plan-enforce/scripts/validate_plan.py`. Every Python invocation in this skill runs through the project's virtual environment.
 
-### Plan, story, and checklist templates
+### Plan and checklist templates
 
 This project's plan-enforce templates and references:
 
 - Programming plan template: `references/_template-programming.md`
 - Base plan template: `references/_template.md`
 - Phase template: `references/_phase-template.md`
-- User-story template: `references/_template-user-story.md`
-- Consistency checklist: `references/_consistency-checklist.md`
+- Plan/phase/audit/completion checklist: `references/_consistency-checklist.md`
+
+The canonical user-story template and story-hygiene checklist are owned by the `user-story` skill at `.opencode/skills/user-story/references/`.
 
 ## Mandatory core
 
@@ -196,12 +197,13 @@ Watch for goal drift on every phase close, every scope change, and every collate
 
 A plan reconciles only the acceptance criteria it **committed to deliver** — the selected criteria of the approved story that its goals trace to — the criteria it **materially changes**, and any regression it introduced. Other legitimate story commitments the plan did not select stay `⬜` and do not block completion:
 
-- `✅` — a committed or materially-changed criterion established by verified evidence (a completed goal's `Done when:`, a passing verify command, or a recorded outcome). No committed criterion may remain `⬜` at completion.
+- `✅` — a committed or materially-changed criterion established by verified evidence, resolved through the story's `## Proof` section (a completed goal's `Done when:`, a passing verify command, or a recorded outcome). No committed criterion may remain `⬜` at completion.
 - `❌` — a committed criterion explicitly known to be unmet. A `❌`, an unmet committed criterion, or a regression the plan introduced blocks `## Outcome` and archival until satisfied or removed.
 - A committed or materially-changed criterion removed as out-of-scope is deleted from the story (not left unchecked) and recorded as a dated change-log line, optionally pointing at a follow-up story.
 - A criterion the plan did not select is not reconciled: leaving it `⬜` is not a defect, and no blanket "every touched-story criterion" disposition applies.
+- **`## Constraints` are respected, never delivered.** A story's `## Constraints` entries are pre-decided restrictions, not obligations to build: confirm none was violated, and never tick, deliver, or reconcile one as a criterion.
 
-Reconciliation is fail-closed on adverse evidence: `## Outcome` and the archive move stay blocked while a committed criterion lacks evidence, a regression the plan introduced is unresolved, or the final-snapshot evidence is missing or adverse. Release events (PR opened/reviewed/merged) are release history, not feature acceptance criteria; a feature criterion may state the release policy (e.g. "merge remains user-only") but never a specific PR/review/merge event.
+Reconciliation is fail-closed on adverse evidence: `## Outcome` and the archive move stay blocked while a committed criterion lacks evidence, a `## Constraints` entry the plan violated is unresolved, a regression the plan introduced is unresolved, or the final-snapshot evidence is missing or adverse. Release events (PR opened/reviewed/merged) are release history, not feature acceptance criteria; a feature criterion may state the release policy (e.g. "merge remains user-only") but never a specific PR/review/merge event.
 
 #### Resume (completion)
 
@@ -246,7 +248,7 @@ Crucible 🔥 (Test Architect) executes each declared approved test command; For
 
 ### User stories
 
-Stories are the durable per-feature definitions (`user-stories/<feature-slug>.md`); plans are temporal. Pre-plan behavior discussion, story ownership, creation, revision, and collision analysis belong to the `user-story` skill, and the `## user-stories` section of `.opencode/skills/plan-enforce/references/_consistency-checklist.md` is the canonical story format/hygiene contract. Planning only consumes an approved (`active`) story and the selected criteria it hands over — never a `draft`, and never a story choice renegotiated here. If no approved story owns a feature the plan will write, stop and route that feature to `user-story` before creating plan files. Cite each touched story under `plan.md` → `## Critical files / tools`; trace each goal to a selected acceptance criterion, or to `## Context` / `## Goals` when stories are skipped. Stories are never archived or deleted with plans.
+Stories are the durable per-feature definitions (`user-stories/<feature-slug>.md`); plans are temporal. Pre-plan behavior discussion, story ownership, creation, revision, and collision analysis belong to the `user-story` skill, and `.opencode/skills/user-story/references/_consistency-checklist.md` is the canonical story format/hygiene contract. Planning only consumes an approved (`active`) story and the selected criteria it hands over — never a `draft`, and never a story choice renegotiated here. If no approved story owns a feature the plan will write, stop and route that feature to `user-story` before creating plan files. Cite each touched story under `plan.md` → `## Critical files / tools`; trace each goal to a selected acceptance criterion, or to `## Context` / `## Goals` when stories are skipped. Stories are never archived or deleted with plans.
 
 ### User-story scope
 
@@ -257,6 +259,7 @@ Programming plans ALWAYS carry a story for each feature touched by writes under 
 Planning starts from the **approved story** and the selected criteria it hands over — never from an invented feature intent. `user-story` owns the feature contract (see **User stories**); planning consumes it:
 
 - Read the approved (`active`) story body and the criteria selected for delivery. These are the source of feature intent: the task phrasing never overrides the story.
+- Read the story's `## Proof` and `## Constraints` with it. `## Proof` is where delivery evidence resolves; `## Constraints` are pre-decided restrictions to respect, never deliver or tick.
 - Trace every goal to a selected acceptance criterion of the approved story, or to `## Context` / `## Goals` when stories are skipped (see **User stories**).
 - A `draft` story is in-progress discussion, not a planning contract — do not plan from it.
 - If no approved story owns a feature the plan will write, stop and route that feature to `user-story` before creating plan files.
@@ -358,7 +361,7 @@ Documentation ships with the change, in the same plan: every behavior change car
 - **Manifest** lists each affected documentation path as an `Add` / `Modify` / `Delete` row, exactly like code paths; the union of phase `**Writes:**` must equal it, and each row appears in at least one phase's writes.
 - **Completion** reviews each documented path against the delivered behavior, reading the actual documentation content — never the plan's description of it. A shipped behavior change whose documentation is missing or contradicts the delivered behavior blocks `## Outcome` and archival (see **Acceptance-criterion reconciliation**).
 
-Published documents, durable criteria, and Goal `Done when:` must not cite temporal `plans/` or `output/` paths; cite a commit SHA, PR number, or ticket ID instead (see the `## user-stories` section of `.opencode/skills/plan-enforce/references/_consistency-checklist.md`).
+Published documents, durable criteria, Goal `Done when:`, and every `## Change log` entry must not cite temporal `plans/` or `output/` paths; cite a commit SHA, PR number, or ticket ID instead (see `.opencode/skills/user-story/references/_consistency-checklist.md`). Plans are untracked and machine-local: a plan folder is never a traceability anchor.
 
 ### Examples
 
