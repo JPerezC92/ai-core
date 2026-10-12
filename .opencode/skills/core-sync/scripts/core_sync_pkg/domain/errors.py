@@ -1,4 +1,4 @@
-"""Typed core-sync domain errors: stable codes returned as values, plus the marker error."""
+"""Typed core-sync domain errors: stable codes returned as values, plus the raised marker and JSONC errors."""
 
 from __future__ import annotations
 
@@ -19,5 +19,11 @@ class DomainError:
 
 class MalformedSourceMarkers(ValueError):
     """A region-mode source has core or project marker lines without one valid core pair."""
+
+    code: str = CODE_INVALID
+
+
+class MalformedJsonc(ValueError):
+    """A JSON/JSONC document is malformed or its top level is not an object."""
 
     code: str = CODE_INVALID

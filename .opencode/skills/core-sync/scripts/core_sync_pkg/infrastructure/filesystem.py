@@ -9,6 +9,7 @@ from pathlib import Path
 from core_sync_pkg.domain.bindings import Bindings
 from core_sync_pkg.domain.constants import (
     DEFAULT_ROOT_CANDIDATES,
+    MODE_MERGE,
     MODE_RAW,
     CommandName,
 )
@@ -50,6 +51,15 @@ def write_bytes(path: Path, content: bytes) -> None:
 def read_source_raw(path: Path) -> bytes | None:
     """Read a source file's bytes verbatim at the IO boundary (raw mode)."""
     return read_bytes(path)
+
+
+def read_source_text(path: Path) -> str | None:
+    """Read a source file's whole text at the IO boundary (merge mode).
+
+    UTF-8 with no newline translation, matching the destination writer so a
+    merged document is compared and written byte-for-byte in the same encoding.
+    """
+    return read_text(path)
 
 
 def read_source_core(path: Path) -> str | None:
@@ -151,10 +161,10 @@ def preflight_write_targets(
 
     root_path = resolve_root_path(destination_dir, bindings)
     mode_by_source = mode_of or {}
-    raw_destination_paths = [
+    non_region_destination_paths = [
         destination_dir / destination
         for entry in bindings["bindings"]
-        if mode_by_source.get(entry["source"]) == MODE_RAW
+        if mode_by_source.get(entry["source"]) in (MODE_RAW, MODE_MERGE)
         for destination in entry["destinations"]
     ]
     targets: list[tuple[Path, str]] = [(root_path, "root")]
@@ -185,13 +195,13 @@ def preflight_write_targets(
             if (
                 previous_kind == "root"
                 and target_kind == "destination payload"
-                and target in raw_destination_paths
+                and target in non_region_destination_paths
             ):
-                return f"root write target aliases raw destination: {target}"
+                return f"root write target aliases non-region destination: {target}"
             same_root_region_target = (
                 lexical_target == previous_lexical
                 and {target_kind, previous_kind} == {"root", "destination payload"}
-                and target not in raw_destination_paths
+                and target not in non_region_destination_paths
             )
             if not same_root_region_target:
                 return (
@@ -245,27 +255,27 @@ def preflight_write_targets(
         if target_kind == "root":
             resolved_root = resolved_target
 
-    for raw_destination_path in raw_destination_paths:
+    for non_region_destination_path in non_region_destination_paths:
         try:
-            resolved_raw_destination = raw_destination_path.resolve()
+            resolved_non_region_destination = non_region_destination_path.resolve()
         except (OSError, RuntimeError) as error:
             return (
-                "could not resolve raw destination write target "
-                f"{raw_destination_path}: {error}"
+                "could not resolve non-region destination write target "
+                f"{non_region_destination_path}: {error}"
             )
-        if resolved_root == resolved_raw_destination:
+        if resolved_root == resolved_non_region_destination:
             return (
-                "root write target aliases raw destination: "
-                f"{raw_destination_path}"
+                "root write target aliases non-region destination: "
+                f"{non_region_destination_path}"
             )
         try:
             root_stat = root_path.stat()
-            raw_stat = raw_destination_path.stat()
+            raw_stat = non_region_destination_path.stat()
         except FileNotFoundError:
             continue
         except OSError as error:
             return (
-                "could not inspect root/raw destination alias targets: "
+                "could not inspect root/non-region destination alias targets: "
                 f"{error}"
             )
         if (
@@ -275,8 +285,8 @@ def preflight_write_targets(
             == (raw_stat.st_dev, raw_stat.st_ino)
         ):
             return (
-                "root write target aliases raw destination: "
-                f"{raw_destination_path}"
+                "root write target aliases non-region destination: "
+                f"{non_region_destination_path}"
             )
 
     if command == "init" and bindings.get("root") is None:
@@ -369,13 +379,16 @@ class LocalFilesystemPaths:
 
 
 class LocalSourceCoreReader:
-    """Read source cores and raw source bytes from the local filesystem."""
+    """Read source cores, raw bytes, and whole text from the local filesystem."""
 
     def read_core(self, path: Path) -> str | None:
         return read_source_core(path)
 
     def read_raw(self, path: Path) -> bytes | None:
         return read_source_raw(path)
+
+    def read_text(self, path: Path) -> str | None:
+        return read_source_text(path)
 
 
 class LocalDestinationWriter:
@@ -410,6 +423,7 @@ __all__ = [
     "read_bytes",
     "write_bytes",
     "read_source_raw",
+    "read_source_text",
     "read_source_core",
     "resolve_root_path",
     "preflight_write_targets",

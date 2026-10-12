@@ -32,11 +32,13 @@ class BindingsStore(Protocol):
 
 
 class SourceCoreReader(Protocol):
-    """Read a source file's core region or raw bytes."""
+    """Read a source file's core region, raw bytes, or whole text."""
 
     def read_core(self, path: Path) -> str | None: ...
 
     def read_raw(self, path: Path) -> bytes | None: ...
+
+    def read_text(self, path: Path) -> str | None: ...
 
 
 class DestinationWriter(Protocol):

@@ -27,6 +27,7 @@ from core_sync_pkg.domain.errors import (  # noqa: E402
     DomainError,
     MalformedSourceMarkers,
 )
+from core_sync_pkg.domain.jsonc import parse_object  # noqa: E402
 from core_sync_pkg.domain.ports import UseCaseResult  # noqa: E402
 from core_sync_pkg.domain.reconciliation import ReconciliationEntry  # noqa: E402
 
@@ -38,6 +39,13 @@ BINDINGS_PATH = Path("/src/bindings.yaml")
 OLD_DEST = "HEAD\n<!-- core:begin -->\nOLD\n<!-- core:end -->\nTAIL\n"
 NEW_DEST = "HEAD\n<!-- core:begin -->\nCORE\n<!-- core:end -->\nTAIL\n"
 RAW_SOURCE = b'{\n  "theme": "dark"\n}\n'
+MERGE_SOURCE_TEXT = '{"theme": "dark", "shared": "source"}'
+MERGE_DEST_TEXT = (
+    '{\n  // keep\n  "shared": "destination",\n  "extra": 1\n}\n'
+)
+MERGE_DEST_ALREADY = (
+    '{\n  "shared": "source",\n  "extra": 1,\n  "theme": "dark"\n}\n'
+)
 
 
 class FakeBindingsStore:
@@ -68,9 +76,11 @@ class FakeSourceCoreReader:
         self,
         cores: dict[Path, str | Exception] | None = None,
         raws: dict[Path, bytes] | None = None,
+        texts: dict[Path, str] | None = None,
     ) -> None:
         self.cores = cores or {}
         self.raws = raws or {}
+        self.texts = texts or {}
 
     def read_core(self, path: Path) -> str | None:
         value = self.cores.get(path)
@@ -80,6 +90,9 @@ class FakeSourceCoreReader:
 
     def read_raw(self, path: Path) -> bytes | None:
         return self.raws.get(path)
+
+    def read_text(self, path: Path) -> str | None:
+        return self.texts.get(path)
 
 
 class FakeDestinationWriter:
@@ -229,6 +242,7 @@ def _apply(
     *,
     cores: dict[Path, str | Exception] | None = None,
     raws: dict[Path, bytes] | None = None,
+    texts: dict[Path, str] | None = None,
     text: dict[Path, str] | None = None,
     binary: dict[Path, bytes] | None = None,
     cleared: set[str] | None = None,
@@ -242,7 +256,7 @@ def _apply(
     writer = FakeDestinationWriter(text=text, binary=binary)
     use_case = ApplyCoreRevision(
         store,
-        FakeSourceCoreReader(cores=cores, raws=raws),
+        FakeSourceCoreReader(cores=cores, raws=raws, texts=texts),
         writer,
         FakeClearanceStore(cleared=cleared, exists=clearance_exists, modes=modes),
         FakeRootRuntimeFile(),
@@ -356,3 +370,99 @@ class ApplyCoreRevisionTests:
         assert isinstance(result, DomainError)
         assert result.code == CODE_INVALID
         assert "invalid bindings" in result.message
+
+    def test_merge_writes_source_keys_into_destination(self) -> None:
+        fixture = _apply(
+            _bindings(
+                REV_A, [_entry("opencode.jsonc", ["opencode.jsonc"], "merge")]
+            ),
+            texts={SOURCE_DIR / "opencode.jsonc": MERGE_SOURCE_TEXT},
+            text={DEST_DIR / "opencode.jsonc": MERGE_DEST_TEXT},
+            cleared={"opencode.jsonc"},
+            modes={"opencode.jsonc": "merge"},
+            files={DEST_DIR / "opencode.jsonc"},
+        )
+        result = fixture.use_case.execute(
+            SOURCE_DIR, DEST_DIR, BINDINGS_PATH, REV_B
+        )
+        assert isinstance(result, UseCaseResult)
+        assert result.message == "applied"
+        assert len(fixture.writer.text_writes) == 1
+        written_path, written = fixture.writer.text_writes[0]
+        assert written_path == DEST_DIR / "opencode.jsonc"
+        assert "// keep" in written
+        assert parse_object(written) == {
+            "shared": "source",
+            "extra": 1,
+            "theme": "dark",
+        }
+        assert fixture.writer.byte_writes == []
+        assert fixture.store.saves[-1][1]["core_revision"] == REV_B
+
+    def test_merge_writes_nothing_when_already_merged(self) -> None:
+        fixture = _apply(
+            _bindings(
+                REV_A, [_entry("opencode.jsonc", ["opencode.jsonc"], "merge")]
+            ),
+            texts={SOURCE_DIR / "opencode.jsonc": MERGE_SOURCE_TEXT},
+            text={DEST_DIR / "opencode.jsonc": MERGE_DEST_ALREADY},
+            cleared={"opencode.jsonc"},
+            modes={"opencode.jsonc": "merge"},
+            files={DEST_DIR / "opencode.jsonc"},
+        )
+        result = fixture.use_case.execute(
+            SOURCE_DIR, DEST_DIR, BINDINGS_PATH, REV_B
+        )
+        assert isinstance(result, UseCaseResult)
+        assert fixture.writer.text_writes == []
+
+    def test_merge_reports_missing_destination(self) -> None:
+        fixture = _apply(
+            _bindings(
+                REV_A, [_entry("opencode.jsonc", ["opencode.jsonc"], "merge")]
+            ),
+            texts={SOURCE_DIR / "opencode.jsonc": MERGE_SOURCE_TEXT},
+            cleared={"opencode.jsonc"},
+            modes={"opencode.jsonc": "merge"},
+        )
+        result = fixture.use_case.execute(
+            SOURCE_DIR, DEST_DIR, BINDINGS_PATH, REV_B
+        )
+        assert isinstance(result, DomainError)
+        assert result.code == CODE_DRIFT
+        assert "missing destination" in result.message
+
+    def test_merge_reports_missing_source(self) -> None:
+        fixture = _apply(
+            _bindings(
+                REV_A, [_entry("opencode.jsonc", ["opencode.jsonc"], "merge")]
+            ),
+            text={DEST_DIR / "opencode.jsonc": MERGE_DEST_TEXT},
+            cleared={"opencode.jsonc"},
+            modes={"opencode.jsonc": "merge"},
+            files={DEST_DIR / "opencode.jsonc"},
+        )
+        result = fixture.use_case.execute(
+            SOURCE_DIR, DEST_DIR, BINDINGS_PATH, REV_B
+        )
+        assert isinstance(result, DomainError)
+        assert result.code == CODE_DRIFT
+        assert "missing source" in result.message
+
+    def test_merge_reports_invalid_when_destination_malformed(self) -> None:
+        fixture = _apply(
+            _bindings(
+                REV_A, [_entry("opencode.jsonc", ["opencode.jsonc"], "merge")]
+            ),
+            texts={SOURCE_DIR / "opencode.jsonc": MERGE_SOURCE_TEXT},
+            text={DEST_DIR / "opencode.jsonc": '{"theme": }'},
+            cleared={"opencode.jsonc"},
+            modes={"opencode.jsonc": "merge"},
+            files={DEST_DIR / "opencode.jsonc"},
+        )
+        result = fixture.use_case.execute(
+            SOURCE_DIR, DEST_DIR, BINDINGS_PATH, REV_B
+        )
+        assert isinstance(result, DomainError)
+        assert result.code == CODE_INVALID
+        assert "invalid JSONC" in result.message

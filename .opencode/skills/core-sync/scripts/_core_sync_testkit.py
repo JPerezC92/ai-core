@@ -17,6 +17,7 @@ from core_sync_pkg.domain.bindings import BindingEntry, Bindings  # noqa: E402
 from core_sync_pkg.domain.constants import (  # noqa: E402
     CLEARANCE_REL,
     CLEARANCE_SCHEMA,
+    MODE_MERGE,
     MODE_RAW,
     MODE_REGION,
     SCHEMA_VERSION,
@@ -73,6 +74,25 @@ DEST_PLAIN = (
 )
 
 RAW_SOURCE_BYTES = b'{\n  "theme": "dark",\n  "model": "sample"\n}\n'
+
+MERGE_SOURCE = '{\n  "theme": "dark",\n  "shared": "source"\n}\n'
+
+MERGE_DESTINATION = (
+    "{\n"
+    "  // destination-only comment\n"
+    '  "shared": "destination",\n'
+    '  "custom": 42\n'
+    "}\n"
+)
+
+MERGE_DESTINATION_MERGED = (
+    "{\n"
+    "  // user comment\n"
+    '  "shared": "source",\n'
+    '  "custom": 42,\n'
+    '  "theme": "dark"\n'
+    "}\n"
+)
 
 ROOT_TEXT = "# Root runtime\n\nIntro paragraph.\n\nLast line.\n"
 
@@ -328,6 +348,40 @@ def _raw_setup(
         _bindings_with_entries(
             pinned,
             [_binding_entry("opencode.jsonc", ["opencode.jsonc"], "raw")],
+            pending,
+        ),
+    )
+    return source, destination, bindings_path
+
+
+def _merge_setup(
+    tmp_path: Path,
+    *,
+    source_content: str = MERGE_SOURCE,
+    destination_content: str | None = MERGE_DESTINATION,
+    pinned: str = REV_A,
+    pending: list[str] | None = None,
+) -> tuple[Path, Path, Path]:
+    """Build a merge-mode source/destination JSONC fixture plus a merge bindings file.
+
+    The source is cleared with mode `merge`; both documents are written verbatim
+    so merge behavior is exercised without production parsing in the fixture.
+    """
+    source = tmp_path / "source"
+    destination = tmp_path / "destination"
+    _write_bytes_file(
+        source, "opencode.jsonc", source_content.encode("utf-8"), mode=MODE_MERGE
+    )
+    if destination_content is None:
+        destination.mkdir(parents=True, exist_ok=True)
+    else:
+        _write_file(destination, "opencode.jsonc", destination_content)
+    bindings_path = tmp_path / "bindings.yaml"
+    save_bindings(
+        bindings_path,
+        _bindings_with_entries(
+            pinned,
+            [_binding_entry("opencode.jsonc", ["opencode.jsonc"], "merge")],
             pending,
         ),
     )

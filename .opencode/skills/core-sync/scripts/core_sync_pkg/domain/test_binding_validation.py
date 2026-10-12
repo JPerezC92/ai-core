@@ -16,7 +16,22 @@ from core_sync_pkg.domain.bindings import parse_bindings  # noqa: E402
 
 
 class BindingModeValidationTests:
-    """Reject invalid binding modes during parsing."""
+    """Validate binding mode values during parsing."""
+
+    def test_merge_mode_accepted_by_parser(self) -> None:
+        text = (
+            "schema: 1\n"
+            "core_revision: " + REV_A + "\n"
+            "bindings:\n"
+            "  - source: opencode.jsonc\n"
+            "    destinations:\n"
+            "      - opencode.jsonc\n"
+            "    mode: merge\n"
+            "pending: []\n"
+        )
+        parsed = parse_bindings(text)
+        assert parsed is not None
+        assert parsed["bindings"][0]["mode"] == "merge"
 
     def test_unknown_mode_rejected_by_parser(self) -> None:
         text = (

@@ -40,6 +40,19 @@ class ClearanceMetadataTests:
         assert result["AGENTS.md"] == ClearanceRecord(mode="region", role="root")
         assert result["opencode.jsonc"] == ClearanceRecord(mode="raw", role=None)
 
+    def test_merge_record_parses(self) -> None:
+        result = parse_clearance(_doc({"opencode.jsonc": {"mode": "merge"}}))
+        assert isinstance(result, dict)
+        assert result["opencode.jsonc"] == ClearanceRecord(mode="merge", role=None)
+
+    def test_merge_root_role_is_invalid(self) -> None:
+        result = parse_clearance(_doc({"a.md": {"mode": "merge", "role": "root"}}))
+        assert isinstance(result, DomainError) and result.code == CODE_INVALID
+
+    def test_unknown_mode_is_invalid(self) -> None:
+        result = parse_clearance(_doc({"a.md": {"mode": "bogus"}}))
+        assert isinstance(result, DomainError) and result.code == CODE_INVALID
+
     def test_missing_mode_is_invalid(self) -> None:
         result = parse_clearance(_doc({"a.md": {"role": "root"}}))
         assert isinstance(result, DomainError) and result.code == CODE_INVALID

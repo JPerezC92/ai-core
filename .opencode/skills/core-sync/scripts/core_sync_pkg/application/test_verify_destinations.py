@@ -37,6 +37,11 @@ CORE_SOURCE = "agent.md"
 CORE_DEST = "agent.md"
 CORE_TEXT = "<!-- core:begin -->\nCORE\n<!-- core:end -->\n"
 DRIFT_TEXT = "<!-- core:begin -->\nOLD\n<!-- core:end -->\n"
+MERGE_SOURCE_TEXT = '{"theme": "dark", "shared": "source"}'
+MERGE_DEST_MERGED = (
+    '{\n  // c\n  "shared": "source",\n  "theme": "dark",\n  "extra": 1\n}\n'
+)
+MERGE_DEST_DRIFT = '{\n  "shared": "source",\n  "extra": 1\n}\n'
 
 
 class FakeBindingsStore:
@@ -67,9 +72,11 @@ class FakeSourceCoreReader:
         self,
         cores: dict[Path, str | Exception] | None = None,
         raws: dict[Path, bytes] | None = None,
+        texts: dict[Path, str] | None = None,
     ) -> None:
         self.cores = cores or {}
         self.raws = raws or {}
+        self.texts = texts or {}
 
     def read_core(self, path: Path) -> str | None:
         value = self.cores.get(path)
@@ -79,6 +86,9 @@ class FakeSourceCoreReader:
 
     def read_raw(self, path: Path) -> bytes | None:
         return self.raws.get(path)
+
+    def read_text(self, path: Path) -> str | None:
+        return self.texts.get(path)
 
 
 class FakeDestinationWriter:
@@ -219,6 +229,7 @@ def _run(
     *,
     cores: dict[Path, str | Exception] | None = None,
     raws: dict[Path, bytes] | None = None,
+    texts: dict[Path, str] | None = None,
     text: dict[Path, str] | None = None,
     binary: dict[Path, bytes] | None = None,
     cleared: set[str] | None = None,
@@ -231,7 +242,7 @@ def _run(
     """Execute VerifyDestinations with in-memory doubles."""
     use_case = VerifyDestinations(
         FakeBindingsStore(bindings),
-        FakeSourceCoreReader(cores=cores, raws=raws),
+        FakeSourceCoreReader(cores=cores, raws=raws, texts=texts),
         FakeDestinationWriter(text=text, binary=binary),
         FakeClearanceStore(cleared=cleared, exists=clearance_exists, modes=modes),
         FakeRootRuntimeFile(),
@@ -345,3 +356,60 @@ class VerifyDestinationsTests:
         assert isinstance(result, DomainError)
         assert result.code == CODE_INVALID
         assert "invalid write target" in result.message
+
+    def test_merge_current_when_source_keys_present(self) -> None:
+        result = _run(
+            _bindings(
+                REV_A, [_entry("opencode.jsonc", ["opencode.jsonc"], "merge")]
+            ),
+            texts={SOURCE_DIR / "opencode.jsonc": MERGE_SOURCE_TEXT},
+            text={DEST_DIR / "opencode.jsonc": MERGE_DEST_MERGED},
+            cleared={"opencode.jsonc"},
+            modes={"opencode.jsonc": "merge"},
+            files={DEST_DIR / "opencode.jsonc"},
+        )
+        assert isinstance(result, UseCaseResult)
+        assert result.message == "current"
+
+    def test_merge_reports_drift_when_source_key_missing(self) -> None:
+        result = _run(
+            _bindings(
+                REV_A, [_entry("opencode.jsonc", ["opencode.jsonc"], "merge")]
+            ),
+            texts={SOURCE_DIR / "opencode.jsonc": MERGE_SOURCE_TEXT},
+            text={DEST_DIR / "opencode.jsonc": MERGE_DEST_DRIFT},
+            cleared={"opencode.jsonc"},
+            modes={"opencode.jsonc": "merge"},
+            files={DEST_DIR / "opencode.jsonc"},
+        )
+        assert isinstance(result, DomainError)
+        assert result.code == CODE_DRIFT
+        assert "merge drift" in result.message
+
+    def test_merge_reports_missing_destination(self) -> None:
+        result = _run(
+            _bindings(
+                REV_A, [_entry("opencode.jsonc", ["opencode.jsonc"], "merge")]
+            ),
+            texts={SOURCE_DIR / "opencode.jsonc": MERGE_SOURCE_TEXT},
+            cleared={"opencode.jsonc"},
+            modes={"opencode.jsonc": "merge"},
+        )
+        assert isinstance(result, DomainError)
+        assert result.code == CODE_DRIFT
+        assert "missing destination" in result.message
+
+    def test_merge_reports_invalid_when_destination_malformed(self) -> None:
+        result = _run(
+            _bindings(
+                REV_A, [_entry("opencode.jsonc", ["opencode.jsonc"], "merge")]
+            ),
+            texts={SOURCE_DIR / "opencode.jsonc": MERGE_SOURCE_TEXT},
+            text={DEST_DIR / "opencode.jsonc": '{"theme": }'},
+            cleared={"opencode.jsonc"},
+            modes={"opencode.jsonc": "merge"},
+            files={DEST_DIR / "opencode.jsonc"},
+        )
+        assert isinstance(result, DomainError)
+        assert result.code == CODE_INVALID
+        assert "invalid JSONC" in result.message

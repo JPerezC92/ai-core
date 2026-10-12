@@ -14,17 +14,20 @@ from core_sync_pkg.domain.ports import (
     UseCaseResult,
 )
 from core_sync_pkg.domain.bindings import (
+    _non_region_destination_paths,
     _normalize_pending,
-    _raw_destination_paths,
     uncleared_sources,
 )
-from core_sync_pkg.domain.constants import CLEARANCE_REL, MODE_RAW
+from core_sync_pkg.domain.constants import CLEARANCE_REL, MODE_MERGE, MODE_RAW
 from core_sync_pkg.domain.errors import (
     CODE_DRIFT,
     CODE_INVALID,
     DomainError,
+    MalformedJsonc,
     MalformedSourceMarkers,
 )
+from core_sync_pkg.domain.jsonc import parse_object
+from core_sync_pkg.domain.merge import merge_top_level
 from core_sync_pkg.domain.regions import (
     outside_bytes,
     render_with_region,
@@ -128,6 +131,42 @@ class ApplyCoreRevision:
                         )
                     raw_writes.append((destination_path, source_bytes))
                 continue
+            if mode_of.get(entry["source"]) == MODE_MERGE:
+                source_text = self._source_reader.read_text(source_path)
+                if source_text is None:
+                    return DomainError(
+                        CODE_DRIFT, f"missing source: {source_path}"
+                    )
+                try:
+                    parse_object(source_text)
+                except MalformedJsonc:
+                    return DomainError(
+                        CODE_INVALID, f"invalid JSONC: {source_path}"
+                    )
+                for destination in entry["destinations"]:
+                    destination_path = destination_dir / destination
+                    if not self._paths.is_file(destination_path):
+                        return DomainError(
+                            CODE_DRIFT,
+                            f"missing destination: {destination_path}",
+                        )
+                    destination_text = self._destination_writer.read_text(
+                        destination_path
+                    )
+                    if destination_text is None:
+                        return DomainError(
+                            CODE_DRIFT,
+                            f"missing destination: {destination_path}",
+                        )
+                    try:
+                        merged_text = merge_top_level(source_text, destination_text)
+                    except MalformedJsonc:
+                        return DomainError(
+                            CODE_INVALID, f"invalid JSONC: {destination_path}"
+                        )
+                    if merged_text != destination_text:
+                        writes.append((destination_path, merged_text))
+                continue
             try:
                 source_core = self._source_reader.read_core(source_path)
             except MalformedSourceMarkers:
@@ -173,7 +212,7 @@ class ApplyCoreRevision:
 
         bindings["core_revision"] = source_revision
         bindings["pending"] = _normalize_pending(
-            bindings["pending"], _raw_destination_paths(bindings, mode_of)
+            bindings["pending"], _non_region_destination_paths(bindings, mode_of)
         )
         self._bindings_store.save(bindings_path, bindings)
         self._root_runtime.write_blocker(

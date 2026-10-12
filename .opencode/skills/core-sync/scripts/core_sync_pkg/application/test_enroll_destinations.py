@@ -26,6 +26,7 @@ from core_sync_pkg.domain.errors import (  # noqa: E402
     CODE_INVALID,
     DomainError,
 )
+from core_sync_pkg.domain.jsonc import parse_object  # noqa: E402
 from core_sync_pkg.domain.ports import UseCaseResult  # noqa: E402
 from core_sync_pkg.domain.reconciliation import ReconciliationEntry  # noqa: E402
 
@@ -34,6 +35,10 @@ REV_B = "b" * 40
 SOURCE_DIR = Path("/src")
 DEST_DIR = Path("/dst")
 BINDINGS_PATH = Path("/src/bindings.yaml")
+MERGE_SOURCE_TEXT = '{"theme": "dark", "shared": "source"}'
+MERGE_DEST_TEXT = (
+    '{\n  // keep\n  "shared": "destination",\n  "extra": 1\n}\n'
+)
 PLAIN_DEST = "---\nname: dest\n---\n\nOld body\n"
 INIT_DEST = (
     "---\nname: dest\n---\n"
@@ -78,9 +83,11 @@ class FakeSourceCoreReader:
         self,
         cores: dict[Path, str | Exception] | None = None,
         raws: dict[Path, bytes] | None = None,
+        texts: dict[Path, str] | None = None,
     ) -> None:
         self.cores = cores or {}
         self.raws = raws or {}
+        self.texts = texts or {}
 
     def read_core(self, path: Path) -> str | None:
         value = self.cores.get(path)
@@ -90,6 +97,9 @@ class FakeSourceCoreReader:
 
     def read_raw(self, path: Path) -> bytes | None:
         return self.raws.get(path)
+
+    def read_text(self, path: Path) -> str | None:
+        return self.texts.get(path)
 
 
 class FakeDestinationWriter:
@@ -239,6 +249,7 @@ def _enroll(
     *,
     cores: dict[Path, str | Exception] | None = None,
     raws: dict[Path, bytes] | None = None,
+    texts: dict[Path, str] | None = None,
     text: dict[Path, str] | None = None,
     binary: dict[Path, bytes] | None = None,
     cleared: set[str] | None = None,
@@ -252,7 +263,7 @@ def _enroll(
     writer = FakeDestinationWriter(text=text, binary=binary)
     use_case = EnrollDestinations(
         store,
-        FakeSourceCoreReader(cores=cores, raws=raws),
+        FakeSourceCoreReader(cores=cores, raws=raws, texts=texts),
         writer,
         FakeClearanceStore(cleared=cleared, exists=clearance_exists, modes=modes),
         FakeRootRuntimeFile(),
@@ -391,3 +402,68 @@ class EnrollDestinationsTests:
         assert isinstance(result, DomainError)
         assert result.code == CODE_INVALID
         assert "invalid bindings" in result.message
+
+    def test_merges_existing_destination_without_report_or_pending(self) -> None:
+        fixture = _enroll(
+            _bindings(
+                REV_B, [_entry("opencode.jsonc", ["opencode.jsonc"], "merge")]
+            ),
+            texts={SOURCE_DIR / "opencode.jsonc": MERGE_SOURCE_TEXT},
+            text={DEST_DIR / "opencode.jsonc": MERGE_DEST_TEXT},
+            cleared={"opencode.jsonc"},
+            modes={"opencode.jsonc": "merge"},
+            files={DEST_DIR / "opencode.jsonc"},
+        )
+        result = fixture.use_case.execute(
+            SOURCE_DIR, DEST_DIR, BINDINGS_PATH, REV_A, [], []
+        )
+        assert isinstance(result, UseCaseResult)
+        assert result.message == "initialized"
+        assert len(fixture.writer.text_writes) == 1
+        written_path, written = fixture.writer.text_writes[0]
+        assert written_path == DEST_DIR / "opencode.jsonc"
+        assert "// keep" in written
+        assert parse_object(written) == {
+            "shared": "source",
+            "extra": 1,
+            "theme": "dark",
+        }
+        assert fixture.writer.byte_writes == []
+        assert fixture.store.reports == []
+        assert fixture.store.saves[-1][1]["pending"] == []
+        assert fixture.store.saves[-1][1]["core_revision"] == REV_A
+
+    def test_merge_reports_missing_destination_and_creates_nothing(self) -> None:
+        fixture = _enroll(
+            _bindings(
+                REV_B, [_entry("opencode.jsonc", ["opencode.jsonc"], "merge")]
+            ),
+            texts={SOURCE_DIR / "opencode.jsonc": MERGE_SOURCE_TEXT},
+            cleared={"opencode.jsonc"},
+            modes={"opencode.jsonc": "merge"},
+        )
+        result = fixture.use_case.execute(
+            SOURCE_DIR, DEST_DIR, BINDINGS_PATH, REV_A, [], []
+        )
+        assert isinstance(result, DomainError)
+        assert result.code == CODE_DRIFT
+        assert "missing destination" in result.message
+        assert fixture.writer.text_writes == []
+
+    def test_merge_reports_invalid_when_destination_malformed(self) -> None:
+        fixture = _enroll(
+            _bindings(
+                REV_B, [_entry("opencode.jsonc", ["opencode.jsonc"], "merge")]
+            ),
+            texts={SOURCE_DIR / "opencode.jsonc": MERGE_SOURCE_TEXT},
+            text={DEST_DIR / "opencode.jsonc": '{"theme": }'},
+            cleared={"opencode.jsonc"},
+            modes={"opencode.jsonc": "merge"},
+            files={DEST_DIR / "opencode.jsonc"},
+        )
+        result = fixture.use_case.execute(
+            SOURCE_DIR, DEST_DIR, BINDINGS_PATH, REV_A, [], []
+        )
+        assert isinstance(result, DomainError)
+        assert result.code == CODE_INVALID
+        assert "invalid JSONC" in result.message

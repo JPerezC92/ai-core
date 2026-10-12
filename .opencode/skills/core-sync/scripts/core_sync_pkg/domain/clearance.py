@@ -107,7 +107,7 @@ def parse_clearance(text: str) -> ClearanceParseResult:
             CODE_LEGACY_SCHEMA,
             "clearance schema 1 is legacy; rewrite it as schema 2 with a "
             "path-keyed 'cleared' object, a required per-record 'mode' "
-            "(region|raw), and an optional 'role' of 'root' on the region-mode root",
+            "(region|raw|merge), and an optional 'role' of 'root' on the region-mode root",
         )
     if schema != CLEARANCE_SCHEMA:
         return DomainError(

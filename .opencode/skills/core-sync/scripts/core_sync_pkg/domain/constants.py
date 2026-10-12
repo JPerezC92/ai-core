@@ -5,12 +5,13 @@ from __future__ import annotations
 import re
 from typing import Literal
 
-BindingMode = Literal["region", "raw"]
+BindingMode = Literal["region", "raw", "merge"]
 CommandName = Literal["check", "apply", "init"]
 
 MODE_REGION: BindingMode = "region"
 MODE_RAW: BindingMode = "raw"
-VALID_MODES: tuple[BindingMode, ...] = (MODE_REGION, MODE_RAW)
+MODE_MERGE: BindingMode = "merge"
+VALID_MODES: tuple[BindingMode, ...] = (MODE_REGION, MODE_RAW, MODE_MERGE)
 
 ROLE_ROOT = "root"
 VALID_ROLES: tuple[str, ...] = (ROLE_ROOT,)
