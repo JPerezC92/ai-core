@@ -16,6 +16,7 @@ from core_sync_pkg.domain.constants import (
     MODE_REGION,
     ROLE_ROOT,
     VALID_MODES,
+    VALID_ROLES,
 )
 from core_sync_pkg.domain.errors import CODE_INVALID, CODE_LEGACY_SCHEMA, DomainError
 from core_sync_pkg.domain.markers import _is_safe_relative
@@ -74,7 +75,7 @@ def _parse_record(path: object, raw_record: object) -> ClearanceRecord | DomainE
             f"cleared record for {path!r} requires mode in {list(VALID_MODES)}",
         )
     role = raw_record.get("role")
-    if role is not None and role != ROLE_ROOT:
+    if role is not None and role not in VALID_ROLES:
         return DomainError(
             CODE_INVALID, f"cleared record for {path!r} has invalid role: {role!r}"
         )

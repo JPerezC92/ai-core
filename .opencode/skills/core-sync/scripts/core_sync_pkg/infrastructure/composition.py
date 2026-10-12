@@ -16,7 +16,12 @@ from core_sync_pkg.domain.constants import (
     REVISION_RE,
     CommandName,
 )
-from core_sync_pkg.domain.errors import CODE_DRIFT, CODE_INVALID, DomainError
+from core_sync_pkg.domain.errors import (
+    CODE_DRIFT,
+    CODE_INVALID,
+    CODE_LEGACY_SCHEMA,
+    DomainError,
+)
 from core_sync_pkg.domain.ports import UseCaseResult
 from core_sync_pkg.infrastructure.filesystem import (
     LocalDestinationWriter,
@@ -29,7 +34,11 @@ from core_sync_pkg.infrastructure.stores import (
     YamlBindingsStore,
 )
 
-_EXIT_CODE_BY_ERROR_CODE = {CODE_DRIFT: EXIT_DRIFT, CODE_INVALID: EXIT_INVALID}
+_EXIT_CODE_BY_ERROR_CODE = {
+    CODE_DRIFT: EXIT_DRIFT,
+    CODE_INVALID: EXIT_INVALID,
+    CODE_LEGACY_SCHEMA: EXIT_INVALID,
+}
 
 
 def _revision_arg(value: str) -> str:

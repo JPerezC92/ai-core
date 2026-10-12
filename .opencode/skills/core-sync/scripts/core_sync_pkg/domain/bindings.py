@@ -20,9 +20,9 @@ from core_sync_pkg.domain.markers import _is_safe_relative
 class BindingEntry(TypedDict):
     """One source file and the destination files that mirror it.
 
-    `mode` selects the binding behavior: `region` (the default) mirrors the
-    source core region between the destination markers, while `raw` copies the
-    whole source file byte-for-byte and ignores markers.
+    `mode` is an in-memory declaration hint, not persisted: the authoritative
+    distribution mode is owned by the source `distribution-clearance.json`. It
+    defaults to `region` and is dropped on serialization.
     """
 
     source: str
