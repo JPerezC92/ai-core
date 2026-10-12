@@ -103,11 +103,12 @@ def _raw_fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
     return source, destination, bindings_path
 
 
-def _set_clearance(source: Path, paths: list[str]) -> Path:
-    """Write a valid schema-1 clearance file for a fixture source."""
+def _set_clearance(source: Path, paths: list[str], mode: str = "region") -> Path:
+    """Write a valid schema-2 clearance file for a fixture source."""
     clearance_path = source / CLEARANCE_REL
+    clearance = {"schema": 2, "cleared": {p: {"mode": mode} for p in paths}}
     clearance_path.write_text(
-        json.dumps({"schema": 1, "cleared": paths}, indent=2) + "\n",
+        json.dumps(clearance, indent=2) + "\n",
         encoding="utf-8",
     )
     return clearance_path
@@ -119,7 +120,7 @@ def _raw_success_fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
     destination = tmp_path / "destination"
     _write_bytes_file(source, "payload.bin", RAW_SOURCE_BYTES)
     _write_bytes_file(destination, "payload.bin", RAW_SOURCE_BYTES)
-    _set_clearance(source, ["payload.bin"])
+    _set_clearance(source, ["payload.bin"], mode="raw")
 
     bindings_path = tmp_path / ".aicore" / "core.yaml"
     bindings_path.parent.mkdir(parents=True, exist_ok=True)
@@ -281,7 +282,7 @@ class DistributionClearanceTests:
         ).read_bytes()
         assert json.loads(
             (source / CLEARANCE_REL).read_text(encoding="utf-8")
-        ) == {"schema": 1, "cleared": ["payload.bin"]}
+        ) == {"schema": 2, "cleared": {"payload.bin": {"mode": "raw"}}}
 
         assert main(_command_args(command, source, destination, bindings)) == 0
         assert capsys.readouterr().out == {

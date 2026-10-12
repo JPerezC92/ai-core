@@ -82,13 +82,13 @@ class InitBindingRegistrationTests:
         assert updated["bindings"] == [
             _binding_entry("existing.md", ["existing.md"]),
             _binding_entry("new-agent.md", ["new-agent.md"]),
-            _binding_entry("raw/opencode.jsonc", ["opencode.jsonc"], "raw"),
+            _binding_entry("raw/opencode.jsonc", ["opencode.jsonc"]),
         ]
         assert len(updated["bindings"]) == 3
         assert updated["pending"] == ["existing.md", "legacy.md", "new-agent.md"]
         serialized = bindings_path.read_text(encoding="utf-8")
         assert serialized.count("source:") == 3
-        assert serialized.count("mode: raw") == 1
+        assert serialized.count("mode")==0
         assert "mode: region" not in serialized
         assert (destination / "opencode.jsonc").read_bytes() == raw_bytes
         assert RECONCILE_BEGIN in root_path.read_text(encoding="utf-8")

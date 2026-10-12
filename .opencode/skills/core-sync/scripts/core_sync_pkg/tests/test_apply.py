@@ -86,7 +86,7 @@ class ApplyContractTests:
         )
         source = tmp_path / "source"
         destination = tmp_path / "destination"
-        _write_bytes_file(source, "agent.md", source_bytes)
+        _write_bytes_file(source, "agent.md", source_bytes, mode="region")
         destination_path = _write_bytes_file(
             destination, "agent.md", destination_bytes
         )

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 from core_sync_pkg.domain.bindings import (
@@ -10,7 +9,9 @@ from core_sync_pkg.domain.bindings import (
     parse_bindings,
     serialize_bindings,
 )
-from core_sync_pkg.domain.constants import CLEARANCE_REL, SCHEMA_VERSION
+from core_sync_pkg.domain.clearance import ClearanceRecord, parse_clearance
+from core_sync_pkg.domain.constants import CLEARANCE_REL
+from core_sync_pkg.domain.errors import DomainError
 from core_sync_pkg.domain.reconciliation import (
     ReconciliationEntry,
     reconciliation_report_path,
@@ -33,11 +34,12 @@ def save_bindings(path: Path, bindings: Bindings) -> None:
     write_text(path, serialize_bindings(bindings))
 
 
-def load_clearance(source_dir: Path) -> tuple[set[str] | None, bool]:
+def load_clearance(source_dir: Path) -> tuple[dict[str, ClearanceRecord] | None, bool]:
     """Read the source distribution-clearance file at the IO boundary.
 
     Returns `(None, False)` when the file is absent, `(None, True)` when it is
-    present but malformed, or the cleared path set and `True` when valid.
+    present but malformed (including a legacy schema-1 document), or the cleared
+    path set and `True` when a valid schema-2 document is parsed.
     """
     path = source_dir / CLEARANCE_REL
     if not path.exists():
@@ -45,19 +47,10 @@ def load_clearance(source_dir: Path) -> tuple[set[str] | None, bool]:
     text = read_text(path)
     if text is None:
         return (None, True)
-    try:
-        data = json.loads(text)
-    except json.JSONDecodeError:
+    records = parse_clearance(text)
+    if isinstance(records, DomainError):
         return (None, True)
-    if (
-        not isinstance(data, dict)
-        or type(data.get("schema")) is not int
-        or data.get("schema") != SCHEMA_VERSION
-        or not isinstance(data.get("cleared"), list)
-        or not all(isinstance(item, str) for item in data["cleared"])
-    ):
-        return (None, True)
-    return (set(data["cleared"]), True)
+    return (records, True)
 
 
 class YamlBindingsStore:
@@ -77,10 +70,12 @@ class YamlBindingsStore:
         write_text(path, render_reconciliation_report(entries, revision))
 
 
-class JsonClearanceRecord:
+class JsonClearanceStore:
     """Read the JSON distribution-clearance record."""
 
-    def load(self, source_dir: Path) -> tuple[set[str] | None, bool]:
+    def load(
+        self, source_dir: Path
+    ) -> tuple[dict[str, ClearanceRecord] | None, bool]:
         return load_clearance(source_dir)
 
 
@@ -89,5 +84,5 @@ __all__ = [
     "save_bindings",
     "load_clearance",
     "YamlBindingsStore",
-    "JsonClearanceRecord",
+    "JsonClearanceStore",
 ]

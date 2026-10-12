@@ -6,7 +6,7 @@ from pathlib import Path
 
 from core_sync_pkg.domain.ports import (
     BindingsStore,
-    ClearanceRecord,
+    ClearanceStore,
     DestinationWriter,
     FilesystemPaths,
     RootRuntimeFile,
@@ -36,7 +36,7 @@ class VerifyDestinations:
         bindings_store: BindingsStore,
         source_reader: SourceCoreReader,
         destination_writer: DestinationWriter,
-        clearance: ClearanceRecord,
+        clearance: ClearanceStore,
         root_runtime: RootRuntimeFile,
         paths: FilesystemPaths,
     ) -> None:
@@ -58,9 +58,18 @@ class VerifyDestinations:
         if bindings is None:
             return DomainError(CODE_INVALID, f"invalid bindings: {bindings_path}")
 
-        cleared, clearance_exists = self._clearance.load(source_dir)
+        records, clearance_exists = self._clearance.load(source_dir)
+        mode_of = (
+            {} if records is None
+            else {source: record.mode for source, record in records.items()}
+        )
         preflight_error = self._paths.preflight_write_targets(
-            "check", source_dir, destination_dir, bindings_path, bindings
+            "check",
+            source_dir,
+            destination_dir,
+            bindings_path,
+            bindings,
+            mode_of=mode_of,
         )
         if preflight_error is not None:
             return DomainError(
@@ -71,12 +80,25 @@ class VerifyDestinations:
             return DomainError(
                 CODE_DRIFT, f"missing clearance file: {source_dir / CLEARANCE_REL}"
             )
-        if cleared is None:
+        if records is None:
             return DomainError(
                 CODE_INVALID,
                 f"invalid clearance file: {source_dir / CLEARANCE_REL}",
             )
+        cleared = set(records)
         names = uncleared_sources(bindings, cleared)
+        for entry in bindings["bindings"]:
+            record = records.get(entry["source"])
+            if (
+                record is not None
+                and entry["mode"] == MODE_RAW
+                and record.mode != MODE_RAW
+            ):
+                return DomainError(
+                    CODE_INVALID,
+                    f"binding mode 'raw' conflicts with source clearance mode "
+                    f"{record.mode!r} for {entry['source']}",
+                )
         if names:
             return DomainError(
                 CODE_DRIFT,
@@ -85,7 +107,7 @@ class VerifyDestinations:
 
         source_cores: dict[str, str] = {}
         for entry in bindings["bindings"]:
-            if entry["mode"] == MODE_RAW:
+            if mode_of.get(entry["source"]) == MODE_RAW:
                 continue
             source_path = source_dir / entry["source"]
             try:
@@ -98,7 +120,7 @@ class VerifyDestinations:
                 return DomainError(CODE_DRIFT, f"missing source: {source_path}")
             source_cores[entry["source"]] = source_core
 
-        raw_destinations = _raw_destination_paths(bindings)
+        raw_destinations = _raw_destination_paths(bindings, mode_of)
         stale_raw_pending = [
             path for path in bindings["pending"] if path in raw_destinations
         ]
@@ -126,7 +148,7 @@ class VerifyDestinations:
 
         for entry in bindings["bindings"]:
             source_path = source_dir / entry["source"]
-            if entry["mode"] == MODE_RAW:
+            if mode_of.get(entry["source"]) == MODE_RAW:
                 source_bytes = self._source_reader.read_raw(source_path)
                 if source_bytes is None:
                     return DomainError(

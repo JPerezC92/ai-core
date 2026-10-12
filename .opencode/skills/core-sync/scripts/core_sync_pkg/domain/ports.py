@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Protocol
 
 from core_sync_pkg.domain.bindings import Bindings
+from core_sync_pkg.domain.clearance import ClearanceRecord
 from core_sync_pkg.domain.constants import CommandName
 from core_sync_pkg.domain.reconciliation import ReconciliationEntry
 
@@ -50,10 +51,10 @@ class DestinationWriter(Protocol):
     def write_bytes(self, path: Path, content: bytes) -> None: ...
 
 
-class ClearanceRecord(Protocol):
+class ClearanceStore(Protocol):
     """Read the source distribution-clearance metadata."""
 
-    def load(self, source_dir: Path) -> tuple[set[str] | None, bool]: ...
+    def load(self, source_dir: Path) -> tuple[dict[str, ClearanceRecord] | None, bool]: ...
 
 
 class RootRuntimeFile(Protocol):
@@ -75,6 +76,10 @@ class FilesystemPaths(Protocol):
 
     def is_symlink(self, path: Path) -> bool: ...
 
+    def detect_root(self, destination_dir: Path) -> str | None: ...
+
+    def ensure_dir(self, path: Path) -> None: ...
+
     def preflight_write_targets(
         self,
         command: CommandName,
@@ -83,4 +88,5 @@ class FilesystemPaths(Protocol):
         bindings_path: Path,
         bindings: Bindings,
         new_raw_destinations: set[str] | None = None,
+        mode_of: dict[str, str] | None = None,
     ) -> str | None: ...

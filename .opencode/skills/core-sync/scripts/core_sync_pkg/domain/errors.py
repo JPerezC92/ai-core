@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 CODE_DRIFT = "drift"
 CODE_INVALID = "invalid"
+CODE_LEGACY_SCHEMA = "legacy_schema"
 
 
 @dataclass(frozen=True)

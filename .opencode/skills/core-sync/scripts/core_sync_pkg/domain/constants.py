@@ -12,6 +12,10 @@ MODE_REGION: BindingMode = "region"
 MODE_RAW: BindingMode = "raw"
 VALID_MODES: tuple[BindingMode, ...] = (MODE_REGION, MODE_RAW)
 
+ROLE_ROOT = "root"
+VALID_ROLES: tuple[str, ...] = (ROLE_ROOT,)
+CLEARANCE_SCHEMA = 2
+
 BEGIN = "<!-- core:begin -->"
 END = "<!-- core:end -->"
 PROJECT_BEGIN = "<!-- project:begin -->"
@@ -73,7 +77,13 @@ RECONCILE_BODY = (
     "block** (from `<!-- core:reconcile:begin -->` to "
     "`<!-- core:reconcile:end -->`). Change nothing outside the project regions."
 )
-DEFAULT_ROOT_CANDIDATES = ("AGENTS.md", "CLAUDE.md")
+DEFAULT_ROOT_CANDIDATES: tuple[str, ...] = (
+    "AGENTS.md",
+    "agents.md",
+    "CLAUDE.md",
+    "claude.md",
+    "instructions.md",
+)
 
 EXIT_OK = 0
 EXIT_DRIFT = 1
