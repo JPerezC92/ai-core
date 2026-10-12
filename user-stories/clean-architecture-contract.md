@@ -3,7 +3,7 @@
 > **Created:** 2026-10-11
 > **Title:** Clean architecture contract
 > **Status:** active
-> **version:** 1.2.0
+> **version:** 1.3.0
 > **Epic:** core-governance
 > **Affected areas:** `knowledge/agents.md`, `.opencode/agents/atrium.md`, `.opencode/agents/bastion.md`, `.opencode/agents/crucible.md`, `.opencode/agents/forge.md`, `.opencode/agents/marshal.md`, `.opencode/agents/sentinel.md`, `.opencode/skills/op-agent-creator/SKILL.md`
 
@@ -22,29 +22,51 @@
 
 ## Acceptance criteria
 
-- ✅ `knowledge/agents.md` states the language-agnostic contract and requires `execute()`. Evidence: `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`.
-- ✅ No language section suspends the contract. Evidence: `.opencode/agents/bastion.md` Python section; verification: `uv run --frozen python3 -B -c "from pathlib import Path; t=Path('.opencode/agents/bastion.md').read_text(); assert 'suspended for Python files' not in t; assert 'language-agnostic' in t; print('no suspension: PASS')"`.
-- ✅ Sentinel 🛡️ (Quality Guardian) and Marshal 🎖️ (HR Director) enforce the structure: `SP-12` and the Runtime Spec Format require a language-agnostic Rulebook subsection before the first language section. Evidence: `.opencode/agents/sentinel.md` `SP-12`; `.opencode/agents/marshal.md` Runtime Spec Format.
-- ✅ Each rulebook is grouped by language first; every language-specific obligation is generalized into the language-agnostic subsection, which also states the folder layout. Backend names its layers domain, application, infrastructure. Evidence: `.opencode/agents/bastion.md`, `.opencode/agents/atrium.md`, `.opencode/agents/crucible.md` `### Rulebook`.
-- ✅ React keeps the Hook as the adapter; `execute()` is a non-Hook callable in the existing hooks file, passed to `queryFn` or `mutationFn`. Evidence: `.opencode/agents/atrium.md` Hook rule.
-- ✅ The language-agnostic section carries an agnostic `Test Pyramid Overview` (three generic levels), and the TypeScript section carries the concrete two-column diagram with `**Key rule:**`, Vitest for unit/integration and Playwright for end-to-end. Evidence: `.opencode/agents/crucible.md` `##### Test Pyramid Overview` and `#### TypeScript`.
-- ✅ Python maps domain, application (use case `execute()`), infrastructure, and composition; the concrete module roles are in the project region. Evidence: `.opencode/agents/bastion.md` `##### Layers (Python) — domain, application, infrastructure` and `## Project extensions` → `### Local Configuration`.
-- ✅ Python tests follow the pyramid and mirror the layers. Evidence: `.opencode/agents/crucible.md` `##### Python Test Pyramid`.
-- ✅ **CA5 — Semantic preservation:** Valid architectural obligations and concrete library interpretations survive or are translated without loss. Obsolete, conflicting, or noncompliant definitions are explicitly replaced or retired against the approved contract, not preserved merely because they existed before. Before-copies establish change history; they are not an architectural authority. Proving surfaces: the revised Rulebook/Workflow sections and the shared contract, assessed by semantic review.
-- ✅ **CA1 — Applicable reads and gates:** Before an assigned behavior slice, the implementer reads the shared contract and applicable role/language definitions plus affected code/test/documentation dependencies. Frontend, backend/script, and test review use their actual owners; an unconditional frontend gate does not override the backend/Python gate. Proving surfaces: implementation warmup and gate routing in `.opencode/agents/forge.md`, plus the architect/test specs.
-- ✅ **CA2 — Snapshot-bound architecture evidence:** Reviews state their scope and reviewed snapshot, assess responsibilities and dependency direction by reading, and do not substitute test execution for architectural judgment. Evidence is reused only when its relevant content and dependencies remain unchanged. Proving surfaces: architecture-review scope and reporting rules.
-- ✅ **CA3 — Required touched-file rework:** A file included in a plan that violates the approved design must be reworked within that plan, with the necessary supporting files, tests, and documentation declared before editing. Existing noncompliance is neither grandfathered nor mislabeled compliant; unrelated repository-wide migrations are not implied. Proving surfaces: the shared architecture contract, implementer scope rules, and planning discovery/manifest gates.
-- ✅ **CA4 — Effective dependency and error contracts:** Static dependency direction is distinguished from runtime calls: application may invoke effects through injected domain ports without depending on concrete infrastructure. Returned business failures are distinguished from boundary/programming exceptions; transport serialization belongs at the delivery edge. Detailed language rules, examples, and local extensions agree with these obligations rather than weakening them. Proving surfaces: the shared contract and affected language profiles.
+- ✅ **AC1:** The shared agent rules state one language-agnostic clean-architecture contract and require a named use case exposing `execute()`.
+- ✅ **AC2:** No language section suspends or weakens the language-agnostic contract.
+- ✅ **AC3:** Structural review enforces the rulebook shape: a language-agnostic subsection must precede the first language section in every governed rulebook.
+- ✅ **AC4:** Each rulebook is grouped by language first, with libraries nested under their language, and every language-specific obligation is generalized into the language-agnostic subsection.
+- ✅ **AC5:** The language-agnostic subsection also states the folder layout, naming the layers domain, application, and infrastructure.
+- ✅ **AC6:** React keeps the Hook as the adapter and the use case as a non-Hook callable consumed through the query or mutation callback.
+- ✅ **AC7:** The test pyramid is stated generically in the language-agnostic section and concretely per language, naming the unit/integration and end-to-end runners that language uses.
+- ✅ **AC8:** Python maps domain, application, infrastructure, and composition to the same contract; its concrete module roles stay in destination-owned project extensions.
+- ✅ **AC9:** Python tests follow the pyramid and mirror the layers.
+- ✅ **AC10 — Semantic preservation:** Valid architectural obligations and concrete library interpretations survive or are translated without loss. Obsolete, conflicting, or noncompliant definitions are explicitly replaced or retired against the approved contract, not preserved merely because they existed before. Before-copies establish change history; they are not an architectural authority.
+- ✅ **AC11 — Applicable reads and gates:** Before an assigned behavior slice, the implementer reads the shared contract and applicable role/language definitions plus affected code/test/documentation dependencies. Frontend, backend/script, and test review use their actual owners; an unconditional frontend gate does not override the backend/Python gate.
+- ✅ **AC12 — Snapshot-bound architecture evidence:** Reviews state their scope and reviewed snapshot, assess responsibilities and dependency direction by reading, and do not substitute test execution for architectural judgment. Evidence is reused only when its relevant content and dependencies remain unchanged.
+- ✅ **AC13 — Required touched-file rework:** A file included in a plan that violates the approved design must be reworked within that plan, with the necessary supporting files, tests, and documentation declared before editing. Existing noncompliance is neither grandfathered nor mislabeled compliant; unrelated repository-wide migrations are not implied.
+- ✅ **AC14 — Effective dependency and error contracts:** Static dependency direction is distinguished from runtime calls: application may invoke effects through injected domain ports without depending on concrete infrastructure. Returned business failures are distinguished from boundary/programming exceptions; transport serialization belongs at the delivery edge. Detailed language rules, examples, and local extensions agree with these obligations rather than weakening them.
+
+## Proof
+
+- AC1 → `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`
+- AC2 → `.opencode/agents/bastion.md` Python section · `uv run --frozen python3 -B` no-suspension assertion → `PASS`
+- AC3 → `.opencode/agents/sentinel.md` `SP-12` · `.opencode/agents/marshal.md` Runtime Spec Format
+- AC4 → `.opencode/agents/bastion.md`, `.opencode/agents/atrium.md`, `.opencode/agents/crucible.md` `### Rulebook`
+- AC5 → `.opencode/agents/bastion.md` `##### Layers (Python) — domain, application, infrastructure`
+- AC6 → `.opencode/agents/atrium.md` `##### HOOK LAYER — \`modules/{feature}/hooks/use-{feature}.ts\``
+- AC7 → `.opencode/agents/crucible.md` `##### Test Pyramid Overview`, `#### TypeScript`
+- AC8 → `.opencode/agents/bastion.md` `##### Layers (Python) — domain, application, infrastructure` · `## Project extensions` `### Local Configuration`
+- AC9 → `.opencode/agents/crucible.md` `##### Python Test Pyramid`
+- AC10 → `.opencode/agents/atrium.md`, `bastion.md`, `crucible.md`, `forge.md` `### Rulebook` and `### Workflow` · `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)` · semantic review
+- AC11 → `.opencode/agents/forge.md` `### Workflow` implementation warmup and gate routing · `.opencode/agents/atrium.md`, `bastion.md`, `crucible.md` `### Rulebook`
+- AC12 → `.opencode/agents/atrium.md`, `bastion.md`, `crucible.md` `#### Review scope and snapshot` · `.opencode/agents/sentinel.md` `#### Review scope and snapshot`
+- AC13 → `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)` · `.opencode/agents/forge.md` `### Rulebook` scope rules · `.opencode/skills/plan-enforce/SKILL.md` `### Bounded discovery before scope confirmation` and `### Contract-sized phases`
+- AC14 → `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)` · `.opencode/agents/bastion.md` `##### Layers (Python) — domain, application, infrastructure` · `.opencode/agents/atrium.md` `##### TypeScript — React`
+
+## Constraints
+
+- The language-agnostic contract governs every language; no language section may suspend it — because a per-language exemption destroys the single architecture the roster enforces.
+- Content is grouped by language first with libraries nested under their language — because a maintainer mapping a new library needs to see the language's rules before the library's.
+- NestJS is the worked example for mapping a new library — because one concrete worked example prevents each language inventing its own mapping procedure.
+- React uses a non-Hook `execute()` passed to the query or mutation callback; component-plus-Hook tests stay unchanged — because the Hook is an adapter and making it the use case couples the use case to the rendering lifecycle.
+- Python conforms to the agnostic contract; its module/IO/type rules are syntax specifics — because syntax differences must not weaken the layering.
+- Nonconforming files included in an implementation plan are reworked in that plan — because existing noncompliance is neither grandfathered nor grounds for a partial fix, and unrelated repository-wide migrations are not implied.
 
 ## Change log
 
-- 2026-10-12 — implementation-enforcement-20261012: delivered per-owner gate routing and impact-bounded reads (`forge.md`), snapshot-bound read-based review (`atrium`/`bastion`/`crucible`/`sentinel`), the dependency/runtime-port/error/serialization distinctions (`knowledge/agents.md`, `bastion.md`), and the preservation-vs-retirement + nonconforming-planned-file rules.
-- 2026-10-11 — workflow-contract: approved bounded architecture review, correct gate routing, explicit dependency/error boundaries, and required rework for nonconforming planned files.
+- before 2026-10-11 — earlier history: see git history for this file
 - 2026-10-11 — clean-architecture-contract-20261011: made the contract language-agnostic, grouped rulebooks by language, and kept library mappings explicit.
-
-## Resolved decisions
-
-- 2026-10-11 — Content is grouped by language first; libraries nest under their language. NestJS is the worked example for mapping a new library.
-- 2026-10-11 — React uses a non-Hook `execute()` inside the existing hooks file. The custom Hook passes it to `queryFn` or `mutationFn`. Component-plus-Hook tests stay unchanged.
-- 2026-10-11 — Python conforms to the agnostic contract; its module/IO/type rules are syntax specifics.
-- 2026-10-11 — Nonconforming files included in an implementation plan are reworked in that plan; no blanket legacy exemption or unrelated repository-wide migration is authorized.
+- 2026-10-11 — workflow-contract: approved bounded architecture review, correct gate routing, explicit dependency/error boundaries, and required rework for nonconforming planned files.
+- 2026-10-12 — implementation-enforcement-20261012: delivered per-owner gate routing and impact-bounded reads (`forge.md`), snapshot-bound read-based review (`atrium`/`bastion`/`crucible`/`sentinel`), the dependency/runtime-port/error/serialization distinctions (`knowledge/agents.md`, `bastion.md`), and the preservation-vs-retirement + nonconforming-planned-file rules.
+- 2026-10-12 — story revision: split behavioural criteria from `## Proof` and moved pre-decided architectural policy into `## Constraints`.

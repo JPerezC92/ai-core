@@ -24,7 +24,7 @@ EXPECTED_SOURCE_VERSIONS = {
     "marshal.md": "1.4.0",
     "quill.md": "1.3.2",
     "scribe.md": "1.2.2",
-    "sentinel.md": "1.12.0",
+    "sentinel.md": "1.13.0",
     "vault.md": "1.4.3",
     "warden.md": "1.5.2",
 }

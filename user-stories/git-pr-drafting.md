@@ -3,7 +3,7 @@
 > **Created:** 2026-09-14
 > **Title:** Pull request draft generation
 > **Status:** active
-> **version:** 1.0.0
+> **version:** 1.1.0
 > **Epic:** developer-tooling
 > **Affected areas:** `.opencode/skills/git-pr/`, `plans/`, `pr-draft.md`
 
@@ -22,17 +22,31 @@
 
 ## Acceptance criteria
 
-- ✅ Plan discovery searches both `plans/*.md` and `plans/*/plan.md` for active or completed plans. Evidence: `.opencode/skills/git-pr/SKILL.md` `1.4.0` plan-discovery section.
-- ✅ A real draft run on a branch ahead of `main` discovers a subfolder plan and incorporates its Context motivation into the Summary. Evidence: the `git-pr` run at checkpoint `64fae1bf4aa5978e5a8a14ce63a30fca11905660` discovered `plans/skill-debt-resolution-20260914/plan.md` via `plans/*/plan.md` and its Summary bullet states the plan's why (DEBT-001/002/003).
-- ✅ Every non-possessive Herald mention uses `Herald 📯 (Release Manager)`; possessives remain bare. Evidence: Vault 🔐 (Catalog Steward) `[PASS]` for `git-pr` `1.4.0`; all mentions conform.
-- ✅ The skill writes only `pr-draft.md`, never mutates GitHub or git state, and preserves the unchecked test-plan plus immutable-head evidence contracts. Evidence: `pr-draft.md` gitignored by `.gitignore`; the run staged and committed nothing; Vault 🔐 (Catalog Steward) `[PASS]`.
-- ✅ `Observed output` in PR test evidence is the human-readable verdict only — for pytest, the `N passed in Xs` line (and the exit code where relevant); progress bars, per-test dots, stack traces, and raw dumps are forbidden unless the user explicitly asks. Evidence: `.opencode/skills/git-pr/SKILL.md` `1.4.0` **Verdict-only observed output**; consumers `.opencode/agents/inquisitor.md` `1.4.0` and `.opencode/agents/herald.md` `1.4.0`.
+- ✅ **AC1:** The skill finds the governing plan in either supported layout — a single file under `plans/` or a `plan.md` inside a plan subfolder — and accepts an active or completed plan.
+- ✅ **AC2:** The draft's Summary explains the plan's Context motivation rather than merely restating the diff.
+- ✅ **AC3:** Roster members are named in the canonical `Name Emoji (Role)` form in the skill's prose and in the generated draft; possessives stay bare-name.
+- ✅ **AC4:** The skill writes only `pr-draft.md` and leaves GitHub and git state untouched.
+- ✅ **AC5:** Test evidence records the human-readable verdict only; progress bars, per-test dots, stack traces, and raw dumps are omitted unless the maintainer explicitly asks.
+- ✅ **AC6:** The generated test plan remains unchecked and executable until executed evidence exists.
+
+## Proof
+
+- AC1 → `.opencode/skills/git-pr/SKILL.md` plan-discovery section
+- AC2 → `.opencode/skills/git-pr/SKILL.md` Summary construction · checkpoint `64fae1bf4aa5978e5a8a14ce63a30fca11905660`
+- AC3 → Vault 🔐 (Catalog Steward) `[PASS]` on the `git-pr` surface
+- AC4 → `pr-draft.md` gitignored · the recorded run staged and committed nothing · Vault 🔐 (Catalog Steward) `[PASS]`
+- AC5 → `.opencode/skills/git-pr/SKILL.md` **Verdict-only observed output** · `.opencode/agents/inquisitor.md` · `.opencode/agents/herald.md`
+- AC6 → `.opencode/skills/git-pr/SKILL.md` test-plan section
+
+## Constraints
+
+- The skill writes only `pr-draft.md` and never mutates GitHub or git state — because drafting is a review artifact and state changes belong to the authorized release workflow.
+- PR creation is left to the authorized release workflow — because opening a PR requires an explicit per-repo user ask and is not implied by drafting.
+- The test plan stays unchecked until executed evidence exists — because an unexecuted test plan is not a result.
 
 ## Change log
 
+- before 2026-09-14 — earlier history: see git history for this file
 - 2026-09-14 — skill-debt-resolution-20260914: created the feature definition; added dual-layout plan discovery and context-grounded PR drafting (`git-pr` `1.3.1`).
-- 2026-10-05 — process-debt-clearance-20261005: added the verdict-only `Observed output` criterion (`git-pr` `1.4.0`; consumers inquisitor and herald).
-
-## Resolved decisions
-
-- 2026-09-14 — the skill writes only `pr-draft.md` and never mutates GitHub or git state; the test plan stays unchecked until executed evidence exists.
+- 2026-10-05 — process-debt-clearance-20261005: added the verdict-only `Observed output` criterion (`git-pr` `1.4.0`; consumers Inquisitor 🔎 (PR Reviewer) and Herald 📯 (Release Manager)).
+- 2026-10-12 — story revision: split behavioural criteria from `## Proof`, moved pre-decided policy into `## Constraints`, and dropped checkpoint/version pins from criterion text.

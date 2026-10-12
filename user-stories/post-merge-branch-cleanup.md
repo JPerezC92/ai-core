@@ -3,7 +3,7 @@
 > **Created:** 2026-09-15
 > **Title:** Merge-style-aware post-merge branch cleanup
 > **Status:** active
-> **version:** 1.0.0
+> **version:** 1.1.0
 > **Epic:** developer-tooling
 > **Affected areas:** `.opencode/skills/plan-enforce/`, `.opencode/agents/herald.md`
 
@@ -14,7 +14,7 @@
 ## Goal
 
 - **G:** A user-confirmed merged branch is deleted only after a fail-closed proof that its content is in `origin/main`, for merge-commit, squash, and rebase merges alike.
-  - Done when: the shared plan-enforce/Herald 📯 (Release Manager) sequence requires live `MERGED` PR metadata, an immutable head pin, merge-commit ancestry when present, branch-tip ancestry for `git branch -d`, and per-path content parity (`git diff --quiet --exit-code`) before any `git branch -D`, with every metadata, fetch, extraction, ancestry, or diff error blocking deletion. Evidence: `.opencode/skills/plan-enforce/SKILL.md` `User confirms PR merge` lifecycle rule; `.opencode/agents/herald.md` `#### Execution steps` item 8 and `#### PR lifecycle`.
+  - Done when: the shared plan-enforce/Herald 📯 (Release Manager) sequence requires live merged PR metadata, an immutable head pin, merge-commit ancestry when present, branch-tip ancestry for the safe local delete, and per-path content parity before any force-delete, with every metadata, fetch, extraction, ancestry, or diff error blocking deletion.
 
 ## Scenario
 
@@ -22,18 +22,31 @@
 
 ## Acceptance criteria
 
-- ✅ The plan-enforce `User confirms PR merge` rule requires live `MERGED` metadata, an immutable `headRefOid` pin matched to `$BRANCH`, merge-commit ancestry when present, branch-tip ancestry for `git branch -d`, and per-path content parity (`git diff --name-only -z` into `CHANGED_PATHS` plus `git diff --quiet --exit-code` exiting 0) before `git branch -D`. Evidence: `.opencode/skills/plan-enforce/SKILL.md`, row `User confirms PR merge`.
-- ✅ Herald 📯 (Release Manager) implements the same fail-closed sequence and keeps user-only merge authority. Evidence: `.opencode/agents/herald.md` `#### Execution steps` item 8 and `#### PR lifecycle` hard rules.
-- ✅ Any metadata, fetch, head-mismatch, merge-base, path-extraction, ancestry, or diff error blocks deletion; `git branch -D` is authorized only after the content-parity proof, the local delete is `-d` on the ancestry path, and the remote branch is deleted only when it still exists. Evidence: `.opencode/skills/plan-enforce/SKILL.md` `User confirms PR merge` lifecycle rule and `.opencode/agents/herald.md` `#### Execution steps` item 8 / `#### PR lifecycle`.
-- ✅ The plan-enforce skill discovers the capability from its trigger metadata. Evidence: `.opencode/skills/plan-enforce/SKILL.md` frontmatter description and `## When to use me` (user-confirmed PR merge trigger).
+- ✅ **AC1:** A branch is deleted only after live PR metadata confirms it is merged and the exact reviewed head's content is proven present in `origin/main`.
+- ✅ **AC2:** The proof covers all three merge styles — merge-commit, squash, and rebase — using branch-tip ancestry when it holds and per-path content parity when it does not.
+- ✅ **AC3:** Any error in metadata retrieval, fetch, head matching, merge-base resolution, path extraction, ancestry, or diff comparison blocks deletion; the branch survives.
+- ✅ **AC4:** Force-deletion happens only after the content-parity proof; where branch-tip ancestry holds, the local delete uses the non-destructive form, and the remote branch is deleted only when it still exists.
+- ✅ **AC5:** Merge authority remains user-only: the workflow never merges on its own.
+- ✅ **AC6:** The plan-enforce skill discovers the cleanup capability from its trigger metadata rather than requiring the maintainer to name it.
+
+## Proof
+
+- AC1 → `.opencode/skills/plan-enforce/SKILL.md` `User confirms PR merge` lifecycle rule · `.opencode/agents/herald.md` `#### PR lifecycle`
+- AC2 → `.opencode/skills/plan-enforce/SKILL.md` `User confirms PR merge` lifecycle rule · `.opencode/agents/herald.md` `#### Execution steps` item 8
+- AC3 → `.opencode/skills/plan-enforce/SKILL.md` `User confirms PR merge` lifecycle rule · `.opencode/agents/herald.md` `#### PR lifecycle` hard rules
+- AC4 → `.opencode/agents/herald.md` `#### Execution steps` item 8
+- AC5 → `.opencode/agents/herald.md` `#### PR lifecycle` hard rules
+- AC6 → `.opencode/skills/plan-enforce/SKILL.md` frontmatter description · `## When to use me`
+
+## Constraints
+
+- Deletion is fail-closed: no live merged metadata plus parity proof, no delete — because a branch delete is destructive and squash/rebase merges leave the tip outside `origin/main`.
+- The branch tip must equal the pinned head — because cleanup must prove the exact reviewed head, not a possibly advanced local branch.
+- Merge authority stays user-only — because merging is irreversible and is never implied by a cleanup request.
 
 ## Change log
 
-- 2026-10-09 — aicore-all-files-pr-20261008: made remote-branch deletion conditional on its continued existence as part of the fail-closed cleanup contract.
+- before 2026-09-15 — earlier history: see git history for this file
 - 2026-09-15 — debt-001-citation-currency-20260915: created the feature definition for merge-style-aware, fail-closed post-merge branch cleanup.
-
-## Resolved decisions
-
-- 2026-09-15 — The cleanup proof is content parity on the immutable PR head rather than ancestry alone, because squash and rebase merges leave the branch tip outside `origin/main`.
-- 2026-09-15 — The branch tip must equal the pinned `headRefOid`, so cleanup proves the exact reviewed head rather than a possibly advanced local branch.
-- 2026-09-15 — Deleting a branch is destructive, so it stays user-confirmed and fail-closed: no proof, no deletion.
+- 2026-10-09 — aicore-all-files-pr-20261008: made remote-branch deletion conditional on its continued existence as part of the fail-closed cleanup contract.
+- 2026-10-12 — story revision: split behavioural criteria from `## Proof` and moved the fail-closed deletion policy into `## Constraints`.
