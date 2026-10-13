@@ -14,12 +14,22 @@ Run every command from the project root. The validator enforces only the mechani
 
 ## analysis/state.md
 
-- Header has all 7 YAML fields: `Phase`, `SLA-due`, `Updated`, `Hypotheses-outstanding`, `Query-budget`, `identification_verdict`, `Same-query-reruns`. *(delegated to `validate_runbook.py`)*
+- Header has exactly the existing 7 YAML fields: `Phase`, `SLA-due`, `Updated`, `Hypotheses-outstanding`, `Query-budget`, `identification_verdict`, `Same-query-reruns`; coordination lives only in existing Markdown/dispatch, not extra YAML. *(required-field presence delegated to `validate_runbook.py`; exact schema is analysis)*
 - `Phase` is one of `identify` / `investigate` / `synthesize` and advances only after the previous step's gate passes and the validator exits clean. *(enum delegated)*
 - `identification_verdict` is one of `pending` / `exact` / `structural` / `no_match`. *(enum delegated; verdict-vs-register is delegated for cited `P-NNN`/lifecycle consistency and is analysis for discriminator evidence)*
 - `Query-budget` is `used/limit` with used less than or equal to the current limit (default 6). A fresh scaffold is `0/6`; exhausted means used equals limit. The used value reflects actually consumed queries. *(delegated)*
 - Other kill-switch counters reflect what was actually consumed: hypotheses ≤ 3 and same-query reruns ≤ 2. *(delegated)*
 - `SLA-due` matches the ticket's real SLA deadline (not a placeholder). *(analysis — value must match evidence)*
+
+## Coordination, ownership and conserved accounting
+
+- Each assignment declares workflow/ticket, task/instance, role/responsibility, accepted predecessors/input identities, exact writes/other access, allocated output destinations, gates, continuation/join owner and capacity/accounting owner. Cipher 🔓 (Lead Orchestrator) owns dispatch/acceptance and authoritative incident accounting. *(analysis)*
+- One current authorized step instance owns `state.md`, its artifact and recorded counters; supporting instances return bounded attributed evidence without state/counter writes, verdict authority, competing hypothesis framing or incident-query execution. Independent ready evidence reads require stable inputs, compatible resources and declared capacity. *(analysis)*
+- Check whole-file/directory/alias overlaps, generated/autofix outputs, canonical reports, screenshots, session-validation destinations, durable records, response drafts, registers, browser/auth refresh, adapters and external capacity. Fixed paths remain exclusively owned/serialized; unknown isolation/capacity blocks access. Supporting outputs add no analysis files. *(analysis)*
+- Preserve hypotheses `3/3` outstanding with decrement per resolved hypothesis (cap 3), Query-budget `0/6` initially used/limit, Same-query-reruns `0/2` with stop at 2 and the 75%-SLA warning. Record actual consumption once; each actual verifier adapter execution costs one existing slot. Exhaustion is used = authorized limit; only user authorization raises the denominator before execution; never used > limit or `14/6`. Handoffs clone/reset no allowance. *(analysis)*
+- Handoffs carry task/instance, consumed input/output identities, actual counter snapshot, relevant finished producer/consumer results, current gates and resource-use status. The coordinator accepts the join and observes prior-user cessation before explicit successor assignment. Old timestamps, stop requests, timeouts and completed returns alone prove no cessation. The ten-minute warning remains an alert, not a lock/lease. *(analysis)*
+- Keep reviewed inputs/outputs stable; relevant changes invalidate affected assignments/verdicts. Incomplete, failed, stale or still-mutating results never unblock transitions. Required checkpoints return `AWAITING_REVIEW`; the parent accepts the existing owner gate and redispatches continuation. Missing boundaries return `BLOCKED` without expanded scope or a worker question call. *(analysis)*
+- Completed-step validation plus current semantic gates and coordinator acceptance precede header advance. Preserve sequential H1→H2→H3 and stored pack→diagnostic precedence; non-production examples are guidance, not execution evidence. *(analysis)*
 
 ## Register-first identification (`knowledge/problems.md` → verdict)
 
@@ -55,8 +65,9 @@ Run every command from the project root. The validator enforces only the mechani
 
 ## Semantic close-out confirmation (before authorization)
 
+- All relevant finished producer/consumer results are coordinator-accepted, including investigation, synthesis, screenshots, drafting, posted-response synchronization, retention and register admission as applicable; no active user accesses working files. Collapse's exclusive writer is explicitly assigned; directory deletion conflicts with descendant access. Relevant changes require renewed readiness validation/acceptance. Validator success alone proves neither semantic ownership nor cessation. *(analysis)*
 - Register admission from the confirmed root cause is complete: `case:` pointer recorded, plus an optional `pack:` pointer for a reusable identification pack, and an optional `diagnostic:` sidecar pointer when the confirming query is reusable under protocol-v1. *(analysis)*
-- Every executed query in `02-investigate.md` — manual `Query:` blocks and verifier-routed evidence — is preserved verbatim in `ticket_<id>.md` or a cited `validations/` artifact BEFORE collapse deletes the working file. *(analysis)*
+- Every executed query in `02-investigate.md` — manual `Query:` blocks, pack-replay blocks and verifier-routed evidence — is preserved verbatim in `ticket_<id>.md` or a cited `validations/` artifact BEFORE collapse deletes the working file. Verifier retention remains redacted: ID, three-state verdict, source/definition/evidence digests and redacted path only; never credentials, raw adapter output, rendered SQL/parameters or unredacted configured identifiers. Retention writers require exact assignment, not implied scope. *(analysis)*
 - Every non-`path:` evidence citation (prose/backtick references) in the ticket record resolves to real evidence. *(analysis)*
 - Each used image records `url:` when the ticket system returned one, and never records a fabricated `url:`. *(analysis)*
 - Posted-response fidelity and content/completeness gates pass. *(analysis)*

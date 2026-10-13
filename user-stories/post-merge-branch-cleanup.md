@@ -31,9 +31,9 @@
 
 ## Proof
 
-- AC1 → `.opencode/skills/plan-enforce/SKILL.md` `User confirms PR merge` lifecycle rule · `.opencode/agents/herald.md` `#### PR lifecycle`
-- AC2 → `.opencode/skills/plan-enforce/SKILL.md` `User confirms PR merge` lifecycle rule · `.opencode/agents/herald.md` `#### Execution steps` item 8
-- AC3 → `.opencode/skills/plan-enforce/SKILL.md` `User confirms PR merge` lifecycle rule · `.opencode/agents/herald.md` `#### PR lifecycle` hard rules
+- AC1 → `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Post-merge proof and cleanup` · `.opencode/agents/herald.md` `#### PR lifecycle`
+- AC2 → `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Post-merge proof and cleanup` · `.opencode/agents/herald.md` `#### Execution steps` item 8
+- AC3 → `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Post-merge proof and cleanup` · `.opencode/agents/herald.md` `#### PR lifecycle` hard rules
 - AC4 → `.opencode/agents/herald.md` `#### Execution steps` item 8
 - AC5 → `.opencode/agents/herald.md` `#### PR lifecycle` hard rules
 - AC6 → `.opencode/skills/plan-enforce/SKILL.md` frontmatter description · `## When to use me`
@@ -50,3 +50,4 @@
 - 2026-09-15 — debt-001-citation-currency-20260915 (PR #40): created the feature definition for merge-style-aware, fail-closed post-merge branch cleanup.
 - 2026-10-09 — aicore-all-files-pr-20261008 (PR #52): made remote-branch deletion conditional on its continued existence as part of the fail-closed cleanup contract.
 - 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof` and moved the fail-closed deletion policy into `## Constraints`.
+- 2026-10-13 — safe-roster-parallelism (PR #61): repaired proof pointers for the relocated post-merge lifecycle procedure.

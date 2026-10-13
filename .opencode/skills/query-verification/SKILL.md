@@ -36,16 +36,16 @@ The skill accepts no adapter command, credential, connection string, or persiste
 
 ### Steps
 
-1. Read the skill's protocol reference (see Project extensions) and confirm the v1 boundary.
-2. Validate the sidecar against its root by running the query-verification script (see Project extensions) with the `validate` subcommand, passing the query root and the sidecar path (see Project extensions for the example paths).
+1. Read the skill's protocol reference (see **Reference files**) and confirm the v1 boundary.
+2. Validate the sidecar against its root by running the query-verification script (see **Query-verification script**) with the `validate` subcommand, passing the query root and the sidecar path (see **Example paths**).
 3. On non-zero exit, stop and report the rejection reason. Do not execute the query or continue to evaluation.
-4. Hand the validated sidecar to the destination-owned adapter. The adapter binds the declared named parameters from the current case and returns normalized JSON matching the shape of the adapter-output reference (see Project extensions). That file is a shape example only — its source is not shipped, so its digest values are illustrative and cannot be reproduced by a reader.
-5. Evaluate the normalized output locally by running the query-verification script (see Project extensions) with the `evaluate` subcommand, passing the sidecar, the adapter output, and the evidence path.
+4. Hand the validated sidecar to the destination-owned adapter. The adapter binds the declared named parameters from the current case and returns normalized JSON matching the shape of the adapter-output reference (see **Reference files**). That file is a shape example only — its source is not shipped, so its digest values are illustrative and cannot be reproduced by a reader.
+5. Evaluate the normalized output locally by running the query-verification script (see **Query-verification script**) with the `evaluate` subcommand, passing the sidecar, the adapter output, and the evidence path.
 6. Write the evidence record under the ticket's session-specific `validations/` folder using the verifier ID as the filename stem, then report the verifier ID, verdict, and digests to Cipher 🔓 (Lead Orchestrator).
 
 ### Evidence output
 
-The evidence record matches the shape of the case-evidence reference (see Project extensions); that file is an illustrative example whose digest values cannot be reproduced by a reader. It carries the verifier ID, exactly one verdict, the source and definition digests, the allowlisted evidence values with configured redaction applied, and a deterministic digest of the redacted record. It never carries raw adapter output, rendered SQL, parameter values, credentials, connection details, or unredacted configured identifiers.
+The evidence record matches the shape of the case-evidence reference (see **Reference files**); that file is an illustrative example whose digest values cannot be reproduced by a reader. It carries the verifier ID, exactly one verdict, the source and definition digests, the allowlisted evidence values with configured redaction applied, and a deterministic digest of the redacted record. It never carries raw adapter output, rendered SQL, parameter values, credentials, connection details, or unredacted configured identifiers.
 
 ### Safety boundaries
 
@@ -83,7 +83,14 @@ The evidence record matches the shape of the case-evidence reference (see Projec
 
 **Sidecar rejected for unknown or missing fields:**
 - Cause: the v1 schema is closed; unknown fields and missing required fields are rejected.
-- Fix: compare the sidecar against the verifier-sidecar schema reference (see Project extensions) and remove or add the exact fields.
+- Fix: compare the sidecar against the verifier-sidecar schema reference (see **Reference files**) and remove or add the exact fields.
+
+### Reference files
+
+- Protocol reference: `references/protocol-v1.md`
+- Adapter-output shape reference: `references/adapter-output-v1.json`
+- Case-evidence shape reference: `references/case-evidence-v1.json`
+- Verifier-sidecar schema reference: `references/verifier-sidecar-v1.yaml`
 <!-- core:end -->
 
 <!-- project:begin -->
@@ -97,17 +104,13 @@ This project's `<python>` is `uv run --frozen python3`.
 
 This project's query-verification script is `<python> .opencode/skills/query-verification/scripts/query_verification.py`, invoked with the `validate` or `evaluate` subcommand.
 
-### Example paths and references
+### Example paths
 
-Concrete paths and reference files used by this project:
+Concrete paths used by this project:
 
 - Query root and sidecar example: `./sql`, `./sql/checks/example-amount.verifier.yaml`
 - Adapter output example: `./validations/session/adapter-output.json`
 - Evidence output example: `./validations/session/example-amount.evidence.json`
-- Protocol reference: `references/protocol-v1.md`
-- Adapter-output shape reference: `references/adapter-output-v1.json`
-- Case-evidence shape reference: `references/case-evidence-v1.json`
-- Verifier-sidecar schema reference: `references/verifier-sidecar-v1.yaml`
 
 ### Dependency pin
 

@@ -62,22 +62,22 @@
 - AC4 → `validate_plan.py` goal-trace / manifest-equality / verification-parity checks
 - AC5 → `validate_plan.py` audit-gate check
 - AC6 → `.opencode/skills/plan-enforce/SKILL.md` `### Post-write self-verification loop`, `#### Independent audit gate` · `references/_template.md` and `references/_template-programming.md` `## Audit` blocks
-- AC7 → `.opencode/skills/plan-enforce/SKILL.md` `### Execution-review message` · `### Plan lifecycle rules` row `Plan files written`
+- AC7 → `.opencode/skills/plan-enforce/SKILL.md` `### Execution-review message` · `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Plan lifecycle rules` row `Plan files written`
 - AC8 → `.opencode/skills/plan-enforce/SKILL.md` `### Execution-review message`
 - AC9 → `references/_template.md` · `references/_template-programming.md`
 - AC10 → `AGENTS.md` Conventions
-- AC11 → `.opencode/skills/plan-enforce/SKILL.md` `### Plan lifecycle rules` row `Forge 🔨 (Implementer) dispatch`
+- AC11 → `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Plan lifecycle rules` row `Forge 🔨 (Implementer) dispatch`
 - AC12 → `.opencode/skills/plan-enforce/SKILL.md` story-input and goal-lifecycle rules · `.opencode/skills/user-story/SKILL.md`
-- AC13 → `.opencode/skills/plan-enforce/SKILL.md` `#### Acceptance-criterion reconciliation (fail-closed)` · `.opencode/skills/user-story/references/_consistency-checklist.md` `## Approved-criteria completion scope`
-- AC14 → `.opencode/skills/plan-enforce/SKILL.md` `### Resume (completion)` and `#### Drift watch`
+- AC13 → `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Acceptance-criterion reconciliation (fail-closed)` · `.opencode/skills/user-story/references/_consistency-checklist.md` `## Approved-criteria completion scope`
+- AC14 → `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Resume (completion)` · `.opencode/skills/plan-enforce/SKILL.md` `#### Drift watch`
 - AC15 → `.opencode/agents/sentinel.md` `##### Story-audit checks` and `##### Judgment calls`
-- AC16 → `.opencode/skills/plan-enforce/SKILL.md` `#### Acceptance-criterion reconciliation (fail-closed)` · `.opencode/skills/user-story/references/_template-user-story.md` `## Acceptance criteria`
+- AC16 → `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Acceptance-criterion reconciliation (fail-closed)` · `.opencode/skills/user-story/references/_template-user-story.md` `## Acceptance criteria`
 - AC17 → `uv run --frozen --group dev pytest -q` → exit 0 · Crucible 🔥 (Test Architect) test-architecture `[PASS]` · `pyproject.toml` `[tool.pytest.ini_options]`
-- AC18 → `.opencode/skills/plan-enforce/SKILL.md` `## Mandatory core`, `## Project extensions`, `### Resume (completion)`, `#### Independent audit gate` · Vault 🔐 (Catalog Steward) `[PASS]` 2026-10-09
+- AC18 → `.opencode/skills/plan-enforce/SKILL.md` `## Mandatory core`, `## Project extensions` · `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Resume (completion)` · `#### Independent audit gate` · Vault 🔐 (Catalog Steward) `[PASS]` 2026-10-09
 - AC19 → `.opencode/skills/plan-enforce/SKILL.md` `### Dispatch bundle contract`, `### User stories`, `### Simplicity discipline` · linked references/templates · Vault 🔐 (Catalog Steward) `[PASS]` 2026-10-09
 - AC20 → `.opencode/skills/plan-enforce/SKILL.md` `### Simplicity discipline` · `.opencode/skills/plan-enforce/references/_consistency-checklist.md` **Completion and findings**
 - AC21 → `.opencode/skills/plan-enforce/SKILL.md` `### Dispatch bundle contract` · `knowledge/agents.md` Question-routing rule
-- AC22 → `.opencode/skills/plan-enforce/SKILL.md` `### Resume (completion)` · `.opencode/skills/plan-enforce/references/_consistency-checklist.md` **Completion and findings**
+- AC22 → `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Resume (completion)` · `.opencode/skills/plan-enforce/references/_consistency-checklist.md` **Completion and findings**
 - AC23 → `.opencode/skills/plan-enforce/SKILL.md` `#### Independent audit gate`
 - AC24 → `.opencode/skills/plan-enforce/SKILL.md` `### Simplicity discipline` · `.opencode/skills/plan-enforce/references/_consistency-checklist.md` **Completion and findings**
 - AC25 → `.opencode/skills/plan-enforce/SKILL.md` `### All-changes disposition` · `AGENTS.md` Conventions
@@ -101,9 +101,9 @@
 
 ## Change log
 
-- before 2026-10-07 — earlier history: see git history for this file
-- 2026-10-07 — core-format-consistency (PR #52): aligned skill/agent authoring guidance with optional ownership headings, corrected stale checklist references, added read/preview/confirm before configuration writes, tightened Crucible's read-only discovery grant, and made dispatch/report output bounded and task-specific.
+- before 2026-10-11 — earlier history: see git history for this file
 - 2026-10-11 — regionize-agents-20261010 (PR #53): authoring evidence now cites the standardized agent Rulebook and Workflow sections.
 - 2026-10-11 — workflow-contract (PR #57): approved story-first planning, criterion-scoped completion, contract-sized phases, documentation coupling, expected-red checkpoints, and required rework for nonconforming planned files.
 - 2026-10-11 — planning-workflow-20261011 (PR #57): delivered approved-story input, bounded discovery, contract-sized phases, semantic review + two-failure reassessment, expected-red checkpoint, criterion-scoped completion, same-change documentation, and the Sentinel story-audit alignment; validator reworked into layers with the path preserved.
 - 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof`, moved pre-decided planning policy into `## Constraints`, and dropped test symbols and config literals from criterion text.
+- 2026-10-13 — safe-roster-parallelism (PR #61): added coordination declarations, extracted lifecycle obligations to a mandatory reference, and repaired relocated proof pointers.

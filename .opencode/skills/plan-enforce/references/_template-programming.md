@@ -72,13 +72,29 @@
 
 > Every phase traces to ≥ 1 goal ID. A phase with no Goals column entry is speculative — remove or merge it. Each phase is contract-sized: one coherent responsibility with its interfaces, allowed writes, outputs, and gates — never sized by an arbitrary file count.
 
+## Coordination and accepted joins
+
+> Apply `knowledge/agents.md` **Safe parallel task coordination (HARD RULE)** and the skill's **Task coordination and accepted joins**. Phase numbering is an index, not evidence of dependency or independence. Preserve Runbook in column 4 and Goals as the terminal column; use declarations below/inside runbooks, not new parsed table columns. Sequential plans retain this supported shape and declare their actual ordering.
+
+- Workflow identity / coordinator: <workflow ID; Cipher 🔓 (Lead Orchestrator)>
+- Capacity / authoritative accounting owner: <shared allocations, available capacity and ledger; Cipher 🔓 (Lead Orchestrator)>
+- Task instances: <per-task ID, role/responsibility and runbook; distinct same-role instances share authority/allowances>
+- Accepted dependencies / inputs: <per-instance predecessor results, acceptance evidence and current content/input identities; explicitly none when independent>
+- Readiness / serialization: <present/current inputs, approvals/gates, compatible access and capacity; actual dependency/conflict/gate/capacity reasons for sequence>
+- Resource modes / ownership: <exact canonical read/write/mutation footprints and active writer per mutable resource, including aliases, directories, shared contracts/exports/fixtures, generated/autofix outputs, reports/indexes, external/auth/browser/environment/Git state; read-side effects>
+- Output allocation / attribution: <exclusive per-instance destinations and consumed identities; fixed governing paths stay serialized, never renamed for parallelism>
+- Checkpoints / transfers: <required owner gates, parent-visible AWAITING_REVIEW returns and explicit accepted continuation; BLOCKED boundary needs halt before mutation; observed cessation before transfer>
+- Review stability / joins: <content/dependency identities, scope, freshness and distinct review/execution verdicts; Cipher 🔓 (Lead Orchestrator) accepts all relevant returns and combined candidate before declared dependents/completion>
+
+> Shared reads may overlap only on unchanged inputs. Reject conflicts unless isolation is verified; sessions/prompts are not isolation or locks. Autofix reviewers own their write footprint. Incomplete, failed, stale or still-mutating predecessors never unblock work; scope/input changes invalidate affected assignments/evidence. Stop requests/timeouts/tool returns alone do not prove continuing effects ceased. Structural validation proves neither locking, semantic independence, isolation, authority nor workflow acceptance.
+
 ## Critical files / tools
 
 -
 
 ## Verification
 
-> Runnable command + expected output, each traced to the goal it proves.
+> Exactly one checkbox per phase file, traced to its output/goal and accepted applicable gates. Runnable command + expected output proves the goal; do not add separate goal-only or gate-only checkboxes that break phase parity. Add dispatch rows/runbooks to match the illustrated two-phase verification, or adapt verification to the actual phase count.
 
 - ⬜ G1: `<command>` → <expected output>
 - ⬜ G2: `<command>` → <expected output>
@@ -99,6 +115,8 @@
 ## Audit
 
 > Filled by the independent auditor before the plan is reported ready or Forge 🔨 (Implementer) is dispatched. An unavailable auditor leaves the plan not-ready; a substitute requires explicit user authorization recorded here. Completion evidence is the layered matrix (code architecture, test architecture, execution, model/guidance) on the final candidate; a planning-readiness audit is not the completion audit.
+
+> Record reviewed content/input identities and scope with the evidence; relevant changes invalidate the verdict. Author returns require coordinator acceptance, not self-audit. Load `references/_lifecycle-contract.md` fully before lifecycle operations; missing/unread content blocks them.
 
 - Auditor: not yet run
 - Verdict: [PENDING]
