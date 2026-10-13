@@ -95,19 +95,19 @@ If the correction requires multiple disjoint edits, do them as separate Edit cal
 - Draft file: the ticket's `response-draft.md` (ephemeral scratch file).
 - Durable record block: the ticket record's `## Responses` section.
 - Local image files: ticket-folder-relative `screenshots/<filename>`; the screenshot directory is `screenshots/`, and repo-relative spellings (`tickets/.../screenshots/...`) are invalid.
-- Image markers/footers: `(ImageN)` / `(ver ImageN)` body references and `Image{N}: desc: ... | path: ... | url: ...` footer lines. The bold image caption line sits immediately above its `<img>` tag; cite images as `(ver ImageN)`.
+- Image markers/footers: `(ImagenN)` / `(ver ImagenN)` body references and `Imagen{N}: desc: ... | path: ... | url: ...` footer lines. The bold image caption line sits immediately above its `<img>` tag; cite images as `(ver ImagenN)`.
 - Non-canonical marker (forbidden): `[IMG: ...]`.
 
 ### Output Format
 
 #### Reference template
 
-> "Hola, buen día. El pedido del cliente incluye [entity] ([name]) —también llamado [alias]— a [value] (ver Image1). Este [entity] está configurado como [plain explanation] (ver Image2), por lo que no es considerado en [consequence]. Por eso, aunque [what user sees], [what is calculated] — [outcome].
+> "Hola, buen día. El pedido del cliente incluye [entity] ([name]) —también llamado [alias]— a [value] (ver Imagen1). Este [entity] está configurado como [plain explanation] (ver Imagen2), por lo que no es considerado en [consequence]. Por eso, aunque [what user sees], [what is calculated] — [outcome].
 >
 > Este es un comportamiento conocido registrado en el Problema #XXXXX que se encuentra en evaluación. Se deriva a {equipo receptor} para vincular este ticket al Problema #XXXXX.
 >
-> Image1: desc: [caption — what the screenshot shows] | path: screenshots/<filename>.png | url: <remote ticket-system location>
-> Image2: desc: [caption — what the screenshot shows] | path: screenshots/<filename>.png | url: <remote ticket-system location>"
+> Imagen1: desc: [caption — what the screenshot shows] | path: screenshots/<filename>.png | url: <remote ticket-system location>
+> Imagen2: desc: [caption — what the screenshot shows] | path: screenshots/<filename>.png | url: <remote ticket-system location>"
 
 Adapt to the domain at hand but keep the structure: situación → análisis → derivación.
 

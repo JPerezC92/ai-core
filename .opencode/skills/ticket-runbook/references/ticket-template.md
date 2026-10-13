@@ -67,7 +67,7 @@ analyses:
 - <conclusion 1>
 - <conclusion 2>
 
-<!-- Image footer: when a response includes images, add one #### ImageN sub-block
+<!-- Imagen footer: when a response includes images, add one #### ImagenN sub-block
      per image at the end of the ### Response N block. Record the local file and,
      when the ticket system returned one, the remote location — both when both exist:
        - **path:** screenshots/NN_source_entity.png                        (ticket-folder-relative local file)
@@ -82,7 +82,7 @@ analyses:
 
 <text of the note sent to level-1 support>
 
-#### Image1
+#### Imagen1
 
 - **path:** screenshots/01_source_entity.png
 - **url:** <ticket-system image URL, when the ticket system returned one>

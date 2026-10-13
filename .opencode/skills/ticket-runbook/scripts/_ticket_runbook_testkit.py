@@ -169,7 +169,7 @@ def _ticket_dir(
         f"known_problem_ids: {known}\n"
         f"identification_verdict: {verdict}\n"
         "---\n\n"
-        "#### Image1\n"
+        "#### Imagen1\n"
         f"- **path:** {image}\n"
     )
     (ticket_dir / "ticket_999999.md").write_text(content, encoding="utf-8")

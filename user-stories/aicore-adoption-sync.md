@@ -3,7 +3,7 @@
 > **Created:** 2026-09-11
 > **Title:** Core region synchronization
 > **Status:** active
-> **version:** 1.5.0
+> **version:** 1.5.1
 > **Epic:** core-governance
 > **Affected areas:** `.opencode/agents/`, `.opencode/skills/`, `agents/`, `README.md`, `AGENTS.md`, `knowledge/agents.md`, `opencode.jsonc`, `user-stories/git-pr-drafting.md`, `distribution-clearance.json`
 
@@ -57,9 +57,9 @@
 - ✅ **AC32:** The opencode config source is cleared as `merge` rather than `raw`; a merge binding of it preserves destination-only top-level keys while propagating AICore's source values.
 - ✅ **AC33 — Skill payload distribution:** A skill ships as one cleared root: clearance lists each shipped skill root with its default mode and its region-file subset, and the sync tool identifies every file under the root at each sync — subset files are region-bound and deliver only their core region, every other file takes the default mode and copies byte-for-byte, and interpreter caches never ship. The sync tool's own skill is never cleared and reaches no destination; any binding naming it fails the uncleared-source check.
 - ✅ **AC34 — Command placeholders:** Shipped skill text invokes project-interpreted commands only through the project-substituted command placeholder `<python>`, with the script path and flags literal — mirroring the base-ref placeholder convention — and embeds no concrete environment invocation; the placeholder's per-project value is declared only in project-owned text.
-- ✅ **AC35 — Raw payload neutrality:** A raw-bound payload copies byte-for-byte and its source text carries no concrete environment command, dependency pin, mandated local policy value, or source-project business vocabulary; placeholder commands, absence-tolerant reference lists, and labelled examples with neutral vocabulary are permitted.
+- ✅ **AC35 — Raw payload neutrality:** A raw-bound payload copies byte-for-byte and its source text carries no concrete environment command, dependency pin, mandated local policy value, or source-project business jargon; the project's response-language record labels (such as its image-attachment names) are language, not jargon. Placeholder commands, absence-tolerant reference lists, and labelled examples remain permitted.
 - ✅ **AC36 — Region skill structure:** The region-bound skill document carries exactly one ordered core pair immediately after frontmatter, a project pair only when source-side project text exists, and only its core region is delivered byte-identically.
-- ✅ **AC37 — Neutral delivered cores:** A delivered skill core contains no source-project identity or business vocabulary, concrete environment invocation, dependency pin, or inlined policy value; such declarations live only in project regions or destination-owned frontmatter.
+- ✅ **AC37 — Neutral delivered cores:** A delivered skill core contains no source-project identity or business jargon (response-language record labels excepted, per AC35), concrete environment invocation, dependency pin, or inlined policy value; such declarations live only in project regions or destination-owned frontmatter.
 
 ## Proof
 
@@ -97,9 +97,9 @@
 - AC32 → `distribution-clearance.json` opencode config record
 - AC33 → `distribution-clearance.json` skill-root records · expansion enumeration (everything under root minus interpreter caches) · `core-sync check` → exit 1 on a bound uncleared source
 - AC34 → shipped skill command examples · `<python>` placeholder form → no concrete invocations present
-- AC35 → raw-bound skill file pair · `cmp` source vs destination → exit 0 · vocabulary/env sweep → no matches
+- AC35 → raw-bound skill file pair · `cmp` source vs destination → exit 0 · jargon/env sweep → no matches (response-language record labels excepted)
 - AC36 → delivered region skill file · core-region byte-compare → exit 0
-- AC37 → delivered skill core · identity/env/vocabulary sweep → no matches
+- AC37 → delivered skill core · identity/env/jargon sweep → no matches (response-language record labels excepted)
 
 ## Constraints
 
@@ -120,5 +120,5 @@
 - before 2026-10-12 — earlier history: see git history for this file.
 - 2026-10-12 — core-sync-merge-mode-20261012 (PR #58): added the `merge` binding mode for JSON/JSONC top-level-key merge and reclassified the opencode config from raw to merge.
 - 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof`, moved synchronization authority policy into `## Constraints`, and dropped test symbols and inline verification commands from criterion text.
-- 2026-10-13 — skill-distribution-20261012 (PR #60): delivered the skill-distribution contract — neutral shipped skill payloads (the <python> command-placeholder convention, ImageN vocabulary, identity-neutral cores), region markers on workflow skill documents, and the ticket-runbook validator conformance rework.
+- 2026-10-13 — skill-distribution-20261012 (PR #60): delivered the skill-distribution contract — neutral shipped skill payloads (the <python> command-placeholder convention, identity-neutral cores), region markers on workflow skill documents, and the ticket-runbook validator conformance rework.
 - 2026-10-13 — skill-root-expansion-20261012 (PR #60): expanded the clearance format in place to the single v1 definition — skill-root rows with region_files and script-side file identification (caches excluded, dynamic at each sync), ten roots replacing per-file skill rows, and distribution-clearance.definition.md as the format source of truth.
