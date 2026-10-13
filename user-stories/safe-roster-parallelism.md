@@ -58,4 +58,4 @@
 
 ## Change log
 
-<!-- No delivered revision is recorded yet. Add a dated entry only when its delivering commit, PR, or ticket anchor exists. -->
+- 2026-10-13 — safe-roster-parallelism (PR #61): created the feature contract and delivered all nine criteria through shared coordination rules, planning/incident guidance, region-boundary corrections, and observed workflow evidence.
