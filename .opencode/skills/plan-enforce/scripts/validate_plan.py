@@ -3,9 +3,9 @@ Validate a plan directory (or single-file plan) against the plan/phase/story
 consistency checklist.
 
 Usage (from project root):
-    python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan_dir>
-    python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan.md> --single-file
-    python3 .opencode/skills/plan-enforce/scripts/validate_plan.py <plan_dir> --stories <dir>
+    <python> .opencode/skills/plan-enforce/scripts/validate_plan.py <plan_dir>
+    <python> .opencode/skills/plan-enforce/scripts/validate_plan.py <plan.md> --single-file
+    <python> .opencode/skills/plan-enforce/scripts/validate_plan.py <plan_dir> --stories <dir>
 
 Mechanical/repetitive subset only: Status enum, Completed line, required
 sections, phase-file sections + blockquote labels, the canonical phase

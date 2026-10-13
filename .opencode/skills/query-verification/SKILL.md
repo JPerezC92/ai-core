@@ -8,28 +8,7 @@ metadata:
   version: 1.0.2
   dependencies: PyYAML==6.0.3
 ---
-
-## Project extensions
-
-### Query-verification script
-
-This project's query-verification script is `uv run --frozen python3 .opencode/skills/query-verification/scripts/query_verification.py`, invoked with the `validate` or `evaluate` subcommand.
-
-### Example paths and references
-
-Concrete paths and reference files used by this project:
-
-- Query root and sidecar example: `./sql`, `./sql/checks/example-amount.verifier.yaml`
-- Adapter output example: `./validations/session/adapter-output.json`
-- Evidence output example: `./validations/session/example-amount.evidence.json`
-- Protocol reference: `references/protocol-v1.md`
-- Adapter-output shape reference: `references/adapter-output-v1.json`
-- Case-evidence shape reference: `references/case-evidence-v1.json`
-- Verifier-sidecar schema reference: `references/verifier-sidecar-v1.yaml`
-
-### Dependency pin
-
-This project pins `PyYAML==6.0.3` in the skill frontmatter `metadata.dependencies`.
+<!-- core:begin -->
 
 ## Mandatory core
 
@@ -105,3 +84,32 @@ The evidence record matches the shape of the case-evidence reference (see Projec
 **Sidecar rejected for unknown or missing fields:**
 - Cause: the v1 schema is closed; unknown fields and missing required fields are rejected.
 - Fix: compare the sidecar against the verifier-sidecar schema reference (see Project extensions) and remove or add the exact fields.
+<!-- core:end -->
+
+<!-- project:begin -->
+## Project extensions
+
+### Python invocation
+
+This project's `<python>` is `uv run --frozen python3`.
+
+### Query-verification script
+
+This project's query-verification script is `<python> .opencode/skills/query-verification/scripts/query_verification.py`, invoked with the `validate` or `evaluate` subcommand.
+
+### Example paths and references
+
+Concrete paths and reference files used by this project:
+
+- Query root and sidecar example: `./sql`, `./sql/checks/example-amount.verifier.yaml`
+- Adapter output example: `./validations/session/adapter-output.json`
+- Evidence output example: `./validations/session/example-amount.evidence.json`
+- Protocol reference: `references/protocol-v1.md`
+- Adapter-output shape reference: `references/adapter-output-v1.json`
+- Case-evidence shape reference: `references/case-evidence-v1.json`
+- Verifier-sidecar schema reference: `references/verifier-sidecar-v1.yaml`
+
+### Dependency pin
+
+This project pins `PyYAML==6.0.3` in the skill frontmatter `metadata.dependencies`.
+<!-- project:end -->

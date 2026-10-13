@@ -15,7 +15,7 @@ VALID_MODES: tuple[BindingMode, ...] = (MODE_REGION, MODE_RAW, MODE_MERGE)
 
 ROLE_ROOT = "root"
 VALID_ROLES: tuple[str, ...] = (ROLE_ROOT,)
-CLEARANCE_SCHEMA = 2
+CLEARANCE_SCHEMA = 1
 
 BEGIN = "<!-- core:begin -->"
 END = "<!-- core:end -->"

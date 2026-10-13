@@ -1,8 +1,8 @@
-"""Pure bindings parsing, serialization, pending normalization, and clearance policy."""
+"""Pure bindings parsing, serialization, mode resolution, and pending normalization."""
 
 from __future__ import annotations
 
-from typing import NotRequired, Optional, TypedDict
+from typing import Mapping, NotRequired, Optional, TypedDict
 
 import yaml
 
@@ -15,6 +15,7 @@ from core_sync_pkg.domain.constants import (
     VALID_MODES,
     BindingMode,
 )
+from core_sync_pkg.domain.errors import CODE_INVALID, DomainError
 from core_sync_pkg.domain.markers import _is_safe_relative
 
 
@@ -201,6 +202,38 @@ def _serialize_binding_entry(entry: BindingEntry) -> dict[str, object]:
         "source": entry["source"],
         "destinations": list(entry["destinations"]),
     }
+
+
+def resolve_source_mode(
+    source: str, expanded_modes: Mapping[str, str]
+) -> Optional[str]:
+    """Look up a binding source's operational mode in the expanded mode map.
+
+    Root-derived modes occupy the same expanded map as per-file modes and
+    resolve identically; a source absent from the map resolves to ``None``.
+    """
+    return expanded_modes.get(source)
+
+
+def binding_mode_conflict(
+    entry: BindingEntry, expanded_modes: Mapping[str, str]
+) -> Optional[DomainError]:
+    """Return the existing raw-mode conflict error for a binding entry, if any.
+
+    The conflict rule is unchanged: a raw-declared entry conflicts with a
+    non-raw source clearance mode. The source mode is looked up through the
+    expanded map, so root-derived modes behave exactly like per-file modes;
+    a source absent from the map raises no conflict here (the uncleared-source
+    check owns that failure).
+    """
+    mode = resolve_source_mode(entry["source"], expanded_modes)
+    if entry["mode"] == MODE_RAW and mode is not None and mode != MODE_RAW:
+        return DomainError(
+            CODE_INVALID,
+            f"binding mode 'raw' conflicts with source clearance mode "
+            f"{mode!r} for {entry['source']}",
+        )
+    return None
 
 
 def _non_region_destination_paths(

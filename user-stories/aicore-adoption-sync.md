@@ -3,9 +3,9 @@
 > **Created:** 2026-09-11
 > **Title:** Core region synchronization
 > **Status:** active
-> **version:** 1.3.0
+> **version:** 1.5.0
 > **Epic:** core-governance
-> **Affected areas:** `.opencode/agents/`, `.opencode/skills/core-sync/`, `.opencode/skills/op-agent-creator/`, `agents/`, `README.md`, `AGENTS.md`, `knowledge/agents.md`, `opencode.jsonc`, `user-stories/git-pr-drafting.md`, `distribution-clearance.json`
+> **Affected areas:** `.opencode/agents/`, `.opencode/skills/`, `agents/`, `README.md`, `AGENTS.md`, `knowledge/agents.md`, `opencode.jsonc`, `user-stories/git-pr-drafting.md`, `distribution-clearance.json`
 
 ## Persona
 
@@ -19,6 +19,7 @@
 ## Scenario
 
 - The core maintainer runs `core-sync init` from the AICore checkout against a clean, saved destination. Region bindings generate core/project regions, set `pending`, and write reconciliation reports; raw bindings copy whole source files byte-for-byte without markers or `pending`. A newly declared raw mapping may create an absent target when its parent directory exists; an absent target for an existing raw mapping remains drift. The script writes the destination-root blocker for region paths. The destination project then reconciles its `project` regions, clears `pending`, and the next `check` reports `current`. Routine core updates run `apply` then `check`. The tool never edits the `project` region, and the core never hand-copies synchronized destination files.
+- The core maintainer prepares skill payloads for distribution: each skill ships by its root folder — clearance lists each shipped skill root with a default mode and its region-file subset, and the sync tool identifies the files. The sync tool's own skill ships nowhere. Region-bound skill documents deliver only their core; source project declarations stay home and each destination writes its own, and shipped text states project-interpreted commands only through the `<python>` placeholder.
 
 ## Acceptance criteria
 
@@ -46,7 +47,7 @@
 - ✅ **AC22:** A raw-bound story payload is created at the destination byte-for-byte and creates no region, report entry, or `pending` item.
 - ✅ **AC23:** The retired adoption management tools and their design document are absent from the tree.
 - ✅ **AC24:** The sync tool follows the language-agnostic clean-architecture contract: a pure IO-free domain, one use case per operation with a single `execute()`, technology adapters plus CLI composition in infrastructure, and a thin documented entry that re-exports the public API. CLI verbs, exit codes, bindings schema, and markers are unchanged by that refactor.
-- ✅ **AC25:** The distribution clearance file is versioned schema: every cleared source declares its binding mode and the source root declares its role; `check`/`apply`/`init` resolve the operational mode from source and reject a binding mode that conflicts with it before any payload read or write.
+- ✅ **AC25:** The distribution clearance file is versioned schema: every cleared source — a file or a skill root — declares its binding mode, a skill root declares a default mode plus the file subset that overrides it to region mode, and the source root declares its role; `check`/`apply`/`init` resolve the operational mode from source and reject a binding mode that conflicts with it before any payload read or write.
 - ✅ **AC26:** `init --bind-cleared` enrolls every cleared source not already bound — creating new region/raw targets and parents, while a merge source requires an existing destination and is never created — and routes the root to the destination instruction file it detects, or to an explicit root override.
 - ✅ **AC27:** Sync tests mirror the architectural layers: domain units, use-case units driven through in-memory port doubles, adapter integration, and CLI end-to-end, with no test importing behavior through the composition facade.
 - ✅ **AC28:** `merge` is a selectable source-owned binding mode: `init`/`apply` write a merged JSON/JSONC document in which every source top-level key is present with the source value and every destination-only top-level key is preserved. A source top-level key replaces the destination's same key wholesale, with no deep merge.
@@ -54,6 +55,11 @@
 - ✅ **AC30:** Merge output preserves the destination's comments, key order, and formatting outside replaced or inserted top-level keys and remains valid JSONC that opencode loads.
 - ✅ **AC31:** Merge mode creates no region markers, no reconciliation report, and no `pending` entry, and coexists with region and raw bindings in one bindings file.
 - ✅ **AC32:** The opencode config source is cleared as `merge` rather than `raw`; a merge binding of it preserves destination-only top-level keys while propagating AICore's source values.
+- ✅ **AC33 — Skill payload distribution:** A skill ships as one cleared root: clearance lists each shipped skill root with its default mode and its region-file subset, and the sync tool identifies every file under the root at each sync — subset files are region-bound and deliver only their core region, every other file takes the default mode and copies byte-for-byte, and interpreter caches never ship. The sync tool's own skill is never cleared and reaches no destination; any binding naming it fails the uncleared-source check.
+- ✅ **AC34 — Command placeholders:** Shipped skill text invokes project-interpreted commands only through the project-substituted command placeholder `<python>`, with the script path and flags literal — mirroring the base-ref placeholder convention — and embeds no concrete environment invocation; the placeholder's per-project value is declared only in project-owned text.
+- ✅ **AC35 — Raw payload neutrality:** A raw-bound payload copies byte-for-byte and its source text carries no concrete environment command, dependency pin, mandated local policy value, or source-project business vocabulary; placeholder commands, absence-tolerant reference lists, and labelled examples with neutral vocabulary are permitted.
+- ✅ **AC36 — Region skill structure:** The region-bound skill document carries exactly one ordered core pair immediately after frontmatter, a project pair only when source-side project text exists, and only its core region is delivered byte-identically.
+- ✅ **AC37 — Neutral delivered cores:** A delivered skill core contains no source-project identity or business vocabulary, concrete environment invocation, dependency pin, or inlined policy value; such declarations live only in project regions or destination-owned frontmatter.
 
 ## Proof
 
@@ -81,7 +87,7 @@
 - AC22 → `.aicore/core.yaml` raw binding · source/destination file pair · `init.yaml` region-only contents · `cmp` of source and destination story → exit 0
 - AC23 → retired-path absence assertion → `retired adoption paths absent`
 - AC24 → `core_sync_pkg/domain/`, `core_sync_pkg/application/`, `core_sync_pkg/infrastructure/` layout · `core_sync.py` documented entry re-export · Bastion 🧱 (Backend & Scripts Architect) code architecture `[PASS]` · Crucible 🔥 (Test Architect) test architecture `[PASS]`
-- AC25 → `core_sync_pkg/domain/clearance.py` · `application/enroll_destinations.py` · `tests/test_init_bind_cleared.py` · `tests/test_merge_init.py` · `uv run --frozen --group dev pytest -q` → exit 0
+- AC25 → `core_sync_pkg/domain/clearance.py` (file and skill-root entry shapes) · `application/enroll_destinations.py` · `core_sync_pkg/domain/test_clearance_metadata.py` · `core_sync_pkg/domain/test_root_expansion.py` · `core_sync_pkg/domain/test_root_mode_conflict.py` · `core_sync_pkg/application/test_enroll_destinations.py` · `uv run --frozen --group dev pytest -q` → exit 0
 - AC26 → `core_sync_pkg/tests/test_init_bind_cleared.py`
 - AC27 → `core_sync_pkg/domain/test_*.py` · `core_sync_pkg/application/test_*.py` driving `execute()` through in-memory port doubles · `core_sync_pkg/infrastructure/test_*.py` · `core_sync_pkg/tests/test_*.py` CLI end-to-end
 - AC28 → `distribution-clearance.json` · `.opencode/skills/core-sync/SKILL.md` `## Binding modes` · `core_sync_pkg/tests/test_merge_check.py`, `test_merge_apply.py`, `test_merge_init.py` · `uv run --frozen --group dev pytest -q` → exit 0
@@ -89,6 +95,11 @@
 - AC30 → `core_sync_pkg/domain/merge.py` `merge_top_level` · `core_sync_pkg/domain/test_merge_top_level.py` · `.opencode/skills/core-sync/SKILL.md` `## Binding modes`
 - AC31 → `core_sync_pkg/tests/test_merge_check.py`, `test_merge_init.py`, `test_binding_coexistence.py`
 - AC32 → `distribution-clearance.json` opencode config record
+- AC33 → `distribution-clearance.json` skill-root records · expansion enumeration (everything under root minus interpreter caches) · `core-sync check` → exit 1 on a bound uncleared source
+- AC34 → shipped skill command examples · `<python>` placeholder form → no concrete invocations present
+- AC35 → raw-bound skill file pair · `cmp` source vs destination → exit 0 · vocabulary/env sweep → no matches
+- AC36 → delivered region skill file · core-region byte-compare → exit 0
+- AC37 → delivered skill core · identity/env/vocabulary sweep → no matches
 
 ## Constraints
 
@@ -100,6 +111,9 @@
 - A missing target on a persisted raw binding is drift, not an invitation to create — because an absent file on a stored mapping signals a real break.
 - Distribution clearance is the authority for which sources may ship — because a bound source absent from clearance is an unreviewed disclosure.
 - The opencode config is synchronized by `merge`, not raw — because AICore's source top-level keys are authoritative while destination-only keys and formatting must survive.
+- Commands ship as project-substituted `<python>` placeholders — because a concrete invocation in frozen or delivered bytes imposes one project's environment on every adopter.
+- The sync tool's own skill ships nowhere — because synchronization runs from the source checkout and a shipped copy would drift unversioned at the destination.
+- Skill roots expand dynamically at each sync — because clearance records durable ownership, not file inventories.
 
 ## Change log
 

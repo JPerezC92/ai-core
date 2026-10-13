@@ -18,7 +18,11 @@ from core_sync_pkg.application.verify_destinations import (  # noqa: E402
     VerifyDestinations,
 )
 from core_sync_pkg.domain.bindings import BindingEntry, Bindings  # noqa: E402
-from core_sync_pkg.domain.clearance import ClearanceRecord
+from core_sync_pkg.domain.clearance import (  # noqa: E402
+    ClearanceEntry,
+    ClearanceRecord,
+    SkillRootEntry,
+)
 from core_sync_pkg.domain.constants import BindingMode, CommandName  # noqa: E402
 from core_sync_pkg.domain.errors import (  # noqa: E402
     CODE_DRIFT,
@@ -33,6 +37,7 @@ REV_B = "b" * 40
 SOURCE_DIR = Path("/src")
 DEST_DIR = Path("/dst")
 BINDINGS_PATH = Path("/src/bindings.yaml")
+ROOT = ".opencode/skills/foo/"
 CORE_SOURCE = "agent.md"
 CORE_DEST = "agent.md"
 CORE_TEXT = "<!-- core:begin -->\nCORE\n<!-- core:end -->\n"
@@ -66,7 +71,7 @@ class FakeBindingsStore:
 
 
 class FakeSourceCoreReader:
-    """In-memory SourceCoreReader double keyed by source path."""
+    """In-memory SourceCoreReader double recording every payload read."""
 
     def __init__(
         self,
@@ -77,17 +82,21 @@ class FakeSourceCoreReader:
         self.cores = cores or {}
         self.raws = raws or {}
         self.texts = texts or {}
+        self.reads: list[str] = []
 
     def read_core(self, path: Path) -> str | None:
+        self.reads.append(f"core:{path}")
         value = self.cores.get(path)
         if isinstance(value, Exception):
             raise value
         return value
 
     def read_raw(self, path: Path) -> bytes | None:
+        self.reads.append(f"raw:{path}")
         return self.raws.get(path)
 
     def read_text(self, path: Path) -> str | None:
+        self.reads.append(f"text:{path}")
         return self.texts.get(path)
 
 
@@ -120,30 +129,31 @@ class FakeDestinationWriter:
 
 
 class FakeClearanceStore:
-    """In-memory ClearanceRecord double returning configured clearance state."""
+    """In-memory ClearanceStore double returning configured clearance entries."""
 
     def __init__(
         self,
         cleared: set[str] | None,
         exists: bool = True,
         modes: dict[str, str] | None = None,
+        roots: dict[str, SkillRootEntry] | None = None,
     ) -> None:
         self.cleared = cleared
         self.exists = exists
         self.modes = modes or {}
+        self.roots = dict(roots or {})
 
     def load(
         self, source_dir: Path
-    ) -> tuple[dict[str, ClearanceRecord] | None, bool]:
-        records = (
-            None
-            if self.cleared is None
-            else {
-                path: ClearanceRecord(mode=self.modes.get(path, "region"))
-                for path in self.cleared
-            }
-        )
-        return records, self.exists
+    ) -> tuple[dict[str, ClearanceEntry] | None, bool]:
+        if self.cleared is None:
+            return (None, self.exists)
+        entries: dict[str, ClearanceEntry] = {
+            path: ClearanceRecord(mode=self.modes.get(path, "region"))
+            for path in self.cleared
+        }
+        entries.update(self.roots)
+        return (entries, self.exists)
 
 
 class FakeRootRuntimeFile:
@@ -169,11 +179,13 @@ class FakeFilesystemPaths:
         dirs: set[Path] | None = None,
         symlinks: set[Path] | None = None,
         preflight_error: str | None = None,
+        enumeration: dict[Path, list[str]] | None = None,
     ) -> None:
         self.files = files or set()
         self.dirs = dirs or set()
         self.symlinks = symlinks or set()
         self.preflight_error = preflight_error
+        self.enumeration = dict(enumeration or {})
 
     def is_file(self, path: Path) -> bool:
         return path in self.files
@@ -186,6 +198,9 @@ class FakeFilesystemPaths:
 
     def is_symlink(self, path: Path) -> bool:
         return path in self.symlinks
+
+    def enumerate_files_under(self, root: Path) -> list[str]:
+        return list(self.enumeration.get(root, []))
 
     def preflight_write_targets(
         self,
@@ -224,6 +239,13 @@ def _bindings(
     }
 
 
+def _skill_root(
+    mode: BindingMode, region_files: tuple[str, ...] = ()
+) -> SkillRootEntry:
+    """Build one parsed skill-root entry with a region-file subset."""
+    return SkillRootEntry(mode=mode, region_files=region_files)
+
+
 def _run(
     bindings: Bindings | None,
     *,
@@ -234,19 +256,33 @@ def _run(
     binary: dict[Path, bytes] | None = None,
     cleared: set[str] | None = None,
     modes: dict[str, str] | None = None,
+    roots: dict[str, SkillRootEntry] | None = None,
     clearance_exists: bool = True,
     files: set[Path] | None = None,
     preflight_error: str | None = None,
+    enumeration: dict[Path, list[str]] | None = None,
     source_revision: str = REV_A,
+    reader: FakeSourceCoreReader | None = None,
 ) -> UseCaseResult | DomainError:
     """Execute VerifyDestinations with in-memory doubles."""
+    if reader is None:
+        reader = FakeSourceCoreReader(cores=cores, raws=raws, texts=texts)
     use_case = VerifyDestinations(
         FakeBindingsStore(bindings),
-        FakeSourceCoreReader(cores=cores, raws=raws, texts=texts),
+        reader,
         FakeDestinationWriter(text=text, binary=binary),
-        FakeClearanceStore(cleared=cleared, exists=clearance_exists, modes=modes),
+        FakeClearanceStore(
+            cleared=cleared,
+            exists=clearance_exists,
+            modes=modes,
+            roots=roots,
+        ),
         FakeRootRuntimeFile(),
-        FakeFilesystemPaths(files=files, preflight_error=preflight_error),
+        FakeFilesystemPaths(
+            files=files,
+            preflight_error=preflight_error,
+            enumeration=enumeration,
+        ),
     )
     return use_case.execute(SOURCE_DIR, DEST_DIR, BINDINGS_PATH, source_revision)
 
@@ -413,3 +449,98 @@ class VerifyDestinationsTests:
         assert isinstance(result, DomainError)
         assert result.code == CODE_INVALID
         assert "invalid JSONC" in result.message
+
+    def test_uncleared_source_is_rejected_before_any_payload_read(self) -> None:
+        reader = FakeSourceCoreReader(cores={SOURCE_DIR / "agent.md": "CORE\n"})
+        result = _run(
+            _bindings(REV_A, [_entry("agent.md", ["agent.md"])]),
+            reader=reader,
+            text={DEST_DIR / "agent.md": CORE_TEXT},
+            cleared=set(),
+        )
+        assert isinstance(result, DomainError)
+        assert result.code == CODE_DRIFT
+        assert "source not cleared for distribution: agent.md" in result.message
+        assert reader.reads == []
+
+    def test_new_file_under_root_is_verified_without_per_file_row(self) -> None:
+        result = _run(
+            _bindings(
+                REV_A, [_entry(ROOT + "new.md", [ROOT + "new.md"], "raw")]
+            ),
+            raws={SOURCE_DIR / (ROOT + "new.md"): b"new\n"},
+            binary={DEST_DIR / (ROOT + "new.md"): b"new\n"},
+            cleared=set(),
+            roots={ROOT: _skill_root("raw", ("SKILL.md",))},
+            enumeration={
+                SOURCE_DIR / ROOT[:-1]: ["SKILL.md", "new.md"]
+            },
+            files={DEST_DIR / (ROOT + "new.md")},
+        )
+        assert isinstance(result, UseCaseResult)
+        assert result.message == "current"
+
+    def test_expanded_file_missing_at_destination_is_drift(self) -> None:
+        result = _run(
+            _bindings(
+                REV_A, [_entry(ROOT + "new.md", [ROOT + "new.md"], "raw")]
+            ),
+            raws={SOURCE_DIR / (ROOT + "new.md"): b"new\n"},
+            cleared=set(),
+            roots={ROOT: _skill_root("raw", ("SKILL.md",))},
+            enumeration={
+                SOURCE_DIR / ROOT[:-1]: ["SKILL.md", "new.md"]
+            },
+        )
+        assert isinstance(result, DomainError)
+        assert result.code == CODE_DRIFT
+        assert "missing destination" in result.message
+
+    def test_interpreter_cache_paths_never_enter_the_cleared_set(self) -> None:
+        result = _run(
+            _bindings(
+                REV_A,
+                [
+                    _entry(
+                        ROOT + "__pycache__/m.pyc",
+                        [ROOT + "__pycache__/m.pyc"],
+                        "raw",
+                    )
+                ],
+            ),
+            raws={SOURCE_DIR / (ROOT + "__pycache__/m.pyc"): b"\0"},
+            cleared=set(),
+            roots={ROOT: _skill_root("raw")},
+            enumeration={
+                SOURCE_DIR / ROOT[:-1]: ["mod.py", "__pycache__/m.pyc"]
+            },
+        )
+        assert isinstance(result, DomainError)
+        assert result.code == CODE_DRIFT
+        assert result.message == (
+            f"source not cleared for distribution: {ROOT}__pycache__/m.pyc"
+        )
+
+    def test_root_derived_mode_conflict_fails_before_payload_read(self) -> None:
+        reader = FakeSourceCoreReader(
+            cores={SOURCE_DIR / (ROOT + "SKILL.md"): "CORE\n"}
+        )
+        result = _run(
+            _bindings(
+                REV_A,
+                [_entry(ROOT + "SKILL.md", [ROOT + "SKILL.md"], "raw")],
+            ),
+            reader=reader,
+            text={DEST_DIR / (ROOT + "SKILL.md"): CORE_TEXT},
+            cleared=set(),
+            roots={ROOT: _skill_root("raw", ("SKILL.md",))},
+            enumeration={SOURCE_DIR / ROOT[:-1]: ["SKILL.md"]},
+            files={DEST_DIR / (ROOT + "SKILL.md")},
+        )
+        assert isinstance(result, DomainError)
+        assert result.code == CODE_INVALID
+        assert (
+            "binding mode 'raw' conflicts with source clearance mode "
+            f"'region' for {ROOT}SKILL.md"
+        ) in result.message
+        assert reader.reads == []

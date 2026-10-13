@@ -6,11 +6,11 @@
 
 Run every command from the project root. The validator enforces only the mechanical/repetitive subset; this checklist's evidence analysis remains the agent's responsibility.
 
-- **Fresh scaffold:** run `uv run --frozen python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis-dir> --scaffold`. It requires the copied `analysis/` structure but intentionally permits template-body fill tokens. The analysis pass verifies `01-identify.md` `Pre` contains this ticket's context; later step bodies are intentionally still template content.
-- **Completed step:** before advancing completed step `NAME` (`identify`, `investigate`, `synthesize`), run `uv run --frozen python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis-dir> --step NAME`. That completed step must have no unfilled tokens.
-- **Completed working state:** after the `Phase:` header advances, reserve `uv run --frozen python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis-dir>` for full validation of all completed steps through that header.
-- **Pre-close readiness (before collapse):** run `uv run --frozen python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --pre-close`. It is read-only and proves the durable record and complete working set are ready before any deletion.
-- **Close-out postcondition (after collapse):** run `uv run --frozen python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --close-out`. It verifies the durable set and confirms the working set is gone.
+- **Fresh scaffold:** run `<python> .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis-dir> --scaffold`. It requires the copied `analysis/` structure but intentionally permits template-body fill tokens. The analysis pass verifies `01-identify.md` `Pre` contains this ticket's context; later step bodies are intentionally still template content.
+- **Completed step:** before advancing completed step `NAME` (`identify`, `investigate`, `synthesize`), run `<python> .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis-dir> --step NAME`. That completed step must have no unfilled tokens.
+- **Completed working state:** after the `Phase:` header advances, reserve `<python> .opencode/skills/ticket-runbook/scripts/validate_runbook.py <analysis-dir>` for full validation of all completed steps through that header.
+- **Pre-close readiness (before collapse):** run `<python> .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --pre-close`. It is read-only and proves the durable record and complete working set are ready before any deletion.
+- **Close-out postcondition (after collapse):** run `<python> .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --close-out`. It verifies the durable set and confirms the working set is gone.
 
 ## analysis/state.md
 
@@ -60,7 +60,7 @@ Run every command from the project root. The validator enforces only the mechani
 - Every non-`path:` evidence citation (prose/backtick references) in the ticket record resolves to real evidence. *(analysis)*
 - Each used image records `url:` when the ticket system returned one, and never records a fabricated `url:`. *(analysis)*
 - Posted-response fidelity and content/completeness gates pass. *(analysis)*
-- The exact phrase `Close out now` is obtained before any deletion. *(analysis)*
+- The project's close-out authorization phrase (see Project extensions) is obtained before any deletion. *(analysis)*
 
 ## Authorization and collapse
 
@@ -76,9 +76,9 @@ Run every command from the project root. The validator enforces only the mechani
 ## Query retention and register admission (close-out)
 
 - Every executed query in `02-investigate.md` — manual `Query:` blocks and verifier-routed evidence — is preserved verbatim in `ticket_<id>.md` or a cited `validations/` artifact BEFORE collapse deletes the working file. *(analysis)*
-- When the confirming query is reusable, it is persisted as parameterized SQL plus an adjacent `.verifier.yaml` sidecar at the destination project's declared query-storage path; the row's Evidence records `diagnostic:<destination-relative-sidecar-path>`. A reusable identification pack (a multi-statement or multi-result correlation) is instead persisted at the destination-chosen path and recorded as `pack:<destination-relative-pack-path>`; it is not a verifier and is never evaluated by `query_verification.py`. AICore never defines the destination directory. *(analysis)*
-- A later `structural` ticket follows a recorded `pack:` pointer first — resolving the destination-relative path and replaying the correlation with current-ticket keys under destination-owned execution (AICore never executes or parses the pack) — then follows the `diagnostic:` pointer through protocol-v1 when present (one existing Query-budget slot), before framing a new query. *(analysis)*
-- Register admission on a confirmed root cause happens before collapse and never waits for `Close out now`; collapse itself requires explicit user authorization. *(analysis)*
+- When the confirming query is reusable, it is persisted as parameterized SQL plus an adjacent `.verifier.yaml` sidecar at the destination project's declared query-storage path; the row's Evidence records `diagnostic:<destination-relative-sidecar-path>`. A reusable identification pack (a multi-statement or multi-result correlation) is instead persisted at the destination-chosen path and recorded as `pack:<destination-relative-pack-path>`; it is not a verifier and is never evaluated by `query_verification.py`. The core never defines the destination directory. *(analysis)*
+- A later `structural` ticket follows a recorded `pack:` pointer first — resolving the destination-relative path and replaying the correlation with current-ticket keys under destination-owned execution (the core never executes or parses the pack) — then follows the `diagnostic:` pointer through protocol-v1 when present (one existing Query-budget slot), before framing a new query. *(analysis)*
+- Register admission on a confirmed root cause happens before collapse and never waits for the project's close-out authorization phrase (see Project extensions); collapse itself requires explicit user authorization. *(analysis)*
 
 ## Loop rule
 

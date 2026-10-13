@@ -82,6 +82,29 @@ def detect_root(destination_dir: Path) -> str | None:
     return None
 
 
+def enumerate_files_under(root: Path) -> list[str]:
+    """Return root-relative file paths under a directory, skipping interpreter caches.
+
+    Every regular file reachable under `root` is returned as a POSIX-style
+    root-relative path in sorted order. Interpreter caches never appear: any
+    path with a `__pycache__` part or a `.pyc` suffix is skipped. A missing or
+    non-directory root enumerates as an empty list.
+    """
+    if not root.is_dir():
+        return []
+    files: list[str] = []
+    for directory, subdirectories, names in os.walk(root):
+        subdirectories[:] = [name for name in subdirectories if name != "__pycache__"]
+        for name in names:
+            if name.endswith(".pyc"):
+                continue
+            relative = Path(directory, name).relative_to(root).as_posix()
+            if "__pycache__" in relative.split("/"):
+                continue
+            files.append(relative)
+    return sorted(files)
+
+
 def resolve_root_path(destination_dir: Path, bindings: Bindings) -> Path:
     """Resolve the destination root runtime file at the IO boundary.
 
@@ -357,6 +380,9 @@ class LocalFilesystemPaths:
     def ensure_dir(self, path: Path) -> None:
         path.mkdir(parents=True, exist_ok=True)
 
+    def enumerate_files_under(self, root: Path) -> list[str]:
+        return enumerate_files_under(root)
+
     def preflight_write_targets(
         self,
         command: CommandName,
@@ -425,6 +451,7 @@ __all__ = [
     "read_source_raw",
     "read_source_text",
     "read_source_core",
+    "enumerate_files_under",
     "resolve_root_path",
     "preflight_write_targets",
     "write_reconciliation_blocker",

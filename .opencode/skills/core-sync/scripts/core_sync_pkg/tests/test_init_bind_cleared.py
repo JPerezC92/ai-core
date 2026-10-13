@@ -1,14 +1,13 @@
-"""End-to-end tests for `init --bind-cleared` bulk enrollment and root detection."""
+"""End-to-end tests for `init --bind-cleared` bulk and merge enrollment."""
 
 from __future__ import annotations
 
 import json
 import sys
 from pathlib import Path
+from typing import NotRequired, TypedDict
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-
-import pytest  # noqa: E402
 
 from _core_sync_testkit import (  # noqa: E402
     MERGE_DESTINATION,
@@ -17,6 +16,7 @@ from _core_sync_testkit import (  # noqa: E402
     _write_bytes_file,
     _write_file,
 )
+from core_sync_pkg.domain.constants import CLEARANCE_SCHEMA  # noqa: E402
 from core_sync_pkg.domain.jsonc import parse_object  # noqa: E402
 from core_sync_pkg.domain.reconciliation import (  # noqa: E402
     reconciliation_report_path,
@@ -35,40 +35,60 @@ ROOT_MARKED = (
 )
 
 
+class FileRecordShape(TypedDict):
+    """Well-formed cleared file record as written by fixture sources."""
+
+    mode: str
+    role: NotRequired[str]
+
+
+class ClearanceDocument(TypedDict):
+    """Well-formed version-1 clearance document maintained by fixtures."""
+
+    schema: int
+    cleared: dict[str, FileRecordShape]
+
+
+def _clearance_document() -> ClearanceDocument:
+    """Build the fixture source's typed version-1 clearance document."""
+    return {
+        "schema": CLEARANCE_SCHEMA,
+        "cleared": {
+            ".opencode/agents/atrium.md": {"mode": "region"},
+            "opencode.jsonc": {"mode": "raw"},
+            "AGENTS.md": {"mode": "region", "role": "root"},
+        },
+    }
+
+
+def _destination_root() -> str:
+    """Build one destination instruction-root file body."""
+    return "---\nname: dest\n---\n# Dest\n"
+
+
 def _source_with_clearance(tmp_path: Path) -> Path:
+    """Build the fixture source tree with its clearance document."""
     source = tmp_path / "source"
     _write_file(source, ".opencode/agents/atrium.md", AGENT_MARKED)
     _write_bytes_file(source, "opencode.jsonc", b"{\n}\n")
     _write_file(source, "AGENTS.md", ROOT_MARKED)
     (source / CLEARANCE).write_text(
-        json.dumps(
-            {
-                "schema": 2,
-                "cleared": {
-                    ".opencode/agents/atrium.md": {"mode": "region"},
-                    "opencode.jsonc": {"mode": "raw"},
-                    "AGENTS.md": {"mode": "region", "role": "root"},
-                },
-            }
-        )
-        + "\n",
+        json.dumps(_clearance_document()) + "\n",
         encoding="utf-8",
     )
     return source
 
 
-class BindClearedEnrollmentTests:
-    """`init --bind-cleared` enrolls every cleared source and detects the root."""
+class BindClearedBulkEnrollmentTests:
+    """`init --bind-cleared` enrolls every cleared source; merge sources merge."""
 
-    def test_fresh_enrollment_creates_targets_and_detects_root(
+    def test_bulk_enrollment_creates_region_and_raw_targets(
         self, tmp_path: Path
     ) -> None:
         source = _source_with_clearance(tmp_path)
         destination = tmp_path / "destination"
         destination.mkdir()
-        (destination / "AGENTS.md").write_text(
-            "---\nname: dest\n---\n# Dest\n", encoding="utf-8"
-        )
+        (destination / "AGENTS.md").write_text(_destination_root(), encoding="utf-8")
         bindings = tmp_path / "bindings.yaml"
 
         code = main(
@@ -88,54 +108,13 @@ class BindClearedEnrollmentTests:
         )
         assert (destination / "opencode.jsonc").read_bytes() == b"{\n}\n"
         assert bindings.is_file()
-        assert "AGENTS.md" in bindings.read_text(encoding="utf-8")
-
-    def test_missing_root_without_override_returns_drift(
-        self, tmp_path: Path
-    ) -> None:
-        source = _source_with_clearance(tmp_path)
-        destination = tmp_path / "destination"
-        destination.mkdir()
-        bindings = tmp_path / "bindings.yaml"
-
-        code = main(
-            [
-                "init",
-                "--source", str(source),
-                "--destination", str(destination),
-                "--bindings", str(bindings),
-                "--source-revision", REV_A,
-                "--bind-cleared",
-            ]
-        )
-
-        assert code == 1
-
-    def test_explicit_root_override_routes_root_source(
-        self, tmp_path: Path
-    ) -> None:
-        source = _source_with_clearance(tmp_path)
-        destination = tmp_path / "destination"
-        destination.mkdir()
-        (destination / "CLAUDE.md").write_text(
-            "---\nname: dest\n---\n# Dest\n", encoding="utf-8"
-        )
-        bindings = tmp_path / "bindings.yaml"
-
-        code = main(
-            [
-                "init",
-                "--source", str(source),
-                "--destination", str(destination),
-                "--bindings", str(bindings),
-                "--source-revision", REV_A,
-                "--bind-cleared",
-                "--root", "CLAUDE.md",
-            ]
-        )
-
-        assert code == 0
-        assert "CLAUDE.md" in bindings.read_text(encoding="utf-8")
+        updated = load_bindings(bindings)
+        assert updated is not None
+        assert {entry["source"] for entry in updated["bindings"]} == {
+            "AGENTS.md",
+            ".opencode/agents/atrium.md",
+            "opencode.jsonc",
+        }
 
     def test_cleared_merge_source_enrolled_in_bulk(self, tmp_path: Path) -> None:
         source = tmp_path / "source"

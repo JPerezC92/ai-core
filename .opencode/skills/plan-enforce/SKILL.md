@@ -7,35 +7,7 @@ metadata:
   author: Philip Perez Castro
   version: 1.18.0
 ---
-
-## Project extensions
-
-### Protected upstream base ref
-
-This project's protected upstream base ref is `origin/main` — remote `origin`, branch `main`. Mandatory core denotes it with `$BASE`, composed as `$BASE="${BASE_REMOTE}/${BASE_BRANCH}"`; substituting this project's values (`$BASE_REMOTE=origin`, `$BASE_BRANCH=main`) keeps every command identical to `origin/main`.
-
-### Reviewed whole-suite command
-
-This project's reviewed whole-suite test command is `uv run --frozen --group dev pytest -q`.
-
-### Test file pattern and harness config
-
-This project's Python test-file pattern is `test_*.py`. This project's root opencode config is `opencode.jsonc`; Crucible 🔥 (Test Architect) runner permissions live under `agent.crucible.permission`.
-
-### Plan validator script
-
-This project's plan validator script is `uv run --frozen python3 .opencode/skills/plan-enforce/scripts/validate_plan.py`. Every Python invocation in this skill runs through the project's virtual environment.
-
-### Plan and checklist templates
-
-This project's plan-enforce templates and references:
-
-- Programming plan template: `references/_template-programming.md`
-- Base plan template: `references/_template.md`
-- Phase template: `references/_phase-template.md`
-- Plan/phase/audit/completion checklist: `references/_consistency-checklist.md`
-
-The canonical user-story template and story-hygiene checklist are owned by the `user-story` skill at `.opencode/skills/user-story/references/`.
+<!-- core:begin -->
 
 ## Mandatory core
 
@@ -370,3 +342,39 @@ Published documents, durable criteria, Goal `Done when:`, and every `## Change l
 ### Troubleshooting
 
 **Live main SHA unavailable:** Cause: remote/authentication failure. Fix: resolve it and rerun inventory; never use a cached SHA. **Stash overlap:** Cause: a planned path intersects a stash path. Fix: change scope or stay blocked; never erase the stash (the user may run `git stash apply`). **Cleanup proof fails:** Cause: mismatch, unchecked extraction, or non-empty parity diff. Fix: do not delete; re-fetch and reevaluate. **Stash inventory denied:** Cause: permissions block the inventory. Fix: ensure config retains targeted destructive denies followed by read-only allows for `git stash list` and `git stash show -u`.
+<!-- core:end -->
+
+<!-- project:begin -->
+## Project extensions
+
+### Python invocation
+
+This project's `<python>` is `uv run --frozen python3`.
+
+### Protected upstream base ref
+
+This project's protected upstream base ref is `origin/main` — remote `origin`, branch `main`. Mandatory core denotes it with `$BASE`, composed as `$BASE="${BASE_REMOTE}/${BASE_BRANCH}"`; substituting this project's values (`$BASE_REMOTE=origin`, `$BASE_BRANCH=main`) keeps every command identical to `origin/main`.
+
+### Reviewed whole-suite command
+
+This project's reviewed whole-suite test command is `uv run --frozen --group dev pytest -q`.
+
+### Test file pattern and harness config
+
+This project's Python test-file pattern is `test_*.py`. This project's root opencode config is `opencode.jsonc`; Crucible 🔥 (Test Architect) runner permissions live under `agent.crucible.permission`.
+
+### Plan validator script
+
+This project's plan validator script is `<python> .opencode/skills/plan-enforce/scripts/validate_plan.py`. Every Python invocation in this skill runs through the project's virtual environment.
+
+### Plan and checklist templates
+
+This project's plan-enforce templates and references:
+
+- Programming plan template: `references/_template-programming.md`
+- Base plan template: `references/_template.md`
+- Phase template: `references/_phase-template.md`
+- Plan/phase/audit/completion checklist: `references/_consistency-checklist.md`
+
+The canonical user-story template and story-hygiene checklist are owned by the `user-story` skill at `.opencode/skills/user-story/references/`.
+<!-- project:end -->

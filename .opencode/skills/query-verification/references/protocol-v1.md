@@ -2,7 +2,7 @@
 
 > **Status:** Normative for the implemented incident-only pilot.
 > **Scope:** Local validation of one incident-owned SQL verifier sidecar and local evaluation of one normalized adapter result.
-> **Non-goal:** This protocol never grants AICore database credentials, query execution, command invocation, network access, or persistent query-root configuration.
+> **Non-goal:** This protocol never grants the core database credentials, query execution, command invocation, network access, or persistent query-root configuration.
 
 ## 1. Actors and trust boundary
 

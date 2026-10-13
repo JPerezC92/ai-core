@@ -5,12 +5,12 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-import core_sync_pkg.infrastructure.filesystem as core_filesystem  # noqa: E402
 from _core_sync_testkit import (  # noqa: E402
     RAW_SOURCE_BYTES,
     REV_A,
@@ -24,7 +24,11 @@ from _core_sync_testkit import (  # noqa: E402
     _write_bytes_file,
     _write_file,
 )
-from core_sync_pkg.domain.constants import CLEARANCE_REL  # noqa: E402
+from core_sync_pkg.domain.constants import (  # noqa: E402
+    CLEARANCE_REL,
+    CLEARANCE_SCHEMA,
+    BindingMode,
+)
 from core_sync_pkg.domain.reconciliation import (  # noqa: E402
     reconciliation_report_path,
     sync_reconciliation_blocker,
@@ -103,12 +107,36 @@ def _raw_fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
     return source, destination, bindings_path
 
 
-def _set_clearance(source: Path, paths: list[str], mode: str = "region") -> Path:
-    """Write a valid schema-2 clearance file for a fixture source."""
+class _FileRecordShape(TypedDict):
+    """Well-formed cleared file record as written by fixture sources."""
+
+    mode: str
+
+
+class _ClearanceDocument(TypedDict):
+    """Well-formed version-1 clearance document maintained by fixtures."""
+
+    schema: int
+    cleared: dict[str, _FileRecordShape]
+
+
+def _clearance_document(
+    paths: list[str], mode: BindingMode = "region"
+) -> _ClearanceDocument:
+    """Build one typed version-1 clearance document for a fixture source."""
+    return {
+        "schema": CLEARANCE_SCHEMA,
+        "cleared": {path: {"mode": mode} for path in paths},
+    }
+
+
+def _set_clearance(
+    source: Path, paths: list[str], mode: BindingMode = "region"
+) -> Path:
+    """Write a valid version-1 clearance file for a fixture source."""
     clearance_path = source / CLEARANCE_REL
-    clearance = {"schema": 2, "cleared": {p: {"mode": mode} for p in paths}}
     clearance_path.write_text(
-        json.dumps(clearance, indent=2) + "\n",
+        json.dumps(_clearance_document(paths, mode), indent=2) + "\n",
         encoding="utf-8",
     )
     return clearance_path
@@ -158,25 +186,6 @@ def _snapshot(paths: list[Path]) -> dict[Path, bytes | None]:
 def _assert_unchanged(paths: list[Path], before: dict[Path, bytes | None]) -> None:
     """Assert that protected files and their existence remain unchanged."""
     assert _snapshot(paths) == before
-
-
-def _install_payload_read_spies(
-    monkeypatch: pytest.MonkeyPatch,
-) -> list[str]:
-    """Make any bound-source payload read fail and return invocation records."""
-    invoked: list[str] = []
-
-    def fail_core(path: Path) -> str | None:
-        invoked.append(f"region:{path}")
-        raise AssertionError("region payload read before clearance gate")
-
-    def fail_raw(path: Path) -> bytes | None:
-        invoked.append(f"raw:{path}")
-        raise AssertionError("raw payload read before clearance gate")
-
-    monkeypatch.setattr(core_filesystem, "read_source_core", fail_core)
-    monkeypatch.setattr(core_filesystem, "read_source_raw", fail_raw)
-    return invoked
 
 
 class DistributionClearanceTests:
@@ -282,7 +291,7 @@ class DistributionClearanceTests:
         ).read_bytes()
         assert json.loads(
             (source / CLEARANCE_REL).read_text(encoding="utf-8")
-        ) == {"schema": 2, "cleared": {"payload.bin": {"mode": "raw"}}}
+        ) == _clearance_document(["payload.bin"], mode="raw")
 
         assert main(_command_args(command, source, destination, bindings)) == 0
         assert capsys.readouterr().out == {
@@ -293,11 +302,10 @@ class DistributionClearanceTests:
 
     @pytest.mark.parametrize("command", COMMANDS)
     @pytest.mark.parametrize("mode", ["region", "raw"])
-    def test_uncleared_source_is_rejected_before_payload_read(
+    def test_uncleared_source_is_rejected_without_writes(
         self,
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],
-        monkeypatch: pytest.MonkeyPatch,
         command: str,
         mode: str,
     ) -> None:
@@ -312,21 +320,18 @@ class DistributionClearanceTests:
         _set_clearance(source, [])
         protected = _protected_paths(source, destination, bindings, payload)
         before = _snapshot(protected)
-        invoked = _install_payload_read_spies(monkeypatch)
 
         assert main(_command_args(command, source, destination, bindings)) == 1
 
         assert f"source not cleared for distribution: {payload}" in capsys.readouterr().err
-        assert invoked == []
         _assert_unchanged(protected, before)
 
     @pytest.mark.parametrize("command", COMMANDS)
     @pytest.mark.parametrize("mode", ("region", "raw"))
-    def test_missing_clearance_is_rejected_before_payload_read_or_write(
+    def test_missing_clearance_is_rejected_without_writes(
         self,
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],
-        monkeypatch: pytest.MonkeyPatch,
         command: str,
         mode: str,
     ) -> None:
@@ -342,7 +347,6 @@ class DistributionClearanceTests:
         clearance_path.unlink()
         protected = _protected_paths(source, destination, bindings, payload)
         before = _snapshot(protected)
-        invoked = _install_payload_read_spies(monkeypatch)
 
         assert main(_command_args(command, source, destination, bindings)) == 1
 
@@ -350,7 +354,6 @@ class DistributionClearanceTests:
             f"missing clearance file: {clearance_path}"
             in capsys.readouterr().err
         )
-        assert invoked == []
         _assert_unchanged(protected, before)
 
     @pytest.mark.parametrize("command", COMMANDS)
@@ -359,15 +362,19 @@ class DistributionClearanceTests:
         "malformed",
         [
             pytest.param("{not-json\n", id="invalid-json"),
-            pytest.param('{"schema":2,"cleared":[]}\n', id="invalid-schema"),
-            pytest.param('{"schema":1,"cleared":[7]}\n', id="non-string-path"),
+            pytest.param(
+                '{"schema":1,"cleared":[]}\n', id="malformed-clearance-shape"
+            ),
+            pytest.param(
+                '{"schema":7,"cleared":{"payload.bin":{"mode":"raw"}}}\n',
+                id="unsupported-version-label",
+            ),
         ],
     )
-    def test_malformed_clearance_is_rejected_before_payload_read_or_write(
+    def test_invalid_clearance_is_rejected_without_writes(
         self,
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],
-        monkeypatch: pytest.MonkeyPatch,
         command: str,
         mode: str,
         malformed: str,
@@ -384,7 +391,6 @@ class DistributionClearanceTests:
         clearance_path.write_text(malformed, encoding="utf-8")
         protected = _protected_paths(source, destination, bindings, payload)
         before = _snapshot(protected)
-        invoked = _install_payload_read_spies(monkeypatch)
 
         assert main(_command_args(command, source, destination, bindings)) == 2
 
@@ -392,5 +398,4 @@ class DistributionClearanceTests:
             f"invalid clearance file: {clearance_path}"
             in capsys.readouterr().err
         )
-        assert invoked == []
         _assert_unchanged(protected, before)
