@@ -4,11 +4,11 @@ A reusable, agnostic **agentic orchestration core** for [OpenCode](https://openc
 
 ## What you get
 
-- **One lead, many specialists** — Cipher 🔓 (Lead Orchestrator) triages every request, dispatches roster agents in parallel or sequence, and synthesizes a single root cause / verdict / plan. Subagents never address the user; they report to the lead in a fixed, bounded format.
+- **One lead, many specialists** — Cipher 🔓 (Lead Orchestrator) triages every request, dispatches independent ready tasks concurrently — including multiple instances of the same role — and serializes work that shares a dependency, resource, gate, or capacity limit. Each assignment names its inputs, exclusive resources, and output. Results are accepted before dependent work continues. Subagents report to the lead; they do not address the user.
 - **Evidence discipline** — facts vs. labeled `hipótesis:` vs. forbidden assumptions; every quantitative claim traces to a cited measurement, every report leads with a verdict and stays ≤ 60 lines (`knowledge/agents.md`).
 - **Safety rails** — a least-privilege permission model in `opencode.jsonc`: force-push, PR merges, `sudo`, system-path `rm -rf`, and env-file reads are denied; the `plan` agent cannot edit files; irreversible actions are User-Authority-Only.
 - **Plan-first workflow** — the `plan-enforce` skill requires a plan artifact in `plans/` plus a user story before Forge 🔨 (Implementer) writes code, and verifies a confirmed PR merge before branch cleanup.
-- **Automatic architecture gates** — Atrium 🏛️ (Frontend Architect) audits after every frontend edit, Crucible 🔥 (Test Architect) after every test-file edit, Inquisitor 🔎 (PR Reviewer) at every PR head, Warden 🔒 (Dependency Warden) before any manifest change.
+- **Automatic architecture gates** — after a frontend edit, Atrium 🏛️ (Frontend Architect); after a backend or script edit, Bastion 🧱 (Backend & Scripts Architect); after a test-file edit, Crucible 🔥 (Test Architect). The worker returns the edit for review and continues only after the lead accepts the current verdict and explicitly resumes it. Inquisitor 🔎 (PR Reviewer) reviews each PR head, and Warden 🔒 (Dependency Warden) reviews manifest changes before they are staged.
 - **Skill library** — core distribution (`core-sync`), git workflow (`git-branch-name`, `git-commit`, `git-pr`), OpenCode authoring (`op-agent-creator`, `op-skill-creator`, `op-model`), and incident tooling (`ticket-runbook`, `query-verification`).
 - **Knowledge registers** — shared agent rules, an accepted-debt register, a diagnostic symptom catalog, a known-problem register, and living design docs.
 - **Tested tooling** — 514 pytest tests cover the Python machinery (core-sync, plan validators, runbook validators, query verification); the suite runs worker-parallel.
@@ -92,7 +92,7 @@ Clone AICore, then clear the destination-owned state so the fresh project starts
 - **Tests** — `uv run --frozen --group dev pytest -q` runs the whole suite (514 tests, worker-parallel via pytest-xdist). Skill tests live beside their scripts: `.opencode/skills/<skill>/scripts/test_*.py`.
 - **Authoring** — use the `op-skill-creator` and `op-agent-creator` skills to scaffold skills/agents, and `op-model` to change agent models deterministically.
 - **Config changes** — the OpenCode TUI must be restarted after any `opencode.jsonc` permission change; active sessions do not reload it.
-- **Plan discipline** — non-trivial work starts with the `plan-enforce` skill (plan artifact in `plans/` + user story); specs never bump synced version numbers locally — destination-local changes live in git history and the user-story change log.
+- **Plan discipline** — non-trivial work starts with the `plan-enforce` skill (plan artifact in `plans/` + user story). Parallel tasks need accepted inputs and non-overlapping writes; a written assignment is not a lock, and a separate session is not verified isolation. Specs never bump synced version numbers locally — destination-local changes live in git history and the user-story change log. Restart OpenCode after accepting runtime or skill changes; the active session does not hot-reload them.
 
 ## Notes
 

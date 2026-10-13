@@ -15,7 +15,7 @@ EXPECTED_SOURCE_VERSIONS = {
     "augur.md": "1.2.2",
     "bastion.md": "1.7.0",
     "crucible.md": "1.8.0",
-    "forge.md": "1.5.0",
+    "forge.md": "1.6.0",
     "herald.md": "1.4.3",
     "inquisitor.md": "1.4.2",
     "investigator.md": "1.3.2",

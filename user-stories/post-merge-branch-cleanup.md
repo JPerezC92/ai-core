@@ -31,9 +31,9 @@
 
 ## Proof
 
-- AC1 → `.opencode/skills/plan-enforce/SKILL.md` `User confirms PR merge` lifecycle rule · `.opencode/agents/herald.md` `#### PR lifecycle`
-- AC2 → `.opencode/skills/plan-enforce/SKILL.md` `User confirms PR merge` lifecycle rule · `.opencode/agents/herald.md` `#### Execution steps` item 8
-- AC3 → `.opencode/skills/plan-enforce/SKILL.md` `User confirms PR merge` lifecycle rule · `.opencode/agents/herald.md` `#### PR lifecycle` hard rules
+- AC1 → `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Post-merge proof and cleanup` · `.opencode/agents/herald.md` `#### PR lifecycle`
+- AC2 → `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Post-merge proof and cleanup` · `.opencode/agents/herald.md` `#### Execution steps` item 8
+- AC3 → `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Post-merge proof and cleanup` · `.opencode/agents/herald.md` `#### PR lifecycle` hard rules
 - AC4 → `.opencode/agents/herald.md` `#### Execution steps` item 8
 - AC5 → `.opencode/agents/herald.md` `#### PR lifecycle` hard rules
 - AC6 → `.opencode/skills/plan-enforce/SKILL.md` frontmatter description · `## When to use me`
