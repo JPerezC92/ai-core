@@ -7,6 +7,7 @@ metadata:
   author: Philip Perez Castro
   version: 1.2.0
 ---
+<!-- core:begin -->
 
 ## What I do
 
@@ -93,3 +94,4 @@ For each finding: the type (duplicate scenario / contradiction / extension / sup
 - **User wants a plan now:** route to `plan-enforce` only after the contract is approved; a draft is not a planning input.
 - **Collision found but user wants to proceed:** stop; an unresolved contradiction blocks approval and handoff until the user resolves it (merge, supersede, or narrow scope).
 - **Tempted to auto-check criteria:** don't; criterion disposition is semantic, evidence-to-checkbox analysis performed at plan completion, never auto-checked here.
+<!-- core:end -->

@@ -98,7 +98,7 @@ ROOT_TEXT = "# Root runtime\n\nIntro paragraph.\n\nLast line.\n"
 
 
 class _FixtureClearance(TypedDict):
-    """Valid schema-2 clearance metadata maintained by source fixtures."""
+    """Valid schema-1 clearance metadata maintained by source fixtures."""
 
     schema: int
     cleared: dict[str, dict[str, str]]

@@ -17,7 +17,7 @@ This project's skill-creation knowledge hooks are `knowledge/skill-migration-ref
 
 ### Prefix example
 
-This project's illustrative prefix-rename example is `reservas-fuera-de-rango` → `reservas-fuera-de-rango-v2`.
+This project's illustrative prefix-rename example is `my-feature` → `my-feature-v2`.
 
 ## Mandatory core
 

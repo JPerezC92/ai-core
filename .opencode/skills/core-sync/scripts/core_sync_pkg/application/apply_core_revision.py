@@ -16,8 +16,10 @@ from core_sync_pkg.domain.ports import (
 from core_sync_pkg.domain.bindings import (
     _non_region_destination_paths,
     _normalize_pending,
+    binding_mode_conflict,
     uncleared_sources,
 )
+from core_sync_pkg.domain.clearance import expand_clearance
 from core_sync_pkg.domain.constants import CLEARANCE_REL, MODE_MERGE, MODE_RAW
 from core_sync_pkg.domain.errors import (
     CODE_DRIFT,
@@ -65,11 +67,15 @@ class ApplyCoreRevision:
         if bindings is None:
             return DomainError(CODE_INVALID, f"invalid bindings: {bindings_path}")
 
-        records, clearance_exists = self._clearance.load(source_dir)
-        mode_of = (
-            {} if records is None
-            else {source: record.mode for source, record in records.items()}
-        )
+        entries, clearance_exists = self._clearance.load(source_dir)
+        mode_of: dict[str, str] = {}
+        if entries is not None:
+            enumerated = {
+                key: self._paths.enumerate_files_under(source_dir / key[:-1])
+                for key in entries
+                if key.endswith("/")
+            }
+            mode_of = expand_clearance(entries, enumerated)
         preflight_error = self._paths.preflight_write_targets(
             "apply",
             source_dir,
@@ -87,25 +93,17 @@ class ApplyCoreRevision:
             return DomainError(
                 CODE_DRIFT, f"missing clearance file: {source_dir / CLEARANCE_REL}"
             )
-        if records is None:
+        if entries is None:
             return DomainError(
                 CODE_INVALID,
                 f"invalid clearance file: {source_dir / CLEARANCE_REL}",
             )
-        cleared = set(records)
+        cleared = set(mode_of)
         names = uncleared_sources(bindings, cleared)
         for entry in bindings["bindings"]:
-            record = records.get(entry["source"])
-            if (
-                record is not None
-                and entry["mode"] == MODE_RAW
-                and record.mode != MODE_RAW
-            ):
-                return DomainError(
-                    CODE_INVALID,
-                    f"binding mode 'raw' conflicts with source clearance mode "
-                    f"{record.mode!r} for {entry['source']}",
-                )
+            conflict = binding_mode_conflict(entry, mode_of)
+            if conflict is not None:
+                return conflict
         if names:
             return DomainError(
                 CODE_DRIFT,

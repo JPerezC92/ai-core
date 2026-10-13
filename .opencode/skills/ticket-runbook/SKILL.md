@@ -8,35 +8,7 @@ metadata:
   version: 2.4.1
   dependencies: PyYAML==6.0.3
 ---
-
-## Project extensions
-
-### Validator script
-
-This project's ticket-runbook validator script is `uv run --frozen python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py`.
-
-### Working-set and record templates
-
-This project's ticket-runbook templates and references:
-
-- Analysis template directory: `references/analysis/` (`state.md`, `01-identify.md`, `02-investigate.md`, `03-synthesize.md`)
-- Ticket record template: `references/ticket-template.md`
-- Response-draft template: `references/response-draft-template.md`
-- Consistency checklist: `references/_consistency-checklist.md`
-- Verifier protocol: `.opencode/skills/query-verification/SKILL.md` and `.opencode/skills/query-verification/references/protocol-v1.md`
-
-### Register, working-set, and record paths
-
-- Symptom register: `knowledge/symptoms.md` (rows `S-xx`).
-- Problem register: `knowledge/problems.md` (rows `P-NNN`; `Team: incident`; `case:` / `pack:` / `diagnostic:` pointers).
-- Per-ticket analysis working set: the `analysis/` subfolder containing `state.md`, `01-identify.md`, `02-investigate.md`, `03-synthesize.md`.
-- Ticket folder artifacts: `screenshots/`, `validations/`, the ephemeral `response-draft.md`, and the durable `ticket_<id>.md` record.
-- Ticket-record response section: `## Responses`.
-- Close-out authorization phrase: `Close out now`.
-
-### Screenshot naming convention
-
-This project's screenshot files use the `NN_<source>_<entity>[_<distinguisher>].png` convention (zero-padded NN matches ImagenN order; no campaign/entity ID/region in filename).
+<!-- core:begin -->
 
 ## Mandatory core
 
@@ -69,7 +41,7 @@ Required outputs:
 - Module
 - Country/region + campaign/period (if applicable)
 - Symptom summary (1–2 sentences)
-- `due_by_time` (SLA deadline in ISO format)
+- the ticket's SLA deadline (ISO format)
 
 Hold these values for later sections.
 
@@ -223,3 +195,39 @@ The validator script is a helper, not the authority — it catches repetitive me
 **Knowledge search unavailable:**
 - Cause: the knowledge-search tool is not reachable.
 - Fix: do not block — knowledge search is a backfill source, never a verdict source. Skip it and proceed with the register-first identification.
+<!-- core:end -->
+
+<!-- project:begin -->
+## Project extensions
+
+### Python invocation
+
+This project's `<python>` is `uv run --frozen python3`.
+
+### Validator script
+
+This project's ticket-runbook validator script is `<python> .opencode/skills/ticket-runbook/scripts/validate_runbook.py`.
+
+### Working-set and record templates
+
+This project's ticket-runbook templates and references:
+
+- Analysis template directory: `references/analysis/` (`state.md`, `01-identify.md`, `02-investigate.md`, `03-synthesize.md`)
+- Ticket record template: `references/ticket-template.md`
+- Response-draft template: `references/response-draft-template.md`
+- Consistency checklist: `references/_consistency-checklist.md`
+- Verifier protocol: `.opencode/skills/query-verification/SKILL.md` and `.opencode/skills/query-verification/references/protocol-v1.md`
+
+### Register, working-set, and record paths
+
+- Symptom register: `knowledge/symptoms.md` (rows `S-xx`).
+- Problem register: `knowledge/problems.md` (rows `P-NNN`; `Team: incident`; `case:` / `pack:` / `diagnostic:` pointers).
+- Per-ticket analysis working set: the `analysis/` subfolder containing `state.md`, `01-identify.md`, `02-investigate.md`, `03-synthesize.md`.
+- Ticket folder artifacts: `screenshots/`, `validations/`, the ephemeral `response-draft.md`, and the durable `ticket_<id>.md` record.
+- Ticket-record response section: `## Responses`.
+- Close-out authorization phrase: `Close out now`.
+
+### Screenshot naming convention
+
+This project's screenshot files use the `NN_<source>_<entity>[_<distinguisher>].png` convention (zero-padded NN matches ImageN order; no campaign/entity ID/region in filename).
+<!-- project:end -->

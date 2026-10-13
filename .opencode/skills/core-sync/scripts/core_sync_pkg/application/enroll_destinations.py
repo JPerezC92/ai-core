@@ -18,8 +18,10 @@ from core_sync_pkg.domain.bindings import (
     _non_region_destination_paths,
     _normalize_pending,
     _parse_init_binding_spec,
+    binding_mode_conflict,
     uncleared_sources,
 )
+from core_sync_pkg.domain.clearance import ClearanceRecord, expand_clearance
 from core_sync_pkg.domain.constants import (
     CLEARANCE_REL,
     MODE_MERGE,
@@ -96,20 +98,28 @@ class EnrollDestinations:
                 CODE_INVALID, f"invalid init binding: {declaration_error}"
             )
 
-        records, clearance_exists = self._clearance.load(source_dir)
-        mode_of = (
-            {} if records is None
-            else {source: record.mode for source, record in records.items()}
-        )
+        entries, clearance_exists = self._clearance.load(source_dir)
+        mode_of: dict[str, str] = {}
+        if entries is not None:
+            enumerated = {
+                key: self._paths.enumerate_files_under(source_dir / key[:-1])
+                for key in entries
+                if key.endswith("/")
+            }
+            mode_of = expand_clearance(entries, enumerated)
 
         bulk_new_region: set[str] = set()
         bulk_new_raw: set[str] = set()
-        if bind_cleared and records is not None:
+        if bind_cleared and entries is not None:
             bound = {entry["source"] for entry in bindings["bindings"]}
             root_destination: str | None = bindings.get("root")
-            for source, record in records.items():
-                if record.role != ROLE_ROOT:
+            root_source: str | None = None
+            for source, entry in entries.items():
+                if not (
+                    isinstance(entry, ClearanceRecord) and entry.role == ROLE_ROOT
+                ):
                     continue
+                root_source = source
                 existing = next(
                     (e for e in bindings["bindings"] if e["source"] == source),
                     None,
@@ -125,24 +135,24 @@ class EnrollDestinations:
                         CODE_DRIFT,
                         "destination instruction root not found; pass --root",
                     )
-            for source, record in records.items():
+            for source, mode in mode_of.items():
                 if source in bound:
                     continue
                 destination = (
-                    root_destination if record.role == ROLE_ROOT else source
+                    root_destination if source == root_source else source
                 )
                 bindings["bindings"].append(
                     {
                         "source": source,
                         "destinations": [destination],
-                        "mode": record.mode,
+                        "mode": mode,
                     }
                 )
                 bound.add(source)
                 if not self._paths.exists(destination_dir / destination):
-                    if record.mode == MODE_RAW:
+                    if mode == MODE_RAW:
                         bulk_new_raw.add(destination)
-                    elif record.mode == MODE_REGION:
+                    elif mode == MODE_REGION:
                         bulk_new_region.add(destination)
             if root_destination is not None:
                 bindings["root"] = root_destination
@@ -167,12 +177,12 @@ class EnrollDestinations:
             return DomainError(
                 CODE_DRIFT, f"missing clearance file: {source_dir / CLEARANCE_REL}"
             )
-        if records is None:
+        if entries is None:
             return DomainError(
                 CODE_INVALID,
                 f"invalid clearance file: {source_dir / CLEARANCE_REL}",
             )
-        cleared = set(records)
+        cleared = set(mode_of)
         names = uncleared_sources(bindings, cleared)
         for spec, declared in (
             [(s, MODE_RAW) for s in raw_specs]
@@ -190,17 +200,9 @@ class EnrollDestinations:
                     f"with source clearance mode {actual_mode!r}",
                 )
         for entry in bindings["bindings"]:
-            record = records.get(entry["source"])
-            if (
-                record is not None
-                and entry["mode"] == MODE_RAW
-                and record.mode != MODE_RAW
-            ):
-                return DomainError(
-                    CODE_INVALID,
-                    f"binding mode 'raw' conflicts with source clearance mode "
-                    f"{record.mode!r} for {entry['source']}",
-                )
+            conflict = binding_mode_conflict(entry, mode_of)
+            if conflict is not None:
+                return conflict
         if names:
             return DomainError(
                 CODE_DRIFT,

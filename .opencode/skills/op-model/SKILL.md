@@ -13,7 +13,7 @@ metadata:
 
 ### Model lookup script
 
-This project's model-lookup script is `uv run --frozen python3 .opencode/skills/op-model/scripts/models.py` — invoke it with the model query as its argument. It runs `opencode models --verbose` and emits one structured JSON record per match.
+This project's model-lookup script is `<python> .opencode/skills/op-model/scripts/models.py` (`<python>` is the project's Python invocation) — invoke it with the model query as its argument. It runs `opencode models --verbose` and emits one structured JSON record per match.
 
 ### Opencode config files
 

@@ -25,7 +25,7 @@ class ValidateRunbookStepModeTests:
         self, tmp_path: Path
     ) -> None:
         sidecar_cli = (
-            "python3 .opencode/skills/query-verification/scripts/"
+            "<python> .opencode/skills/query-verification/scripts/"
             "query_verification.py validate --query-root <sidecar-parent-dir> "
             "--sidecar <sidecar-path>"
         )

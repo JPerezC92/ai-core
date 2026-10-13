@@ -19,7 +19,6 @@ from core_sync_pkg.domain.constants import (
 from core_sync_pkg.domain.errors import (
     CODE_DRIFT,
     CODE_INVALID,
-    CODE_LEGACY_SCHEMA,
     DomainError,
 )
 from core_sync_pkg.domain.ports import UseCaseResult
@@ -37,7 +36,6 @@ from core_sync_pkg.infrastructure.stores import (
 _EXIT_CODE_BY_ERROR_CODE = {
     CODE_DRIFT: EXIT_DRIFT,
     CODE_INVALID: EXIT_INVALID,
-    CODE_LEGACY_SCHEMA: EXIT_INVALID,
 }
 
 

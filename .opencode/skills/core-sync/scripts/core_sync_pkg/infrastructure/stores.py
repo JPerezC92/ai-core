@@ -9,7 +9,7 @@ from core_sync_pkg.domain.bindings import (
     parse_bindings,
     serialize_bindings,
 )
-from core_sync_pkg.domain.clearance import ClearanceRecord, parse_clearance
+from core_sync_pkg.domain.clearance import ClearanceEntry, parse_clearance
 from core_sync_pkg.domain.constants import CLEARANCE_REL
 from core_sync_pkg.domain.errors import DomainError
 from core_sync_pkg.domain.reconciliation import (
@@ -34,12 +34,13 @@ def save_bindings(path: Path, bindings: Bindings) -> None:
     write_text(path, serialize_bindings(bindings))
 
 
-def load_clearance(source_dir: Path) -> tuple[dict[str, ClearanceRecord] | None, bool]:
+def load_clearance(source_dir: Path) -> tuple[dict[str, ClearanceEntry] | None, bool]:
     """Read the source distribution-clearance file at the IO boundary.
 
     Returns `(None, False)` when the file is absent, `(None, True)` when it is
-    present but malformed (including a legacy schema-1 document), or the cleared
-    path set and `True` when a valid schema-2 document is parsed.
+    present but malformed (including any unsupported schema label), or the
+    parsed clearance entries — file records and skill-root records — and `True`
+    when a valid version-1 document is parsed.
     """
     path = source_dir / CLEARANCE_REL
     if not path.exists():
@@ -47,10 +48,10 @@ def load_clearance(source_dir: Path) -> tuple[dict[str, ClearanceRecord] | None,
     text = read_text(path)
     if text is None:
         return (None, True)
-    records = parse_clearance(text)
-    if isinstance(records, DomainError):
+    entries = parse_clearance(text)
+    if isinstance(entries, DomainError):
         return (None, True)
-    return (records, True)
+    return (entries, True)
 
 
 class YamlBindingsStore:
@@ -75,7 +76,7 @@ class JsonClearanceStore:
 
     def load(
         self, source_dir: Path
-    ) -> tuple[dict[str, ClearanceRecord] | None, bool]:
+    ) -> tuple[dict[str, ClearanceEntry] | None, bool]:
         return load_clearance(source_dir)
 
 

@@ -18,7 +18,7 @@ This repository's `user-stories/*.md` are **durable feature contracts**, not XP 
 Classic XP is explicit that a story is *"not an explicit contract for features; rather, details
 will be co-created… A good story captures the essence, not the details"* (Wake, INVEST,
 2003) and that the card is *"just enough text to identify the requirement… a token"*
-(Jeffries, Card/Conversation/Confirmation, 2001). AICore deliberately treats the story as a
+(Jeffries, Card/Conversation/Confirmation, 2001). The skill deliberately treats the story as a
 **requirements specification with acceptance criteria and completion reconciliation**. That is
 a defensible choice for a governance tool — but it means requirements-engineering discipline
 applies more than story-card advice.
