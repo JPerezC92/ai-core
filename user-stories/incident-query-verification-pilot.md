@@ -3,9 +3,10 @@
 > **Created:** 2026-09-10
 > **Title:** Incident query-verification pilot
 > **Status:** active
-> **version:** 1.1.0
+> **version:** 1.2.0
 > **Epic:** incident-diagnostics
 > **Affected areas:** `.opencode/skills/query-verification/`, `.opencode/skills/ticket-runbook/`, `.opencode/agents/crucible.md`, `knowledge/`
+> **Contract approval:** 2026-10-14 — user approved the AC5 reword and the proof-surface corrections after the whole-catalogue review, collision report, and contract preview.
 
 ## Persona
 
@@ -26,7 +27,7 @@
 - ✅ **AC2:** Unsafe SQL, path escapes, malformed metadata, untrusted output mismatches, and ambiguous result shapes produce a rejection or `inconclusive` verdict without query execution.
 - ✅ **AC3:** The evidence record redacts configured values, binds verifier/source/definition digests to the verdict, and retains neither raw adapter output nor credentials.
 - ✅ **AC4:** The optional investigate-step verifier path consumes one existing query-budget unit and never treats a verified symptom as automatic root-cause confirmation.
-- ✅ **AC5:** The skill, protocol, fixtures, and migration entry are available to ticket-enabled destination projects.
+- ✅ **AC5:** The skill, protocol, fixtures, and the living design's shared contract are available to ticket-enabled destination projects.
 - ✅ **AC6:** The shipped valid adapter-output fixture is independently protocol-valid and its source digest is guarded against fixture/source drift.
 - ✅ **AC7:** Reusable verifier persistence is destination-selected: the destination chooses its query-storage location, the problem row's Evidence records a pointer to the sidecar, and a later structural match replays the pair with current-ticket parameters under the same protocol (schema unchanged, one query-budget slot).
 - ✅ **AC8:** The diagnostic-query protocol remains the only sidecar contract — one read-only SELECT, one row, three-state verdict. Identification packs use a separate Evidence pointer and are not evaluated by the diagnostic evaluator.
@@ -36,10 +37,10 @@
 - AC1 → `.opencode/skills/query-verification/references/protocol-v1.md` closed contract · `test_query_verification_paths.py` path tests · `test_query_verification_sql_safety.py` unsafe-source rejection · `test_query_verification_sidecar_schema.py` closed-schema rejections
 - AC2 → `test_query_verification_sql_safety.py` · `test_query_verification_paths.py` · `test_query_verification_sidecar_schema.py` · evaluator `test_evaluate_*_is_inconclusive` cases
 - AC3 → `test_query_verification.py` redaction-and-digest evaluation case · `references/protocol-v1.md` redaction and digest rules
-- AC4 → `knowledge/query-verification-design.md` investigate-step verifier route · `test_validate_runbook_step_mode.py` · `test_validate_runbook_header_budgets.py`
-- AC5 → `.opencode/skills/query-verification/` ships `references/protocol-v1.md` plus the valid fixture trio · `knowledge/query-verification-design.md` migration entry
+- AC4 → `.opencode/skills/ticket-runbook/SKILL.md` `### Optional verifier route (investigate step)` · `test_validate_runbook_step_mode.py` · `test_validate_runbook_header_budgets.py`
+- AC5 → `.opencode/skills/query-verification/` ships `references/protocol-v1.md` plus the valid fixture trio · `knowledge/diagnostic-system-design.md` `## Purpose` · `distribution-clearance.json` living-design row
 - AC6 → `test_query_verification.py` valid-fixture evaluation case · `_query_verification_testkit.py` static-adapter source-digest guard · `test_query_verification_fixtures.py` fixture-trio validation
-- AC7 → `knowledge/query-verification-design.md` destination-chooses-storage · `knowledge/problems.md` `## Entry format` → Evidence
+- AC7 → `knowledge/diagnostic-system-design.md` `## Portability contract` · `knowledge/problems.md` `## Entry format` → Evidence
 - AC8 → `references/protocol-v1.md` · `test_query_verification.py` suite · `.opencode/skills/ticket-runbook/SKILL.md` verifier-step guidance · `knowledge/problems.md` Evidence format
 
 ## Constraints

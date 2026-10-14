@@ -1,3 +1,4 @@
+<!-- core:begin -->
 # Known Problem Pattern Register
 
 Chronological, evidence-backed recurring problem patterns shared by incident and dev work. Each row is a child instance of a symptom class in `knowledge/symptoms.md`; when a row references several classes, the primary symptom class comes first.
@@ -51,4 +52,5 @@ Only `Team: incident` rows participate in incident identification.
 | ID | Date | Team | Symptom | System | Module | Problem | Discriminators | Exclusions | Evidence | Root cause | Lifecycle | Allow_exact | Status |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 
-(no entries yet — an empty register is valid and identifies as `no_match`)
+An empty register is valid and identifies as no_match.
+<!-- core:end -->

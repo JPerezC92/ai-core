@@ -10,8 +10,8 @@ A reusable, agnostic **agentic orchestration core** for [OpenCode](https://openc
 - **Plan-first workflow** — the `plan-enforce` skill requires a plan artifact in `plans/` plus a user story before Forge 🔨 (Implementer) writes code, and verifies a confirmed PR merge before branch cleanup.
 - **Automatic architecture gates** — after a frontend edit, Atrium 🏛️ (Frontend Architect); after a backend or script edit, Bastion 🧱 (Backend & Scripts Architect); after a test-file edit, Crucible 🔥 (Test Architect). The worker returns the edit for review and continues only after the lead accepts the current verdict and explicitly resumes it. Inquisitor 🔎 (PR Reviewer) reviews each PR head, and Warden 🔒 (Dependency Warden) reviews manifest changes before they are staged.
 - **Skill library** — core distribution (`core-sync`), git workflow (`git-branch-name`, `git-commit`, `git-pr`), OpenCode authoring (`op-agent-creator`, `op-skill-creator`, `op-model`), and incident tooling (`ticket-runbook`, `query-verification`).
-- **Knowledge registers** — shared agent rules, an accepted-debt register, a diagnostic symptom catalog, a known-problem register, and living design docs.
-- **Tested tooling** — 514 pytest tests cover the Python machinery (core-sync, plan validators, runbook validators, query verification); the suite runs worker-parallel.
+- **Knowledge registers** — shared agent rules, an accepted-debt register, a diagnostic symptom catalog, a known-problem register, and a living design.
+- **Tested tooling** — 562 pytest tests cover the Python machinery (core-sync, plan validators, runbook validators, query verification); the suite runs worker-parallel.
 - **Atomic, versioned distribution** — `core-sync` splices protected `core` regions into destination projects, byte-copies whole files, or merges a JSON/JSONC config's top-level keys (source keys winning, destination keys and comments kept), pins the source revision in the destination's own bindings file, and keeps acceptance blocked on any drift.
 
 ## Roster
@@ -49,13 +49,17 @@ magic-context.jsonc           magic-context disabled — native OpenCode compact
                               op-agent-creator, op-model, op-skill-creator, plan-enforce,
                               query-verification, ticket-runbook, user-story) — each with SKILL.md + scripts/
 agents/<name>/profile.md      17 persona CVs (incl. cipher)
-knowledge/agents.md           Shared agent rules (evidence/report discipline, hard rules)
-knowledge/debt.md             Accepted-debt register (destination-owned; seeded from debt.template.md,
-                              never mirrored)
-knowledge/debt.template.md    0-entry seed for a destination's own debt register
-knowledge/symptoms.md         Diagnostic symptom-class catalog (shared, shipped)
-knowledge/problems.md         Known-problem register (shared, ships empty)
-knowledge/query-verification-design.md  Query-verification living design (pilot v1 implemented)
+knowledge/agents.md           Shared agent rules (evidence/report discipline, hard rules) —
+                              shared rules ship, source-side extensions stay project
+                              (register table copies with its core region)
+knowledge/debt.md             Accepted-debt register — frame-only core (entry format and rules);
+                              filed entries are project-region content and never ship
+knowledge/symptoms.md         Diagnostic symptom-class catalog — shared catalog, ships in full
+                              (register table copies with its core region)
+knowledge/problems.md         Known-problem register — shared catalog, ships in full, empty of
+                              rows as shipped (register table copies with its core region)
+knowledge/diagnostic-system-design.md  Diagnostic-system living design (pilot v1 implemented);
+                                       shared contract ships, local refinement state stays project
 plans/  user-stories/         Plan lifecycle artifacts (plan-enforce)
 pyproject.toml  uv.lock       Python toolchain (uv; pytest + pytest-xdist in the dev group)
 output/                       Temporal working space (audits, research, design — gitignored)
@@ -66,7 +70,7 @@ output/                       Temporal working space (audits, research, design �
 ### Existing project — atomic adoption via `core-sync`
 
 1. Start only from a destination that is already clean and saved. `core-sync` performs no cleanliness check — confirming the destination is clean and saved is an operator pre-flight. Run `core-sync init` from an AICore checkout after an approved source refresh. It enrolls the **complete applicable unit set** at one AICore revision: each file's `core` region gets the source core, and the file's previous body moves into the destination-owned `project` region. Review every `.aicore/reconciliation/` report under the core-wins rule, resolve the destination-root reconciliation blocker, and clear `pending`; `core-sync check` must exit `0` before the enrollment is accepted. Do not treat enrollment as an application build.
-2. Keep shared rule infrastructure (`knowledge/agents.md`). The destination owns its `plans/`, `user-stories/`, and `knowledge/debt.md`: seed an absent debt register from the shipped 0-entry `knowledge/debt.template.md` and preserve the destination's own entries — AICore's filed debt is never copied into a destination, and the debt unit cannot be declared `mirror`. The shared diagnostic catalog does ship: `knowledge/symptoms.md` (symptom-class catalog) and the empty `knowledge/problems.md` (problem-pattern register) are copied as shared infrastructure. Distinguish filed history, which is never copied, from the shared catalog, which is.
+2. Keep the shared knowledge infrastructure. Copying is uniform: every cleared source delivers its `core` region byte-for-byte, and the destination owns its `project` region. The clearance registry (`distribution-clearance.json`, format defined in `distribution-clearance.definition.md`) declares the knowledge set. The register tables of the three shared registers (`knowledge/agents.md`, `knowledge/problems.md`, `knowledge/symptoms.md`) live in the core region and copy with it like every core region — no table declarations exist. The shared rules ship, with source-side extensions staying project (`knowledge/agents.md`). The shared catalogs ship in full: `knowledge/symptoms.md` (symptom-class catalog) and `knowledge/problems.md` (known-problem register, empty of rows as shipped). The debt register (`knowledge/debt.md`) ships its frame alone — the payload the retired 0-entry seed used to carry — and its filed entries are project-region content: AICore's filed debt is never copied into a destination, and no seed template ships. The living design ships its shared contract as `knowledge/diagnostic-system-design.md`, its local refinement state staying project. Destination-filed records live in the destination's project region, survive every sync, and are never substituted — distinguish filed history, which never ships, from the shared catalog, which does. The destination owns its `plans/`, `user-stories/`, and its own filed records.
 3. If your stack differs, adapt only the project-extensions sections of the stack-specific rulebooks (`atrium.md`, `bastion.md`, `crucible.md`, `lumen.md`) before adopting the core, and record that review in the destination's `.aicore/reconciliation/` records. Do not replace mandatory bytes.
 4. Substitute your real tooling only in destination-owned project extensions or destination configuration. Do not edit protected mandatory text. The core ships neutral on purpose.
 5. Recurring updates run from an AICore checkout, after an approved refresh of the protected upstream tip, using the absolute path `.opencode/skills/core-sync/scripts/core_sync.py`:
@@ -84,12 +88,12 @@ output/                       Temporal working space (audits, research, design �
 
 ### New project — start from this repository
 
-Clone AICore, then clear the destination-owned state so the fresh project starts clean: `plans/`, `user-stories/`, `output/`, `knowledge/debt.md` entries (keep the template), `commit.txt`, `pr-draft.md`, and AICore's git history. Customize the project-extensions sections (stack rulebooks, `knowledge/`, MCP servers, models) to your stack, then keep the core regions untouched so future `core-sync apply` updates stay possible.
+Clone AICore, then clear the destination-owned state so the fresh project starts clean: `plans/`, `user-stories/`, `output/`, `knowledge/debt.md` filed entries, `commit.txt`, `pr-draft.md`, and AICore's git history. Customize the project-extensions sections (stack rulebooks, `knowledge/`, MCP servers, models) to your stack, then keep the core regions untouched so future `core-sync apply` updates stay possible.
 
 ## Development
 
 - **Environment** — `python3` (not `python`), Python ≥ 3.13, managed with `uv`. Every Python command runs through the project environment: `uv run --frozen …`, never a bare or global interpreter.
-- **Tests** — `uv run --frozen --group dev pytest -q` runs the whole suite (514 tests, worker-parallel via pytest-xdist). Skill tests live beside their scripts: `.opencode/skills/<skill>/scripts/test_*.py`.
+- **Tests** — `uv run --frozen --group dev pytest -q` runs the whole suite (562 tests, worker-parallel via pytest-xdist). Skill tests live beside their scripts: `.opencode/skills/<skill>/scripts/test_*.py`.
 - **Authoring** — use the `op-skill-creator` and `op-agent-creator` skills to scaffold skills/agents, and `op-model` to change agent models deterministically.
 - **Config changes** — the OpenCode TUI must be restarted after any `opencode.jsonc` permission change; active sessions do not reload it.
 - **Plan discipline** — non-trivial work starts with the `plan-enforce` skill (plan artifact in `plans/` + user story). Parallel tasks need accepted inputs and non-overlapping writes; a written assignment is not a lock, and a separate session is not verified isolation. Specs never bump synced version numbers locally — destination-local changes live in git history and the user-story change log. Restart OpenCode after accepting runtime or skill changes; the active session does not hot-reload them.

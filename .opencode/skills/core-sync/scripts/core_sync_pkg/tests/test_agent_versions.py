@@ -17,7 +17,7 @@ EXPECTED_SOURCE_VERSIONS = {
     "crucible.md": "1.8.0",
     "forge.md": "1.6.0",
     "herald.md": "1.4.3",
-    "inquisitor.md": "1.4.2",
+    "inquisitor.md": "1.5.0",
     "investigator.md": "1.3.2",
     "ledger.md": "1.4.2",
     "lumen.md": "1.2.1",
