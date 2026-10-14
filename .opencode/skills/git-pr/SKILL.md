@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.4.1
+  version: 1.5.0
   domain: git
 ---
 
@@ -113,7 +113,7 @@ After the PR exists, retain the same PR body as the sole mutable description sur
 **Verdict-only observed output.** `Observed output` is the human-readable verdict only — for pytest, the `N passed in Xs` line (and the exit code where relevant). Do not paste progress bars, per-test dots, stack traces, or raw dumps unless the user explicitly asks. A raw dump is not clearer evidence; the verdict line is the durable result.
 
 3. Re-read the persisted PR body with `gh pr view <number> --json body` and verify the PR number, immutable head SHA, exact scope command, literal input, observed output, executor, and matching evidence row before ticking the corresponding checkbox. Missing or partial evidence leaves the item unchecked.
-4. **Execution-ownership handoff.** When Cipher 🔓 (Lead Orchestrator) or another execution owner runs a test-plan item but does not own PR-body mutation, that owner must not report the PR complete. It must immediately dispatch Herald 📯 (Release Manager) to persist the complete evidence row, re-read the live PR body, and tick the exact matching checkbox. The item stays `- [ ]`, and no PR-complete report is made, until that handoff completes.
+4. **Execution-ownership handoff.** When an execution owner runs a test-plan item but does not own PR-body mutation, that owner must not report the PR complete; the complete `## Test evidence` row and the matching tick are recorded by the single evidence writer at the review join (the designated Inquisitor 🔎 (PR Reviewer) instance under the project's PR-boundary contract) — no second body writer exists; the item stays `- [ ]`, and no PR-complete report is made, until that writer has persisted the row and tick and re-read the live body.
 
 ### Breaking changes
 
@@ -196,7 +196,7 @@ Title: <title here>
 
 **Tests executed but test-plan boxes left unchecked**:
 - Cause: an execution owner ran the item but the PR-body persistence step was skipped, so no `## Test evidence` row was written and the matching checkbox was never ticked.
-- Fix: dispatch Herald 📯 (Release Manager) to persist the complete head-bound `## Test evidence` row, re-read the live PR body, then tick only the matching item.
+- Fix: route the complete head-bound `## Test evidence` row to the single evidence writer at the review join to persist, re-read the live PR body, then tick only the matching item.
 
 **`git ls-tree -- '*.py'` (pathspec form) silently returns 0 results**:
 - Cause: `git ls-tree` with a pathspec form returns nothing even when matching files are tracked — it has produced false "no Python files" verdicts in PR reviews.
