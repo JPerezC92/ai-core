@@ -50,3 +50,5 @@
 - A verified symptom is never root-cause confirmation — because symptom presence and cause are different claims.
 
 ## Change log
+
+- 2026-10-14 — knowledge-distribution-20261014 (PR #63): delivered the living-design companion under the system name — shared contract core, refinement state project-side.

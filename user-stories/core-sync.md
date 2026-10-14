@@ -86,3 +86,5 @@
 - Skill roots expand dynamically at each sync — because clearance records durable ownership, not file inventories.
 
 ## Change log
+
+- 2026-10-14 — knowledge-distribution-20261014 (PR #63): delivered the five knowledge region rows with documented distribution classes, the knowledge splits, and the living-design rename.
