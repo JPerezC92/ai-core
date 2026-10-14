@@ -57,3 +57,5 @@
 - Evidence rows keep verdict-only observed output — because raw dumps bury the audit surface.
 
 ## Change log
+
+- 2026-10-13 — pr-test-evidence-collection-20261013 (PR #62): created the feature contract and delivered the round-based manifest → fan-out → single-writer evidence collection.
