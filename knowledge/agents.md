@@ -1,11 +1,6 @@
 # Shared Agent Rules
 
-## Project extensions
-
-### Knowledge registers
-
-- This project's symptom-class catalog is `knowledge/symptoms.md` and its known-problem register is `knowledge/problems.md`; the incident domain is enabled here. Replace these with the destination's own registers when the incident domain does not apply.
-
+<!-- core:begin -->
 ## Mandatory core
 
 ### Evidence discipline (HARD RULE)
@@ -55,6 +50,10 @@ If work needs another resource or mutation outside the assignment, halt the affe
 - **Transport serialization belongs at the delivery edge, not inside the business operation.** The business operation works in domain types; the delivery edge (controller/handler/view) serializes to the transport shape. Serialization into a transport schema must not live inside the business operation.
 - Language sections carry the concrete syntax and library mapping. A language section must not rename a layer or state that this contract is suspended for that language.
 - A pure helper does not need an artificial use-case wrapper. A module that decides policy and calls infrastructure does.
+
+### Knowledge registers
+
+- The symptom-class catalog is `knowledge/symptoms.md` and the known-problem register is `knowledge/problems.md`. A project that does not enable the incident domain replaces these with its own registers in its project extension.
 
 ### Register-first identification (HARD RULE)
 
@@ -152,3 +151,8 @@ Edge cases:
 - Vault 🔐 (Catalog Steward) governs the complete skills catalog across both teams and all harnesses for skill quality and lifecycle.
 - Warden 🔒 (Dependency Warden) governs skill and package security.
 - Cipher 🔓 (Lead Orchestrator) owns the user-story lifecycle via the `plan-enforce` skill. Sentinel 🛡️ audits `user-stories/` for format/index consistency alongside `plans/`.
+<!-- core:end -->
+
+<!-- project:begin -->
+## Project extensions
+<!-- project:end -->

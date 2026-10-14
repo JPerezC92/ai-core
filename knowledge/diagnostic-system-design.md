@@ -1,20 +1,11 @@
-# Query Verification Design - Living Refinement
+<!-- core:begin -->
+# Diagnostic System Design
 
-## Status and purpose
-
-**Status: implemented — incident-only pilot (v1); broader design deferred.**
+## Purpose
 
 The implemented pilot is the `query-verification` OpenCode skill at `.opencode/skills/query-verification/`. It validates one incident-owned, sidecar-defined SQL verifier against an invocation-time query root and evaluates trusted normalized adapter output offline, producing a redacted, digest-bound case-evidence record with exactly one verdict: `verified`, `not_verified`, or `inconclusive`. Its normative contract is `references/protocol-v1.md` in that skill.
 
-This living design records the approach to query verification across destination projects. The implemented pilot does not change the registers' paths, identifiers, schema, or runtime behavior, and it imposes no executable behavior on agents. AICore validates and evaluates local artifacts only; a destination-owned trusted adapter binds parameters and executes the query. AICore never connects to a database, executes SQL, reads credentials, invokes an adapter command, or holds persistent query-root configuration. Ticket-enabled destinations receive the skill and this design document during destination onboarding (region model: the destination's `project` region / skills wave); the pilot adds no root dependency, lockfile, runtime configuration, credential, or destination query-library change.
-
-**Deferred (not implemented):**
-
-- Dev-team verifiers, Dev workflow integration, and the Dev problem-record lifecycle.
-- External adapter execution, adapter commands, credentials, and connection strings.
-- Centralized verifier discovery or a central index.
-- Non-SQL sources, multiple result sets, and a general assertion language. Multiple result sets remain deferred for protocol-v1: a one-row verifier cannot express a multi-statement or multi-result correlation.
-- Persistent query-root configuration.
+This living design records the approach to query verification across destination projects. The implemented pilot does not change the registers' paths, identifiers, schema, or runtime behavior, and it imposes no executable behavior on agents. AICore validates and evaluates local artifacts only; a destination-owned trusted adapter binds parameters and executes the query. AICore never connects to a database, executes SQL, reads credentials, invokes an adapter command, or holds persistent query-root configuration. Ticket-enabled destinations receive the skill and this design document during destination onboarding (clearance delivery model: a cleared source ships its core region byte-for-byte and the destination owns its project region / skills wave); the pilot adds no root dependency, lockfile, runtime configuration, credential, or destination query-library change.
 
 The goal is to let an incident case safely reuse a diagnostic query without placing large, project-specific SQL in the symptom or problem registers.
 
@@ -214,6 +205,20 @@ The implemented incident pilot retains the existing shared query safeguards in `
 - Parameter rendering is typed and controlled; unbounded text interpolation and dynamic SQL concatenation are not accepted, and the core never renders a parameter value.
 - A reusable diagnostic query does not retain customer-specific query output. The pilot retains only the redacted, digest-bound evidence record; raw output belongs to destination policy.
 - The verdict is exactly `verified`, `not_verified`, or `inconclusive`; missing, zero, or multiple context rows and any malformed or mismatched input produce `inconclusive`, never a silent pass.
+<!-- core:end -->
+
+<!-- project:begin -->
+## Status
+
+**Status: implemented — incident-only pilot (v1); broader design deferred.**
+
+**Deferred (not implemented):**
+
+- Dev-team verifiers, Dev workflow integration, and the Dev problem-record lifecycle.
+- External adapter execution, adapter commands, credentials, and connection strings.
+- Centralized verifier discovery or a central index.
+- Non-SQL sources, multiple result sets, and a general assertion language. Multiple result sets remain deferred for protocol-v1: a one-row verifier cannot express a multi-statement or multi-result correlation.
+- Persistent query-root configuration.
 
 ## Refinement backlog
 
@@ -283,3 +288,4 @@ The pilot's post-implementation advisories are closed or recorded as verified no
 | 2026-09-10 | Crucible 🔥 (Test Architect) gained an additive Python stdlib `unittest` audit branch returning `[PASS]`/`[FAIL]` for exact active-plan Python test files; `plan-enforce` now requires both Bastion 🧱 (Backend & Scripts Architect) and Crucible 🔥 (Test Architect) verdicts. | Supersedes the earlier Bastion-only gate |
 | 2026-09-10 | The living design record retains no mechanical-fix count; no source artifact substantiates one. | No count retained |
 | 2026-09-27 | Python skill tests are pytest under Crucible 🔥 (Test Architect) `## PYTHON PYTEST TESTS` and `uv run --frozen --group dev pytest`; the 2026-09-10 unittest branch is historical. | Supersedes the unittest gate |
+<!-- project:end -->
