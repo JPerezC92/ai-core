@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.1.1
+  version: 2.1.2
 ---
 
 ## What I do
@@ -120,7 +120,7 @@ While region-mode paths remain in `pending`, `check`, `apply`, and `init` ensure
 <!-- core:reconcile:end -->
 ```
 
-The block is self-contained; the destination assistant needs no other context. It directs the destination to adopt the two-region rule permanently in its root instructions (`CLAUDE.md` / `AGENTS.md`) if absent. It explains that the upstream-owned `core` region is never edited, moved, or deleted, while the destination-owned `project` region keeps genuine project-specific content and may contain the old core copy that is now superseded.
+The block is self-contained; the destination assistant needs no other context. It directs the destination to adopt the two-region rule permanently in its root instructions (`CLAUDE.md` / `AGENTS.md`) if absent. It explains that the upstream-owned `core` region is never edited, moved, or deleted, while the destination-owned `project` region keeps genuine project-specific content and may contain the old core copy that is now superseded. It also carries a config-file instruction: if the merge delivered `opencode.jsonc`, migrate the file from the OpenCode V1 layout to the V2 layout when it is still on the old one, and — because the merge replaces the source-owned `mcp` key wholesale — restore any MCP server this project had registered that is now missing, keep every server the core registers, and never leave a registered MCP server silently dropped.
 
 For each path in `pending:`:
 1. Open the file.

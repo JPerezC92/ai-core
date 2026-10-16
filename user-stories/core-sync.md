@@ -3,10 +3,10 @@
 > **Created:** 2026-10-14
 > **Title:** Core synchronization
 > **Status:** active
-> **version:** 1.2.2
+> **version:** 1.3.0
 > **Epic:** core-governance
 > **Affected areas:** `.opencode/skills/core-sync/`, `distribution-clearance.json`, `distribution-clearance.definition.md`, `knowledge/`
-> **Contract approval:** 2026-10-14 — user approved the active contract and uniform-model correction; 2026-10-15 — user approved retired-declaration/table-ownership corrections and the exact genuinely-markerless-source AC2 clarification after paired semantic review. This source-local contract remains excluded from distribution; revision history is pending under the approved timing rule.
+> **Contract approval:** 2026-10-14 — user approved the active contract and uniform-model correction; 2026-10-15 — user approved retired-declaration/table-ownership corrections and the exact genuinely-markerless-source AC2 clarification after paired semantic review; 2026-10-16 — user approved the AC23 update-compatibility guidance revision (UPDATE `core-sync`) after the whole-catalogue ownership review. This source-local contract remains excluded from distribution; revision history is pending under the approved timing rule.
 
 ## Persona
 
@@ -47,6 +47,7 @@
 - ✅ **AC20 — Knowledge register clearance:** Cleared knowledge registers carry a documented distribution class — a record-bearing register ships its frame only and never carries the source's filed records, while a shared catalog ships in full — and destination-owned records live in the project region and are never substituted by a sync.
 - ✅ **AC21 — Merge bindings:** A merge binding writes a document in which every source top-level key holds the source value and every destination-only top-level key is preserved, with source keys replaced wholesale and no deep merge; the output preserves the destination's comments, key order, and formatting and stays loadable; merge bindings create no markers, reports, or pending entries; a config source whose keys are project-owned is cleared as merge rather than raw.
 - ✅ **AC22 — Merge verification:** Merge verification exits 0 when each source top-level key holds the source value with extra destination keys allowed; a missing or mismatched source key or a missing destination exits 1; malformed JSONC or an unknown mode exits 2.
+- ⬜ **AC23 — Update-compatibility guidance:** The reconciliation blocker also instructs the destination to migrate its merged `opencode.jsonc` to the OpenCode V2 layout and to restore any project-registered MCP server the merge displaced, while keeping the MCP servers the core registers — so an update never leaves a half-migrated V1 config or silently drops a registered MCP server.
 
 ## Proof
 
@@ -74,6 +75,7 @@ Proof paths below are relative to `.opencode/skills/core-sync/scripts/core_sync_
 - AC20 → `distribution-clearance.definition.md` `## Knowledge distribution classes` · `knowledge/debt.md` frame-only core · `README.md` shipping policy
 - AC21 → `.../domain/merge.py` `merge_top_level` · `.../domain/test_merge_top_level.py` `MergeTopLevelTests` · `.../tests/test_merge_init.py` `MergeInitTests` · `.../tests/test_binding_coexistence.py` three-mode case · `distribution-clearance.json` `opencode.jsonc: merge`
 - AC22 → `.../tests/test_merge_check.py` `MergeCheckTests` · `.../tests/test_check_invalid_bindings.py` `CheckInvalidBindingsTests.test_unknown_binding_mode_returns_two`
+- AC23 → `.../domain/test_reconcile_blocker.py` `ReconcileBlockerContentTests` (to be extended to assert the V2-layout/MCP-restore guidance in the blocker body) — unverified; target behaviour not yet implemented
 
 ## Constraints
 
@@ -93,6 +95,7 @@ Proof paths below are relative to `.opencode/skills/core-sync/scripts/core_sync_
 - 2026-10-15 — User explicitly approved the AC2 existing-behavior clarification under the 48-path corrective scope. Malformed active markers still fail closed; fenced marker literals are not active markers. AC2 retains its identity and pending status, and no engine feature or completed delivery is claimed.
 - 2026-10-15 — Criteria reconciled against actual code and the passing whole suite (`607 passed`). Marked delivered: AC1–AC5, AC7–AC9, AC13–AC15, AC17–AC18, AC21–AC22 (evidence: the referenced modules/test classes in each Proof line). Left pending against real gaps: **AC12** — bulk `--bind-cleared` raw enrollment does not create target parents (requires an existing parent; no test); **AC6** — the missing-parent guard is a mid-loop check rather than a pre-write preflight, so "fails before any write" is not guaranteed. Source-local; does not ship.
 - 2026-10-16 — Engine fix delivered (plan `core-sync-raw-enrollment-20261016`, PR #64): bulk `--bind-cleared` raw enrollment now creates missing parent directories, and a non-bulk (explicit `--bind-raw`/persisted) raw target with an absent parent fails with `CODE_DRIFT` in a pre-write pass before any write. AC6/AC12 marked delivered; Bastion 🧱 (Backend & Scripts Architect) + Crucible 🔥 (Test Architect) PASS, whole suite `609 passed`. Source-local; does not ship.
+- 2026-10-16 — Approved AC23 blocker-guidance revision (UPDATE `core-sync`) after the whole-catalogue ownership review. Persisted with pending history: AC23 stays `⬜`, its Proof target is explicitly unverified, and no Change log entry is written until a delivery-matching commit/PR/ticket exists. Completion, `## Outcome`, archival, and release handoff remain blocked until the actual reference is established. Source-local; does not ship.
 
 ## Change log
 
