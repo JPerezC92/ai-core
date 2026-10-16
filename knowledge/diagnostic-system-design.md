@@ -3,15 +3,15 @@
 
 ## Purpose
 
-The implemented pilot is the `query-verification` OpenCode skill at `.opencode/skills/query-verification/`. It validates one incident-owned, sidecar-defined SQL verifier against an invocation-time query root and evaluates trusted normalized adapter output offline, producing a redacted, digest-bound case-evidence record with exactly one verdict: `verified`, `not_verified`, or `inconclusive`. Its normative contract is `references/protocol-v1.md` in that skill.
+The implemented incident query verification is the `query-verification` OpenCode skill at `.opencode/skills/query-verification/`. It validates one incident-owned, sidecar-defined SQL verifier against an invocation-time query root and evaluates trusted normalized adapter output offline, producing a redacted, digest-bound case-evidence record with exactly one verdict: `verified`, `not_verified`, or `inconclusive`. Its normative contract is `references/protocol-v1.md` in that skill.
 
-This living design records the approach to query verification across destination projects. The implemented pilot does not change the registers' paths, identifiers, schema, or runtime behavior, and it imposes no executable behavior on agents. AICore validates and evaluates local artifacts only; a destination-owned trusted adapter binds parameters and executes the query. AICore never connects to a database, executes SQL, reads credentials, invokes an adapter command, or holds persistent query-root configuration. Ticket-enabled destinations receive the skill and this design document during destination onboarding (clearance delivery model: a cleared source ships its core region byte-for-byte and the destination owns its project region / skills wave); the pilot adds no root dependency, lockfile, runtime configuration, credential, or destination query-library change.
+This living design records the approach to query verification across destination projects. The implemented incident query verification does not change the registers' paths, identifiers, schema, or runtime behavior, and it imposes no executable behavior on agents. The core skill validates and evaluates local artifacts only; a destination-owned trusted adapter binds parameters and executes the query. The core skill never connects to a database, executes SQL, reads credentials, invokes an adapter command, or holds persistent query-root configuration. Ticket-enabled destinations receive the skill and this design document during destination onboarding (clearance delivery model: a cleared source ships its core region byte-for-byte and the destination owns its project region / skills wave); incident query verification adds no root dependency, lockfile, runtime configuration, credential, or destination query-library change.
 
 The goal is to let an incident case safely reuse a diagnostic query without placing large, project-specific SQL in the symptom or problem registers.
 
-**Destination chooses storage:** the destination chooses and declares its base folder for reusable diagnostic queries; AICore defines the protocol, never the destination directory. A problem row's Evidence points to a stored verifier with `diagnostic:<destination-relative-sidecar-path>` — the pointer is the discovery mechanism for later `structural` tickets, which validate the pair with the sidecar's parent as the `--query-root` and rebind current-ticket values through the destination adapter (one query-budget slot). Pointer-based discovery does not create persistent query-root configuration.
+**Destination chooses storage:** the destination chooses and declares its base folder for reusable diagnostic queries; the shared diagnostic system defines the protocol, never the destination directory. A problem row's Evidence points to a stored verifier with `diagnostic:<destination-relative-sidecar-path>` — the pointer is the discovery mechanism for later `structural` tickets, which validate the pair with the sidecar's parent as the `--query-root` and rebind current-ticket values through the destination adapter (one query-budget slot). Pointer-based discovery does not create persistent query-root configuration.
 
-**Identification packs:** a problem row's Evidence may also carry an optional `pack:<destination-relative-pack-path>` pointer to a reusable identification pack — a multi-statement or multi-result correlation the destination stores at its own chosen location. A pack is not a verifier: it has no sidecar, no one-row result contract, and is never validated or evaluated by `query_verification.py` or protocol-v1. A later `structural` ticket follows the `pack:` pointer first, resolving the destination-relative path and replaying the correlation with current-ticket keys under destination-owned execution; AICore never executes or parses the pack internals. The destination chooses the pack's directory, filename, and layout; AICore defines the pointer and replay order only.
+**Identification packs:** a problem row's Evidence may also carry an optional `pack:<destination-relative-pack-path>` pointer to a reusable identification pack — a multi-statement or multi-result correlation the destination stores at its own chosen location. A pack is not a verifier: it has no sidecar, no one-row result contract, and is never validated or evaluated by `query_verification.py` or protocol-v1. A later `structural` ticket follows the `pack:` pointer first, resolving the destination-relative path and replaying the correlation with current-ticket keys under destination-owned execution; the core skill never executes or parses the pack internals. The destination chooses the pack's directory, filename, and layout; the shared diagnostic system defines the pointer and replay order only.
 
 ## Core model
 
@@ -24,17 +24,17 @@ The symptom and problem registers, diagnostic-query library, verifier definition
 | Destination diagnostic-query library | Large reusable diagnostic queries, such as SQL, document, or script queries. |
 | Verifier definition | Machine-readable YAML metadata that links a diagnostic query to query verification. |
 | Verifier | A diagnostic query together with its verifier definition. |
-| Case evidence | Retained ticket/task proof from a verification execution: the verifier ID, the verdict, the bound digests, and the redacted evidence values. The implemented pilot does not retain raw query output. |
+| Case evidence | Retained ticket/task proof from a verification execution: the verifier ID, the verdict, the bound digests, and the redacted evidence values. The implemented incident query verification does not retain raw query output. |
 
 A verifier can establish that a symptom is present for a particular case. It does not establish a root cause unless its declared result contract directly tests that cause.
 
 ## Portability contract
 
-AICore must define the protocol, not prescribe a destination's query-library layout.
+The shared diagnostic system must define the protocol, not prescribe a destination's query-library layout.
 
 Each destination project will declare one base folder containing reusable diagnostic queries. Valid examples include `sql/queries/`, `support/diagnostics/`, and `operational-data/checks/`. Within that base folder, the destination may organize files by system, module, country, product, or any other local convention.
 
-Every diagnostic query intended to verify a symptom must have a YAML verifier definition. The implemented incident pilot requires a sidecar file beside the diagnostic query:
+Every diagnostic query intended to verify a symptom must have a YAML verifier definition. The implemented incident query verification requires a sidecar file beside the diagnostic query:
 
 ```text
 <declared-query-root>/
@@ -43,13 +43,13 @@ Every diagnostic query intended to verify a symptom must have a YAML verifier de
     Festival_DiagnosticoMonto.verifier.yaml
 ```
 
-The sidecar layout is required for the implemented incident pilot. A centralized YAML index remains a deferred consideration if it can preserve the same verifier-definition contract and reliably map each definition to one diagnostic query.
+The sidecar layout is required for the implemented incident query verification. A centralized YAML index remains a deferred consideration if it can preserve the same verifier-definition contract and reliably map each definition to one diagnostic query.
 
 Not every symptom requires query verification. A symptom may require logs, browser evidence, code inspection, or another diagnostic method. A verifier definition is required only for reusable query verification.
 
-## Implemented incident pilot contract (v1)
+## Implemented incident query verification contract (v1)
 
-The implemented pilot is closed, incident-only, SQL-source-only, and sidecar-only. Its normative contract lives in `.opencode/skills/query-verification/references/protocol-v1.md`; the static shapes are `verifier-sidecar-v1.yaml`, `adapter-output-v1.json`, and `case-evidence-v1.json` in the same folder.
+The implemented incident query verification is closed, incident-only, SQL-source-only, and sidecar-only. Its normative contract lives in `.opencode/skills/query-verification/references/protocol-v1.md`; the static shapes are `verifier-sidecar-v1.yaml`, `adapter-output-v1.json`, and `case-evidence-v1.json` in the same folder.
 
 | Element | Implemented v1 rule |
 |---|---|
@@ -61,7 +61,7 @@ The implemented pilot is closed, incident-only, SQL-source-only, and sidecar-onl
 | Result set | Exactly one result set named `verification` with exactly one `verification_verdict` column. |
 | Evidence | Configured `evidence_columns` retained, configured `redact_columns` replaced by `[REDACTED]`, verdict bound to verifier/source/definition digests. |
 | Verdicts | Exactly `verified`, `not_verified`, or `inconclusive`. |
-| Execution | The destination-owned adapter binds and executes; AICore validates and evaluates local artifacts only. |
+| Execution | The destination-owned adapter binds and executes; the core skill validates and evaluates local artifacts only. |
 
 ## Broader verifier-definition contract (deferred)
 
@@ -70,7 +70,7 @@ This broader shape remains a design proposal and is not implemented. Each verifi
 | Field | Purpose |
 |---|---|
 | `id` | Stable, destination-unique verifier identifier. |
-| `team` | Owning team for the verifier. The current core uses `incident` and `dev`. |
+| `team` | Owning team for the verifier. Register team vocabulary is `incident` and `dev`; the implemented v1 verifiers accept `incident` only. |
 | `source` | Diagnostic-query path relative to the destination's declared query root. |
 | `symptoms` | One or more destination symptom IDs that the verifier can verify. |
 | `purpose` | Short description of what the verifier proves or rules out. |
@@ -115,11 +115,11 @@ safety:
     - consultant_identifier
 ```
 
-The sample is a design illustration of the deferred broader shape. The implemented incident pilot does not use `assertions`, `result_sets`, or `required_filters`; its closed v1 contract is the section above. Field names, comparison syntax, and any eventual broader schema remain to be defined before implementation.
+The sample is a design illustration of the deferred broader shape. The implemented incident query verification does not use `assertions`, `result_sets`, or `required_filters`; its closed v1 contract is the section above. Field names, comparison syntax, and any eventual broader schema remain to be defined before implementation.
 
 ## Query-verification flow
 
-In the implemented incident pilot, the destination-owned adapter performs the execution step; the core skill performs only the local validate and evaluate steps. The full flow below remains the design target; steps marked **(deferred)** are not implemented by the pilot.
+In the implemented incident query verification, the destination-owned adapter performs the execution step; the core skill performs only the local validate and evaluate steps. The full flow below remains the design target; steps marked **(deferred)** are not implemented by incident query verification.
 
 ```text
 New incident or development case
@@ -148,7 +148,7 @@ When the same symptom appears in a future case, an agent performs a verification
 
 ## Current two-team workflow map
 
-This is a readable map of the current AICore definitions. It does not introduce new behavior. Items marked **Gap** are not yet operationally defined.
+This is a readable map of the shared diagnostic system's current definitions. It does not introduce new behavior. Items marked **Gap** are not yet operationally defined.
 
 ### Incident team
 
@@ -179,10 +179,10 @@ This is a readable map of the current AICore definitions. It does not introduce 
 
 | Start | Find | Verify | Result |
 |---|---|---|---|
-| Incident ticket (implemented pilot) | Symptom ID, team, system/module | Verifier (its verifier definition and destination-owned diagnostic query) with current-case parameters bound by the destination adapter | Verification verdict: `verified`, `not_verified`, or `inconclusive` |
+| Incident ticket (implemented incident query verification) | Symptom ID, team, system/module | Verifier (its verifier definition and destination-owned diagnostic query) with current-case parameters bound by the destination adapter | Verification verdict: `verified`, `not_verified`, or `inconclusive` |
 | Dev issue (deferred) | Symptom ID, team, system/module | Verifier with current-case parameters | Verification verdict: `verified`, `not_verified`, or `inconclusive` |
 
-When the verification verdict is `verified`, the agent may link to an existing problem record and recommend its recorded fix. It must not apply a fix or claim root-cause equivalence without the required evidence and approval. The implemented pilot covers the incident row only; the Dev row is deferred.
+When the verification verdict is `verified`, the agent may link to an existing problem record and recommend its recorded fix. It must not apply a fix or claim root-cause equivalence without the required evidence and approval. The implemented incident query verification covers the incident row only; the Dev row is deferred.
 
 ## Register interaction
 
@@ -190,20 +190,20 @@ This query-verification design augments rather than replaces the existing regist
 
 - A symptom entry may reference one or more verifier IDs as part of its canonical diagnostic routing.
 - A problem record may cite a verifier ID only after case evidence confirms a recurring root-cause pattern.
-- A ticket/task retains the verifier evidence record from its verification execution: the verifier ID, the verdict, the source and definition digests, and the redacted evidence values. Raw query output, rendered SQL, parameter values, and credentials are not retained by the pilot.
+- A ticket/task retains the verifier evidence record from its verification execution: the verifier ID, the verdict, the source and definition digests, and the redacted evidence values. Raw query output, rendered SQL, parameter values, and credentials are not retained by incident query verification.
 - A new problem record is not created merely because a verifier exists or a symptom is observed.
 - Repeated cases that satisfy the same root-cause evidence enrich or link to the existing problem record instead of creating duplicates.
 
 ## Verification and evidence constraints
 
-The implemented incident pilot retains the existing shared query safeguards in `knowledge/agents.md`:
+The implemented incident query verification retains the existing shared query safeguards in `knowledge/agents.md`:
 
 - Queries are bounded and include relevant filter fields in their evidence projection.
 - The target schema and environment are verified before use by the destination adapter; the core skill performs lexical safety checks only.
 - Values from a prior ticket are never copied into a new case; all parameters come from the current case and are bound by the destination adapter.
-- A verifier definition must declare whether its diagnostic query is read-only. Destructive or mutating scripts are never verifiers; the pilot rejects any `safety.operation` other than `read_only`.
+- A verifier definition must declare whether its diagnostic query is read-only. Destructive or mutating scripts are never verifiers; incident query verification rejects any `safety.operation` other than `read_only`.
 - Parameter rendering is typed and controlled; unbounded text interpolation and dynamic SQL concatenation are not accepted, and the core never renders a parameter value.
-- A reusable diagnostic query does not retain customer-specific query output. The pilot retains only the redacted, digest-bound evidence record; raw output belongs to destination policy.
+- A reusable diagnostic query does not retain customer-specific query output. Incident query verification retains only the redacted, digest-bound evidence record; raw output belongs to destination policy.
 - The verdict is exactly `verified`, `not_verified`, or `inconclusive`; missing, zero, or multiple context rows and any malformed or mismatched input produce `inconclusive`, never a silent pass.
 <!-- core:end -->
 

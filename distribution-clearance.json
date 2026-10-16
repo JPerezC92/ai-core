@@ -1,56 +1,201 @@
 {
   "schema": 1,
   "cleared": {
-    "AGENTS.md": { "mode": "region", "role": "root" },
-    "opencode.jsonc": { "mode": "merge" },
-    "user-stories/git-pr-drafting.md": { "mode": "raw" },
-    "knowledge/agents.md": { "mode": "region" },
-    "knowledge/debt.md": { "mode": "region" },
-    "knowledge/problems.md": { "mode": "region" },
-    "knowledge/symptoms.md": { "mode": "region" },
-    "knowledge/diagnostic-system-design.md": { "mode": "region" },
-    ".opencode/skills/git-branch-name/": { "mode": "raw" },
-    ".opencode/skills/git-commit/": { "mode": "raw" },
-    ".opencode/skills/git-pr/": { "mode": "raw" },
-    ".opencode/skills/op-agent-creator/": { "mode": "raw" },
-    ".opencode/skills/op-model/": { "mode": "raw" },
-    ".opencode/skills/op-skill-creator/": { "mode": "raw" },
-    ".opencode/skills/plan-enforce/": { "mode": "raw", "region_files": ["SKILL.md"] },
-    ".opencode/skills/query-verification/": { "mode": "raw", "region_files": ["SKILL.md"] },
-    ".opencode/skills/ticket-runbook/": { "mode": "raw", "region_files": ["SKILL.md"] },
-    ".opencode/skills/user-story/": { "mode": "raw", "region_files": ["SKILL.md"] },
-    ".opencode/agents/lumen.md": { "mode": "region" },
-    "agents/lumen/profile.md": { "mode": "region" },
-    ".opencode/agents/atrium.md": { "mode": "region" },
-    ".opencode/agents/augur.md": { "mode": "region" },
-    ".opencode/agents/bastion.md": { "mode": "region" },
-    ".opencode/agents/crucible.md": { "mode": "region" },
-    ".opencode/agents/forge.md": { "mode": "region" },
-    ".opencode/agents/herald.md": { "mode": "region" },
-    ".opencode/agents/inquisitor.md": { "mode": "region" },
-    ".opencode/agents/investigator.md": { "mode": "region" },
-    ".opencode/agents/ledger.md": { "mode": "region" },
-    ".opencode/agents/marshal.md": { "mode": "region" },
-    ".opencode/agents/quill.md": { "mode": "region" },
-    ".opencode/agents/scribe.md": { "mode": "region" },
-    ".opencode/agents/sentinel.md": { "mode": "region" },
-    ".opencode/agents/vault.md": { "mode": "region" },
-    ".opencode/agents/warden.md": { "mode": "region" },
-    "agents/atrium/profile.md": { "mode": "region" },
-    "agents/augur/profile.md": { "mode": "region" },
-    "agents/bastion/profile.md": { "mode": "region" },
-    "agents/cipher/profile.md": { "mode": "region" },
-    "agents/crucible/profile.md": { "mode": "region" },
-    "agents/forge/profile.md": { "mode": "region" },
-    "agents/herald/profile.md": { "mode": "region" },
-    "agents/inquisitor/profile.md": { "mode": "region" },
-    "agents/investigator/profile.md": { "mode": "region" },
-    "agents/ledger/profile.md": { "mode": "region" },
-    "agents/marshal/profile.md": { "mode": "region" },
-    "agents/quill/profile.md": { "mode": "region" },
-    "agents/scribe/profile.md": { "mode": "region" },
-    "agents/sentinel/profile.md": { "mode": "region" },
-    "agents/vault/profile.md": { "mode": "region" },
-    "agents/warden/profile.md": { "mode": "region" }
+    "AGENTS.md": {
+      "mode": "region",
+      "role": "root"
+    },
+    "opencode.jsonc": {
+      "mode": "merge"
+    },
+    "knowledge/agents.md": {
+      "mode": "region"
+    },
+    "knowledge/debt.md": {
+      "mode": "region"
+    },
+    "knowledge/problems.md": {
+      "mode": "region"
+    },
+    "knowledge/symptoms.md": {
+      "mode": "region"
+    },
+    "knowledge/diagnostic-system-design.md": {
+      "mode": "region"
+    },
+    ".opencode/skills/git-branch-name/": {
+      "mode": "raw"
+    },
+    ".opencode/skills/git-commit/": {
+      "mode": "raw"
+    },
+    ".opencode/skills/git-pr/": {
+      "mode": "raw"
+    },
+    ".opencode/skills/op-agent-creator/": {
+      "mode": "raw"
+    },
+    ".opencode/skills/op-model/": {
+      "mode": "raw"
+    },
+    ".opencode/skills/op-skill-creator/": {
+      "mode": "raw"
+    },
+    ".opencode/skills/plan-enforce/": {
+      "mode": "raw",
+      "region_files": [
+        "SKILL.md"
+      ]
+    },
+    ".opencode/skills/query-verification/": {
+      "mode": "raw",
+      "region_files": [
+        "SKILL.md"
+      ]
+    },
+    ".opencode/skills/ticket-runbook/": {
+      "mode": "raw",
+      "region_files": [
+        "SKILL.md"
+      ]
+    },
+    ".opencode/skills/user-story/": {
+      "mode": "raw",
+      "region_files": [
+        "SKILL.md"
+      ]
+    },
+    ".opencode/agents/lumen.md": {
+      "mode": "region"
+    },
+    "agents/lumen/profile.md": {
+      "mode": "region"
+    },
+    ".opencode/agents/atrium.md": {
+      "mode": "region"
+    },
+    ".opencode/agents/augur.md": {
+      "mode": "region"
+    },
+    ".opencode/agents/bastion.md": {
+      "mode": "region"
+    },
+    ".opencode/agents/crucible.md": {
+      "mode": "region"
+    },
+    ".opencode/agents/forge.md": {
+      "mode": "region"
+    },
+    ".opencode/agents/herald.md": {
+      "mode": "region"
+    },
+    ".opencode/agents/inquisitor.md": {
+      "mode": "region"
+    },
+    ".opencode/agents/investigator.md": {
+      "mode": "region"
+    },
+    ".opencode/agents/ledger.md": {
+      "mode": "region"
+    },
+    ".opencode/agents/marshal.md": {
+      "mode": "region"
+    },
+    ".opencode/agents/quill.md": {
+      "mode": "region"
+    },
+    ".opencode/agents/scribe.md": {
+      "mode": "region"
+    },
+    ".opencode/agents/sentinel.md": {
+      "mode": "region"
+    },
+    ".opencode/agents/vault.md": {
+      "mode": "region"
+    },
+    ".opencode/agents/warden.md": {
+      "mode": "region"
+    },
+    "agents/atrium/profile.md": {
+      "mode": "region"
+    },
+    "agents/augur/profile.md": {
+      "mode": "region"
+    },
+    "agents/bastion/profile.md": {
+      "mode": "region"
+    },
+    "agents/cipher/profile.md": {
+      "mode": "region"
+    },
+    "agents/crucible/profile.md": {
+      "mode": "region"
+    },
+    "agents/forge/profile.md": {
+      "mode": "region"
+    },
+    "agents/herald/profile.md": {
+      "mode": "region"
+    },
+    "agents/inquisitor/profile.md": {
+      "mode": "region"
+    },
+    "agents/investigator/profile.md": {
+      "mode": "region"
+    },
+    "agents/ledger/profile.md": {
+      "mode": "region"
+    },
+    "agents/marshal/profile.md": {
+      "mode": "region"
+    },
+    "agents/quill/profile.md": {
+      "mode": "region"
+    },
+    "agents/scribe/profile.md": {
+      "mode": "region"
+    },
+    "agents/sentinel/profile.md": {
+      "mode": "region"
+    },
+    "agents/vault/profile.md": {
+      "mode": "region"
+    },
+    "agents/warden/profile.md": {
+      "mode": "region"
+    },
+    "user-stories/clean-architecture-contract.md": {
+      "mode": "region"
+    },
+    "user-stories/diagnostic-system.md": {
+      "mode": "region"
+    },
+    "user-stories/git-pr-drafting.md": {
+      "mode": "region"
+    },
+    "user-stories/incident-query-verification.md": {
+      "mode": "region"
+    },
+    "user-stories/op-model-configuration.md": {
+      "mode": "region"
+    },
+    "user-stories/plan-lifecycle-governance.md": {
+      "mode": "region"
+    },
+    "user-stories/post-merge-branch-cleanup.md": {
+      "mode": "region"
+    },
+    "user-stories/pr-test-evidence-collection.md": {
+      "mode": "region"
+    },
+    "user-stories/register-first-incident-identification.md": {
+      "mode": "region"
+    },
+    "user-stories/safe-roster-parallelism.md": {
+      "mode": "region"
+    },
+    "user-stories/user-story.md": {
+      "mode": "region"
+    }
   }
 }

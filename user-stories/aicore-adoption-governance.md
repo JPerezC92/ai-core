@@ -1,4 +1,4 @@
-# User story — aicore-adoption-sync
+# User story — aicore-adoption-governance
 
 > **Created:** 2026-09-11
 > **Title:** AICore adoption governance
@@ -44,9 +44,9 @@
 
 ## Change log
 
-- before 2026-10-12 — earlier history: see git history for this file.
-- 2026-10-12 — core-sync-merge-mode-20261012 (PR #58): added the `merge` binding mode for JSON/JSONC top-level-key merge and reclassified the opencode config from raw to merge.
+- before 2026-10-12 — earlier history: see git history for this file (incl. core-sync-merge-mode-20261012, PR #58).
 - 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof`, moved synchronization authority policy into `## Constraints`, and dropped test symbols and inline verification commands from criterion text.
 - 2026-10-13 — skill-distribution-20261012 (PR #60): delivered the skill-distribution contract — neutral shipped skill payloads (the <python> command-placeholder convention, identity-neutral cores), region markers on workflow skill documents, and the ticket-runbook validator conformance rework.
 - 2026-10-13 — skill-root-expansion-20261012 (PR #60): expanded the clearance format in place to the single v1 definition — skill-root rows with region_files and script-side file identification (caches excluded, dynamic at each sync), ten roots replacing per-file skill rows, and distribution-clearance.definition.md as the format source of truth.
 - 2026-10-14 — knowledge-distribution-20261014 (PR #63): re-scoped the story to source-side adoption governance (v2.0.0) — title, persona, and goal rewritten to identity neutrality and bindings ownership; the sync-mechanism criteria are superseded by the `core-sync` story.
+- 2026-10-15 — story-distribution-20261015 (PR #64): renamed from aicore-adoption-sync (slug/title corrected). (source-local, not distributed)

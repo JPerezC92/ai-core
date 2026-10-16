@@ -1,3 +1,4 @@
+<!-- core:begin -->
 # User story — pr-test-evidence-collection
 
 > **Created:** 2026-10-13
@@ -6,7 +7,6 @@
 > **version:** 1.0.0
 > **Epic:** developer-tooling
 > **Affected areas:** `.opencode/agents/inquisitor.md`, `AGENTS.md`, `.opencode/skills/git-pr/SKILL.md`
-> **Contract approval:** 2026-10-13 — user approved CREATE + contract as active after the catalogue review, collision report, and contract preview.
 
 ## Persona
 
@@ -38,15 +38,15 @@
 
 ## Proof
 
-- AC1 → `.opencode/agents/inquisitor.md` `##### Dispatch protocol` Round 1–2 · completion audit `[PASS]` 2026-10-13
-- AC2 → `.opencode/agents/inquisitor.md` `##### Dispatch protocol` Round 2 · `## Test evidence` row executor field · completion audit `[PASS]` 2026-10-13
-- AC3 → `.opencode/agents/inquisitor.md` `##### PR-body evidence boundary` · `.opencode/skills/git-pr/SKILL.md` `## Post-PR evidence contract` · completion audit `[PASS]` 2026-10-13
-- AC4 → `.opencode/agents/inquisitor.md` `##### PR-body evidence boundary` · completion audit `[PASS]` 2026-10-13
-- AC5 → `.opencode/agents/inquisitor.md` `##### Dispatch protocol` Round 1 · completion audit `[PASS]` 2026-10-13
-- AC6 → `.opencode/agents/inquisitor.md` `##### Dispatch protocol` Round 2 · completion audit `[PASS]` 2026-10-13
-- AC7 → `.opencode/agents/inquisitor.md` `##### Edge cases` · completion audit `[PASS]` 2026-10-13
-- AC8 → `.opencode/agents/inquisitor.md` `##### Dispatch protocol` Round 3 · completion audit `[PASS]` 2026-10-13
-- AC9 → `AGENTS.md` `### Identity & Role` PR boundary review · `.opencode/agents/inquisitor.md` `##### Dispatch protocol` Round 3 · completion audit `[PASS]` 2026-10-13
+- AC1 → `.opencode/agents/inquisitor.md` `##### Dispatch protocol (round-based: manifest → concurrent fan-out → single-writer join)` rounds 1–2
+- AC2 → `.opencode/agents/inquisitor.md` `##### Dispatch protocol (round-based: manifest → concurrent fan-out → single-writer join)` round 2 · `##### PR-body evidence boundary` executor field
+- AC3 → `.opencode/agents/inquisitor.md` `##### PR-body evidence boundary` · `.opencode/skills/git-pr/SKILL.md` `### Post-PR evidence contract`
+- AC4 → `.opencode/agents/inquisitor.md` `##### PR-body evidence boundary`
+- AC5 → `.opencode/agents/inquisitor.md` `##### Dispatch protocol (round-based: manifest → concurrent fan-out → single-writer join)` round 1
+- AC6 → `.opencode/agents/inquisitor.md` `##### Dispatch protocol (round-based: manifest → concurrent fan-out → single-writer join)` round 2
+- AC7 → `.opencode/agents/inquisitor.md` `##### Edge cases`
+- AC8 → `.opencode/agents/inquisitor.md` `##### Dispatch protocol (round-based: manifest → concurrent fan-out → single-writer join)` round 3
+- AC9 → `.opencode/agents/inquisitor.md` `##### Dispatch protocol (round-based: manifest → concurrent fan-out → single-writer join)` round 3 · `.opencode/skills/git-pr/SKILL.md` `### Post-PR evidence contract` execution-ownership handoff
 
 ## Constraints
 
@@ -56,6 +56,23 @@
 - The reviewing role holds no execution grant — because the gate that judges evidence must not produce it.
 - Evidence rows keep verdict-only observed output — because raw dumps bury the audit surface.
 
+<!-- core:end -->
+
+<!-- project:begin -->
+## Approval record
+
+> **Contract approval:** 2026-10-13 — user approved CREATE + contract as active after the catalogue review, collision report, and contract preview.
+
+## Local evidence
+
+- **AC1–AC9:** Prior source Proof recorded the completion audit `[PASS]` dated 2026-10-13 for the PR evidence-collection contract. That observed source verdict is retained locally and is not a current PR-head execution or destination verification.
+
+## Revision tracking
+
+- 2026-10-15 — Shared-region preparation and separation of portable evidence-boundary pointers from dated source audit results await final acceptance and a delivery-matching history reference. No PR body or GitHub record is edited by this work.
+
 ## Change log
 
 - 2026-10-13 — pr-test-evidence-collection-20261013 (PR #62): created the feature contract and delivered the round-based manifest → fan-out → single-writer evidence collection.
+- 2026-10-15 — story-distribution-20261015 (PR #64): regionized the story with portable evidence-boundary pointers.
+<!-- project:end -->

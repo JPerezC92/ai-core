@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-
-from core_sync_pkg.domain.regions import split_frontmatter  # noqa: E402
+from core_sync_pkg.domain.regions import split_frontmatter
 
 
-EXPECTED_SOURCE_VERSIONS = {
+EXPECTED_SOURCE_VERSIONS: dict[str, str] = {
     "atrium.md": "1.4.0",
     "augur.md": "1.2.2",
     "bastion.md": "1.7.0",
@@ -24,7 +21,7 @@ EXPECTED_SOURCE_VERSIONS = {
     "marshal.md": "1.4.0",
     "quill.md": "1.3.2",
     "scribe.md": "1.2.2",
-    "sentinel.md": "1.14.0",
+    "sentinel.md": "1.14.1",
     "vault.md": "1.4.3",
     "warden.md": "1.5.2",
 }

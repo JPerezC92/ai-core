@@ -48,6 +48,9 @@ Every item you are tempted to write into a story belongs to exactly one of these
 
 ## Decision procedure
 
+First determine ownership using **Shared versus project-owned content** below. The
+categories classify an item's meaning; they do not independently authorize distribution.
+
 Run every candidate item through these. Stop at the first decisive answer.
 
 1. **Who observes it?** An end user, a consuming developer, an operator, an auditor, an adversary?
@@ -69,6 +72,40 @@ Run every candidate item through these. Stop at the first decisive answer.
 9. **Enabler/technical work:** name the real stakeholder and a demonstrable outcome, or state
    plainly that it is enabling scope. Never invent a persona to satisfy a template.
 10. **Is anything unagreed or unanswered?** → open question, never an acceptance criterion.
+
+## Shared versus project-owned content
+
+Classify semantically, not by file location, heading, framework name, or phrases such as
+"this project". A concrete shared workflow interpretation remains shared; a genuine
+local selection, requirement, grant, run, or record is project-owned.
+
+| Content | Ownership / treatment |
+|---|---|
+| Reusable approved behavioural contract | Shared story core: H1/shared metadata, Persona, Goal, Scenario, criteria plus shared marks, portable Proof, Constraints; one contiguous region through Constraints |
+| Source-only feature contract | Retain in the source catalogue; do not clear it or copy its row merely because other stories ship |
+| Genuine project-specific requirement | Project-owned content, subject to existing ownership/collision/approval review; cannot replace or weaken the shared baseline |
+| Shared criterion's completion mark | Core alongside its promise; means evidenced shared delivery, not a verification run at each destination |
+| Resolvable portable proving path and section/symbol | One canonical Proof entry for the criterion in core; identify a future target as pending/unverified |
+| Actual source/local run, dated audit verdict, operational grant or release observation | Project-owned Local evidence or history, keyed to existing AC ids where useful; not universal Proof or a second shared-status table |
+| Local approval record or approved revision awaiting matching history | Project-owned Revision tracking, outside feature Change log and shipped core; not delivery evidence |
+| Feature delivery history and actual release events | Project-owned bounded Change log with real matching anchors; never a shared requirement |
+| Story catalogue | One project-owned index of actual shared and local files, not a transported copy of the source index |
+
+For a proposed shared revision, preserve unchanged criterion identities and account for
+changed/retired promises, Proof, and dependencies under the consistency checklist.
+Review current evidence before retaining marks; neither approval nor synchronization
+proves implementation or destination checks. Destinations never edit inherited core.
+
+Distinguish **required behavioural dependencies** from historical mentions, Proof/tool
+references, and common affected areas. Only the former require an available compatible
+contract before delivery. A source-local mention cannot silently impose an adopter
+requirement. If a required promise is unavailable, report the blocker; do not import a
+source-only story by implication or invent a portable proof target.
+
+On adoption, reconcile displaced duplicate contracts/metadata and retain genuine local
+evidence/history. Initialize empty local history without a fabricated receipt event;
+reconcile the destination's index rather than shipping the source catalogue. Follow the
+checklist's destination procedure and the supported `core-sync` enrollment path.
 
 ## Hard cases and where they belong
 
@@ -117,8 +154,10 @@ This repository takes a **hybrid**, which is why categories 3 and 5 both exist:
 Unagreed items currently have no home in the template. Two acceptable treatments:
 
 - Hold them in the discussion and do not persist them until agreed.
-- If a question blocks a criterion, state the criterion conditionally and record the question in
-  the change-log entry that lands it.
+- If the user approves a conditional promise, state that agreed condition explicitly; keep
+  unanswered discussion outside the approved contract. Record a truthful revision in the
+  matching delivery's change-log entry, or pending local Revision tracking during approved
+  staged persistence. Never invent a delivery entry to house an open question.
 
 Do **not** write an unanswered question as an acceptance criterion. Example Mapping calls these
 red cards for a reason: they are not promises.

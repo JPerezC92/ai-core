@@ -3,6 +3,14 @@
 <!-- core:begin -->
 ## Mandatory core
 
+### Core and project ownership (HARD RULE)
+
+- **Core is the shared source of truth.** In a region-governed document, every reusable baseline guideline, rule, architecture obligation, workflow, approval or review gate, template, and shared behavioural contract belongs in the `core` region. Only the selected upstream revision defines that shared baseline; destination content cannot replace its authority.
+- **Classify by meaning, not wording.** A heading, file location, framework name, example, or phrase such as "this project" does not make a shared obligation project-owned. Shared defaults and their concrete interpretations remain core; an evidenced project-specific selection or operational binding belongs in `project`.
+- **Project extensions preserve the baseline.** The `project` region holds genuine project-specific configuration, operational bindings, actual local grants, requirements, records, evidence, and history. Extensions may specialize the baseline only where it permits; they must never override, weaken, or contradict a shared rule. A local grant never creates authority forbidden by core.
+- **Shared contracts retain shared status.** A shared story's persona, goal, scenarios, acceptance criteria and their shared completion status, governing constraints, and portable Proof references belong in core. A shared completion mark reports evidence-established delivery of the shared capability; inheriting it does not establish that verification ran in the destination. Project-specific verification results and source-local execution or release history remain project-owned and must not be represented as shared or destination-wide evidence.
+- **Keep the ownership boundary intact.** Shared core changes originate upstream and reach destinations through the authorized synchronization workflow. Never edit destination core to record local completion or accommodate an extension; record genuine local requirements and evidence in project-owned content without changing the shared contract. Source-only project content never becomes a payload merely because it appears beside shared rules.
+
 ### Evidence discipline (HARD RULE)
 
 - **Facts** (query results, tool returns, browser evidence): unmarked.
