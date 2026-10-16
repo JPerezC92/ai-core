@@ -1,3 +1,4 @@
+<!-- core:begin -->
 # User story — diagnostic-system
 
 > **Created:** 2026-10-14
@@ -6,7 +7,6 @@
 > **version:** 1.0.0
 > **Epic:** incident-diagnostics
 > **Affected areas:** `knowledge/symptoms.md`, `knowledge/problems.md`, `knowledge/diagnostic-system-design.md`
-> **Contract approval:** 2026-10-14 — user approved CREATE + contract as active after the whole-catalogue review, collision report, and contract preview.
 
 ## Persona
 
@@ -20,6 +20,7 @@
 ## Scenario
 
 - An incident case arrives with a known symptom class and a destination-owned diagnostic query. The agent classifies the observation, identifies register-first, validates the sidecar verifier, obtains normalized output from the destination's trusted adapter, records the three-state verdict as evidence, and files or enriches the problem record.
+- The incident route composes the `register-first-incident-identification` contract (`exact`, `structural`, `no_match`) and the `incident-query-verification` contract (`verified`, `not_verified`, `inconclusive`); the second establishes symptom evidence, not a second identification matcher or automatic root-cause confirmation.
 - A dev issue runs the same loop with its team's rows; team ownership is recorded on every problem row.
 - A destination receives the system's catalog, register, and living design; its filed rows and refinements survive every core update.
 
@@ -41,7 +42,7 @@
 - AC4 → `knowledge/diagnostic-system-design.md` `## Verification and evidence constraints` · `knowledge/agents.md` `### Bounded-query discipline (SELECT-in-WHERE)`
 - AC5 → `knowledge/diagnostic-system-design.md` `## Current two-team workflow map`
 - AC6 → `knowledge/diagnostic-system-design.md` document title · `knowledge/agents.md` `### Artifact naming (HARD RULE)` · naming review
-- AC7 → `knowledge/diagnostic-system-design.md` core/project region split · `distribution-clearance.json` living-design row · `core-sync check` → exit 0
+- AC7 → `knowledge/diagnostic-system-design.md` core/project region split, `## Purpose`, `## Core model`, and `## Portability contract`
 
 ## Constraints
 
@@ -49,6 +50,22 @@
 - The destination owns its diagnostic-query layout — because the system defines protocol and pointer semantics, not storage.
 - A verified symptom is never root-cause confirmation — because symptom presence and cause are different claims.
 
+<!-- core:end -->
+
+<!-- project:begin -->
+## Approval record
+
+> **Contract approval:** 2026-10-14 — user approved CREATE + contract as active after the whole-catalogue review, collision report, and contract preview.
+
+## Local evidence
+
+- **AC7:** Prior source Proof cited the living-design row in `distribution-clearance.json` and recorded `core-sync check` → exit 0. This source-clearance observation is retained locally; the sync tool and source registry are not destination story dependencies or a newly executed check.
+
+## Revision tracking
+
+- 2026-10-15 — Shared-region preparation, portable Proof, and explicit existing incident-contract composition await final candidate acceptance and a delivery-matching history reference. AC1–AC5 remain unselected pending commitments; Dev integration is not implied.
+
 ## Change log
 
 - 2026-10-14 — knowledge-distribution-20261014 (PR #63): delivered the living-design companion under the system name — shared contract core, refinement state project-side.
+<!-- project:end -->

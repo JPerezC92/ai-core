@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.19.0
+  version: 1.20.0
 ---
 <!-- core:begin -->
 
@@ -105,11 +105,11 @@ Watch for goal drift on every phase close, every scope change, and every collate
 
 #### Acceptance-criterion reconciliation (fail-closed)
 
-Apply the full reference's **Acceptance-criterion reconciliation (fail-closed)** dispositions: reconcile committed/materially-changed criteria and introduced regressions through story Proof; unselected commitments stay `⬜`. Respect, never deliver/tick Constraints. Unmet criteria, violated constraints, regressions, or missing/adverse final evidence block Outcome/archive; release events are history, not acceptance criteria.
+Apply the full reference's **Acceptance-criterion reconciliation (fail-closed)**, including **Story ownership and current evidence**: reconcile selected/materially-changed criteria and regressions through Proof at the authorized owner; destinations record local outcomes without editing inherited core. Preserve unselected commitments and evidence-grounded shared marks. Respect, never deliver/tick Constraints. Unmet criteria, violations, regressions, missing/adverse final evidence, or unfinalized required history block completion; release events are history, not criteria.
 
 #### Resume (completion)
 
-Apply the full reference's **Resume (completion)** procedure before building the release PR: require current independent completion `[PASS]` and the layered evidence matrix, accepted joins, criterion reconciliation, chat goals resume, then Outcome → completed metadata → archive → filesystem verification. Missing/adverse evidence blocks goal checkmarks, Outcome, and archival. Planning readiness or test execution alone is never completion proof.
+Apply the full reference's **History finalization gate** and **Resume (completion)** before building the release PR: current independent completion `[PASS]`, layered evidence, accepted joins, owner-aware reconciliation, matching history, chat goals resume, then Outcome → completed metadata → archive → filesystem verification. Missing/adverse evidence or required history blocks finalization. Planning readiness, inherited marks, or test execution alone is never completion proof.
 
 ### Simplicity discipline
 
@@ -162,7 +162,7 @@ Programming plans ALWAYS carry a story for each feature touched by writes under 
 
 ### Planning input — approved story and selected criteria
 
-Read the approved (`active`) story body, selected delivery criteria, `## Proof` and `## Constraints` together. Story intent governs, never invented intent or overriding task phrasing; drafts are not planning contracts. Resolve evidence through Proof; respect, never deliver/tick Constraints. Trace every goal to a selected criterion, or Context/Goals when stories are skipped. No approved owner for a feature write means stop and route to `user-story` before plan creation.
+Read the approved (`active`) story, selected criteria, Proof, Constraints, and applicable project-owned approval/history tracking together. Intent governs, never invented intent or overriding task phrasing; drafts are not planning contracts. An approved revision with explicitly pending history may feed planning under the full lifecycle's **History finalization gate**. Inherited marks never prove current-plan or destination checks. Trace goals to selected criteria (or Context/Goals when skipped), respect Constraints, and apply **Story ownership and current evidence**; no approved owner means route to `user-story` before plan creation.
 
 ### Bounded discovery before scope confirmation
 
@@ -218,7 +218,7 @@ Run after every plan/phase/story/index write and every Forge 🔨 (Implementer) 
 
 1. Re-read each written `plan.md`, phase file, story, and index.
 2. Mechanical pass: active subfolder plans touching stories/index use `<plan-dir> --stories user-stories`; no-story plans use `<plan-dir>`; single-file plans use `<plan.md> --single-file`. Fix validator findings for Status/Completed, required sections and labels, executor-command tables, placeholders, index mirroring, goal trace, manifest equality, verification parity, and completed-plan audit gate.
-3. Analysis pass against the consistency checklist: evidence-match confirmed goals; each goal has Issue/How/Files; phase-to-goal and phase-file links exist; verification checkboxes trace to outputs; phase Writes equal the manifest; story title/status mirror the index; every criterion this plan committed to deliver or materially changed is reconciled, while unselected criteria `⬜` are left untouched. This semantic writer self-review reads the actual in-scope content — the real files, diffs, and command output — never the plan's or template's description of it. Never invent a value; stop and ask.
+3. Analysis pass against the consistency checklist: evidence-match goals and Issue/How/Files; check phase/goal links, output/verification trace, Writes/manifest equality, and story/index metadata. Reconcile selected/materially-changed criteria and regressions at completion under the full lifecycle's ownership and history rules; preparation may retain truthful pending criteria/history. Preserve unselected commitments and inherited core. Read actual files, diffs, and command output, never their description; never invent a value. Escalate missing decisions through the existing question-routing rule.
 4. Repeat to zero findings and report `self-verification passes: N`. After 3 iterations or the same unchanged violation twice, stop-and-ask (S-07).
 
 Mechanical success never substitutes for actual-content semantic self-review.

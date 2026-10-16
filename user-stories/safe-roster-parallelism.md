@@ -1,3 +1,4 @@
+<!-- core:begin -->
 # User story — safe-roster-parallelism
 
 > **Created:** 2026-10-13
@@ -6,7 +7,6 @@
 > **version:** 1.0.0
 > **Epic:** core-governance
 > **Affected areas:** `AGENTS.md`, `knowledge/agents.md`, `.opencode/agents/`, `.opencode/skills/plan-enforce/`, `.opencode/skills/ticket-runbook/`, `README.md`
-> **Contract approval:** 2026-10-13 — user selected `CREATE + approve` after the catalogue review and contract preview.
 
 ## Persona
 
@@ -38,15 +38,15 @@
 
 ## Proof
 
-- AC1 → `AGENTS.md` `### Identity & Role` orchestration responsibilities · observed three-way parallel dispatch (Marshal + 2×Vault) with disjoint scopes and explained serialization · Sentinel evidence review `[PASS]`
-- AC2 → `AGENTS.md` `### Conventions` subagent dispatch contract; `.opencode/skills/plan-enforce/SKILL.md` `### Dispatch bundle contract` · per-instance fields (task ID, responsibility, accepted inputs, writes, output, gates) recorded in every dispatch · Sentinel evidence review `[PASS]`
-- AC3 → `AGENTS.md` `### Conventions` subagent dispatch contract · conflicting-writer withholding observed (no second writer on active paths) · shared unchanged P1 bytes read concurrently · Sentinel evidence review `[PASS]`
-- AC4 → `knowledge/agents.md` `### Safe parallel task coordination (HARD RULE)` · boundary stop (P4 mitigated exclusion) and Marshal→Sentinel→Marshal transfer with documented cessation at each handoff · Sentinel evidence review `[PASS]`
-- AC5 → `knowledge/agents.md` `### Report discipline (HARD RULE)` · outputs attributed by session ID + SHA-256 across disjoint paths · Sentinel evidence review `[PASS]`
-- AC6 → `.opencode/agents/forge.md` `#### Per-step execution` · P2 `AWAITING_REVIEW` → Sentinel `[PASS]` → parent resume → `COMPLETED` · Sentinel evidence review `[PASS]`
-- AC7 → `.opencode/agents/atrium.md`, `.opencode/agents/bastion.md`, `.opencode/agents/crucible.md`, `.opencode/agents/sentinel.md` `#### Review scope and snapshot` · pre-fix forge SHA rejected after naming correction; fresh identity accepted · Sentinel evidence review `[PASS]`
-- AC8 → `.opencode/skills/plan-enforce/SKILL.md` `### Contract-sized phases`; `.opencode/skills/ticket-runbook/SKILL.md` `#### 7. Close-out (two-stage: readiness gate, then authorized collapse)` · P4 `[UNCERTAIN]` blocked P5; Augur usage-limit not accepted; suite exit 1 blocked until scope decision · Sentinel evidence review `[PASS]`
-- AC9 → `.opencode/skills/ticket-runbook/SKILL.md` `#### 3. Scaffold the working analysis (always)` query-budget rule and `### Optional verifier route (investigate step)`; `.opencode/skills/ticket-runbook/references/analysis/state.md` `Query-budget` and `## Kill-switch status` · three authoring slots allocated/reused without duplication; one coordinator ledger · Sentinel evidence review `[PASS]`
+- AC1 → `knowledge/agents.md` `### Safe parallel task coordination (HARD RULE)` independent readiness, capacity, and serialization obligations
+- AC2 → `knowledge/agents.md` `### Safe parallel task coordination (HARD RULE)` assignment fields · `.opencode/skills/plan-enforce/SKILL.md` `### Dispatch bundle contract`
+- AC3 → `knowledge/agents.md` `### Safe parallel task coordination (HARD RULE)` resource ownership and compatible shared reads
+- AC4 → `knowledge/agents.md` `### Safe parallel task coordination (HARD RULE)` boundary changes and observed cessation before transfer
+- AC5 → `knowledge/agents.md` `### Report discipline (HARD RULE)` · `### Safe parallel task coordination (HARD RULE)` attributable results
+- AC6 → `.opencode/agents/forge.md` `#### Per-step execution` · `.opencode/skills/plan-enforce/SKILL.md` `### Task coordination and accepted joins`
+- AC7 → `.opencode/agents/atrium.md`, `.opencode/agents/bastion.md`, `.opencode/agents/crucible.md`, `.opencode/agents/sentinel.md` `#### Review scope and snapshot`
+- AC8 → `.opencode/skills/plan-enforce/SKILL.md` `### Task coordination and accepted joins` · `.opencode/skills/ticket-runbook/SKILL.md` `#### 7. Close-out (two-stage: readiness gate, then authorized collapse)`
+- AC9 → `knowledge/agents.md` `### Safe parallel task coordination (HARD RULE)` shared capacity/accounting · `.opencode/skills/ticket-runbook/references/analysis/state.md` `Query-budget` and `## Kill-switch status`
 
 ## Constraints
 
@@ -56,6 +56,32 @@
 - One authoritative coordinator consolidates each workflow — because competing ownership and acceptance decisions would conflict.
 - Isolation is claimed only when verified — because separate agent sessions or written assignments alone do not establish enforcement.
 
+<!-- core:end -->
+
+<!-- project:begin -->
+## Approval record
+
+> **Contract approval:** 2026-10-13 — user selected `CREATE + approve` after the catalogue review and contract preview.
+
+## Local evidence
+
+These observations and Sentinel 🛡️ (Quality Guardian) evidence-review `[PASS]` claims are retained from prior source Proof; none is a new execution or universal destination result.
+
+- **AC1:** Observed three-way dispatch of Marshal 🎖️ (HR Director) and two Vault 🔐 (Catalog Steward) instances, with disjoint scopes and explained serialization.
+- **AC2:** Per-instance task, responsibility, inputs, writes, output, and gate fields were recorded in each source dispatch.
+- **AC3:** A conflicting second writer was withheld; shared unchanged P1 content was read concurrently.
+- **AC4:** P4 boundary mitigation and the Marshal 🎖️ (HR Director) → Sentinel 🛡️ (Quality Guardian) → Marshal 🎖️ (HR Director) transfer recorded cessation at each handoff.
+- **AC5:** Session identities and SHA-256 values attributed outputs across disjoint paths.
+- **AC6:** P2 returned `AWAITING_REVIEW`, received Sentinel 🛡️ (Quality Guardian) `[PASS]`, then resumed through the parent to `COMPLETED`.
+- **AC7:** A pre-fix implementation-spec hash was rejected after naming correction; a fresh identity was accepted.
+- **AC8:** P4 `[UNCERTAIN]` blocked P5; Augur's usage-limit return was not accepted; suite exit 1 blocked until the scope decision.
+- **AC9:** Three authoring slots were allocated/reused without duplicating allowances, under one coordinator ledger.
+
+## Revision tracking
+
+- 2026-10-15 — Shared-region preparation and separation of portable rules from observed source coordination await final acceptance and a delivery-matching history reference. The nine existing shared promises and identities remain intact.
+
 ## Change log
 
 - 2026-10-13 — safe-roster-parallelism (PR #61): created the feature contract and delivered all nine criteria through shared coordination rules, planning/incident guidance, region-boundary corrections, and observed workflow evidence.
+<!-- project:end -->

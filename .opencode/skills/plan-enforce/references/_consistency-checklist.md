@@ -59,7 +59,10 @@
 
 ## Completion and findings (analysis)
 
-- Completion evidence is the layered matrix on the current snapshot: code architecture, test architecture, test execution, and model/guidance verdicts, each with its scope and verdict. A passing execution never substitutes for a required architecture verdict, and a planning-readiness audit is never the completion audit. `## Outcome` and goal checkmarks require this evidence, accepted joins, reconciliation of committed/materially-changed criteria and introduced regressions, and respect for Constraints; unselected commitments stay `⬜`.
+- Completion evidence is the layered matrix on the current snapshot: code architecture, test architecture, test execution, and model/guidance verdicts, each with its scope and verdict. A passing execution never substitutes for a required architecture verdict, and a planning-readiness audit is never the completion audit. `## Outcome` and goal checkmarks require this evidence, accepted joins, reconciliation of committed/materially-changed criteria and introduced regressions, and respect for Constraints; unselected unfulfilled commitments stay `⬜`, while evidence-grounded existing shared marks are preserved rather than reset.
+- Apply the full lifecycle's **Story ownership and current evidence**: source work reconciles shared criteria at the authorized source; destination work records project-owned outcomes without changing inherited core, criteria, marks, or Proof. Inherited `✅` and synchronization do not prove the current plan's checks or regressions passed. Review actual proving surfaces/current evidence and required contract dependencies, not inherited status alone; no local completion overlay or weakening requirement is permitted.
+- Apply **History finalization gate** independently of execution success: approved staged persistence/planning may retain truthful pending history outside the feature log and shared core, with unimplemented criteria pending and future Proof unverified. Missing or nonmatching final references block completion, goal checkmarks, Outcome, completed metadata, archive, and release handoff until the real matching reference and compliant bounded entry are established. No fabricated delivery, borrowed anchor, or new Git/external-artifact authorization follows from this permission to prepare.
+- Review adoption against the story checklist: initialize empty local history without a receipt event, preserve genuine local evidence/history, remove displaced duplicate contract/metadata, and reconcile one project-owned catalogue of actual shared/local stories. Source project sections and source index do not ship. Actual local deliveries retain the matching-history requirement; no missing source-local history is repaired by editing destination core.
 - The full `references/_lifecycle-contract.md` is loaded before lifecycle operations; missing/unread/incomplete/conflicting content blocks them, with no summary fallback. Review its complete stash inventory/status, criterion dispositions, completion/archive/reopen/cancellation, lifecycle events and post-merge proof against actual evidence. Required command order/exits, live SHA/fingerprint, both ancestry directions, immutable head match, checked NUL path extraction, per-path parity, safe versus force deletion, fast-forward and conditional remote deletion remain intact; no new mutation authority is granted.
 - Every admitted finding states the confirmed goal, the governing normative clause, the actual actor and the shipped path it controls (distinct from a helper or fixture), expected versus observed, affected scope, a reproduction or static fact, severity with literal output, and a keep / fix / reject-scope decision.
 - Replaced, superseded, or newly wired behavior carries a recorded legacy/dead-code sweep; no dead symbol, inert field, or stale mapping survives completion.
@@ -70,8 +73,11 @@
 Story format and hygiene are owned by the `user-story` skill — see
 `.opencode/skills/user-story/references/_consistency-checklist.md`. `plan-enforce`
 consumes an approved (`active`) story and its selected criteria and never renegotiates
-the story choice. Approved-criteria completion scope, the behaviour/proof separation,
-and the `## Constraints` contract are defined there.
+the story choice. Approved-criteria completion scope, shared/local ownership, dependency
+and revision review, destination reconciliation, behaviour/Proof separation, staged
+persistence/history, and the `## Constraints` contract are defined there. Review the
+actual contract and project evidence; do not auto-check criteria or treat source-only
+references as destination requirements. Unresolved source changes return to the owner.
 
 ## Loop rule
 

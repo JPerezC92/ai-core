@@ -1,9 +1,10 @@
+<!-- core:begin -->
 # User story — register-first-incident-identification
 
 > **Created:** 2026-09-12
 > **Title:** Register-first incident identification
 > **Status:** active
-> **version:** 1.1.0
+> **version:** 1.1.1
 > **Epic:** incident-diagnostics
 > **Affected areas:** `.opencode/skills/ticket-runbook/`, `knowledge/symptoms.md`, `knowledge/problems.md`, `knowledge/agents.md`, `.opencode/agents/investigator.md`, `.opencode/agents/ledger.md`, `.opencode/agents/quill.md`, `.opencode/agents/scribe.md`
 
@@ -27,7 +28,7 @@
 - ✅ **AC3:** A problem entry is admitted as `candidate` on the first confirmed case and may be promoted to `active` only after a second independent confirmed case.
 - ✅ **AC4:** Working analysis is a bounded working set of a state file and three ordered analysis steps — identify, investigate, synthesize — and nothing else.
 - ✅ **AC5:** Close-out retains one durable ticket record plus its screenshots, validations, and other cited evidence; each used image records a local path and a remote URL when both exist.
-- ✅ **AC6:** Close-out runs two ordered stages: a read-only pre-close gate, then an authorized collapse. The gate requires exactly one ticket record, the complete working set and response draft, durable directories, every machine-addressable citation, and consistent identification/register state. Semantic review then confirms prior register admission and all other cited evidence before the explicit collapse authorization. Neither stage mutates ticket files.
+- ✅ **AC6:** Close-out runs two ordered stages: a read-only pre-close gate, then an authorized collapse. The gate requires exactly one ticket record, the complete working set and response draft, durable directories, every machine-addressable citation, and consistent identification/register state. Semantic review then confirms prior register admission and all other cited evidence before the explicit collapse authorization. Both validator modes are read-only; the separately authorized collapse performs the documented working-file deletion.
 - ✅ **AC7:** Image citations in a ticket record are ticket-folder-relative and resolve inside the ticket folder; repository-relative spellings and parent-directory escapes are rejected at both close-out stages.
 - ✅ **AC8:** Optional query verification remains symptom evidence only and consumes one existing query-budget slot on the investigate step.
 - ✅ **AC9:** Register admission is prepared before destructive collapse and does not wait for the collapse authorization; a missing admission workflow or gated tool halts the operation.
@@ -39,20 +40,20 @@
 
 ## Proof
 
-- AC1 → `knowledge/problems.md` `## Rules` · `.opencode/skills/ticket-runbook/SKILL.md` `#### 2. Identify — register-first` verdict table · `test_validate_runbook_register_first.py` empty-register case
-- AC2 → `knowledge/agents.md` `### Register-first identification` · `.opencode/agents/investigator.md` `### Hard Rules` → Verdict-source restriction · `test_validate_runbook_register_first.py` exact-requires-cited-identifier case
+- AC1 → `knowledge/problems.md` `## Rules` · `.opencode/skills/ticket-runbook/SKILL.md` `#### 2. Identify — register-first` verdict table · `.opencode/skills/ticket-runbook/scripts/test_validate_runbook_register_first.py` `test_empty_register_verdict_no_match_ok`
+- AC2 → `knowledge/agents.md` `### Register-first identification (HARD RULE)` · `.opencode/agents/investigator.md` `### Hard Rules` verdict-source restriction · `.opencode/skills/ticket-runbook/scripts/test_validate_runbook_register_first.py` `test_exact_requires_cited_p_nnn`
 - AC3 → `knowledge/problems.md` `## Lifecycle`
-- AC4 → `.opencode/skills/ticket-runbook/SKILL.md` `### Working-set and record templates` · `references/analysis/` templates
-- AC5 → `.opencode/skills/ticket-runbook/SKILL.md` `#### 7. Close-out` · `.opencode/agents/ledger.md` `### Close-out collapse (two-stage contract)` · `.opencode/agents/quill.md` `### Hard Rules` → Image discipline → Footer
-- AC6 → `validate_runbook.py` `--pre-close` / `--close-out` modes and their violation codes · `test_validate_runbook_pre_close.py` · `test_validate_runbook_close_out.py` · `references/_consistency-checklist.md` close-out sections · Bastion 🧱 (Backend & Scripts Architect) and Crucible 🔥 (Test Architect) `[PASS]` 2026-09-16
-- AC7 → `validate_runbook.py` shared ticket-path resolver · `test_validate_runbook_paths.py` path-citation cases · `references/ticket-template.md` footer · `.opencode/agents/ledger.md` `### Images scope` · `.opencode/agents/quill.md` self-audit
-- AC8 → `.opencode/skills/ticket-runbook/SKILL.md` `### Optional verifier route (investigate step)` · `references/analysis/02-investigate.md` optional verifier route and query-budget accounting
-- AC9 → `.opencode/skills/ticket-runbook/SKILL.md` `#### 6. Register admission` and `#### 7. Close-out` · `knowledge/agents.md` `### Register-first identification` → Proactive admission · `.opencode/agents/scribe.md` `#### Problem record management`
-- AC10 → `references/analysis/02-investigate.md` Step 7 Retention · `knowledge/problems.md` `## Entry format` → Evidence
-- AC11 → `knowledge/problems.md` `## Entry format` → Evidence and `## Lifecycle` → Operational gate · `knowledge/agents.md` `### Register-first identification` → Proactive admission · `references/analysis/02-investigate.md` Step 7 Retention · Sentinel 🛡️ (Quality Guardian) `[PASS]`
-- AC12 → `validate_runbook.py` fill-marker scan · `test_state_html_comment_is_not_unfilled_token` · Bastion 🧱 (Backend & Scripts Architect) and Crucible 🔥 (Test Architect) `[PASS]` 2026-09-27
-- AC13 → `validate_runbook.py` excluded fill tokens · `test_filled_investigate_keeps_sidecar_command_examples` · `test_unfilled_output_fill_fails_step_investigate`
-- AC14 → `.opencode/skills/ticket-runbook/SKILL.md` Query-budget hard rule · `validate_runbook.py` kill-switch checks · `test_query_budget_compared_to_denominator` · `test_pre_close_accepts_authorized_raised_query_budget` · `test_pre_close_rejects_query_budget_over_denominator`
+- AC4 → `.opencode/skills/ticket-runbook/SKILL.md` `### Working-set and record templates` · `.opencode/skills/ticket-runbook/references/analysis/state.md` and ordered analysis-step templates
+- AC5 → `.opencode/skills/ticket-runbook/SKILL.md` `#### 7. Close-out (two-stage: readiness gate, then authorized collapse)` · `.opencode/agents/ledger.md` `#### Close-out collapse (two-stage contract)` · `.opencode/agents/quill.md` `### Hard Rules` image discipline/footer
+- AC6 → `.opencode/skills/ticket-runbook/scripts/ticket_runbook_pkg/entry.py` `validate_pre_close` and `validate_close_out` · `.opencode/skills/ticket-runbook/scripts/test_validate_runbook_pre_close.py` `ValidateRunbookPreCloseTests` · `.opencode/skills/ticket-runbook/scripts/test_validate_runbook_close_out.py` `ValidateRunbookCloseOutTests`
+- AC7 → `.opencode/skills/ticket-runbook/scripts/ticket_runbook_pkg/entry.py` `_resolve_ticket_path` · `.opencode/skills/ticket-runbook/scripts/test_validate_runbook_paths.py` `ValidateRunbookPathCitationTests` · `.opencode/agents/ledger.md` `#### Images scope` · `.opencode/agents/quill.md` `#### Self-audit before return (CRITICAL)`
+- AC8 → `.opencode/skills/ticket-runbook/SKILL.md` `### Optional verifier route (investigate step)` · `.opencode/skills/ticket-runbook/references/analysis/02-investigate.md` optional verifier route and query-budget accounting
+- AC9 → `.opencode/skills/ticket-runbook/SKILL.md` register-admission and two-stage close-out workflow · `knowledge/agents.md` `### Register-first identification (HARD RULE)` proactive admission · `.opencode/agents/scribe.md` `#### Problem record management`
+- AC10 → `.opencode/skills/ticket-runbook/references/analysis/02-investigate.md` Step 7 Retention · `knowledge/problems.md` `## Entry format` Evidence
+- AC11 → `knowledge/problems.md` `## Entry format` Evidence and `## Lifecycle` operational gate · `knowledge/agents.md` `### Register-first identification (HARD RULE)` proactive admission · `.opencode/skills/ticket-runbook/references/analysis/02-investigate.md` Step 7 Retention
+- AC12 → `.opencode/skills/ticket-runbook/scripts/test_validate_runbook.py` `test_state_html_comment_is_not_unfilled_token` · `.opencode/skills/ticket-runbook/scripts/test_validate_runbook_pre_close.py` `test_state_html_comment_is_not_unfilled_token_in_pre_close`
+- AC13 → `.opencode/skills/ticket-runbook/scripts/test_validate_runbook_step_mode.py` `test_filled_investigate_keeps_sidecar_command_examples`, `test_unfilled_output_fill_fails_step_investigate`
+- AC14 → `.opencode/skills/ticket-runbook/SKILL.md` `#### 3. Scaffold the working analysis (always)` Query-budget rule · `.opencode/skills/ticket-runbook/scripts/test_validate_runbook_header_budgets.py` `test_query_budget_compared_to_denominator` · `.opencode/skills/ticket-runbook/scripts/test_validate_runbook_pre_close.py` raised/exceeded denominator cases
 
 ## Constraints
 
@@ -63,6 +64,23 @@
 - Identification packs are an Evidence pointer, not inlined diagnostic content — because the destination owns the storage layout and the registers must stay thin.
 - Collapse requires an exact user authorization string — because deleting working analysis is destructive and is never implied by a readiness gate.
 
+<!-- core:end -->
+
+<!-- project:begin -->
+## Approval record
+
+> **Contract approval:** 2026-10-15 — user approved clarifying read-only validator modes versus separately authorized collapse, preserving all close-out authorization and evidence-retention gates. Revision history is explicitly pending under the approved timing rule.
+
+## Local evidence
+
+- **AC6:** Prior source Proof recorded Bastion 🧱 (Backend & Scripts Architect) and Crucible 🔥 (Test Architect) `[PASS]` on 2026-09-16.
+- **AC11:** Prior source Proof recorded Sentinel 🛡️ (Quality Guardian) `[PASS]` for identification-pack pointer handling.
+- **AC12:** Prior source Proof recorded Bastion 🧱 (Backend & Scripts Architect) and Crucible 🔥 (Test Architect) `[PASS]` on 2026-09-27. These retained observations are not fresh executions or destination verification.
+
+## Revision tracking
+
+- 2026-10-15 — Approved validator/collapse actor clarification awaits a delivery-matching history reference. Existing validator evidence and exact destructive-action authorization remain governing; no ticket mutation is performed by this revision. History finalization remains required before completion, archival, or release handoff.
+
 ## Change log
 
 - before 2026-09-16 — earlier history: see git history for this file
@@ -71,3 +89,4 @@
 - 2026-09-27 — runbook-budget-and-plan-review-20260927 (PR #44): added HTML-comment fill-token ignore, sidecar instruction excludes, and the denominator-authoritative Query-budget KILL-2 (`ticket-runbook` 2.4.0).
 - 2026-10-09 — aicore-all-files-pr-20261008 (PR #52): replaced version-pinned Query-budget evidence, made approval before gated register mutation explicit, and repointed register/pre-close/close-out/path evidence to current concern-focused modules.
 - 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof`, generalized the working-set and close-out contracts, and moved register-first policy into `## Constraints`.
+<!-- project:end -->

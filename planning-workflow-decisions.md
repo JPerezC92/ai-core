@@ -1,6 +1,6 @@
 # Planning and Implementation Workflow — Analysis and Decisions
 
-**Status:** Story contracts approved; D1–D15 selected for execution planning  
+**Status:** Historical decision record — source contracts approved; D1–D15 selected for execution planning; delivery tracked in the implementation plan  
 **Purpose:** Choose a faster, more reliable planning workflow first, then improve implementation definitions without weakening clean architecture or review.  
 **Scope of this document:** Selected improvements and their rationale. The user delegated the implementation decisions and authorized improvement work. This document records that direction; the execution plan and current role/permission rules govern the actual edits and commands.
 
@@ -105,7 +105,7 @@ Use dispositions such as **retained**, **translated**, **moved**, **replaced**, 
 
 ### 3.5 Recommendations versus adopted policy
 
-The user delegated selection of the best solutions and authorized the improvements, selected the standalone story skill and approved-criteria completion scope, approved the three feature contracts, and required rework for nonconforming files included in a plan. D1–D15 are selected; workflow implementation has not begun. The conditional focused-runner option in D8 is deferred until a pilot demonstrates a need and its permissions are explicitly reviewed. Current permissions and mandatory gates continue to apply while the new definitions are planned and implemented.
+The user delegated selection of the best solutions and authorized the improvements, selected the standalone story skill and approved-criteria completion scope, approved the three feature contracts, and required rework for nonconforming files included in a plan. D1–D15 are selected and their delivery is tracked in the implementation plan. The conditional focused-runner option in D8 is deferred until a pilot demonstrates a need and its permissions are explicitly reviewed. Current permissions and mandatory gates continue to apply while the new definitions are planned and implemented.
 
 ### 3.6 The story defines the feature; the plan defines its execution
 
@@ -119,7 +119,7 @@ If planning discovers a needed behavior change, return to story discussion, show
 
 ### D1 — Evidence-first, bounded discovery
 
-**Status:** Selected; implementation pending  
+**Status:** Selected; delivery tracked in the implementation plan  
 **Recommendation:** Complete relevant discovery before drafting goals, without requiring a repository-wide read.
 
 Before goal confirmation:
@@ -140,7 +140,7 @@ Record facts in the existing plan Context or Current state section. Do not creat
 
 ### D2 — One evidence-backed scope decision
 
-**Status:** Selected; implementation pending  
+**Status:** Selected; delivery tracked in the implementation plan  
 **Recommendation:** Investigate options and recommend a solution before confirmation. With D13 adopted, approve the story contract first; the later combined plan goals/classification/scope confirmation references that contract rather than reauthoring it.
 
 Separate the user's requested outcomes, necessary correctness dependencies, and optional enhancements. Present the actual affected files with the choices. Ask only decisions the repository cannot settle.
@@ -155,7 +155,7 @@ Routine factual corrections must be explained and reflected in evidence. Materia
 
 ### D3 — Contract-sized plans and effective writer review
 
-**Status:** Selected; implementation pending  
+**Status:** Selected; delivery tracked in the implementation plan  
 **Recommendation:** Write the shortest complete execution contract, then review its meaning before independent audit.
 
 Each phase fixes its owner, prerequisites, input contracts, allowed writes, observable output, verification/executor, and failure conditions. Include the affected documentation paths and their owners in the same write/delete manifest. A phase boundary follows a coherent outcome or handoff, not an arbitrary number of files.
@@ -181,7 +181,7 @@ Use one canonical phase command definition with references elsewhere. Avoid inde
 
 ### D4 — Independent semantic review and bounded recovery
 
-**Status:** Selected; implementation pending  
+**Status:** Selected; delivery tracked in the implementation plan  
 **Recommendation:** Review neutrally, fix findings coherently, and trigger a reassessment after two failed independent planning audits.
 
 The audit packet distinguishes user decisions, verified facts, and design interpretations. Do not instruct the auditor to accept the author's interpretation as “confirmed context.”
@@ -200,7 +200,7 @@ After two failed audits, diagnose whether the scope, requirement translation, or
 
 ### D5 — Compatible templates and a mechanical-only validator
 
-**Status:** Selected; implementation pending  
+**Status:** Selected; delivery tracked in the implementation plan  
 **Recommendation:** Align templates, checklist, and validator, and prove compatibility with representative generated artifacts.
 
 Keep the current phase-level verification parity; place each goal's proving evidence inside its owning phase verification. Make Writes examples show the accepted semicolon format. Keep author instructions clearly separate from rendered plan content.
@@ -215,7 +215,7 @@ Do not expand the validator into an architecture or intent classifier. A grep fo
 
 ### D6 — Concise updates and complete authorized execution
 
-**Status:** Selected; implementation pending  
+**Status:** Selected; delivery tracked in the implementation plan  
 **Recommendation:** Report results and decisions, and continue authorized work until done or genuinely blocked.
 
 An update states the result, material change, next action, and any blocker. Do not publish internal deliberation, narrate routine reads, or repeatedly restate unchanged goals.
@@ -230,7 +230,7 @@ The plan-creation execution-review stop remains deliberate. After execution is a
 
 ### D7 — One behavior contract per coherent slice
 
-**Status:** Selected; implementation pending  
+**Status:** Selected; delivery tracked in the implementation plan  
 **Recommendation:** Implement bounded vertical behavior slices within the approved architecture and manifest.
 
 A slice is an observable behavior, not necessarily one file. A use-case change can require a domain port, an adapter, a caller, tests, and documentation to remain coherent.
@@ -245,7 +245,7 @@ Implement the smallest complete change satisfying the behavior. “Smallest” d
 
 ### D8 — Real TDD where it earns its cost
 
-**Status:** Selected; implementation pending  
+**Status:** Selected; delivery tracked in the implementation plan  
 **Recommendation:** Use red–green–refactor for testable new behavior and bug fixes; use characterization tests first for behavior-preserving legacy refactors.
 
 Correction to the earlier advice: TDD does not require the implementer to own test execution. `.opencode/agents/crucible.md` explicitly supports a red phase without implementation. The orchestrator can dispatch the approved test executor between writing a test and implementing its behavior.
@@ -280,7 +280,7 @@ For React, retain the existing unit definition: render the component with the re
 
 ### D9 — Impact-scoped reading and snapshot-aware reviews
 
-**Status:** Selected; implementation pending  
+**Status:** Selected; delivery tracked in the implementation plan  
 **Recommendation:** Keep complete semantic review of affected content, but avoid rereading unrelated code and unchanged tests for every iteration.
 
 Read scope includes:
@@ -304,7 +304,7 @@ Keep the current automatic edit gates until any different review schedule is exp
 
 ### D10 — One effective architecture contract, not legacy exceptions
 
-**Status:** Selected; implementation pending  
+**Status:** Selected; delivery tracked in the implementation plan  
 **Recommendation:** Normalize implementer/reviewer definitions before making TDD the default for applicable changes.
 
 Every role must agree on the generic domain/application/infrastructure responsibilities, `execute()`, preserved folder design, selected language/library interpretation, and domain-error versus boundary-error behavior.
@@ -325,7 +325,7 @@ Normalize gate ownership too: frontend architecture goes to its reviewer, backen
 
 ### D11 — Evidence-bound completion and automatic lifecycle follow-through
 
-**Status:** Selected; implementation pending  
+**Status:** Selected; delivery tracked in the implementation plan  
 **Recommendation:** Distinguish planning readiness, implementation correctness, test execution, completion, and release explicitly.
 
 A planning PASS establishes the plan is coherent. It does not approve future implementation. A completion review binds to the final artifacts and must verify the user's actual requirement, including semantic structure and rejected definitions—not only token presence or old-line retention.
@@ -340,7 +340,7 @@ Only then mark goals and acceptance criteria complete, write Outcome, set comple
 
 ### D12 — Documentation is part of every behavior change
 
-**Status:** Selected; implementation pending  
+**Status:** Selected; delivery tracked in the implementation plan  
 **Recommendation:** Discover, plan, update, and semantically review documentation together with every new or changed behavior.
 
 The user explicitly requires documentation updates when implementing new things or changing existing things. It is not an optional follow-up after code is declared done.
@@ -455,27 +455,27 @@ The user selected the workflow direction, approved the three story contracts, an
 
 | Decision | Status | Recommended choice |
 |---|---|---|
-| D1 — Discovery | Selected; implementation pending | Evidence-first, bounded to affected contracts |
-| D2 — Confirmation | Selected; implementation pending | Research first; one combined scope/story/classification decision |
-| D3 — Plan and self-review | Selected; implementation pending | Contract-sized phases; semantic writer review before audit |
-| D4 — Audit recovery | Selected; implementation pending | Neutral audits; two failed planning audits trigger reassessment, never a waived gate |
-| D5 — Templates and validation | Selected; implementation pending | Compatible examples and regression tests; validator remains mechanical |
-| D6 — Communication/execution | Selected; implementation pending | Concise result updates; complete authorized work unless genuinely blocked |
-| D7 — Implementation slices | Selected; implementation pending | One coherent observable behavior per slice |
-| D8 — TDD | Selected; implementation pending | Real red–green–refactor where useful; designated authorized executor; no automatic grant expansion |
-| D9 — Reads and reviews | Selected; implementation pending | Impact-scoped full content review; snapshot-aware evidence; retain current edit gates |
-| D10 — Architecture definitions | Selected; implementation pending | One effective contract; replace contradictory legacy rules; normalize gate ownership |
-| D11 — Completion | Selected; implementation pending | Final-snapshot evidence, criteria reconciliation, and archive before release |
-| D12 — Documentation | Selected; implementation pending | Documentation impact, updates, and semantic review belong to the same behavior change |
-| D13 — Story-first workflow | Selected; implementation pending | Standalone `user-story` skill; approved behavior before implementation planning |
-| D14 — Story collisions | Selected; implementation pending | Read the entire story catalogue; mechanical consistency plus semantic collision analysis |
-| D15 — Planned-file design conformance | Selected; implementation pending | Rework nonconforming files included in the plan, with necessary tests/docs and declared supporting paths |
+| D1 — Discovery | Selected; delivery tracked in the implementation plan | Evidence-first, bounded to affected contracts |
+| D2 — Confirmation | Selected; delivery tracked in the implementation plan | Research first; one combined scope/story/classification decision |
+| D3 — Plan and self-review | Selected; delivery tracked in the implementation plan | Contract-sized phases; semantic writer review before audit |
+| D4 — Audit recovery | Selected; delivery tracked in the implementation plan | Neutral audits; two failed planning audits trigger reassessment, never a waived gate |
+| D5 — Templates and validation | Selected; delivery tracked in the implementation plan | Compatible examples and regression tests; validator remains mechanical |
+| D6 — Communication/execution | Selected; delivery tracked in the implementation plan | Concise result updates; complete authorized work unless genuinely blocked |
+| D7 — Implementation slices | Selected; delivery tracked in the implementation plan | One coherent observable behavior per slice |
+| D8 — TDD | Selected; delivery tracked in the implementation plan | Real red–green–refactor where useful; designated authorized executor; no automatic grant expansion |
+| D9 — Reads and reviews | Selected; delivery tracked in the implementation plan | Impact-scoped full content review; snapshot-aware evidence; retain current edit gates |
+| D10 — Architecture definitions | Selected; delivery tracked in the implementation plan | One effective contract; replace contradictory legacy rules; normalize gate ownership |
+| D11 — Completion | Selected; delivery tracked in the implementation plan | Final-snapshot evidence, criteria reconciliation, and archive before release |
+| D12 — Documentation | Selected; delivery tracked in the implementation plan | Documentation impact, updates, and semantic review belong to the same behavior change |
+| D13 — Story-first workflow | Selected; delivery tracked in the implementation plan | Standalone `user-story` skill; approved behavior before implementation planning |
+| D14 — Story collisions | Selected; delivery tracked in the implementation plan | Read the entire story catalogue; mechanical consistency plus semantic collision analysis |
+| D15 — Planned-file design conformance | Selected; delivery tracked in the implementation plan | Rework nonconforming files included in the plan, with necessary tests/docs and declared supporting paths |
 
 ## 11. Story-first additions — D13 and D14
 
 ### D13 — A standalone user-story discussion skill
 
-**Status:** Selected; implementation pending  
+**Status:** Selected; delivery tracked in the implementation plan  
 **Recommendation:** Add `.opencode/skills/user-story/SKILL.md` for collaboratively creating or updating an approved feature contract before planning.
 
 The local skills catalogue has no equivalent standalone story-discussion workflow. `plan-enforce` currently performs story selection and negotiation during planning. Move that pre-plan responsibility into `user-story`; retain execution planning, goal traceability, verification, and completion lifecycle in `plan-enforce`. Reuse the canonical story template instead of creating a competing format.
@@ -496,7 +496,7 @@ For an active-story revision, compare old and proposed behavior, preserve the ex
 
 ### D14 — Catalogue-wide story validation and collision analysis
 
-**Status:** Selected; implementation pending  
+**Status:** Selected; delivery tracked in the implementation plan  
 **Recommendation:** Enumerate the catalogue, read all bodies, and evaluate collisions before approving a new or revised story.
 
 At the initial catalogue review, nine feature-story files plus the index were enumerated and all nine bodies were read. That established ownership: planning belongs to `plan-enforce`, architecture definitions to `clean-architecture-contract`, and pytest runner authority to `python-pytest`. The subsequently created `user-story` contract adds the standalone discussion feature; the initial inventory is historical evidence, not a current catalogue count.
@@ -530,6 +530,8 @@ Catalogue assessment found no existing story for that independent discussion fea
 
 ### Approved UPDATE — `plan-enforce`
 
+Current story: `user-stories/plan-lifecycle-governance.md` (Plan lifecycle governance). The UPDATE heading preserves the historical story name.
+
 The approved revision keeps planning-lifecycle ownership and replaces blanket touched-story completion with approved-criteria scope. Its behavioral contract is:
 
 - Planning starts from an approved story or an existing approved behavior to preserve; the feature intent is not first invented inside phase instructions.
@@ -562,13 +564,13 @@ The user approved all three contracts, and the story files/index now reflect the
 
 ## 13. D15 — Rework nonconforming planned files
 
-**Status:** Selected; implementation pending
+**Status:** Selected; delivery tracked in the implementation plan
 
 Read the files included in a plan against the approved architecture/design, rather than inferring conformance from their names, size, or passing tests. If a planned file violates that design, include the necessary rework in the same plan. Assess the actual supporting dependencies and add their required paths, tests, and documentation to the manifest before editing. If discovered after the manifest is agreed, follow the applicable scope-change process first.
 
 Do not grandfather noncompliance, preserve an obsolete architecture merely because it is current, or substitute a small behavioral patch for necessary design correction. Conversely, do not turn this into an unrelated repository-wide rewrite: the boundary is the planned nonconforming files and the support needed to make them conform.
 
-Proving contracts: `user-stories/plan-enforce.md` **PE10** and `user-stories/clean-architecture-contract.md` **CA3**.
+Proving contracts: `user-stories/plan-lifecycle-governance.md` **AC31** and `user-stories/clean-architecture-contract.md` **AC13**.
 
 ## 14. Next action
 

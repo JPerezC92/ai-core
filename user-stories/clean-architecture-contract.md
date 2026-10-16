@@ -1,3 +1,4 @@
+<!-- core:begin -->
 # User story — clean-architecture-contract
 
 > **Created:** 2026-10-11
@@ -40,17 +41,17 @@
 ## Proof
 
 - AC1 → `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`
-- AC2 → `.opencode/agents/bastion.md` Python section · `uv run --frozen python3 -B` no-suspension assertion → `PASS`
+- AC2 → `.opencode/agents/bastion.md` `### Rulebook` language-agnostic and Python obligations · `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`
 - AC3 → `.opencode/agents/sentinel.md` `SP-12` · `.opencode/agents/marshal.md` Runtime Spec Format
 - AC4 → `.opencode/agents/bastion.md`, `.opencode/agents/atrium.md`, `.opencode/agents/crucible.md` `### Rulebook`
 - AC5 → `.opencode/agents/bastion.md` `##### Layers (Python) — domain, application, infrastructure`
 - AC6 → `.opencode/agents/atrium.md` `##### HOOK LAYER — \`modules/{feature}/hooks/use-{feature}.ts\``
 - AC7 → `.opencode/agents/crucible.md` `##### Test Pyramid Overview`, `#### TypeScript`
-- AC8 → `.opencode/agents/bastion.md` `##### Layers (Python) — domain, application, infrastructure` · `## Project extensions` `### Local Configuration`
+- AC8 → `.opencode/agents/bastion.md` `##### Layers (Python) — domain, application, infrastructure` shared mapping and the project-owned concrete-configuration boundary
 - AC9 → `.opencode/agents/crucible.md` `##### Python Test Pyramid`
-- AC10 → `.opencode/agents/atrium.md`, `bastion.md`, `crucible.md`, `forge.md` `### Rulebook` and `### Workflow` · `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)` · semantic review
-- AC11 → `.opencode/agents/forge.md` `### Workflow` implementation warmup and gate routing · `.opencode/agents/atrium.md`, `bastion.md`, `crucible.md` `### Rulebook`
-- AC12 → `.opencode/agents/atrium.md`, `bastion.md`, `crucible.md` `#### Review scope and snapshot` · `.opencode/agents/sentinel.md` `#### Review scope and snapshot`
+- AC10 → `.opencode/agents/atrium.md`, `.opencode/agents/bastion.md`, `.opencode/agents/crucible.md`, `.opencode/agents/forge.md` `### Rulebook` and `### Workflow` · `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`
+- AC11 → `.opencode/agents/forge.md` `### Workflow` implementation warmup and gate routing · `.opencode/agents/atrium.md`, `.opencode/agents/bastion.md`, `.opencode/agents/crucible.md` `### Rulebook`
+- AC12 → `.opencode/agents/atrium.md`, `.opencode/agents/bastion.md`, `.opencode/agents/crucible.md`, `.opencode/agents/sentinel.md` `#### Review scope and snapshot`
 - AC13 → `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)` · `.opencode/agents/forge.md` `### Rulebook` scope rules · `.opencode/skills/plan-enforce/SKILL.md` `### Bounded discovery before scope confirmation` and `### Contract-sized phases`
 - AC14 → `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)` · `.opencode/agents/bastion.md` `##### Layers (Python) — domain, application, infrastructure` · `.opencode/agents/atrium.md` `##### TypeScript — React`
 
@@ -63,6 +64,18 @@
 - Python conforms to the agnostic contract; its module/IO/type rules are syntax specifics — because syntax differences must not weaken the layering.
 - Nonconforming files included in an implementation plan are reworked in that plan — because existing noncompliance is neither grandfathered nor grounds for a partial fix, and unrelated repository-wide migrations are not implied.
 
+<!-- core:end -->
+
+<!-- project:begin -->
+## Local evidence
+
+- **AC2:** Earlier source Proof recorded a `uv run --frozen python3 -B` no-suspension assertion as `PASS`; the original inline assertion was not included in that pointer. This retained historical observation is not a fresh execution and is not substituted for the current shared rulebook references.
+- **AC8:** Earlier source Proof also pointed to the source backend rulebook's project-owned Local Configuration. That local module-role selection does not ship as universal proving evidence; the shared mapping remains the canonical pointer.
+
+## Revision tracking
+
+- 2026-10-15 — User approved staged persistence and planning with pending revision history for the shared-region preparation; the actual matching history reference remains mandatory before completion, Outcome, archival, or release handoff. Existing architectural promises and criterion identities are retained; no new code or test run is claimed.
+
 ## Change log
 
 - before 2026-10-11 — earlier history: see git history for this file
@@ -70,3 +83,4 @@
 - 2026-10-11 — workflow-contract (PR #57): approved bounded architecture review, correct gate routing, explicit dependency/error boundaries, and required rework for nonconforming planned files.
 - 2026-10-12 — implementation-enforcement-20261012 (PR #57): delivered per-owner gate routing and impact-bounded reads (`forge.md`), snapshot-bound read-based review (`atrium`/`bastion`/`crucible`/`sentinel`), the dependency/runtime-port/error/serialization distinctions (`knowledge/agents.md`, `bastion.md`), and the preservation-vs-retirement + nonconforming-planned-file rules.
 - 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof` and moved pre-decided architectural policy into `## Constraints`.
+<!-- project:end -->

@@ -1,4 +1,4 @@
-# User story — aicore-adoption-sync
+# User story — aicore-adoption-governance
 
 > **Created:** 2026-09-11
 > **Title:** AICore adoption governance

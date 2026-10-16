@@ -1,11 +1,11 @@
 ---
 name: core-sync
-description: "Per-binding core update for destination files. Three modes: `region` (default) enrolls markerless destinations (`init`), splices (`apply`), and verifies (`check`) a source file's core region into each bound destination while leaving everything outside the region byte-identical; `raw` copies the whole source file to the destination byte-for-byte with no markers; `merge` merges only the top-level keys of a JSON/JSONC object source into the destination with source keys winning, preserving destination-only keys and comments. Records the pinned source revision in a bindings file and keeps a reconciliation blocker block in the destination's root runtime file while `pending` is non-empty. Use when a core-owned skill or agent file must be pushed to a destination project, when a whole markerless file (e.g. `user-stories/git-pr-drafting.md`) must be mirrored verbatim, when a JSON/JSONC config's top-level keys must be merged (e.g. `opencode.jsonc`), when a destination's core-region drift needs a check, or when a destination must be reminded to reconcile its `project` region."
+description: "Synchronize cleared source files into bound destinations at a pinned revision. Region mode enrolls or updates shared core while preserving destination-owned content; raw mode copies whole files byte-for-byte; merge mode replaces source-owned top-level JSON/JSONC keys while preserving destination-only content. Tracks pending region reconciliation and its root blocker. Use when distributing shared skills, agents, or per-file region stories, mirroring whole-file references, merging config keys, checking drift, or reconciling destination project content."
 license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.1.0
+  version: 2.1.1
 ---
 
 ## What I do
@@ -14,9 +14,9 @@ Update the bound files of a destination from a source of truth, and keep the des
 
 ## When to use me
 
-- A core-owned file (skill or agent) changed at the source and the bound destination copies must be brought current.
+- A core-owned file (skill, agent, or individually cleared shared story) changed and bound destination copies must be brought current.
 - A markerless destination must be enrolled into the core/project region model (`init`).
-- A whole file must be mirrored verbatim with no region markers (raw mode) — e.g. `user-stories/git-pr-drafting.md`.
+- A whole file, such as a raw-cleared reference, must be mirrored verbatim rather than by active regions (raw mode).
 - Only the top-level keys of a JSON/JSONC object config must be merged into a destination that keeps its own keys and comments (merge mode) — e.g. `opencode.jsonc`.
 - A drift check is wanted before shipping: confirm the destination core regions byte-match the pinned source revision.
 - A destination must be reminded (via its root runtime file) to reconcile its `project` region and clear `pending`.
@@ -49,7 +49,7 @@ uv run --frozen python3 .opencode/skills/core-sync/scripts/core_sync.py init \
 - `--source-revision` — the 40-character lowercase hex source revision to compare (`check`) or pin (`apply`/`init`).
 - `init --bind SOURCE=DESTINATION` — append a region-mode binding to the loaded bindings file before preflight. Repeatable and idempotent for an identical mapping.
 - `init --bind-raw SOURCE=DESTINATION` — append a raw binding. Repeatable and idempotent for an identical mapping; a destination already mapped to a different source fails closed.
-- `init --bind-cleared` — enroll every source `distribution-clearance.json` resolves to that is not already bound, using its resolved `mode`. A skill root resolves to every file under it (its `region_files` members use `region`, the rest use the root's default mode; interpreter caches never join); a file row resolves to itself. Ordinary sources map to the same relative path; the `role: root` source maps to the destination instruction root. Absent bindings are initialized; new region/raw targets and parents are created after preflight; existing mappings are preserved.
+- `init --bind-cleared` — enroll every source `distribution-clearance.json` resolves to that is not already bound, using its resolved `mode`. A skill root resolves to every file under it (its `region_files` members use `region`, the rest use the root's default mode; interpreter caches never join); a file row resolves to itself. Ordinary sources map to the same relative path; the `role: root` source maps to the destination instruction root. Absent bindings are initialized; a region target newly enrolled here may have its missing target and parent directories created after preflight, while a newly enrolled raw target is created only when its parent directory already exists; existing mappings are preserved.
 - `init --root PATH` — set the destination path for the root-role source when it is not already mapped and detection must be overridden.
 - Binding conflict detection is metadata-only: different existing destination bytes never block synchronization. Region `init` preserves old destination content in the `project` region and sets `pending`; raw mode overwrites the target byte-for-byte as explicitly selected.
 - These flags let the script update binding metadata and synchronized content together; do not hand-edit destination payload files or copy files manually. Without `--bind-cleared` the bindings file must already exist; with it, an absent file is initialized from an empty routing document. Raw and merge destinations must exist before `apply` and before `init` for mappings already stored in the bindings file. During `init --bind-raw`, only an absent destination belonging to a newly registered mapping may be created, and only when its parent directory already exists; a missing parent or a missing target on a stored mapping returns exit `1` without writes. Repeating a declaration for a stored mapping does not make it new.
@@ -66,6 +66,10 @@ Each bound source runs in one of three modes, resolved from the source-side `dis
 
 Region mode, raw mode, and merge mode may coexist in one bindings file; each entry is handled independently.
 
+For raw references, "no markers/project region" means no active region ownership is
+introduced or interpreted by synchronization. Fenced template/example marker literals
+remain ordinary source bytes and are copied intact, not rejected or extracted.
+
 ## Marker contract
 
 A marker counts only as an exact line (ignoring surrounding whitespace) outside a fenced code block. The parser recognizes matching backtick and tilde fences and splits both LF and CRLF line separators without newline translation; repository text files and fixtures must use LF.
@@ -79,7 +83,13 @@ A region-mode source is markerless only when it has no exact core markers or pro
 
 ## Bindings schema
 
-`schema: 1`. `core_revision` is the pinned 40-hex source revision or `null`. Each `bindings` entry maps one `source` to one or more `destinations`; source and destination paths must be canonical safe relative POSIX paths and must not contain NUL characters (no absolute paths, empty/`.`/`..` components, backslashes, or Windows drive/root prefixes), and destination paths must be unique. Invalid persisted paths are rejected as malformed bindings (exit `2`) before filesystem operations use them. A binding carries no `mode`: the distribution mode is owned by source clearance (below). A persisted `mode` key is read as a declaration; a persisted `raw` declaration whose source record is not `raw` fails closed (exit `2`), and the key is dropped on the next save. `pending` lists outstanding paths; `check` requires it to be empty. A region, raw, or merge binding whose `source` is absent from the source-side `distribution-clearance.json` (`schema: 1`, read from `--source`) is not cleared for distribution and cannot be synchronized. That file is `{"schema": 1, "cleared": {…}}` — the only accepted version label; any other is rejected (exit `2`), and there is no legacy or migration machinery. Records are either file rows `{ "mode": "region"|"raw"|"merge", "role"?: "root" }` (the root runtime `AGENTS.md` is the only `role: root`; agent specs and persona profiles are per-file region rows) or skill-root rows — keys ending in `/` with `{ "mode": <default>, "region_files": [<root-relative paths>]? }` for the ten `.opencode/skills/*` roots (the four workflow roots use `{"mode":"raw","region_files":["SKILL.md"]}`, the six tooling roots `{"mode":"raw"}`). The sync tool expands skill roots at every sync: `region_files` members deliver only their core region, all other files use the root's default mode, `__pycache__`/`*.pyc` caches never join, and new files join automatically. The declared mode is authoritative for distribution, so an explicit `--bind`/`--bind-raw` declaration whose mode conflicts with the source record fails closed (exit `2`); the sync tool's own `core-sync` skill is never cleared. Skill files join automatically via their root row after that root's test or review passes; per-file rows are for non-skill sources.
+`schema: 1`. `core_revision` is the pinned 40-hex source revision or `null`. Each `bindings` entry maps one `source` to one or more `destinations`; source and destination paths must be canonical safe relative POSIX paths and must not contain NUL characters (no absolute paths, empty/`.`/`..` components, backslashes, or Windows drive/root prefixes), and destination paths must be unique. Invalid persisted paths are rejected as malformed bindings (exit `2`) before filesystem operations use them.
+A binding carries no `mode`: the distribution mode is owned by source clearance (below). A persisted `mode` key is read as a declaration; a persisted `raw` declaration whose source record is not `raw` fails closed (exit `2`), and the key is dropped on the next save.
+`pending` lists outstanding paths; `check` requires it to be empty. A region, raw, or merge binding whose `source` is absent from the source-side `distribution-clearance.json` (`schema: 1`, read from `--source`) is not cleared for distribution and cannot be synchronized.
+That file is `{"schema": 1, "cleared": {…}}` — the only accepted version label; any other is rejected (exit `2`), and there is no legacy or migration machinery.
+Records are either file rows `{ "mode": "region"|"raw"|"merge", "role"?: "root" }` (the root runtime `AGENTS.md` is the only `role: root`; agent specs and persona profiles are per-file region rows) or skill-root rows — keys ending in `/` with `{ "mode": <default>, "region_files": [<root-relative paths>]? }` for the ten `.opencode/skills/*` roots (the four workflow roots use `{"mode":"raw","region_files":["SKILL.md"]}`, the six tooling roots `{"mode":"raw"}`).
+The sync tool expands skill roots at every sync: `region_files` members deliver only their core region, all other files use the root's default mode, `__pycache__`/`*.pyc` caches never join, and new files join automatically.
+The declared mode is authoritative for distribution, so an explicit `--bind`/`--bind-raw` declaration whose mode conflicts with the source record fails closed (exit `2`); the sync tool's own `core-sync` skill is never cleared. Skill files join automatically via their root row after that root's test or review passes; per-file rows are for non-skill sources.
 
 The format's source of truth is `distribution-clearance.definition.md`.
 
@@ -90,9 +100,9 @@ schema: 1
 core_revision: "86ef8aab65c9bf7bdaeab65e86edd6e1968207d5"
 root: CLAUDE.md
 bindings:
-  - source: .opencode/agent.md
+  - source: .opencode/agents/lumen.md
     destinations:
-      - .opencode/agent.md
+      - .opencode/agents/lumen.md
   - source: opencode.jsonc
     destinations:
       - opencode.jsonc
@@ -136,18 +146,66 @@ The clearance gate runs before any bound-source payload read or destination muta
 
 ## Examples
 
-To enroll the root spec and a whole-file binding without hand-editing the bindings YAML, run `init` with declarations (the bindings file and region-mode `CLAUDE.md` target must already exist; a newly declared raw destination may be absent if its parent directory exists):
+To enroll a complete applicable cleared set at one revision, including individually
+region-cleared shared stories, use bulk enrollment from the source checkout against a
+clean, saved destination. Inspect the selected revision's clearance first; a story is
+not deliverable merely because it exists in the source catalogue. The command below
+requires the source's other applicable preconditions too, including existing merge
+targets and parents for newly created raw targets:
 
 ```bash
 uv run --frozen python3 .opencode/skills/core-sync/scripts/core_sync.py init \
-  --source ./aicore --destination ./destination \
-  --bindings ./destination/.aicore/core.yaml --source-revision "$SOURCE_REVISION" \
-  --bind AGENTS.md=CLAUDE.md --bind-raw user-stories/git-pr-drafting.md=user-stories/git-pr-drafting.md
+  --source . --destination ../destination \
+  --bindings ../destination/.aicore/core.yaml --source-revision "$SOURCE_REVISION" \
+  --bind-cleared --root AGENTS.md
 ```
 
-The script adds the binding entries, enrolls `CLAUDE.md` into core/project regions, raw-copies the git-pr story byte-for-byte, and generates a reconciliation blocker for the region path.
+New region destinations discovered by `--bind-cleared` may be absent: `init` creates
+their targets and parents, renders the source core plus an empty project region, and
+records pending reconciliation. An explicit region `--bind SOURCE=DESTINATION` alone
+does not create an absent target; nor does `apply` enroll a missing or markerless one.
+For an already-present markerless story, `init` retains its previous body in project.
+Already marked region stories refresh their core while preserving outside bytes.
 
-To mirror only a markerless whole file, add its mapping with `--bind-raw` and run `init`. The destination file becomes byte-identical to the source and receives no region markers, reconciliation report, or `pending` entry. A `merge`-cleared source (such as `opencode.jsonc`) needs no dedicated flag: `init`/`apply` merge its top-level keys from the `distribution-clearance.json` record when its destination already exists.
+Shared stories use explicit per-file `region` clearance, not raw story transport or a
+story-directory root. Keep H1/shared metadata through Constraints in core; source-local
+evidence, revision tracking, and Change log do not ship. The canonical user-story
+template remains a raw reference: its fenced generated-story markers are literal
+template content, not active regions governing that raw file. Raw mode does not parse
+or strip those literals.
+
+To mirror a raw-cleared whole-file reference, add its mapping with `--bind-raw` and run
+`init`; an absent newly declared raw target requires an existing parent. Bulk raw-parent
+creation is not supported: an absent raw target is created only when its parent directory
+already exists. A `merge`-cleared source (such as `opencode.jsonc`) needs no
+dedicated flag and requires an existing destination. Modes and revision rules are unchanged.
+
+### Shared-story reconciliation
+
+1. **Preflight legacy hints.** Inspect existing bindings before a raw-to-region update.
+   If a binding persists an explicit `mode: raw` hint, it conflicts with region clearance
+   and fails closed with exit `2`. Only if present, remove that obsolete hint through
+   separately authorized destination bindings maintenance, retaining source/destination
+   mappings and pending state, before enrollment; source clearance owns the actual mode.
+   Normal saves omit mode hints, but a conflicting hint cannot be
+   removed by a synchronization that already fails preflight. Never bypass the gate,
+   retain raw transport for a shared story, or assume all adopters have this hint.
+2. **Reconcile displaced bodies.** Read the report and story. Remove duplicate old shared
+   H1/metadata/contracts/Proof from project, retaining genuine local requirements,
+   evidence and history. Never edit protected core; resolve behavioural conflicts through
+   approved source revision or noncontradictory local ownership review.
+3. **Initialize local history.** Fresh region creation does not copy source project
+   sections or seed local records. Add an empty project-owned Change log and local
+   evidence sections as needed, without fabricating a receipt event, anchor or passing
+   destination result. Shared completion marks survive adoption but do not prove local
+   execution. Apply the user-story checklist's history gate for actual local deliveries.
+4. **Reconcile the catalogue.** Maintain one destination-owned `user-stories/index.md`
+   listing actual shared/local files and mirroring their metadata. Preserve local rows;
+   do not transport the source index or import source-only stories by copying its rows.
+5. **Accept only after reconciliation.** Clear pending paths through the existing blocker
+   procedure and require `check` exit `0`. Recurring updates use `apply` then `check` at
+   the selected revision; new or markerless paths require enrollment first. These steps
+   document existing operations, not authority to mutate an adopter or change core locally.
 
 ## Troubleshooting
 
@@ -156,6 +214,8 @@ To mirror only a markerless whole file, add its mapping with `--bind-raw` and ru
 - **Merge destination missing (exit 1):** merge never creates a destination. `check`, `apply`, and `init` all require an existing merge target, so a missing one is drift, not enrollment. Create the destination object file first, then re-run.
 - **Malformed JSONC (`check`/`apply`/`init` exits 2):** a merge source or destination is not a single JSON/JSONC object — a non-object top level, or malformed syntax such as an unterminated comment or a duplicate key. Merge is object-only; correct the document.
 - **Raw destination missing (exit 1):** `apply` and `check` always require the target to exist. `init` also requires an existing target for a raw mapping already stored in YAML; only a newly registered `--bind-raw` or `--bind-cleared` mapping can create an absent raw target, and its parent directory must already exist. A missing parent fails before writes. Repeating a declaration for an existing mapping does not enable creation.
+- **New shared story missing:** use supported `init --bind-cleared` enrollment for newly discovered region mappings, not raw copying or an absent explicit `--bind` target. Inspect all applicable-set preconditions before running it; this does not promise missing-parent creation for raw payloads.
+- **Legacy raw hint or duplicate story metadata:** cause: prior whole-file transport or displaced markerless content. Follow **Shared-story reconciliation**; resolve a persisted raw hint before preflight and remove displaced duplicate shared text only from project. Retain genuine local evidence and reconcile the local index before acceptance.
 - **Stale non-region-bound pending path (`check` exits 1):** the binding changed from region to raw or merge while the destination was listed in `pending`. Run `apply` or `init` to remove the obsolete reconciliation entry; `check` does not mutate the bindings file.
 - **Conflicting binding declaration (`init` exits 2):** the requested destination path is already mapped to a different source. This is a bindings-metadata conflict, not a destination-content conflict; same mappings are idempotent, region content is reconciled through the `project` region/blocker, raw content is replaced by its selected whole-file source, and merge content is re-derived by top-level key.
 - **Source not cleared for distribution (exit 1):** the bound `source` is absent from `distribution-clearance.json`. Skill files join automatically via their root row once its test or review passes; per-file rows are for non-skill sources, so for those run the file's test or review and add its per-file row. That file is the clearance record, not a content manifest.

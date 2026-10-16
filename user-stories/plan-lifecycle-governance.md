@@ -1,9 +1,10 @@
-# User story — plan-enforce
+<!-- core:begin -->
+# User story — plan-lifecycle-governance
 
 > **Created:** 2026-09-10
-> **Title:** Plan-enforce
+> **Title:** Plan lifecycle governance
 > **Status:** active
-> **version:** 1.3.0
+> **version:** 1.4.0
 > **Epic:** plan-governance
 > **Affected areas:** `.opencode/skills/plan-enforce/`, `.opencode/skills/user-story/`, `.opencode/skills/git-commit/`, `.opencode/skills/git-pr/`, `.opencode/skills/op-agent-creator/`, `.opencode/skills/op-model/`, `.opencode/skills/op-skill-creator/`, `AGENTS.md`, `knowledge/agents.md`, `README.md`, `user-stories/`, `.opencode/agents/atrium.md`, `.opencode/agents/bastion.md`, `.opencode/agents/crucible.md`, `.opencode/agents/forge.md`, `.opencode/agents/marshal.md`, `.opencode/agents/sentinel.md`, `.opencode/agents/vault.md`, `opencode.jsonc`
 
@@ -14,11 +15,12 @@
 ## Goal
 
 - **G:** Derive an evidence-grounded, contract-sized execution plan from approved story behavior, with authorized verification, required design rework, and completion scoped to the criteria the plan commits to deliver or materially changes.
-  - Done when: affected code/documentation is inspected before scope confirmation; goals trace to approved criteria; nonconforming planned files have explicit rework; every verification command has an authorized executor; planning and completion reviews are independently evidenced; the execution-review turn precedes implementation; committed criteria are fulfilled without deleting other story commitments; and final evidence, Outcome, and archival precede release.
+  - Done when: affected code/documentation is inspected before scope confirmation; goals trace to approved criteria; nonconforming planned files have explicit rework; every verification command has an authorized executor; planning and completion reviews are independently evidenced; the execution-review turn precedes implementation; committed criteria are fulfilled without deleting other story commitments; and final evidence, Outcome, and archival precede release. Plans consuming inherited shared stories preserve upstream contract ownership and distinguish shared delivery status from the current plan's verification evidence.
 
 ## Scenario
 
 - After the user approves a new or revised story, Cipher 🔓 (Lead Orchestrator) inspects the implementation and documentation boundaries, selects the delivery criteria, and writes contract-sized phases with complete manifests and authorized executors. Required architectural rework is included for nonconforming planned files. The user receives execution review before implementation. Expected-red test evidence remains an intermediate checkpoint, not completion. The final review fulfills the declared criteria and checks relevant established behavior for regressions; other legitimate story commitments remain recorded. Outcome and archival precede an authorized release.
+- A destination plan uses an inherited shared story: it traces the relevant approved promises, records its own authorized verification evidence, and preserves inherited core bytes. If the intended work requires a shared contract change, the change is handled through the source's approved revision and synchronization, or a separately approved noncontradictory project-owned requirement, rather than a destination edit to shared core.
 
 ## Acceptance criteria
 
@@ -53,40 +55,46 @@
 - ✅ **AC29 — Expected-red checkpoint:** A behavior slice may record the intended failing test through the designated executor's authorized command before implementation. Expected red is not a phase, goal, or acceptance `[PASS]`; final green, applicable architecture verdicts, and the reviewed whole-suite completion gate remain required.
 - ✅ **AC30 — Same-change documentation:** Actual affected documentation paths, owners, and proving semantic review are in the same plan/manifest as the behavior change. Final guidance, examples, diagrams, and links agree with the delivered contract.
 - ✅ **AC31 — Nonconforming planned files:** During discovery, planned files are assessed against the approved design; necessary rework, supporting paths, tests, and documentation are included in the same plan before execution. Existing noncompliance is not an exemption, and a passing behavior test cannot substitute for architectural conformance. New required paths discovered later are added through the applicable manifest/scope process before editing.
+- ⬜ **AC32 — Inherited evidence boundary:** When a plan consumes a shared story, inherited completion marks are not accepted as evidence that the current plan's work or destination checks passed. Selected delivery scope, materially changed behavior, and relevant regressions remain subject to the existing final-snapshot evidence and completion gates.
+- ⬜ **AC33 — Contract-owner reconciliation:** Completion reconciliation respects story ownership: authorized source work reconciles shared criteria at the source, while destination work records project-owned outcomes without modifying inherited core. A needed shared-contract change is resolved through an approved source revision and synchronization; a distinct local requirement follows the existing ownership and collision review and cannot weaken the shared baseline.
+- ⬜ **AC34 — History finalization boundary:** A plan may consume an approved contract whose delivery-history reference is explicitly pending. A missing or nonmatching final reference blocks completion, Outcome, archival, and release handoff; authorization to create any Git or external tracking artifact remains a separate user decision.
 
 ## Proof
 
-- AC1 → `.opencode/skills/plan-enforce/scripts/test_validate_plan_phase_structure.py` verify-table rejection cases · `uv run --frozen --group dev pytest -q` → exit 0
+- AC1 → `.opencode/skills/plan-enforce/scripts/test_validate_plan_phase_structure.py` `ValidatePlanPhaseStructureTests` verify-table rejection cases
 - AC2 → `.opencode/skills/plan-enforce/SKILL.md` `### Verification command executors` · `.opencode/agents/bastion.md` `### Rulebook` · `.opencode/agents/crucible.md` `#### Test Execution`
 - AC3 → `.opencode/skills/plan-enforce/SKILL.md` `#### Non-TypeScript test files` · `.opencode/agents/crucible.md` `#### Test Execution`
-- AC4 → `validate_plan.py` goal-trace / manifest-equality / verification-parity checks
-- AC5 → `validate_plan.py` audit-gate check
-- AC6 → `.opencode/skills/plan-enforce/SKILL.md` `### Post-write self-verification loop`, `#### Independent audit gate` · `references/_template.md` and `references/_template-programming.md` `## Audit` blocks
+- AC4 → `.opencode/skills/plan-enforce/scripts/plan_validate_pkg/domain/rules.py` `check_goal_trace`, `check_manifest_equality`, `check_verification_parity`
+- AC5 → `.opencode/skills/plan-enforce/scripts/plan_validate_pkg/domain/rules.py` `check_audit_gate`
+- AC6 → `.opencode/skills/plan-enforce/SKILL.md` `### Post-write self-verification loop`, `#### Independent audit gate` · `.opencode/skills/plan-enforce/references/_template.md` and `.opencode/skills/plan-enforce/references/_template-programming.md` `## Audit`
 - AC7 → `.opencode/skills/plan-enforce/SKILL.md` `### Execution-review message` · `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Plan lifecycle rules` row `Plan files written`
 - AC8 → `.opencode/skills/plan-enforce/SKILL.md` `### Execution-review message`
-- AC9 → `references/_template.md` · `references/_template-programming.md`
-- AC10 → `AGENTS.md` Conventions
+- AC9 → `.opencode/skills/plan-enforce/references/_template.md` and `.opencode/skills/plan-enforce/references/_template-programming.md` `## Goals`
+- AC10 → registered root runtime (`AGENTS.md` source, resolved through its root binding) `### Conventions`
 - AC11 → `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Plan lifecycle rules` row `Forge 🔨 (Implementer) dispatch`
 - AC12 → `.opencode/skills/plan-enforce/SKILL.md` story-input and goal-lifecycle rules · `.opencode/skills/user-story/SKILL.md`
-- AC13 → `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Acceptance-criterion reconciliation (fail-closed)` · `.opencode/skills/user-story/references/_consistency-checklist.md` `## Approved-criteria completion scope`
+- AC13 → `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Acceptance-criterion reconciliation (fail-closed)` · `.opencode/skills/user-story/references/_consistency-checklist.md` `## Approved-criteria completion scope (fail-closed)`
 - AC14 → `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Resume (completion)` · `.opencode/skills/plan-enforce/SKILL.md` `#### Drift watch`
-- AC15 → `.opencode/agents/sentinel.md` `##### Story-audit checks` and `##### Judgment calls`
+- AC15 → `.opencode/agents/sentinel.md` `##### Story-audit checks (report-only)` and `##### Judgment calls (report only)`
 - AC16 → `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Acceptance-criterion reconciliation (fail-closed)` · `.opencode/skills/user-story/references/_template-user-story.md` `## Acceptance criteria`
-- AC17 → `uv run --frozen --group dev pytest -q` → exit 0 · Crucible 🔥 (Test Architect) test-architecture `[PASS]` · `pyproject.toml` `[tool.pytest.ini_options]`
-- AC18 → `.opencode/skills/plan-enforce/SKILL.md` `## Mandatory core`, `## Project extensions` · `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Resume (completion)` · `#### Independent audit gate` · Vault 🔐 (Catalog Steward) `[PASS]` 2026-10-09
-- AC19 → `.opencode/skills/plan-enforce/SKILL.md` `### Dispatch bundle contract`, `### User stories`, `### Simplicity discipline` · linked references/templates · Vault 🔐 (Catalog Steward) `[PASS]` 2026-10-09
-- AC20 → `.opencode/skills/plan-enforce/SKILL.md` `### Simplicity discipline` · `.opencode/skills/plan-enforce/references/_consistency-checklist.md` **Completion and findings**
-- AC21 → `.opencode/skills/plan-enforce/SKILL.md` `### Dispatch bundle contract` · `knowledge/agents.md` Question-routing rule
-- AC22 → `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Resume (completion)` · `.opencode/skills/plan-enforce/references/_consistency-checklist.md` **Completion and findings**
+- AC17 → `.opencode/skills/plan-enforce/SKILL.md` `#### Non-TypeScript test files` · `.opencode/agents/crucible.md` `#### Test Execution`
+- AC18 → `.opencode/skills/plan-enforce/SKILL.md` `## Mandatory core` and project-owned extension boundary · `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Resume (completion)` · `.opencode/skills/plan-enforce/SKILL.md` `#### Independent audit gate`
+- AC19 → `.opencode/skills/plan-enforce/SKILL.md` `### Dispatch bundle contract`, `### User stories`, `### Simplicity discipline` · `.opencode/skills/plan-enforce/references/_consistency-checklist.md`
+- AC20 → `.opencode/skills/plan-enforce/SKILL.md` `### Simplicity discipline` · `.opencode/skills/plan-enforce/references/_consistency-checklist.md` `## Completion and findings (analysis)`
+- AC21 → `.opencode/skills/plan-enforce/SKILL.md` `### Dispatch bundle contract` · `knowledge/agents.md` `### User-Authority-Only rule`
+- AC22 → `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Resume (completion)` · `.opencode/skills/plan-enforce/references/_consistency-checklist.md` `## Completion and findings (analysis)`
 - AC23 → `.opencode/skills/plan-enforce/SKILL.md` `#### Independent audit gate`
-- AC24 → `.opencode/skills/plan-enforce/SKILL.md` `### Simplicity discipline` · `.opencode/skills/plan-enforce/references/_consistency-checklist.md` **Completion and findings**
-- AC25 → `.opencode/skills/plan-enforce/SKILL.md` `### All-changes disposition` · `AGENTS.md` Conventions
-- AC26 → `.opencode/skills/plan-enforce/SKILL.md` `### Bounded discovery before scope confirmation`, `### Contract-sized phases` · `references/_template.md`, `references/_template-programming.md`, `references/_phase-template.md`
-- AC27 → `validate_plan.py` rendered-template, phase-table, and story-index regression tests
+- AC24 → `.opencode/skills/plan-enforce/SKILL.md` `### Simplicity discipline` · `.opencode/skills/plan-enforce/references/_consistency-checklist.md` `## Completion and findings (analysis)`
+- AC25 → `.opencode/skills/plan-enforce/SKILL.md` `### All-changes disposition`
+- AC26 → `.opencode/skills/plan-enforce/SKILL.md` `### Bounded discovery before scope confirmation`, `### Contract-sized phases` · `.opencode/skills/plan-enforce/references/_template.md`, `.opencode/skills/plan-enforce/references/_template-programming.md`, `.opencode/skills/plan-enforce/references/_phase-template.md`
+- AC27 → `.opencode/skills/plan-enforce/scripts/test_validate_plan_template_render.py` `ValidatePlanTemplateRenderTests` · `.opencode/skills/plan-enforce/scripts/test_validate_plan_phase_structure.py` `ValidatePlanPhaseStructureTests` · `.opencode/skills/plan-enforce/scripts/test_validate_plan_story_index.py` `ValidatePlanStoryIndexTests`
 - AC28 → `.opencode/skills/plan-enforce/SKILL.md` `### Post-write self-verification loop`, `#### Independent audit gate`
-- AC29 → `.opencode/skills/plan-enforce/SKILL.md` `### Expected-red intermediate checkpoint` · `references/_phase-template.md` · `.opencode/agents/crucible.md` `#### Test Execution`
+- AC29 → `.opencode/skills/plan-enforce/SKILL.md` `### Expected-red intermediate checkpoint` · `.opencode/skills/plan-enforce/references/_phase-template.md` `## Gate` · `.opencode/agents/crucible.md` `#### Test Execution`
 - AC30 → `.opencode/skills/plan-enforce/SKILL.md` `### Documentation discipline` · `.opencode/skills/plan-enforce/references/_consistency-checklist.md`
 - AC31 → `.opencode/skills/plan-enforce/SKILL.md` `### Bounded discovery before scope confirmation` item 4 · `### Contract-sized phases`
+- AC32 → `.opencode/skills/plan-enforce/SKILL.md` `### Planning input — approved story and selected criteria` · `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `### Story ownership and current evidence` · final-candidate acceptance pending
+- AC33 → `knowledge/agents.md` `### Core and project ownership (HARD RULE)` · `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `### Story ownership and current evidence` · final-candidate acceptance pending
+- AC34 → `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `### History finalization gate` · `.opencode/skills/plan-enforce/references/_consistency-checklist.md` `## Completion and findings (analysis)` · final-candidate acceptance pending
 
 ## Constraints
 
@@ -99,6 +107,22 @@
 - Planning and completion audits are distinct — because a planning pass cannot certify a finished candidate.
 - `## Resolved decisions` on a plan file is plan-scope history and remains in use there; it is retired only on story files — because plans record how scope changed and stories record what the feature is.
 
+<!-- core:end -->
+
+<!-- project:begin -->
+## Approval record
+
+> **Contract approval:** 2026-10-15 — user approved inherited-contract evidence and reconciliation boundaries after the whole-catalogue semantic review, then explicitly approved planning with pending revision history while retaining the actual-reference gate before completion, Outcome, archival, and release handoff. Approval does not establish implementation acceptance.
+
+## Local evidence
+
+- **AC1, AC17:** Earlier source Proof recorded `uv run --frozen --group dev pytest -q` → exit 0 and Crucible 🔥 (Test Architect) test-architecture `[PASS]`; source runner configuration was `pyproject.toml` `[tool.pytest.ini_options]`. These are retained source observations, not a new run or destination runner selection.
+- **AC18, AC19:** Earlier source Proof recorded Vault 🔐 (Catalog Steward) `[PASS]` on 2026-10-09. That dated audit remains local history, not a shared or current-plan verdict.
+
+## Revision tracking
+
+- 2026-10-15 — Approved inherited-story reconciliation and history-timing revision awaits final-candidate acceptance and a delivery-matching history reference. AC32–AC34 remain pending delivery acceptance; canonical guidance and runtime review rules have passed their slice reviews, not overall delivery. Completion, Outcome, archival, and release handoff remain blocked until final evidence and actual matching history are established. This is source-local tracking, not shared proof.
+
 ## Change log
 
 - before 2026-10-11 — earlier history: see git history for this file
@@ -107,3 +131,4 @@
 - 2026-10-11 — planning-workflow-20261011 (PR #57): delivered approved-story input, bounded discovery, contract-sized phases, semantic review + two-failure reassessment, expected-red checkpoint, criterion-scoped completion, same-change documentation, and the Sentinel story-audit alignment; validator reworked into layers with the path preserved.
 - 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof`, moved pre-decided planning policy into `## Constraints`, and dropped test symbols and config literals from criterion text.
 - 2026-10-13 — safe-roster-parallelism (PR #61): added coordination declarations, extracted lifecycle obligations to a mandatory reference, and repaired relocated proof pointers.
+<!-- project:end -->
