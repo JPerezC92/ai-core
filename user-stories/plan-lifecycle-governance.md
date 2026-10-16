@@ -130,5 +130,5 @@
 - 2026-10-11 — planning-workflow-20261011 (PR #57): delivered approved-story input, bounded discovery, contract-sized phases, semantic review + two-failure reassessment, expected-red checkpoint, criterion-scoped completion, same-change documentation, and the Sentinel story-audit alignment; validator reworked into layers with the path preserved.
 - 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof`, moved pre-decided planning policy into `## Constraints`, and dropped test symbols and config literals from criterion text.
 - 2026-10-13 — safe-roster-parallelism (PR #61): added coordination declarations, extracted lifecycle obligations to a mandatory reference, and repaired relocated proof pointers.
-- 2026-10-15 — story-distribution-20261015 (commit 4174328): regionized the story and added inherited-evidence, source-owner reconciliation and history-finalization criteria (AC32–AC34).
+- 2026-10-15 — story-distribution-20261015 (PR #64): regionized the story and added inherited-evidence, source-owner reconciliation and history-finalization criteria (AC32–AC34).
 <!-- project:end -->

@@ -88,5 +88,5 @@
 - 2026-09-27 — runbook-budget-and-plan-review-20260927 (PR #44): added HTML-comment fill-token ignore, sidecar instruction excludes, and the denominator-authoritative Query-budget KILL-2 (`ticket-runbook` 2.4.0).
 - 2026-10-09 — aicore-all-files-pr-20261008 (PR #52): replaced version-pinned Query-budget evidence, made approval before gated register mutation explicit, and repointed register/pre-close/close-out/path evidence to current concern-focused modules.
 - 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof`, generalized the working-set and close-out contracts, and moved register-first policy into `## Constraints`.
-- 2026-10-15 — story-distribution-20261015 (commit 4174328): clarified read-only validator modes versus the authorized collapse; regionized the story.
+- 2026-10-15 — story-distribution-20261015 (PR #64): clarified read-only validator modes versus the authorized collapse; regionized the story.
 <!-- project:end -->

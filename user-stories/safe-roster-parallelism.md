@@ -84,5 +84,5 @@ These observations and Sentinel 🛡️ (Quality Guardian) evidence-review `[PAS
 ## Change log
 
 - 2026-10-13 — safe-roster-parallelism (PR #61): created the feature contract and delivered all nine criteria through shared coordination rules, planning/incident guidance, region-boundary corrections, and observed workflow evidence.
-- 2026-10-15 — story-distribution-20261015 (commit 4174328): regionized the story and separated shared coordination rules from observed source evidence.
+- 2026-10-15 — story-distribution-20261015 (PR #64): regionized the story and separated shared coordination rules from observed source evidence.
 <!-- project:end -->

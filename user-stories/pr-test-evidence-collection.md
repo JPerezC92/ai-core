@@ -74,5 +74,5 @@
 ## Change log
 
 - 2026-10-13 — pr-test-evidence-collection-20261013 (PR #62): created the feature contract and delivered the round-based manifest → fan-out → single-writer evidence collection.
-- 2026-10-15 — story-distribution-20261015 (commit 4174328): regionized the story with portable evidence-boundary pointers.
+- 2026-10-15 — story-distribution-20261015 (PR #64): regionized the story with portable evidence-boundary pointers.
 <!-- project:end -->
