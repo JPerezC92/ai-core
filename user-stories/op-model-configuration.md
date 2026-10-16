@@ -65,4 +65,5 @@
 - 2026-09-14 — skill-debt-resolution-20260914 (PR #36): created the feature definition; added the `ModelRecord` typed record contract (`op-model` 1.0.1).
 - 2026-10-09 — aicore-all-files-pr-20261008 (PR #52): made confirmation of the exact preview an explicit prerequisite for creating a missing config, alongside the existing surgical model edit.
 - 2026-10-12 — story revision (PR #59): separated behavioural criteria from proof and dropped the typed-record parser contract from the feature definition.
+- 2026-10-15 — story-distribution-20261015 (commit 4174328): repaired AC1/AC6 (grouped in/out costs; safe malformed-record recovery with `0.0` fallback) and regionized the story.
 <!-- project:end -->

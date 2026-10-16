@@ -68,4 +68,5 @@
 ## Change log
 
 - 2026-10-14 — knowledge-distribution-20261014 (PR #63): delivered the living-design companion under the system name — shared contract core, refinement state project-side.
+- 2026-10-15 — story-distribution-20261015 (commit 4174328): regionized the story, made the incident-contract composition (register-first + incident query verification) explicit, and neutralized source identity in the companion.
 <!-- project:end -->

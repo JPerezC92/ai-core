@@ -68,10 +68,10 @@
 
 ## Change log
 
-- before 2026-09-16 — earlier history: see git history for this file
-- 2026-09-16 — identification-pack-pointer-20260916 (PR #42): recorded that identification packs use `pack:`, not a protocol-v1 change.
+- before 2026-09-16 — earlier history: see git history for this file (incl. identification-pack-pointer-20260916, PR #42)
 - 2026-09-27 — python-pytest-20260927 (PR #43): moved Python skill tests to pytest under Crucible 🔥 (Test Architect); earlier unittest decisions remain historical.
 - 2026-10-10 — aicore-all-files-pr-20261008 (PR #52): repointed path, SQL-safety, sidecar-schema, and runbook test evidence to concern-specific modules; added direct valid-fixture/source-digest evidence.
 - 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof`, retired `## Resolved decisions` in favour of `## Constraints`, and removed the advisory-dispositions audit history from the contract.
 - 2026-10-14 — knowledge-distribution-20261014 (PR #63): delivered the clearance-shipped living-design shared contract and recorded the approved AC5 reword plus the AC4/AC5/AC7 proof-surface corrections.
+- 2026-10-15 — story-distribution-20261015 (commit 4174328): renamed from incident-query-verification-pilot; replaced source identity with the shared query-verification skill; regionized the story.
 <!-- project:end -->

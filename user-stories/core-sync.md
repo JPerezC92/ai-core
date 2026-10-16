@@ -95,3 +95,4 @@ Proof paths below are relative to `.opencode/skills/core-sync/scripts/core_sync_
 ## Change log
 
 - 2026-10-14 — knowledge-distribution-20261014 (PR #63): delivered the five knowledge region rows with documented distribution classes, the knowledge splits, and the living-design rename.
+- 2026-10-15 — story-distribution-20261015 (commit 4174328): clarified AC2 to genuinely-markerless whole-body delivery; removed the retired table-declaration wording; repointed Proof to current modules. (source-local, not distributed)

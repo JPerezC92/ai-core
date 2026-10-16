@@ -67,4 +67,5 @@
 - 2026-09-14 — skill-debt-resolution-20260914 (PR #36): created the feature definition; added dual-layout plan discovery and context-grounded PR drafting (`git-pr` `1.3.1`).
 - 2026-10-05 — process-debt-clearance-20261005 (PR #47): added the verdict-only `Observed output` criterion (`git-pr` `1.4.0`; consumers Inquisitor 🔎 (PR Reviewer) and Herald 📯 (Release Manager)).
 - 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof`, moved pre-decided policy into `## Constraints`, and dropped checkpoint/version pins from criterion text.
+- 2026-10-15 — story-distribution-20261015 (commit 4174328): clarified AC4 to the existing preview/approval-gated missing ignore entry and the no-state-mutating-Git-command boundary; regionized the story.
 <!-- project:end -->

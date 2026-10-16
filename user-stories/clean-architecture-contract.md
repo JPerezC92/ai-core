@@ -83,4 +83,5 @@
 - 2026-10-11 — workflow-contract (PR #57): approved bounded architecture review, correct gate routing, explicit dependency/error boundaries, and required rework for nonconforming planned files.
 - 2026-10-12 — implementation-enforcement-20261012 (PR #57): delivered per-owner gate routing and impact-bounded reads (`forge.md`), snapshot-bound read-based review (`atrium`/`bastion`/`crucible`/`sentinel`), the dependency/runtime-port/error/serialization distinctions (`knowledge/agents.md`, `bastion.md`), and the preservation-vs-retirement + nonconforming-planned-file rules.
 - 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof` and moved pre-decided architectural policy into `## Constraints`.
+- 2026-10-15 — story-distribution-20261015 (commit 4174328): regionized the story and resolved portable proving references.
 <!-- project:end -->

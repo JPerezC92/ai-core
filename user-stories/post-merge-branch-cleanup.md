@@ -63,4 +63,5 @@
 - 2026-10-09 — aicore-all-files-pr-20261008 (PR #52): made remote-branch deletion conditional on its continued existence as part of the fail-closed cleanup contract.
 - 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof` and moved the fail-closed deletion policy into `## Constraints`.
 - 2026-10-13 — safe-roster-parallelism (PR #61): repaired proof pointers for the relocated post-merge lifecycle procedure.
+- 2026-10-15 — story-distribution-20261015 (commit 4174328): generalized the merge target to the project's configured PR target branch; regionized the story.
 <!-- project:end -->
