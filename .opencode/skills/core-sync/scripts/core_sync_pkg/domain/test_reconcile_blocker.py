@@ -41,12 +41,18 @@ class ReconcileBlockerContentTests:
             assert step in body
         assert "delete this entire blocker block" in body
 
-    def test_block_body_carries_v2_migration_and_mcp_restore_guidance(self) -> None:
+    def test_block_body_carries_v2_migration_and_mcp_preservation_guidance(
+        self,
+    ) -> None:
         body = RECONCILE_BODY
         assert "`opencode.jsonc`" in body
         assert "OpenCode V1 layout" in body
         assert "migrate the file to the V2 layout" in body
-        assert "replaces the source-owned `mcp` key wholesale" in body
-        assert "restore any MCP server this project had registered" in body
-        assert "keep every server the core registers" in body
-        assert "never leave a registered MCP server silently dropped" in body
+        assert (
+            "keeps this project's own MCP servers alongside the core-registered "
+            "ones" in body
+        )
+        assert "same-named MCP server entry core-wins" in body
+        assert "every other key is still replaced wholesale" in body
+        assert "restore any MCP server" not in body
+        assert "replaces the source-owned `mcp` key wholesale" not in body

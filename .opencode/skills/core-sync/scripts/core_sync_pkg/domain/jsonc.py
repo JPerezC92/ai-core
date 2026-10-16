@@ -23,17 +23,23 @@ _SIMPLE_ESCAPES = {
 
 
 class KeyValueSpan(TypedDict):
-    """One top-level member: its key, parsed value, and raw source offsets."""
+    """One object member: its key, parsed value, raw offsets, and nested body.
+
+    `members` carries the value's own parsed object body when the value is an
+    object, so a caller can address spans nested one level below the top level;
+    it is `None` for every non-object value.
+    """
 
     key: str
     value: object
     member_start: int
     value_start: int
     value_end: int
+    members: ObjectSpans | None
 
 
 class ObjectSpans(TypedDict):
-    """A parsed top-level object plus the offsets a top-level merge splices at."""
+    """A parsed object plus the offsets a merge splices at."""
 
     value: dict[str, object]
     spans: list[KeyValueSpan]
@@ -68,22 +74,15 @@ class _Scanner:
         self._skip_trivia()
         if self._pos >= self._length or self._text[self._pos] != "{":
             raise MalformedJsonc("document top level must be a JSON object")
-        value, spans, close_index, trailing_comma = self._parse_object_body()
+        result = self._parse_object_body()
         self._skip_trivia()
         if self._pos != self._length:
             raise MalformedJsonc(
                 f"unexpected content after the top-level object at offset {self._pos}"
             )
-        return {
-            "value": value,
-            "spans": spans,
-            "close_index": close_index,
-            "trailing_comma": trailing_comma,
-        }
+        return result
 
-    def _parse_object_body(
-        self,
-    ) -> tuple[dict[str, object], list[KeyValueSpan], int, bool]:
+    def _parse_object_body(self) -> ObjectSpans:
         """Parse an object starting at `{`, returning its map, spans, and offsets."""
         if self._pos >= self._length or self._text[self._pos] != "{":
             raise MalformedJsonc(f"expected '{{' at offset {self._pos}")
@@ -95,7 +94,12 @@ class _Scanner:
         if self._pos < self._length and self._text[self._pos] == "}":
             close_index = self._pos
             self._pos += 1
-            return result, spans, close_index, trailing_comma
+            return {
+                "value": result,
+                "spans": spans,
+                "close_index": close_index,
+                "trailing_comma": trailing_comma,
+            }
         while True:
             self._skip_trivia()
             if self._pos >= self._length or self._text[self._pos] != '"':
@@ -110,7 +114,12 @@ class _Scanner:
             self._pos += 1
             self._skip_trivia()
             value_start = self._pos
-            value = self._parse_value()
+            members: ObjectSpans | None = None
+            if self._pos < self._length and self._text[self._pos] == "{":
+                members = self._parse_object_body()
+                value: object = members["value"]
+            else:
+                value = self._parse_value()
             value_end = self._pos
             result[key] = value
             spans.append(
@@ -120,6 +129,7 @@ class _Scanner:
                     "member_start": member_start,
                     "value_start": value_start,
                     "value_end": value_end,
+                    "members": members,
                 }
             )
             self._skip_trivia()
@@ -130,12 +140,22 @@ class _Scanner:
                     trailing_comma = True
                     close_index = self._pos
                     self._pos += 1
-                    return result, spans, close_index, trailing_comma
+                    return {
+                        "value": result,
+                        "spans": spans,
+                        "close_index": close_index,
+                        "trailing_comma": trailing_comma,
+                    }
                 continue
             if self._pos < self._length and self._text[self._pos] == "}":
                 close_index = self._pos
                 self._pos += 1
-                return result, spans, close_index, trailing_comma
+                return {
+                    "value": result,
+                    "spans": spans,
+                    "close_index": close_index,
+                    "trailing_comma": trailing_comma,
+                }
             raise MalformedJsonc(f"expected ',' or '}}' at offset {self._pos}")
 
     def _parse_value(self) -> object:
@@ -144,8 +164,7 @@ class _Scanner:
             raise MalformedJsonc("unexpected end of document while parsing a value")
         char = self._text[self._pos]
         if char == "{":
-            value, _spans, _close, _trailing = self._parse_object_body()
-            return value
+            return self._parse_object_body()["value"]
         if char == "[":
             return self._parse_array()
         if char == '"':

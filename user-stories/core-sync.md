@@ -3,10 +3,10 @@
 > **Created:** 2026-10-14
 > **Title:** Core synchronization
 > **Status:** active
-> **version:** 1.3.0
+> **version:** 1.4.0
 > **Epic:** core-governance
 > **Affected areas:** `.opencode/skills/core-sync/`, `distribution-clearance.json`, `distribution-clearance.definition.md`, `knowledge/`
-> **Contract approval:** 2026-10-14 — user approved the active contract and uniform-model correction; 2026-10-15 — user approved retired-declaration/table-ownership corrections and the exact genuinely-markerless-source AC2 clarification after paired semantic review; 2026-10-16 — user approved the AC23 update-compatibility guidance revision (UPDATE `core-sync`) after the whole-catalogue ownership review. This source-local contract remains excluded from distribution; revision history is pending under the approved timing rule.
+> **Contract approval:** 2026-10-14 — user approved the active contract and uniform-model correction; 2026-10-15 — user approved retired-declaration/table-ownership corrections and the exact genuinely-markerless-source AC2 clarification after paired semantic review; 2026-10-16 — user approved the AC23 update-compatibility guidance revision (UPDATE `core-sync`) after the whole-catalogue ownership review; 2026-10-16 — user approved the mcp-key merge revision (UPDATE `core-sync` AC21/AC22/AC23) after the whole-catalogue ownership review, so only the `mcp` key is exempt from wholesale replacement (merged by server name, core-wins on a same-named entry) while every other key is replaced wholesale. This source-local contract remains excluded from distribution; revision history is pending under the approved timing rule.
 
 ## Persona
 
@@ -14,12 +14,12 @@
 
 ## Goal
 
-- **G:** Every cleared source distributes through one deterministic sync — core regions splice, raw files copy byte-for-byte, and JSON/JSONC config merges by top-level key — while destination-owned content (project regions and the records they hold) survives every update.
+- **G:** Every cleared source distributes through one deterministic sync — core regions splice, raw files copy byte-for-byte, and JSON/JSONC config merges by top-level key with the `mcp` key merged by server name — while destination-owned content (project regions and the records they hold) survives every update.
   - Done when: enrollment, update, and verification enforce the declared modes with the documented exit codes; a core region containing a shared table copies byte-for-byte like any other core region; verification is the same core byte-equality for every region source; the distribution clearance file lists every shippable source with its mode; and a record-bearing register ships its frame only.
 
 ## Scenario
 
-- The source maintainer runs enrollment from the source checkout against a clean, saved destination: region bindings generate core/project regions and reconciliation reports, raw bindings copy whole files byte-for-byte, and merge bindings write the union of top-level keys. The destination reconciles its project regions and the next verification reports current. Routine updates refresh the same surfaces and never touch destination-owned content.
+- The source maintainer runs enrollment from the source checkout against a clean, saved destination: region bindings generate core/project regions and reconciliation reports, raw bindings copy whole files byte-for-byte, and merge bindings replace source keys wholesale except the `mcp` key, which merges by server name — a destination-only MCP server survives and a same-named server entry is core-wins. The destination reconciles its project regions and the next verification reports current. Routine updates refresh the same surfaces and never touch destination-owned content.
 - The source maintainer prepares skill payloads and knowledge registers for distribution: each skill ships by its cleared root with its region-file subset, and each knowledge register declares its distribution class — record-bearing registers ship their frame only, shared catalogs ship in full.
 - A destination's problem register already holds rows its team filed: they live in the destination's project region, survive every sync, and are never substituted; the shipped core table copies byte-for-byte with the core region and never touches them.
 
@@ -45,9 +45,9 @@
 - ✅ **AC18 — Test layering:** Sync tests mirror the architectural layers — domain units, use-case units driven through in-memory port doubles, adapter integration, and CLI end-to-end — and no test imports behavior through the composition facade.
 - ✅ **AC19 — Core table:** A cleared markdown source's shared core tables ship byte-for-byte with the core region; project-owned records, including tabular records, remain project content and never ship.
 - ✅ **AC20 — Knowledge register clearance:** Cleared knowledge registers carry a documented distribution class — a record-bearing register ships its frame only and never carries the source's filed records, while a shared catalog ships in full — and destination-owned records live in the project region and are never substituted by a sync.
-- ✅ **AC21 — Merge bindings:** A merge binding writes a document in which every source top-level key holds the source value and every destination-only top-level key is preserved, with source keys replaced wholesale and no deep merge; the output preserves the destination's comments, key order, and formatting and stays loadable; merge bindings create no markers, reports, or pending entries; a config source whose keys are project-owned is cleared as merge rather than raw.
-- ✅ **AC22 — Merge verification:** Merge verification exits 0 when each source top-level key holds the source value with extra destination keys allowed; a missing or mismatched source key or a missing destination exits 1; malformed JSONC or an unknown mode exits 2.
-- ✅ **AC23 — Update-compatibility guidance:** The reconciliation blocker also instructs the destination to migrate its merged `opencode.jsonc` to the OpenCode V2 layout and to restore any project-registered MCP server the merge displaced, while keeping the MCP servers the core registers — so an update never leaves a half-migrated V1 config or silently drops a registered MCP server.
+- ⬜ **AC21 — Merge bindings:** A merge binding writes a document in which every source key holds the source value and every destination-only key is preserved, with source keys replaced wholesale except the `mcp` key, which is merged by server name so a destination-only MCP server survives while a same-named server entry is core-wins; the output preserves the destination's comments, key order, and formatting and stays loadable; merge bindings create no markers, reports, or pending entries; a config source whose keys are project-owned is cleared as merge rather than raw.
+- ⬜ **AC22 — Merge verification:** Merge verification exits 0 when each source key holds the source value, with extra destination-only top-level keys allowed and extra destination-only MCP servers allowed by server name while every other value must match exactly; a missing or mismatched source key or a missing destination exits 1; malformed JSONC or an unknown mode exits 2.
+- ⬜ **AC23 — Update-compatibility guidance:** The reconciliation blocker also instructs the destination to migrate its merged `opencode.jsonc` to the OpenCode V2 layout, and states that the merge preserves this project's own MCP servers alongside the core-registered ones — so an update never leaves a half-migrated V1 config or overrides a registered MCP server.
 
 ## Proof
 
@@ -74,8 +74,8 @@ Proof paths below are relative to `.opencode/skills/core-sync/scripts/core_sync_
 - AC19 → `distribution-clearance.json` knowledge region rows · `knowledge/problems.md` core `## Register` table · `.../domain/regions.py` `extract_source_core` / `render_with_region` · `.../tests/test_apply.py` outside-byte preservation assertions
 - AC20 → `distribution-clearance.definition.md` `## Knowledge distribution classes` · `knowledge/debt.md` frame-only core · `README.md` shipping policy
 - AC21 → `.../domain/merge.py` `merge_top_level` · `.../domain/test_merge_top_level.py` `MergeTopLevelTests` · `.../tests/test_merge_init.py` `MergeInitTests` · `.../tests/test_binding_coexistence.py` three-mode case · `distribution-clearance.json` `opencode.jsonc: merge`
-- AC22 → `.../tests/test_merge_check.py` `MergeCheckTests` · `.../tests/test_check_invalid_bindings.py` `CheckInvalidBindingsTests.test_unknown_binding_mode_returns_two`
-- AC23 → `.../domain/test_reconcile_blocker.py` `ReconcileBlockerContentTests.test_block_body_carries_v2_migration_and_mcp_restore_guidance` · `.opencode/skills/core-sync/SKILL.md` `## Reconciliation blocker`
+- AC22 → `.../tests/test_merge_check.py` `MergeCheckTests` · `.../domain/test_is_merged.py` `IsMergedTests` · `.../tests/test_check_invalid_bindings.py` `CheckInvalidBindingsTests.test_unknown_binding_mode_returns_two`
+- AC23 → `.../domain/test_reconcile_blocker.py` `ReconcileBlockerContentTests` · `.opencode/skills/core-sync/SKILL.md` `## Reconciliation blocker`
 
 ## Constraints
 
@@ -97,6 +97,8 @@ Proof paths below are relative to `.opencode/skills/core-sync/scripts/core_sync_
 - 2026-10-16 — Engine fix delivered (plan `core-sync-raw-enrollment-20261016`, PR #64): bulk `--bind-cleared` raw enrollment now creates missing parent directories, and a non-bulk (explicit `--bind-raw`/persisted) raw target with an absent parent fails with `CODE_DRIFT` in a pre-write pass before any write. AC6/AC12 marked delivered; Bastion 🧱 (Backend & Scripts Architect) + Crucible 🔥 (Test Architect) PASS, whole suite `609 passed`. Source-local; does not ship.
 - 2026-10-16 — Approved AC23 blocker-guidance revision (UPDATE `core-sync`) after the whole-catalogue ownership review. Persisted with pending history: AC23 stays `⬜`, its Proof target is explicitly unverified, and no Change log entry is written until a delivery-matching commit/PR/ticket exists. Completion, `## Outcome`, archival, and release handoff remain blocked until the actual reference is established. Source-local; does not ship.
 - 2026-10-16 — Finalized: AC23 delivered by commit `38e456f` on branch `feat/core-sync/add-reconcile-migration-guidance`; Proof repointed to the extended `ReconcileBlockerContentTests` and the SKILL blocker section, the bounded Change log entry added, and pending history resolved. Gates on the frozen candidate: Bastion 🧱 code architecture PASS, Crucible 🔥 test architecture PASS, whole suite `uv run --frozen --group dev pytest -q` exit 0 (600 passed), Vault 🔐 independent skill-quality PASS, Sentinel 🛡️ completion audit. Source-local; does not ship.
+- 2026-10-16 — User approved the mcp-key merge revision (UPDATE `core-sync` AC21/AC22/AC23) after the whole-catalogue ownership review: only the `mcp` key is exempt from wholesale replacement — merged by server name with a same-named entry core-wins — while every other key is replaced wholesale; verification accepts extra destination MCP servers; and the blocker must state preservation instead of a displaced-server restore. Materially reworded AC21/AC22/AC23 are reset to `⬜` pending re-establishment through their Proof; no Change log entry until a delivery-matching reference exists. Completion, `## Outcome`, archival, and release handoff remain blocked until then. Source-local; does not ship.
+- 2026-10-16 — Consistency alignment within the same revision: `## Goal` and `## Scenario` now describe top-level merge with the `mcp` key merged by server name; the existing `## Constraints` wording ("merged top-level keys") already fits that scope and is unchanged. AC5's merge clause is read through AC22's `mcp` exception; its wording and `✅` mark are unchanged by this revision.
 
 ## Change log
 

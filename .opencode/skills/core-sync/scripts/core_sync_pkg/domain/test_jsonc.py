@@ -67,6 +67,34 @@ class JsoncParserTests:
         assert text[first["member_start"] : first["value_end"]] == '"b": 2'
         assert text[second["value_start"] : second["value_end"]] == "[1]"
 
+    def test_object_value_exposes_nested_member_spans(self) -> None:
+        text = '{\n  "mcp": {\n    "servers": {\n      "a": {}\n    }\n  }\n}\n'
+        parsed = parse_object_spans(text)
+        mcp = parsed["spans"][0]
+        assert mcp["key"] == "mcp"
+        mcp_members = mcp["members"]
+        assert mcp_members is not None
+        servers = mcp_members["spans"][0]
+        assert servers["key"] == "servers"
+        assert (
+            text[servers["member_start"] : servers["value_end"]]
+            == '"servers": {\n      "a": {}\n    }'
+        )
+        servers_members = servers["members"]
+        assert servers_members is not None
+        server = servers_members["spans"][0]
+        assert server["key"] == "a"
+        assert text[server["value_start"] : server["value_end"]] == "{}"
+
+    def test_non_object_values_expose_no_nested_members(self) -> None:
+        parsed = parse_object_spans('{"a": [1], "b": "s", "c": 1, "d": null}')
+        assert [span["members"] for span in parsed["spans"]] == [
+            None,
+            None,
+            None,
+            None,
+        ]
+
     def test_trailing_comma_flag(self) -> None:
         assert parse_object_spans('{"a": 1,}')["trailing_comma"] is True
 

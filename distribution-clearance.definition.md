@@ -19,7 +19,7 @@ The document carries `"schema": 1`. The version stays **v1** through every compa
 | Kind | Key | Record | Mode semantics |
 |---|---|---|---|
 | Root runtime | `AGENTS.md` | `{"mode": "region", "role": "root"}` | core region only; `role: root` is unique to this row |
-| Harness config | `opencode.jsonc` | `{"mode": "merge"}` | top-level JSON(C) key merge, destination-only keys preserved |
+| Harness config | `opencode.jsonc` | `{"mode": "merge"}` | top-level JSON(C) key merge, destination-only keys preserved; the `mcp` key merges by server name, keeping destination-only MCP servers and making a same-named entry core-wins |
 | Story payload | `user-stories/<slug>.md` (portable) | `{"mode": "region"}` | core region only (shared contract); project region is destination-owned |
 | Story payload (source-local) | `user-stories/<slug>.md` (source-only) | *(absent — not cleared)* | story exists in the source catalogue but is never delivered |
 | Knowledge documents | `knowledge/*.md` | `{"mode": "region"}` | core region only (core/project markers) |
@@ -61,7 +61,7 @@ A literal region marker pair inside a raw template or fenced example is ordinary
 - Root entries cover **skill roots only** for now. Agent specs, persona profiles, and every other non-skill source stay per-file rows; the scope widens only with an explicit design change (which, being compatible, does not bump the version).
 - The sync tool's own skill (`.opencode/skills/core-sync/`) is never a cleared key and reaches no destination.
 - Only region-mode rows use active core/project ownership markers — `SKILL.md` within a skill root, and region file rows (the root runtime, agent specs, persona profiles, knowledge documents, shared stories). Raw and merge transport does not interpret ownership markers; marker literals in a raw reference or fenced example remain ordinary copied bytes, not a separate region binding.
-- Modes: `region` (delivers only the source core region; the destination owns its project region), `raw` (byte-for-byte copy), `merge` (top-level key merge — config only).
+- Modes: `region` (delivers only the source core region; the destination owns its project region), `raw` (byte-for-byte copy), `merge` (top-level key merge — config only; the `mcp` key merges by server name, keeping destination-only MCP servers and making a same-named entry core-wins).
 
 ## Validation
 

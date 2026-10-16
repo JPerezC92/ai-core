@@ -12,6 +12,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from _core_sync_testkit import (  # noqa: E402
+    MERGE_MCP_DESTINATION,
+    MERGE_MCP_RESULT,
+    MERGE_MCP_SOURCE,
     REV_A,
     _apply_args,
     _merge_setup,
@@ -60,6 +63,35 @@ class MergeApplyTests:
 
     def test_apply_is_idempotent(self, tmp_path: Path) -> None:
         source, destination, bindings_path = _merge_setup(tmp_path)
+        destination_path = destination / "opencode.jsonc"
+
+        assert main(_apply_args(source, destination, bindings_path, REV_A)) == 0
+        first = destination_path.read_bytes()
+        assert main(_apply_args(source, destination, bindings_path, REV_A)) == 0
+        assert destination_path.read_bytes() == first
+
+    def test_apply_keeps_destination_mcp_server_and_inserts_core_servers(
+        self, tmp_path: Path
+    ) -> None:
+        source, destination, bindings_path = _merge_setup(
+            tmp_path,
+            source_content=MERGE_MCP_SOURCE,
+            destination_content=MERGE_MCP_DESTINATION,
+        )
+        destination_path = destination / "opencode.jsonc"
+
+        assert main(_apply_args(source, destination, bindings_path, REV_A)) == 0
+
+        written = destination_path.read_text(encoding="utf-8")
+        assert "// keep this comment" in written
+        assert parse_object(written) == MERGE_MCP_RESULT
+
+    def test_apply_mcp_merge_is_byte_idempotent(self, tmp_path: Path) -> None:
+        source, destination, bindings_path = _merge_setup(
+            tmp_path,
+            source_content=MERGE_MCP_SOURCE,
+            destination_content=MERGE_MCP_DESTINATION,
+        )
         destination_path = destination / "opencode.jsonc"
 
         assert main(_apply_args(source, destination, bindings_path, REV_A)) == 0
