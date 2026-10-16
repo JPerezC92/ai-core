@@ -26,10 +26,10 @@
 
 ## Acceptance criteria
 
-- ⬜ **AC1 — Core model:** The symptom catalog, the problem register, the destination query library, verifier definitions, verifiers, and case evidence each have one declared responsibility; registers hold pointers and verdicts, never query payloads or result tables.
-- ⬜ **AC2 — Register interaction:** Verification attaches to the registers only as routing and evidence references: symptoms may route through verifiers, problems may cite them only after case evidence confirms a recurring root-cause pattern, repeated cases enrich existing records instead of duplicating them, and no problem record is created merely because a verifier exists or a symptom is observed.
-- ⬜ **AC3 — Portability:** The destination declares its diagnostic-query storage; the system defines the protocol and pointer semantics, never the destination's layout.
-- ⬜ **AC4 — Evidence invariants:** Every verification on either team is read-only and bounded, yields exactly one of `verified`, `not_verified`, or `inconclusive`, and retains only redacted, digest-bound evidence; a verified symptom is never automatic root-cause confirmation.
+- ✅ **AC1 — Core model:** The symptom catalog, the problem register, the destination query library, verifier definitions, verifiers, and case evidence each have one declared responsibility; registers hold pointers and verdicts, never query payloads or result tables.
+- ✅ **AC2 — Register interaction:** Verification attaches to the registers only as routing and evidence references: symptoms may route through verifiers, problems may cite them only after case evidence confirms a recurring root-cause pattern, repeated cases enrich existing records instead of duplicating them, and no problem record is created merely because a verifier exists or a symptom is observed.
+- ✅ **AC3 — Portability:** The destination declares its diagnostic-query storage; the system defines the protocol and pointer semantics, never the destination's layout.
+- ✅ **AC4 — Evidence invariants:** Every verification on either team is read-only and bounded, yields exactly one of `verified`, `not_verified`, or `inconclusive`, and retains only redacted, digest-bound evidence; a verified symptom is never automatic root-cause confirmation.
 - ⬜ **AC5 — Two-team loop:** Both teams run the same loop — classify, identify register-first, verify, file or enrich — with team ownership recorded on every problem row.
 - ✅ **AC6 — Naming:** The system and its living design are named for the business predicate *diagnostic system* rather than for one mechanism the system contains, and the living design document carries the system name.
 - ✅ **AC7 — Living-design companion:** The living design delivers the shared approach — model, contracts, flow, register interaction, constraints — and keeps the source project's refinement state local; destinations receive the contract and never the source's refinement state.
@@ -63,7 +63,7 @@
 
 ## Revision tracking
 
-- 2026-10-15 — Shared-region preparation, portable Proof, and explicit existing incident-contract composition await final candidate acceptance and a delivery-matching history reference. AC1–AC5 remain unselected pending commitments; Dev integration is not implied.
+- 2026-10-15 — Shared-region preparation, portable Proof, and explicit existing incident-contract composition await final candidate acceptance and a delivery-matching history reference. Criteria reconciled against the living design and registers: AC1–AC4 marked delivered (`diagnostic-system-design.md` core model, register interaction, portability contract, verification/evidence constraints; `knowledge/problems.md` rules; `knowledge/agents.md` bounded-query discipline). AC5 remains pending against a real gap — the Dev-team operational loop is deferred (design records Dev steps as Gap; verifiers are incident-only); the shared model/map and team-ownership column are delivered but the Dev route is not.
 
 ## Change log
 
