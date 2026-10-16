@@ -42,7 +42,7 @@ GEMINI_FLASH = Model.create(
     cost_out=2.5,
 )
 
-EMPTY_SOURCE_MESSAGE = "No models parsed from `opencode models --verbose` output."
+EMPTY_SOURCE_MESSAGE = "No models parsed from `opencode models` output."
 NO_MATCH_MESSAGE = (
     "No match for mistral in `opencode models`. "
     "Run `<python> .opencode/skills/op-model/scripts/models.py` "

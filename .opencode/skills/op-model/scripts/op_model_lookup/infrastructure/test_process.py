@@ -10,29 +10,24 @@ import pytest
 from op_model_lookup.domain.catalog import Model, ModelSourceFailure
 from op_model_lookup.infrastructure.process import OpencodeModelSource
 
-STDOUT_CATALOG = (
-    "openai/gpt-4\n"
-    '{"name": "GPT-4", "cost": {"input": 30, "output": 60}}\n'
-    "google/gemini-2.5-flash\n"
-    '{"name": "Gemini 2.5 Flash", "cost": {"input": 0.3, "output": 2.5}}\n'
-)
+STDOUT_CATALOG = "openai/gpt-4\ngoogle/gemini-2.5-flash\n"
 
 EXPECTED_MODELS = (
     Model.create(
         config="openai/gpt-4",
         id="gpt-4",
         provider="openai",
-        name="GPT-4",
-        cost_in=30.0,
-        cost_out=60.0,
+        name="gpt-4",
+        cost_in=0.0,
+        cost_out=0.0,
     ),
     Model.create(
         config="google/gemini-2.5-flash",
         id="gemini-2.5-flash",
         provider="google",
-        name="Gemini 2.5 Flash",
-        cost_in=0.3,
-        cost_out=2.5,
+        name="gemini-2.5-flash",
+        cost_in=0.0,
+        cost_out=0.0,
     ),
 )
 
@@ -50,7 +45,7 @@ class Invocation(TypedDict):
 class OpencodeModelSourceTests:
     """Fetch behavior: checked invocation, stdout mapping, and boundary-failure channels."""
 
-    def test_fetch_runs_checked_verbose_command_with_capture_and_timeout(
+    def test_fetch_runs_checked_command_with_capture_and_timeout(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         calls: list[Invocation] = []
@@ -80,7 +75,7 @@ class OpencodeModelSourceTests:
         OpencodeModelSource().fetch()
         assert calls == [
             Invocation(
-                command=["opencode", "models", "--verbose"],
+                command=["opencode", "models"],
                 capture_output=True,
                 text=True,
                 check=True,
@@ -88,7 +83,7 @@ class OpencodeModelSourceTests:
             )
         ]
 
-    def test_fetch_maps_stdout_to_valid_models(
+    def test_fetch_maps_stdout_selector_lines_to_models(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         def stub_run(
@@ -104,6 +99,8 @@ class OpencodeModelSourceTests:
     def test_missing_executable_raises_model_source_failure(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
+        """A missing `opencode` executable names the tool and reports it cannot list models."""
+
         def stub_run(
             command: list[str], **kwargs: object
         ) -> subprocess.CompletedProcess[str]:
@@ -132,7 +129,7 @@ class OpencodeModelSourceTests:
             OpencodeModelSource().fetch()
         assert (
             str(exc_info.value)
-            == "ERROR: `opencode models --verbose` failed (exit 2):\nboom"
+            == "ERROR: `opencode models` failed (exit 2):\nboom"
         )
 
     def test_timeout_raises_model_source_failure(
@@ -146,4 +143,4 @@ class OpencodeModelSourceTests:
         monkeypatch.setattr(subprocess, "run", stub_run)
         with pytest.raises(ModelSourceFailure) as exc_info:
             OpencodeModelSource().fetch()
-        assert str(exc_info.value) == "ERROR: `opencode models --verbose` timed out."
+        assert str(exc_info.value) == "ERROR: `opencode models` timed out."

@@ -2,15 +2,11 @@
 
 from __future__ import annotations
 
-import json
 import re
-from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Protocol
 
-BLOCK_HEADER = re.compile(
-    r"^([A-Za-z0-9][A-Za-z0-9_+.-]*)/([A-Za-z0-9][A-Za-z0-9_+.-]*)$", re.M
-)
+SELECTOR = re.compile(r"^(?P<provider>[A-Za-z0-9][A-Za-z0-9_+.-]*)/(?P<model>\S+)$")
 
 CODE_NO_MODELS = "no_models_available"
 CODE_NO_MATCH = "no_matching_models"
@@ -50,7 +46,7 @@ class Model:
 
 @dataclass(frozen=True)
 class ParseIssue:
-    """One skipped catalog block, identified by a stable code and a message."""
+    """One skipped catalog line, identified by a stable code and a message."""
 
     code: str
     message: str
@@ -76,7 +72,7 @@ class NoModelsAvailable:
         """Build the no-models outcome with its stable code and message."""
         return cls(
             code=CODE_NO_MODELS,
-            message="No models parsed from `opencode models --verbose` output.",
+            message="No models parsed from `opencode models` output.",
         )
 
 
@@ -115,70 +111,37 @@ class ModelSource(Protocol):
 
 
 def parse_records(stdout: str) -> CatalogParseResult:
-    """Parse `opencode models --verbose` output into models plus per-block issues.
+    """Parse `opencode models` selector lines into models plus per-line issues.
 
-    Blocks whose JSON body is malformed, is not a JSON object, or supplies an
-    incompatible name or cost shape are skipped one by one; valid blocks around
-    them survive. Missing or empty names fall back to the header model id, and
-    missing or empty costs fall back to 0.0.
+    Each non-blank line that is a `provider/model` selector becomes a model whose
+    name is its model id and whose in/out costs are 0.0; every other non-blank
+    line is skipped and recorded as an `unrecognized_line` issue.
     """
     models: list[Model] = []
     issues: list[ParseIssue] = []
-    for match in BLOCK_HEADER.finditer(stdout):
-        provider, model_id = match.group(1), match.group(2)
-        config = f"{provider}/{model_id}"
-        body = stdout[match.end() :]
-        next_header = BLOCK_HEADER.search(body)
-        block = body[: next_header.start()] if next_header else body
-        try:
-            data = json.loads(block)
-        except json.JSONDecodeError:
-            issues.append(
-                ParseIssue("malformed_json", f"{config}: block body is not valid JSON")
-            )
+    for raw_line in stdout.splitlines():
+        line = raw_line.strip()
+        if not line:
             continue
-        if not isinstance(data, dict):
+        match = SELECTOR.match(line)
+        if match is None:
             issues.append(
                 ParseIssue(
-                    "non_object_body", f"{config}: block body is not a JSON object"
+                    "unrecognized_line", f"{line}: not a provider/model selector"
                 )
             )
             continue
-        name_value = data.get("name")
-        if name_value is not None and not isinstance(name_value, str):
-            issues.append(
-                ParseIssue("incompatible_name", f"{config}: name is not a string")
-            )
-            continue
-        cost_value = data.get("cost")
-        if cost_value is not None and not isinstance(cost_value, Mapping):
-            issues.append(
-                ParseIssue("incompatible_cost", f"{config}: cost is not a mapping")
-            )
-            continue
-        cost: Mapping[object, object] = (
-            cost_value if isinstance(cost_value, Mapping) else {}
-        )
-        name = name_value if isinstance(name_value, str) and name_value else model_id
         models.append(
             Model.create(
-                config=config,
-                id=model_id,
-                provider=provider,
-                name=name,
-                cost_in=_to_cost(cost.get("input")),
-                cost_out=_to_cost(cost.get("output")),
+                config=line,
+                id=match.group("model"),
+                provider=match.group("provider"),
+                name=match.group("model"),
+                cost_in=0.0,
+                cost_out=0.0,
             )
         )
     return CatalogParseResult(models=tuple(models), issues=tuple(issues))
-
-
-def _to_cost(value: object) -> float:
-    """Convert one cost value to float, using 0.0 when it is not convertible."""
-    try:
-        return float(value)
-    except (TypeError, ValueError, OverflowError):
-        return 0.0
 
 
 def normalize(text: str) -> str:

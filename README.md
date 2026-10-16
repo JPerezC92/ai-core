@@ -42,7 +42,8 @@ Persona CVs live at `agents/<name>/profile.md`; runtime specs at `.opencode/agen
 
 ```
 AGENTS.md                     Cipher's runtime spec: mandatory core + roster + reuse guide
-opencode.jsonc                OpenCode config: agent/model bindings, permission model, MCP servers
+opencode.jsonc                OpenCode V2 config: agent/model bindings, permission model, MCP servers
+opencode.v1.jsonc             OpenCode V1 config backup (byte-identical), for an OpenCode V1 binary
 magic-context.jsonc           magic-context disabled — native OpenCode compaction owns context
 .opencode/agents/             16 subagent runtime specs (OpenCode subagents)
 .opencode/skills/             11 skills (core-sync, git-branch-name, git-commit, git-pr,
@@ -98,7 +99,7 @@ Clone AICore, then remove only source-local state so the fresh project starts cl
 - **Environment** — `python3` (not `python`), Python ≥ 3.13, managed with `uv`. Every Python command runs through the project environment: `uv run --frozen …`, never a bare or global interpreter.
 - **Tests** — `uv run --frozen --group dev pytest -q` runs the whole suite (worker-parallel via pytest-xdist; scope: core-sync, plan validators, runbook validators, query verification, and the other skill machinery). Skill tests live throughout each skill's `scripts/` tree, not only beside the entry script: `.opencode/skills/<skill>/scripts/**/test_*.py`, including layered subpackages (e.g. `.opencode/skills/op-model/scripts/op_model_lookup/domain/test_catalog.py`).
 - **Authoring** — use the `op-skill-creator` and `op-agent-creator` skills to scaffold skills/agents, and `op-model` to change agent models deterministically.
-- **Config changes** — the OpenCode TUI must be restarted after any `opencode.jsonc` permission change; active sessions do not reload it.
+- **Config changes** — the OpenCode TUI must be restarted after any `opencode.jsonc` permission change; active sessions do not reload it. AICore's `opencode.jsonc` targets the OpenCode V2 config definition, and `opencode.v1.jsonc` preserves the V1 config for an OpenCode V1 binary.
 - **Plan discipline** — non-trivial work starts with the `plan-enforce` skill (plan artifact in `plans/` + user story). Parallel tasks need accepted inputs and non-overlapping writes; a written assignment is not a lock, and a separate session is not verified isolation. Specs never bump synced version numbers locally — destination-local changes live in git history and the user-story change log. Restart OpenCode after accepting runtime or skill changes; the active session does not hot-reload them.
 
 ## Notes

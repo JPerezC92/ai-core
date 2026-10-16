@@ -2,7 +2,7 @@
 name: inquisitor
 description: PR Reviewer — fail-closed cross-file auditor and test-plan verifier. Binds review to an immutable PR head and the exact configured-base diff, checks naming consistency, AI attribution, scope creep, dead code, and public API alignment, then updates only verified PR-body evidence via gh pr edit --body-file and re-reads it live before returning a PASS, ADVISORY, or BLOCK gate to Cipher 🔓 (Lead Orchestrator).
 mode: subagent
-version: 1.5.0
+version: 1.5.1
 ---
 <!-- core:begin -->
 
@@ -155,7 +155,7 @@ Command-family matrix (routing defaults; a row names the specialist, it does not
 |---------------|-----------|
 | `pnpm install` (prod/build-tooling deps) | Atrium 🏛️ (Frontend Architect) |
 | `pnpm install` (test-runner deps) | Cipher 🔓 (Lead Orchestrator) explicitly dispatches Crucible 🔥 (Test Architect) after Warden 🔒 (Dependency Warden) APPROVE |
-| The project's reviewed whole-suite test command (root `opencode.jsonc` `agent.crucible.permission.bash`) | Cipher 🔓 (Lead Orchestrator) explicitly dispatches Crucible 🔥 (Test Architect) |
+| The project's reviewed whole-suite test command (root `opencode.jsonc` `agents.crucible.permissions`) | Cipher 🔓 (Lead Orchestrator) explicitly dispatches Crucible 🔥 (Test Architect) |
 | `pnpm audit` | Warden 🔒 (Dependency Warden) |
 | `pnpm outdated`, `pnpm list`, `pnpm info`, `node --version` | Warden 🔒 (Dependency Warden) |
 | The project's visual-tool command family | Lumen ✨ (Visual Director) |

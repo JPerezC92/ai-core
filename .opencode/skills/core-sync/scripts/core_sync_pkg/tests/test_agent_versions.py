@@ -11,10 +11,10 @@ EXPECTED_SOURCE_VERSIONS: dict[str, str] = {
     "atrium.md": "1.4.0",
     "augur.md": "1.2.2",
     "bastion.md": "1.7.0",
-    "crucible.md": "1.8.0",
+    "crucible.md": "1.8.1",
     "forge.md": "1.6.0",
     "herald.md": "1.4.3",
-    "inquisitor.md": "1.5.0",
+    "inquisitor.md": "1.5.1",
     "investigator.md": "1.3.2",
     "ledger.md": "1.4.2",
     "lumen.md": "1.2.1",
@@ -23,7 +23,7 @@ EXPECTED_SOURCE_VERSIONS: dict[str, str] = {
     "scribe.md": "1.2.2",
     "sentinel.md": "1.14.1",
     "vault.md": "1.4.3",
-    "warden.md": "1.5.2",
+    "warden.md": "1.5.3",
 }
 
 
