@@ -1,7 +1,7 @@
 """Behavior tests for static destination reconciliation blocker content.
 
 Run: uv run --frozen --group dev pytest \
-    .opencode/skills/core-sync/scripts/test_core_sync_reconcile_blocker.py
+    .opencode/skills/core-sync/scripts/core_sync_pkg/domain/test_reconcile_blocker.py
 """
 
 from __future__ import annotations
@@ -40,3 +40,13 @@ class ReconcileBlockerContentTests:
         ):
             assert step in body
         assert "delete this entire blocker block" in body
+
+    def test_block_body_carries_v2_migration_and_mcp_restore_guidance(self) -> None:
+        body = RECONCILE_BODY
+        assert "`opencode.jsonc`" in body
+        assert "OpenCode V1 layout" in body
+        assert "migrate the file to the V2 layout" in body
+        assert "replaces the source-owned `mcp` key wholesale" in body
+        assert "restore any MCP server this project had registered" in body
+        assert "keep every server the core registers" in body
+        assert "never leave a registered MCP server silently dropped" in body
