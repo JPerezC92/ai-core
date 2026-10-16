@@ -4,7 +4,7 @@
 > **Created:** 2026-09-14
 > **Title:** OpenCode model configuration
 > **Status:** active
-> **version:** 1.1.0
+> **version:** 1.2.0
 > **Epic:** developer-tooling
 > **Affected areas:** `.opencode/skills/op-model/`, `opencode.json`, `opencode.jsonc`
 
@@ -19,11 +19,11 @@
 
 ## Scenario
 
-- The maintainer names a model family. The skill resolves it from live `opencode models --verbose` output, presents each candidate with its identifier, provider, and cost, asks when more than one provider matches, and updates only the selected agent's model field with a verified `provider/model` value.
+- The maintainer names a model family. The skill resolves it from live `opencode models` output and presents each candidate with its `provider/model` selector — plus its in/out cost when the live source provides one — asks when more than one provider matches, and updates only the selected agent's model field with a verified `provider/model` value.
 
 ## Acceptance criteria
 
-- ✅ **AC1:** Each available model is presented with its identifier, provider, and in/out cost, so the maintainer can compare candidates before choosing.
+- ✅ **AC1:** Each available model is presented with its `provider/model` selector (identifier and provider), plus its in/out cost when the live source provides one, so the maintainer can compare candidates before choosing.
 - ✅ **AC2:** Model resolution uses live `opencode models` output as the only authority for what is available; no model identifier is supplied from memory or assumption.
 - ✅ **AC3:** When more than one provider offers a matching model, the maintainer is asked to choose rather than having one selected for them.
 - ✅ **AC4:** The configuration change is limited to the selected agent's model field, is parse-verified after writing, and is followed by a restart instruction.
@@ -32,12 +32,12 @@
 
 ## Proof
 
-- AC1 → `.opencode/skills/op-model/scripts/op_model_lookup/infrastructure/cli.py` `render_selection` · `.opencode/skills/op-model/scripts/op_model_lookup/e2e/test_models_cli.py` grouped-cost presentation cases
+- AC1 → `.opencode/skills/op-model/scripts/op_model_lookup/infrastructure/cli.py` `render_selection` · `.opencode/skills/op-model/scripts/op_model_lookup/infrastructure/test_cli.py` grouped cost-segment cases (cost shown only when the source provides it) · `.opencode/skills/op-model/scripts/op_model_lookup/e2e/test_models_cli.py` selector-listing cases
 - AC2 → `.opencode/skills/op-model/SKILL.md` `### Steps` items 2–3
 - AC3 → `.opencode/skills/op-model/SKILL.md` `### Steps` item 3
 - AC4 → `.opencode/skills/op-model/SKILL.md` `### Steps` items 4–9
 - AC5 → `.opencode/skills/op-model/SKILL.md` `### Steps` item 6 · `### Troubleshooting` missing-config confirmation rule
-- AC6 → `.opencode/skills/op-model/scripts/op_model_lookup/domain/catalog.py` `parse_records`, `matches` · `.opencode/skills/op-model/scripts/op_model_lookup/domain/test_catalog.py` malformed-block recovery · `.opencode/skills/op-model/scripts/op_model_lookup/e2e/test_models_cli.py` no-match/error outcomes
+- AC6 → `.opencode/skills/op-model/scripts/op_model_lookup/domain/catalog.py` `parse_records`, `matches` · `.opencode/skills/op-model/scripts/op_model_lookup/domain/test_catalog.py` malformed-line recovery · `.opencode/skills/op-model/scripts/op_model_lookup/e2e/test_models_cli.py` no-match/error outcomes
 
 ## Constraints
 
@@ -50,14 +50,16 @@
 <!-- project:begin -->
 ## Local evidence
 
-- **AC1:** Grouped rendering shows both labeled costs per 1M tokens and its end-to-end cases cover the presentation. The repaired helper (`numeric-fix-1`/`interpreter-fix-1`) passed current Python/test architecture `[PASS]` and `crucible-suite-3` `uv run --frozen --group dev pytest -q` → exit 0 (607 passed). This establishes AC1 alongside AC6; final-candidate acceptance and the matching history reference remain pending for finalization.
-- **AC6:** Fresh review found an uncaught `OverflowError` on a sufficiently large valid JSON cost integer; the promised `0.0` fallback was incomplete. `numeric-fix-1` added `OverflowError` to the narrow conversion handler and a parameterized regression over both cost fields (real `10**400` input), asserting `0.0` for the affected cost, preservation of the other cost, model retention, empty issues and a surviving neighbour. `bastion-corrections-review-1` Python architecture `[PASS]`; `crucible-corrections-review-1` test architecture `[PASS]`; `crucible-suite-3` `uv run --frozen --group dev pytest -q` → exit 0 (607 passed). Current evidence establishes AC6.
+- **AC1 (pre-V2 snapshot):** Grouped rendering then showed both labeled costs per 1M tokens and its end-to-end cases covered that presentation; `crucible-suite-3` `uv run --frozen --group dev pytest -q` → exit 0 (607 passed). This predates the V2 migration: the current V2 candidate is the 599-passed run in Revision tracking, where the selector and cost-when-provided clauses are proven by `infrastructure/test_cli.py`. Final-candidate acceptance and the matching history reference remain pending.
+- **AC6 (pre-V2 snapshot):** The malformed-record repairs (`numeric-fix-1`/`interpreter-fix-1`, including the `OverflowError` `0.0` fallback) passed Python/test architecture `[PASS]`; `crucible-suite-3` `uv run --frozen --group dev pytest -q` → exit 0 (607 passed). Under V2 the parser skips non-selector lines and reports no-match/no-models; the current candidate is the 599-passed run in Revision tracking. Final-candidate acceptance remains pending.
 - **AC5:** Prior source Proof recorded Vault 🔐 (Catalog Steward) `[PASS]` on 2026-10-09 for the missing-config confirmation preview. This retained source observation is not a fresh execution.
 
 ## Revision tracking
 
 - 2026-10-15 — Shared-region preparation and portable proving-reference cleanup await final-candidate acceptance and a delivery-matching history reference. Existing criteria and identities are retained; no new model or config change is claimed.
 - 2026-10-15 — The helper code and regression package were changed under the approved programming scope; model selection and runtime configuration were not changed. Current fallback/fixture findings were repaired through `numeric-fix-1`/`interpreter-fix-1` with fresh owner gates and `crucible-suite-3` exit 0 (607 passed), establishing AC1/AC6. Matching history remains required for finalization; final-candidate acceptance stays pending.
+- 2026-10-16 — Approved V2-compatibility revision (v1.2.0): the skill resolves from live `opencode models` output and presents each candidate as a `provider/model` selector, with in/out cost only when the live source provides it (OpenCode V2 `opencode models` emits plain selectors with no cost). AC2–AC6 and Constraints are unchanged. The Proof pointers for the V2 parser refresh and the matching delivery reference remain pending final-candidate acceptance; no Change log entry until then.
+- 2026-10-16 — Current frozen V2 candidate evidence: `uv run --frozen --group dev pytest -q` → 599 passed, exit 0; `infrastructure/test_cli.py` proves the AC1 cost-when-provided clause. The earlier 607-passed entries above are the pre-V2 snapshot; final-candidate acceptance and the matching delivery reference remain pending.
 
 ## Change log
 

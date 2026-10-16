@@ -1,0 +1,201 @@
+{
+    "$schema": "https://opencode.ai/config.json",
+    "autoupdate": true,
+    "agent": {
+        "plan": {
+            "model": "deepseek/deepseek-v4-flash",
+            "color": "warning",
+            "permission": {
+                "question": "allow",
+                "edit": "deny"
+            }
+        },
+        "build": {
+            "model": "zai-coding-plan/glm-4.7",
+            "color": "secondary",
+            "permission": {
+                "question": "allow"
+            }
+        },
+        "crucible": {
+            "permission": {
+                "bash": {
+                    "*": "deny",
+                    "pnpm install": "allow",
+                    "uv run --frozen --group dev pytest -q": "allow",
+                    // Read-only discovery so the test architect can inspect the tree
+                    // with `rg`/`ls`. Use Glob/Grep for filesystem discovery. Editing,
+                    // network, and interpreter access stay denied. TUI restart required.
+                    "rg *": "allow",
+                    "rg *--pre*": "deny",
+                    "ls *": "allow",
+                    "wc *": "allow",
+                    "git log *": "allow",
+                    "git show *": "allow",
+                    "git diff *": "allow"
+                }
+            }
+        }
+    },
+    // Project instructions (optional — point at your own docs):
+    // "instructions": [
+    //     "./knowledge/cipher-hard-rules.md",
+    //     "./knowledge/operational-gates.md"
+    // ],
+    "permission": {
+        "read": {
+            "*": "allow",
+            "*.env": "deny",
+            "*.env.*": "deny"
+        },
+        "glob": "allow",
+        "grep": "allow",
+        "webfetch": "allow",
+        "websearch": "allow",
+        "task": "allow",
+        "skill": "allow",
+        "lsp": "allow",
+        "question": "deny",
+        "edit": "allow",
+        "external_directory": {
+            "*": "allow"
+        },
+        "bash": {
+            "*": "allow",
+            "rm *": "ask",
+            "rm -rf *": "ask",
+            "rm -rf /*": "deny",
+            "rm -rf ~*": "deny",
+            "rm -r /*": "deny",
+            "rm -fr /*": "deny",
+            "rm -f -r /*": "deny",
+            "rm -r -f /*": "deny",
+            "rm -r ~*": "deny",
+            "rm -fr ~*": "deny",
+            "rm -f -r ~*": "deny",
+            "rm -r -f ~*": "deny",
+            "mv *": "ask",
+            "cp *": "ask",
+            "chmod *": "ask",
+            "chown *": "ask",
+            "sudo *": "deny",
+            "git push *": "ask",
+            "git push --force *": "deny",
+            "git push --force": "deny",
+            "git push -f *": "deny",
+            "git push -f": "deny",
+            "git reset --hard *": "deny",
+            "git clean -fd *": "deny",
+            "git branch -D *": "ask",
+            "gh pr merge *": "deny",
+            "gh repo delete *": "deny",
+            "dd *of=/dev/*": "deny",
+            "mkfs*": "deny",
+            "chmod -R * /*": "deny",
+            "chown -R * /*": "deny",
+            "shutdown*": "deny",
+            "reboot*": "deny",
+            // Read-only tools. Broad allow first, then the narrow deny that
+            // disables its mutating mode under last-match-wins.
+            "jq *": "allow",
+            "rg *": "allow",
+            "rg *--pre*": "deny",
+            "ast-grep *": "allow",
+            "ast-grep *--rewrite*": "deny",
+            "ast-grep *--update-all*": "deny",
+            "ast-grep *-U*": "deny",
+            // `sg` is ast-grep's deprecated alias and collides with util-linux
+            // `sg` (switch-group); deny the name and use `ast-grep` only.
+            "sg *": "deny",
+            // Project virtual environment only: uv run is allowed, uvx is not.
+            "uv run *": "allow",
+            "uv run *ruff*--fix*": "deny",
+            "ruff *--fix*": "deny",
+            // Mutating package/format operations are denied regardless of wrapper.
+            "*pip install*": "deny",
+            "*pip3 install*": "deny",
+            "*python -m pip *": "deny",
+            "*ruff format*": "deny",
+            "*ruff format --check*": "allow",
+            "uvx *": "deny",
+            "uv tool run *": "deny",
+            // Stash safety gate (plan-enforce) — model agents may
+            // `git stash push`/`save` (park work) and `git stash apply`
+            // (recover, non-destructive — the entry survives as a durable
+            // backup). `pop`/`drop`/`clear`/`update-ref` stay denied below;
+            // stash erasure is user-only, run manually in the user's terminal.
+            // Read-only inventory allows follow.
+            //
+            // NOTE: The OpenCode TUI must be RESTARTED for any permission change
+            // to take effect. Active sessions do NOT reload the `bash` block at
+            // runtime.
+            "git stash *": "deny",
+            "git stash push": "allow",
+            "git stash push *": "allow",
+            "git stash save": "allow",
+            "git stash save *": "allow",
+            "git stash apply": "allow",
+            "git stash apply *": "allow",
+            "git update-ref *": "deny",
+            "git stash": "deny",
+            "git reflog *": "deny",
+            "git gc": "deny",
+            "git gc *": "deny",
+            "git prune": "deny",
+            "git prune *": "deny",
+            "git repack": "deny",
+            "git repack *": "deny",
+            "git symbolic-ref refs/stash *": "deny",
+            "git stash list": "allow",
+            "git stash show -u": "allow",
+            "git stash show -u *": "allow",
+            "mv plans/*-*": "allow",
+            // Redirect denies LAST so no later allow can shadow them; narrowed to
+            // catastrophic absolute targets so /tmp and /dev/null stay usable.
+            // (A fork bomb is not expressible as a glob because the shell tool
+            // emits only the inner command nodes; accepted as a documented gap.)
+            "* > /etc/*": "deny",
+            "* >> /etc/*": "deny",
+            "* 2> /etc/*": "deny",
+            "* 2>> /etc/*": "deny",
+            "* &> /etc/*": "deny",
+            "* > /boot/*": "deny",
+            "* > /usr/*": "deny",
+            "* > /root/*": "deny",
+            "* > /home/*": "deny",
+            "* > /var/*": "deny",
+            "* > /opt/*": "deny",
+            "* > /dev/sd*": "deny"
+            // NOTE: the OpenCode TUI must be RESTARTED for these changes to take effect.
+        }
+    },
+    "compaction": {
+        "auto": true,
+        "prune": true
+    },
+    "mcp": {
+        "memories": {
+            "type": "local",
+            "command": ["npx", "-y", "@memories.sh/cli", "serve"]
+        },
+        "context7": {
+            "type": "remote",
+            "url": "https://mcp.context7.com/mcp",
+            "headers": {
+                "CONTEXT7_API_KEY": "{file:./.secrets/context7-api-key}"
+            },
+            "enabled": true
+        }
+    }
+    // MCP servers (per-project — add your own here on copy). Example (generic):
+    // "chrome-devtools": {
+    //     "type": "local",
+    //     "command": ["npx", "-y", "chrome-devtools-mcp@latest"]
+    // },
+    // "context7": {
+    //     "type": "remote",
+    //     "url": "https://mcp.context7.com/mcp",
+    //     "headers": { "CONTEXT7_API_KEY": "YOUR_API_KEY" },
+    //     "enabled": true
+    // }
+}

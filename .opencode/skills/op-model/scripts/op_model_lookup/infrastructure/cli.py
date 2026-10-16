@@ -37,7 +37,7 @@ def _render_record(model: Model) -> str:
 
 
 def _render_grouped(selection: Sequence[Model]) -> str:
-    """Render the models grouped by provider, with both costs per 1M tokens."""
+    """Render the models grouped by provider, noting name and cost only when known."""
     by_provider: dict[str, list[Model]] = {}
     for model in selection:
         by_provider.setdefault(model.provider, []).append(model)
@@ -45,10 +45,12 @@ def _render_grouped(selection: Sequence[Model]) -> str:
     for provider in sorted(by_provider):
         lines.append(f"## {provider}")
         for model in sorted(by_provider[provider], key=lambda item: item.config):
-            lines.append(
-                f"  {model.config} | {model.name} | "
-                f"in:{model.cost_in} per 1M | out:{model.cost_out} per 1M"
-            )
+            line = f"  {model.config}"
+            if model.name != model.id:
+                line += f" | {model.name}"
+            if model.cost_in != 0.0 or model.cost_out != 0.0:
+                line += f" | in:{model.cost_in} per 1M | out:{model.cost_out} per 1M"
+            lines.append(line)
         lines.append("")
     return "\n".join(lines) + "\n"
 

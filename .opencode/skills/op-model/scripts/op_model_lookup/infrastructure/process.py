@@ -1,4 +1,4 @@
-"""Process adapter: fetch `opencode models --verbose` output and map it to models."""
+"""Process adapter: fetch `opencode models` output and map it to models."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from op_model_lookup.domain.catalog import (
 
 
 class OpencodeModelSource:
-    """ModelSource adapter over the local `opencode models --verbose` process."""
+    """ModelSource adapter over the local `opencode models` process."""
 
     def fetch(self) -> tuple[Model, ...]:
         """Run the checked live command and return the valid parsed models.
@@ -22,7 +22,7 @@ class OpencodeModelSource:
         """
         try:
             completed = subprocess.run(
-                ["opencode", "models", "--verbose"],
+                ["opencode", "models"],
                 capture_output=True,
                 text=True,
                 check=True,
@@ -34,11 +34,11 @@ class OpencodeModelSource:
             ) from exc
         except subprocess.CalledProcessError as exc:
             raise ModelSourceFailure(
-                f"ERROR: `opencode models --verbose` failed (exit {exc.returncode}):\n"
+                f"ERROR: `opencode models` failed (exit {exc.returncode}):\n"
                 f"{exc.stderr}"
             ) from exc
         except subprocess.TimeoutExpired as exc:
             raise ModelSourceFailure(
-                "ERROR: `opencode models --verbose` timed out."
+                "ERROR: `opencode models` timed out."
             ) from exc
         return parse_records(completed.stdout).models

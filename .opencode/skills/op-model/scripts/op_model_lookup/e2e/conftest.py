@@ -12,7 +12,7 @@ import pytest
 MODELS_SCRIPT = Path(__file__).resolve().parents[2] / "models.py"
 FAKE_OPENCODE_TEMPLATE = (
     "#!{interpreter}\n"
-    '"""Fake `opencode`: emit the controlled stdout payload and exit."""\n'
+    '"""Fake `opencode`: emit the controlled selector-line stdout payload and exit."""\n'
     "\n"
     "import sys\n"
     "\n"
@@ -27,11 +27,13 @@ def fake_opencode(
 ) -> Callable[[str], Path]:
     """Return an installer for a payload-controlled fake `opencode` on an isolated PATH.
 
-    The fake lives in ``tmp_path/bin`` with a literal absolute shebang from
-    ``sys.executable``, preserving the project virtual environment without
-    dereferencing its interpreter symlink or consulting PATH. PATH, HOME,
-    XDG_CONFIG_HOME and OPENCODE_CONFIG are redirected via monkeypatch, so no
-    installed or authenticated OpenCode and no real config is ever reachable.
+    The installed fake prints a controlled `opencode models` selector-line payload
+    (one `provider/model` per line) as its stdout. It lives in ``tmp_path/bin``
+    with a literal absolute shebang from ``sys.executable``, preserving the
+    project virtual environment without dereferencing its interpreter symlink or
+    consulting PATH. PATH, HOME, XDG_CONFIG_HOME and OPENCODE_CONFIG are
+    redirected via monkeypatch, so no installed or authenticated OpenCode and no
+    real config is ever reachable.
     """
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
@@ -45,7 +47,7 @@ def fake_opencode(
     monkeypatch.setenv("OPENCODE_CONFIG", str(tmp_path / "opencode.jsonc"))
 
     def install(payload: str) -> Path:
-        """Write the fake `opencode` emitting `payload` on stdout; return its path."""
+        """Write the fake `opencode` emitting the selector-line `payload`; return its path."""
         executable = bin_dir / "opencode"
         executable.write_text(
             FAKE_OPENCODE_TEMPLATE.format(
@@ -66,7 +68,7 @@ def run_models(
     """Return a bounded runner over the fake-`opencode` environment for `models.py`."""
 
     def run(payload: str, *args: str) -> subprocess.CompletedProcess[str]:
-        """Install `payload` as fake `opencode` output, then run `models.py` with `args`."""
+        """Install the selector-line `payload` as fake `opencode` output, then run `models.py` with `args`."""
         fake_opencode(payload)
         return subprocess.run(
             [sys.executable, str(MODELS_SCRIPT), *args],

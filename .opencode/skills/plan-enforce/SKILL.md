@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.20.0
+  version: 1.20.1
 ---
 <!-- core:begin -->
 
@@ -150,7 +150,7 @@ Every phase runbook has one non-empty `## Verify commands` Markdown table with e
 
 #### Non-TypeScript test files
 
-Crucible 🔥 (Test Architect) executes each declared approved test command; Forge 🔨 (Implementer) writes tests; Bastion 🧱 (Backend & Scripts Architect) audits applicable Python implementation. A plan editing a Python test in reviewed discovery areas must list the reviewed whole-suite command (Project extensions), obtain Bastion 🧱 (Backend & Scripts Architect) `[PASS]` on applicable implementation edits, then dispatch Crucible 🔥 (Test Architect) to return `[PASS]` or `[FAIL]`. `[UNCERTAIN]` is not acceptable. Cipher 🔓 (Lead Orchestrator) checks the exact command before dispatch; runner permissions are in the root opencode config under `agent.crucible.permission` and gate command text, not sandbox execution. Existing TypeScript / Atrium 🏛️ (Frontend Architect) and Crucible 🔥 (Test Architect) gates remain unchanged.
+Crucible 🔥 (Test Architect) executes each declared approved test command; Forge 🔨 (Implementer) writes tests; Bastion 🧱 (Backend & Scripts Architect) audits applicable Python implementation. A plan editing a Python test in reviewed discovery areas must list the reviewed whole-suite command (Project extensions), obtain Bastion 🧱 (Backend & Scripts Architect) `[PASS]` on applicable implementation edits, then dispatch Crucible 🔥 (Test Architect) to return `[PASS]` or `[FAIL]`. `[UNCERTAIN]` is not acceptable. Cipher 🔓 (Lead Orchestrator) checks the exact command before dispatch; runner permissions are in the root opencode config under `agents.crucible.permissions` and gate command text, not sandbox execution. Existing TypeScript / Atrium 🏛️ (Frontend Architect) and Crucible 🔥 (Test Architect) gates remain unchanged.
 
 ### User stories
 
@@ -289,7 +289,7 @@ This project's reviewed whole-suite test command is `uv run --frozen --group dev
 
 ### Test file pattern and harness config
 
-This project's Python test-file pattern is `test_*.py`. This project's root opencode config is `opencode.jsonc`; Crucible 🔥 (Test Architect) runner permissions live under `agent.crucible.permission`.
+This project's Python test-file pattern is `test_*.py`. This project's root opencode config is `opencode.jsonc`; Crucible 🔥 (Test Architect) runner permissions live under `agents.crucible.permissions`.
 
 ### Plan validator script
 
