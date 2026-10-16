@@ -94,6 +94,95 @@ MERGE_DESTINATION_MERGED = (
     "}\n"
 )
 
+MERGE_MCP_SOURCE = (
+    "{\n"
+    '  "mcp": {\n'
+    '    "servers": {\n'
+    '      "core": {\n'
+    '        "command": "core"\n'
+    "      },\n"
+    '      "shared": {\n'
+    '        "command": "source-shared"\n'
+    "      }\n"
+    "    }\n"
+    "  }\n"
+    "}\n"
+)
+
+MERGE_MCP_DESTINATION = (
+    "{\n"
+    "  // keep this comment\n"
+    '  "mcp": {\n'
+    '    "enabled": true,\n'
+    '    "servers": {\n'
+    '      "shared": {\n'
+    '        "command": "destination-shared"\n'
+    "      },\n"
+    '      "local": {\n'
+    '        "command": "local"\n'
+    "      }\n"
+    "    }\n"
+    "  }\n"
+    "}\n"
+)
+
+MERGE_MCP_DESTINATION_CURRENT = (
+    "{\n"
+    '  "mcp": {\n'
+    '    "enabled": true,\n'
+    '    "servers": {\n'
+    '      "core": {\n'
+    '        "command": "core"\n'
+    "      },\n"
+    '      "shared": {\n'
+    '        "command": "source-shared"\n'
+    "      },\n"
+    '      "local": {\n'
+    '        "command": "local"\n'
+    "      }\n"
+    "    }\n"
+    "  }\n"
+    "}\n"
+)
+
+MERGE_MCP_RESULT: dict[str, object] = {
+    "mcp": {
+        "enabled": True,
+        "servers": {
+            "core": {"command": "core"},
+            "shared": {"command": "source-shared"},
+            "local": {"command": "local"},
+        },
+    }
+}
+
+MERGE_MCP_DESTINATION_MISSING_CORE = (
+    "{\n"
+    '  "mcp": {\n'
+    '    "servers": {\n'
+    '      "local": {\n'
+    '        "command": "local"\n'
+    "      }\n"
+    "    }\n"
+    "  }\n"
+    "}\n"
+)
+
+MERGE_MCP_DESTINATION_STALE_SHARED = (
+    "{\n"
+    '  "mcp": {\n'
+    '    "servers": {\n'
+    '      "core": {\n'
+    '        "command": "core"\n'
+    "      },\n"
+    '      "shared": {\n'
+    '        "command": "stale"\n'
+    "      }\n"
+    "    }\n"
+    "  }\n"
+    "}\n"
+)
+
 ROOT_TEXT = "# Root runtime\n\nIntro paragraph.\n\nLast line.\n"
 
 
@@ -148,10 +237,9 @@ EXPECTED_RECONCILE_BODY = (
     "> **Config file (`opencode.jsonc`) — finish the migration.** A core "
     "update merges the core's top-level keys into this project's "
     "`opencode.jsonc`. If this project is still on the OpenCode V1 layout, "
-    "migrate the file to the V2 layout. That merge replaces the source-owned "
-    "`mcp` key wholesale, so restore any MCP server this project had registered "
-    "that is now missing, keep every server the core registers, and never leave "
-    "a registered MCP server silently dropped.\n"
+    "migrate the file to the V2 layout. The merge keeps this project's own "
+    "MCP servers alongside the core-registered ones, with a same-named MCP "
+    "server entry core-wins; every other key is still replaced wholesale.\n"
     ">\n"
     "> **To finish.** When `pending:` is empty, **delete this entire blocker "
     "block** (from `<!-- core:reconcile:begin -->` to "

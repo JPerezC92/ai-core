@@ -13,6 +13,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from _core_sync_testkit import (  # noqa: E402
     MERGE_DESTINATION_MERGED,
+    MERGE_MCP_DESTINATION_CURRENT,
+    MERGE_MCP_DESTINATION_MISSING_CORE,
+    MERGE_MCP_DESTINATION_STALE_SHARED,
+    MERGE_MCP_SOURCE,
     REV_A,
     _check_args,
     _merge_setup,
@@ -28,6 +32,30 @@ class MergeCheckTests:
             tmp_path, destination_content=MERGE_DESTINATION_MERGED
         )
         assert main(_check_args(source, destination, bindings_path, REV_A)) == 0
+
+    def test_current_when_destination_added_mcp_server(self, tmp_path: Path) -> None:
+        source, destination, bindings_path = _merge_setup(
+            tmp_path,
+            source_content=MERGE_MCP_SOURCE,
+            destination_content=MERGE_MCP_DESTINATION_CURRENT,
+        )
+        assert main(_check_args(source, destination, bindings_path, REV_A)) == 0
+
+    def test_drift_when_core_mcp_server_missing(self, tmp_path: Path) -> None:
+        source, destination, bindings_path = _merge_setup(
+            tmp_path,
+            source_content=MERGE_MCP_SOURCE,
+            destination_content=MERGE_MCP_DESTINATION_MISSING_CORE,
+        )
+        assert main(_check_args(source, destination, bindings_path, REV_A)) == 1
+
+    def test_drift_when_mcp_server_value_differs(self, tmp_path: Path) -> None:
+        source, destination, bindings_path = _merge_setup(
+            tmp_path,
+            source_content=MERGE_MCP_SOURCE,
+            destination_content=MERGE_MCP_DESTINATION_STALE_SHARED,
+        )
+        assert main(_check_args(source, destination, bindings_path, REV_A)) == 1
 
     def test_drift_when_source_key_missing(self, tmp_path: Path) -> None:
         source, destination, bindings_path = _merge_setup(

@@ -126,6 +126,10 @@ A destination's **active runtime** carries destination-only identity: its root r
 
 Each destination records its bound source files and the pinned core revision in its own `.aicore/core.yaml` bindings file, with its reconciliation reports under `.aicore/reconciliation/`. AICore keeps no adopter registry and no cross-destination verification checker — destination bindings are destination-owned state. Every other shipped AICore surface stays neutral and names no adopter (local plans and gitignored temporal output are not shipped).
 
+### Destination modification boundary (HARD RULE)
+
+Running a synchronization is the *entire* operator action for a destination: run the core-sync tool (`init`/`apply`/`check`) and read its report. Never hand-edit a destination file — no `project`-region edits, no marker edits, no writing or removing the reconciliation blocker, no clearing or editing `pending:`, and no git or other mutation of the destination. The `project` region, `pending`, and the blocker are destination-owned; the destination project reconciles them itself, using its own agents. A `check` reporting drift because `pending` is non-empty is the correct, complete handoff — do not "finish" it. Report the tool's result and stop.
+
 ### Environment constraints
 
 - `python3` is the interpreter (not `python`); skill tests run with `uv run --frozen --group dev pytest`; the root UV environment locks runtime dependencies (PyYAML) separately from the `dev` group (pytest).

@@ -35,6 +35,45 @@ class IsMergedTests:
     def test_ignores_destination_comments_and_formatting(self) -> None:
         assert is_merged('{"theme":"dark"}', '{\n  // c\n  "theme": "dark"\n}\n')
 
+    def test_mcp_key_allows_extra_destination_server(self) -> None:
+        source = '{"mcp": {"servers": {"core": {"command": "core"}}}}'
+        destination = (
+            '{"mcp": {"servers": {"core": {"command": "core"}, '
+            '"local": {"command": "local"}}}}'
+        )
+        assert is_merged(source, destination) is True
+
+    def test_mcp_key_false_when_core_server_missing(self) -> None:
+        source = '{"mcp": {"servers": {"core": {"command": "core"}}}}'
+        destination = '{"mcp": {"servers": {"local": {"command": "local"}}}}'
+        assert is_merged(source, destination) is False
+
+    def test_mcp_key_false_when_server_value_differs(self) -> None:
+        source = '{"mcp": {"servers": {"core": {"command": "core"}}}}'
+        destination = '{"mcp": {"servers": {"core": {"command": "other"}}}}'
+        assert is_merged(source, destination) is False
+
+    def test_mcp_key_ignores_destination_non_servers_children(self) -> None:
+        source = '{"mcp": {"servers": {"core": {}}, "core_flag": true}}'
+        destination = (
+            '{"mcp": {"servers": {"core": {}, "local": {}}, "enabled": true}}'
+        )
+        assert is_merged(source, destination) is True
+
+    def test_mcp_key_compared_exactly_when_not_an_object(self) -> None:
+        assert is_merged('{"mcp": "a"}', '{"mcp": "a"}') is True
+        assert is_merged('{"mcp": "a"}', '{"mcp": {"servers": {}}}') is False
+
+    def test_mcp_key_compared_exactly_without_servers_object(self) -> None:
+        source = '{"mcp": {"enabled": true}}'
+        destination = '{"mcp": {"enabled": true, "servers": {"core": {}}}}'
+        assert is_merged(source, destination) is False
+
+    def test_mcp_key_compared_exactly_when_servers_not_object(self) -> None:
+        source = '{"mcp": {"servers": []}}'
+        assert is_merged(source, '{"mcp": {"servers": []}}') is True
+        assert is_merged(source, '{"mcp": {"servers": [1]}}') is False
+
     def test_empty_source_is_always_merged(self) -> None:
         assert is_merged("{}", '{"anything": [1, 2]}') is True
 
