@@ -110,3 +110,29 @@ class RawInitEnrollmentTests:
         assert not missing_parent.exists()
         assert not destination_path.exists()
         assert not report_path.exists()
+
+    def test_bind_cleared_raw_target_creates_missing_parent(
+        self, tmp_path: Path
+    ) -> None:
+        source = tmp_path / "source"
+        destination = tmp_path / "destination"
+        destination.mkdir()
+        raw_bytes = b'{"nested": true}\n'
+        _write_bytes_file(source, "nested/deep/data.json", raw_bytes)
+        bindings_path = tmp_path / "bindings.yaml"
+        missing_parent = destination / "nested/deep"
+        destination_path = missing_parent / "data.json"
+        args = _init_args(source, destination, bindings_path, REV_A)
+        args.append("--bind-cleared")
+
+        assert not missing_parent.exists()
+        assert main(args) == 0
+
+        assert missing_parent.is_dir()
+        assert destination_path.read_bytes() == raw_bytes
+        updated = load_bindings(bindings_path)
+        assert updated is not None
+        assert updated["bindings"] == [
+            _binding_entry("nested/deep/data.json", ["nested/deep/data.json"])
+        ]
+        assert updated["pending"] == []

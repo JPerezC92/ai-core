@@ -12,9 +12,12 @@ from _core_sync_testkit import (  # noqa: E402
     REV_A,
     REV_B,
     SOURCE_NO_MARKERS,
+    _binding_entry,
     _bindings_document,
+    _bindings_with_entries,
     _init_args,
     _raw_setup,
+    _write_bytes_file,
     _write_file,
 )
 from core_sync_pkg.domain.reconciliation import (  # noqa: E402
@@ -131,6 +134,42 @@ class InitMissingInputsTests:
         assert not report_path.exists()
         assert main(args) == 1
         assert {path: path.read_bytes() for path in unchanged} == unchanged
+        assert not destination_path.exists()
+        assert not report_path.exists()
+
+    def test_init_missing_raw_destination_parent_returns_one_without_creating_tree(
+        self, tmp_path: Path
+    ) -> None:
+        source = tmp_path / "source"
+        destination = tmp_path / "destination"
+        _write_bytes_file(source, "payload.bin", b"\x00raw\xff\r\n")
+        destination.mkdir()
+        root_path = _write_file(
+            destination, "CLAUDE.md", "# Root remains unchanged\n"
+        )
+        bindings_path = tmp_path / "bindings.yaml"
+        save_bindings(
+            bindings_path,
+            _bindings_with_entries(
+                REV_B,
+                [_binding_entry("payload.bin", ["nested/payload.bin"], "raw")],
+                root="CLAUDE.md",
+            ),
+        )
+        missing_parent = destination / "nested"
+        destination_path = missing_parent / "payload.bin"
+        report_path = reconciliation_report_path(bindings_path)
+        unchanged = {
+            root_path: root_path.read_bytes(),
+            bindings_path: bindings_path.read_bytes(),
+        }
+
+        assert not missing_parent.exists()
+        assert not report_path.exists()
+        assert main(_init_args(source, destination, bindings_path, REV_A)) == 1
+        assert {path: path.read_bytes() for path in unchanged} == unchanged
+        assert sorted(path.name for path in destination.iterdir()) == ["CLAUDE.md"]
+        assert not missing_parent.exists()
         assert not destination_path.exists()
         assert not report_path.exists()
 

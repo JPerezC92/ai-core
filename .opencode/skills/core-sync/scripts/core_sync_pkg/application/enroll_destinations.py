@@ -209,6 +209,27 @@ class EnrollDestinations:
                 f"source not cleared for distribution: {', '.join(names)}",
             )
 
+        # Pre-write validation: a non-bulk raw target whose parent directory is
+        # absent is drift, and must fail before any directory is created. Only
+        # bulk-cleared raw targets may create their parent (mirroring the region
+        # branch); explicit and persisted raw targets keep the precondition.
+        for entry in bindings["bindings"]:
+            if mode_of.get(entry["source"]) != MODE_RAW:
+                continue
+            for destination in entry["destinations"]:
+                if destination in bulk_new_raw:
+                    continue
+                destination_path = destination_dir / destination
+                if self._paths.exists(destination_path) or self._paths.is_symlink(
+                    destination_path
+                ):
+                    continue
+                if not self._paths.is_dir(destination_path.parent):
+                    return DomainError(
+                        CODE_DRIFT,
+                        f"missing destination parent: {destination_path.parent}",
+                    )
+
         writes: list[tuple[Path, str]] = []
         raw_writes: list[tuple[Path, bytes]] = []
         entries: list[ReconciliationEntry] = []
@@ -235,7 +256,9 @@ class EnrollDestinations:
                             and not self._paths.exists(destination_path)
                             and not self._paths.is_symlink(destination_path)
                         ):
-                            if not self._paths.is_dir(destination_path.parent):
+                            if destination in bulk_new_raw:
+                                self._paths.ensure_dir(destination_path.parent)
+                            elif not self._paths.is_dir(destination_path.parent):
                                 return DomainError(
                                     CODE_DRIFT,
                                     "missing destination parent: "

@@ -55,6 +55,7 @@ def _clearance_document() -> ClearanceDocument:
         "schema": CLEARANCE_SCHEMA,
         "cleared": {
             ".opencode/agents/atrium.md": {"mode": "region"},
+            ".opencode/skills/foo/note.md": {"mode": "raw"},
             "opencode.jsonc": {"mode": "raw"},
             "AGENTS.md": {"mode": "region", "role": "root"},
         },
@@ -70,6 +71,7 @@ def _source_with_clearance(tmp_path: Path) -> Path:
     """Build the fixture source tree with its clearance document."""
     source = tmp_path / "source"
     _write_file(source, ".opencode/agents/atrium.md", AGENT_MARKED)
+    _write_bytes_file(source, ".opencode/skills/foo/note.md", b"note bytes\n")
     _write_bytes_file(source, "opencode.jsonc", b"{\n}\n")
     _write_file(source, "AGENTS.md", ROOT_MARKED)
     (source / CLEARANCE).write_text(
@@ -107,12 +109,17 @@ class BindClearedBulkEnrollmentTests:
             encoding="utf-8"
         )
         assert (destination / "opencode.jsonc").read_bytes() == b"{\n}\n"
+        assert (destination / ".opencode/skills/foo").is_dir()
+        assert (destination / ".opencode/skills/foo/note.md").read_bytes() == (
+            b"note bytes\n"
+        )
         assert bindings.is_file()
         updated = load_bindings(bindings)
         assert updated is not None
         assert {entry["source"] for entry in updated["bindings"]} == {
             "AGENTS.md",
             ".opencode/agents/atrium.md",
+            ".opencode/skills/foo/note.md",
             "opencode.jsonc",
         }
 
