@@ -4,7 +4,7 @@
 > **Created:** 2026-09-12
 > **Title:** Register-first incident identification
 > **Status:** active
-> **version:** 1.1.1
+> **version:** 1.2.0
 > **Epic:** incident-diagnostics
 > **Affected areas:** `.opencode/skills/ticket-runbook/`, `knowledge/symptoms.md`, `knowledge/problems.md`, `knowledge/agents.md`, `.opencode/agents/investigator.md`, `.opencode/agents/ledger.md`, `.opencode/agents/quill.md`, `.opencode/agents/scribe.md`
 
@@ -14,12 +14,15 @@
 
 ## Goal
 
-- **G:** Incident identification is deterministic: ticket signal → symptom class → known problem → `exact` | `structural` | `no_match`.
-  - Done when: an empty problem register yields `no_match` and a full investigation; exact/structural require a cited problem identifier; working analysis uses one bounded working set; an evidence-backed register draft receives exact `approved` / `aprobado` authorization before gated mutation; a non-destructive pre-close gate passes before semantic close-out confirmation and authorized collapse; post-collapse validation leaves one durable ticket record plus local and remote image locations.
+- **G:** Normal incident identification is deterministic: ticket signal → symptom class → known problem → `exact` | `structural` | `no_match`; an explicit scaffold-only invocation prepares the same working set without starting identification or investigation.
+  - Done when: normal identification against an empty problem register yields `no_match` and a full investigation; exact/structural require a cited problem identifier; scaffold-only invocation returns a validated bounded working set with identification pending; an evidence-backed register draft receives exact `approved` / `aprobado` authorization before gated mutation; a non-destructive pre-close gate ignores instructional comment examples but validates active citations; semantic close-out selects our own posted responses and accounts for every evidence artifact before authorized collapse; post-collapse validation leaves one durable ticket record plus local and remote image locations.
 
 ## Scenario
 
-- A new incident arrives. Cipher 🔓 (Lead Orchestrator) runs `ticket-runbook`. The skill classifies a symptom, matches at most one known problem, and writes the working analysis. When root cause is confirmed, Scribe ✍️ (Docs & Problems Manager) prepares the register-admission draft immediately; after exact `approved` / `aprobado` user approval, Cipher 🔓 (Lead Orchestrator) applies it through the destination's gated tool before collapse. At close, Ledger 📒 (Record Keeper) runs the non-destructive pre-close gate, confirms the earlier register mutation plus query/evidence/content retention, obtains the exact `Close out now` authorization, removes only the working analysis markdown and the response draft, then runs the post-collapse validator over the ticket record and cited evidence.
+- A new incident arrives. In normal mode, Cipher 🔓 (Lead Orchestrator) runs `ticket-runbook`; the skill classifies a symptom, matches at most one known problem, and writes the working analysis. When root cause is confirmed, Scribe ✍️ (Docs & Problems Manager) prepares the register-admission draft immediately; after exact `approved` / `aprobado` user approval, Cipher 🔓 (Lead Orchestrator) applies it through the destination's gated tool before collapse. At close, Ledger 📒 (Record Keeper) runs the non-destructive pre-close gate, confirms the earlier register mutation plus query/evidence/content retention, obtains the exact `Close out now` authorization, removes only the working analysis markdown and the response draft, then runs the post-collapse validator over the ticket record and cited evidence.
+- The user wants to guide analysis and invokes `ticket-runbook ID scaffold`: the working set, durable record, response draft, and evidence directories are prepared from evidenced context, validated, and returned with identification pending. No identification, hypotheses, incident queries, or investigation dispatch starts automatically.
+- A third-party note follows our own posted response: archive synchronization selects our latest applicable own response using evidenced authorship and note identity, not the latest arbitrary note. An edit updates the matching response record.
+- A ticket contains non-image evidence and instructional comment examples: evidence is placed in the session validation area; every artifact is cited or durably accounted for as intentionally uncited before collapse. Comment examples do not become real citations, and active missing or unsafe citations still fail.
 
 ## Acceptance criteria
 
@@ -34,9 +37,12 @@
 - ✅ **AC9:** Register admission is prepared before destructive collapse and does not wait for the collapse authorization; a missing admission workflow or gated tool halts the operation.
 - ✅ **AC10:** Every executed investigation query survives collapse verbatim in the ticket record or a cited validation artifact; a reusable confirming query is optionally persisted as SQL plus an adjacent sidecar referenced from Evidence.
 - ✅ **AC11:** When the proof path is a reusable identification pack, Evidence records a pointer to a destination-relative pack path rather than inlining SQL or result tables in the registers, and a later structural match follows that pointer before framing a new query.
-- ✅ **AC12:** Fill-token scanning ignores HTML comments, so commented-out example tokens do not fail the pre-close gate.
+- ✅ **AC12:** Fill-token and citation scanning ignore instructional HTML comments, so commented-out example tokens and paths do not cause unfilled-token or missing-citation failures; active content remains subject to the applicable validation checks.
 - ✅ **AC13:** Placeholders inside documented command examples do not fail step validation; genuine unfilled output tokens still fail until filled.
 - ✅ **AC14:** Query-budget enforcement compares used slots to the declared denominator rather than a fixed default; the scaffold default remains six.
+- ✅ **AC15:** A scaffold-only invocation returns a validated bounded working set with truthful context and pending identification, without identification, hypothesis work, incident-query execution, or investigation dispatch.
+- ✅ **AC16:** Durable responses select only our own posted notes using tool-evidenced authorship; third-party notes never replace them, and editing a selected note updates its matching record instead of creating a duplicate. Missing authorship is reported rather than inferred.
+- ✅ **AC17:** Non-image case evidence is placed in the ticket's session validation area; before collapse every artifact is durably cited or explicitly accounted for as intentionally uncited with an evidenced reason, and no evidence is deleted to satisfy readiness.
 
 ## Proof
 
@@ -51,9 +57,12 @@
 - AC9 → `.opencode/skills/ticket-runbook/SKILL.md` register-admission and two-stage close-out workflow · `knowledge/agents.md` `### Register-first identification (HARD RULE)` proactive admission · `.opencode/agents/scribe.md` `#### Problem record management`
 - AC10 → `.opencode/skills/ticket-runbook/references/analysis/02-investigate.md` Step 7 Retention · `knowledge/problems.md` `## Entry format` Evidence
 - AC11 → `knowledge/problems.md` `## Entry format` Evidence and `## Lifecycle` operational gate · `knowledge/agents.md` `### Register-first identification (HARD RULE)` proactive admission · `.opencode/skills/ticket-runbook/references/analysis/02-investigate.md` Step 7 Retention
-- AC12 → `.opencode/skills/ticket-runbook/scripts/test_validate_runbook.py` `test_state_html_comment_is_not_unfilled_token` · `.opencode/skills/ticket-runbook/scripts/test_validate_runbook_pre_close.py` `test_state_html_comment_is_not_unfilled_token_in_pre_close`
+- AC12 → `.opencode/skills/ticket-runbook/scripts/ticket_runbook_pkg/domain/rules.py` `_cited_image_paths` comment stripping · `.opencode/skills/ticket-runbook/scripts/e2e/test_validate_runbook_citation_comments.py` commented-path acceptance in both close stages · `.opencode/skills/ticket-runbook/scripts/test_validate_runbook_paths.py` active missing/escaping/directory rejection · `.opencode/skills/ticket-runbook/scripts/test_validate_runbook.py` `test_state_html_comment_is_not_unfilled_token`
 - AC13 → `.opencode/skills/ticket-runbook/scripts/test_validate_runbook_step_mode.py` `test_filled_investigate_keeps_sidecar_command_examples`, `test_unfilled_output_fill_fails_step_investigate`
 - AC14 → `.opencode/skills/ticket-runbook/SKILL.md` `#### 3. Scaffold the working analysis (always)` Query-budget rule · `.opencode/skills/ticket-runbook/scripts/test_validate_runbook_header_budgets.py` `test_query_budget_compared_to_denominator` · `.opencode/skills/ticket-runbook/scripts/test_validate_runbook_pre_close.py` raised/exceeded denominator cases
+- AC15 → `.opencode/skills/ticket-runbook/SKILL.md` `### Arguments` second argument and `#### 1b. Mode branch — `scaffold` (user-guided)` · `.opencode/skills/ticket-runbook/references/_consistency-checklist.md` `## Validation modes` scaffold-only note · `.opencode/skills/ticket-runbook/scripts/validate_runbook.py` `--scaffold` mode
+- AC16 → `.opencode/agents/ledger.md` `#### Own-authorship filter` (identity, note-id keying, ordering, missing-author stop) and `#### Incremental sync per phase` · `.opencode/skills/ticket-runbook/SKILL.md` `#### 7. Close-out (two-stage: readiness gate, then authorized collapse)` step 1 · `.opencode/skills/ticket-runbook/references/ticket-template.md` `## Responses` comment · walkthrough 2026-10-16: own n1 / third-party n2 / own n3 edit; n2 never replaces our response, the n3 edit updates its matching block, missing authorship blocks selection
+- AC17 → `.opencode/skills/ticket-runbook/SKILL.md` `#### 7. Close-out (two-stage: readiness gate, then authorized collapse)` step 3 · `.opencode/skills/ticket-runbook/references/_consistency-checklist.md` `## Semantic close-out confirmation (before authorization)` · `.opencode/skills/ticket-runbook/references/analysis/02-investigate.md` `## Steps` Step 7 Retention · `.opencode/agents/ledger.md` `#### Multi-session ticket layout` and `#### Close-out collapse (two-stage contract)` Stage 1 · walkthrough 2026-10-16: q1/q3 cited and retained, q2 recorded as intentionally uncited with an evidenced reason, no deletion to satisfy readiness
 
 ## Constraints
 
@@ -71,22 +80,27 @@
 
 > **Contract approval:** 2026-10-15 — user approved clarifying read-only validator modes versus separately authorized collapse, preserving all close-out authorization and evidence-retention gates. Revision history is explicitly pending under the approved timing rule.
 
+- 2026-10-16 — The user approved UPDATE after the catalogue/ownership review and contract preview, including scaffold-only stopping, own-author response selection, evidence placement/accounting, and citation-comment immunity. The subsequent instruction to update stories first authorizes contract persistence, not feature implementation or release.
+
 ## Local evidence
 
 - **AC6:** Prior source Proof recorded Bastion 🧱 (Backend & Scripts Architect) and Crucible 🔥 (Test Architect) `[PASS]` on 2026-09-16.
 - **AC11:** Prior source Proof recorded Sentinel 🛡️ (Quality Guardian) `[PASS]` for identification-pack pointer handling.
 - **AC12:** Prior source Proof recorded Bastion 🧱 (Backend & Scripts Architect) and Crucible 🔥 (Test Architect) `[PASS]` on 2026-09-27. These retained observations are not fresh executions or destination verification.
+- **AC12 (citation behaviour), 2026-10-16:** comment stripping added in `domain/rules.py`; covered by `e2e/test_validate_runbook_citation_comments.py` (both close stages) and `test_validate_runbook_paths.py` (active missing/escaping/directory rejection). Bastion 🧱 implementation `[PASS]`; Crucible 🔥 test-architecture `[PASS]`; whole suite 646 passed, exit 0.
+- **AC15 (scaffold-only), 2026-10-16:** isolated synthetic verification set at `/tmp/opencode/aicore-debt-fixes-20261016/scaffold-context-check` — declared synthetic ticket 999998 (SyntheticSystem/SyntheticModule, ZZ, no campaign, blank export), `Updated` 2026-10-16T19:47, `SLA-due` 2026-10-16T23:47; `validate_runbook.py <analysis> --scaffold` exited 0 (with the expected recent-session warning, which is an alert only). Populated state/identify context, `identification_verdict: pending`, counters `3/3`,`0/6`,`0/2`, gates unchecked, no identification/query/dispatch. Vault 🔐 (Catalog Steward) `[PASS]` on the ordered pre-write guard and the populated fixture; runtime refusal for missing input and for an existing working set was not executed.
+- **Revised AC12; new AC15–AC17:** AC12 and AC15 carry the evidence above. AC16/AC17 were exercised on 2026-10-16 by a synthetic, non-live walkthrough (own n1 10:00, third-party n2 10:20, own n3 10:40 edited 11:05; validations q1/q2/q3): n2 never replaced our response, the n3 edit updated its matching block, missing authorship blocked selection, and q2 was recorded as intentionally uncited with an evidenced reason while cited artifacts were retained. Authenticated identity resolution and a real note payload were not exercised. The delivery reference is finalized as PR #68.
 
 ## Revision tracking
 
 - 2026-10-15 — Approved validator/collapse actor clarification awaits a delivery-matching history reference. Existing validator evidence and exact destructive-action authorization remain governing; no ticket mutation is performed by this revision. History finalization remains required before completion, archival, or release handoff.
+- 2026-10-16 — Approved revision persisted with AC1–AC11 and AC13–AC14 identities and prior shared marks preserved; AC12 is extended and AC15–AC17 are new. Existing retention/path criteria remain regression boundaries, not proof of the additions. The drafting contract owns public-note content; this contract owns durable selection/retention. AC12 and AC15 are established by implementation gates plus a real scaffold validation; AC16/AC17 are established by clause application on a synthetic 2026-10-16 walkthrough. Delivery history is finalized as PR #68. No destination mutation or distribution clearance is implied.
 
 ## Change log
 
-- before 2026-09-16 — earlier history: see git history for this file (incl. ticket-runbook-pre-close-20260915, PR #41)
-- 2026-09-16 — identification-pack-pointer-20260916 (PR #42): added the optional `pack:` Evidence pointer for destination-owned identification packs.
-- 2026-09-27 — runbook-budget-and-plan-review-20260927 (PR #44): added HTML-comment fill-token ignore, sidecar instruction excludes, and the denominator-authoritative Query-budget KILL-2 (`ticket-runbook` 2.4.0).
-- 2026-10-09 — aicore-all-files-pr-20261008 (PR #52): replaced version-pinned Query-budget evidence, made approval before gated register mutation explicit, and repointed register/pre-close/close-out/path evidence to current concern-focused modules.
-- 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof`, generalized the working-set and close-out contracts, and moved register-first policy into `## Constraints`.
+- 2026-10-16 — aicore-debt-fixes-20261016 (PR #68): added the scaffold-only mode that stops before identification, own-authorship note selection with tool chronology, session-`validations/` placement with cited-or-intentionally-uncited accounting, and comment-safe citation scanning with an injected clock. Revised AC12; added AC15–AC17.
 - 2026-10-15 — story-distribution-20261015 (PR #64): clarified read-only validator modes versus the authorized collapse; regionized the story.
+- 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof`, generalized the working-set and close-out contracts, and moved register-first policy into `## Constraints`.
+- before 2026-10-12 — earlier history: see git history for this file (incl. ticket-runbook-pre-close-20260915 PR #41, identification-pack-pointer-20260916 PR #42, runbook-budget-and-plan-review-20260927 PR #44, aicore-all-files-pr-20261008 PR #52).
+
 <!-- project:end -->

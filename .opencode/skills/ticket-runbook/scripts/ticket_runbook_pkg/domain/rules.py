@@ -148,6 +148,12 @@ class RegisterRowsPort(Protocol):
     def __call__(self) -> list[ProblemRow]: ...
 
 
+class ClockPort(Protocol):
+    """Injected clock port returning one local naive timestamp per call."""
+
+    def __call__(self) -> datetime: ...
+
+
 class TicketIdentification(TypedDict):
     """The identification fields parsed from a ``ticket_<id>.md`` record."""
 
@@ -395,14 +401,12 @@ def check_kill_switches(header: AnalysisHeader) -> list[str]:
     return violations
 
 
-def check_sla_clock(
-    header: AnalysisHeader, now: Optional[datetime] = None
-) -> Optional[str]:
+def check_sla_clock(header: AnalysisHeader, now: datetime) -> Optional[str]:
     """Warn when the SLA time remaining is below ``SLA_WARN_PCT`` of the window.
 
     Returns a warning string when the threshold is breached, ``None`` otherwise.
     Skips the check silently when SLA-due or Updated are placeholder values.
-    The clock is an injectable input; ``now`` defaults to the current time.
+    ``now`` is an explicit injected input; the domain never reads a clock.
     """
     sla_due = _parse_iso_datetime(header["SLA_due"])
     updated = _parse_iso_datetime(header["Updated"])
@@ -410,8 +414,6 @@ def check_sla_clock(
     if sla_due is None or updated is None:
         return None  # placeholder values — template not yet filled
 
-    if now is None:
-        now = datetime.now()
     total_window = (sla_due - updated).total_seconds()
     if total_window <= 0:
         return None  # degenerate window — cannot compute ratio
@@ -428,22 +430,18 @@ def check_sla_clock(
     return None
 
 
-def check_concurrent_session(
-    header: AnalysisHeader, now: Optional[datetime] = None
-) -> Optional[str]:
+def check_concurrent_session(header: AnalysisHeader, now: datetime) -> Optional[str]:
     """Warn when ``Updated`` was written less than 10 minutes ago.
 
     This is a non-blocking safety warning: another agent session may still be
     active on the same analysis.  Returns a warning string when the condition is
     met, ``None`` otherwise.  Skips silently when ``Updated`` is a placeholder.
-    The clock is an injectable input; ``now`` defaults to the current time.
+    ``now`` is an explicit injected input; the domain never reads a clock.
     """
     updated = _parse_iso_datetime(header["Updated"])
     if updated is None:
         return None  # placeholder — template not yet filled
 
-    if now is None:
-        now = datetime.now()
     delta_seconds = (now - updated).total_seconds()
 
     if delta_seconds < 600:  # 10 minutes = 600 seconds
@@ -826,9 +824,16 @@ def parse_ticket_record(content: str, source: str) -> TicketIdentification:
 
 
 def _cited_image_paths(content: str) -> list[str]:
-    """Return every ``path:`` value found in Image-style blocks."""
+    """Return every ``path:`` value found in Image-style blocks.
+
+    Instructional HTML comments are stripped before matching, so a commented
+    example (for example a template's Imagen-footer hint) is not read as a real
+    citation.  Active citations keep the existing extraction and the downstream
+    containment/existence checks in both close modes.
+    """
     paths: list[str] = []
-    for match in _CITED_PATH_RE.finditer(content):
+    stripped = _HTML_COMMENT_RE.sub("", content)
+    for match in _CITED_PATH_RE.finditer(stripped):
         value = match.group(1).strip().strip("`").strip()
         if value:
             paths.append(value)

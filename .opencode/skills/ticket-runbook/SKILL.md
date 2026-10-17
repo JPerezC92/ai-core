@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.5.0
+  version: 2.6.0
   dependencies: PyYAML==6.0.3
 ---
 <!-- core:begin -->
@@ -29,6 +29,7 @@ The identify-step artifact (see **Working-set and record templates**) also docum
 From the user's request, extract:
 
 - **ticket id** — the ticket number (e.g. `183700`). If not provided, ask the user.
+- **`scaffold`** (optional second argument) — the user-guided mode. When present, this invocation only prepares the working set and stops (see **Mode branch — `scaffold`**). Absent, the invocation runs the standard register-first flow.
 
 ### Steps
 
@@ -54,6 +55,18 @@ Required outputs:
 - the ticket's SLA deadline (ISO format)
 
 Hold these values for later sections.
+
+#### 1b. Mode branch — `scaffold` (user-guided)
+
+If this invocation carried the `scaffold` argument (see **Arguments**), run only this bounded sequence and stop:
+
+1. Perform step 1 (read the ticket) for context only. Do not match a register.
+2. Before any creation or write, check for an existing working set: if present, stop and report it without overwriting. Check that the mandatory ticket context is available; a missing mandatory value is a reported blocker — never a guessed SLA, system, or module. Then perform only step 3.1–3.3 (create the ticket folder, screenshots directory, validations directory, ticket record, response-draft file, and the analysis working set) using only evidenced values. Populate the ticket identity, record metadata and symptom summary, and the identify-step `Pre` with this ticket's evidenced context before validation. Skip step 3.4: matching, discriminator/exclusion evaluation and the identification result remain explicitly not performed, with the verdict pending and step gates unchecked.
+3. Initialize the state header with `identification_verdict: pending` and unchanged counters (`Hypotheses-outstanding 3/3`, `Query-budget 0/6`, `Same-query-reruns 0/2`).
+4. Run step 4 (scaffold validation) and the complete post-write self-verification loop, including semantic comparison with the supplied context; structural exit 0 alone is not sufficient. Report the created set and the actual verification result.
+5. **STOP.** Do not run step 2 identification, do not record a verdict, do not frame hypotheses, execute queries, or dispatch Investigator 🔍 (Incident Investigator) (step 5). Hand control back to the user; the normal invocation continues the standard flow.
+
+**Refuse to overwrite:** if the ticket folder already holds a working set, stop and report the existing set instead of replacing it.
 
 #### 2. Identify — register-first (`S-xx` → incident `P-NNN`)
 
@@ -129,9 +142,9 @@ This step is not destructive and never gates on file deletion.
 
 Register-admission preparation starts at step 6; the approved mutation must be applied before collapse. This step only confirms that earlier mutation — it never re-admits. If approval or the destination's gated tool is missing, halt before collapse. The durable set is the durable ticket record plus the project's screenshots and validations directories (see **Working-set and record schema**), and every other cited evidence file. At close, run this order without skipping or reordering:
 
-1. Complete posted-response synchronization: the responses section (see **Working-set and record schema**) of the durable ticket record mirrors the latest posted response (never the draft).
-2. Run the validator script (see **Validator script**) with `<ticket-folder> --pre-close`. This mode is read-only and requires: exactly one durable ticket record; the complete project analysis working set (state + step files; see **Working-set and record schema** — nothing missing, nothing unexpected); the project's response-draft file; the project's screenshots and validations directories; a completed `synthesize` phase; every machine-addressable `path:` citation in the ticket record spelled ticket-folder-relative (the project's screenshot path spelling; see **Screenshot naming convention**) and resolving to an existing file inside the ticket folder; and valid identification/register consistency. Abort on any non-zero exit.
-3. Semantic confirmation — the validator never claims this ground: confirm the earlier register admission completed (the case pointer, plus an identification-pack pointer or a diagnostic-sidecar pointer when applicable); every executed query from the investigate-step artifact (see **Working-set and record templates**) is preserved verbatim in the durable ticket record or a cited validations artifact (see the retention rule in the investigate template — **Working-set and record templates**); every non-local-path evidence citation (prose/backtick references) resolves to real evidence; and record content/completeness gates pass. Require coordinator-accepted finished producer/consumer results (investigation, synthesis, screenshots, drafting, posted-response synchronization, retention and register admission as applicable) and observed cessation of every active user's access to the working files before collapse. Allocate the collapse writer explicitly; directory deletion conflicts with descendant access. Any relevant change invalidates readiness and requires current validation/acceptance again.
+1. Complete posted-response synchronization: the responses section (see **Working-set and record schema**) of the durable ticket record mirrors the latest response **posted by us — our own notes only** — identified from the ticket tool's author evidence and note id; never the draft and never a third-party or requester note. An edit to a selected note updates its matching response block rather than appending a duplicate. Missing authorship is reported, never inferred.
+2. Run the validator script (see **Validator script**) with `<ticket-folder> --pre-close`. This mode is read-only and requires: exactly one durable ticket record; the complete project analysis working set (state + step files; see **Working-set and record schema** — nothing missing, nothing unexpected); the project's response-draft file; the project's screenshots and validations directories (non-image evidence artifacts live under the ticket's session `validations/` directory, never the ticket root); a completed `synthesize` phase; every machine-addressable `path:` citation in the ticket record spelled ticket-folder-relative (the project's screenshot path spelling; see **Screenshot naming convention**) and resolving to an existing file inside the ticket folder; and valid identification/register consistency. Abort on any non-zero exit.
+3. Semantic confirmation — the validator never claims this ground: confirm the earlier register admission completed (the case pointer, plus an identification-pack pointer or a diagnostic-sidecar pointer when applicable); every executed query from the investigate-step artifact (see **Working-set and record templates**) is preserved verbatim in the durable ticket record or a cited validations artifact (see the retention rule in the investigate template — **Working-set and record templates**); every non-local-path evidence citation (prose/backtick references) resolves to real evidence; every artifact under the session `validations/` directory is accounted for as either durably cited in `ticket_<id>.md` or intentionally uncited with an evidenced reason (no evidence is deleted to satisfy readiness); and record content/completeness gates pass. Require coordinator-accepted finished producer/consumer results (investigation, synthesis, screenshots, drafting, posted-response synchronization, retention and register admission as applicable) and observed cessation of every active user's access to the working files before collapse. Allocate the collapse writer explicitly; directory deletion conflicts with descendant access. Any relevant change invalidates readiness and requires current validation/acceptance again.
 4. Obtain the exact close-out authorization phrase (see **Working-set and record schema**).
 5. Remove the analysis working-set state file, every analysis step file, and the project's response-draft file (see **Working-set and record schema**) — nothing else.
 6. Run the validator script (see **Validator script**) with `<ticket-folder> --close-out` and require exit 0. If it fails after collapse, halt without deleting anything further: the durable ticket record, the screenshots and validations directories, and every cited durable evidence file are never deleted to satisfy a validator.

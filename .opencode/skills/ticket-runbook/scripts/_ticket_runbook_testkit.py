@@ -5,15 +5,20 @@ from __future__ import annotations
 import re
 import shutil
 import sys
+from datetime import datetime
 from pathlib import Path
+
+import pytest
 
 sys.path.insert(0, str(Path(__file__).parent))
 import validate_runbook as vr  # noqa: E402
+import ticket_runbook_pkg.entry as entry  # noqa: E402
 
 
 TEMPLATE_ANALYSIS_DIR = Path(__file__).parents[1] / "references" / "analysis"
 STEP_FILES = ["01-identify.md", "02-investigate.md", "03-synthesize.md"]
 _DATETIME_FMT = "%Y-%m-%dT%H:%M"
+_FIXED_DATE = (2026, 1, 1)
 
 
 def _state_md(
@@ -93,6 +98,36 @@ def _patch_header(analysis_dir: Path, updates: dict[str, str]) -> None:
         content, replacements = re.subn(pattern, replacement, content, count=1)
         assert replacements == 1, f"state.md has no quoted {field} field"
     state_md.write_text(content, encoding="utf-8")
+
+
+def _at(hour: int, minute: int = 0) -> datetime:
+    """Build a fixed local naive timestamp for clock and window inputs."""
+    year, month, day = _FIXED_DATE
+    return datetime(year, month, day, hour, minute)
+
+
+def _header_times(*, sla_due: str, updated: str) -> dict[str, str]:
+    """Build the ``SLA-due``/``Updated`` header overrides driving time decisions."""
+    return {"SLA-due": sla_due, "Updated": updated}
+
+
+def _short_window_scenario() -> tuple[dict[str, str], datetime]:
+    """Build one short SLA window plus its single injected timestamp.
+
+    The window is ten minutes; eight minutes in, fewer than 25% remain, so the
+    SLA warning and the concurrency warning both fire from that one timestamp.
+    """
+    return (
+        _header_times(sla_due="2026-01-01T00:10", updated="2026-01-01T00:00"),
+        _at(0, 8),
+    )
+
+
+def _fix_edge_clock(
+    monkeypatch: pytest.MonkeyPatch, timestamp: datetime
+) -> None:
+    """Pin the composition-edge system clock used by omitted-time calls."""
+    monkeypatch.setattr(entry, "_system_clock", lambda: timestamp)
 
 
 def _copy_initialized_scaffold(root: Path) -> Path:
@@ -216,3 +251,24 @@ def _filesystem_bytes(root: Path) -> tuple[dict[str, bytes], list[str]]:
         if path.is_dir()
     ]
     return files, directories
+
+
+def _append_ticket_text(ticket_file: Path, text: str) -> None:
+    """Append ``text`` to an existing ticket record."""
+    ticket_file.write_text(
+        ticket_file.read_text(encoding="utf-8") + text, encoding="utf-8"
+    )
+
+
+def _commented_citation(
+    path: str = "screenshots/commented_example.png", *, multiline: bool = False
+) -> str:
+    """Build an instructional HTML comment citing ``path`` as an example only."""
+    if multiline:
+        return f"<!--\nImagen footer example:\n- **path:** {path}\n-->\n"
+    return f"<!-- Imagen footer example: - **path:** {path} -->\n"
+
+
+def _appended_citation(path: str) -> str:
+    """Build one active Image-footer citation for ``path``."""
+    return f"- **path:** {path}\n"

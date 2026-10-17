@@ -14,7 +14,6 @@ import query_verification as qv  # noqa: E402
 from _query_verification_testkit import (  # noqa: E402
     SidecarVariant,
     VALID_SIDECAR_NAME,
-    _base_sidecar,
     _columns,
     _parameters,
     _read_source_text,

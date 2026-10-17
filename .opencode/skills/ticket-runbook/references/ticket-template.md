@@ -12,6 +12,7 @@ created: "2099-01-01"
 date_resolved: null
 ticket_url: <ticket system URL>
 connections: []
+# Ticket's own tool-reported author, as returned by the ticket tool. Never fabricate or infer a value; report a missing value instead.
 author: <author>
 escalated_to: null
 related_ticket: null
@@ -78,7 +79,12 @@ analyses:
 
 ## Responses
 
-### Response 1 — 2099-01-01
+<!-- Mirror ONLY our own posted notes into this section, selected from the ticket
+     tool's author evidence and note id — never a third-party or requester note and
+     never the draft. An edit to a selected note updates its matching response block
+     rather than appending a duplicate. Missing authorship is reported, never inferred. -->
+
+### Response 1 — 2099-01-01 · note <id>
 
 <text of the note sent to level-1 support>
 

@@ -3,15 +3,20 @@
 from __future__ import annotations
 
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
 from ticket_runbook_pkg.application.validate import (
-    ValidateAnalysis,
-    ValidateCloseOut,
-    ValidatePreClose,
-    ValidateScaffold,
-    ValidateStep,
+    ValidateAnalysis as _ValidateAnalysis,
+)
+from ticket_runbook_pkg.application.validate_close_out import ValidateCloseOut
+from ticket_runbook_pkg.application.validate_pre_close import ValidatePreClose
+from ticket_runbook_pkg.application.validate_scaffold import (
+    ValidateScaffold as _ValidateScaffold,
+)
+from ticket_runbook_pkg.application.validate_step import (
+    ValidateStep as _ValidateStep,
 )
 from ticket_runbook_pkg.domain.rules import (
     REQUIRED_ANALYSIS_FILES,
@@ -19,12 +24,96 @@ from ticket_runbook_pkg.domain.rules import (
     STEP_FILE_BY_NAME,
     STEP_FILES,
     AnalysisHeader,
+    ClockPort,
     CloseOutSnapshot,
+    ModeFindings,
     ProblemRow,
     _cited_image_paths,
+    check_concurrent_session as _check_concurrent_session,
+    check_sla_clock as _check_sla_clock,
     parse_problem_register,
     parse_state_header,
 )
+
+
+# ── Composition-edge clock and compatibility surface ─────────────────────────
+
+
+def _system_clock() -> datetime:
+    """Return the current local naive timestamp; the composition-edge clock."""
+    return datetime.now()
+
+
+def check_sla_clock(
+    header: AnalysisHeader, now: Optional[datetime] = None
+) -> Optional[str]:
+    """Edge-compatible SLA warning; an omitted ``now`` is resolved here only."""
+    resolved = now if now is not None else _system_clock()
+    return _check_sla_clock(header, resolved)
+
+
+def check_concurrent_session(
+    header: AnalysisHeader, now: Optional[datetime] = None
+) -> Optional[str]:
+    """Edge-compatible concurrency warning; an omitted ``now`` is resolved here only."""
+    resolved = now if now is not None else _system_clock()
+    return _check_concurrent_session(header, resolved)
+
+
+class ValidateAnalysis:
+    """Edge-compatible wrapper delegating to the clock-injected analysis use case."""
+
+    def __init__(self, clock: Optional[ClockPort] = None) -> None:
+        """Accept an optional clock; a concrete system clock is chosen here."""
+        self._inner = _ValidateAnalysis(
+            clock if clock is not None else _system_clock
+        )
+
+    def execute(
+        self,
+        header: AnalysisHeader,
+        step_contents: dict[str, str],
+        analysis_dir: str,
+    ) -> ModeFindings:
+        """Delegate to the injected use case without changing its signature."""
+        return self._inner.execute(header, step_contents, analysis_dir)
+
+
+class ValidateScaffold:
+    """Edge-compatible wrapper delegating to the clock-injected scaffold use case."""
+
+    def __init__(self, clock: Optional[ClockPort] = None) -> None:
+        """Accept an optional clock; a concrete system clock is chosen here."""
+        self._inner = _ValidateScaffold(
+            clock if clock is not None else _system_clock
+        )
+
+    def execute(
+        self,
+        header: AnalysisHeader,
+        step_contents: dict[str, str],
+        analysis_dir: str,
+    ) -> ModeFindings:
+        """Delegate to the injected use case without changing its signature."""
+        return self._inner.execute(header, step_contents, analysis_dir)
+
+
+class ValidateStep:
+    """Edge-compatible wrapper delegating to the clock-injected step use case."""
+
+    def __init__(self, clock: Optional[ClockPort] = None) -> None:
+        """Accept an optional clock; a concrete system clock is chosen here."""
+        self._inner = _ValidateStep(clock if clock is not None else _system_clock)
+
+    def execute(
+        self,
+        header: AnalysisHeader,
+        step_contents: dict[str, str],
+        step_name: str,
+        analysis_dir: str,
+    ) -> ModeFindings:
+        """Delegate to the injected use case without changing its signature."""
+        return self._inner.execute(header, step_contents, step_name, analysis_dir)
 
 
 # ── IO helpers ───────────────────────────────────────────────────────────────
@@ -147,7 +236,9 @@ def validate(analysis_dir: str) -> int:
         return 1
 
     step_contents = load_step_file_contents(Path(analysis_dir))
-    findings = ValidateAnalysis().execute(header, step_contents, analysis_dir)
+    findings = ValidateAnalysis(_system_clock).execute(
+        header, step_contents, analysis_dir
+    )
 
     for warning in findings["warnings"]:
         print(f"WARN: {warning}", file=sys.stderr)
@@ -178,7 +269,9 @@ def validate_scaffold(analysis_dir: str) -> int:
         return 1
 
     step_contents = load_step_file_contents(Path(analysis_dir))
-    findings = ValidateScaffold().execute(header, step_contents, analysis_dir)
+    findings = ValidateScaffold(_system_clock).execute(
+        header, step_contents, analysis_dir
+    )
 
     for warning in findings["warnings"]:
         print(f"WARN: {warning}", file=sys.stderr)
@@ -204,7 +297,9 @@ def validate_step(analysis_dir: str, step_name: str) -> int:
         return 1
 
     step_contents = load_step_file_contents(Path(analysis_dir))
-    findings = ValidateStep().execute(header, step_contents, step_name, analysis_dir)
+    findings = ValidateStep(_system_clock).execute(
+        header, step_contents, step_name, analysis_dir
+    )
 
     for warning in findings["warnings"]:
         print(f"WARN: {warning}", file=sys.stderr)
