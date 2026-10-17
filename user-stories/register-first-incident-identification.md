@@ -89,7 +89,7 @@
 - **AC12:** Prior source Proof recorded Bastion 🧱 (Backend & Scripts Architect) and Crucible 🔥 (Test Architect) `[PASS]` on 2026-09-27. These retained observations are not fresh executions or destination verification.
 - **AC12 (citation behaviour), 2026-10-16:** comment stripping added in `domain/rules.py`; covered by `e2e/test_validate_runbook_citation_comments.py` (both close stages) and `test_validate_runbook_paths.py` (active missing/escaping/directory rejection). Bastion 🧱 implementation `[PASS]`; Crucible 🔥 test-architecture `[PASS]`; whole suite 646 passed, exit 0.
 - **AC15 (scaffold-only), 2026-10-16:** isolated synthetic verification set at `/tmp/opencode/aicore-debt-fixes-20261016/scaffold-context-check` — declared synthetic ticket 999998 (SyntheticSystem/SyntheticModule, ZZ, no campaign, blank export), `Updated` 2026-10-16T19:47, `SLA-due` 2026-10-16T23:47; `validate_runbook.py <analysis> --scaffold` exited 0 (with the expected recent-session warning, which is an alert only). Populated state/identify context, `identification_verdict: pending`, counters `3/3`,`0/6`,`0/2`, gates unchecked, no identification/query/dispatch. Vault 🔐 (Catalog Steward) `[PASS]` on the ordered pre-write guard and the populated fixture; runtime refusal for missing input and for an existing working set was not executed.
-- **Revised AC12; new AC15–AC17:** AC12 and AC15 carry the evidence above. AC16/AC17 were exercised on 2026-10-16 by a synthetic, non-live walkthrough (own n1 10:00, third-party n2 10:20, own n3 10:40 edited 11:05; validations q1/q2/q3): n2 never replaced our response, the n3 edit updated its matching block, missing authorship blocked selection, and q2 was recorded as intentionally uncited with an evidenced reason while cited artifacts were retained. Authenticated identity resolution and a real note payload were not exercised. A matching delivery reference remains pending.
+- **Revised AC12; new AC15–AC17:** AC12 and AC15 carry the evidence above. AC16/AC17 were exercised on 2026-10-16 by a synthetic, non-live walkthrough (own n1 10:00, third-party n2 10:20, own n3 10:40 edited 11:05; validations q1/q2/q3): n2 never replaced our response, the n3 edit updated its matching block, missing authorship blocked selection, and q2 was recorded as intentionally uncited with an evidenced reason while cited artifacts were retained. Authenticated identity resolution and a real note payload were not exercised. The delivery reference is finalized as PR #68.
 
 ## Revision tracking
 
@@ -98,11 +98,9 @@
 
 ## Change log
 
-- 2026-10-16 — runbook-scaffold-and-record-retention-20261016 (PR #68): added the scaffold-only mode that stops before identification, own-authorship note selection with tool chronology, session-`validations/` placement with cited-or-intentionally-uncited accounting, and comment-safe citation scanning with an injected clock. Revised AC12; added AC15–AC17.
-- before 2026-09-16 — earlier history: see git history for this file (incl. ticket-runbook-pre-close-20260915, PR #41)
-- 2026-09-16 — identification-pack-pointer-20260916 (PR #42): added the optional `pack:` Evidence pointer for destination-owned identification packs.
-- 2026-09-27 — runbook-budget-and-plan-review-20260927 (PR #44): added HTML-comment fill-token ignore, sidecar instruction excludes, and the denominator-authoritative Query-budget KILL-2 (`ticket-runbook` 2.4.0).
-- 2026-10-09 — aicore-all-files-pr-20261008 (PR #52): replaced version-pinned Query-budget evidence, made approval before gated register mutation explicit, and repointed register/pre-close/close-out/path evidence to current concern-focused modules.
+- 2026-10-16 — aicore-debt-fixes-20261016 (PR #68): added the scaffold-only mode that stops before identification, own-authorship note selection with tool chronology, session-`validations/` placement with cited-or-intentionally-uncited accounting, and comment-safe citation scanning with an injected clock. Revised AC12; added AC15–AC17.
+- before 2026-10-12 — earlier history: see git history for this file (incl. ticket-runbook-pre-close-20260915 PR #41, identification-pack-pointer-20260916 PR #42, runbook-budget-and-plan-review-20260927 PR #44, aicore-all-files-pr-20261008 PR #52).
 - 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof`, generalized the working-set and close-out contracts, and moved register-first policy into `## Constraints`.
 - 2026-10-15 — story-distribution-20261015 (PR #64): clarified read-only validator modes versus the authorized collapse; regionized the story.
+
 <!-- project:end -->

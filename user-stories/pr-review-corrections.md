@@ -65,5 +65,5 @@
 
 ## Change log
 
-- 2026-10-16 — pr-review-corrections-20261016 (PR #68): added the authorized serialized factual prose-correction path on the fresh live body, with observed writer release, preserved evidence and a post-write live reread.
+- 2026-10-16 — aicore-debt-fixes-20261016 (PR #68): added the authorized serialized factual prose-correction path on the fresh live body, with observed writer release, preserved evidence and a post-write live reread.
 <!-- project:end -->

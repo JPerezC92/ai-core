@@ -66,5 +66,5 @@
 
 ## Change log
 
-- 2026-10-16 — response-note-drafting-20261016 (PR #68): added verified ticket hyperlinks, the public-payload/internal-metadata split, caption labels matched to their `ImagenN` marker, and the public-leak and hyperlink-preservation audits.
+- 2026-10-16 — aicore-debt-fixes-20261016 (PR #68): added verified ticket hyperlinks, the public-payload/internal-metadata split, caption labels matched to their `ImagenN` marker, and the public-leak and hyperlink-preservation audits.
 <!-- project:end -->
