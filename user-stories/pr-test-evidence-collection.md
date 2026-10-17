@@ -86,6 +86,7 @@
 ## Change log
 
 - 2026-10-16 — aicore-debt-fixes-20261016 (PR #68): replaced persist-before-tick with evidence intake classification, agent-first execution, one atomic rows-and-ticks join and a live reread; added manual-action evidence and unroutable-item handling.
-- 2026-10-13 — pr-test-evidence-collection-20261013 (PR #62): created the feature contract and delivered the round-based manifest → fan-out → single-writer evidence collection.
 - 2026-10-15 — story-distribution-20261015 (PR #64): regionized the story with portable evidence-boundary pointers.
+- 2026-10-13 — pr-test-evidence-collection-20261013 (PR #62): created the feature contract and delivered the round-based manifest → fan-out → single-writer evidence collection.
+
 <!-- project:end -->

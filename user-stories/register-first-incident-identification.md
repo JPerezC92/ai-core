@@ -99,8 +99,8 @@
 ## Change log
 
 - 2026-10-16 — aicore-debt-fixes-20261016 (PR #68): added the scaffold-only mode that stops before identification, own-authorship note selection with tool chronology, session-`validations/` placement with cited-or-intentionally-uncited accounting, and comment-safe citation scanning with an injected clock. Revised AC12; added AC15–AC17.
-- before 2026-10-12 — earlier history: see git history for this file (incl. ticket-runbook-pre-close-20260915 PR #41, identification-pack-pointer-20260916 PR #42, runbook-budget-and-plan-review-20260927 PR #44, aicore-all-files-pr-20261008 PR #52).
-- 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof`, generalized the working-set and close-out contracts, and moved register-first policy into `## Constraints`.
 - 2026-10-15 — story-distribution-20261015 (PR #64): clarified read-only validator modes versus the authorized collapse; regionized the story.
+- 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof`, generalized the working-set and close-out contracts, and moved register-first policy into `## Constraints`.
+- before 2026-10-12 — earlier history: see git history for this file (incl. ticket-runbook-pre-close-20260915 PR #41, identification-pack-pointer-20260916 PR #42, runbook-budget-and-plan-review-20260927 PR #44, aicore-all-files-pr-20261008 PR #52).
 
 <!-- project:end -->
