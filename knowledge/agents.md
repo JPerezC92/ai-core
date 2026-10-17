@@ -28,6 +28,7 @@ Every agent report to Cipher 🔓 (Lead Orchestrator) follows the exact output f
 - Cite evidence; do not dump file excerpts. Omit process narration, repeated summaries, and unrelated recommendations.
 - Hard bound: **≤ 60 lines**. A report over the bound is a failure, not thoroughness — verbosity is never coverage.
 - **Finish or stop-and-report.** If the task cannot be completed, report the exact blocker immediately — never pad with partial progress, present unfinished work as done, or invent a verdict. An incomplete report naming a blocker beats a complete one containing guesses.
+- **Flow-first explanations (code-flow handoffs).** Before composing code excerpts for a code-flow handoff, establish each structure's flow in order and write it that way: what fills the structure and from where (its evidenced source), then how and where it is used in sequence, then its effect. Integrate each code excerpt at the step it belongs to, joined by connective prose; never emit a bare sequence of code blocks whose labels leave the reader to reconstruct the logic. This governs explanatory handoffs only — it never replaces the verdict-first result, the role- or task-specific deliverable, or the ≤ 60-line bound above.
 
 ### Safe parallel task coordination (HARD RULE)
 
@@ -119,7 +120,9 @@ When Inquisitor 🔎 (PR Reviewer) returns review findings, Cipher 🔓 (Lead Or
 
 | Finding | Disposition | Ask user? |
 |---|---|---|
-| Real defect, fix in scope | Route to the owning agent (Forge 🔨 (Implementer) for code, the responsible architect for docs); fix as a NEW commit — never amend; re-review | No — report |
+| Real source defect, fix in scope | Route to the owning agent (Forge 🔨 (Implementer) for code, the responsible architect for docs); source changes use a NEW authorized commit — never amend; re-review | No — report |
+| Evidence-row or checkbox correction | Route verified head-bound evidence to the designated Inquisitor 🔎 (PR Reviewer) evidence writer; validate, join rows and ticks atomically, live-reread; do not route a body-only correction through a source commit | No — within existing authority |
+| Already-authorized, in-scope reversible factual PR-prose correction | Route the minimal draft-backed delta to Herald 📯 (Release Manager) after observed release of evidence-body ownership; read the fresh live head/body before writing, preserve evidence/ticks and unrelated prose, then live-reread. No source commit or repeated permission request for this body-only repair | No — report the verified factual basis |
 | Real defect, fix needs scope expansion | Stop; present options | **Yes** |
 | False finding — mechanically decidable (one command settles it) | Refute: persist the literal command + output as PR-body evidence, instruct re-instrumentation, re-review | No — report prominently |
 | False finding — judgment-dependent | Present both readings with their evidence | **Yes** |

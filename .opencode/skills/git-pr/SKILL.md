@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.5.0
+  version: 1.6.0
   domain: git
 ---
 
@@ -106,13 +106,16 @@ After the PR exists, retain the same PR body as the sole mutable description sur
   - Base: `$BASE`
   - Scope command: `git diff "$BASE"...<head-sha>`
   - Input: `<literal executed input>`
+  - Command (only when a command was actually executed): `<literal executed command>`
   - Observed output: `<literal observed output>`
   - Executor: `<person or agent>`
 ````
 
 **Verdict-only observed output.** `Observed output` is the human-readable verdict only — for pytest, the `N passed in Xs` line (and the exit code where relevant). Do not paste progress bars, per-test dots, stack traces, or raw dumps unless the user explicitly asks. A raw dump is not clearer evidence; the verdict line is the durable result.
 
-3. Re-read the persisted PR body with `gh pr view <number> --json body` and verify the PR number, immutable head SHA, exact scope command, literal input, observed output, executor, and matching evidence row before ticking the corresponding checkbox. Missing or partial evidence leaves the item unchecked.
+**Manual actions.** An evidence row may record a genuinely performed manual action — treat it like any other row: literal action/input, literal observed result, and the actual executor. Include the executed command only when a command was actually run; never invent one for a manual check, and never let a bare tick instruction or a `manual`/`optional` label stand in for a performed execution.
+
+3. **Atomic evidence-and-tick join.** Validate the complete evidence for the item first — PR number, immutable head SHA, exact scope command, literal input, observed output, executor, and the matching evidence row. Only then persist the `## Test evidence` row(s) and the matching checkbox tick(s) in ONE `--body-file` body write: a row is never persisted in one write and its checkbox ticked in a separate write. After that single write, live-reread the unchanged head and body with `gh pr view <number> --json number,headRefOid,body`; a changed head, a divergent body, or a failed reread blocks acceptance. Missing or partial evidence leaves the item unchecked.
 4. **Execution-ownership handoff.** When an execution owner runs a test-plan item but does not own PR-body mutation, that owner must not report the PR complete; the complete `## Test evidence` row and the matching tick are recorded by the single evidence writer at the review join (the designated Inquisitor 🔎 (PR Reviewer) instance under the project's PR-boundary contract) — no second body writer exists; the item stays `- [ ]`, and no PR-complete report is made, until that writer has persisted the row and tick and re-read the live body.
 
 ### Breaking changes
@@ -161,7 +164,7 @@ Title: <title here>
 - **Do NOT tick test plan checkboxes** in the draft. Ticking happens later, in the PR body, after each item has been executed with live evidence.
 - **Do NOT force a PR title to match its branch.** A matching branch is a consistency check; the diff-derived title wins on mismatch and the mismatch must be reported.
 - **Do NOT use prose test items** ("Verify the X works"). Use `- [ ] <actionable item>` form. Herald 📯 (Release Manager) converts prose → checkboxes only if forced; the skill must produce checkboxes from the start.
-- **Do NOT claim unexecuted evidence** in the draft or PR body. A checkbox remains unchecked until its complete post-PR evidence row is persisted and re-read.
+- **Do NOT claim unexecuted evidence** in the draft or PR body. Before the join, missing or unvalidated evidence leaves its checkbox unchecked. At the join, write the validated evidence row and matching tick together once; accept the tick only after the live unchanged-head/body reread succeeds. A failed reread blocks acceptance, not a separate persist-before-tick write.
 - **Do NOT use `git diff --cached --check` as scope evidence.** Use `git diff "$BASE"...HEAD` before PR creation and `git diff "$BASE"...<head-sha>` after the immutable PR head is known.
 - **Do NOT create, post, edit, identify, or delete GitHub comments or reviews.** Test evidence belongs only in the PR body.
 - **If on the base branch with no diverging commits** — inform the user, no draft to write.
@@ -192,11 +195,11 @@ Title: <title here>
 
 **A checkbox was ticked without complete evidence**:
 - Cause: the PR body lacks the immutable head SHA, exact scope command, literal input, observed output, executor, or a persisted re-read.
-- Fix: return the item to `- [ ]`, add the complete `## Test evidence` row for the current PR head, re-read the PR body, then tick only the matching item.
+- Fix: return the item to `- [ ]`, then validate the complete `## Test evidence` row for the current PR head and persist that row together with its matching tick in one body write, and live-reread the unchanged head/body before accepting.
 
 **Tests executed but test-plan boxes left unchecked**:
 - Cause: an execution owner ran the item but the PR-body persistence step was skipped, so no `## Test evidence` row was written and the matching checkbox was never ticked.
-- Fix: route the complete head-bound `## Test evidence` row to the single evidence writer at the review join to persist, re-read the live PR body, then tick only the matching item.
+- Fix: route the complete head-bound `## Test evidence` row to the single evidence writer at the review join to persist the row and its matching tick in one body write, then live-reread the unchanged head/body before accepting.
 
 **`git ls-tree -- '*.py'` (pathspec form) silently returns 0 results**:
 - Cause: `git ls-tree` with a pathspec form returns nothing even when matching files are tracked — it has produced false "no Python files" verdicts in PR reviews.

@@ -15,4 +15,6 @@
 | `post-merge-branch-cleanup` | Merge-style-aware post-merge branch cleanup | active | developer-tooling | `.opencode/skills/plan-enforce/`, `.opencode/agents/herald.md` |
 | `op-model-configuration` | OpenCode model configuration | active | developer-tooling | `.opencode/skills/op-model/`, `opencode.json`, `opencode.jsonc` |
 | `python-pytest` | Python pytest test runner | active | developer-tooling | `pyproject.toml`, `uv.lock`, `.opencode/agents/crucible.md`, `.opencode/agents/bastion.md`, `.opencode/agents/ledger.md`, `.opencode/skills/plan-enforce/`, `.opencode/skills/ticket-runbook/`, `.opencode/skills/query-verification/`, `.opencode/skills/*/scripts/test_*.py`, `AGENTS.md`, `opencode.jsonc` |
-| `pr-test-evidence-collection` | PR test evidence collection | active | developer-tooling | `.opencode/agents/inquisitor.md`, `AGENTS.md`, `.opencode/skills/git-pr/SKILL.md` |
+| `pr-test-evidence-collection` | PR test evidence collection | active | developer-tooling | `.opencode/agents/inquisitor.md`, `.opencode/agents/herald.md`, `AGENTS.md`, `.opencode/skills/git-pr/SKILL.md`, `knowledge/agents.md` |
+| `response-note-drafting` | Response note drafting | active | incident-communication | `.opencode/agents/quill.md`, `.opencode/agents/ledger.md`, `.opencode/skills/ticket-runbook/references/response-draft-template.md` |
+| `pr-review-corrections` | PR review corrections | active | developer-tooling | `.opencode/agents/inquisitor.md`, `.opencode/agents/herald.md`, `.opencode/skills/git-pr/SKILL.md`, `knowledge/agents.md` |
