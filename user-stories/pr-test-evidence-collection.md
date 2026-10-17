@@ -81,10 +81,11 @@
 ## Revision tracking
 
 - 2026-10-15 — Shared-region preparation and separation of portable evidence-boundary pointers from dated source audit results await final acceptance and a delivery-matching history reference. No PR body or GitHub record is edited by this work.
-- 2026-10-16 — Approved revision persisted without renumbering: AC3–AC5 and AC7 are revised and AC10–AC11 are new; AC1–AC2, AC6, AC8–AC9 retain their identities and prior shared marks, not a fresh verification claim. The approved collision resolution replaced persisted-evidence-before-tick sequencing with prevalidated evidence plus matching ticks in one join write, then live verification; the guidance is aligned, and the revised criteria are established by current runtime/skill clauses plus clause application on the synthetic 2026-10-16 PR walkthrough. General factual prose corrections belong to their separate contract and authorized writer, while draft generation remains non-mutating on GitHub. A matching bounded delivery-history entry remains pending before finalization. No new grant, destination change, distribution clearance, or release action is implied.
+- 2026-10-16 — Approved revision persisted without renumbering: AC3–AC5 and AC7 are revised and AC10–AC11 are new; AC1–AC2, AC6, AC8–AC9 retain their identities and prior shared marks, not a fresh verification claim. The approved collision resolution replaced persisted-evidence-before-tick sequencing with prevalidated evidence plus matching ticks in one join write, then live verification; the guidance is aligned, and the revised criteria are established by current runtime/skill clauses plus clause application on the synthetic 2026-10-16 PR walkthrough. General factual prose corrections belong to their separate contract and authorized writer, while draft generation remains non-mutating on GitHub. Delivery history is finalized as PR #68. No new grant, destination change, distribution clearance, or release action is implied.
 
 ## Change log
 
+- 2026-10-16 — pr-test-evidence-collection-20261016 (PR #68): replaced persist-before-tick with evidence intake classification, agent-first execution, one atomic rows-and-ticks join and a live reread; added manual-action evidence and unroutable-item handling.
 - 2026-10-13 — pr-test-evidence-collection-20261013 (PR #62): created the feature contract and delivered the round-based manifest → fan-out → single-writer evidence collection.
 - 2026-10-15 — story-distribution-20261015 (PR #64): regionized the story with portable evidence-boundary pointers.
 <!-- project:end -->

@@ -61,7 +61,9 @@
 
 ## Revision tracking
 
-- 2026-10-16 — Approved active contract persisted. Evidence corrections remain owned by the PR evidence-collection contract; this contract adds the distinct factual prose-correction outcome without turning draft generation into a GitHub writer. The authorized prose writer's workflow and exclusive handoff are now specified, and AC1–AC5 are established by clause application on the synthetic 2026-10-16 PR walkthrough. A real matching bounded delivery-history entry remains pending before completion, archival, or release handoff. This source-authored story is not automatically cleared for distribution, and no grant, destination mutation, or release action is implied.
+- 2026-10-16 — Approved active contract persisted. Evidence corrections remain owned by the PR evidence-collection contract; this contract adds the distinct factual prose-correction outcome without turning draft generation into a GitHub writer. The authorized prose writer's workflow and exclusive handoff are now specified, and AC1–AC5 are established by clause application on the synthetic 2026-10-16 PR walkthrough. Delivery history is finalized as PR #68. This source-authored story is not automatically cleared for distribution, and no grant, destination mutation, or release action is implied.
 
 ## Change log
+
+- 2026-10-16 — pr-review-corrections-20261016 (PR #68): added the authorized serialized factual prose-correction path on the fresh live body, with observed writer release, preserved evidence and a post-write live reread.
 <!-- project:end -->

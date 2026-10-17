@@ -62,7 +62,9 @@
 
 ## Revision tracking
 
-- 2026-10-16 — Approved active contract persisted. Drafting owns the public-content/handoff boundary; the register-first contract retains durable selection/retention ownership. The destination publishing implementation and its remaining footer/HTML checks are not fixed by this story revision. AC1–AC5 are established by current clauses plus a clearly synthetic 2026-10-16 drafting fixture, not by publication. A real matching bounded delivery-history entry remains pending before completion, archival, or release handoff. This file is source-authored and is not automatically cleared for distribution; no clearance, destination edit, or release action is authorized.
+- 2026-10-16 — Approved active contract persisted. Drafting owns the public-content/handoff boundary; the register-first contract retains durable selection/retention ownership. The destination publishing implementation and its remaining footer/HTML checks are not fixed by this story revision. AC1–AC5 are established by current clauses plus a clearly synthetic 2026-10-16 drafting fixture, not by publication. Delivery history is finalized as PR #68. This file is source-authored and is not automatically cleared for distribution; no clearance, destination edit, or release action is authorized.
 
 ## Change log
+
+- 2026-10-16 — response-note-drafting-20261016 (PR #68): added verified ticket hyperlinks, the public-payload/internal-metadata split, caption labels matched to their `ImagenN` marker, and the public-leak and hyperlink-preservation audits.
 <!-- project:end -->

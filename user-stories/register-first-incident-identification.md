@@ -94,10 +94,11 @@
 ## Revision tracking
 
 - 2026-10-15 — Approved validator/collapse actor clarification awaits a delivery-matching history reference. Existing validator evidence and exact destructive-action authorization remain governing; no ticket mutation is performed by this revision. History finalization remains required before completion, archival, or release handoff.
-- 2026-10-16 — Approved revision persisted with AC1–AC11 and AC13–AC14 identities and prior shared marks preserved; AC12 is extended and AC15–AC17 are new. Existing retention/path criteria remain regression boundaries, not proof of the additions. The drafting contract owns public-note content; this contract owns durable selection/retention. AC12 and AC15 are established by implementation gates plus a real scaffold validation; AC16/AC17 are established by clause application on a synthetic 2026-10-16 walkthrough. A matching delivery-history reference remains pending before completion or release handoff. No destination mutation or distribution clearance is implied.
+- 2026-10-16 — Approved revision persisted with AC1–AC11 and AC13–AC14 identities and prior shared marks preserved; AC12 is extended and AC15–AC17 are new. Existing retention/path criteria remain regression boundaries, not proof of the additions. The drafting contract owns public-note content; this contract owns durable selection/retention. AC12 and AC15 are established by implementation gates plus a real scaffold validation; AC16/AC17 are established by clause application on a synthetic 2026-10-16 walkthrough. Delivery history is finalized as PR #68. No destination mutation or distribution clearance is implied.
 
 ## Change log
 
+- 2026-10-16 — runbook-scaffold-and-record-retention-20261016 (PR #68): added the scaffold-only mode that stops before identification, own-authorship note selection with tool chronology, session-`validations/` placement with cited-or-intentionally-uncited accounting, and comment-safe citation scanning with an injected clock. Revised AC12; added AC15–AC17.
 - before 2026-09-16 — earlier history: see git history for this file (incl. ticket-runbook-pre-close-20260915, PR #41)
 - 2026-09-16 — identification-pack-pointer-20260916 (PR #42): added the optional `pack:` Evidence pointer for destination-owned identification packs.
 - 2026-09-27 — runbook-budget-and-plan-review-20260927 (PR #44): added HTML-comment fill-token ignore, sidecar instruction excludes, and the denominator-authoritative Query-budget KILL-2 (`ticket-runbook` 2.4.0).
