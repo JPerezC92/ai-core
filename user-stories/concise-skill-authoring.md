@@ -38,7 +38,7 @@
 - AC3 → `.opencode/skills/op-skill-creator/SKILL.md` `## Generated body requirements` project-binding clause and `## Pre-write checks` binding check · `.opencode/skills/git-pr/SKILL.md` `## Steps` item 1 unresolvable-base stop
 - AC4 → `.opencode/skills/op-skill-creator/SKILL.md` `## Inputs`, `## Rewrite, rename and migration` independent cleanup/path choices and helper-preservation sequence, and `## Rules` stop-on-missing-input · `.opencode/skills/git-pr/SKILL.md` `## Steps` item 1 base resolution · no `$ARGUMENTS` interpolation in any rewritten skill
 - AC5 → `.opencode/skills/git-branch-name/SKILL.md` `### Type`–`### Description`, `## Rules` · `.opencode/skills/git-commit/SKILL.md` `## Message format`, `## Rules` · `.opencode/skills/git-pr/SKILL.md` `## Draft and body contract`, `### Post-PR evidence contract`, `## Rules`
-- AC6 → `.opencode/skills/op-skill-creator/SKILL.md` `## Generated body requirements` and `## Pre-write checks` · `.opencode/agents/vault.md` QC-11 and QC-12 conditional applicability · OC-2 compact-body check
+- AC6 → `.opencode/skills/op-skill-creator/SKILL.md` `## Generated body requirements` and `## Pre-write checks` · `.opencode/agents/vault.md` QC-11 and QC-12 conditional applicability
 
 ## Constraints
 

@@ -59,7 +59,8 @@
 
 ## Revision tracking
 
-- 2026-10-15 — Approved existing-behavior clarification and shared-region/Proof preparation await final-candidate acceptance and a delivery-matching history reference. AC4 retains its identity; the current skill's explicit approval/decline clauses are the proving surface, not the historic no-commit observation alone.
+- 2026-10-15 — Approved existing-behavior clarification and shared-region/Proof preparation awaited final-candidate acceptance and a delivery-matching history reference. AC4 retains its identity; the current skill's explicit approval/decline clauses are the proving surface, not the historic no-commit observation alone.
+- 2026-10-18 — Delivered by PR #71: AC4's Proof pointers were repointed to the condensed `git-pr` `## Steps` items 4–6 and `## Rules`; criterion identity, promise and mark are unchanged.
 
 ## Change log
 
@@ -68,4 +69,5 @@
 - 2026-10-05 — process-debt-clearance-20261005 (PR #47): added the verdict-only `Observed output` criterion (`git-pr` `1.4.0`; consumers Inquisitor 🔎 (PR Reviewer) and Herald 📯 (Release Manager)).
 - 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof`, moved pre-decided policy into `## Constraints`, and dropped checkpoint/version pins from criterion text.
 - 2026-10-15 — story-distribution-20261015 (PR #64): clarified AC4 to the existing preview/approval-gated missing ignore entry and the no-state-mutating-Git-command boundary; regionized the story.
+- 2026-10-18 — concise-skill-authoring (PR #71): repointed AC1/AC2/AC4 Proof to the condensed `git-pr` sections after the skill rewrite; no promise or mark change (`git-pr` `1.6.1`).
 <!-- project:end -->
