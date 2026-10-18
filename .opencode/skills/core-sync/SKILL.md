@@ -62,7 +62,7 @@ For a region binding, `init` rebuilds a markerless destination as frontmatter + 
 
 ### Operator runbook
 
-Argument origins: `--source .` is the source checkout; `--destination` is the destination directory; `--bindings` is `<destination-dir>/.aicore/core.yaml`; `--source-revision` is the revision being distributed — the 40-character lowercase hex value of `git rev-parse HEAD` in the source checkout. `check` compares against it; `apply`/`init` pin it.
+Argument origins: `--source .` is the source checkout; `--destination` is the destination directory; `--bindings` is `<destination-dir>/.aicore/core.yaml`; `--source-revision` is the revision being distributed — the 40-character lowercase hex value of `git rev-parse HEAD` in the source checkout. `check` compares against it; `apply`/`init` pin it; `--root` (optional) overrides the detected destination instruction file; the command runs without it.
 
 | Operator state | Command | Expected result |
 |---|---|---|
