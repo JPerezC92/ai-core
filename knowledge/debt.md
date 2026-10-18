@@ -25,7 +25,25 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 0.** No accepted debts are currently open.
+**Open debts: 2.**
 
-**ID to use for the next new debt:** `DEBT-007`. This is an allocation counter, not an open debt.
+### DEBT-007
+
+- **ID** — `DEBT-007`
+- **Date** — 2026-10-18
+- **Description** — The forbidden-AI-attribution matcher's literal token set is not recorded in any repository-readable surface, so the exact-token attribution scan cannot be reproduced from the checkout; PR reviews fall back to a conventional attribution-token scan.
+- **Direct evidence** — PR #70 review at head `b82cdcad04c51eb0b5c3eeae78f2db651b75f88c` (finding 1): the matcher's tokens are defined outside every readable repo surface (`inquisitor.md` keeps them external; `herald.md` carries policy prose only); the conventional scan over both commit subjects and full message bodies, the PR title and body, and all four changed-file bodies returned zero matches.
+- **Resolution criteria** — The approved matcher's literal token set is recorded in a repository surface the reviewing role can read, and the exact-token scan runs and is documented at a PR head.
+- **Explicit deferral decision** — 2026-10-18 — user directed "add them as debts"; deferred at the PR #70 review by Inquisitor 🔎 (PR Reviewer), adjudicated `defer-to-debt` by Cipher 🔓 (Lead Orchestrator).
+
+### DEBT-008
+
+- **ID** — `DEBT-008`
+- **Date** — 2026-10-18
+- **Description** — `user-stories/core-sync.md`'s 2026-10-18 revision entry states "AC24's promise, mark, and Proof unchanged" beside the documented form-only Proof correction (verdict date removed from the Proof line); the wording could distinguish value stability from the recorded form change.
+- **Direct evidence** — PR #70 review at head `b82cdcad04c51eb0b5c3eeae78f2db651b75f88c` (finding 2): the form-only correction is documented in the adjacent entry; no criterion, promise, mark, or verdict value changed.
+- **Resolution criteria** — The wording is aligned at the next `core-sync` story revision so the entry distinguishes promise/mark/verdict-value stability from the recorded form correction.
+- **Explicit deferral decision** — 2026-10-18 — user directed "add them as debts"; deferred at the PR #70 review by Inquisitor 🔎 (PR Reviewer), adjudicated `defer-to-debt` by Cipher 🔓 (Lead Orchestrator).
+
+**ID to use for the next new debt:** `DEBT-009`. This is an allocation counter, not an open debt.
 <!-- project:end -->
