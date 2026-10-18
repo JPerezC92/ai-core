@@ -60,6 +60,16 @@ uv run --frozen python3 .opencode/skills/core-sync/scripts/core_sync.py init \
 
 For a region binding, `init` rebuilds a markerless destination as frontmatter + a `core` region holding the source core + a `project` region holding the destination's previous body, then records that region path in `pending`. CLI binding flags are merged into the existing bindings file before this enrollment. For a raw binding, `init` copies the source bytes exactly and creates no regions, report, or `pending` entry; a target newly enrolled in bulk by `--bind-cleared` may have missing parent directories created, while an explicitly declared `--bind-raw` or persisted raw target is created as a byte-exact file only when its parent already exists. For a merge binding, `init` and `apply` write the merged document and likewise create no regions, report, or `pending` entry, and a merge destination must already exist (a merge target is never created). `apply` re-splices region cores, copies raw sources as bytes, and writes merged documents; both `apply` and `init` remove obsolete `pending` paths that are now bound raw or merge. `check` verifies all three modes, reports stale non-region `pending` paths until a write command normalizes them, and syncs the blocker for region paths (see below).
 
+### Operator runbook
+
+Argument origins: `--source .` is the source checkout; `--destination` is the destination directory; `--bindings` is `<destination-dir>/.aicore/core.yaml`; `--source-revision` is the revision being distributed — the 40-character lowercase hex value of `git rev-parse HEAD` in the source checkout. `check` compares against it; `apply`/`init` pin it.
+
+| Operator state | Command | Expected result |
+|---|---|---|
+| Unenrolled destination (no `<destination-dir>/.aicore/core.yaml`) | `uv run --frozen python3 .opencode/skills/core-sync/scripts/core_sync.py init --source . --destination <destination-dir> --bindings <destination-dir>/.aicore/core.yaml --source-revision <40-hex> --bind-cleared [--root <destination-root-path>]` | `initialized` |
+| Enrolled destination receiving an update | `uv run --frozen python3 .opencode/skills/core-sync/scripts/core_sync.py apply --source . --destination <destination-dir> --bindings <destination-dir>/.aicore/core.yaml --source-revision <40-hex>`, then `check` below | `applied`, then `current` (or a drift report) |
+| Drift check | `uv run --frozen python3 .opencode/skills/core-sync/scripts/core_sync.py check --source . --destination <destination-dir> --bindings <destination-dir>/.aicore/core.yaml --source-revision <40-hex>` | `current`, or the exit-1/exit-2 report under *Exit contract* |
+
 ## Binding modes
 
 Each bound source runs in one of three modes, resolved from the source-side `distribution-clearance.json` (its file row, or the skill-root row that expands to it): `region` splices the source core region between destination markers; `raw` copies the whole source byte-for-byte; `merge` merges the source's top-level object keys into the destination, except the `mcp` key, which merges by server name.
@@ -160,7 +170,7 @@ targets:
 ```bash
 uv run --frozen python3 .opencode/skills/core-sync/scripts/core_sync.py init \
   --source . --destination ../destination \
-  --bindings ../destination/.aicore/core.yaml --source-revision "$SOURCE_REVISION" \
+  --bindings ../destination/.aicore/core.yaml --source-revision "$(git rev-parse HEAD)" \
   --bind-cleared --root AGENTS.md
 ```
 
