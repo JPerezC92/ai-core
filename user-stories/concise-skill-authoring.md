@@ -64,8 +64,10 @@
 
 ## Revision tracking
 
-- 2026-10-18 — Approved contract and criterion identities are unchanged. The four introduced creator defects have current independent corrective evidence, superseding prior failed implementation acceptance; the false-PASS process debt remains open separately. Final story/plan reconciliation and a matching delivery commit, PR or ticket with a compliant change-log entry are still required before plan completion, Outcome, archival or release handoff. No new distribution clearance or destination mutation is authorized.
+- 2026-10-18 — Delivered by PR #71 on branch `feat/skills/concise-skill-authoring` (feature commit `ce3e0b2b0fc2dff3ae33957805477ba2f07c91f9`, debt commit `83d0e5ccc6879a1394e73867ef750c272f6829de`). Pending delivery tracking resolved: the reviewed Proof surfaces and corrective evidence above are the accepted basis for AC1–AC6. The false-PASS process debt remains open separately as DEBT-010 and is not cleared by this delivery. No distribution clearance or destination mutation is authorized.
 
 ## Change log
+
+- 2026-10-18 — concise-skill-authoring (PR #71): created the feature definition; condensed the three Git skills into generic portable procedures and aligned the creator and catalog checks with conditional authoring guidance (`vault` `1.5.0`, `op-skill-creator` `1.3.0`, Git skills patch-level).
 
 <!-- project:end -->
