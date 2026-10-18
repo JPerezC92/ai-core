@@ -12,6 +12,7 @@
 | `core-sync` | Core synchronization | active | core-governance | `.opencode/skills/core-sync/`, `distribution-clearance.json`, `distribution-clearance.definition.md`, `knowledge/` |
 | `safe-roster-parallelism` | Safe roster-wide agent parallelism | active | core-governance | `AGENTS.md`, `knowledge/agents.md`, `.opencode/agents/`, `.opencode/skills/plan-enforce/`, `.opencode/skills/ticket-runbook/`, `README.md` |
 | `git-pr-drafting` | Pull request draft generation | active | developer-tooling | `.opencode/skills/git-pr/`, `plans/`, `pr-draft.md`, `.gitignore` |
+| `concise-skill-authoring` | Concise skill authoring | active | developer-tooling | `.opencode/skills/git-branch-name/`, `.opencode/skills/git-commit/`, `.opencode/skills/git-pr/`, `.opencode/skills/op-skill-creator/`, `.opencode/agents/vault.md` |
 | `post-merge-branch-cleanup` | Merge-style-aware post-merge branch cleanup | active | developer-tooling | `.opencode/skills/plan-enforce/`, `.opencode/agents/herald.md` |
 | `op-model-configuration` | OpenCode model configuration | active | developer-tooling | `.opencode/skills/op-model/`, `opencode.json`, `opencode.jsonc` |
 | `python-pytest` | Python pytest test runner | active | developer-tooling | `pyproject.toml`, `uv.lock`, `.opencode/agents/crucible.md`, `.opencode/agents/bastion.md`, `.opencode/agents/ledger.md`, `.opencode/skills/plan-enforce/`, `.opencode/skills/ticket-runbook/`, `.opencode/skills/query-verification/`, `.opencode/skills/*/scripts/test_*.py`, `AGENTS.md`, `opencode.jsonc` |

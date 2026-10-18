@@ -32,10 +32,10 @@
 
 ## Proof
 
-- AC1 → `.opencode/skills/git-pr/SKILL.md` `## Steps` item 3 plan discovery
-- AC2 → `.opencode/skills/git-pr/SKILL.md` `## Steps` item 3 and `### Body` Summary requirement
+- AC1 → `.opencode/skills/git-pr/SKILL.md` `## Steps` item 2 governing plan discovery in either layout, active or completed
+- AC2 → `.opencode/skills/git-pr/SKILL.md` `## Steps` item 2 Context read and `### Body` Summary requirement
 - AC3 → registered root runtime (`AGENTS.md` source, resolved through its root binding) `### Conventions` roster mention format
-- AC4 → `.opencode/skills/git-pr/SKILL.md` `## What I do`, `## When to use me`, `## Steps` items 6–7, and `## Rules` write/approval/mutation boundary
+- AC4 → `.opencode/skills/git-pr/SKILL.md` `## Steps` items 4–6, and `## Rules` write/approval/mutation boundary
 - AC5 → `.opencode/skills/git-pr/SKILL.md` `### Post-PR evidence contract` **Verdict-only observed output** · `.opencode/agents/inquisitor.md` `##### PR-body evidence boundary`
 - AC6 → `.opencode/skills/git-pr/SKILL.md` `### Body` unchecked, executable Test plan requirements
 
