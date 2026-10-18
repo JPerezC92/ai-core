@@ -130,7 +130,16 @@ When Inquisitor 🔎 (PR Reviewer) returns review findings, Cipher 🔓 (Lead Or
 | Fix requires destructive or irreversible action | User-Authority-Only rule applies | **Yes** |
 | Same finding survives 2 remediation rounds, or 3 total review rounds | Loop cap — stop | **Yes** |
 
-**Round summary (delivered to the user after every review round):** verdict line + findings table (finding → severity → disposition → action taken) + PR state + `needs your call: none | <items>`.
+**Round summary (delivered to the user after every review round):** one findings-status message — first line + findings table + `Counts:` line + verdict line + PR state + `needs your call: none | <items>`.
+
+- **First line (open-count verdict):** `Open findings: <N> of <M> — <nothing unresolved and nothing blocking | …>` — a reader who reads only this line knows whether any finding is unresolved or blocking.
+- **Open count:** `<N>` counts `🔴 OPEN` findings only — carried `DEFERRED` findings are named in the `Counts:` line and in the first line whenever they exist.
+- **Findings table columns:** `# | Finding | Severity | Status | Basis / destination`.
+- **Closed status vocabulary:** `✅ FIXED (round <N>)` · `🔴 OPEN` · `⏸ DEFERRED → <destination>` · `✖ REJECTED (not a defect)` — status is never left to prose inference.
+- **Status basis:** `FIXED` names the remediation and the party that verified it; `DEFERRED` names its destination (story, plan, or debt entry) and why it is non-blocking; `REJECTED` carries the literal refutation output.
+- **Counts line:** `Counts: fixed <n> · open <n> · deferred <n> · rejected <n> (of <M>)` — the four figures total to `M`.
+- **Carry-over:** findings persist across rounds with their status until `FIXED` or `REJECTED`; a finding is never dropped silently.
+- **Unchanged mandate:** the verdict line, the PR state, `needs your call: none | <items>`, and the literal-refutation-evidence rule remain required elements of the same message.
 
 Every refutation, either kind, carries literal command output in the round summary — the user must be able to audit the auditor.
 
