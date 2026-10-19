@@ -18,6 +18,8 @@
 - **Assumptions**: FORBIDDEN. If evidence is missing, return "no evidence found" — never fill with plausible guesses.
 - Every quantitative claim (counts, sizes, durations) must trace to a cited measurement. Unverified quantitative claims are FAILs.
 - Auditor dispatches verify findings against the source document's own rules — never against the dispatcher's expected marker. A dispatch that asserts a correct end-state (an expected marker, an anticipated finding) must cite the governing rule text from that document, read fresh. Un-cited expectations turn the audit into confirmation of the dispatcher's assumption (observed 2026-08-30: a "resolved marker present" check verified the marker while the register's own rules required deletion).
+- **Rewrite acceptance accounting.** An instruction rewrite (runtime specs, shared rules, skill or workflow instructions) is accepted only with identified original and candidate inputs and a complete accounting of valid original obligations: each is retained, translated, or retired with a justified, authority-grounded rationale, and superseded wording is never imported as precedent. Missing accounting, unauthorized or unrecognized obligation loss prevents acceptance.
+- **Rewrite source neutrality.** A rewrite candidate names no source-specific runner or interpreter, dependency pin, or mandated local policy value; project bindings stay project-owned. Source-environment leakage prevents acceptance.
 
 ### Report discipline (HARD RULE)
 
@@ -84,7 +86,7 @@ Admission: the first confirmed case admits a `candidate` row (structural only); 
 
 **Stop-and-ask rule (S-07):** two consecutive failures of the same operation, or a long-running/expensive operation that grinds, means STOP — reassess the approach and report bounded options to Cipher 🔓 (Lead Orchestrator). Do not keep retrying.
 
-**Question-routing rule (HARD RULE):** Subagents must never invoke the user-facing `question` tool. When a required input, instruction, or piece of evidence is missing, a subagent MUST halt the affected operation and return a structured report to Cipher 🔓 (Lead Orchestrator) — the task as received, the exact missing item, what it inspected, bounded options, and a recommended default. A subagent must never guess, assume, silently continue on an unverified premise, or stall without a report. Cipher 🔓 (Lead Orchestrator) is the sole authority permitted to use `question`, and only for genuine user-only decisions after available evidence and delegated investigation have been exhausted.
+**Question-routing rule (HARD RULE):** Subagents must never invoke the user-facing `question` tool. When a required input, instruction, or piece of evidence is missing, a subagent MUST halt the affected operation and return a structured report to Cipher 🔓 (Lead Orchestrator) — the task as received, the exact missing item, what it inspected, bounded options, and a recommended default. For a blocked or permission-denied inventory operation, that report carries the exact failed invocation, the literal error, and the matching effective rule — or explicitly states that the rule is unknown — never a bare denial, and accessible configuration evidence is investigated before new permissions or user intervention are requested. A subagent must never guess, assume, silently continue on an unverified premise, or stall without a report. Cipher 🔓 (Lead Orchestrator) is the sole authority permitted to use `question`, and only for genuine user-only decisions after available evidence and delegated investigation have been exhausted.
 
 ### Bounded-query discipline (SELECT-in-WHERE)
 
@@ -92,6 +94,7 @@ Admission: the first confirmed case admits a `candidate` row (structural only); 
 - SELECT columns must include the filter columns when the result is used for screenshots.
 - Reuse a prior incident's query structure only after replacing ALL parameter values with the current ticket's values (prior-incident parameter quarantine).
 - Never assume a collection/table/field exists in another environment without verifying.
+- **Inventory preflight:** before issuing a lifecycle Git-inventory read (e.g. status, stash, or ref listings, or ancestry checks), check its exact invocation against the effective available permission rules; never execute a known-disallowed variant, and never weaken or renegotiate permissions to accommodate one. Matching follows the effective permission rules' own matching precedence; never infer precedence from rule specificity alone.
 
 ### Instrument discipline
 

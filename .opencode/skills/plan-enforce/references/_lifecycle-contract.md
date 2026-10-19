@@ -10,6 +10,10 @@ This gate has two ordered parts: an initial read-only inventory and a post-scope
 
 Run this inventory before selecting a plan, deriving a new plan, or writing a plan file:
 
+**Exact-invocation permission preflight (before each inventory or ancestry command below):** match the exact intended invocation against the effective permission rule; only the bare granted variant proceeds. Any non-matching, unknown, or known-disallowed variant is rejected at preflight and never issued; rejection never alters, weakens, or renegotiates permissions. Matching follows the effective permission rules' own matching precedence; never infer precedence from rule specificity alone. An available configured allow/deny rule is configuration evidence of policy, not verified live runtime state; it does not prove the active runtime reloaded or enforced that rule.
+
+**Preflight failure packet:** stop before issuing the command and report to Cipher 🔓 (Lead Orchestrator) — never the user-facing `question` tool — the intended exact command/variant, the literal rejection or error, the governing effective rule or an explicit "rule unknown/unrecognized", complete reporting of every blocked/unknown element, and bounded options with a recommended default. Investigate accessible evidence (permission/configuration sources and parseable inventory output) before requesting user intervention. Invariants: no known-disallowed variant is ever issued; inventory success is asserted only for the bare variant actually run; accessible evidence precedes user escalation; permissions are never weakened.
+
 | Command | Purpose |
 |---|---|
 | `git ls-remote "$BASE_REMOTE" "refs/heads/$BASE_BRANCH"` | Capture `LIVE_MAIN_SHA`. Fail closed if unavailable. |
@@ -27,7 +31,7 @@ For each selector, resolve its full object SHA and base SHA. Classify it in this
 3. **ahead** — `LIVE_MAIN_SHA` is an ancestor of the base SHA.
 4. **diverged** — neither SHA is an ancestor of the other.
 
-Check command exits and parseable output: ancestry exit 0 means ancestor, exit 1 means not ancestor; an error is not a negative ancestry result. Distinguish an absent stash ref from other failures. Malformed selectors, missing objects, unparseable output, or a changed fingerprint from the plan's recorded fingerprint fail closed. Caller-repository stash mutation is forbidden. The permission policy denies direct destructive stash/ref/reflog/pruning pathways; this is a targeted policy, not an exhaustive shell sandbox.
+Check command exits and parseable output: ancestry exit 0 means ancestor, exit 1 means not ancestor; an error is not a negative ancestry result. Distinguish an absent stash ref from other failures. Malformed selectors, missing objects, unparseable output, or a changed fingerprint from the plan's recorded fingerprint fail closed. Caller-repository stash mutation is forbidden. The permission policy denies direct destructive stash/ref/reflog/pruning pathways; this is a targeted policy, not an exhaustive shell sandbox and never an unconditional inventory grant — every listed invocation still passes the exact-invocation permission preflight above.
 
 ### Derive the write/delete manifest
 
@@ -53,7 +57,7 @@ Park work via `git stash push` / `git stash save` — git never erases existing 
 
 ### Stash status query
 
-To answer "are there unapplied stashes?" mechanically, run these three read-only commands:
+To answer "are there unapplied stashes?" mechanically, run these three read-only commands (each subject to the same exact-invocation permission preflight and failure packet as the initial inventory; only the bare granted variant proceeds and the verdict is asserted only for variants actually run):
 
 | Command | Purpose |
 |---|---|
