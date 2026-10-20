@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.3.0
+  version: 1.4.0
   source: opencode-docs-skills
 ---
 
@@ -22,10 +22,10 @@ Read what the project already answers, and request only the decisions still unre
 ## Steps
 
 1. Classify the operation. `create` has no prior file; `modify` edits an existing skill in place; `migrate` copies a skill from another harness's skills root; `rename`/`prefix` creates the skill at a new ID. Rename and migration have separate delete, archive or keep-source choices; choosing the operation never implies source removal.
-2. Read before writing — the existing `SKILL.md` for a modify, the source skill and its supporting directories for a migrate or rename/prefix, and the project's own authoring references when present (migration notes, skills inventory, catalog checklist, conventions). A missing optional reference is not a blocker: the embedded checks below stay coherent, and the gap is noted in the final report. Never silently skip a reference that does exist.
-3. Validate the name against the portable rule: 1–64 characters, `^[a-z0-9]+(-[a-z0-9]+)*$`, no leading or trailing hyphen, no consecutive hyphens, and equal to the target directory name. Separately, apply the local catalog policy that the name is unique among the project's skills.
-4. Validate the description against the portable rule: 1–1024 characters, non-empty, stating what the skill does and when to use it. Then apply this catalog's local wording policy inline, so validation needs no optional reference: no angle brackets, and a when-trigger clause such as `Use when …` naming the concrete situations that activate the skill.
-5. Handle frontmatter. Under the portable specification, optional `metadata` must be a mapping with string keys and string values; reject lists and numeric values. Keep `license`, `compatibility` and `metadata` at this project's convention: `license: MIT`, `compatibility: opencode`, and non-empty `metadata.author` and `metadata.version`, alongside existing `domain`, `source` and attribution. Preserve supplied author/version/domain/source attribution across operations; on a modify, advance the preserved version for the actual change. Never invent optional metadata, fabricate delivery evidence, or leave empty author values.
+2. Read before writing — the existing `SKILL.md` for a modify, the source skill and its supporting directories for a migrate or rename/prefix, and the project's own authoring references when present (migration notes, skills inventory, catalog checklist, conventions). On a modify, preserve the existing tone and structure unless the request explicitly changes them. A missing optional reference is not a blocker: the embedded checks below stay coherent, and the gap is noted in the final report. Never silently skip a reference that does exist.
+3. Validate the name against the portable rule: 1–64 characters, `^[a-z0-9]+(-[a-z0-9]+)*$`, no leading or trailing hyphen, no consecutive hyphens, and equal to the target directory name. Separately, apply the local catalog policy that the name is unique among the project's skills — checking the skill directories on disk when no inventory exists. This check cannot see global or external paths: report that boundary explicitly and leave uniqueness across all locations to the user.
+4. Validate the description against the portable rule: 1–1024 characters, non-empty, stating what the skill does and when to use it. Then apply the project's declared description-wording policy — **this catalog's local convention** (not a portable requirement): no angle brackets, and a when-trigger clause such as `Use when …` naming the concrete situations that activate the skill. Validate inline so no optional reference is needed.
+5. Handle frontmatter. Under the portable specification, `license` and `compatibility` must be strings, and optional `metadata` must be a mapping with string keys and string values; reject lists and numeric values. `license`, `compatibility` and `metadata` values come from the requester's input or from a convention the project actually declares (see `## Portable, runtime and local layers`) — never from a literal hardcoded here. Preserve every supplied or already-present typed value across operations, including author/version/domain/source attribution. Apply a declared convention value or default only where one exists; an absent convention is not itself a blocker and must not overwrite preserved values. Where a supplied or existing value conflicts with a convention the project enforces as a catalog check, report the conflict and request a decision — do not silently overwrite either. When a genuinely required value is still missing, request that one value rather than inventing a default. `metadata.author` and `metadata.version` must be non-empty strings whenever present or required. On a modify, advance the preserved version for the actual change. Never invent optional metadata, fabricate delivery evidence, or leave empty author values.
 6. Build the body under `## Generated body requirements`, then check consistency: every capability the body declares appears in the description.
 7. Run `## Pre-write checks`, fixing safe defects. A decision that changes contract, metadata, or scope is a required input, not something to guess.
 8. Resolve any existing-target collision before writing; never overwrite an unrelated skill. Write the file under `.opencode/skills/<name>/SKILL.md`, then re-read it to confirm valid frontmatter, a matching directory name, and the intended body. For rename/migration, complete the approved helper and reference work below before any source cleanup.
@@ -34,7 +34,7 @@ Read what the project already answers, and request only the decisions still unre
 
 - Plain Markdown with H2 subsections and no skipped heading level; no H1 title and no rule-layout marker.
 - Necessary steps, decisions, safeguards and outputs only — no restated anatomy, no redundant mandatory section names, no command recipe where an outcome states the requirement.
-- Required inputs and missing-input handling explicit. Do not assume Claude-style argument interpolation; declare inputs the skill needs.
+- Required inputs and missing-input handling explicit. When the skill takes arguments, state how they are collected — the field set (name, type, description, validation, options), when each is required, the fallback when one is missing, and the collection-form schema a consumer relies on. Do not assume Claude-style argument interpolation; declare inputs the skill needs.
 - Examples or failure guidance only where they settle a decision or an expected use. Cause and remedy stay where an operator can act on them, not only in an optional reference.
 - Environment-dependent invocations use project-defined bindings; necessary Python uses the destination project's `<python>` binding, never a bare/global interpreter or a source-specific runner. Binding authority remains project-owned; this grants no shell authority or new exact-command exception.
 - Keep external artifact schemas explicit when a consumer depends on them.
@@ -42,11 +42,12 @@ Read what the project already answers, and request only the decisions still unre
 
 ## Pre-write checks
 
-- File is `SKILL.md`; frontmatter `name` matches the directory basename and is kebab-case; no `claude-` or `anthropic-` prefix; no `README.md` in the skill directory.
-- No unfilled `{...}` placeholders; body under 5,000 words and under 500 lines; static blocks over roughly 30 lines extracted to a named reference artifact with a read-pointer.
-- `compatibility: opencode` present per local convention, and the body stays compact.
+- File is `SKILL.md`; frontmatter `name` matches the directory basename and is kebab-case. This catalog's local policy, not a portable requirement: no `claude-` or `anthropic-` prefix, and no `README.md` in the skill directory.
+- No unfilled `{...}` placeholders; total under 5,000 words and `SKILL.md` under 500 lines — the whole file, not the body alone; static blocks over roughly 30 lines extracted to a named reference artifact with a read-pointer. Those ceilings are this catalog's **local** policy values, not portable requirements.
+- `compatibility` present at the value the project's catalog convention declares when it declares one; otherwise the supplied or existing value is preserved rather than replaced or invented.
 - Every project command names its defined binding rather than a fixed runner.
 - Naming, pattern-registry and audit follow-up handed to the catalog owner; cross-references are not left stale.
+- After writing, re-run these checks against the target and against every edited reference file. If the skill does not load afterwards, check the cause before changing anything else: the file is named `SKILL.md`, the frontmatter carries `name` and `description`, the name is unique, and the project's skill or permission configuration has not disabled it.
 
 ## Portable, runtime and local layers
 
@@ -54,7 +55,7 @@ Read what the project already answers, and request only the decisions still unre
 |---|---|---|
 | Portable Agent Skills specification | Package and metadata requirements | A directory containing `SKILL.md`; `name` up to 64 kebab-case characters matching the directory; `description` 1–1024 characters; optional `license`, `compatibility`, `metadata` |
 | OpenCode V2 runtime | Discovery and loading | Frontmatter optional at runtime; the file path derives the exact skill ID; `name` is a display label; `compatibility` is accepted but uninterpreted; supporting files are read on demand, not loaded automatically |
-| Project catalog policy | Stricter local conventions | Exact `compatibility: opencode`; metadata author/version/domain convention; catalog checklist item IDs |
+| Project catalog policy | Stricter local conventions | Exact `compatibility` value per the project's declared convention; metadata author/version/domain convention; catalog checklist item IDs |
 
 A local convention is reported as local, never as a portable or runtime requirement.
 
@@ -65,6 +66,7 @@ A local convention is reported as local, never as a portable or runtime requirem
 - Offer source cleanup separately: delete, move to `_deprecated/`, or keep the old source as-is. Delete/archive requires explicit prior confirmation; declined cleanup leaves the source intact and does not prevent an otherwise approved copy. Neither the operation nor target approval implies cleanup approval.
 - Copy required helpers and update target references for the approved paths. Search the project's inventories, agent specs, knowledge files, plans and stories for the old name or path; update the approved matches, preserving intentional source references when keeping the source. Record an empty result instead of skipping the search.
 - Re-read the target, verify its required helpers and all target references, and re-read each edited reference before any approved source cleanup. Helpers may move only as part of explicitly confirmed cleanup after target verification; keep-source leaves the original skill and support tree intact.
+- Confirm completion from observed outcomes, then list all changed paths. For a previewed operation (rename, prefix or migration) compare them against the approved preview; for a plain in-place modify, report the actual changed set directly. The preview is never the result; report what actually changed, including a recorded empty result.
 
 ## Rules
 
