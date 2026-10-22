@@ -4,7 +4,7 @@
 > **Created:** 2026-09-10
 > **Title:** Plan lifecycle governance
 > **Status:** active
-> **version:** 1.6.0
+> **version:** 1.7.0
 > **Epic:** plan-governance
 > **Affected areas:** `.opencode/skills/plan-enforce/`, `.opencode/skills/user-story/`, `.opencode/skills/git-commit/`, `.opencode/skills/git-pr/`, `.opencode/skills/op-agent-creator/`, `.opencode/skills/op-model/`, `.opencode/skills/op-skill-creator/`, `AGENTS.md`, `knowledge/agents.md`, `README.md`, `user-stories/`, `.opencode/agents/atrium.md`, `.opencode/agents/bastion.md`, `.opencode/agents/crucible.md`, `.opencode/agents/forge.md`, `.opencode/agents/herald.md`, `.opencode/agents/marshal.md`, `.opencode/agents/sentinel.md`, `.opencode/agents/vault.md`, `opencode.jsonc`
 
@@ -15,11 +15,12 @@
 ## Goal
 
 - **G:** Derive an evidence-grounded, contract-sized execution plan from approved story behavior, with authorized verification, required design rework, and completion scoped to the criteria the plan commits to deliver or materially changes.
-  - Done when: affected code/documentation is inspected before scope confirmation; goals trace to approved criteria; nonconforming planned files have explicit rework; every verification command has an authorized executor; planning and completion reviews are independently evidenced; the execution-review turn precedes implementation; committed criteria are fulfilled without deleting other story commitments; and final evidence, Outcome, and archival precede release. Plans consuming inherited shared stories preserve upstream contract ownership and distinguish shared delivery status from the current plan's verification evidence.
+  - Done when: affected code/documentation is inspected before scope confirmation; goals trace to approved criteria; nonconforming planned files have explicit rework; every verification command has an authorized executor; planning and completion reviews are independently evidenced; the execution-review turn precedes implementation; committed criteria are fulfilled without deleting other story commitments; final evidence, Outcome, goal checkmarks, and archival precede any done-claim for the plan or its release; and a skipped close-out after a ship report is repaired by the same pre-release sequence rather than treated as complete. Plans consuming inherited shared stories preserve upstream contract ownership and distinguish shared delivery status from the current plan's verification evidence.
 
 ## Scenario
 
 - After the user approves a new or revised story, Cipher 🔓 (Lead Orchestrator) inspects the implementation and documentation boundaries, selects the delivery criteria, and writes contract-sized phases with complete manifests and authorized executors. Required architectural rework is included for nonconforming planned files. The user receives execution review before implementation. Expected-red test evidence remains an intermediate checkpoint, not completion. The final review fulfills the declared criteria and checks relevant established behavior for regressions; other legitimate story commitments remain recorded. Outcome and archival precede an authorized release.
+- Cipher 🔓 (Lead Orchestrator) reports the work shipped (PR opened, reviewed, or merged, or a done status) while confirmed goals are still unmarked and the plan is still active: that report is not completion. Close-out still runs as independent completion `[PASS]`, Outcome, goal checkmarks, completed metadata, archive, and filesystem verification. Repair restores the still-active plan and uses that same sequence; post-merge branch cleanup still does not archive.
 - A destination plan uses an inherited shared story: it traces the relevant approved promises, records its own authorized verification evidence, and preserves inherited core bytes. If the intended work requires a shared contract change, the change is handled through the source's approved revision and synchronization, or a separately approved noncontradictory project-owned requirement, rather than a destination edit to shared core.
 - A lifecycle Git inventory needs a command variant: its exact invocation is checked against the effective available permission rules before execution. A blocker carries the failed invocation, literal error and matching rule or an explicit unknown; accessible evidence is investigated before escalating to the user.
 - An instruction rewrite is proposed for acceptance: the reviewer compares identified original and candidate inputs, accounts for valid original obligations and justified changes or retirements, and checks source neutrality. Missing accounting, unauthorized obligation loss or source-environment leakage prevents acceptance even when another review returned a passing verdict.
@@ -65,6 +66,8 @@
 - ✅ **AC37 — Rewrite acceptance accounting:** Accept an instruction rewrite only with identified original/candidate inputs, complete accounting of valid original obligations, justified changes or retirements, and a source-neutrality check. Missing accounting, unauthorized obligation loss, or source-environment leakage prevents acceptance.
 - ✅ **AC38 — Consolidated findings:** The initial independent planning-readiness audit consolidates findings against all applicable contracts. Subsequent reviews preserve finding identities and dispositions, concentrating on corrections and affected dependencies or regressions without skipping mandatory checks. Newly discovered mandatory blockers remain admissible with their governing requirement, evidence, and an explanation of why they were missed earlier.
 - ✅ **AC39 — Nonblocking advice:** An advisory alone neither blocks planning readiness nor requires rewriting. A violation of an applicable mandatory obligation is never relabelled advisory.
+- ⬜ **AC40 — Close-out before done-claim:** The orchestrator does not report a plan complete, and does not report that plan’s release or PR done, until every confirmed goal is marked complete, Outcome is written, completed metadata is set, and the plan is archived with filesystem verification. An opened, reviewed, or merged PR, or a shipped status, does not replace that sequence.
+- ⬜ **AC41 — Skipped close-out is a defect:** If close-out was skipped after the work was treated as shipped, restore the still-active plan, complete the same pre-release sequence, then archive. Post-merge branch cleanup still does not archive.
 
 ## Proof
 
@@ -107,6 +110,8 @@
 - AC37 → `.opencode/skills/plan-enforce/references/_consistency-checklist.md` `## Completion and findings (analysis)` · `.opencode/agents/sentinel.md` `#### Review scope and snapshot` / `#### Preservation vs retirement` · `.opencode/agents/vault.md` `#### Onboarding audit (new skill)` · `knowledge/agents.md` `### Evidence discipline` `Rewrite acceptance accounting` / `Rewrite source neutrality`
 - AC38 → `.opencode/skills/plan-enforce/SKILL.md` `#### Independent audit gate` · `.opencode/skills/plan-enforce/references/_consistency-checklist.md` `## Audit gate`
 - AC39 → `.opencode/skills/plan-enforce/SKILL.md` `#### Independent audit gate` · `.opencode/skills/plan-enforce/references/_consistency-checklist.md` `## Audit gate`
+- AC40 → `.opencode/skills/plan-enforce/SKILL.md` `#### Resume (completion)` · `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Plan lifecycle rules` row `Audits pass, release PR requested` · planned target, unverified
+- AC41 → `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Resume (completion)` · `## Plan lifecycle rules` row `User confirms PR merge` · planned target, unverified
 
 ## Constraints
 
@@ -117,6 +122,7 @@
 - Story discussion owns feature behavior; plans own execution contracts — because feature intent must be settled before delivery mechanics.
 - Nonconforming files included in a plan require their necessary design rework within that plan — because a partial patch on noncompliant code preserves the defect.
 - Planning and completion audits are distinct — because a planning pass cannot certify a finished candidate.
+- A done-claim never bypasses archive-before-release — because merge or PR history is not plan completion.
 - `## Resolved decisions` on a plan file is plan-scope history and remains in use there; it is retired only on story files — because plans record how scope changed and stories record what the feature is.
 
 <!-- core:end -->
@@ -128,6 +134,7 @@
 
 - 2026-10-19 — After current-debt and whole-catalogue ownership review, the user selected UPDATE of the existing planning contract for DEBT-009/010 and approved the displayed AC35–AC37 delta. Scope is lifecycle Git inventories and instruction-rewrite review/acceptance; no broader command-dispatch, permission, Git, release or destination-mutation authority is added. DEBT-007 remains deferred pending authoritative matcher policy.
 - 2026-10-22 — User approved the displayed AC28 replacement and AC38–AC39 additions after whole-catalogue collision review: bounded planning-readiness review, consolidated findings, and nonblocking advice. AC26 and all other existing promises remain unchanged. This approval establishes the revised contract, not procedure implementation, faster planning, or Git/release authorization.
+- 2026-10-22 — After whole-catalogue collision review, the user selected UPDATE of plan-lifecycle-governance and approved AC40–AC41: close-out before any done-claim, and skipped close-out repaired by the same pre-release sequence. Existing AC14/AC23/AC34 and post-merge-branch-cleanup remain unchanged. This approval establishes the revised contract, not procedure implementation or Git/release authorization.
 
 ## Local evidence
 
@@ -221,6 +228,7 @@ Exact performed command: `uv run --frozen python3 -B .opencode/skills/plan-enfor
 
 ## Revision tracking
 
+- 2026-10-22 — Approved close-out-before-done-claim revision: AC40–AC41 are pending implementation and verification; their Proof entries name planned extensions, not passing results. No existing obligation is retired. Delivery history is pending with no matching reference or new Change log entry. Completion, Outcome, archival, and release handoff remain subject to the existing evidence and history gates.
 - 2026-10-22 — Approved bounded-planning-review revision delivered: AC28/38/39 implemented in `plan-enforce` 1.23.7 and matching checklist; independent completion `bounded-completion-1` `[PASS]` on merge `a8715d8b71e851002ee3c68cb25675dde1230cbd` (PR #76). Proof targets are the Independent audit gate and Audit gate sections. This does not claim faster planning on a later live task. Earlier pending-history wording for this revision is superseded.
 - 2026-10-22 — Approved bounded-planning-review revision: AC28 and new AC38–AC39 are pending implementation and verification; their Proof entries name planned extensions, not passing results. AC28 retains actual-content review, decisions/facts/interpretations, two-failure reassessment, and the independent `[PASS]` gate while adding the approved round boundary. No existing obligation is retired; AC26 and the other criteria remain unchanged. Delivery history is pending with no matching reference or new Change log entry. Completion, Outcome, archival, and release handoff remain subject to the existing evidence and history gates. The already-passing write-safety plan and active foundation plan are not edited or retrospectively re-audited by this story revision.
 - 2026-10-15 — Approved inherited-story reconciliation and history-timing revision awaits final-candidate acceptance and a delivery-matching history reference. AC32–AC34 remain pending delivery acceptance; canonical guidance and runtime review rules have passed their slice reviews, not overall delivery. Completion, Outcome, archival, and release handoff remain blocked until final evidence and actual matching history are established. This is source-local tracking, not shared proof.

@@ -25,7 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 3.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; see the standing-condition record in `user-stories/plan-lifecycle-governance.md`.
+**Open debts: 4.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; see the standing-condition record in `user-stories/plan-lifecycle-governance.md`.
 
 ### DEBT-007
 
@@ -54,5 +54,14 @@ Each entry MUST include:
 - **Resolution criteria** — (1) The generated release artifacts are written outside the repository root, to a machine-local or per-session artifact location, and the owning skill or workflow text is updated to say so. (2) A complete release run leaves no generated artifact at the repository root without manual deletion. (3) The `.gitignore` entries are reconciled with the new location, and obsolete root entries are removed rather than left as dead config. (4) The change is independently reviewed, and a later release run confirms a clean root.
 - **Explicit deferral decision** — 2026-10-21 — user directed "delete the pr files u generated then and add as a debt creating them, they should not exist on the root"; Cipher 🔓 (Lead Orchestrator) records this as tooling-debris debt, nonblocking for release work. No permission, roster, Git or release change is authorized by this record.
 
-**ID to use for the next new debt:** `DEBT-013`. This is an allocation counter, not an open debt.
+### DEBT-013
+
+- **ID** — `DEBT-013`
+- **Date** — 2026-10-22
+- **Description** — Cipher 🔓 (Lead Orchestrator) treated “a second active plan is not allowed” as a hard rule and blocked creating a plan for approved AC40/AC41 because `plans/agent-workflow-foundation-20261021` was already `Status: active`. That prohibition is not in the skill.
+- **Direct evidence** — `.opencode/skills/plan-enforce/SKILL.md` `### Check for active plan` items 4–5: if one active plan exists, read it before showing it or dispatching Forge 🔨 (Implementer); if none exists, create; if multiple exist, stop and ask the user to select one. No item forbids a second active plan. The 2026-10-22 question offered “Keep foundation; park AC40/41”, “Complete/cancel foundation first”, and “User authorizes two actives (not recommended; conflicts with plan-enforce)” as if two actives were forbidden.
+- **Resolution criteria** — (1) Operator guidance no longer states that a second active plan is forbidden. (2) Creating a new plan while another is active is allowed when the user selected a distinct task; the multiple-active case still requires the user to select which plan to show or resume. (3) Independent review of the corrected reading against the skill text.
+- **Explicit deferral decision** — 2026-10-22 — user: “this is wrong A second active plan is not allowed. add as a debt”; Cipher 🔓 (Lead Orchestrator) records the false prohibition as nonblocking debt. No permission, Git, or release change is authorized by this record.
+
+**ID to use for the next new debt:** `DEBT-014`. This is an allocation counter, not an open debt.
 <!-- project:end -->
