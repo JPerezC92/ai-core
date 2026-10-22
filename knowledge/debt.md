@@ -25,7 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 2.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; see the standing-condition record in `user-stories/plan-lifecycle-governance.md`.
+**Open debts: 3.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; see the standing-condition record in `user-stories/plan-lifecycle-governance.md`.
 
 ### DEBT-007
 
@@ -45,5 +45,14 @@ Each entry MUST include:
 - **Resolution criteria** — (1) Record a bounded completion-verification procedure that, before a plan is reported complete, requires an adversarial pass over the actual original and candidate content and over the delivered evidence, checking original-obligation accounting completeness, evidence durability in a non-temporal surface, shared/project separation, source-neutrality under its stated boundary, and live test-plan evidence — not shape, presence, or self-attestation. (2) Exercise that procedure against at least the six failure classes named above and record expected and observed verdicts on identified inputs. (3) Obtain an independent review of the procedure and its evidence by a reviewer that authored neither. (4) Demonstrate on a later completed plan that a user-requested double check returns no requirement, evidence, ownership or test-evidence defect, or that the procedure caught the defect before completion was claimed. Correcting the individual findings from the 2026-10-19 double check does not by itself clear this debt.
 - **Explicit deferral decision** — 2026-10-19 — user directed "add as a debt the next always when u complete a plan and i tell u to make a double check u found issues"; Cipher 🔓 (Lead Orchestrator) records the recurring false-completion process failure as a separate follow-up debt, nonblocking for the bounded rework of PR #72. No permission, roster, Git or release change is authorized by this record.
 
-**ID to use for the next new debt:** `DEBT-012`. This is an allocation counter, not an open debt.
+### DEBT-012
+
+- **ID** — `DEBT-012`
+- **Date** — 2026-10-21
+- **Description** — The release tooling generates working artifacts at the repository root and leaves them there. `git-commit` writes `commit.txt`, `git-pr` writes `pr-draft.md`, and the PR-body correction workflow wrote `pr73-body.md` and `pr73-body-new.md`. These are transient tool artifacts, not repository content; they should not be created in the root of a working tree and should not require manual deletion after every release.
+- **Direct evidence** — Observed 2026-10-21 at the end of the PR #73 post-merge cleanup: `commit.txt`, `pr-draft.md`, `pr73-body.md` and `pr73-body-new.md` were present at the repository root and had to be removed manually. `.gitignore:8` and `.gitignore:9` list `pr-draft.md` and `commit.txt`, which confirms they are recognized non-content artifacts whose root placement is already known to be undesirable. `.gitignore` has no entries for the body-edit artifacts, so those appeared as untracked files. The release reports themselves recorded writing these paths at the repo root.
+- **Resolution criteria** — (1) The generated release artifacts are written outside the repository root, to a machine-local or per-session artifact location, and the owning skill or workflow text is updated to say so. (2) A complete release run leaves no generated artifact at the repository root without manual deletion. (3) The `.gitignore` entries are reconciled with the new location, and obsolete root entries are removed rather than left as dead config. (4) The change is independently reviewed, and a later release run confirms a clean root.
+- **Explicit deferral decision** — 2026-10-21 — user directed "delete the pr files u generated then and add as a debt creating them, they should not exist on the root"; Cipher 🔓 (Lead Orchestrator) records this as tooling-debris debt, nonblocking for release work. No permission, roster, Git or release change is authorized by this record.
+
+**ID to use for the next new debt:** `DEBT-013`. This is an allocation counter, not an open debt.
 <!-- project:end -->
