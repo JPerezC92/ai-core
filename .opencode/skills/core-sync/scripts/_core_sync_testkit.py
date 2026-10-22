@@ -287,7 +287,7 @@ def _write_file(base: Path, relative: str, content: str) -> Path:
     """Write a fixture file under a base directory, creating parents."""
     path = base / relative
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content, encoding="utf-8")
+    path.write_text(content, encoding="utf-8", newline="\n")
     if base.name == "source":
         _ensure_fixture_clearance(base, relative)
     return path

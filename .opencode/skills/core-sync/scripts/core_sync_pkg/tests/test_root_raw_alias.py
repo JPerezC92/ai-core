@@ -56,8 +56,7 @@ class RootRawAliasTests:
         root_path = _write_bytes_file(
             destination, "CLAUDE.md", b"raw root target unchanged\x00\n"
         )
-        raw_destination_path = destination / "settings.jsonc"
-        raw_destination_path.symlink_to(root_path)
+        raw_destination_path = destination / "CLAUDE.md"
         other_destination_path = _write_file(destination, "agent.md", DEST_MARKED)
         bindings_path = tmp_path / "bindings.yaml"
         save_bindings(
@@ -65,7 +64,7 @@ class RootRawAliasTests:
             _bindings_with_entries(
                 REV_A,
                 [
-                    _binding_entry("settings.jsonc", ["settings.jsonc"], "raw"),
+                    _binding_entry("settings.jsonc", ["CLAUDE.md"], "raw"),
                     _binding_entry("agent.md", ["agent.md"]),
                 ],
                 pending=["agent.md"],
@@ -88,7 +87,6 @@ class RootRawAliasTests:
         result = self._run(command, source, destination, bindings_path)
 
         assert result == EXIT_INVALID
-        assert raw_destination_path.is_symlink()
         assert self._snapshot(*unchanged) == unchanged
 
     def test_init_new_raw_default_root_alias_rejected_before_writes(

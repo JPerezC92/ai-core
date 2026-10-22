@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 from typing import TypedDict
 
@@ -11,6 +12,8 @@ from op_model_lookup.domain.catalog import Model, ModelSourceFailure
 from op_model_lookup.infrastructure.process import OpencodeModelSource
 
 STDOUT_CATALOG = "openai/gpt-4\ngoogle/gemini-2.5-flash\n"
+RESOLVED_OPENCODE = "/resolved/opencode"
+DUMMY_OPENCODE = "/dummy/opencode"
 
 EXPECTED_MODELS = (
     Model.create(
@@ -50,6 +53,9 @@ class OpencodeModelSourceTests:
     ) -> None:
         calls: list[Invocation] = []
 
+        def stub_which(_name: str) -> str:
+            return RESOLVED_OPENCODE
+
         def stub_run(
             command: list[str],
             *,
@@ -71,11 +77,12 @@ class OpencodeModelSourceTests:
                 args=command, returncode=0, stdout="", stderr=""
             )
 
+        monkeypatch.setattr(shutil, "which", stub_which)
         monkeypatch.setattr(subprocess, "run", stub_run)
         OpencodeModelSource().fetch()
         assert calls == [
             Invocation(
-                command=["opencode", "models"],
+                command=[RESOLVED_OPENCODE, "models"],
                 capture_output=True,
                 text=True,
                 check=True,
@@ -86,6 +93,9 @@ class OpencodeModelSourceTests:
     def test_fetch_maps_stdout_selector_lines_to_models(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
+        def stub_which(_name: str) -> str:
+            return DUMMY_OPENCODE
+
         def stub_run(
             command: list[str], **kwargs: object
         ) -> subprocess.CompletedProcess[str]:
@@ -93,6 +103,7 @@ class OpencodeModelSourceTests:
                 args=command, returncode=0, stdout=STDOUT_CATALOG, stderr=""
             )
 
+        monkeypatch.setattr(shutil, "which", stub_which)
         monkeypatch.setattr(subprocess, "run", stub_run)
         assert OpencodeModelSource().fetch() == EXPECTED_MODELS
 
@@ -101,14 +112,24 @@ class OpencodeModelSourceTests:
     ) -> None:
         """A missing `opencode` executable names the tool and reports it cannot list models."""
 
-        def stub_run(
-            command: list[str], **kwargs: object
-        ) -> subprocess.CompletedProcess[str]:
-            raise FileNotFoundError("opencode")
+        run_calls: list[object] = []
 
+        def stub_which(_name: str) -> None:
+            return None
+
+        def stub_run(
+            *_args: object, **_kwargs: object
+        ) -> subprocess.CompletedProcess[str]:
+            run_calls.append((_args, _kwargs))
+            return subprocess.CompletedProcess(
+                args=[], returncode=0, stdout="", stderr=""
+            )
+
+        monkeypatch.setattr(shutil, "which", stub_which)
         monkeypatch.setattr(subprocess, "run", stub_run)
         with pytest.raises(ModelSourceFailure) as exc_info:
             OpencodeModelSource().fetch()
+        assert run_calls == []
         assert (
             str(exc_info.value)
             == "ERROR: `opencode` not found on PATH. Cannot list models."
@@ -117,6 +138,9 @@ class OpencodeModelSourceTests:
     def test_failed_child_execution_raises_model_source_failure(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
+        def stub_which(_name: str) -> str:
+            return DUMMY_OPENCODE
+
         def stub_run(
             command: list[str], **kwargs: object
         ) -> subprocess.CompletedProcess[str]:
@@ -124,6 +148,7 @@ class OpencodeModelSourceTests:
                 returncode=2, cmd=command, stderr="boom"
             )
 
+        monkeypatch.setattr(shutil, "which", stub_which)
         monkeypatch.setattr(subprocess, "run", stub_run)
         with pytest.raises(ModelSourceFailure) as exc_info:
             OpencodeModelSource().fetch()
@@ -135,11 +160,15 @@ class OpencodeModelSourceTests:
     def test_timeout_raises_model_source_failure(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
+        def stub_which(_name: str) -> str:
+            return DUMMY_OPENCODE
+
         def stub_run(
             command: list[str], **kwargs: object
         ) -> subprocess.CompletedProcess[str]:
             raise subprocess.TimeoutExpired(cmd=command, timeout=60)
 
+        monkeypatch.setattr(shutil, "which", stub_which)
         monkeypatch.setattr(subprocess, "run", stub_run)
         with pytest.raises(ModelSourceFailure) as exc_info:
             OpencodeModelSource().fetch()

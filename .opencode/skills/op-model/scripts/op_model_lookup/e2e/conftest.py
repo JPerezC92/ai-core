@@ -31,9 +31,10 @@ def fake_opencode(
     (one `provider/model` per line) as its stdout. It lives in ``tmp_path/bin``
     with a literal absolute shebang from ``sys.executable``, preserving the
     project virtual environment without dereferencing its interpreter symlink or
-    consulting PATH. PATH, HOME, XDG_CONFIG_HOME and OPENCODE_CONFIG are
-    redirected via monkeypatch, so no installed or authenticated OpenCode and no
-    real config is ever reachable.
+    consulting PATH. On Windows, an ``opencode.cmd`` shim in the same directory
+    invokes that interpreter against the Python fake and forwards ``%*``. PATH,
+    HOME, XDG_CONFIG_HOME and OPENCODE_CONFIG are redirected via monkeypatch, so
+    no installed or authenticated OpenCode and no real config is ever reachable.
     """
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
@@ -48,14 +49,20 @@ def fake_opencode(
 
     def install(payload: str) -> Path:
         """Write the fake `opencode` emitting the selector-line `payload`; return its path."""
+        interpreter = Path(sys.executable).absolute()
         executable = bin_dir / "opencode"
         executable.write_text(
             FAKE_OPENCODE_TEMPLATE.format(
-                interpreter=Path(sys.executable).absolute(), payload=payload
+                interpreter=interpreter, payload=payload
             ),
             encoding="utf-8",
         )
         executable.chmod(0o755)
+        if sys.platform == "win32":
+            (bin_dir / "opencode.cmd").write_text(
+                f'@"{interpreter}" "{executable}" %*\n',
+                encoding="utf-8",
+            )
         return executable
 
     return install

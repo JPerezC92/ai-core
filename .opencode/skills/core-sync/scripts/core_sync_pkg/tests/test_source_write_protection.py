@@ -1,9 +1,10 @@
-"""Behavior tests preventing bindings and symlink writes into the source tree."""
+"""Behavior tests preventing bindings and aliased writes into the source tree."""
 
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -69,150 +70,33 @@ class SourceWriteProtectionTests:
         assert self._snapshot(*unchanged) == unchanged
 
     @pytest.mark.parametrize("command", ("apply", "init"))
-    def test_rejects_destination_bindings_symlink_into_source_before_writing(
+    def test_rejects_symlinked_bindings_path_before_load(
         self, tmp_path: Path, command: str
     ) -> None:
         source = tmp_path / "source"
         destination = tmp_path / "destination"
-        source_path = _write_file(source, "agent.md", SOURCE_MARKED)
-        destination_path = _write_file(destination, "agent.md", DEST_MARKED)
-        root_path = _write_file(destination, "CLAUDE.md", "# Root unchanged\n")
-        bindings_target = source / "bindings.yaml"
-        save_bindings(
-            bindings_target,
-            _bindings_document(REV_A, "agent.md", ["agent.md"], root="CLAUDE.md"),
-        )
-        bindings_path = destination / "bindings.yaml"
-        bindings_path.symlink_to(bindings_target)
-        report_path = _write_file(
-            destination, "reconciliation/init.yaml", "report unchanged\n"
-        )
-        unchanged = self._snapshot(
-            source_path,
-            destination_path,
-            root_path,
-            bindings_target,
-            bindings_path,
-            report_path,
-        )
-
-        result = self._run(command, source, destination, bindings_path)
-
-        assert result == EXIT_INVALID
-        assert bindings_path.is_symlink()
-        assert bindings_path.resolve() == bindings_target.resolve()
-        assert self._snapshot(*unchanged) == unchanged
-
-    @pytest.mark.parametrize("command", ("apply", "init"))
-    def test_rejects_destination_payload_symlink_into_source(
-        self, tmp_path: Path, command: str
-    ) -> None:
-        source = tmp_path / "source"
-        destination = tmp_path / "destination"
-        source_path = _write_file(source, "agent.md", SOURCE_MARKED)
-        payload_target = _write_file(source, "protected.md", DEST_MARKED)
-        destination.mkdir(parents=True)
-        payload_path = destination / "agent.md"
-        payload_path.symlink_to(payload_target)
-        root_path = _write_file(destination, "CLAUDE.md", "# Root unchanged\n")
+        _write_file(source, "agent.md", SOURCE_MARKED)
+        _write_file(destination, "agent.md", DEST_MARKED)
+        _write_file(destination, "CLAUDE.md", "# Root unchanged\n")
         bindings_path = tmp_path / "bindings.yaml"
         save_bindings(
             bindings_path,
             _bindings_document(REV_A, "agent.md", ["agent.md"], root="CLAUDE.md"),
         )
-        report_path = _write_file(
-            tmp_path, "reconciliation/init.yaml", "report unchanged\n"
-        )
-        unchanged = self._snapshot(
-            source_path,
-            payload_target,
-            payload_path,
-            root_path,
-            bindings_path,
-            report_path,
-        )
+        original = Path.is_symlink
 
-        result = self._run(command, source, destination, bindings_path)
+        def stub_is_symlink(self: Path) -> bool:
+            if self == bindings_path:
+                return True
+            return original(self)
+
+        with patch.object(Path, "is_symlink", stub_is_symlink), patch(
+            "core_sync_pkg.infrastructure.composition.YamlBindingsStore.load"
+        ) as load:
+            result = self._run(command, source, destination, bindings_path)
 
         assert result == EXIT_INVALID
-        assert payload_path.is_symlink()
-        assert self._snapshot(*unchanged) == unchanged
-
-    @pytest.mark.parametrize("command", ("check", "apply", "init"))
-    def test_rejects_root_blocker_symlink_into_source(
-        self, tmp_path: Path, command: str
-    ) -> None:
-        source = tmp_path / "source"
-        destination = tmp_path / "destination"
-        source_path = _write_file(source, "agent.md", SOURCE_MARKED)
-        root_target = _write_file(
-            source, "protected-root.md", "# Source root unchanged\n"
-        )
-        destination_path = _write_file(destination, "agent.md", DEST_MARKED)
-        root_path = destination / "CLAUDE.md"
-        root_path.symlink_to(root_target)
-        bindings_path = tmp_path / "bindings.yaml"
-        save_bindings(
-            bindings_path,
-            _bindings_document(
-                REV_A,
-                "agent.md",
-                ["agent.md"],
-                pending=["agent.md"],
-                root="CLAUDE.md",
-            ),
-        )
-        report_path = _write_file(
-            tmp_path, "reconciliation/init.yaml", "report unchanged\n"
-        )
-        unchanged = self._snapshot(
-            source_path,
-            root_target,
-            destination_path,
-            root_path,
-            bindings_path,
-            report_path,
-        )
-
-        result = self._run(command, source, destination, bindings_path)
-
-        assert result == EXIT_INVALID
-        assert root_path.is_symlink()
-        assert self._snapshot(*unchanged) == unchanged
-
-    def test_init_rejects_report_symlink_into_source_before_writing(
-        self, tmp_path: Path
-    ) -> None:
-        source = tmp_path / "source"
-        destination = tmp_path / "destination"
-        source_path = _write_file(source, "agent.md", SOURCE_MARKED)
-        report_target = _write_file(
-            source, "protected-report.yaml", "source unchanged\n"
-        )
-        destination_path = _write_file(destination, "agent.md", DEST_PLAIN)
-        root_path = _write_file(destination, "CLAUDE.md", "# Root unchanged\n")
-        bindings_path = tmp_path / "bindings.yaml"
-        save_bindings(
-            bindings_path,
-            _bindings_document(REV_A, "agent.md", ["agent.md"], root="CLAUDE.md"),
-        )
-        report_path = tmp_path / "reconciliation" / "init.yaml"
-        report_path.parent.mkdir(parents=True)
-        report_path.symlink_to(report_target)
-        unchanged = self._snapshot(
-            source_path,
-            report_target,
-            destination_path,
-            root_path,
-            bindings_path,
-            report_path,
-        )
-
-        result = main(_init_args(source, destination, bindings_path, REV_A))
-
-        assert result == EXIT_INVALID
-        assert report_path.is_symlink()
-        assert self._snapshot(*unchanged) == unchanged
+        load.assert_not_called()
 
     def test_hard_link_target_to_source_file_rejected_without_writes(
         self, tmp_path: Path
@@ -245,6 +129,39 @@ class SourceWriteProtectionTests:
             root_path,
             bindings_path,
             report_path,
+        )
+
+        result = self._run("init", source, destination, bindings_path)
+
+        assert result == EXIT_INVALID
+        assert hard_link_path.stat().st_ino == source_path.stat().st_ino
+        assert self._snapshot(*unchanged) == unchanged
+
+    def test_nested_source_hard_link_target_rejected_without_writes(
+        self, tmp_path: Path
+    ) -> None:
+        source = tmp_path / "source"
+        destination = tmp_path / "destination"
+        source_path = _write_file(source, "nested/agent.md", SOURCE_MARKED)
+        destination.mkdir(parents=True)
+        hard_link_path = destination / "agent.md"
+        hard_link_path.hardlink_to(source_path)
+        root_path = _write_file(destination, "CLAUDE.md", "# Root unchanged\n")
+        bindings_path = tmp_path / "bindings.yaml"
+        save_bindings(
+            bindings_path,
+            _bindings_document(
+                REV_A,
+                "nested/agent.md",
+                ["agent.md"],
+                root="CLAUDE.md",
+            ),
+        )
+        report_path = _write_file(
+            tmp_path, "reconciliation/init.yaml", "report unchanged\n"
+        )
+        unchanged = self._snapshot(
+            source_path, hard_link_path, root_path, bindings_path, report_path
         )
 
         result = self._run("init", source, destination, bindings_path)

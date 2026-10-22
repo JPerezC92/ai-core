@@ -144,6 +144,13 @@ def main(argv: list[str] | None = None) -> int:
     source_dir = Path(args.source)
     destination_dir = Path(args.destination)
     bindings_path = Path(args.bindings)
+    if args.command in ("apply", "init") and bindings_path.is_symlink():
+        print(
+            "invalid write target: bindings write target is a symbolic link: "
+            f"{bindings_path}",
+            file=sys.stderr,
+        )
+        return EXIT_INVALID
     outcome: UseCaseResult | DomainError
     try:
         use_case = _build_use_case(args.command)

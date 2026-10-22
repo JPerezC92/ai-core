@@ -659,3 +659,21 @@ class EnrollDestinationsTests:
         assert fixture.reader.reads == []
         assert fixture.writer.text_writes == []
         assert fixture.writer.byte_writes == []
+
+    def test_returns_invalid_when_preflight_reports_symlinked_target(self) -> None:
+        fixture = _enroll(
+            _bindings(REV_A, [_entry("agent.md", ["agent.md"])]),
+            cores={SOURCE_DIR / "agent.md": "CORE\n"},
+            text={DEST_DIR / "agent.md": PLAIN_DEST},
+            cleared={"agent.md"},
+            preflight_error="symlinked target",
+        )
+        result = fixture.use_case.execute(
+            SOURCE_DIR, DEST_DIR, BINDINGS_PATH, REV_B, [], []
+        )
+        assert isinstance(result, DomainError)
+        assert result.code == CODE_INVALID
+        assert "invalid write target" in result.message
+        assert fixture.writer.text_writes == []
+        assert fixture.writer.byte_writes == []
+        assert fixture.store.saves == []
