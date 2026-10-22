@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import contextlib
 import io
-import os
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
-import pytest
 import yaml
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -84,14 +83,20 @@ class QueryVerificationPathTests:
         )
         self._assert_rejected(root, outside_sidecar, "outside the query root")
 
-    def test_rejects_symlink_escape_source(self, tmp_path: Path) -> None:
+    def test_rejects_resolved_source_escape(self, tmp_path: Path) -> None:
         root = _write_root(tmp_path, _read_source_text(), _base_sidecar())
-        outside_source = tmp_path / "outside-source.sql"
-        outside_source.write_text(_read_source_text(), encoding="utf-8")
-        link = root / "incident-check.sql"
-        link.unlink()
-        try:
-            os.symlink(outside_source, link)
-        except (OSError, NotImplementedError) as exc:
-            pytest.skip(f"symlink creation unsupported: {exc}")
-        self._assert_rejected(root, root / VALID_SIDECAR_NAME, "outside the query root")
+        source_path = root / "incident-check.sql"
+        escaped = tmp_path / "outside-source.sql"
+        original = Path.resolve
+
+        def stub_resolve(self: Path) -> Path:
+            if self == source_path:
+                return escaped
+            return original(self)
+
+        with patch.object(Path, "resolve", stub_resolve):
+            self._assert_rejected(
+                root,
+                root / VALID_SIDECAR_NAME,
+                "path resolves outside the query root",
+            )

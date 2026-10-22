@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 
 from op_model_lookup.domain.catalog import (
@@ -20,9 +21,14 @@ class OpencodeModelSource:
         A missing executable, failed child execution, or timeout is raised as
         ModelSourceFailure; no fallback or partial output is ever returned.
         """
+        resolved = shutil.which("opencode")
+        if resolved is None:
+            raise ModelSourceFailure(
+                "ERROR: `opencode` not found on PATH. Cannot list models."
+            )
         try:
             completed = subprocess.run(
-                ["opencode", "models"],
+                [resolved, "models"],
                 capture_output=True,
                 text=True,
                 check=True,

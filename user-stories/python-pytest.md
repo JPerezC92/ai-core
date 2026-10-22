@@ -3,9 +3,9 @@
 > **Created:** 2026-09-27
 > **Title:** Python pytest test runner
 > **Status:** active
-> **version:** 1.2.0
+> **version:** 1.3.0
 > **Epic:** developer-tooling
-> **Affected areas:** `pyproject.toml`, `uv.lock`, `.opencode/agents/crucible.md`, `.opencode/agents/bastion.md`, `.opencode/agents/ledger.md`, `.opencode/skills/plan-enforce/`, `.opencode/skills/ticket-runbook/`, `.opencode/skills/query-verification/`, `.opencode/skills/*/scripts/test_*.py`, `AGENTS.md`, `opencode.jsonc`
+> **Affected areas:** `pyproject.toml`, `conftest.py`, `uv.lock`, `.opencode/agents/crucible.md`, `.opencode/agents/bastion.md`, `.opencode/agents/ledger.md`, `.opencode/skills/plan-enforce/`, `.opencode/skills/ticket-runbook/`, `.opencode/skills/query-verification/`, `.opencode/skills/*/scripts/test_*.py`, `AGENTS.md`, `opencode.jsonc`
 
 ## Persona
 
@@ -14,7 +14,7 @@
 ## Goal
 
 - **G:** AICore's Python tests run as one reviewed, project-wide suite, and Crucible 🔥 (Test Architect) reports running it separately from judging its architecture. Other projects approve their own runner.
-  - Done when: the approved whole-suite command collects and passes every Python test under the project root except the configured exclusions; a test added anywhere under the root joins without a configuration or permission edit; the suite runs in parallel under the unchanged reviewed command; the runner is not a dependency of the shipped package; filesystem cases use temporary directories; and Crucible 🔥 (Test Architect) returns execution results separately from an architecture verdict.
+  - Done when: the approved whole-suite command collects and passes every Python test under the project root except the configured exclusions; a test added anywhere under the root joins without a configuration or permission edit; the suite runs in parallel under the unchanged reviewed command; the runner is not a dependency of the shipped package; filesystem cases use temporary directories contained within the project root; and Crucible 🔥 (Test Architect) returns execution results separately from an architecture verdict.
 
 ## Scenario
 
@@ -29,7 +29,7 @@
 - ✅ **AC5:** Crucible 🔥 (Test Architect) owns execution and test-architecture review for each project's approved whole suite, including tests outside skill directories, and reports them as separate verdicts; a cancelled or missing review is never reported as passing.
 - ✅ **AC6:** AICore's harness config grants Crucible 🔥 (Test Architect) exactly the reviewed whole-suite command plus narrow read-only discovery, and the shared spec carries no executable grant of its own.
 - ✅ **AC7:** The approved runner is project-owned: AICore's command is never imposed on another project, and each destination reviews and owns its own runner policy.
-- ✅ **AC8:** Each test module and each test class covers one behavioural concern; shared builders live in undiscovered helper modules and filesystem cases use temporary directories rather than production data or host Git state.
+- ⬜ **AC8:** Each test module and each test class covers one behavioural concern; shared builders live in undiscovered helper modules and filesystem cases use temporary directories contained within the project root rather than production data, host Git state, or locations outside the project.
 - ✅ **AC9:** Every Python command runs through the project virtual environment; no AICore-owned example invokes a bare or global interpreter.
 - ✅ **AC10:** `plan-enforce` and `AGENTS.md` require the approved command for Python skill tests and do not forbid the chosen framework.
 
@@ -42,7 +42,7 @@
 - AC5 → `.opencode/agents/crucible.md` `### Test Execution`, `### Test Organization by Concern`
 - AC6 → `.opencode/agents/crucible.md` `### Bash Grant Scope`, `### Local Permissions` · `opencode.jsonc` · `opencode debug config > /dev/null` → exit 0
 - AC7 → `.opencode/agents/warden.md` `#### Bash Grant Registry` · `.opencode/agents/crucible.md` `### Test Execution`
-- AC8 → `.opencode/agents/crucible.md` `### Test Organization by Concern` · underscore-prefixed testkit modules · `tmp_path`
+- AC8 → `.opencode/agents/crucible.md` `### Test Organization by Concern` · underscore-prefixed testkit modules · `tmp_path` · root `conftest.py` project-local temp root (unverified)
 - AC9 → `AGENTS.md` `### Environment constraints` · validator and query examples
 - AC10 → `AGENTS.md` Conventions · `.opencode/skills/plan-enforce/SKILL.md` `#### Non-TypeScript test files`
 
@@ -56,6 +56,10 @@
 - Baseline suites are pytest-native, with no `unittest.TestCase` inheritance or `unittest.main()` entrypoint — because mixing frameworks splits the executor grant and the runner policy.
 - Runner validation is structural, not heuristic — because text scanning cannot establish that a grant is narrow or that a command is the reviewed one.
 - Architecture review is separate from execution — because a passing suite never establishes architectural conformance.
+
+## Revision tracking
+
+- 2026-10-22 — User explicitly approved the **exact AC8 wording** after the wording-level delta was shown; the earlier ownership selection alone was not treated as contract approval. AC8 now requires test-created temporary directories to stay contained within the project root, its mark is reset to `⬜`, and its Proof carries the new unverified surface. The other reviewed behaviors need no revision: `core-sync` AC8 already promises hard-link rejection (its Windows skip masked a `(0,0)` inode-identity defect) and `op-model-configuration` AC2 already owns live-source resolution. No delivery reference exists yet, so no Change log entry is written; finalization remains pending an actual matching commit/PR. No source, plan, or execution authority is claimed.
 
 ## Change log
 

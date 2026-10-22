@@ -3,7 +3,7 @@
 > **Created:** 2026-10-14
 > **Title:** Core synchronization
 > **Status:** active
-> **version:** 1.5.0
+> **version:** 1.6.0
 > **Epic:** core-governance
 > **Affected areas:** `.opencode/skills/core-sync/`, `distribution-clearance.json`, `distribution-clearance.definition.md`, `knowledge/`
 > **Contract approval:** 2026-10-14 — user approved the active contract and uniform-model correction; 2026-10-15 — user approved retired-declaration/table-ownership corrections and the exact genuinely-markerless-source AC2 clarification after paired semantic review; 2026-10-16 — user approved the AC23 update-compatibility guidance revision (UPDATE `core-sync`) after the whole-catalogue ownership review; 2026-10-16 — user approved the mcp-key merge revision (UPDATE `core-sync` AC21/AC22/AC23) after the whole-catalogue ownership review, so only the `mcp` key is exempt from wholesale replacement (merged by server name, core-wins on a same-named entry) while every other key is replaced wholesale; 2026-10-17 — user approved the operator-runbook revision (UPDATE `core-sync` AC24) after the whole-catalogue ownership review. This source-local contract remains excluded from distribution; revision history was finalized on 2026-10-20 (PR #72) — earlier entries below retain their original dates as history.
@@ -49,6 +49,7 @@
 - ✅ **AC22 — Merge verification:** Merge verification exits 0 when each source key holds the source value, with extra destination-only top-level keys allowed and extra destination-only MCP servers allowed by server name while every other value must match exactly; a missing or mismatched source key or a missing destination exits 1; malformed JSONC or an unknown mode exits 2.
 - ✅ **AC23 — Update-compatibility guidance:** The reconciliation blocker also instructs the destination to migrate its merged `opencode.jsonc` to the OpenCode V2 layout, and states that the merge preserves this project's own MCP servers alongside the core-registered ones — so an update never leaves a half-migrated V1 config or overrides a registered MCP server.
 - ✅ **AC24 — Operator runbook:** The sync skill documents the complete operator command sequence — an unenrolled destination, an enrolled destination receiving an update, and a drift check — naming the exact command in each state, the origin of every argument value including the pinned source revision, and the expected result; no documented command depends on an undefined variable.
+- ⬜ **AC25 — Regular-file write targets:** A write target that is a symbolic link is rejected before any read or write, regardless of where it points; write targets are otherwise regular files or absent paths created as regular files.
 
 ## Proof
 
@@ -78,6 +79,7 @@ Proof paths below are relative to `.opencode/skills/core-sync/scripts/core_sync_
 - AC22 → `.../tests/test_merge_check.py` `MergeCheckTests` · `.../domain/test_is_merged.py` `IsMergedTests` · `.../tests/test_check_invalid_bindings.py` `CheckInvalidBindingsTests.test_unknown_binding_mode_returns_two`
 - AC23 → `.../domain/test_reconcile_blocker.py` `ReconcileBlockerContentTests` · `.opencode/skills/core-sync/SKILL.md` `## Reconciliation blocker`
 - AC24 → `.opencode/skills/core-sync/SKILL.md` `## Commands` `### Operator runbook` · `skill-quality-review-1 [PASS]`
+- AC25 → `.opencode/skills/core-sync/SKILL.md` write-target preflight paragraph · `.../infrastructure/filesystem.py` `preflight_write_targets` symlinked-target rejection · `.../application/test_enroll_destinations.py` symlinked-target case — unverified
 
 ## Constraints
 
@@ -90,6 +92,7 @@ Proof paths below are relative to `.opencode/skills/core-sync/scripts/core_sync_
 - Commands ship as project-substituted placeholders — because a concrete invocation in frozen bytes imposes one project's environment on every adopter.
 - The sync tool's own skill ships nowhere — because synchronization runs from the source checkout and a shipped copy would drift unversioned at the destination.
 - Skill roots expand dynamically at each sync — because clearance records durable ownership, not file inventories.
+- Test suites create no symbolic links — because symlink creation needs a platform privilege that is absent on some hosts, and the rejection policy is provable without creating one.
 
 ## Revision tracking
 
@@ -108,6 +111,7 @@ Proof paths below are relative to `.opencode/skills/core-sync/scripts/core_sync_
 - 2026-10-18 — `--root` origin refinement delivered by commit `b111070` (plan `review-findings-status-reporting-20261018`, G2): the runbook's argument-origins sentence defines `--root` (optional) and its optionality inline within the unchanged ≤15-word clause bound; AC24's promise, mark, and verdict value unchanged; the separate Proof-form correction is recorded above.
 - 2026-10-19 — The user approved UPDATE of this source-local history wording under DEBT-008: the preceding entry now distinguishes unchanged promise, mark and verdict value from the separately recorded Proof-form correction. No criterion, mark, Proof line or transport behavior is changed. This editorial revision awaits independent verification and its own delivery-matching history reference; DEBT-008 is not retired by approval or persistence, and no Change log entry is invented while history is pending.
 - 2026-10-20 — **Pending delivery history RESOLVED.** The user explicitly authorized commit and PR creation. The editorial wording is delivered by PR #72, squashed to merge commit `6b84d4d0bbbac11be00146ef612aa553f7820ff5`. Commit `f6efbe87f40c73b19dddb4a79f23dab7be7d8749` was the pre-squash delivery commit on the feature branch, which was deleted after the squash merge; it is retained as history only and is **not** the anchor. Independent verification of the wording itself stands on the current bytes. **Superseded 2026-10-20:** the two verdicts originally cited here (`dr-sentinel-planning-2` and the completion audit `dr-sentinel-completion-1`) were withdrawn as completion evidence when a user-requested double check found open findings at that same head. What remains verified is that AC24's `✅` mark and its undated Proof entry are untouched and the entry now separates value stability from the recorded form change. The bounded Change log entry below is now compliant, and the DEBT-008 register deletion is **provisional** under the standing condition recorded in `user-stories/plan-lifecycle-governance.md` rather than a settled retirement. Source-local; does not ship.
+- 2026-10-22 — User approved UPDATE (`core-sync` 1.6.0) after the ownership evidence, collision report, and exact-delta preview: write targets must be regular files, and a symlinked target is rejected before any read or write. AC8 is unchanged and keeps its mark; new AC25 stays `⬜` with an unverified Proof target. A `## Constraints` entry now forbids test suites from creating symbolic links. No delivery reference exists, so no Change log entry is written; completion remains gated on an actual matching commit/PR. Source-local; does not ship.
 
 ## Change log
 

@@ -122,6 +122,13 @@ def resolve_root_path(destination_dir: Path, bindings: Bindings) -> Path:
     return destination_dir / DEFAULT_ROOT_CANDIDATES[-1]
 
 
+def _usable_file_identity(file_stat: os.stat_result) -> tuple[int, int] | None:
+    """Return a (dev, ino) pair when the filesystem reports a non-zero inode."""
+    if file_stat.st_ino == 0:
+        return None
+    return (file_stat.st_dev, file_stat.st_ino)
+
+
 def _source_regular_file_inodes(source_dir: Path) -> set[tuple[int, int]]:
     """Collect regular-file device/inode identities reachable under the source root."""
     try:
@@ -129,29 +136,40 @@ def _source_regular_file_inodes(source_dir: Path) -> set[tuple[int, int]]:
     except FileNotFoundError:
         return set()
     if stat.S_ISREG(root_stat.st_mode):
-        return {(root_stat.st_dev, root_stat.st_ino)}
+        identity = _usable_file_identity(root_stat)
+        return set() if identity is None else {identity}
     if not stat.S_ISDIR(root_stat.st_mode):
         return set()
 
     inodes: set[tuple[int, int]] = set()
-    visited_directories = {(root_stat.st_dev, root_stat.st_ino)}
+    visited_directories: set[tuple[int, int]] = set()
+    visited_paths: set[str] = {os.path.abspath(source_dir)}
+    root_identity = _usable_file_identity(root_stat)
+    if root_identity is not None:
+        visited_directories.add(root_identity)
     directories = [source_dir]
     while directories:
         directory = directories.pop()
         with os.scandir(directory) as entries:
             for entry in entries:
                 try:
-                    entry_stat = entry.stat(follow_symlinks=True)
+                    entry_stat = os.stat(entry.path, follow_symlinks=True)
                 except FileNotFoundError:
                     if entry.is_symlink():
                         continue
                     raise
-                identity = (entry_stat.st_dev, entry_stat.st_ino)
+                identity = _usable_file_identity(entry_stat)
                 if stat.S_ISDIR(entry_stat.st_mode):
-                    if identity not in visited_directories:
+                    abs_path = os.path.abspath(entry.path)
+                    if identity is not None:
+                        if identity in visited_directories:
+                            continue
                         visited_directories.add(identity)
-                        directories.append(Path(entry.path))
-                elif stat.S_ISREG(entry_stat.st_mode):
+                    elif abs_path in visited_paths:
+                        continue
+                    visited_paths.add(abs_path)
+                    directories.append(Path(entry.path))
+                elif stat.S_ISREG(entry_stat.st_mode) and identity is not None:
                     inodes.add(identity)
     return inodes
 
@@ -205,6 +223,10 @@ def preflight_write_targets(
     resolved_targets: dict[Path, tuple[Path, Path, str]] = {}
     target_inodes: dict[tuple[int, int], tuple[Path, Path, str]] = {}
     for target, target_kind in targets:
+        if target.is_symlink():
+            return f"{target_kind} write target is a symbolic link: {target}"
+        if target.exists() and not target.is_file():
+            return f"{target_kind} write target is not a regular file: {target}"
         try:
             resolved_target = target.resolve()
         except (OSError, RuntimeError) as error:
@@ -250,31 +272,34 @@ def preflight_write_targets(
         except OSError as error:
             return f"could not inspect {target_kind} write target {target}: {error}"
         if target_stat is not None and stat.S_ISREG(target_stat.st_mode):
-            target_inode = (target_stat.st_dev, target_stat.st_ino)
-            if target_inode in source_file_inodes:
-                return (
-                    f"{target_kind} write target shares a source-tree file inode: "
-                    f"{target}"
-                )
-            previous_inode_target = target_inodes.get(target_inode)
-            if previous_inode_target is not None:
-                previous_path, previous_lexical, previous_kind = previous_inode_target
-                same_root_region_target = (
-                    lexical_target == previous_lexical
-                    and {target_kind, previous_kind}
-                    == {"root", "destination payload"}
-                )
-                if not same_root_region_target:
+            target_inode = _usable_file_identity(target_stat)
+            if target_inode is not None:
+                if target_inode in source_file_inodes:
                     return (
-                        "distinct write targets share a filesystem inode: "
-                        f"{previous_path} and {target}"
+                        f"{target_kind} write target shares a source-tree file inode: "
+                        f"{target}"
                     )
-            else:
-                target_inodes[target_inode] = (
-                    target,
-                    lexical_target,
-                    target_kind,
-                )
+                previous_inode_target = target_inodes.get(target_inode)
+                if previous_inode_target is not None:
+                    previous_path, previous_lexical, previous_kind = (
+                        previous_inode_target
+                    )
+                    same_root_region_target = (
+                        lexical_target == previous_lexical
+                        and {target_kind, previous_kind}
+                        == {"root", "destination payload"}
+                    )
+                    if not same_root_region_target:
+                        return (
+                            "distinct write targets share a filesystem inode: "
+                            f"{previous_path} and {target}"
+                        )
+                else:
+                    target_inodes[target_inode] = (
+                        target,
+                        lexical_target,
+                        target_kind,
+                    )
         if target_kind == "root":
             resolved_root = resolved_target
 
@@ -301,11 +326,13 @@ def preflight_write_targets(
                 "could not inspect root/non-region destination alias targets: "
                 f"{error}"
             )
+        root_identity = _usable_file_identity(root_stat)
+        raw_identity = _usable_file_identity(raw_stat)
         if (
             stat.S_ISREG(root_stat.st_mode)
             and stat.S_ISREG(raw_stat.st_mode)
-            and (root_stat.st_dev, root_stat.st_ino)
-            == (raw_stat.st_dev, raw_stat.st_ino)
+            and root_identity is not None
+            and root_identity == raw_identity
         ):
             return (
                 "root write target aliases non-region destination: "
