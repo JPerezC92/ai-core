@@ -25,7 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 2.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; see the standing-condition record in `user-stories/plan-lifecycle-governance.md`.
+**Open debts: 5.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; see the standing-condition record in `user-stories/plan-lifecycle-governance.md`.
 
 ### DEBT-007
 
@@ -45,5 +45,32 @@ Each entry MUST include:
 - **Resolution criteria** — (1) Record a bounded completion-verification procedure that, before a plan is reported complete, requires an adversarial pass over the actual original and candidate content and over the delivered evidence, checking original-obligation accounting completeness, evidence durability in a non-temporal surface, shared/project separation, source-neutrality under its stated boundary, and live test-plan evidence — not shape, presence, or self-attestation. (2) Exercise that procedure against at least the six failure classes named above and record expected and observed verdicts on identified inputs. (3) Obtain an independent review of the procedure and its evidence by a reviewer that authored neither. (4) Demonstrate on a later completed plan that a user-requested double check returns no requirement, evidence, ownership or test-evidence defect, or that the procedure caught the defect before completion was claimed. Correcting the individual findings from the 2026-10-19 double check does not by itself clear this debt.
 - **Explicit deferral decision** — 2026-10-19 — user directed "add as a debt the next always when u complete a plan and i tell u to make a double check u found issues"; Cipher 🔓 (Lead Orchestrator) records the recurring false-completion process failure as a separate follow-up debt, nonblocking for the bounded rework of PR #72. No permission, roster, Git or release change is authorized by this record.
 
-**ID to use for the next new debt:** `DEBT-012`. This is an allocation counter, not an open debt.
+### DEBT-012
+
+- **ID** — `DEBT-012`
+- **Date** — 2026-10-21
+- **Description** — The release tooling generates working artifacts at the repository root and leaves them there. `git-commit` writes `commit.txt`, `git-pr` writes `pr-draft.md`, and the PR-body correction workflow wrote `pr73-body.md` and `pr73-body-new.md`. These are transient tool artifacts, not repository content; they should not be created in the root of a working tree and should not require manual deletion after every release.
+- **Direct evidence** — Observed 2026-10-21 at the end of the PR #73 post-merge cleanup: `commit.txt`, `pr-draft.md`, `pr73-body.md` and `pr73-body-new.md` were present at the repository root and had to be removed manually. `.gitignore:8` and `.gitignore:9` list `pr-draft.md` and `commit.txt`, which confirms they are recognized non-content artifacts whose root placement is already known to be undesirable. `.gitignore` has no entries for the body-edit artifacts, so those appeared as untracked files. The release reports themselves recorded writing these paths at the repo root.
+- **Resolution criteria** — (1) The generated release artifacts are written outside the repository root, to a machine-local or per-session artifact location, and the owning skill or workflow text is updated to say so. (2) A complete release run leaves no generated artifact at the repository root without manual deletion. (3) The `.gitignore` entries are reconciled with the new location, and obsolete root entries are removed rather than left as dead config. (4) The change is independently reviewed, and a later release run confirms a clean root.
+- **Explicit deferral decision** — 2026-10-21 — user directed "delete the pr files u generated then and add as a debt creating them, they should not exist on the root"; Cipher 🔓 (Lead Orchestrator) records this as tooling-debris debt, nonblocking for release work. No permission, roster, Git or release change is authorized by this record.
+
+### DEBT-013
+
+- **ID** — `DEBT-013`
+- **Date** — 2026-10-22
+- **Description** — Cipher 🔓 (Lead Orchestrator) treated “a second active plan is not allowed” as a hard rule and blocked creating a plan for approved AC40/AC41 because `plans/agent-workflow-foundation-20261021` was already `Status: active`. That prohibition is not in the skill.
+- **Direct evidence** — `.opencode/skills/plan-enforce/SKILL.md` `### Check for active plan` items 4–5: if one active plan exists, read it before showing it or dispatching Forge 🔨 (Implementer); if none exists, create; if multiple exist, stop and ask the user to select one. No item forbids a second active plan. The 2026-10-22 question offered “Keep foundation; park AC40/41”, “Complete/cancel foundation first”, and “User authorizes two actives (not recommended; conflicts with plan-enforce)” as if two actives were forbidden.
+- **Resolution criteria** — (1) Operator guidance no longer states that a second active plan is forbidden. (2) Creating a new plan while another is active is allowed when the user selected a distinct task; the multiple-active case still requires the user to select which plan to show or resume. (3) Independent review of the corrected reading against the skill text.
+- **Explicit deferral decision** — 2026-10-22 — user: “this is wrong A second active plan is not allowed. add as a debt”; Cipher 🔓 (Lead Orchestrator) records the false prohibition as nonblocking debt. No permission, Git, or release change is authorized by this record.
+
+### DEBT-014
+
+- **ID** — `DEBT-014`
+- **Date** — 2026-10-22
+- **Description** — After authorized delivery work, Cipher 🔓 (Lead Orchestrator) stops and waits (commit without close-out, close-out without the release PR, or a “not done / say when”) instead of continuing the remaining lifecycle: completion audit → Outcome → goal marks → archive → filesystem verify → release PR. The skip is recurrent.
+- **Direct evidence** — 2026-10-22 on `close-out-before-done-claim-20261022`: (1) after phase 1, Cipher asked for release authorization while the plan was still active; (2) after user “u can commit”, Cipher reported SHA `4f2187f086d89caa49a140be0c9fcdeaf9614eb6` and stopped without close-out; (3) after user “hey what are u waiting for?”, Cipher archived then stopped again without opening the release PR. User: “AGAIN WHAT ARE U WAITING FOR? WHY U DONT CONTINUE THE WORKFLOW? U ARE MAKING THIS ERROR RECURTRENTLY ADD AS a DEBT”.
+- **Resolution criteria** — (1) After user-authorized implementation, Cipher runs the remaining applicable lifecycle events in order without a new prompt to continue. (2) Archive-before-release still holds; a PR is opened only after archive, not instead of it. (3) Independent review of one later delivery that close-out and the release PR both happen without a “what are you waiting for” prompt.
+- **Explicit deferral decision** — 2026-10-22 — user directed add as a debt; Cipher 🔓 (Lead Orchestrator) records the recurrent stop as nonblocking. This record does not replace continuing the current release PR.
+
+**ID to use for the next new debt:** `DEBT-015`. This is an allocation counter, not an open debt.
 <!-- project:end -->

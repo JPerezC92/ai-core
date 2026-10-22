@@ -29,7 +29,7 @@
 - ✅ **AC5:** Crucible 🔥 (Test Architect) owns execution and test-architecture review for each project's approved whole suite, including tests outside skill directories, and reports them as separate verdicts; a cancelled or missing review is never reported as passing.
 - ✅ **AC6:** AICore's harness config grants Crucible 🔥 (Test Architect) exactly the reviewed whole-suite command plus narrow read-only discovery, and the shared spec carries no executable grant of its own.
 - ✅ **AC7:** The approved runner is project-owned: AICore's command is never imposed on another project, and each destination reviews and owns its own runner policy.
-- ⬜ **AC8:** Each test module and each test class covers one behavioural concern; shared builders live in undiscovered helper modules and filesystem cases use temporary directories contained within the project root rather than production data, host Git state, or locations outside the project.
+- ✅ **AC8:** Each test module and each test class covers one behavioural concern; shared builders live in undiscovered helper modules and filesystem cases use temporary directories contained within the project root rather than production data, host Git state, or locations outside the project.
 - ✅ **AC9:** Every Python command runs through the project virtual environment; no AICore-owned example invokes a bare or global interpreter.
 - ✅ **AC10:** `plan-enforce` and `AGENTS.md` require the approved command for Python skill tests and do not forbid the chosen framework.
 
@@ -39,10 +39,10 @@
 - AC2 → `pyproject.toml` `[tool.pytest.ini_options]` `testpaths`, `python_files`, `python_classes`, `norecursedirs` · `uv run --frozen --group dev pytest -q` → exit 0
 - AC3 → `pyproject.toml` `[tool.pytest.ini_options]` `addopts` · `uv.lock` `pytest-xdist` · Warden 🔒 (Dependency Warden) `[PASS]` 2026-10-05
 - AC4 → `pyproject.toml` `[dependency-groups].dev` vs `[project].dependencies` · `uv lock --check` → exit 0 · Warden 🔒 (Dependency Warden) `[PASS]` 2026-09-27
-- AC5 → `.opencode/agents/crucible.md` `### Test Execution`, `### Test Organization by Concern`
-- AC6 → `.opencode/agents/crucible.md` `### Bash Grant Scope`, `### Local Permissions` · `opencode.jsonc` · `opencode debug config > /dev/null` → exit 0
-- AC7 → `.opencode/agents/warden.md` `#### Bash Grant Registry` · `.opencode/agents/crucible.md` `### Test Execution`
-- AC8 → `.opencode/agents/crucible.md` `### Test Organization by Concern` · underscore-prefixed testkit modules · `tmp_path` · root `conftest.py` project-local temp root (unverified)
+- AC5 → `.opencode/agents/crucible.md` `#### Test Execution`, `##### Test Organization by Concern`
+- AC6 → `.opencode/agents/crucible.md` `#### Bash Grant Scope`, `### Local Permissions` · `opencode.jsonc` · `opencode debug config > /dev/null` → exit 0
+- AC7 → `.opencode/agents/warden.md` `#### Bash Grant Registry` · `.opencode/agents/crucible.md` `#### Test Execution`
+- AC8 → `.opencode/agents/crucible.md` `##### Test Organization by Concern` · underscore-prefixed testkit modules · `tmp_path` · `conftest.py` · `tests/test_pytest_temp_root.py`
 - AC9 → `AGENTS.md` `### Environment constraints` · validator and query examples
 - AC10 → `AGENTS.md` Conventions · `.opencode/skills/plan-enforce/SKILL.md` `#### Non-TypeScript test files`
 
@@ -60,12 +60,13 @@
 ## Revision tracking
 
 - 2026-10-22 — User explicitly approved the **exact AC8 wording** after the wording-level delta was shown; the earlier ownership selection alone was not treated as contract approval. AC8 now requires test-created temporary directories to stay contained within the project root, its mark is reset to `⬜`, and its Proof carries the new unverified surface. The other reviewed behaviors need no revision: `core-sync` AC8 already promises hard-link rejection (its Windows skip masked a `(0,0)` inode-identity defect) and `op-model-configuration` AC2 already owns live-source resolution. No delivery reference exists yet, so no Change log entry is written; finalization remains pending an actual matching commit/PR. No source, plan, or execution authority is claimed.
+- 2026-10-22 — **Pending delivery history RESOLVED.** Delivered by PR #75 (squash merge `f90fafa`). AC8 is `✅` on the post-fix snapshot: `tests/test_pytest_temp_root.py` and root `conftest.py`; Crucible 🔥 (Test Architect) `667 passed`, exit 0 at head `e6e658a`. Source-local; does not ship.
 
 ## Change log
 
-- before 2026-09-27 — earlier history: see git history for this file
-- 2026-09-27 — python-pytest-20260927 (PR #43): adopted pytest as the Python runner with whole-project discovery and the reviewed whole-suite command.
+- before 2026-10-07 — earlier history: see git history for this file
 - 2026-10-07 — core-sync-review (PR #52): narrowed Crucible's discovery permissions, aligned AICore Python invocation examples with `uv run --frozen`, and split mixed core-sync test concerns.
 - 2026-10-09 — aicore-all-files-pr-20261008 (PR #52): applied the frozen-environment Python invocation contract across the full ticket-runbook and query-verification skill roots.
 - 2026-10-11 — regionize-agents-20261010 (PR #53): inherited test and backend reference rulebooks now ship in core; runner selection and executable grants stay project-owned.
 - 2026-10-12 — story revision (PR #59): split behavioural criteria from proof, removed the enumerated test-file inventory from `Done when:`, and promoted pre-decided runner policy into `## Constraints`.
+- 2026-10-22 — write-safety-test-containment-20261022 (PR #75): filesystem cases use a project-contained pytest temp root (`conftest.py`, `tests/test_pytest_temp_root.py`).

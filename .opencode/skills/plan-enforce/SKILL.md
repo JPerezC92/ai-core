@@ -28,7 +28,7 @@ From the user's request, extract:
 
 - **task description** — concise description of the intended work.
 
-If no task description and no active plan are available, Cipher 🔓 (Lead Orchestrator) collects the description with the `question` tool. A delegated run reports the gap to Cipher and never invokes that tool.
+If no task description and no active plan are available, Cipher 🔓 (Lead Orchestrator) collects the description with the `question` tool. A delegated run reports the gap to Cipher 🔓 and never invokes that tool.
 
 #### Argument collection form
 
@@ -54,7 +54,7 @@ Apply its ordered **Stash safety gate** for the mapped events, including creatio
 2. Scan `plans/*.md` (excluding `.completed/`) and `plans/*/plan.md`.
 3. Read candidate plan files and select those with `Status: active`.
 4. If one active plan exists, read it and, for subfolder layout only, its `phase-*.md` siblings; derive its manifest and run the post-scope collision check before showing the plan or dispatching Forge 🔨 (Implementer). Resumption also requires the current independent-audit `[PASS]` under **Plan lifecycle rules** and the **Independent audit gate**.
-5. If no active plan exists, continue to **Create new plan**. If multiple exist, Cipher stops and asks the user to select one; a delegated run reports the candidates and gap to Cipher.
+5. If no active plan exists, continue to **Create new plan**. If multiple exist, Cipher 🔓 (Lead Orchestrator) stops and asks the user to select one; a delegated run reports the candidates and gap to Cipher 🔓.
 
 An archived plan is never resumed directly from `plans/.completed/`. Restore it to `plans/`, set `Status: active`, and append `Reopened: YYYY-MM-DD HH:MM` before resuming.
 
@@ -109,7 +109,7 @@ Apply **Acceptance-criterion reconciliation (fail-closed)** from the loaded life
 
 #### Resume (completion)
 
-Apply **History finalization gate** and **Resume (completion)** from the loaded lifecycle contract before building the release PR: current independent completion `[PASS]`, layered evidence, accepted joins, owner-aware reconciliation, matching history, chat goals resume, then Outcome → completed metadata → archive → filesystem verification. Missing/adverse evidence or required history blocks finalization. Planning readiness, inherited marks, or test execution alone is never completion proof.
+Apply **History finalization gate** and **Resume (completion)** from the loaded lifecycle contract before building the release PR: current independent completion `[PASS]`, layered evidence, accepted joins, owner-aware reconciliation, matching history, chat goals resume, then Outcome → completed metadata → archive → filesystem verification. Missing/adverse evidence or required history blocks finalization. Planning readiness, inherited marks, or test execution alone is never completion proof. Cipher 🔓 (Lead Orchestrator) must not report the plan complete, and must not report that plan’s PR or release done, until every confirmed goal is marked complete, Outcome is written, completed metadata is set, and the plan is archived with filesystem verification. An opened, reviewed, or merged PR, or a shipped status, does not replace that sequence. If close-out was skipped after a ship report, restore the still-active plan, run that same pre-release sequence, then archive; do not add a post-merge archive step.
 
 ### Simplicity discipline
 
@@ -202,7 +202,7 @@ A test-first behavior slice may record **expected red**: the designated executor
 1. Run the initial inventory; choose subfolder layout unless ALL five single-file criteria in `references/_template.md` are met (1 owner, ≤30 instruction lines, no phase IO contracts, no external state mutation, no improvisation risk).
 2. Consume the approved story and selected criteria without renegotiation (see **Planning input**). If ownership is missing or CREATE/UPDATE is needed, route to `user-story` and stop before files. Record skipped stories in Context. Do not re-filter unread catalogue bodies here.
 3. Derive slug, the complete write/delete manifest, and execution instructions in memory; derive phases only for subfolder layout. Detect numbered `G1..Gn` from those selected criteria (see **Goal lifecycle**).
-4. Run bounded discovery; present goals/classification/evidence, then Cipher 🔓 (Lead Orchestrator) makes the single short confirming `question` before files. Confirm path-detected template type with goals. A delegated run reports the confirmation packet to Cipher and never invokes `question`.
+4. Run bounded discovery; present goals/classification/evidence, then Cipher 🔓 (Lead Orchestrator) makes the single short confirming `question` before files. Confirm path-detected template type with goals. A delegated run reports the confirmation packet to Cipher 🔓 and never invokes `question`.
 5. Run the post-scope collision check; stop on overlap.
 6. Render only the confirmed layout:
    - **Single-file:** create `plans/<task-slug>-YYYYMMDD.md` from `references/_template.md`'s minimal single-file body, with `Layout: single-file` and `## Audit`. Include applicable programming content when path-detected. Put the sole owner's complete instructions, explicit write/delete paths, outputs, authorized verification and gates in that file. Do not create a plan folder, phase runbooks, phase IO contracts, or dispatch table. If the complete contract cannot meet every single-file criterion, return to scope confirmation for subfolder layout rather than silently changing it.
@@ -244,9 +244,9 @@ For an all-pending-changes analysis, inspect and disposition every nonignored mo
 
 ### Plan lifecycle rules
 
-Apply **Plan lifecycle rules** and **Reopen rule** from the loaded lifecycle contract for every lifecycle event. Only incomplete plans enter Git; completed tracked plans retire by deletions in their completing PR, never an archive commit. No plan deletion, merge command, or stash mutation occurs during archival. Scope changes retain user approval and invalidate affected assignments/evidence.
+Apply **Plan lifecycle rules** and **Reopen rule** from the loaded lifecycle contract for every lifecycle event. Only incomplete plans enter Git; completed tracked plans retire by deletions in their completing PR, never an archive commit. No plan deletion, merge command, or stash mutation occurs during archival. Scope changes retain user approval and invalidate affected assignments/evidence. Cipher 🔓 (Lead Orchestrator) must not report the plan complete or its PR/release done until goal checkmarks, Outcome, completed metadata, archive, and filesystem verification have occurred; an opened, reviewed, or merged PR or shipped status does not replace that sequence. If close-out was skipped after a ship report, restore the still-active plan, run that same pre-release sequence, then archive; post-merge branch cleanup still does not archive.
 
-**User confirms PR merge:** apply **Post-merge proof and cleanup** from the loaded lifecycle contract. Require live MERGED metadata, exact immutable head match, checked fetch/ancestry/extraction, and per-path parity before force deletion; use safe deletion when tip ancestry holds. Fast-forward local base and delete remote only if present. Any proof error blocks deletion; merge remains user-only and no post-merge archive step exists.
+**User confirms PR merge:** apply **Post-merge proof and cleanup** from the loaded lifecycle contract. Require live MERGED metadata, exact immutable head match, checked fetch/ancestry/extraction, and per-path parity before force deletion; use safe deletion when tip ancestry holds. Fast-forward local base and delete remote only if present. Any proof error blocks deletion; merge remains user-only and no post-merge archive step exists. Skipped close-out is repaired by restoring the still-active plan and running the same pre-release sequence, not by archiving here.
 
 ### Documentation discipline
 
