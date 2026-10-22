@@ -1,22 +1,22 @@
 ---
 name: git-pr
-description: Draft a pull request title and body by analyzing branch commits and the diff versus the project's base branch ($BASE), writing output to `pr-draft.md`; if that path is not ignored, preview and request approval before adding it to `.gitignore`. Use when the user wants to open a PR, create a pull request, draft a PR description, or says "I'm done with this branch" / "ready to merge" / "submit my changes".
+description: Draft a pull request title and body by analyzing branch commits and the diff versus the project's base branch ($BASE), writing output to `output/pr-draft.md`. Use when the user wants to open a PR, create a pull request, draft a PR description, or says "I'm done with this branch" / "ready to merge" / "submit my changes".
 license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.6.1
+  version: 1.7.2
   domain: git
 ---
 
 ## Steps
 
 1. Establish scope: the commits on the branch and the complete diff from the merge base with the project's configured base ref (`$BASE`, substituted with the project's actual base) to the current head, sampling the highest-signal files when the change set is large. That diff is the only scope evidence; a whitespace or staging diagnostic never is. An unresolvable or ambiguous configured base stops the draft and is reported as a blocker; never substitute a base of your own choosing.
-2. Find the governing plan — a single file under `plans/` or `plans/<slug>/plan.md`, active or completed — and read its Context for the motivation. Use ticket references from recent commit subjects where present. The Summary explains why, which usually lives there rather than in the diff.
+2. Find the governing plan for this diff among active or completed single-file/subfolder layouts: `plans/*.md`, `plans/<slug>/plan.md`, archived `plans/.completed/*.md`, and `plans/.completed/<slug>/plan.md`. Read candidate content to establish which plan governs the change; do not pick merely by filename, latest date, or active status. Missing or ambiguous governing plan → stop and report the inspected candidates and gap to the coordinator/requester before drafting. Read the selected plan's Context for motivation; use ticket references from recent commit subjects where present. The Summary explains why, which usually lives there rather than in the diff. Archived plans are read-only context, not reopened just to draft.
 3. Derive the title and body from the diff. When the current branch follows `type/scope/description` and its type or scope disagrees with the derived title, keep the diff-derived title and report both values explicitly: a branch is evidence of intent, not authority.
-4. Check the effective ignore rules for `pr-draft.md`. When it is not ignored, preview the exact `.gitignore` line and request explicit approval for that second write. Declined → write neither file and report the blocker. Approved → append the entry only when missing, confirm the path is now ignored, and continue.
-5. Write `pr-draft.md` at the repository root in the shape below. Never create a second PR-description artifact.
-6. Hand off. When the roster is installed, report that `pr-draft.md` is ready for Herald 📯 (Release Manager) to create the PR, naming Inquisitor 🔎 (PR Reviewer) review at the immutable head as the completion condition, and print no publication command. Otherwise report the draft ready for the requester.
+4. Before any draft write, obtain a read-only effective-ignore check for the exact `output/pr-draft.md` path through the existing Git owner (Herald 📯 (Release Manager) when the roster is installed, otherwise the authorized requester). Confirm the actual path is ignored, including negation rules and whether it is already tracked; merely finding an ignore entry is not proof. Check a not-yet-created path prospectively. Not ignored, tracked, denied, failed, or inconclusive → stop and report the checked path and observed blocker to the coordinator/requester for separately authorized remediation by the existing ignore-configuration owner. This skill never edits `.gitignore` or other ignore configuration. While remediation is blocked, pending, or declined, create/overwrite neither draft nor directory and do not hand off a stale file as ready. Resume only after a fresh successful check; this grants no new Git-command authority.
+5. Write `output/pr-draft.md` in the shape below only after that check succeeds. Create `output/` if needed. Never write `pr-draft.md` at the repository root or create a second PR-description artifact.
+6. Hand off. When the roster is installed, report that `output/pr-draft.md` is ready for Herald 📯 (Release Manager) to create the PR, naming Inquisitor 🔎 (PR Reviewer) review at the immutable head as the completion condition, and print no publication command. Otherwise report the draft ready for the requester.
 
 When the branch has no commits ahead of the base, report that there is nothing to draft; if uncommitted changes exist, point to `git-commit` first.
 
@@ -94,6 +94,6 @@ After the PR exists, its body remains the sole evidence surface — never commen
 
 ## Rules
 
-- Write only `pr-draft.md` plus the separately approved ignore entry. Never publish or mutate a PR — creation, title, body, merge, comments and reviews included — and never run a state-mutating Git command.
+- The permitted writes are `output/pr-draft.md` and its `output/` parent directory when that directory is absent. Do not write the repository root or edit `.gitignore`. Never publish or mutate a PR — creation, title, body, merge, comments and reviews included — and never run a state-mutating Git command.
 - Do not tick a checkbox, claim executed evidence, or record a result in the draft.
 - Do not force the title to match the branch; report the mismatch and keep the diff-derived title.

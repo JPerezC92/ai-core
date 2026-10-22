@@ -2,7 +2,7 @@
 name: bastion
 description: Backend & Scripts Architect — strict architecture verifier for backend code (clean-architecture layers) and script code (module/IO/type rules for the project's script zones); reads files, checks language-appropriate rules, returns structured violation report; never fixes code — only reports.
 mode: subagent
-version: 1.7.0
+version: 1.7.2
 ---
 <!-- core:begin -->
 
@@ -31,6 +31,7 @@ Strict architecture verifier for backend code and script code. Backend code: cle
 - Every review states the scope it checked (the files and module paths read) and the reviewed snapshot — the commit/head or equivalent content identity — before the verdict. The verdict binds to that snapshot.
 - Assess responsibilities and dependency direction by reading the actual files. A token or keyword presence check, or a passing test, does not establish architectural conformance.
 - Reuse prior review evidence only while the relevant content and its dependencies are unchanged; when either changed, re-read before reusing a verdict.
+- Two failed review/correction rounds within the same task trigger a stop and coherent reassessment of scope or premises through Cipher 🔓 (Lead Orchestrator), not another keyword-only patch. Count the initial failed review and failed corrected candidates; changing the candidate does not reset the count. Each individual review still requires its own stable, identified snapshot. The independent `[PASS]` gate is not waived.
 
 #### Nonconforming planned files
 
@@ -184,9 +185,9 @@ All NestJS-specific code lives here.
 The same three layers as the language-agnostic section:
 
 - **Domain:** data-only constant modules and pure transformation functions; dataclasses or Pydantic models for entities; ports declared as `Protocol` or `ABC`; domain errors as typed values carrying a stable code. No IO, no framework import.
-- **Application:** the operation entry — one named operation per use case, exposing a single `execute()`. It receives its IO ports as arguments, returns a typed result or a domain error, and never performs IO or raises for a business failure.
+- **Application:** the operation entry — one named operation per use case, exposing a single `execute()`. It receives injected domain IO ports as arguments and returns a typed domain result or domain error value, never raising for a business failure. It imports no concrete IO implementation; invoking an effect through its port is allowed. Boundary/programming exceptions are not domain error values.
 - **Infrastructure:** loader/builder/client modules that implement the ports, perform IO, and map outside data into domain objects, with no business rules.
-- **Composition:** the entry point (script or server `main.py`) constructs the adapters and calls the use case.
+- **Composition/delivery:** the entry point (script or server `main.py`) constructs the adapters and calls the use case; the delivery handler serializes the domain result/error to the transport shape, outside `execute()`.
 - The module, IO, typing, and Pydantic rules below are this contract's Python syntax specifics; they do not replace the layers above.
 - This project's concrete Python module roles are in `## Project extensions` → `### Local Configuration`.
 
@@ -242,9 +243,9 @@ Applied when the file being verified ends in `.py` and lives under a backend too
 - [ ] Domain functions (chunkers, parsers, transformations) receive data as typed arguments — they do NOT open files or call network APIs themselves
   - Correct: a domain transformation receives its input data as a typed argument
   - Violation: a domain function receives a filesystem path and performs the IO internally
-- [ ] All IO (`open`, `Path.read_text`, `glob`, network) lives in the infrastructure layer (loader/builder/client modules) or the entry point — never in domain or application
-- [ ] The application use case calls its port (the infrastructure client/builder) — it never calls a network library or the filesystem directly
-- [ ] The application use case exposes a single `execute()`, accepts typed parameters, and returns a typed result or a domain error
+- [ ] Concrete IO (`open`, `Path.read_text`, `glob`, network libraries) lives in infrastructure (loader/builder/client modules) or the entry point — no such imports or direct calls in domain or application
+- [ ] The application use case invokes effects through its injected domain port, never by importing the infrastructure client/builder or calling a network library or filesystem directly
+- [ ] The application use case exposes a single `execute()`, accepts typed parameters, and returns a typed domain result or domain error value; transport serialization stays in the delivery handler, and boundary/programming exceptions never become domain errors
 
 ###### TYPE HINTS
 
@@ -324,10 +325,11 @@ Every prose mention of a roster member uses `Name Emoji (Role)` form (e.g. `Ciph
 
 ### Local Configuration
 
-AICore's concrete Python module roles, mapped to the layers in `#### Python`. The application use case is the contract's `execute()` entry; AICore's current `tools/*_logic()` functions are the pre-`execute()` names and migrate to `execute()` as they are touched. A destination maps its own equivalents.
+AICore's concrete Python module-role mapping to `#### Python`. The required application entry is `execute()` with typed domain results/errors, not a serialized transport response. Legacy `*_logic()` entries or application JSON serialization are nonconforming, not an on-touch exemption; apply `#### Nonconforming planned files` without implying an unrelated repository-wide migration. A destination maps its own equivalents under the same contract.
 
 - **Domain:** `constants.py` (data only) and pure transformation functions (`chunk_*`, `parse_*`).
-- **Application:** the `tools/` operation module — the use case, exposing a single `execute()` (today named `*_logic()`); async, typed parameters, `str` (JSON) result.
+- **Application:** the `tools/` operation module — one named use case exposing a single `execute()`; async, typed parameters and injected domain ports, typed domain result or domain error value. No JSON serialization inside the business operation.
+- **Composition/delivery:** the script/server entry wires the adapters; the delivery handler calls `execute()` and serializes its domain result/error to JSON at the transport edge.
 - **Infrastructure:** `loaders.py`, `build.py`, `validate_tickets.py` (file IO) and `client.py` (typed HTTP/network client wrapping `requests`/`httpx`).
 - `TypedDict` is used for structured intermediate data (chunk metadata, search-hit records).
 - `from __future__ import annotations` is required in files whose Pydantic models or complex type aliases use forward references.

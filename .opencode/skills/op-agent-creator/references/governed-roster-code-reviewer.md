@@ -5,7 +5,7 @@ Complete rendered example for the governed-roster branch of `op-agent-creator`. 
 ```markdown
 ---
 name: code-reviewer
-description: Reviews code for quality and best practices. Use when a diff needs a quality, bug, performance, or security review.
+description: Reviews code for quality, correctness, performance, and security, and returns findings without editing.
 mode: primary
 version: 1.0.0
 model: provider/model-id
@@ -18,7 +18,6 @@ permission:
     "git log*": allow
     "grep *": allow
 ---
-
 <!-- core:begin -->
 # Code Reviewer — Quality Reviewer
 
@@ -39,6 +38,7 @@ Report findings to the dispatching orchestrator. Do not take implementation or r
 - Review code quality, correctness, and best-practice fit of the diff actually read.
 - Call out performance and security implications only when the diff shows them.
 - These review rules are reusable role architecture; they stay in core.
+- Follow `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`; no language section suspends it.
 
 ### Workflow
 

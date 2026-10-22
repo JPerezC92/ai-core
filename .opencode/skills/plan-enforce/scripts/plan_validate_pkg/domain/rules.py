@@ -193,6 +193,7 @@ def check_plan_snapshot(snapshot: PlanSnapshot) -> list[str]:
     findings.extend(check_completed_line(meta))
     findings.extend(check_required_sections(content))
     findings.extend(check_placeholders(content))
+    findings.extend(check_audit_gate(content, meta.get("Status", "").strip()))
     return findings
 
 
@@ -201,18 +202,16 @@ def validate_plan_snapshot(
 ) -> list[str]:
     """Run the phase-aware plan invariants without file IO.
 
-    Goal trace, manifest equality, verification parity, and the audit gate need
-    the plan's phase files, so only directory validation calls this function;
-    single-file validation keeps the phase-free checks.
+    Goal trace, manifest equality, and verification parity are folder-only and
+    need the plan's phase files, so only directory validation calls this
+    function. The audit gate is content-based, not phase-dependent.
     """
     content = snapshot["content"]
-    status = parse_plan_metadata(content).get("Status", "").strip()
     phase_names = [phase["name"] for phase in phase_snapshots]
     findings: list[str] = []
     findings.extend(check_goal_trace(content, phase_names))
     findings.extend(check_manifest_equality(content, phase_snapshots))
     findings.extend(check_verification_parity(content, len(phase_snapshots)))
-    findings.extend(check_audit_gate(content, status))
     return findings
 
 
@@ -587,9 +586,15 @@ def check_phase_snapshot(snapshot: PhaseSnapshot) -> list[str]:
 
 
 def parse_story_metadata(content: str) -> StoryMetadata:
-    """Extract structured metadata used by user-story index validation."""
+    """Extract structured metadata used by user-story index validation.
+
+    Only the leading metadata block — every line before the first level-2
+    section heading — is parsed, so a fenced example deeper in the body cannot
+    override the story's real header values.
+    """
+    metadata_region = content.split("\n## ", 1)[0]
     fields: StoryMetadata = {}
-    for line in content.splitlines():
+    for line in metadata_region.splitlines():
         m = re.match(r">\s*\*\*(\w[\w ]*):\*\*\s*(.*)$", line)
         if m and m.group(1).strip() == "Status":
             fields["Status"] = m.group(2).strip()

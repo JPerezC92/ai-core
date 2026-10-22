@@ -16,25 +16,25 @@ A reusable, agnostic **agentic orchestration core** for [OpenCode](https://openc
 
 ## Roster
 
-| Agent | Role | Team |
-|---|---|---|
-| Cipher 🔓 | Lead Orchestrator | cross-cutting |
-| Augur 🔮 | Research Analyst | cross-cutting |
-| Marshal 🎖️ | HR Director | cross-cutting |
-| Vault 🔐 | Catalog Steward | cross-cutting |
-| Investigator 🔍 | Incident Investigator | incident |
-| Ledger 📒 | Record Keeper | incident |
-| Quill 🪶 | Note Drafter | incident |
-| Scribe ✍️ | Docs & Problems Manager | incident |
-| Atrium 🏛️ | Frontend Architect | dev |
-| Bastion 🧱 | Backend & Scripts Architect | dev |
-| Crucible 🔥 | Test Architect | dev |
-| Forge 🔨 | Implementer | dev |
-| Herald 📯 | Release Manager | dev |
-| Inquisitor 🔎 | PR Reviewer | dev |
-| Lumen ✨ | Visual Director | dev |
-| Sentinel 🛡️ | Quality Guardian | dev |
-| Warden 🔒 | Dependency Warden | dev |
+| Agent | Team |
+|---|---|
+| Cipher 🔓 (Lead Orchestrator) | cross-cutting |
+| Augur 🔮 (Research Analyst) | cross-cutting |
+| Marshal 🎖️ (HR Director) | cross-cutting |
+| Vault 🔐 (Catalog Steward) | cross-cutting |
+| Investigator 🔍 (Incident Investigator) | incident |
+| Ledger 📒 (Record Keeper) | incident |
+| Quill 🪶 (Note Drafter) | incident |
+| Scribe ✍️ (Docs & Problems Manager) | incident |
+| Atrium 🏛️ (Frontend Architect) | dev |
+| Bastion 🧱 (Backend & Scripts Architect) | dev |
+| Crucible 🔥 (Test Architect) | dev |
+| Forge 🔨 (Implementer) | dev |
+| Herald 📯 (Release Manager) | dev |
+| Inquisitor 🔎 (PR Reviewer) | dev |
+| Lumen ✨ (Visual Director) | dev |
+| Sentinel 🛡️ (Quality Guardian) | dev |
+| Warden 🔒 (Dependency Warden) | dev |
 
 Persona CVs live at `agents/<name>/profile.md`; runtime specs at `.opencode/agents/<name>.md` (Cipher's runtime spec is the root `AGENTS.md` by design). The spec carries workflow only, the CV carries personality — they never duplicate each other.
 
@@ -53,6 +53,8 @@ agents/<name>/profile.md      17 persona CVs (incl. cipher)
 knowledge/agents.md           Shared agent rules (evidence/report discipline, hard rules) —
                               shared rules ship, source-side extensions stay project
                               (register table copies with its core region)
+knowledge/agent-workflow.md   Shared agent entry — owners, assessment, feedback, conflicts
+docs/architecture/            Source-local ADRs and historical decision records
 knowledge/debt.md             Accepted-debt register — frame-only core (entry format and rules);
                               filed entries are project-region content and never ship
 knowledge/symptoms.md         Diagnostic symptom-class catalog — shared catalog, ships in full
@@ -62,7 +64,7 @@ knowledge/problems.md         Known-problem register — shared catalog, ships i
 knowledge/diagnostic-system-design.md  Diagnostic-system living design (incident query
                                        verification implemented, broader design deferred); shared contract
                                        ships, local refinement state stays project
-plans/  user-stories/         Plan lifecycle artifacts (plan-enforce); eleven portable story
+plans/  user-stories/         Plan lifecycle artifacts (plan-enforce); twelve portable story
                               contracts carry core/project regions; source-local stories and
                               the source catalogue stay source-only
 pyproject.toml  uv.lock       Python toolchain (uv; pytest + pytest-xdist in the dev group)
@@ -74,7 +76,7 @@ output/                       Temporal working space (audits, research, design �
 ### Existing project — atomic adoption via `core-sync`
 
 1. Start only from a destination that is already clean and saved. `core-sync` performs no cleanliness check — confirming the destination is clean and saved is an operator pre-flight. Run `core-sync init --bind-cleared` from an AICore checkout after an approved source refresh. Inspect the selected revision's clearance and every applicable target precondition in `.opencode/skills/core-sync/SKILL.md` first — existing merge targets and raw-target parent requirements remain binding, and markerless or new region paths require enrollment before they can sync. It enrolls the **complete applicable unit set** at one AICore revision using the cleared modes: each file's `core` region gets the source core, and the file's previous body moves into the destination-owned `project` region. Review every `.aicore/reconciliation/` report under the core-wins rule, resolve the destination-root reconciliation blocker, and clear `pending`; `core-sync check` must exit `0` before the enrollment is accepted. Do not treat enrollment as an application build.
-2. Keep the shared knowledge infrastructure. Copying follows each unit's cleared mode: a region-mode source delivers its `core` region while the destination's `project` bytes are preserved, a raw source is copied whole, and a merge source replaces the source-owned top-level keys (the `mcp` key alone merging by server name, core-wins on a same-named server while destination-only MCP servers survive). The clearance registry (`distribution-clearance.json`, format defined in `distribution-clearance.definition.md`) declares the cleared set. The register tables of the three shared registers (`knowledge/agents.md`, `knowledge/problems.md`, `knowledge/symptoms.md`) live in the core region and copy with it like every core region — no table declarations exist. The shared rules ship, with source-side extensions staying project (`knowledge/agents.md`). The shared catalogs ship in full: `knowledge/symptoms.md` (symptom-class catalog) and `knowledge/problems.md` (known-problem register, empty of rows as shipped). The debt register (`knowledge/debt.md`) ships its frame alone — the payload the retired 0-entry seed used to carry — and its filed entries are project-region content: AICore's filed debt is never copied into a destination, and no seed template ships. The living design ships its shared contract as `knowledge/diagnostic-system-design.md`, its local refinement state staying project. Destination-filed records live in the destination's project region, survive every sync, and are never substituted — distinguish filed history, which never ships, from the shared catalog, which does. Shared story contracts move like every other cleared source: the eleven portable story contracts deliver their `core` region — shared metadata through Constraints and portable Proof — while local evidence, approval records, revision tracking, and Change log stay in the destination-owned `project` region, and source-local state never ships. The three source-only stories (`user-stories/core-sync.md`, `user-stories/aicore-adoption-governance.md`, `user-stories/python-pytest.md`) and the source `user-stories/index.md` are not delivered. The destination owns its `plans/`, its own stories and filed records, and one destination-owned `user-stories/index.md` reconciled against the actual shared and local files; reconciling an enrolled story keeps genuine destination-owned stories, records, evidence, and history and removes only duplicate shared text displaced into its project body.
+2. Keep the shared knowledge infrastructure. Copying follows each unit's cleared mode: a region-mode source delivers its `core` region while the destination's `project` bytes are preserved, a raw source is copied whole, and a merge source replaces the source-owned top-level keys (the `mcp` key alone merging by server name, core-wins on a same-named server while destination-only MCP servers survive). The clearance registry (`distribution-clearance.json`, format defined in `distribution-clearance.definition.md`) declares the cleared set. The register tables of the three shared registers (`knowledge/agents.md`, `knowledge/problems.md`, `knowledge/symptoms.md`) live in the core region and copy with it like every core region — no table declarations exist. The shared rules ship, with source-side extensions staying project (`knowledge/agents.md`). The shared workflow entry ships as `knowledge/agent-workflow.md`. The shared catalogs ship in full: `knowledge/symptoms.md` (symptom-class catalog) and `knowledge/problems.md` (known-problem register, empty of rows as shipped). The debt register (`knowledge/debt.md`) ships its frame alone — the payload the retired 0-entry seed used to carry — and its filed entries are project-region content: AICore's filed debt is never copied into a destination, and no seed template ships. The living design ships its shared contract as `knowledge/diagnostic-system-design.md`, its local refinement state staying project. Destination-filed records live in the destination's project region, survive every sync, and are never substituted — distinguish filed history, which never ships, from the shared catalog, which does. Shared story contracts move like every other cleared source: the twelve portable story contracts deliver their `core` region — shared metadata through Constraints and portable Proof — while local evidence, approval records, revision tracking, and Change log stay in the destination-owned `project` region, and source-local state never ships. The six non-cleared stories (`user-stories/core-sync.md`, `user-stories/aicore-adoption-governance.md`, `user-stories/python-pytest.md`, `user-stories/concise-skill-authoring.md`, `user-stories/pr-review-corrections.md`, `user-stories/response-note-drafting.md`) and the source `user-stories/index.md` are not delivered. The destination owns its `plans/`, its own stories and filed records, and one destination-owned `user-stories/index.md` reconciled against the actual shared and local files; reconciling an enrolled story keeps genuine destination-owned stories, records, evidence, and history and removes only duplicate shared text displaced into its project body.
 3. If your stack differs, adapt only the project-extensions sections of the stack-specific rulebooks (`atrium.md`, `bastion.md`, `crucible.md`, `lumen.md`) before adopting the core, and record that review in the destination's `.aicore/reconciliation/` records. Do not replace mandatory bytes.
 4. Substitute your real tooling only in destination-owned project extensions or destination configuration. Do not edit protected mandatory text. The core ships neutral on purpose.
 5. Recurring updates run from an AICore checkout, after an approved refresh of the protected upstream tip, using the absolute path `.opencode/skills/core-sync/scripts/core_sync.py`:
@@ -92,7 +94,7 @@ output/                       Temporal working space (audits, research, design �
 
 ### New project — start from this repository
 
-Clone AICore, then remove only source-local state so the fresh project starts clean: `plans/`, `output/`, `knowledge/debt.md` filed entries, `commit.txt`, `pr-draft.md`, AICore's git history, each delivered file's source-local `project` content, and the source-only stories (`user-stories/core-sync.md`, `user-stories/aicore-adoption-governance.md`, `user-stories/python-pytest.md`) and source `user-stories/index.md` that are never delivered. Retain the shared story cores — the eleven portable story contracts keep their shared contract in `core` and an empty `project` region — and keep any destination-owned stories, records, evidence, and history intact. Reconcile one destination-owned `user-stories/index.md` against the actual shared and local files. Customize the project-extensions sections (stack rulebooks, `knowledge/`, MCP servers, models) to your stack, and keep the core regions untouched. Do not treat the clone as enrolled: future `core-sync apply` or `core-sync check` runs require an authorized enrollment first — `core-sync init --bind-cleared` from a **separate** AICore source checkout at the selected revision, under the same clearance and applicable-target-precondition review as any destination. Never run core-sync with an overlapping source and destination root, and never assemble the destination's `.aicore/core.yaml` bindings by hand; the enrollment writes the bindings and pins the revision.
+Clone AICore, then remove only source-local state so the fresh project starts clean: `plans/`, `output/`, `docs/architecture/`, `knowledge/debt.md` filed entries, AICore's git history, each delivered file's source-local `project` content, and the six non-cleared stories (`user-stories/core-sync.md`, `user-stories/aicore-adoption-governance.md`, `user-stories/python-pytest.md`, `user-stories/concise-skill-authoring.md`, `user-stories/pr-review-corrections.md`, `user-stories/response-note-drafting.md`) and source `user-stories/index.md` that are never delivered. Retain the shared story cores — the twelve portable story contracts keep their shared contract in `core` and an empty `project` region — and keep any destination-owned stories, records, evidence, and history intact. Reconcile one destination-owned `user-stories/index.md` against the actual shared and local files. Customize the project-extensions sections (stack rulebooks, `knowledge/`, MCP servers, models) to your stack, and keep the core regions untouched. Do not treat the clone as enrolled: future `core-sync apply` or `core-sync check` runs require an authorized enrollment first — `core-sync init --bind-cleared` from a **separate** AICore source checkout at the selected revision, under the same clearance and applicable-target-precondition review as any destination. Never run core-sync with an overlapping source and destination root, and never assemble the destination's `.aicore/core.yaml` bindings by hand; the enrollment writes the bindings and pins the revision.
 
 ## Development
 
@@ -100,12 +102,12 @@ Clone AICore, then remove only source-local state so the fresh project starts cl
 - **Tests** — `uv run --frozen --group dev pytest -q` runs the whole suite (worker-parallel via pytest-xdist; scope: core-sync, plan validators, runbook validators, query verification, and the other skill machinery). Skill tests live throughout each skill's `scripts/` tree, not only beside the entry script: `.opencode/skills/<skill>/scripts/**/test_*.py`, including layered subpackages (e.g. `.opencode/skills/op-model/scripts/op_model_lookup/domain/test_catalog.py`).
 - **Authoring** — use the `op-skill-creator` and `op-agent-creator` skills to scaffold skills/agents, and `op-model` to change agent models deterministically.
 - **Config changes** — the OpenCode TUI must be restarted after any `opencode.jsonc` permission change; active sessions do not reload it. AICore's `opencode.jsonc` targets the OpenCode V2 config definition, and `opencode.v1.jsonc` preserves the V1 config for an OpenCode V1 binary.
-- **Plan discipline** — non-trivial work starts with the `plan-enforce` skill (plan artifact in `plans/` + user story). Parallel tasks need accepted inputs and non-overlapping writes; a written assignment is not a lock, and a separate session is not verified isolation. Specs never bump synced version numbers locally — destination-local changes live in git history and the user-story change log. Restart OpenCode after accepting runtime or skill changes; the active session does not hot-reload them.
+- **Plan discipline** — agents read `knowledge/agent-workflow.md` before acting. Non-trivial work starts with the `plan-enforce` skill (plan artifact in `plans/` + user story). Parallel tasks need accepted inputs and non-overlapping writes; a written assignment is not a lock, and a separate session is not verified isolation. Specs never bump synced version numbers locally — destination-local changes live in git history and the user-story change log. Restart OpenCode after accepting runtime or skill changes; the active session does not hot-reload them.
 
 ## Notes
 
-- Everything is OpenCode-native: agent specs in `.opencode/agents/`, skills in `.opencode/skills/` (`compatibility: opencode`), plan lifecycle in `plans/` + `user-stories/`.
+- Everything is OpenCode-native: agent specs in `.opencode/agents/`, skills in `.opencode/skills/` (`compatibility: opencode`), plan lifecycle in `plans/` + `user-stories/`. Source-local architecture decisions live in `docs/architecture/`.
 - `output/` is gitignored — it holds temporal artifacts (audit reports, research briefs, design briefs/audits); agents create it on first write.
-- Skills `git-commit` and `git-pr` write `commit.txt` / `pr-draft.md` (both gitignored) and, with `git-branch-name`, assume git + pnpm and the GitHub CLI (`gh`) — the dev-team defaults.
+- Skills `git-commit` and `git-pr` write `output/commit.txt` / `output/pr-draft.md` (covered by the `output/` ignore) and, with `git-branch-name`, assume git + pnpm and the GitHub CLI (`gh`) — the dev-team defaults.
 - Each destination's adopted content is bound by its own `.aicore/core.yaml`: it maps each source file to its destination paths and pins the `core_revision` the destination was enrolled at. The bindings are destination-owned state — AICore keeps no adopter registry.
 - This project uses the local memories.sh store via the `memories` MCP server as a **cache** of repo-derivable facts; durable knowledge belongs in repo surfaces (`knowledge/`, skill Troubleshooting), never memory-only.

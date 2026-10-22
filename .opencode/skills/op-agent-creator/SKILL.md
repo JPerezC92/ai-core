@@ -5,14 +5,14 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.4.0
+  version: 1.4.6
 ---
 
 ## Project extensions
 
 ### Knowledge hooks
 
-This project's pre-flight knowledge hooks are the files `knowledge/agents.md`, `knowledge/skill-migration-reference.md`, `knowledge/skills.md`, and `.opencode/agents/vault.md` (Quality Checklist section). `knowledge/skill-migration-reference.md` and `knowledge/skills.md` are destination-specific hooks and may be absent; the skill degrades gracefully when they are.
+This project's pre-flight knowledge hooks are the files `knowledge/agents.md`, `knowledge/agent-workflow.md`, `knowledge/skill-migration-reference.md`, `knowledge/skills.md`, and `.opencode/agents/vault.md` (Quality Checklist section). `knowledge/agents.md` and `knowledge/agent-workflow.md` are shared infrastructure; skip the workflow entry only when it is not present yet. `knowledge/skill-migration-reference.md` and `knowledge/skills.md` are destination-specific hooks and may be absent; the skill degrades gracefully when they are.
 
 ### Claude Code migration
 
@@ -54,6 +54,7 @@ Classify the requested operation as exactly one of:
 | File | Why | If absent |
 |---|---|---|
 | This project's shared-rules reference (see Project extensions) | Roster ownership table (per-agent rule boundaries) | Skip; use the roster in this project's docs |
+| This project's agent-workflow entry (see Project extensions) | Authority map; keep files small; do not copy owner rulebooks | Skip; do not invent a competing workflow |
 | This project's skill-migration reference (see Project extensions) | Field deltas, body renames, metadata defaults | Skip; use the embedded rules in this skill |
 | This project's skills inventory (see Project extensions) | Inventory + uniqueness check + adjacent skill state | Skip; uniqueness checked against the agent directory on disk |
 | The catalog steward agent's Quality Checklist section (see Project extensions) | QC-4 (WHAT + WHEN description) guidance; the agent-contract checks are embedded in Step 6 | Skip; the agent-contract checks are embedded in Step 6 |
@@ -73,6 +74,7 @@ After loading, the agent MUST emit one line per file:
 ```
 guidelines loaded:
 - shared-rules reference: loaded | skipped (not present)
+- agent-workflow entry: loaded | skipped (not present)
 - skill-migration reference: loaded | skipped (not present)
 - skills inventory: loaded | skipped (not present)
 - catalog steward Quality Checklist section: loaded | skipped (not present)
@@ -98,7 +100,7 @@ Create a new OpenCode-native agent under `.opencode/agents/{name}.md`. The agent
 
 ### Steps
 
-1. Ask for the new agent's `name` if not provided.
+1. Take `name` from the request; if missing, report to Cipher 🔓 (Lead Orchestrator).
 2. Validate `name` immediately:
    - 1–64 characters
    - Matches `^[a-z0-9]+(-[a-z0-9]+)*$`
@@ -106,26 +108,26 @@ Create a new OpenCode-native agent under `.opencode/agents/{name}.md`. The agent
    - Does not contain `--`
    - Will become the file name (no `.md` extension in the YAML `name` field)
    - Is unique in `.opencode/agents/` (project-local check; the creator cannot check global paths — the user must ensure uniqueness across all locations)
-   - If a file already exists at `.opencode/agents/{name}.md`, ask the user via multiple-choice question:
+   - If a file already exists at `.opencode/agents/{name}.md`, stop and report to Cipher 🔓 (Lead Orchestrator): overwrite, pick a different name, or abort. Never invoke the user-facing `question` tool from a delegated run.
      - **A.** Overwrite the existing file
      - **B.** Pick a different name
      - **C.** Abort
-3. Ask: "Is this a **primary agent** or a **subagent**?" (default: **subagent** — more common case for new agents).
+3. If mode is missing, report to Cipher 🔓 (Lead Orchestrator); default **subagent** when the request already implies it.
 4. Branch to the matching sub-flow (primary or subagent) — see sections below.
-5. **Step 5 — Consistency check.** Verify the agent's `description` frontmatter field covers every major capability declared in the body (system prompt). Cross-reference the Vault 🔐 (Catalog Steward) Quality Checklist (file loaded in Step 0.2) — specifically item QC-4 (description has WHAT + WHEN + "Use when …" — adapted for agents: WHAT the agent does + WHEN to dispatch it) and the agent body completeness rules. For example:
+5. **Step 5 — Consistency check.** Verify the agent's `description` frontmatter field covers every major capability declared in the body (system prompt). A **subagent** description states WHAT it does and WHEN to dispatch it. A **primary** description is a brief behavioral summary, not a skill-style `Use when …` trigger. For example:
    - If the body says "I review pull requests" but the description says "I write docs" → mismatch.
    - If the body is restricted to read-only tools but the description says "I edit and run tests" → mismatch.
-   - If a capability is missing from the description, stop and ask the user via multiple-choice question:
+   - If a capability is missing from the description, stop and report to Cipher 🔓 (Lead Orchestrator): auto-update, let the user edit, or abort. Never invoke the user-facing `question` tool from a delegated run.
      - **A.** Auto-update the description with a recommended addition
      - **B.** Let the user edit manually
-     - **C.** Ignore the mismatch and continue
+      - **C.** Abort agent creation
 6. **Step 6 — Pre-validation (agent-contract subset).** Generated specs must cite `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)` and must not tell a language section to suspend it. Before writing, run these checks against the fully built agent definition. The agent runtime-spec contract (Marshal 🎖️ (HR Director)'s Runtime Spec Format; Sentinel 🛡️ (Quality Guardian) rule SP-3) is authoritative; reference it for full text:
 
    ```
    - [ ] File is `.opencode/agents/<name>.md` — a single markdown file, not a folder — QC-1 (adapted)
    - [ ] Frontmatter `name` matches file basename — QC-2
    - [ ] Frontmatter `name` is kebab-case — QC-3
-   - [ ] `description` 1–1024 chars, no `<`, `>`, has WHAT + WHEN — QC-4 (adapted for agents)
+   - [ ] `description` 1-1024 chars, no `<`, `>`; subagent WHAT + WHEN to dispatch; primary behavioral summary, not a skill trigger - QC-4 (adapted for agents)
    - [ ] No `claude-` or `anthropic-` prefix — QC-5
    - [ ] No unfilled `{...}` placeholders — QC-13
    - [ ] Total under 5,000 words; body under 500 lines; static blocks >30 lines extracted — QC-14 / QC-27 (adapted)
@@ -136,20 +138,20 @@ Create a new OpenCode-native agent under `.opencode/agents/{name}.md`. The agent
      - [ ] Contract: follow Marshal 🎖️ (HR Director)'s Runtime Spec Format and Sentinel 🛡️ (Quality Guardian) SP-3 — do not invent a competing layout. Exactly one `<!-- core:begin -->` … `<!-- core:end -->` pair immediately after the frontmatter closing `---`. Governed roster specs use all eight H3s in order under `## Mandatory core`: Your Role, Roster Context, Rulebook, Workflow, Tools and References, Output Format, Stop and Report, Hard Rules. Custom non-roster specs omit the persona line and `### Roster Context` explicitly and keep the other seven in core. Optional project markers only for evidenced local configuration, actual local grants, selected bindings, or local history. `### Hard Rules` is the last H3. A command named in the body is a reference form, not a grant; the frontmatter `permission` block is the configured grant.
    ```
 
-   If any check FAILS, fix or surface to user via the `question` tool before the write step (Step 10).
-7. If issues are found, stop and ask the user via multiple-choice question:
+   If any check FAILS, fix safe defects or report to Cipher 🔓 (Lead Orchestrator) before the write step (Step 10). Never invoke the user-facing `question` tool from a delegated run. Mandatory portable requirements, runtime validity, and shared/core agent-contract obligations cannot be waived by a generic override. A legitimate discretionary project-local exception must be explicitly permitted by its owning rule, approved by its authorized owner, and recorded with scope and rationale; it resolves that local choice, never a mandatory-check failure or a conflict with core. If the authority or applicability is unclear, stop and report rather than treating the check as optional.
+7. If issues are found, stop and report to Cipher 🔓 (Lead Orchestrator) with a short recommendation: auto-fix if safe, request a corrected value, or abort.
    - **A.** Auto-fix the issue if safe
    - **B.** Let the user provide a corrected value
    - **C.** Abort agent creation
    - Include a short recommendation for each issue.
 8. Apply the chosen fix and re-run the final prevalidation. Repeat until no issues remain or the user aborts.
 9. Create the directory `.opencode/agents/` if it does not exist.
-10. **Step 10 — Write file.** Write to `.opencode/agents/{name}.md`. If any Quality Checklist check failed in Step 6 and was not explicitly overridden by the user, halt here and ask.
+10. **Step 10 — Write file.** Write to `.opencode/agents/{name}.md` only after all mandatory checks pass and any permitted discretionary local exception is resolved and recorded under Step 6. Any unresolved or mandatory failed check halts the write and is reported to Cipher 🔓 (Lead Orchestrator); an override does not authorize a noncompliant spec.
 11. Re-read the file to confirm it exists, frontmatter parses, and the file name matches the `name` field.
 
 ### Argument collection form
 
-When the initial `name` or `mode` arguments are missing, invalid, or ambiguous, use the `question` tool to collect corrections — never re-ask in plain text. Full convention: this project's conventions reference § "Skill argument form-fill convention" (see Project extensions).
+When the initial `name` or `mode` arguments are missing, invalid, or ambiguous, report to Cipher 🔓 (Lead Orchestrator) — never invoke the user-facing `question` tool from a delegated run.
 
 #### Fields
 
@@ -165,11 +167,11 @@ When the initial `name` or `mode` arguments are missing, invalid, or ambiguous, 
 | **Missing arg** | Name not provided, or mode not stated |
 | **Validation failure** | Name fails regex (e.g., uppercase, underscores, double hyphens) |
 
-Clean parse + clean validation = **no form** — agent proceeds directly. Steps 3–11 already use multi-choice questions for later fields (overwrite/pick-new, auto-fix/manual/abort) — those are fine as-is.
+Clean parse + clean validation = **no form** — agent proceeds directly. Later missing decisions are reported to Cipher 🔓 (Lead Orchestrator), not asked via the user-facing `question` tool on a delegated run.
 
 ### Sub-flow: primary agent
 
-Ask the user for each field, then build the frontmatter:
+Take each field from the request; report missing required fields to Cipher 🔓 (Lead Orchestrator), then build the frontmatter:
 
 | Field | Required? | Notes |
 |---|---|---|
@@ -182,18 +184,18 @@ Ask the user for each field, then build the frontmatter:
 | `steps` | optional | positive integer; max agentic iterations before forced summary |
 | `disable` | optional | `true` to disable the agent |
 | `prompt` | optional | external prompt file path; if unset, the markdown body IS the system prompt |
-| `permission` | optional | ask which permission keys to set and what action; typical keys for a primary agent: `edit`, `bash`, `webfetch`, `websearch`, `skill`, `task`, `external_directory` |
+| `permission` | optional | take keys from the request; typical keys for a primary agent: `edit`, `bash`, `webfetch`, `websearch`, `skill`, `task`, `external_directory` |
 
 > `hidden` is NOT applicable for primary agents. Reject if the user tries to set it.
 
 ### Sub-flow: subagent (default)
 
-Ask the user for each field, then build the frontmatter:
+Take each field from the request; report missing required fields to Cipher 🔓 (Lead Orchestrator), then build the frontmatter:
 
 | Field | Required? | Notes |
 |---|---|---|
 | `mode` | yes | must be `subagent` |
-| `description` | yes | 1–1024 chars; brief behavioral summary |
+| `description` | yes | 1–1024 chars; WHAT it does and WHEN to dispatch it |
 | `model` | optional | defaults to the model of the invoking primary agent |
 | `temperature` | optional | 0.0–1.0 |
 | `top_p` | optional | 0.0–1.0 |
@@ -262,120 +264,9 @@ Reusable review, documentation, and diagnostic rules belong in core. Add `<!-- p
 
 See `references/governed-roster-code-reviewer.md` for the complete rendered `.opencode/agents/code-reviewer.md` example. It is illustrative; validate new specs against the current Runtime Spec Format and SP-3 rules.
 
-#### Custom subagent — `docs-writer`
+#### Custom and hidden subagent examples
 
-`.opencode/agents/docs-writer.md`:
-
-```markdown
----
-name: docs-writer
-description: Writes and maintains project documentation. Use when docs need to be created or updated.
-mode: subagent
-version: 1.0.0
-permission:
-  bash: deny
----
-
-<!-- core:begin -->
-# Docs Writer
-
-Custom non-roster agent: no persona CV, so this spec omits the persona reference line and `### Roster Context`.
-
-## Mandatory core
-
-### Your Role
-
-Create clear, comprehensive documentation. Do not edit application source.
-
-### Rulebook
-
-- Write clear explanations with a stable heading structure.
-- Include a code example when the documented behavior is procedural.
-- These documentation rules are reusable; they stay in core. This example has no local configuration, so it has no project region.
-
-### Workflow
-
-1. Read the existing doc and the change that must be documented.
-2. Draft the update.
-3. Return the draft for human review before any publish step.
-
-### Tools and References
-
-- Read existing docs and the source that grounds them.
-- This example's configured grant is the frontmatter `permission` block (`bash: deny`). A command named in prose is a reference form only — it does not authorize running the command or changing permission config.
-
-### Output Format
-
-Return the documentation draft, the path it belongs in, and what a human must review before publish.
-
-### Stop and Report
-
-If the source behavior is missing or contradicted, stop and report the gap. Do not invent the missing behavior.
-
-### Hard Rules
-
-- Never edit source code.
-- Never publish without human review.
-<!-- core:end -->
-```
-
-#### Hidden subagent — `internal-helper`
-
-`.opencode/agents/internal-helper.md`:
-
-```markdown
----
-name: internal-helper
-description: Internal subagent for system-level diagnostics. Use when another agent needs diagnostics via the Task tool.
-mode: subagent
-version: 1.0.0
-hidden: true
-permission:
-  edit: deny
-  bash: ask
----
-
-<!-- core:begin -->
-# Internal Helper
-
-Custom non-roster agent: no persona CV, so this spec omits the persona reference line and `### Roster Context`.
-
-## Mandatory core
-
-### Your Role
-
-Run system-level diagnostics and return findings. Do not edit files.
-
-### Rulebook
-
-- Limit diagnostics to the requested system-level question.
-- These diagnostic rules are reusable; they stay in core. This example has no local configuration, so it has no project region.
-
-### Workflow
-
-1. Read the diagnostic question and the allowed scope.
-2. Collect only the evidence that question needs.
-3. Return findings. Do not widen the scope.
-
-### Tools and References
-
-- Read-only inspection tools are the reference set for this role.
-- This example's configured grant is the frontmatter `permission` block (`edit: deny`, `bash: ask`). Naming a command here is not a grant to run it, install packages, or edit permission config.
-
-### Output Format
-
-Return each finding with the evidence that supports it and any gap that blocked a check.
-
-### Stop and Report
-
-If the question or scope is missing, stop and report the gap. Do not guess a diagnostic target.
-
-### Hard Rules
-
-- Never edit files.
-- Never run destructive commands.
-<!-- core:end -->
-```
+When creating custom or hidden subagents, read this skill's `references/custom-agent-examples.md` before rendering the agent spec. It contains the complete rendered `docs-writer` and `internal-helper` examples; validate new specs against the current Runtime Spec Format and SP-3 rules above.
 
 ### Migration: Claude Code → OpenCode
 
@@ -385,15 +276,15 @@ Use this when the user has an existing Claude Code agent spec and wants an OpenC
 
 1. Read the existing Claude Code agent file (frontmatter + body).
 2. Map its fields to OpenCode fields (see Project extensions for the concrete Claude Code mapping).
-3. Keep the Claude Code agent file read-only. Ask the user via multiple-choice question about **Persona CV handling** (if `agents/{name}/profile.md` exists):
+3. Keep the Claude Code agent file read-only. Report **Persona CV handling** to Cipher 🔓 (Lead Orchestrator) when `agents/{name}/profile.md` exists:
    - A. Keep the CV; OpenCode agent body references it via a single persona reference line.
    - B. Drop the CV; consolidate persona into the OpenCode agent body — **only for a custom (non-roster) agent**. When the target is a governed roster spec this option is unavailable: the CV/runtime split is mandatory — persona lives only in the persona CV and the runtime spec references it via the single line. Never duplicate persona content into a roster spec body.
    - C. Stop — migration requires human review of persona content.
 4. Build a migration preview: list every OpenCode file to create or edit, and show the Claude Code source file as read-only/unchanged.
-5. Ask the user to confirm the preview.
+5. Report the preview to Cipher 🔓 (Lead Orchestrator) for confirmation. Never invoke the user-facing `question` tool from a delegated run.
 6. Execute the migration: write `.opencode/agents/{name}.md` and update its body to reference the CV (if option A above); never move, edit, or delete the Claude Code source file.
 7. Run a final prevalidation on the new agent and any edited reference files.
-8. If issues are found, stop and ask the user via multiple-choice question with recommendations.
+8. If issues are found, stop and report to Cipher 🔓 (Lead Orchestrator) with recommendations.
 9. Apply the chosen fix and re-run prevalidation. Repeat until no issues remain or the user aborts.
 10. Confirm completion and list all changed paths.
 

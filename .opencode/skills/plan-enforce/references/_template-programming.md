@@ -116,7 +116,7 @@
 
 > Filled by the independent auditor before the plan is reported ready or Forge 🔨 (Implementer) is dispatched. An unavailable auditor leaves the plan not-ready; a substitute requires explicit user authorization recorded here. Completion evidence is the layered matrix (code architecture, test architecture, execution, model/guidance) on the final candidate; a planning-readiness audit is not the completion audit.
 
-> Record reviewed content/input identities and scope with the evidence; relevant changes invalidate the verdict. Author returns require coordinator acceptance, not self-audit. Load `references/_lifecycle-contract.md` fully before lifecycle operations; missing/unread content blocks them.
+> Record reviewed content/input identities and scope with the evidence; relevant changes invalidate the verdict. Author returns require coordinator acceptance, not self-audit. Load the applicable sections of `references/_lifecycle-contract.md` before lifecycle operations; missing/unread applicable content blocks them.
 
 - Auditor: not yet run
 - Verdict: [PENDING]
@@ -142,7 +142,7 @@
 
 ## Template footer (inherits base rules)
 
-> **HARD RULE — anti-improvisation:** Plans must give the agent a complete execution path. Agent improvisation forbidden — every command, file, gate must be explicit.
+> **HARD RULE — anti-improvisation:** Plans must give the agent a complete execution contract. Public interfaces, allowed writes, verify commands, and gates must be explicit. Do not prewrite private implementation.
 
 This programming template inherits the base subfolder / single-file rules from `references/_template.md`:
 

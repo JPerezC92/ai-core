@@ -11,6 +11,9 @@
     "knowledge/agents.md": {
       "mode": "region"
     },
+    "knowledge/agent-workflow.md": {
+      "mode": "region"
+    },
     "knowledge/debt.md": {
       "mode": "region"
     },
@@ -162,6 +165,9 @@
       "mode": "region"
     },
     "agents/warden/profile.md": {
+      "mode": "region"
+    },
+    "user-stories/agent-workflow-navigation.md": {
       "mode": "region"
     },
     "user-stories/clean-architecture-contract.md": {

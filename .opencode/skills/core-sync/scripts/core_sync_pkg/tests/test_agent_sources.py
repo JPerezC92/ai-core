@@ -55,9 +55,10 @@ CORE_ANCHORS = {
 LOCAL_ONLY = {
     "crucible.md": (
         "The AICore project's narrow read-only discovery allowance includes "
-        "`rg`, `ls`, `wc`, and read-only `git log`, `git show`, and `git diff` "
-        "commands. These commands are not test execution, not a package install, "
-        "and not a Git mutation.",
+        "`rg`, `ls`, and `wc`. These commands are not test execution or a "
+        "package install. No Git command is authorized: the core no-Git "
+        "boundary applies to read-only Git as well as mutations, regardless "
+        "of any conflicting harness allow.",
     ),
     "warden.md": (
         "In AICore, no scanner is configured in Warden's permitted command list; "

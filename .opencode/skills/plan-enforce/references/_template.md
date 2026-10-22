@@ -88,7 +88,7 @@
 
 > Filled by the independent auditor before the plan is reported ready or Forge 🔨 (Implementer) is dispatched. An unavailable auditor leaves the plan not-ready; a substitute requires explicit user authorization recorded here. Completion evidence is the layered matrix (code architecture, test architecture, execution, model/guidance) on the final candidate; a planning-readiness audit is not the completion audit.
 
-> Record reviewed content/input identities and scope with the evidence; relevant changes invalidate the verdict. Author returns require coordinator acceptance, not self-audit. Load `references/_lifecycle-contract.md` fully before lifecycle operations; missing/unread content blocks them.
+> Record reviewed content/input identities and scope with the evidence; relevant changes invalidate the verdict. Author returns require coordinator acceptance, not self-audit. Load the applicable sections of `references/_lifecycle-contract.md` before lifecycle operations; missing/unread applicable content blocks them.
 
 - Auditor: not yet run
 - Verdict: [PENDING]
@@ -114,7 +114,7 @@
 
 ## Single-file exception (template footer)
 
-> **HARD RULE — anti-improvisation:** Plans must give the agent a complete execution path. Agent improvisation forbidden — every command, file, gate must be explicit.
+> **HARD RULE — anti-improvisation:** Plans must give the agent a complete execution contract. Public interfaces, allowed writes, verify commands, and gates must be explicit. Do not prewrite private implementation.
 
 The subfolder pattern is the **default**. Single-file is an **exception**, allowed ONLY when ALL five criteria are met:
 
@@ -124,12 +124,45 @@ The subfolder pattern is the **default**. Single-file is an **exception**, allow
 4. **No external state mutation** — no ticket-system writes, no DB writes, no git operations beyond a single commit
 5. **No risk of agent improvisation** — instructions fit a single shell command or single file edit
 
-**Minimal section list for a single-file body** (use these exact sections, in order):
+**Minimal section list for a single-file body** (use these exact sections, in order; `Documentation` is added when the change is behavior-visible — see the conditional below, so the list and that condition do not conflict):
 
 ```
-Status / Started / Subject / Layout: single-file / Context / Goals / Body / Critical files / Verification / Out of scope
+Status / Started / Subject / Layout: single-file / Context / Goals / Body / Critical files / tools / Verification / Audit / Out of scope
 ```
 
-A single-file body also includes `Documentation` when the plan ships a behavior-visible change (same-change documentation; see the section above).
+Render the compact body below, filling task inputs and removing author guidance. Do not copy this footer or the subfolder dispatch/manifest/phase sections into the plan. Required programming content still applies when path-detected: use `Current state`, `Behavior change`, and `Design decisions` instead of base `Body`, add each goal's `Done when:`, and put the complete execution instructions in that file. If this cannot satisfy all five criteria, select subfolder at confirmation. No phase files, phase IO, or phase-parity checks belong to single-file layout.
+
+```markdown
+# Plan — <task subject>
+> **Status:** active
+> **Started:** <actual start date and time>
+> **Subject:** <task description>
+> **Layout:** single-file
+## Context
+<overall issue; approved story/selected criteria or reason stories are skipped>
+## Goals
+- ⬜ **G1:** <confirmed observable condition>
+  - Issue: <problem>
+  - How: <approach>
+  - Files: <exact paths>
+## Body
+- Owner and assignment: <sole owner; inputs/resources; coordinator and capacity>
+- <discovery evidence; complete instructions and write/delete actions/paths; output; gates and abort conditions>
+## Critical files / tools
+- <required inputs and tools>
+## Verification
+- ⬜ <output check; authorized executor, command/action and expected result>
+## Audit
+- Auditor: not yet run
+- Verdict: [PENDING]
+- Findings: not assessed
+- Date:
+## Out of scope
+- <explicit exclusions>
+```
+
+The independent auditor supplies actual `Auditor`, `Verdict`, `Findings`, `Date`, reviewed identities and scope; these pending values claim no audit occurred or passed. Readiness/resumption/dispatch require the current independent `[PASS]`; completion requires its distinct final-candidate audit before goal checkmarks, Outcome, completed metadata or archive. Never carry pending labels or an invented date/findings count into a claimed passing audit.
+
+A single-file body also includes `Documentation` when the plan ships a behavior-visible change (same-change documentation; see above); list the affected owner, action and path in-file without requiring phase writes.
 
 **Fall-through rule:** If unsure → subfolder, never single-file.

@@ -38,11 +38,12 @@ Agent specs and persona profiles migrate as **per-file rows** — one row per fi
 
 ## Knowledge distribution classes
 
-The five cleared `knowledge/` sources are region rows whose core/project split expresses their distribution class:
+The six cleared `knowledge/` sources are region rows whose core/project split expresses their distribution class:
 
 | Class | Files | Core ships |
 |---|---|---|
 | Shared rules | `knowledge/agents.md` | the shared rules; source-side extensions stay project |
+| Shared workflow | `knowledge/agent-workflow.md` | the reusable entry sequence; source-side extensions stay project |
 | Record-bearing register (frame-only core) | `knowledge/debt.md` | the frame alone — the register carries no table; filed records never ship |
 | Shared catalog (full core) | `knowledge/problems.md`, `knowledge/symptoms.md` | the full catalog |
 | Living design (contract core, local refinement state) | `knowledge/diagnostic-system-design.md` | the shared contract; refinement state stays project |
@@ -52,7 +53,7 @@ The five cleared `knowledge/` sources are region rows whose core/project split e
 
 ## Story distribution
 
-Eleven shared story contracts use explicit per-file `region` rows. The core region holds the approved shared contract (H1/metadata, Persona, Goal, Scenario, Acceptance criteria with shared marks, portable Proof, Constraints). The project region holds source-local or destination-local evidence, approval records, revision tracking, and Change log. Three source-only stories (`core-sync`, `aicore-adoption-governance`, `python-pytest`) and the source `user-stories/index.md` are **not cleared** and never ship. Existence in the source catalogue alone is not clearance.
+Twelve shared story contracts use explicit per-file `region` rows. The core region holds the approved shared contract (H1/metadata, Persona, Goal, Scenario, Acceptance criteria with shared marks, portable Proof, Constraints). The project region holds source-local or destination-local evidence, approval records, revision tracking, and Change log. Six non-cleared stories (`core-sync`, `aicore-adoption-governance`, `python-pytest`, `concise-skill-authoring`, `pr-review-corrections`, `response-note-drafting`) and the source `user-stories/index.md` are **not cleared** and never ship. Existence in the source catalogue alone is not clearance.
 
 A literal region marker pair inside a raw template or fenced example is ordinary content: raw mode copies it byte-for-byte without interpreting it. Only region-mode rows carry active core/project markers.
 
