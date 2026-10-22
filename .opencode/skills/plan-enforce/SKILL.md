@@ -1,11 +1,11 @@
 ---
 name: plan-enforce
-description: Enforce plan-first discipline for non-trivial tasks. Creates or resumes a subfolder plan artifact in plans/ before code-writing work, and verifies a user-confirmed PR merge before branch cleanup. Use when the user asks to plan work, types /plan, Cipher is about to dispatch Forge for implementation, or a user confirms a PR merge.
+description: Enforce plan-first discipline for non-trivial tasks. Creates or resumes a plan artifact in plans/ before code-writing work, and verifies a user-confirmed PR merge before branch cleanup. Use when the user asks to plan work, types /plan, Cipher is about to dispatch Forge for implementation, or a user confirms a PR merge.
 license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.21.0
+  version: 1.23.6
 ---
 <!-- core:begin -->
 
@@ -28,7 +28,7 @@ From the user's request, extract:
 
 - **task description** — concise description of the intended work.
 
-If no task description and no active plan are available, collect the description with the `question` tool.
+If no task description and no active plan are available, Cipher 🔓 (Lead Orchestrator) collects the description with the `question` tool. A delegated run reports the gap to Cipher and never invokes that tool.
 
 #### Argument collection form
 
@@ -44,27 +44,27 @@ Use one `question` call. The first option is the parsed value when one is availa
 
 ### Stash safety gate
 
-**Mandatory loading:** read `references/_lifecycle-contract.md` in full before stash inventory/status, plan creation/resumption, criterion reconciliation, completion/archive/reopen/cancellation, implementer dispatch, release preparation, or post-merge cleanup. Missing, unread, incomplete, or conflicting lifecycle content blocks the operation; these summaries are not a fallback.
+**Mandatory loading:** read `references/_lifecycle-contract.md`'s loading instructions and operation table, then load its common lifecycle rules and every additional section applicable to the event, including named subsections. Standalone read-only stash inventory/status uses its separate bounded rows. Do not load unrelated post-merge proof during planning. Missing, unread, incomplete, or conflicting **applicable** content blocks the operation; these summaries are not a fallback.
 
-Apply its **Stash safety gate** sections in order: live read-only inventory with SHA/fingerprint and both ancestry directions, complete write/delete manifest, then collision check. Run before new plans, resumption, archival, and every Forge 🔨 (Implementer) dispatch; `PLANNED_PATH_OVERLAP` blocks writing/dispatch. Never mutate stash/refs in this gate; erasure remains user-only. Its **Stash status query** defines the mechanical verdict and inconclusive response.
+Apply its ordered **Stash safety gate** for the mapped events, including creation, resumption, archival, reopening, and every Forge 🔨 (Implementer) dispatch: live read-only inventory with SHA/fingerprint and both ancestry directions, complete write/delete manifest, then collision check. `PLANNED_PATH_OVERLAP` blocks the affected write/dispatch. Never mutate stash/refs in this gate; erasure remains user-only. Its **Stash status query** defines the mechanical verdict and inconclusive response.
 
 ### Check for active plan
 
 1. Run the initial inventory.
 2. Scan `plans/*.md` (excluding `.completed/`) and `plans/*/plan.md`.
 3. Read candidate plan files and select those with `Status: active`.
-4. If one active plan exists, read it and its `phase-*.md` siblings, derive its manifest, and run the post-scope collision check before showing the plan or dispatching Forge 🔨 (Implementer).
-5. If no active plan exists, continue to **Create new plan**. If multiple exist, stop and ask the user to select one.
+4. If one active plan exists, read it and, for subfolder layout only, its `phase-*.md` siblings; derive its manifest and run the post-scope collision check before showing the plan or dispatching Forge 🔨 (Implementer). Resumption also requires the current independent-audit `[PASS]` under **Plan lifecycle rules** and the **Independent audit gate**.
+5. If no active plan exists, continue to **Create new plan**. If multiple exist, Cipher stops and asks the user to select one; a delegated run reports the candidates and gap to Cipher.
 
 An archived plan is never resumed directly from `plans/.completed/`. Restore it to `plans/`, set `Status: active`, and append `Reopened: YYYY-MM-DD HH:MM` before resuming.
 
 ### Goal lifecycle
 
-Detect `G1..Gn` from the task, confirm before file creation, persist as `## Goals` checkboxes, watch drift, and resume at completion.
+Detect `G1..Gn` from the approved selected criteria (or Context/Goals when skipped), confirm before file creation, persist as `## Goals` checkboxes, watch drift, and resume at completion.
 
 #### Detect
 
-Extract the goals from the task description before writing any plan file:
+Extract the goals from the approved selected criteria (or from Context/Goals when stories are skipped) before writing any plan file. Do not invent feature behavior from task phrasing:
 
 1. Number them `G1`, `G2`, … in order of importance.
 2. State each goal as what must be true when the plan is done — an observable condition, not an activity.
@@ -87,7 +87,7 @@ Before ANY plan file, make exactly one short `question` call: proceed with or re
 
 #### Persist
 
-Write the confirmed goals into `plan.md` under `## Goals`:
+Write the confirmed goals into the active plan artifact (`plan.md`, or the single-file plan file) under `## Goals`:
 
 - One checkbox per goal: `- ⬜ **G1:** <goal>`
 - Each goal lists Issue, How, and Files. `## Context` remains the overall issue.
@@ -105,11 +105,11 @@ Watch for goal drift on every phase close, every scope change, and every collate
 
 #### Acceptance-criterion reconciliation (fail-closed)
 
-Apply the full reference's **Acceptance-criterion reconciliation (fail-closed)**, including **Story ownership and current evidence**: reconcile selected/materially-changed criteria and regressions through Proof at the authorized owner; destinations record local outcomes without editing inherited core. Preserve unselected commitments and evidence-grounded shared marks. Respect, never deliver/tick Constraints. Unmet criteria, violations, regressions, missing/adverse final evidence, or unfinalized required history block completion; release events are history, not criteria.
+Apply **Acceptance-criterion reconciliation (fail-closed)** from the loaded lifecycle contract, including **Story ownership and current evidence**: reconcile selected/materially-changed criteria and regressions through Proof at the authorized owner; destinations record local outcomes without editing inherited core. Preserve unselected commitments and evidence-grounded shared marks. Respect, never deliver/tick Constraints. Unmet criteria, violations, regressions, missing/adverse final evidence, or unfinalized required history block completion; release events are history, not criteria.
 
 #### Resume (completion)
 
-Apply the full reference's **History finalization gate** and **Resume (completion)** before building the release PR: current independent completion `[PASS]`, layered evidence, accepted joins, owner-aware reconciliation, matching history, chat goals resume, then Outcome → completed metadata → archive → filesystem verification. Missing/adverse evidence or required history blocks finalization. Planning readiness, inherited marks, or test execution alone is never completion proof.
+Apply **History finalization gate** and **Resume (completion)** from the loaded lifecycle contract before building the release PR: current independent completion `[PASS]`, layered evidence, accepted joins, owner-aware reconciliation, matching history, chat goals resume, then Outcome → completed metadata → archive → filesystem verification. Missing/adverse evidence or required history blocks finalization. Planning readiness, inherited marks, or test execution alone is never completion proof.
 
 ### Simplicity discipline
 
@@ -119,7 +119,7 @@ Admit a finding only with its confirmed goal, governing clause, responsible acto
 
 ### Dispatch bundle contract
 
-Every subagent dispatch prompt MUST contain verbatim: (1) the plan Subject; (2) the full `## Goals` block, checkboxes included; (3) the full phase runbook; and (4) each prior-phase Output value consumed by that phase's Reads. "See phase-01 output," summarized goals, or paraphrased phase content do not qualify. Verify all four before dispatch; if anything is missing, rebuild and do not dispatch.
+Every subagent dispatch prompt MUST contain verbatim: (1) the plan Subject; (2) the full `## Goals` block, checkboxes included; (3) the full phase runbook (for an eligible single-file plan, its complete in-file execution instructions, including applicable programming sections, instead); and (4) each prior-phase Output value consumed by that phase's Reads, explicitly none for single-file plans without phase IO. "See phase-01 output," summarized goals, or paraphrased phase content do not qualify. Verify all four before dispatch; if anything is missing, rebuild and do not dispatch.
 
 Include verbatim the question prohibition and stop-report contract: never invoke the user-facing `question` tool. If required input, instruction, or evidence is missing, halt and report to Cipher 🔓 (Lead Orchestrator) the task as received, exact missing item, inspected sources, bounded options, and recommended default. Never guess, assume, silently continue, or stall.
 
@@ -162,7 +162,7 @@ Programming plans ALWAYS carry a story for each feature touched by writes under 
 
 ### Planning input — approved story and selected criteria
 
-Read the approved (`active`) story, selected criteria, Proof, Constraints, and applicable project-owned approval/history tracking together. Intent governs, never invented intent or overriding task phrasing; drafts are not planning contracts. An approved revision with explicitly pending history may feed planning under the full lifecycle's **History finalization gate**. Inherited marks never prove current-plan or destination checks. Trace goals to selected criteria (or Context/Goals when skipped), respect Constraints, and apply **Story ownership and current evidence**; no approved owner means route to `user-story` before plan creation.
+Read the approved (`active`) story, selected criteria, Proof, Constraints, and applicable project-owned approval/history tracking together. Intent governs, never invented intent or overriding task phrasing; drafts are not planning contracts. An approved revision with explicitly pending history may feed planning under the lifecycle contract's **History finalization gate**. Inherited marks never prove current-plan or destination checks. Trace goals to selected criteria (or Context/Goals when skipped), respect Constraints, and apply **Story ownership and current evidence**; no approved owner means route to `user-story` before plan creation.
 
 ### Bounded discovery before scope confirmation
 
@@ -199,14 +199,16 @@ A test-first behavior slice may record **expected red**: the designated executor
 
 ### Create new plan
 
-1. Run the initial inventory; choose subfolder layout unless there is one owner, one edited file, no handoff/external mutation, and ≤30 instruction lines.
-2. Derive slug, phases, and complete write/delete manifest in memory. Detect numbered `G1..Gn` observable goals (see **Goal lifecycle**).
-3. Run bounded discovery; present goals/classification/evidence, then the single short confirming `question` before files. Confirm path-detected template type with goals.
-4. Consume approved story/selected criteria without renegotiation; read/filter `user-stories/index.md` and review candidate bodies for overlap. Route needed CREATE/UPDATE to `user-story`; wait for approval and stop on collision before files. Record skipped stories in Context.
+1. Run the initial inventory; choose subfolder layout unless ALL five single-file criteria in `references/_template.md` are met (1 owner, ≤30 instruction lines, no phase IO contracts, no external state mutation, no improvisation risk).
+2. Consume the approved story and selected criteria without renegotiation (see **Planning input**). If ownership is missing or CREATE/UPDATE is needed, route to `user-story` and stop before files. Record skipped stories in Context. Do not re-filter unread catalogue bodies here.
+3. Derive slug, the complete write/delete manifest, and execution instructions in memory; derive phases only for subfolder layout. Detect numbered `G1..Gn` from those selected criteria (see **Goal lifecycle**).
+4. Run bounded discovery; present goals/classification/evidence, then Cipher 🔓 (Lead Orchestrator) makes the single short confirming `question` before files. Confirm path-detected template type with goals. A delegated run reports the confirmation packet to Cipher and never invokes `question`.
 5. Run the post-scope collision check; stop on overlap.
-6. Create `plans/<task-slug>-YYYYMMDD/plan.md` and one phase-template `phase-NN-<owner>.md` per phase. Record the full manifest; `Action`/`Path` rows must equal the union of phase `**Writes:**` paths.
-7. Complete each phase's Owner, Pre, Reads, Writes, assignment/resources, Steps, Output, Verify commands, Gate, and Abort conditions; no `TBD` in Steps/Output/Gate/Abort. Declare accepted dependencies, capacity, handoffs and join readiness; add one traced verification checkbox per phase output.
-8. Run the post-write self-verification loop on every written file. After it passes, send the execution-review message and stop. Do not dispatch Forge 🔨 (Implementer) in this turn or treat `ExitPlanMode` as implementation authorization.
+6. Render only the confirmed layout:
+   - **Single-file:** create `plans/<task-slug>-YYYYMMDD.md` from `references/_template.md`'s minimal single-file body, with `Layout: single-file` and `## Audit`. Include applicable programming content when path-detected. Put the sole owner's complete instructions, explicit write/delete paths, outputs, authorized verification and gates in that file. Do not create a plan folder, phase runbooks, phase IO contracts, or dispatch table. If the complete contract cannot meet every single-file criterion, return to scope confirmation for subfolder layout rather than silently changing it.
+   - **Subfolder:** create `plans/<task-slug>-YYYYMMDD/plan.md` and one phase-template `phase-NN-<owner>.md` per phase. Record the full manifest; `Action`/`Path` rows must equal the union of phase `**Writes:**` paths.
+7. For **subfolder layout only**, complete each phase's Owner, Pre, Reads, Writes, assignment/resources, Steps, Output, Verify commands, Gate, and Abort conditions; no `TBD` in Steps/Output/Gate/Abort. Steps state contract outcomes, not private implementation. Declare accepted dependencies, capacity, handoffs and join readiness; add one traced verification checkbox per phase output. Single-file layout retains applicable assignment, owner, approval and review gates without inventing phases or handoffs.
+8. After the coherent write batch for the selected layout, run the post-write self-verification loop once on that batch. After it passes, send the execution-review message and stop. Do not dispatch Forge 🔨 (Implementer) in this turn or treat `ExitPlanMode` as implementation authorization.
 
 ### Execution-review message
 
@@ -214,11 +216,11 @@ After written plans pass self-verification, Cipher 🔓 (Lead Orchestrator) send
 
 ### Post-write self-verification loop
 
-Run after every plan/phase/story/index write and every Forge 🔨 (Implementer) dispatch that mutates plan artifacts; repeat until clean:
+Run after each coherent plan/phase/story/index write batch and every Forge 🔨 (Implementer) dispatch that mutates plan artifacts; repeat until clean:
 
 1. Re-read each written `plan.md`, phase file, story, and index.
-2. Mechanical pass: active subfolder plans touching stories/index use `<plan-dir> --stories user-stories`; no-story plans use `<plan-dir>`; single-file plans use `<plan.md> --single-file`. Fix validator findings for Status/Completed, required sections and labels, executor-command tables, placeholders, index mirroring, goal trace, manifest equality, verification parity, and completed-plan audit gate.
-3. Analysis pass against the consistency checklist: evidence-match goals and Issue/How/Files; check phase/goal links, output/verification trace, Writes/manifest equality, and story/index metadata. Reconcile selected/materially-changed criteria and regressions at completion under the full lifecycle's ownership and history rules; preparation may retain truthful pending criteria/history. Preserve unselected commitments and inherited core. When the write revises or replaces existing instructions, run rewrite-acceptance accounting: identify the original and candidate content and disposition every valid original obligation as retained, translated, or justifiably retired with an authority-grounded rationale, plus a source-neutrality check (no source-specific runner or interpreter, dependency pin, or mandated local policy value); superseded wording is never imported as precedent. Read actual files, diffs, and command output, never their description; never invent a value. Escalate missing decisions through the existing question-routing rule.
+2. Mechanical pass, by layout: active subfolder plans touching stories/index use `<plan-dir> --stories user-stories`; no-story subfolder plans use `<plan-dir>`; single-file plans use `<plan.md> --single-file`, and when a single-file plan touches `user-stories/index.md` add `--stories user-stories`. Both layouts check Status/Completed, required sections, placeholders, and the completed-plan audit gate. Apply index mirroring in either layout when stories/index are touched. Subfolder layout additionally checks phase sections/labels, executor-command tables, goal trace, manifest equality, and verification parity; do not impose those phase checks on single-file plans.
+3. Analysis pass against the consistency checklist: evidence-match goals and Issue/How/Files; check output/verification trace, explicit allowed writes, and applicable story/index metadata. Check phase/goal links and Writes/manifest equality only for subfolder layout; single-file review checks its complete in-file execution contract instead. Reconcile selected/materially-changed criteria and regressions at completion under the lifecycle contract's ownership and history rules; preparation may retain truthful pending criteria/history. Preserve unselected commitments and inherited core. When the write revises or replaces existing instructions, run rewrite-acceptance accounting: identify the original and candidate content and disposition every valid original obligation as retained, translated, or justifiably retired with an authority-grounded rationale, plus a source-neutrality check (no source-specific runner or interpreter, dependency pin, or mandated local policy value); superseded wording is never imported as precedent. Read actual files, diffs, and command output, never their description; never invent a value. Escalate missing decisions through the existing question-routing rule.
 4. Repeat to zero findings and report `self-verification passes: N`. After 3 iterations or the same unchanged violation twice, stop-and-ask (S-07).
 
 Mechanical success never substitutes for actual-content semantic self-review.
@@ -231,6 +233,7 @@ Never report readiness or dispatch Forge 🔨 (Implementer) on the writer's own 
 - **Rewrite acceptance accounting.** When a write revises or replaces existing instructions, acceptance requires identified original and candidate inputs read as actual content — an author's summary or change description is never a substitute when an obligation comparison is required — and a complete disposition of every valid original obligation as retained, translated, or justifiably retired with an authority-grounded rationale, with superseded wording never imported as precedent. A source-neutrality check confirms no source-specific runner or interpreter, dependency pin, or mandated local policy value. Missing accounting, unauthorized or unrecognized obligation loss, or source-environment leakage prevents acceptance.
 - **Handoff discipline.** An audit handoff separates **user decisions** (what the user chose), **facts** (what the repository and commands show), and **interpretations** (the auditor's reading of ambiguous evidence). The auditor flags any interpretation presented as fact and any decision attributed to the user without an explicit record.
 - **Two-failure reassessment.** Two failed planning audits on the same plan trigger a coherent reassessment of the plan's discovery, scope, phase cuts, or premises — not a cosmetic edit to satisfy the next auditor. The reassessment may rework goals, discovery evidence, or phase boundaries; it never waives the independent `[PASS]` gate: readiness/dispatch still require a fresh independent auditor `[PASS]`.
+- **Completion adversarial pass.** Before a plan is reported complete, the completion auditor reads the actual original and candidate content and the delivered evidence, and checks: original-obligation accounting completeness; evidence durability outside temporal `output/` or `plans/` paths; shared/project separation; source-neutrality under its stated boundary; and live PR test-plan evidence when a PR exists. Shape, presence, or self-attestation is not completion. A missing or adverse check blocks `## Outcome`, goal checkmarks, and archive.
 
 ### All-changes disposition
 
@@ -238,27 +241,27 @@ For an all-pending-changes analysis, inspect and disposition every nonignored mo
 
 ### Plan lifecycle rules
 
-Apply the full reference's **Plan lifecycle rules** table and **Reopen rule** for every lifecycle event. Only incomplete plans enter Git; completed tracked plans retire by deletions in their completing PR, never an archive commit. No plan deletion, merge command, or stash mutation occurs during archival. Scope changes retain user approval and invalidate affected assignments/evidence.
+Apply **Plan lifecycle rules** and **Reopen rule** from the loaded lifecycle contract for every lifecycle event. Only incomplete plans enter Git; completed tracked plans retire by deletions in their completing PR, never an archive commit. No plan deletion, merge command, or stash mutation occurs during archival. Scope changes retain user approval and invalidate affected assignments/evidence.
 
-**User confirms PR merge:** apply **Post-merge proof and cleanup** in the fully loaded reference. Require live MERGED metadata, exact immutable head match, checked fetch/ancestry/extraction, and per-path parity before force deletion; use safe deletion when tip ancestry holds. Fast-forward local base and delete remote only if present. Any proof error blocks deletion; merge remains user-only and no post-merge archive step exists.
+**User confirms PR merge:** apply **Post-merge proof and cleanup** from the loaded lifecycle contract. Require live MERGED metadata, exact immutable head match, checked fetch/ancestry/extraction, and per-path parity before force deletion; use safe deletion when tip ancestry holds. Fast-forward local base and delete remote only if present. Any proof error blocks deletion; merge remains user-only and no post-merge archive step exists.
 
 ### Documentation discipline
 
 Documentation ships with the change, in the same plan: every behavior change carries its affected documentation through discovery, the manifest, and completion.
 
 - **Discovery** names every affected documentation surface (README, `knowledge/` registers, skill prose, user stories, reference docs) and its owner, with the evidence that the surface is affected (see **Bounded discovery before scope confirmation**).
-- **Manifest** lists each affected documentation path as an `Add` / `Modify` / `Delete` row, exactly like code paths; the union of phase `**Writes:**` must equal it, and each row appears in at least one phase's writes.
+- **Manifest** lists each affected documentation path as an `Add` / `Modify` / `Delete` row, exactly like code paths; for subfolder layout the union of phase `**Writes:**` must equal it, and each row appears in at least one phase's writes. An eligible single-file plan records these actions and paths in its explicit write/delete instructions, without phase IO.
 - **Completion** reviews each documented path against the delivered behavior, reading the actual documentation content — never the plan's description of it. A shipped behavior change whose documentation is missing or contradicts the delivered behavior blocks `## Outcome` and archival (see **Acceptance-criterion reconciliation**).
 
 Published documents, durable criteria, Goal `Done when:`, and every `## Change log` entry must not cite temporal `plans/` or `output/` paths; cite a commit SHA, PR number, or ticket ID instead (see `.opencode/skills/user-story/references/_consistency-checklist.md`). Plans are untracked and machine-local: a plan folder is never a traceability anchor.
 
 ### Examples
 
-**New/existing plan:** derive all writes and check stash collisions before creation/dispatch. **Independent work:** two same-role research instances read frozen inputs into distinct reports; cross-role writers own disjoint files with no changing shared dependency. Dispatch concurrently only after readiness/capacity checks. **Collision:** two writers targeting one file, even different sections, stay blocked until serialized or verified isolation. **Stale non-overlapping stash:** offer user-run apply or retention, never erasure. **Cleanup:** use confirmed `$PR_NUMBER`/`$BRANCH` and the full lifecycle proof.
+**New/existing plan:** derive all writes and check stash collisions before creation/dispatch. **Independent work:** two same-role research instances read frozen inputs into distinct reports; cross-role writers own disjoint files with no changing shared dependency. Dispatch concurrently only after readiness/capacity checks. **Collision:** two writers targeting one file, even different sections, stay blocked until serialized or verified isolation. **Stale non-overlapping stash:** offer user-run apply or retention, never erasure. **Cleanup:** use confirmed `$PR_NUMBER`/`$BRANCH` and the post-merge proof sequence.
 
 ### Troubleshooting
 
-**Live SHA unavailable:** remote/auth failure; resolve and rerun, never cache. **Stash overlap:** change scope or stay blocked; never erase (user may apply). **Cleanup proof fails:** mismatch, unchecked extraction or parity diff; retain branch, re-fetch/reevaluate. **Inventory denied:** retain targeted destructive denies followed by read-only stash list/show allows. **Lifecycle reference missing/unread:** load the full reference or stop, never use summaries. **Stale review:** changed input/content invalidates the verdict; hold the new candidate stable and obtain fresh applicable review. **Unfinished predecessor:** pending/failed/still-mutating worker; block dependent dispatch/completion, collect its attributable return and observed cessation, then accept or redispatch through the parent.
+**Live SHA unavailable:** remote/auth failure; resolve and rerun, never cache. **Stash overlap:** change scope or stay blocked; never erase (user may apply). **Cleanup proof fails:** mismatch, unchecked extraction or parity diff; retain branch, re-fetch/reevaluate. **Inventory denied:** retain targeted destructive denies followed by read-only stash list/show allows. **Lifecycle reference missing/unread:** load the applicable sections or stop, never use summaries. **Stale review:** changed input/content invalidates the verdict; hold the new candidate stable and obtain fresh applicable review. **Unfinished predecessor:** pending/failed/still-mutating worker; block dependent dispatch/completion, collect its attributable return and observed cessation, then accept or redispatch through the parent.
 
 ### Plan and checklist templates
 
@@ -268,7 +271,7 @@ Plan-enforce templates and references:
 - Base plan template: `references/_template.md`
 - Phase template: `references/_phase-template.md`
 - Plan/phase/audit/completion checklist: `references/_consistency-checklist.md`
-- Mandatory lifecycle contract: `references/_lifecycle-contract.md` (full loading required before lifecycle operations)
+- Mandatory lifecycle contract: `references/_lifecycle-contract.md` (load applicable sections per its operation table)
 
 The canonical user-story template and story-hygiene checklist are owned by the `user-story` skill at `.opencode/skills/user-story/references/`.
 <!-- core:end -->

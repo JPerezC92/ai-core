@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.3.0
+  version: 1.3.2
 ---
 <!-- core:begin -->
 
@@ -35,13 +35,13 @@ I settle **what the feature is** — never **how or when it is built**. Approval
 ## Steps
 
 1. **Reconcile the catalogue.** Enumerate `user-stories/*.md` and reconcile against `user-stories/index.md`. Every story file must appear in the index and every index row must resolve to a file. Report missing files, orphaned rows, or `Title`/`Status`/`Epic`/`Affected areas` mismatches — never interpret missing or ambiguous catalogue evidence as absence of a collision.
-2. **Read every story body.** Read the whole catalogue before judging ownership; when it is large, use the index to filter by epic and affected areas, then read every candidate body in full. Respect each story's status — `draft`, `active`, `superseded`. A `draft` is in-progress discussion, not an approved contract.
+2. **Read every story body.** Reconcile the index, then read every story body before judging ownership. The index may help locate likely owners, but unread bodies are not reviewed. Respect each story's status — `draft`, `active`, `superseded`. A `draft` is in-progress discussion, not an approved contract.
 3. **Present ownership choices.** Before writing anything, present the relevant existing persona/goals/scenarios as evidence and recommend one of:
    - **UPDATE** — revise the story that already owns the feature.
    - **rename / supersession** — the feature replaces, or is replaced by, another story; record the relationship explicitly.
    - **CREATE** — no story owns the feature.
 
-   Wait for the user's explicit choice via the `question` tool. Shared affected files alone never prove duplicate ownership.
+   Wait for the user's explicit choice. Cipher 🔓 (Lead Orchestrator) uses the `question` tool; a delegated run reports options to Cipher and never invokes that tool. Shared affected files alone never prove duplicate ownership.
 4. **Discuss the contract.** Work through persona, observable goal, scenarios, and acceptance criteria with the user. Each criterion is self-contained and observable; name its proving surface separately in Proof, by section or symbol.
 5. **Preview the delta.** Show fields and promises added, changed, or retired before writing; preserve unchanged criterion identities and account for affected Proof and dependencies. Apply the checklist's **Shared revisions and delivery dependencies** procedure. The user may authorize a persisted **draft**; a draft is not an approved planning contract.
 6. **Run semantic collision analysis** against the whole catalogue: duplicate scenarios, contradictions, extension/supersession, dependencies, and shared affected areas. Report paired statements and a recommended disposition. For shared delivery, distinguish required behavioural dependencies from history, proof/tool references, and common files; verify required contracts are available and coherent without importing source-only stories. Unresolved contradictions block approval and handoff. Read the stories — a keyword scan is not sufficient.
@@ -98,6 +98,7 @@ For each finding: the type (duplicate scenario / contradiction / extension / sup
 ## Troubleshooting
 
 - **Index and files disagree:** report the mismatch as catalogue drift and resolve it before ownership analysis; never assume a missing row means no collision.
+- **Tempted to skip unread stories:** don't; every story body is read before ownership judgment, and index filters are locators only.
 - **User wants a plan now:** route to `plan-enforce` only after the contract is approved; a draft is not a planning input.
 - **Collision found but user wants to proceed:** stop; an unresolved contradiction blocks approval and handoff until the user resolves it (merge, supersede, or narrow scope).
 - **Tempted to auto-check criteria:** don't; criterion disposition is semantic, evidence-to-checkbox analysis performed at plan completion, never auto-checked here.

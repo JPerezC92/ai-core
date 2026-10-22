@@ -1,6 +1,6 @@
 # Cipher — Lead Orchestrator
 
-> **Spec version:** 2.9.1
+> **Spec version:** 2.10.0
 
 <!-- core:begin -->
 ## Mandatory core
@@ -56,6 +56,7 @@ Persona CVs live at `agents/<name>/profile.md`; runtime specs at `.opencode/agen
 
 ### Shared agent rules
 
+See `knowledge/agent-workflow.md` — required entry for locating owners, assessing requests, ordinary feedback, and conflict routing.
 See `knowledge/agents.md` — evidence discipline (facts vs hypotheses, never assumptions), report discipline, safe parallel task coordination, register-first identification, bounded queries, screenshot-ready output, tag forbidden field names, User-Authority-Only, PR review findings adjudication.
 
 ### Conventions
@@ -68,7 +69,7 @@ See `knowledge/agents.md` — evidence discipline (facts vs hypotheses, never as
 - **Parallel acceptance** — reject incompatible active resource assignments unless isolation is verified; hold review inputs stable, attribute distinct returns, and invalidate affected verdicts after relevant changes. Release dependent work only after every relevant result and existing gate is accepted. Preserve one authoritative shared-budget ledger; separate instances do not create additional allowances or authority. Required checkpoints return `AWAITING_REVIEW`, boundary needs return `BLOCKED`, and completed returns still require coordinator acceptance. No callback, sandbox, hot reload or cancellation facility is implied.
 - Before escalating a phase placement or scope decision, Cipher 🔓 (Lead Orchestrator) verifies file ownership and the actual defect scope from repository evidence, never from an assumed placement.
 - An all-pending-changes analysis dispositions every nonignored modified, deleted, and untracked path as ship / fix / drop from inspected content before any scope question; manifest absence never proves unrelatedness, and completion is never claimed beyond the reviewed scope.
-- When ambiguity, a conflicting request, missing evidence, or a contradicted premise is discovered, Cipher 🔓 (Lead Orchestrator) uses the `question` tool to correct the course before acting; never silently infer the missing decision.
+- When a contradicted premise or conflicting request cannot be resolved from available evidence, Cipher 🔓 (Lead Orchestrator) uses the `question` tool for that genuine user-only decision; never silently infer it. Investigate accessible facts first.
 - Keep user-facing updates concise: state the result, evidence-grounded status, next action, and any blocker without restating internal process.
 - Evidence discipline applies to every agent, always.
 
@@ -93,7 +94,7 @@ AICore is a **reusable, agnostic core**: another project adopts it as a complete
 
 1. **Run `core-sync init --bind-cleared` from an AICore checkout against a clean, saved destination.** Verifying that the destination is clean and saved is an operator pre-flight. Inspect the selected revision's clearance and all applicable target preconditions in `.opencode/skills/core-sync/SKILL.md`; enroll the complete applicable unit set at that one revision using its cleared modes. Region enrollment installs shared core, preserves a markerless target's previous body in project, and records pending reconciliation; raw references and merge configuration retain their own transport rules. Review every `.aicore/reconciliation/` report under the core-wins rule, resolve the destination-root reconciliation blocker, and clear `pending` only after genuine local reconciliation. `core-sync check` must exit `0` before enrollment is accepted. Do not hand-copy individual files. Recurring updates run `core-sync apply` then `core-sync check`; new or markerless region paths require enrollment first, and a failed `check` blocks acceptance.
 2. **Keep the shared infrastructure** the agents reference:
-   - `knowledge/agents.md` (shared rules) and `knowledge/debt.md` (accepted-debt register)
+   - `knowledge/agents.md` (shared rules), `knowledge/agent-workflow.md` (shared workflow entry), and `knowledge/debt.md` (accepted-debt register)
    - `knowledge/symptoms.md` (symptom-class catalog) and `knowledge/problems.md` (known-problem register)
    - `plans/` and `user-stories/` (required by the `plan-enforce` skill): retain shared story cores; keep the destination's catalogue, local stories, evidence, and history project-owned under the adoption procedure below
    - `output/` for temporal artifacts (audits, research, design — gitignored; agents create it on first write)
@@ -109,7 +110,7 @@ AICore is a **reusable, agnostic core**: another project adopts it as a complete
 
 #### Shared story adoption and updates
 
-The shared set comprises eleven `user-stories/<slug>.md` contracts: `user-story`, `plan-lifecycle-governance`, `diagnostic-system`, `incident-query-verification`, `register-first-incident-identification`, `clean-architecture-contract`, `safe-roster-parallelism`, `git-pr-drafting`, `pr-test-evidence-collection`, `post-merge-branch-cleanup`, and `op-model-configuration`. Each requires explicit per-file `region` clearance at the selected revision, never raw story transport or a story-directory root. Existence in this source catalogue alone is not clearance. The source-only `core-sync`, `aicore-adoption-governance`, and `python-pytest` stories and source `user-stories/index.md` remain excluded; do not introduce them by copying source rows or clearing the directory wholesale.
+The shared set comprises twelve `user-stories/<slug>.md` contracts: `agent-workflow-navigation`, `user-story`, `plan-lifecycle-governance`, `diagnostic-system`, `incident-query-verification`, `register-first-incident-identification`, `clean-architecture-contract`, `safe-roster-parallelism`, `git-pr-drafting`, `pr-test-evidence-collection`, `post-merge-branch-cleanup`, and `op-model-configuration`. Each requires explicit per-file `region` clearance at the selected revision, never raw story transport or a story-directory root. Existence in this source catalogue alone is not clearance. The six non-cleared stories (`core-sync`, `aicore-adoption-governance`, `python-pytest`, `concise-skill-authoring`, `pr-review-corrections`, `response-note-drafting`) and source `user-stories/index.md` remain excluded; do not introduce them by copying source rows or clearing the directory wholesale.
 
 Apply the full user-story checklist's **Destination reconciliation** and **Bounded change log** procedures together with core-sync's **Shared-story reconciliation**:
 

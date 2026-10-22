@@ -25,9 +25,9 @@ HARD RULE — fill every Step / Output / Gate / Abort. No `TBD` placeholders. Ag
 
 ## Steps
 
-1. <One shell command or one file edit — be explicit, no paraphrasing>
-2. <Next command or edit>
-3. <Continue as needed — every step must be independently executable>
+1. <Contract outcome — public interface, allowed write, or verification; not a private helper body>
+2. <Next contract outcome>
+3. <Continue as needed — exact commands only for migrations, external operations, or permission-sensitive work>
 
 ## Output
 

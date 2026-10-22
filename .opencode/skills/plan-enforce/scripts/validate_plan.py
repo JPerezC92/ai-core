@@ -6,13 +6,19 @@ Usage (from project root):
     <python> .opencode/skills/plan-enforce/scripts/validate_plan.py <plan_dir>
     <python> .opencode/skills/plan-enforce/scripts/validate_plan.py <plan.md> --single-file
     <python> .opencode/skills/plan-enforce/scripts/validate_plan.py <plan_dir> --stories <dir>
+    <python> .opencode/skills/plan-enforce/scripts/validate_plan.py <plan.md> --single-file --stories <dir>
 
 Mechanical/repetitive subset only: Status enum, Completed line, required
-sections, phase-file sections + blockquote labels, the canonical phase
-executor-command table shape, unfilled <...>/TBD/date placeholders, and
-user-stories index mirroring. Semantic correctness (values match evidence,
-verdict/naming consistency, executor authority) is the skill loop's analysis
-job — this script is a helper, not the authority.
+sections, unfilled <...>/TBD/date placeholders, the completed-plan audit gate
+(auditor/verdict/date), and user-stories index mirroring (`--stories` applies
+to both layouts; with `--single-file`, the entry composes it at the CLI edge).
+Single-file layout runs
+content-only checks and never looks for phase files; subfolder layout
+adds phase sections + blockquote labels, the canonical phase executor-command
+table shape, goal trace, manifest equality, and verification parity. Semantic
+correctness (values match evidence, verdict/naming consistency, executor
+authority) is the skill loop's analysis job — this script is a helper, not the
+authority.
 
 Exit codes:
     0 — all checks pass (warnings do not affect exit code)

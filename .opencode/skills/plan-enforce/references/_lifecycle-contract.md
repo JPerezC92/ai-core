@@ -1,10 +1,26 @@
 # Plan-enforce — mandatory lifecycle contract
 
-Read this entire reference before any stash inventory/status operation, plan creation/resumption, criterion reconciliation, completion/archive/reopen/cancellation, implementer dispatch, release preparation, or post-merge cleanup. This reference is normative, not optional background. A missing, unread, incomplete, or conflicting reference blocks the affected operation; never fall back to the skill's summaries. Apply the inline story, approval, dispatch, executor, discovery, audit, self-verification, and documentation rules with it.
+Load the applicable sections before the matching operation. This reference is normative, not optional background. Missing, unread, incomplete, or conflicting **applicable** content blocks that operation; never fall back to the skill's summaries. A named section includes its subsections unless a row explicitly narrows the read.
+
+**Common lifecycle read:** every plan lifecycle event loads **Plan lifecycle rules**, including **Reopen rule**, and applies its relevant event rows and common paragraphs. This covers creation/selection/show/resumption, plan/phase/story/index writes, readiness reports, dispatch, phase closure, scope changes, criterion reconciliation, completion, archive, reopen/PR rework, cancellation, release preparation, tracked-plan retirement, and confirmed-merge cleanup. The following additional reads are cumulative when operations combine; standalone read-only stash queries are not plan lifecycle events.
+
+| Operation | Additional load |
+|---|---|
+| Standalone read-only stash inventory | **Initial read-only inventory** and **Stash lifecycle** only; no plan manifest, lifecycle transition, or cleanup proof |
+| Standalone read-only stash status | **Stash status query**, the exact-invocation preflight and failure packet in **Initial read-only inventory**, and **Stash lifecycle** only; no remote/ancestry inventory or collision check required for this status-only query |
+| Planning inputs, creation, resumption, implementer dispatch, scope changes | **Story ownership and current evidence** and **History finalization gate**, including preparation with truthful pending history and the separate completion boundary |
+| Creation, active-plan selection/show or resumption, plan-file writes, implementer dispatch, archive, reopen/PR rework | Ordered stash gate: **Initial read-only inventory** → **Derive the write/delete manifest** → **Post-scope collision check**, plus **Stash lifecycle**; not the status-only query |
+| Scope changes | The ordered stash gate above for the revised complete manifest before affected writes/redispatch |
+| Readiness report, resumption, implementer dispatch | The skill's **Independent audit gate**, together with this reference's **Plan ready to report or resume** and **Forge 🔨 (Implementer) dispatch** lifecycle rows; a current independent `[PASS]`, auditor and date are required |
+| Criterion reconciliation, completion, archive, cancellation, release preparation | **Acceptance-criterion reconciliation (fail-closed)** including **Story ownership and current evidence** and **History finalization gate**, and **Resume (completion)**; archive also loads the ordered stash gate above |
+| Phase closure, other plan/phase/story/index writes, tracked-plan retirement | Common lifecycle read plus any other matching row; no unrelated completion or cleanup proof |
+| Post-merge cleanup | **Post-merge proof and cleanup** and the ordered stash gate above, plus applicable common lifecycle rules only; no new completion/archive step |
+
+Do not require post-merge deletion proof to create or resume a plan. Apply the inline story, approval, dispatch, executor, discovery, audit, self-verification, and documentation rules with the loaded sections. Reading a rule does not execute its event: planning reads the history boundary without requiring delivery history yet, and a readiness report is not completion.
 
 ## Stash safety gate
 
-This gate has two ordered parts: an initial read-only inventory and a post-scope collision check. It runs before new-plan creation, plan resumption, archive work, and every Forge 🔨 (Implementer) dispatch. The gate never mutates the caller repository's stash or refs. Git operations remain with Herald 📯 (Release Manager); this contract grants no new command authority.
+This gate has two ordered parts: an initial read-only inventory and a post-scope collision check, with the complete manifest derived between them. It runs before new-plan creation, plan resumption, archive work, reopening/PR rework, and every Forge 🔨 (Implementer) dispatch, and for the other events mapped above. The gate never mutates the caller repository's stash or refs. Git operations remain with Herald 📯 (Release Manager); this contract grants no new command authority. Standalone status-only queries use their bounded row rather than the ordered plan gate.
 
 ### Initial read-only inventory
 
@@ -40,6 +56,7 @@ Derive the manifest before the collision check:
 - **New plan:** derive the complete write/delete manifest in memory from the intended task and phase design before writing any plan or phase file.
 - **Existing subfolder plan:** derive the manifest from every phase runbook's `## Writes` block (the canonical `> **Writes:**` label).
 - **Existing single-file plan:** derive the manifest from its explicit write/delete instructions only.
+- **Archive/reopen:** include the transition's source and destination paths as well as the plan's work manifest before moving or editing files. Account for either layout, including all subfolder descendants.
 
 Read-only inputs are never manifest entries. The manifest must be complete before a new plan file is created or Forge 🔨 (Implementer) is dispatched.
 
@@ -47,7 +64,7 @@ Read-only inputs are never manifest entries. The manifest must be complete befor
 
 Intersect every stashed changed path from the initial inventory with the derived write/delete manifest:
 
-- Any intersection is `PLANNED_PATH_OVERLAP`: fail closed before plan-file creation or Forge 🔨 (Implementer) dispatch.
+- Any intersection is `PLANNED_PATH_OVERLAP`: fail closed before the affected plan write, archive/reopen move, or Forge 🔨 (Implementer) dispatch.
 - No intersection permits the plan flow to continue.
 - A stale, ahead, or diverged non-overlapping stash is a user-gated reconciliation candidate; current non-overlapping stashes are reported and retained.
 
@@ -139,9 +156,14 @@ When the plan's work is done and its audits have passed — before the release P
 - Run acceptance-criterion reconciliation (see **Acceptance-criterion reconciliation (fail-closed)**) over the criteria this plan committed to deliver and materially changed, plus any regression it introduced; block `## Outcome` and the archive move while any committed criterion is unmet, any relevant regression is open, or the final-snapshot evidence is missing or adverse. Unselected unfulfilled commitments stay `⬜` and do not block; do not reset evidence-grounded existing marks.
 - Apply **Story ownership and current evidence** and the **History finalization gate** before accepting completion: inherited marks are not current-plan evidence, destination core remains untouched, and the touching delivery's required matching reference and feature-log entry must be established. Pending history permits preparation, never bypasses this completion gate.
 - Present the goals resume in chat: one line per goal, `✅` when met, `❌` when not, each with a 1-line evidence note.
-- Write `## Outcome` into `plan.md` — what the plan produced, per goal — BEFORE moving the plan to `plans/.completed/`.
+- Write `## Outcome` into the active plan artifact (`plan.md`, or the single-file plan file) — what the plan produced, per goal — BEFORE moving the plan to `plans/.completed/`.
 - Set `Status: completed`, append `Completed: YYYY-MM-DD HH:MM`, and move the plan to `plans/.completed/` (folder or file per layout). All of this happens pre-release; the merged PR number or merge SHA may be appended to the local archive copy afterwards as free metadata.
-- Filesystem-verify the archive after the move: confirm every expected file exists under `plans/.completed/<plan>/` AND the active copy is gone from `plans/`. A `mv` that reports success can still leave the active copy in place (observed 2026-08-24); the filesystem, not the command's silence, is the evidence.
+- Filesystem-verify the archive after the move: for subfolder layout confirm **every expected
+  archived file** exists under `plans/.completed/<plan>/` (including `plan.md` and every
+  `phase-*.md` runbook); for single-file layout confirm `plans/.completed/<plan>.md` exists; in
+  both cases confirm the active copy (`plans/<plan>/` or `plans/<plan>.md`) is gone from
+  `plans/`. A `mv` that reports success can still leave the active copy in place (observed
+  2026-08-24); the filesystem, not the command's silence, is the evidence.
 - A plan archived without `## Outcome` is a lifecycle violation: restore it, write the section, then archive again.
 
 Before completion, Cipher 🔓 (Lead Orchestrator) accepts every relevant task return and the combined candidate on stable content/input identities. An unfinished, failed, stale, or still-mutating predecessor cannot establish completion. Author completion is not acceptance; separate execution and architecture verdicts remain required. Apply the shared coordination contract without changing any existing audit, mutation approval, or lifecycle gate.
@@ -158,7 +180,7 @@ Before completion, Cipher 🔓 (Lead Orchestrator) accepts every relevant task r
 | Plan ready to report or resume | Require a recorded independent-audit `[PASS]` with auditor and date; an unavailable auditor leaves the plan not-ready (fail-closed). |
 | Audits pass, release PR requested | First satisfy owner-aware criterion reconciliation, current final evidence, accepted joins, and the History finalization gate; then present the goals resume, write `## Outcome`, set completed metadata, and archive with filesystem verification — all BEFORE the release PR is built. A release request or pending anchor never bypasses these gates. |
 | Plan was tracked mid-work | Stage the plan-file deletions into the completing PR; never stage a completed plan's content. |
-| PR review demands rework | Restore the plan folder from `plans/.completed/` per the reopen rule, resume, re-complete pre-release, and re-stage the deletions. |
+| PR review demands rework | Restore the plan folder or single file, according to its layout, from `plans/.completed/` per the reopen rule, resume, re-complete pre-release, and re-stage the deletions. |
 | Plan cancelled | Complete it as cancelled: `## Outcome` records the cancellation; a tracked cancelled plan retires through the next PR's deletions. |
 | User confirms PR merge | Run both stash-gate parts, then the complete **Post-merge proof and cleanup** sequence below; no post-merge archive step exists and user-only merge authority is unchanged. |
 

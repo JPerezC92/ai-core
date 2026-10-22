@@ -7,7 +7,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 import validate_plan as vp  # noqa: E402
-from _validate_plan_testkit import VALID_PLAN, write_fixture  # noqa: E402
+from _validate_plan_testkit import (  # noqa: E402
+    VALID_PLAN,
+    build_single_file_plan,
+    write_fixture,
+)
 
 
 class ValidatePlanStructureTests:
@@ -16,7 +20,7 @@ class ValidatePlanStructureTests:
         assert vp.check_plan_file(plan_path) == []
 
     def test_valid_single_file_passes(self, tmp_path: Path) -> None:
-        plan_path = write_fixture(tmp_path, "plan.md", VALID_PLAN)
+        plan_path = write_fixture(tmp_path, "plan.md", build_single_file_plan())
         assert vp.check_plan_file(plan_path) == []
 
     def test_bad_status_flagged(self) -> None:

@@ -27,10 +27,7 @@
                 { "action": "shell", "resource": "rg *", "effect": "allow" },
                 { "action": "shell", "resource": "rg *--pre*", "effect": "deny" },
                 { "action": "shell", "resource": "ls *", "effect": "allow" },
-                { "action": "shell", "resource": "wc *", "effect": "allow" },
-                { "action": "shell", "resource": "git log *", "effect": "allow" },
-                { "action": "shell", "resource": "git show *", "effect": "allow" },
-                { "action": "shell", "resource": "git diff *", "effect": "allow" }
+                { "action": "shell", "resource": "wc *", "effect": "allow" }
             ]
         }
     },

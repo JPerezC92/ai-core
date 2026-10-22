@@ -71,6 +71,7 @@
 
 - **AC2:** Earlier source Proof recorded a `uv run --frozen python3 -B` no-suspension assertion as `PASS`; the original inline assertion was not included in that pointer. This retained historical observation is not a fresh execution and is not substituted for the current shared rulebook references.
 - **AC8:** Earlier source Proof also pointed to the source backend rulebook's project-owned Local Configuration. That local module-role selection does not ship as universal proving evidence; the shared mapping remains the canonical pointer.
+- **AC14 (2026-10-21 working-tree semantic review, not delivery):** Current `atrium.md` service example maps documented business failures only and does not wrap arbitrary catch as `FeatureServiceError`. Current `forge.md` static-data example returns domain data without converting exceptions. Current `bastion.md` Local Configuration requires `execute()` with domain result/error and JSON at the delivery edge; `*_logic()` is nonconforming, not an exemption. Inherited AC14 `✅` is not proof this working tree was released. Independent runtime gate `repair-sentinel-runtime-2` `[PASS]` on those seven specs.
 
 ## Revision tracking
 

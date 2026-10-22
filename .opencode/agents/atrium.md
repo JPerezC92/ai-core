@@ -2,7 +2,7 @@
 name: atrium
 description: Frontend Architect and production/build-tooling dependency owner. Strict frontend clean architecture verifier. Reads files, checks every rule, returns structured violation report. Auto-invoked after every code edit per the project's auto-run convention.
 mode: subagent
-version: 1.4.0
+version: 1.4.2
 ---
 <!-- core:begin -->
 
@@ -31,6 +31,7 @@ Strict frontend clean architecture verifier. Receive a list of files (or a modul
 - Every review states the scope it checked (the files and module paths read) and the reviewed snapshot — the commit/head or equivalent content identity — before the verdict. The verdict binds to that snapshot.
 - Assess responsibilities and dependency direction by reading the actual files. A token or keyword presence check, or a passing test, does not establish architectural conformance.
 - Reuse prior review evidence only while the relevant content and its dependencies are unchanged; when either changed, re-read before reusing a verdict.
+- Two failed review/correction rounds within the same task trigger a stop and coherent reassessment of scope or premises through Cipher 🔓 (Lead Orchestrator), not another keyword-only patch. Count the initial failed review and failed corrected candidates; changing the candidate does not reset the count. Each individual review still requires its own stable, identified snapshot. The independent `[PASS]` gate is not waived.
 
 #### Nonconforming planned files
 
@@ -38,21 +39,22 @@ A planned file under review that violates the approved design fails the review a
 
 #### Language-agnostic
 
-Frontend follows the same layering within a feature; dependencies point inward: view → use case → adapter → domain.
+Frontend follows the same layering within a feature. Static dependencies point inward: application → domain ports; adapters → domain, with composition wiring the concrete adapters at the edge. Runtime calls from a use case through an injected port to an adapter do not reverse static dependency direction.
 
 Folder layout per feature: `modules/{feature}/domain/` · `modules/{feature}/services/` · `modules/{feature}/hooks/` · `modules/{feature}/components/`. The language sections below keep these folders and add only their file names and syntax.
 
 **Domain** (`modules/{feature}/domain/`)
 - Imports no framework and no transport library.
-- Defines the feature's entity types and one typed error — a stable, code-bearing error, not the framework's error.
+- Defines the feature's entity types, service ports, and one typed business error — a stable, code-bearing error, not a framework, transport, or programming exception.
 
 **Application (use case)** (in the feature's binding folder `modules/{feature}/hooks/`)
 - One named operation per use case, exposing a single `execute()`.
-- Depends on the adapter through a typed contract, never on the transport library.
+- Depends only on domain types and an injected domain port, never on a concrete service adapter or transport library; it may invoke effects through that port at runtime.
+- Returns business failures as domain error values. Boundary/programming exceptions remain exceptions, never fabricated domain failures; transport serialization stays at the delivery edge.
 
 **Adapter (service)** (`modules/{feature}/services/`)
 - Maps outside data into domain types through a single parsing step.
-- Returns a typed result — a value or a typed error — and never throws.
+- Returns domain data or a documented business failure mapped to a typed domain error value; it never throws for a business failure. Transport, parsing, and programming exceptions are not converted to domain errors and may propagate to the presentation boundary.
 - Holds zero business logic.
 
 **Composition (view)** (`modules/{feature}/hooks/` + `modules/{feature}/components/`)
@@ -64,15 +66,14 @@ Test levels: unit — render the UI and replace the service with a double; integ
 
 ##### Architecture Overview (understand before checking)
 
-Frontend layers flow inward — dependencies point this direction:
+Runtime call flow (not the static-import graph):
 ```
-Component (view) → Hook (driving adapter) → execute() (use case) → Service (driven adapter) → fetch
-                                         ↑
-                                   Domain (types + errors)
+Component (view) → Hook (driving adapter) → execute() → injected domain port → Service → fetch/local data
 ```
 
-- **Hook = driving adapter** — calls a non-Hook `execute()` from `queryFn` or `mutationFn`. `execute()` lives in `modules/{feature}/hooks/use-{feature}.ts`. It still orchestrates data, state, and mutations. Tested together with Component, never in isolation.
-- **Service = driven adapter** — HTTP adapter only, zero business logic, returns `T | FeatureServiceError`.
+- **Static imports** — the use-case operation depends only on domain types/ports, the service implements that domain port, and composition injects the concrete service. Co-location with the Hook permits composition/framework imports for the Hook, not concrete-adapter or framework dependencies inside `execute()`.
+- **Hook = driving adapter** — calls a non-Hook `execute()` from `queryFn` or `mutationFn`. `execute()` lives in `modules/{feature}/hooks/use-{feature}.ts` and orchestrates the business operation through its port; the Hook owns presentation/query state and mutation binding. Tested together with Component, never in isolation.
+- **Service = driven adapter** — HTTP/data adapter, zero business logic, returns `T | FeatureServiceError` (as a Promise for HTTP). With no backend or HTTP it stays synchronous, with no `async`, `await`, or `fetch`.
 - **Component (view)** — reads React Query state, displays data, calls `toast.*`. Never calls service directly.
 
 ---
@@ -84,6 +85,7 @@ Component (view) → Hook (driving adapter) → execute() (use case) → Service
 - [ ] `domain/errors/{feature}-service.error.ts` exists — ALWAYS required, no exceptions
 - [ ] Error class is named `{Feature}ServiceError` (PascalCase feature + `ServiceError` suffix) — NOT a generic name
 - [ ] Error class extends `Error`
+- [ ] Error carries a stable business code; it never represents an arbitrary caught transport, parsing, or programming exception
 - [ ] Constructor sets `this.name = '{Feature}ServiceError'` — string MUST match the actual class name (e.g. class `RequestTagsServiceError` → `this.name = 'RequestTagsServiceError'`)
 - [ ] No `throw` in error constructor — just `super(message)` + `this.name`
 
@@ -102,7 +104,7 @@ Component (view) → Hook (driving adapter) → execute() (use case) → Service
 `execute()` is an ordinary (non-Hook) callable in the same file as its Hook.
 
 - [ ] `execute()` is a plain function or object method — never calls React Query, `useState`, `useEffect`, or any Hook
-- [ ] It performs the business operation by calling the service (the adapter) — never `fetch` or `apiClient` directly
+- [ ] It performs the business operation through an injected domain service port — no concrete service dependency, `fetch`, or `apiClient`; the Hook's composition code supplies the adapter
 - [ ] It returns the domain value or a typed `{Feature}ServiceError` — never throws for a business failure
 - [ ] The Hook passes `execute()` into `queryFn` or `mutationFn`
 
@@ -110,28 +112,23 @@ Component (view) → Hook (driving adapter) → execute() (use case) → Service
 
 ##### SERVICE LAYER — `modules/{feature}/services/{feature}.service.ts`
 
-Service = HTTP adapter (equivalent of repository impl). Zero business logic.
+Service = HTTP/data adapter (equivalent of repository impl). Zero business logic. HTTP-specific checks below apply only when there is HTTP; without a backend or HTTP, use the synchronous static-data pattern in `.opencode/agents/forge.md`.
 
 - [ ] Exported as plain object — NOT a class: `export const xService = { ... }`
 - [ ] Zero React imports — no `useState`, `useEffect`, `useQuery`, or any hook
 - [ ] HTTP calls use `<unknown>` generic: `apiClient.get<unknown>(...)` — never `apiClient.get<MyType>(...)`
 - [ ] Response unwrapped with `parseJsendData(zodSchema, raw)` — no type casting, no `as T`
 - [ ] Types/schemas imported from shared package (if exists) OR from `domain/entities/` — never inline
-- [ ] Return type is `Promise<T | FeatureServiceError>` — never `Promise<T>` alone, never raw `Error`
-- [ ] Service wraps in try/catch — returns caught error as typed `FeatureServiceError`, never re-throws
+- [ ] HTTP return type is `Promise<T | FeatureServiceError>`; static-data return type is `T | FeatureServiceError` — never a raw `Error` value
+- [ ] Only documented business failures map to `FeatureServiceError` values; no blanket try/catch converting arbitrary exceptions. Transport, parsing, and programming exceptions may throw/reject without becoming domain errors; no mandatory exception-as-result wrapper
 - [ ] No local type/interface definitions inline in service file
 
 ```typescript
-// Correct pattern
+// Success mapping; ResponseType/schema come from the domain/shared package.
+// Map a documented business-failure response separately when the contract defines one.
 getAll: async (): Promise<ResponseType | FeatureServiceError> => {
-  try {
-    const raw = await apiClient.get<unknown>('/endpoint');
-    return parseJsendData(schema, raw);
-  } catch (error) {
-    return new FeatureServiceError(
-      error instanceof Error ? error.message : 'Unknown error'
-    );
-  }
+  const raw = await apiClient.get<unknown>('/endpoint');
+  return parseJsendData(schema, raw);
 }
 ```
 
@@ -143,8 +140,8 @@ The Hook is the driving adapter and calls the non-Hook `execute()` (defined in `
 
 - [ ] Query keys defined in `keys.ts` with `as const` — not inline strings
 - [ ] Fetch hooks use `useQuery` with key from `keys.ts`
-- [ ] `queryFn` checks service return: `if (result instanceof FeatureServiceError) throw result`
-  - This hands the error to React Query state — component reads `error` from hook
+- [ ] `queryFn`/`mutationFn` checks the `execute()` result: `if (result instanceof FeatureServiceError) throw result`
+  - Only this presentation binding turns a returned business error into React Query error state. Boundary/programming exceptions also reach that state without domain reclassification; the component reads `error` from the Hook
 - [ ] Mutation hooks invalidate relevant queries in `onSuccess`
 - [ ] `onError` callback: only `console.error()` — NO `toast.*` ever in hooks
 - [ ] Filter hooks use `useMemo` for filtered results

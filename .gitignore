@@ -5,7 +5,5 @@ node_modules/
 .opencode/magic-context/
 __pycache__/
 output/
-pr-draft.md
-commit.txt
 plans/.completed/
 .secrets/

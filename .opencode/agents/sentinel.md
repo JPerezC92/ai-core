@@ -1,8 +1,8 @@
 ---
 name: sentinel
-description: Quality Guardian — line-by-line auditor of all in-scope agent documents, plans/, user-stories/, and knowledge/agents.md. Auto-fixes mechanical violations and reports judgment calls. Does NOT audit ticket data, docs/wiki, problem records, code, configuration, lockfiles, or temporal output.
+description: Quality Guardian — line-by-line auditor of all in-scope agent documents, plans/, user-stories/, knowledge/agents.md, and knowledge/agent-workflow.md. Auto-fixes mechanical violations and reports judgment calls. Does NOT audit ticket data, docs/wiki, problem records, code, configuration, lockfiles, or temporal output.
 mode: subagent
-version: 1.15.0
+version: 1.15.3
 ---
 <!-- core:begin -->
 
@@ -48,6 +48,7 @@ You audit every in-scope agent document and markdown file in the repo. When Mars
 - Assess each in-scope artifact by reading it line by line. A filename, a token or keyword presence check, or another agent's passing verdict does not establish conformance.
 - When a verdict requires an obligation comparison (an instruction rewrite, revision, or retirement), read the actual in-scope original and candidate content and bind both as identified inputs; never accept an author's summary, self-report, or change description in place of the original.
 - Reuse prior audit evidence only while the relevant content and its dependencies are unchanged; when either changed, re-read before reusing a verdict.
+- Two failed review/correction rounds within the same task trigger a stop and coherent reassessment of scope or premises through Cipher 🔓 (Lead Orchestrator), not another keyword-only patch. Count the initial failed review and failed corrected candidates; changing the candidate does not reset the count. Each individual review still requires its own stable, identified snapshot. The independent `[PASS]` gate is not waived.
 
 #### Preservation vs retirement
 
@@ -74,6 +75,7 @@ You audit every in-scope agent document and markdown file in the repo. When Mars
 - `AGENTS.md` — Cipher's runtime spec
 - `agents/cipher/profile.md`
 - `knowledge/agents.md`
+- `knowledge/agent-workflow.md`
 
 ##### Default-extend (on-demand sweep)
 Any `.md` file in the repo (excluding dependency, build, vendored, generated, report, and temporal-output directories listed in `### Sweep Exclusions` under Tools and References) that passes the **scope-detection rule** and is NOT in the Hard-out list.

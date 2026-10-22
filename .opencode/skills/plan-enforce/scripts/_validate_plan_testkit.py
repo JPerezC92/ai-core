@@ -181,3 +181,70 @@ def write_fixture(root: Path, name: str, content: str) -> Path:
 def phase_snapshot(name: str, content: str) -> vp.PhaseSnapshot:
     """Build a loaded phase snapshot for pure validator checks."""
     return {"name": name, "content": content}
+
+
+def build_single_file_plan(
+    *,
+    status: str = "active",
+    completed: str | None = None,
+    auditor: str | None = None,
+    verdict: str | None = None,
+    findings: str | None = None,
+    date: str | None = None,
+) -> str:
+    """Build a complete single-file-shaped plan string for audit-gate tests.
+
+    Defaults produce an otherwise-valid plan the existing section checks
+    accept. ``completed`` adds an optional Completed metadata line. Audit
+    fields are omitted entirely when all are absent; any provided field
+    includes ``## Audit`` with only those named fields. No file IO.
+    """
+    completed_line = (
+        f"> **Completed:** {completed}\n" if completed is not None else ""
+    )
+    audit_lines: list[str] = []
+    if auditor is not None:
+        audit_lines.append(f"- Auditor: {auditor}")
+    if verdict is not None:
+        audit_lines.append(f"- Verdict: {verdict}")
+    if findings is not None:
+        audit_lines.append(f"- Findings: {findings}")
+    if date is not None:
+        audit_lines.append(f"- Date: {date}")
+    audit_section = (
+        "## Audit\n\n" + "\n".join(audit_lines) + "\n\n" if audit_lines else ""
+    )
+    return (
+        "# Plan — sample\n"
+        "\n"
+        f"> **Status:** {status}\n"
+        "> **Started:** 2026-08-20 18:37\n"
+        "> **Subject:** sample plan\n"
+        "> **Layout:** single-file\n"
+        f"{completed_line}"
+        "\n"
+        "## Context\n"
+        "\n"
+        "- Prompted by: test\n"
+        "\n"
+        "## Goals\n"
+        "\n"
+        "- ⬜ **G1:** sample goal\n"
+        "\n"
+        "## Body\n"
+        "\n"
+        "- Owner and assignment: sample\n"
+        "\n"
+        "## Critical files / tools\n"
+        "\n"
+        "-\n"
+        "\n"
+        "## Verification\n"
+        "\n"
+        "- ⬜ sample\n"
+        "\n"
+        f"{audit_section}"
+        "## Out of scope\n"
+        "\n"
+        "-\n"
+    )
