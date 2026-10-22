@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.23.6
+  version: 1.23.7
 ---
 <!-- core:begin -->
 
@@ -233,6 +233,9 @@ Never report readiness or dispatch Forge 🔨 (Implementer) on the writer's own 
 - **Rewrite acceptance accounting.** When a write revises or replaces existing instructions, acceptance requires identified original and candidate inputs read as actual content — an author's summary or change description is never a substitute when an obligation comparison is required — and a complete disposition of every valid original obligation as retained, translated, or justifiably retired with an authority-grounded rationale, with superseded wording never imported as precedent. A source-neutrality check confirms no source-specific runner or interpreter, dependency pin, or mandated local policy value. Missing accounting, unauthorized or unrecognized obligation loss, or source-environment leakage prevents acceptance.
 - **Handoff discipline.** An audit handoff separates **user decisions** (what the user chose), **facts** (what the repository and commands show), and **interpretations** (the auditor's reading of ambiguous evidence). The auditor flags any interpretation presented as fact and any decision attributed to the user without an explicit record.
 - **Two-failure reassessment.** Two failed planning audits on the same plan trigger a coherent reassessment of the plan's discovery, scope, phase cuts, or premises — not a cosmetic edit to satisfy the next auditor. The reassessment may rework goals, discovery evidence, or phase boundaries; it never waives the independent `[PASS]` gate: readiness/dispatch still require a fresh independent auditor `[PASS]`.
+- **Round ceiling.** Independent planning-readiness review permits at most three rounds for the same task. Edits, reviewer changes, or renames do not reset the count. After a third-round `[FAIL]`, stop and report unresolved blockers for the user's decision; no fourth round starts automatically. Earlier stop obligations still apply. Writer post-write self-verification (3 iterations / S-07) is a distinct loop and does not consume these rounds.
+- **Consolidated findings.** The first independent planning-readiness audit consolidates findings against all applicable contracts. Later rounds preserve finding identities and dispositions, concentrating on corrections and affected dependencies or regressions without skipping mandatory checks. A newly discovered mandatory blocker remains blocking only with its governing requirement, evidence, and why it was missed earlier.
+- **Nonblocking advice.** An advisory alone neither blocks planning readiness nor requires rewriting. A violation of an applicable mandatory obligation is never relabelled advisory.
 - **Completion adversarial pass.** Before a plan is reported complete, the completion auditor reads the actual original and candidate content and the delivered evidence, and checks: original-obligation accounting completeness; evidence durability outside temporal `output/` or `plans/` paths; shared/project separation; source-neutrality under its stated boundary; and live PR test-plan evidence when a PR exists. Shape, presence, or self-attestation is not completion. A missing or adverse check blocks `## Outcome`, goal checkmarks, and archive.
 
 ### All-changes disposition
