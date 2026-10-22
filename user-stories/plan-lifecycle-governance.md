@@ -66,8 +66,8 @@
 - ✅ **AC37 — Rewrite acceptance accounting:** Accept an instruction rewrite only with identified original/candidate inputs, complete accounting of valid original obligations, justified changes or retirements, and a source-neutrality check. Missing accounting, unauthorized obligation loss, or source-environment leakage prevents acceptance.
 - ✅ **AC38 — Consolidated findings:** The initial independent planning-readiness audit consolidates findings against all applicable contracts. Subsequent reviews preserve finding identities and dispositions, concentrating on corrections and affected dependencies or regressions without skipping mandatory checks. Newly discovered mandatory blockers remain admissible with their governing requirement, evidence, and an explanation of why they were missed earlier.
 - ✅ **AC39 — Nonblocking advice:** An advisory alone neither blocks planning readiness nor requires rewriting. A violation of an applicable mandatory obligation is never relabelled advisory.
-- ⬜ **AC40 — Close-out before done-claim:** The orchestrator does not report a plan complete, and does not report that plan’s release or PR done, until every confirmed goal is marked complete, Outcome is written, completed metadata is set, and the plan is archived with filesystem verification. An opened, reviewed, or merged PR, or a shipped status, does not replace that sequence.
-- ⬜ **AC41 — Skipped close-out is a defect:** If close-out was skipped after the work was treated as shipped, restore the still-active plan, complete the same pre-release sequence, then archive. Post-merge branch cleanup still does not archive.
+- ✅ **AC40 — Close-out before done-claim:** The orchestrator does not report a plan complete, and does not report that plan’s release or PR done, until every confirmed goal is marked complete, Outcome is written, completed metadata is set, and the plan is archived with filesystem verification. An opened, reviewed, or merged PR, or a shipped status, does not replace that sequence.
+- ✅ **AC41 — Skipped close-out is a defect:** If close-out was skipped after the work was treated as shipped, restore the still-active plan, complete the same pre-release sequence, then archive. Post-merge branch cleanup still does not archive.
 
 ## Proof
 
@@ -110,8 +110,8 @@
 - AC37 → `.opencode/skills/plan-enforce/references/_consistency-checklist.md` `## Completion and findings (analysis)` · `.opencode/agents/sentinel.md` `#### Review scope and snapshot` / `#### Preservation vs retirement` · `.opencode/agents/vault.md` `#### Onboarding audit (new skill)` · `knowledge/agents.md` `### Evidence discipline` `Rewrite acceptance accounting` / `Rewrite source neutrality`
 - AC38 → `.opencode/skills/plan-enforce/SKILL.md` `#### Independent audit gate` · `.opencode/skills/plan-enforce/references/_consistency-checklist.md` `## Audit gate`
 - AC39 → `.opencode/skills/plan-enforce/SKILL.md` `#### Independent audit gate` · `.opencode/skills/plan-enforce/references/_consistency-checklist.md` `## Audit gate`
-- AC40 → `.opencode/skills/plan-enforce/SKILL.md` `#### Resume (completion)` · `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Plan lifecycle rules` row `Audits pass, release PR requested` · planned target, unverified
-- AC41 → `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Resume (completion)` · `## Plan lifecycle rules` row `User confirms PR merge` · planned target, unverified
+- AC40 → `.opencode/skills/plan-enforce/SKILL.md` `#### Resume (completion)` · `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Plan lifecycle rules` row `Audits pass, release PR requested`
+- AC41 → `.opencode/skills/plan-enforce/references/_lifecycle-contract.md` `## Resume (completion)` · `## Plan lifecycle rules` row `User confirms PR merge`
 
 ## Constraints
 
@@ -228,6 +228,7 @@ Exact performed command: `uv run --frozen python3 -B .opencode/skills/plan-enfor
 
 ## Revision tracking
 
+- 2026-10-22 — Close-out-before-done-claim revision delivered: AC40–AC41 implemented in `plan-enforce` skill/lifecycle/checklist; independent completion `sentinel-completion-1` `[PASS]` on commit `4f2187f086d89caa49a140be0c9fcdeaf9614eb6`. Earlier pending-history wording for this revision is superseded.
 - 2026-10-22 — Approved close-out-before-done-claim revision: AC40–AC41 are pending implementation and verification; their Proof entries name planned extensions, not passing results. No existing obligation is retired. Delivery history is pending with no matching reference or new Change log entry. Completion, Outcome, archival, and release handoff remain subject to the existing evidence and history gates.
 - 2026-10-22 — Approved bounded-planning-review revision delivered: AC28/38/39 implemented in `plan-enforce` 1.23.7 and matching checklist; independent completion `bounded-completion-1` `[PASS]` on merge `a8715d8b71e851002ee3c68cb25675dde1230cbd` (PR #76). Proof targets are the Independent audit gate and Audit gate sections. This does not claim faster planning on a later live task. Earlier pending-history wording for this revision is superseded.
 - 2026-10-22 — Approved bounded-planning-review revision: AC28 and new AC38–AC39 are pending implementation and verification; their Proof entries name planned extensions, not passing results. AC28 retains actual-content review, decisions/facts/interpretations, two-failure reassessment, and the independent `[PASS]` gate while adding the approved round boundary. No existing obligation is retired; AC26 and the other criteria remain unchanged. Delivery history is pending with no matching reference or new Change log entry. Completion, Outcome, archival, and release handoff remain subject to the existing evidence and history gates. The already-passing write-safety plan and active foundation plan are not edited or retrospectively re-audited by this story revision.
@@ -243,10 +244,10 @@ Exact performed command: `uv run --frozen python3 -B .opencode/skills/plan-enfor
 
 ## Change log
 
-- before 2026-10-12 — earlier history: see git history for this file
-- 2026-10-12 — story revision (PR #59): split behavioural criteria from `## Proof`, moved pre-decided planning policy into `## Constraints`, and dropped test symbols and config literals from criterion text.
+- before 2026-10-13 — earlier history: see git history for this file
 - 2026-10-13 — safe-roster-parallelism (PR #61): added coordination declarations, extracted lifecycle obligations to a mandatory reference, and repaired relocated proof pointers.
 - 2026-10-15 — story-distribution-20261015 (PR #64): regionized the story and added inherited-evidence, source-owner reconciliation and history-finalization criteria (AC32–AC34).
 - 2026-10-20 — debt-review-reliability-20261019 (PR #72): delivered the AC35–AC37 capability text — exact-invocation lifecycle Git-inventory preflight, evidence-complete inventory blockers, and rewrite-acceptance obligation accounting with source-neutrality checks — together with the corrected creator size scope and convention bindings, the complete original-obligation accounting and the durable rewrite-review case evidence. All of it is inside PR #72's four commits (`f6efbe87`, `5eed3317`, `b19c38e0`, `c25a6d83`), squashed to merge commit `6b84d4d0bbbac11be00146ef612aa553f7820ff5`.
 - 2026-10-22 — bounded-planning-review-20261022 (PR #76): delivered bounded planning-readiness review — three-round same-task ceiling, consolidated findings, and nonblocking advice — in `plan-enforce` 1.23.7 and the matching checklist (merge `a8715d8b71e851002ee3c68cb25675dde1230cbd`).
+- 2026-10-22 — close-out-before-done-claim-20261022 (`4f2187f086d89caa49a140be0c9fcdeaf9614eb6`): delivered AC40/AC41 — no done-claim without close-out; skipped close-out repaired by the pre-release sequence, not post-merge archive.
 <!-- project:end -->

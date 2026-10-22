@@ -25,7 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 4.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; see the standing-condition record in `user-stories/plan-lifecycle-governance.md`.
+**Open debts: 5.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; see the standing-condition record in `user-stories/plan-lifecycle-governance.md`.
 
 ### DEBT-007
 
@@ -63,5 +63,14 @@ Each entry MUST include:
 - **Resolution criteria** — (1) Operator guidance no longer states that a second active plan is forbidden. (2) Creating a new plan while another is active is allowed when the user selected a distinct task; the multiple-active case still requires the user to select which plan to show or resume. (3) Independent review of the corrected reading against the skill text.
 - **Explicit deferral decision** — 2026-10-22 — user: “this is wrong A second active plan is not allowed. add as a debt”; Cipher 🔓 (Lead Orchestrator) records the false prohibition as nonblocking debt. No permission, Git, or release change is authorized by this record.
 
-**ID to use for the next new debt:** `DEBT-014`. This is an allocation counter, not an open debt.
+### DEBT-014
+
+- **ID** — `DEBT-014`
+- **Date** — 2026-10-22
+- **Description** — After authorized delivery work, Cipher 🔓 (Lead Orchestrator) stops and waits (commit without close-out, close-out without the release PR, or a “not done / say when”) instead of continuing the remaining lifecycle: completion audit → Outcome → goal marks → archive → filesystem verify → release PR. The skip is recurrent.
+- **Direct evidence** — 2026-10-22 on `close-out-before-done-claim-20261022`: (1) after phase 1, Cipher asked for release authorization while the plan was still active; (2) after user “u can commit”, Cipher reported SHA `4f2187f086d89caa49a140be0c9fcdeaf9614eb6` and stopped without close-out; (3) after user “hey what are u waiting for?”, Cipher archived then stopped again without opening the release PR. User: “AGAIN WHAT ARE U WAITING FOR? WHY U DONT CONTINUE THE WORKFLOW? U ARE MAKING THIS ERROR RECURTRENTLY ADD AS a DEBT”.
+- **Resolution criteria** — (1) After user-authorized implementation, Cipher runs the remaining applicable lifecycle events in order without a new prompt to continue. (2) Archive-before-release still holds; a PR is opened only after archive, not instead of it. (3) Independent review of one later delivery that close-out and the release PR both happen without a “what are you waiting for” prompt.
+- **Explicit deferral decision** — 2026-10-22 — user directed add as a debt; Cipher 🔓 (Lead Orchestrator) records the recurrent stop as nonblocking. This record does not replace continuing the current release PR.
+
+**ID to use for the next new debt:** `DEBT-015`. This is an allocation counter, not an open debt.
 <!-- project:end -->
