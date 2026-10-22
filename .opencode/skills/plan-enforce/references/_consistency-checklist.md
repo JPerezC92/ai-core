@@ -47,6 +47,9 @@
 - `Verdict` — one of `[PENDING]`, `[PASS]`, `[FAIL]`.
 - `Date` — set when the independent audit runs.
 - A plan is not reported ready and Forge 🔨 (Implementer) is not dispatched until an independent auditor returns `[PASS]`. If no auditor can run, the plan stays not-ready; a substitute requires explicit user authorization recorded in `## Audit` (fail-closed).
+- Independent planning-readiness review permits at most three rounds for the same task; edits, reviewer changes, or renames do not reset the count. After a third-round `[FAIL]`, stop and report unresolved blockers for the user's decision; no fourth round starts automatically. Two failed planning audits still trigger coherent reassessment; independent `[PASS]` and earlier stop obligations remain. Writer self-verification (3 iterations / S-07) is not a readiness round.
+- The first independent planning-readiness audit consolidates findings against all applicable contracts. Later rounds preserve finding identities and dispositions, concentrating on corrections and affected dependencies or regressions without skipping mandatory checks. A newly discovered mandatory blocker remains blocking only with its governing requirement, evidence, and why it was missed earlier.
+- An advisory alone neither blocks planning readiness nor requires rewriting. A violation of an applicable mandatory obligation is never relabelled advisory.
 
 ## phase-NN-<owner>.md
 
