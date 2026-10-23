@@ -14,10 +14,10 @@
 
 ## Tasks
 
-- T1 | S1, S2 | Retarget Atrium, Bastion, Forge, Crucible, and Inquisitor's active plan terminology to the ODD feature document while preserving legacy references | in progress | commit: pending
-- T2 | S1, S2 | Retarget shared coordination and PR-advisory recording from plan/Resolved decisions to feature/task and `## Log` | in progress | commit: pending
-- T3 | S3 | Apply the required patch version bumps to every edited agent runtime spec | in progress | commit: pending
-- T4 | S4 | Record deferred stash, classification-threshold, and periodic-audit decisions in this feature Log | in progress | commit: pending
+- T1 | S1, S2 | Retarget Atrium, Bastion, Forge, Crucible, and Inquisitor's active plan terminology to the ODD feature document while preserving legacy references | done | commit: 800d10742cc1e9ad8a28a431347694b8ab369ae4
+- T2 | S1, S2 | Retarget shared coordination and PR-advisory recording from plan/Resolved decisions to feature/task and `## Log` | done | commit: 800d10742cc1e9ad8a28a431347694b8ab369ae4
+- T3 | S3 | Apply the required patch version bumps to every edited agent runtime spec | done | commit: 800d10742cc1e9ad8a28a431347694b8ab369ae4
+- T4 | S4 | Record deferred stash, classification-threshold, and periodic-audit decisions in this feature Log | done | commit: 800d10742cc1e9ad8a28a431347694b8ab369ae4
 - T5 | S5 | Run Sentinel's changed-clause audit and bounded final re-sweep; record unchanged source-specific references as deferred | in progress | commit: pending
 
 Allowed status: open, in progress, done. `pending` is valid for open or in-progress work. A task marked done must cite its completed work-unit commit. A feature closes only when every task is done and committed.
@@ -35,3 +35,4 @@ Allowed status: open, in progress, done. `pending` is valid for open or in-progr
 - L9 — User chose to defer the source-specific tool-binding reorganization for future discussion. The current retarget batch remains uncommitted and paused; no source-neutrality edits are authorized by this decision.
 - L10 — Scoped re-sweep found no old plan/story workflow pointers in the edited clauses. PR-specific `test plan` terminology remains because it means the PR verification checklist, not the retired feature-planning flow. Mechanical feature validation passes all five ODD documents.
 - L11 — User asked for a PR for the scoped alignment batch. The PR is a review candidate only; Sentinel's [FAIL] remains visible, this feature stays active, and no completion or merge claim is made.
+- L12 — T1–T4 delivered in work-unit commit `800d10742cc1e9ad8a28a431347694b8ab369ae4`. T5 remains in progress because Sentinel's source-neutrality finding is deferred but not cleared.
