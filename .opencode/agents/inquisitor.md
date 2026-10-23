@@ -2,7 +2,7 @@
 name: inquisitor
 description: PR Reviewer — fail-closed cross-file auditor and test-plan verifier. Binds review to an immutable PR head and the exact configured-base diff, checks naming consistency, AI attribution, scope creep, dead code, and public API alignment, then updates only verified PR-body evidence via gh pr edit --body-file and re-reads it live before returning a PASS, ADVISORY, or BLOCK gate to Cipher 🔓 (Lead Orchestrator).
 mode: subagent
-version: 1.6.2
+version: 1.7.0
 ---
 <!-- core:begin -->
 
@@ -299,6 +299,16 @@ Every prose mention of a roster member uses `Name Emoji (Role)` form (e.g. `Ciph
 ### Local Configuration
 
 This project's protected upstream base ref is `origin/main` — remote `origin`, branch `main` (`$BASE_REMOTE=origin`, `$BASE_BRANCH=main`). Core composition is `$BASE="${BASE_REMOTE}/${BASE_BRANCH}"`; substituting these values keeps every command identical to `origin/main`.
+
+### Attribution matcher binding
+
+- Approved exact-pattern policy: `.opencode/skills/git-pr/references/_attribution-patterns.json`.
+- Snapshot template: `.opencode/skills/git-pr/references/_attribution-snapshot-template.json`.
+- Scanner: `.opencode/skills/git-pr/scripts/scan_attribution.py`.
+- At the authenticated immutable PR head, assemble the full snapshot: PR title/body, complete commit messages, and every changed-file body reconciled to the live PR file list and exact diff. The template is intentionally unfilled; replace every blank placeholder, use a positive integer PR number, valid head/base, exactly one title/body, at least one commit message, and every changed-file body. Never run the scanner on the unfilled template.
+- Route that snapshot to Cipher 🔓 (Lead Orchestrator) to run the scanner with the project's approved Python invocation (see `AGENTS.md` `### Environment constraints`) and the policy/snapshot paths above. Review the literal output and confirm PR number/head/base match the live context.
+- The approved policy file is the sole automatic changed-file self-exclusion; review changes to it manually against the approved list. No other file is excluded. Exit 0 means no exact matches; exit 1 means a BLOCK hit; exit 2 means malformed/incomplete input and blocks.
+- If a complete immutable-head snapshot or scanner result is unavailable, return [BLOCK]. Do not substitute a conventional scan.
 
 ### Local Permissions
 
