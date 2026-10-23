@@ -18,7 +18,7 @@
 
 - T1 | S1, S2, S3, S4 | Update validator; split tests into structure, lifecycle, and CLI modules using a shared document factory | done | commit: 3cf9cdc569a49adfd4d4ba4c3c75a599c336bdec
 - T2 | S5 | Replace pending commit fields in the three closed feature documents with the actual delivery commit | done | commit: 3cf9cdc569a49adfd4d4ba4c3c75a599c336bdec
-- T3 | S1, S2, S3 | Update the template, skill, and checklist with the commit-state rule | done | commit: 3cf9cdc569a49adfd4d4ba4c3c75a599c336bdec
+- T3 | S1, S2, S3 | Update the template, skill, and checklist with the commit-state rule | done | commit: 4e80c0d051f7b1e29846b6fdf4c88be535c59e96
 - T4 | S4 | Run feature tests, feature validator, and whole suite | done | commit: 3cf9cdc569a49adfd4d4ba4c3c75a599c336bdec
 
 Allowed status: open, in progress, done. On close, every task is done and committed.
@@ -35,3 +35,4 @@ Allowed status: open, in progress, done. On close, every task is done and commit
 - L8 — `uv run --frozen --group dev pytest -q` → 720 passed, exit 0. The feature validator returns `ok` for all four documents in `odd/tasks/`.
 - L9 — T1–T4 delivered in work-unit commit `3cf9cdc569a49adfd4d4ba4c3c75a599c336bdec`.
 - L10 — Close: task status/commit consistency enforced; all tasks committed; owner gates pass; 720-test suite passes; validator passes all four feature documents. No failed checks. Pending: independent final audit and separate push/PR authorization.
+- L11 — T3's task reference points to follow-up commit `4e80c0d051f7b1e29846b6fdf4c88be535c59e96`, which advances the `odd-workflow` skill metadata to version 1.2.0 while preserving the delivered template/checklist rule. The feature remains closed.
