@@ -1,8 +1,9 @@
 # Validator commit-state semantics
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-10-23
+> **Closed:** 2026-10-23
 
 ## Specs
 
@@ -15,10 +16,10 @@
 
 ## Tasks
 
-- T1 | S1, S2, S3, S4 | Update validator; split tests into structure, lifecycle, and CLI modules using a shared document factory | in progress | commit: pending
-- T2 | S5 | Replace pending commit fields in the three closed feature documents with the actual delivery commit | in progress | commit: pending
-- T3 | S1, S2, S3 | Update the template, skill, and checklist with the commit-state rule | in progress | commit: pending
-- T4 | S4 | Run feature tests, feature validator, and whole suite | in progress | commit: pending
+- T1 | S1, S2, S3, S4 | Update validator; split tests into structure, lifecycle, and CLI modules using a shared document factory | done | commit: 3cf9cdc569a49adfd4d4ba4c3c75a599c336bdec
+- T2 | S5 | Replace pending commit fields in the three closed feature documents with the actual delivery commit | done | commit: 3cf9cdc569a49adfd4d4ba4c3c75a599c336bdec
+- T3 | S1, S2, S3 | Update the template, skill, and checklist with the commit-state rule | done | commit: 3cf9cdc569a49adfd4d4ba4c3c75a599c336bdec
+- T4 | S4 | Run feature tests, feature validator, and whole suite | done | commit: 3cf9cdc569a49adfd4d4ba4c3c75a599c336bdec
 
 Allowed status: open, in progress, done. On close, every task is done and committed.
 
@@ -32,4 +33,5 @@ Allowed status: open, in progress, done. On close, every task is done and commit
 - L6 — The three already-closed feature documents now cite merge commit `ae234b2eaed7ca2a64ae836a9328dc5f80fbfc1b` for their completed tasks. No legacy plan or research file was changed.
 - L7 — Bastion implementation architecture `[PASS]`; Crucible test architecture `[PASS]` on the coordinator-attested current snapshot. Task fixture modules are split by structure, lifecycle, and CLI concern and use the shared factory.
 - L8 — `uv run --frozen --group dev pytest -q` → 720 passed, exit 0. The feature validator returns `ok` for all four documents in `odd/tasks/`.
-- L9 — Verification is complete, but tasks remain `in progress` until their work-unit commit exists. Commit/push/PR require explicit user authorization; no commit was made.
+- L9 — T1–T4 delivered in work-unit commit `3cf9cdc569a49adfd4d4ba4c3c75a599c336bdec`.
+- L10 — Close: task status/commit consistency enforced; all tasks committed; owner gates pass; 720-test suite passes; validator passes all four feature documents. No failed checks. Pending: independent final audit and separate push/PR authorization.
