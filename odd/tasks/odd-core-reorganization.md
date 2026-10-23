@@ -20,9 +20,9 @@
 
 ## Tasks
 
-- T1 | S1, S2, S4 | Core entry, `odd-workflow` skill, feature template, checklist, `AGENTS.md` pointer | done | commit: pending
-- T2 | S3, S5, S6 | First feature document and story supersession | done | commit: pending
-- T3 | S7, S8, S9, S10 | Story migration, legacy routing, walkthrough | done | commit: pending
+- T1 | S1, S2, S4 | Core entry, `odd-workflow` skill, feature template, checklist, `AGENTS.md` pointer | done | commit: ae234b2eaed7ca2a64ae836a9328dc5f80fbfc1b
+- T2 | S3, S5, S6 | First feature document and story supersession | done | commit: ae234b2eaed7ca2a64ae836a9328dc5f80fbfc1b
+- T3 | S7, S8, S9, S10 | Story migration, legacy routing, walkthrough | done | commit: ae234b2eaed7ca2a64ae836a9328dc5f80fbfc1b
 
 ## Log
 
@@ -41,3 +41,4 @@
 - L13 — Second live feature `odd/tasks/legacy-reference-sweep.md` was created from `odd/tasks/_template.md` and run spec → task → log → close. The template is proven on real work.
 - L14 — Audit-7 found residual plan pointers in `forge.md` and `bastion.md` and broken story Proof; the sweep feature fixed them. No re-audit was run.
 - L15 — Close: independent audit-9 PASS, no findings: ODD core, template, skill, `AGENTS.md` pointer, story supersession, and reference sweep verified. The reorganization is closed; legacy migration remains future work.
+- L16 — Recorded the delivery commit for completed tasks: PR #78 merge commit `ae234b2eaed7ca2a64ae836a9328dc5f80fbfc1b`.

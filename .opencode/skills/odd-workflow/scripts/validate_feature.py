@@ -18,8 +18,10 @@ from pathlib import Path
 REQUIRED_HEADINGS = ("## Specs", "## Tasks", "## Log")
 SPEC_RE = re.compile(r"^- S\d+ — .+$")
 TASK_RE = re.compile(
-    r"^- T\d+ \| S\d+(?:, S\d+)* \| .+ \| (open|in progress|done) \| commit: .+$"
+    r"^- T\d+ \| S\d+(?:, S\d+)* \| .+ \| "
+    r"(?P<status>open|in progress|done) \| commit: (?P<commit>.*)$"
 )
+COMMIT_RE = re.compile(r"^[0-9a-fA-F]{7,64}$")
 LOG_RE = re.compile(r"^- L1 — .+$")
 HEADER_RE = re.compile(r"^> \*\*(Status|Owner|Created):\*\* .+$")
 STATUS_RE = re.compile(r"^> \*\*Status:\*\* (active|closed)$")
@@ -116,12 +118,31 @@ def validate_feature(text: str) -> list[str]:
                 f"commit: ...': {line.strip()}"
             )
 
-    if is_closed:
-        for line in task_entries:
-            match = TASK_RE.match(line)
-            if match and match.group(1) != "done":
+    for line in task_entries:
+        match = TASK_RE.match(line)
+        if not match:
+            continue
+        status = match.group("status")
+        commit = match.group("commit").strip()
+        has_commit_reference = COMMIT_RE.fullmatch(commit) is not None
+        if not commit:
+            findings.append(f"task commit must not be blank: {line.strip()}")
+        if status == "done" and not has_commit_reference:
+            findings.append(
+                f"done task must have a 7-64 character hexadecimal commit identifier: {line.strip()}"
+            )
+        elif commit != "pending" and not has_commit_reference:
+            findings.append(
+                f"task commit must be 'pending' or a 7-64 character hexadecimal commit identifier: {line.strip()}"
+            )
+        if is_closed:
+            if status != "done":
                 findings.append(
-                    f"closed feature has a {match.group(1)} task: {line.strip()}"
+                    f"closed feature has a {status} task: {line.strip()}"
+                )
+            if status != "done" and not has_commit_reference:
+                findings.append(
+                    f"closed feature task must have a 7-64 character hexadecimal commit identifier: {line.strip()}"
                 )
 
     if not any(LOG_RE.match(line) for line in log):

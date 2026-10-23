@@ -5,7 +5,7 @@
 - [ ] Copy `odd/tasks/_template.md`; do not invent the format.
 - [ ] Header carries Status, Owner, Created.
 - [ ] `## Specs` has numbered `S#` with exact strings or acceptance checks.
-- [ ] `## Tasks` has stable IDs, linked `S#`, route or owner, status (`open`, `in progress`, `done`), and commit.
+- [ ] `## Tasks` has stable IDs, linked `S#`, route or owner, status (`open`, `in progress`, `done`), and commit. `pending` is only for open/in-progress tasks; done tasks cite a 7–64 character hexadecimal commit identifier.
 - [ ] `## Log` starts with `L1` = the original request verbatim.
 
 ## Before the first write
@@ -25,7 +25,7 @@
 - [ ] Every failed or pending check is reported.
 - [ ] The next step is stated.
 - [ ] A reported failure was reproduced before deciding it already works.
-- [ ] Every task is `done`.
+- [ ] Every task is `done` and has a commit reference.
 - [ ] `Status` is `closed`, a `Closed:` date is present, and the Log has a `Close:` entry.
 - [ ] `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feature.py odd/tasks` exits 0. This is mechanical anatomy only; semantic correctness is Cipher's review.
 
