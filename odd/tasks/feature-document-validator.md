@@ -18,13 +18,13 @@
 
 ## Tasks
 
-- T1 | S1, S2 | Write `.opencode/skills/odd-workflow/scripts/validate_feature.py` | done | commit: pending
-- T2 | S3 | Write `test_validate_feature.py` with valid and invalid cases | done | commit: pending
-- T3 | S5 | Point the skill and checklist to the validator | done | commit: pending
-- T4 | S4 | Run the new tests and the whole suite | done | commit: pending
-- T5 | S1, S3 | Fix audit-10 advisories: per-entry validation, status vocabulary, directory/template-exclusion test, fenced-code handling | done | commit: pending
-- T6 | S7 | Add status/close consistency checks and tests | done | commit: pending
-- T7 | S8 | Add closed-task completion check and tests | done | commit: pending
+- T1 | S1, S2 | Write `.opencode/skills/odd-workflow/scripts/validate_feature.py` | done | commit: ae234b2eaed7ca2a64ae836a9328dc5f80fbfc1b
+- T2 | S3 | Write `test_validate_feature.py` with valid and invalid cases | done | commit: ae234b2eaed7ca2a64ae836a9328dc5f80fbfc1b
+- T3 | S5 | Point the skill and checklist to the validator | done | commit: ae234b2eaed7ca2a64ae836a9328dc5f80fbfc1b
+- T4 | S4 | Run the new tests and the whole suite | done | commit: ae234b2eaed7ca2a64ae836a9328dc5f80fbfc1b
+- T5 | S1, S3 | Fix audit-10 advisories: per-entry validation, status vocabulary, directory/template-exclusion test, fenced-code handling | done | commit: ae234b2eaed7ca2a64ae836a9328dc5f80fbfc1b
+- T6 | S7 | Add status/close consistency checks and tests | done | commit: ae234b2eaed7ca2a64ae836a9328dc5f80fbfc1b
+- T7 | S8 | Add closed-task completion check and tests | done | commit: ae234b2eaed7ca2a64ae836a9328dc5f80fbfc1b
 
 ## Log
 
@@ -38,3 +38,4 @@
 - L8 — Verification after the advisories: feature tests 18 passed; whole suite 685 passed, exit 0; validator `ok` for all three feature documents.
 - L9 — Close: status/close consistency rule added; 23 feature tests and 690-test suite pass; validator `ok` for all three documents.
 - L10 — Close: closed-task completion rule added; 25 feature tests and 692-test suite pass; validator `ok` for all three documents.
+- L11 — Recorded the delivery commit for completed tasks: PR #78 merge commit `ae234b2eaed7ca2a64ae836a9328dc5f80fbfc1b`.

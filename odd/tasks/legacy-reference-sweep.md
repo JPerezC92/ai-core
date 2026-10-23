@@ -15,10 +15,10 @@
 
 ## Tasks
 
-- T1 | S1, S4 | Inventory operational references in `AGENTS.md`, `knowledge/agents.md`, `forge.md`, `bastion.md`, `herald.md`, `sentinel.md`, `README.md` | done | commit: pending
-- T2 | S2, S3 | Classify each hit as retarget, legacy label, or historical | done | commit: pending
-- T3 | S1, S2 | Apply the minimal edits | done | commit: pending
-- T4 | S5 | Re-sweep and record the disposition | done | commit: pending
+- T1 | S1, S4 | Inventory operational references in `AGENTS.md`, `knowledge/agents.md`, `forge.md`, `bastion.md`, `herald.md`, `sentinel.md`, `README.md` | done | commit: ae234b2eaed7ca2a64ae836a9328dc5f80fbfc1b
+- T2 | S2, S3 | Classify each hit as retarget, legacy label, or historical | done | commit: ae234b2eaed7ca2a64ae836a9328dc5f80fbfc1b
+- T3 | S1, S2 | Apply the minimal edits | done | commit: ae234b2eaed7ca2a64ae836a9328dc5f80fbfc1b
+- T4 | S5 | Re-sweep and record the disposition | done | commit: ae234b2eaed7ca2a64ae836a9328dc5f80fbfc1b
 
 ## Log
 
@@ -31,3 +31,4 @@
 - L7 — Fixed the residual pointers, repointed the story Proof to S7–S10, and moved the index note after the table. Audit-8 then found the unlabeled Herald plan-staging line and incomplete sweep accounting; both are fixed.
 - L8 — Final re-sweep is clean: no unlabeled active new-work pointer remains. The only `plans/` lifecycle text is explicitly legacy (Herald).
 - L9 — Close: independent audit-9 PASS, no findings. The feature is closed.
+- L10 — Recorded the delivery commit for completed tasks: PR #78 merge commit `ae234b2eaed7ca2a64ae836a9328dc5f80fbfc1b`.

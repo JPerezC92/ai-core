@@ -19,7 +19,7 @@ Create, read, update, and close the single feature document for a feature. I do 
 
 - Copy `odd/tasks/_template.md` to `odd/tasks/<feature-name>.md`; never reconstruct the format by research.
 - Fill `## Specs` with numbered `S#` requirements, exact strings, and acceptance checks.
-- Fill `## Tasks` with one line per task: stable ID, linked `S#`, route or owner, status (`open`, `in progress`, `done`), and commit.
+- Fill `## Tasks` with one line per task: stable ID, linked `S#`, route or owner, status (`open`, `in progress`, `done`), and commit. Use `commit: pending` only while status is `open` or `in progress`; `done` requires a 7–64 character hexadecimal commit identifier.
 - Fill `## Log` with `L1` = the original request verbatim, then corrections, evidence, and rationale in order.
 
 ### Before the first write
@@ -32,7 +32,7 @@ Rewrite only the affected spec and reopen only its task. Do not append a new pro
 
 ### Close
 
-Report the verified outcome, every failed or pending check, and the next step. Reproduce a reported failure before deciding it already works. On close, every task is `done`; set `Status: closed`, add `> **Closed:** date`, and record a final `L# — Close:` entry.
+Report the verified outcome, every failed or pending check, and the next step. Reproduce a reported failure before deciding it already works. On close, every task is `done` and has a commit reference. Set `Status: closed`, add `> **Closed:** date`, and record a final `L# — Close:` entry.
 
 ### Handoff
 
