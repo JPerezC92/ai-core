@@ -26,7 +26,7 @@
 - T5 | S1, S8 | Run the exact matcher at the matcher-delivery PR's immutable head and record the result | open | commit: pending
 - T6 | S9 | Update the core-sync agent-version contract test for Inquisitor 1.7.0 and make it independently collectible | done | commit: 461e96ba7dcb1879a6a23eb2247109056abf0775
 - T7 | S8 | Retire DEBT-007 in the same PR only after the exact head-bound scan passes | open | commit: pending
-- T8 | S10 | Retarget `git-pr` skill motivation/goal lookup from plans to the ODD feature document and advance its version | in progress | commit: pending
+- T8 | S10 | Retarget `git-pr` skill motivation/goal lookup from plans to the ODD feature document and advance its version | done | commit: 84c4864c38104606c65fecfea4659229429ed4ed
 
 Allowed status: open, in progress, done. `pending` is valid for open or in-progress work. A task marked done must cite its completed work-unit commit. A feature closes only when every task is done and committed.
 
@@ -53,3 +53,4 @@ Allowed status: open, in progress, done. `pending` is valid for open or in-progr
 - L19 — User authorized push and PR creation for the matcher. Pre-write inspection found `git-pr` Step 2 still requires a plan; T8 retargets this prerequisite to the ODD feature document so the PR can be drafted without the old flow.
 - L20 — `git-pr/SKILL.md` Step 2 original input is blob `a5ee41c54fd33ea940f5e1e11c7ddf8051ed331c`; candidate SHA256 `F98A135D22642E0C4B4D92FB593E0E752AFD5C6373952FD800579E8077B0DF50`. Retained: do not select by filename/date/status; stop on missing/ambiguous owner; use governing context for Summary; retain commit-subject ticket references. Translated: plan Context to feature Specs/Tasks/Log. Retired: plan-layout/archive search and reopen guidance for new-work PR drafting, because the feature document is now the single ODD record.
 - L21 — Inquisitor snapshot assembly now states the scanner's required input constraints: positive integer PR number, 7–64 hex head, non-empty base, one title/body, at least one sourced commit message, and non-empty safe changed-file paths. Inquisitor candidate SHA256: `406E9EBFC9FE4074D6F241DB8BD8EAA97EDB7A7A072861193DBF4FD929B8833F`.
+- L22 — T8 delivered in commit `84c4864c38104606c65fecfea4659229429ed4ed`: `git-pr` now reads the governing ODD feature record and keeps its diff-only scope and ambiguity stop.
