@@ -1,0 +1,38 @@
+# Governed updates for published PR branches
+
+> **Status:** active
+> **Owner:** Cipher 🔓 (Lead Orchestrator)
+> **Created:** 2026-10-23
+
+## Specs
+
+- S1 — Define a rule-compliant, non-force procedure to update a published PR branch when its base advances, including how to resolve an actual content conflict.
+- S2 — Preserve the existing user-only PR-merge boundary; updating a PR branch must never merge the PR into its base.
+- S3 — Preserve immutable-head review discipline: every base update creates a new head, invalidates affected snapshots/verdicts, and requires fresh diff reconciliation, applicable gates, exact matcher evidence, and Inquisitor 🔎 (PR Reviewer) review.
+- S4 — Do not use force-push or bypass the current Herald 📯 (Release Manager) restriction by substituting an unreviewed command/API; any needed authority or permission change must be explicit, source-accounted, and reviewed.
+- S5 — After the governance route is accepted and under the user's explicit authorization to continue this PR #81 refresh, use it to reconcile PR #81 with current `main` while preserving PR #80's merged ODD guidance and PR #81's matcher obligations; never merge PR #81 into `main`.
+- S6 — The core-sync agent-version contract test's expected map matches every agent runtime version in the candidate snapshot, including the Herald bump and any version changes carried by the refreshed PR #81 head.
+
+## Tasks
+
+- T1 | S1, S2, S4 | Augur 🔮 (Research Analyst) and Herald 📯 (Release Manager): research existing rules, effective permissions, and supported branch-update/conflict-resolution routes; recommend one compliant procedure | in progress | commit: pending
+- T2 | S1, S2, S3, S4, S6 | Marshal 🎖️ (HR Director): update the release/workflow rule only if the reviewed procedure requires it; account for original obligations. Forge 🔨 (Implementer) aligns all version-fixture entries to the candidate snapshot; Sentinel 🛡️ (Quality Guardian) audits the spec | in progress | commit: pending
+- T3 | S1, S2, S3, S4, S5, S6 | Herald 📯 (Release Manager), under Cipher 🔓 (Lead Orchestrator)'s evaluated gates and the user's explicit "go" for this PR #81 refresh: apply the accepted procedure. Forge 🔨 (Implementer) aligns the version fixture to the refreshed candidate; then rerun affected gates, exact head-bound scan, and final review | open | commit: pending
+
+Allowed status: open, in progress, done. `pending` is valid for open or in-progress work. A task marked done must cite its completed work-unit commit. A feature closes only when every task is done and committed.
+
+## Log
+
+- L1 — ask again
+- L2 — User selected "Yes, create the task" for a separate ODD feature defining a governed, non-force way to update conflicting published PR branches; creating this record alone does not authorize a PR merge.
+- L3 — Current evidence: PR #80 merged into `main` at `06e3aff022abf67084cfb0c9e02ace97912d7364`; PR #81 is open at `94dad88a9c270df262462933c91cdd79ddf815cc`, behind the new base and conflicting in `.opencode/agents/inquisitor.md`.
+- L4 — Herald's current rule permits `git merge "$BASE"` only during pre-implementation sync on a non-PR feature branch and forbids force-push; do not improvise an alternative update mechanism.
+- L5 — Related active follow-up: `odd/tasks/refresh-pr81-after-pr80-merge.md`; DEBT-015 is drafted in the working tree but is not committed. No PR #81 branch integration or merge has occurred.
+- L6 — Augur 🔮 (Research Analyst) and Herald 📯 (Release Manager) independently support a narrow base-into-head merge route: on a clean, live-verified PR head, merge the latest base into that PR branch, resolve conflicts, make a new merge commit, then push normally after revalidating the live head. This does not merge the PR into `main`; rebase is excluded because it rewrites published commits and may require force-push.
+- L7 — Official references: `https://cli.github.com/manual/gh_pr_update-branch` documents update-branch as base-to-head merge by default or rebase with `--rebase`; `https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/keeping-your-pull-request-in-sync-with-the-base-branch` says the Update branch button is for conflict-free branches and conflicts must first be resolved; `https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/resolving-a-merge-conflict-on-github` says conflict resolution commits merge the entire base into the head. These operations do not merge the PR into its base.
+- L8 — Herald 📯 (Release Manager) found no project permission change needed: broad shell allow already exists; normal push remains ask-gated, force-push denied, and PR merge denied. The policy change should be a narrowly scoped Herald 📯 (Release Manager) workflow exception with explicit Cipher 🔓 (Lead Orchestrator) authorization and unchanged PR-merge authority.
+- L9 — Marshal's T2 candidate changes only `.opencode/agents/herald.md`, from `1.6.2` to `1.7.0`, adding explicit open-PR base-into-head update procedure and its narrow pre-commit exception. Original SHA256: `33629852E96130E6BD1F81508B070E62727ACD259A02E190FCBBED3B20522D4D`; candidate SHA256: `B0B4AE74366C51D1ED4FA645C6D079ADB7C0098E400ADA8B1A83BD4025EA7B04`. No permission manifest or other runtime changed; Sentinel 🛡️ (Quality Guardian) audit pending.
+- L10 — Sentinel's first runtime-spec audit required post-push verification to prove the same PR is still OPEN and its live head equals the exact merge commit pushed. Marshal 🎖️ (HR Director) added those fail-closed checks; updated candidate SHA256 is `72798419AC8002910714943D375CDAC1D58C924CCC4D505909C94C5EA9226D28`. The original L1 request is the literal user message `ask again`.
+- L11 — Sentinel's combined Herald/ODD audit returned [PASS] with exhaustive obligation accounting; the post-push correction is accepted. The ODD validator passes all six task documents, exit 0. T2 remains in progress pending the version-contract fixture and its owner gates.
+- L12 — Crucible's T2 review found five pre-existing expected versions stale against current `main` after PR #80 merge: Atrium 1.4.3, Bastion 1.7.3, Crucible 1.8.4, Forge 1.6.3, and Inquisitor 1.6.3. The current frontmatter was verified by search; the baseline fixture is the exact `origin/main` file saved at `output/audits/test-agent-versions-pre-governance.md` (SHA256 `2967672E870D6F8831ECA15A256C3356CCC53598E016B73E947225258182105F`). Align the test map to all actual candidate versions; PR #81's later Inquisitor bump is handled when T3 updates that candidate snapshot.
+- L13 — Final gates for T2: Sentinel 🛡️ [PASS] on Herald candidate SHA256 `72798419AC8002910714943D375CDAC1D58C924CCC4D505909C94C5EA9226D28`; Bastion 🧱 [PASS] and Crucible 🔥 [PASS] on version fixture SHA256 `C7D3A6602C2247ACDEC27FB5C299A575C3CF2DADE91D8CBCD76E165C474ACE8A`. Whole suite `uv run --frozen --group dev pytest -q` -> 720 passed, exit 0. ODD validator -> `ok` for all six docs, exit 0.
