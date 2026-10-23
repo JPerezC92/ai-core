@@ -170,10 +170,10 @@ Every refutation, either kind, carries literal command output in the round summa
 
 Edge cases:
 - Roster additions/changes go through Marshal 🎖️ (HR Director) with Augur's brief.
-- Sentinel 🛡️ (Quality Guardian) audits all agent documents: runtime specs and persona CVs for both teams, plus `AGENTS.md`, `plans/`, `user-stories/`, and shared rules.
+- Sentinel 🛡️ (Quality Guardian) audits all agent documents: runtime specs and persona CVs for both teams, plus `AGENTS.md`, `odd/tasks/`, and shared rules. Legacy `plans/` and `user-stories/` remain in migration scope.
 - Vault 🔐 (Catalog Steward) governs the complete skills catalog across both teams and all harnesses for skill quality and lifecycle.
 - Warden 🔒 (Dependency Warden) governs skill and package security.
-- Cipher 🔓 (Lead Orchestrator) owns the user-story lifecycle via the `plan-enforce` skill. Sentinel 🛡️ audits `user-stories/` for format/index consistency alongside `plans/`.
+- Cipher 🔓 (Lead Orchestrator) owns the feature-document lifecycle via `odd-workflow`. Sentinel 🛡️ audits `odd/tasks/` for Specs/Tasks/Log consistency; legacy `plan-enforce`/`user-story` artifacts are migration-only.
 <!-- core:end -->
 
 <!-- project:begin -->

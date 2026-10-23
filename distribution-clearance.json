@@ -44,6 +44,12 @@
     ".opencode/skills/op-skill-creator/": {
       "mode": "raw"
     },
+    ".opencode/skills/odd-workflow/": {
+      "mode": "raw",
+      "region_files": [
+        "SKILL.md"
+      ]
+    },
     ".opencode/skills/plan-enforce/": {
       "mode": "raw",
       "region_files": [
