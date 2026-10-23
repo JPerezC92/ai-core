@@ -18,10 +18,14 @@ from pathlib import Path
 REQUIRED_HEADINGS = ("## Specs", "## Tasks", "## Log")
 SPEC_RE = re.compile(r"^- S\d+ — .+$")
 TASK_RE = re.compile(
-    r"^- T\d+ \| S\d+(?:, S\d+)* \| .+ \| (?:open|in progress|done) \| commit: .+$"
+    r"^- T\d+ \| S\d+(?:, S\d+)* \| .+ \| (open|in progress|done) \| commit: .+$"
 )
 LOG_RE = re.compile(r"^- L1 — .+$")
 HEADER_RE = re.compile(r"^> \*\*(Status|Owner|Created):\*\* .+$")
+STATUS_RE = re.compile(r"^> \*\*Status:\*\* (active|closed)$")
+STATUS_CLOSED_RE = re.compile(r"^> \*\*Status:\*\* closed$")
+CLOSED_RE = re.compile(r"^> \*\*Closed:\*\* \S+")
+CLOSE_LOG_RE = re.compile(r"^- L\d+ — Close: .+$")
 PLACEHOLDER_RE = re.compile(r"<[^>]+>")
 CODE_SPAN_RE = re.compile(r"`[^`]*`")
 FENCED_BLOCK_RE = re.compile(r"```.*?```", re.DOTALL)
@@ -74,6 +78,24 @@ def validate_feature(text: str) -> list[str]:
     tasks = _section(lines, "## Tasks")
     log = _section(lines, "## Log")
 
+    status_lines = [
+        line.strip() for line in lines if line.strip().startswith("> **Status:**")
+    ]
+    if len(status_lines) != 1:
+        findings.append("header must include exactly one Status line")
+    elif not STATUS_RE.match(status_lines[0]):
+        findings.append("Status must be active or closed")
+
+    is_closed = any(STATUS_CLOSED_RE.match(line) for line in lines)
+    if is_closed and not any(CLOSED_RE.match(line.strip()) for line in lines):
+        findings.append("closed feature needs a Closed date")
+
+    has_close_entry = any(CLOSE_LOG_RE.match(line) for line in log)
+    if is_closed and not has_close_entry:
+        findings.append("closed feature needs a Log 'Close:' entry")
+    if not is_closed and has_close_entry:
+        findings.append("active feature has a Log 'Close:' entry; set Status: closed")
+
     spec_entries = [line for line in specs if line.strip().startswith("- ")]
     task_entries = [line for line in tasks if line.strip().startswith("- ")]
 
@@ -93,6 +115,14 @@ def validate_feature(text: str) -> list[str]:
                 "Tasks entry must match '- T# | S# | ... | open|in progress|done | "
                 f"commit: ...': {line.strip()}"
             )
+
+    if is_closed:
+        for line in task_entries:
+            match = TASK_RE.match(line)
+            if match and match.group(1) != "done":
+                findings.append(
+                    f"closed feature has a {match.group(1)} task: {line.strip()}"
+                )
 
     if not any(LOG_RE.match(line) for line in log):
         findings.append("Log needs an L1 entry")

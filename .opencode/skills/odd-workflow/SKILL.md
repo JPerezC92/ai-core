@@ -32,7 +32,7 @@ Rewrite only the affected spec and reopen only its task. Do not append a new pro
 
 ### Close
 
-Report the verified outcome, every failed or pending check, and the next step. Reproduce a reported failure before deciding it already works.
+Report the verified outcome, every failed or pending check, and the next step. Reproduce a reported failure before deciding it already works. On close, every task is `done`; set `Status: closed`, add `> **Closed:** date`, and record a final `L# — Close:` entry.
 
 ### Handoff
 

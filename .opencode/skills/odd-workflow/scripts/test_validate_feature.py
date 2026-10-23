@@ -31,9 +31,60 @@ VALID = """# Sample feature
 - L1 — original request
 """
 
+CLOSED = (
+    VALID.replace(
+        "> **Status:** active",
+        "> **Status:** closed\n> **Closed:** 2026-10-23",
+    )
+    .replace(
+        "- T1 | S1 | route | open | commit: pending",
+        "- T1 | S1 | route | done | commit: pending",
+    )
+    .replace(
+        "- L1 — original request",
+        "- L1 — original request\n- L2 — Close: done",
+    )
+)
+
 
 def test_valid_document() -> None:
     assert validate_feature(VALID) == []
+
+
+def test_closed_document() -> None:
+    assert validate_feature(CLOSED) == []
+
+
+def test_closed_without_date() -> None:
+    findings = validate_feature(CLOSED.replace("> **Closed:** 2026-10-23\n", ""))
+    assert any("Closed date" in finding for finding in findings)
+
+
+def test_closed_without_close_entry() -> None:
+    findings = validate_feature(CLOSED.replace("- L2 — Close: done", "- L2 — later"))
+    assert any("Close:" in finding for finding in findings)
+
+
+def test_closed_with_open_task() -> None:
+    findings = validate_feature(CLOSED.replace("| done |", "| open |"))
+    assert any("open task" in finding for finding in findings)
+
+
+def test_closed_with_in_progress_task() -> None:
+    findings = validate_feature(CLOSED.replace("| done |", "| in progress |"))
+    assert any("in progress task" in finding for finding in findings)
+
+
+def test_active_with_close_entry() -> None:
+    findings = validate_feature(
+        VALID.replace("- L1 — original request", "- L1 — original request\n- L2 — Close: done")
+    )
+    assert any("active feature" in finding for finding in findings)
+
+
+def test_invalid_status() -> None:
+    findings = validate_feature(VALID.replace("> **Status:** active", "> **Status:** blocked"))
+    assert any("active or closed" in finding for finding in findings)
 
 
 def test_missing_specs_section() -> None:

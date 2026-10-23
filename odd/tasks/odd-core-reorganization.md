@@ -1,8 +1,9 @@
 # ODD core reorganization
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-10-23
+> **Closed:** 2026-10-23
 
 ## Specs
 
@@ -39,4 +40,4 @@
 - L12 — The legacy foundation plan `plans/agent-workflow-foundation-20261021/plan.md` and the legacy adoption plan `plans/odd-project-adoption-20261022/plan.md` stay untouched. Their rules and pending goals are not binding for the ODD workflow; this feature document is the active record.
 - L13 — Second live feature `odd/tasks/legacy-reference-sweep.md` was created from `odd/tasks/_template.md` and run spec → task → log → close. The template is proven on real work.
 - L14 — Audit-7 found residual plan pointers in `forge.md` and `bastion.md` and broken story Proof; the sweep feature fixed them. No re-audit was run.
-- L15 — Independent audit-9 PASS, no findings: ODD core, template, skill, `AGENTS.md` pointer, story supersession, and reference sweep verified. The reorganization is closed; legacy migration remains future work.
+- L15 — Close: independent audit-9 PASS, no findings: ODD core, template, skill, `AGENTS.md` pointer, story supersession, and reference sweep verified. The reorganization is closed; legacy migration remains future work.

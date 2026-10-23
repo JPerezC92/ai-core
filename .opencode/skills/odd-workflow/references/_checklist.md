@@ -25,6 +25,8 @@
 - [ ] Every failed or pending check is reported.
 - [ ] The next step is stated.
 - [ ] A reported failure was reproduced before deciding it already works.
+- [ ] Every task is `done`.
+- [ ] `Status` is `closed`, a `Closed:` date is present, and the Log has a `Close:` entry.
 - [ ] `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feature.py odd/tasks` exits 0. This is mechanical anatomy only; semantic correctness is Cipher's review.
 
 ## Delivery

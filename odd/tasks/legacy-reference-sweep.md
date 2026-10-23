@@ -1,8 +1,9 @@
 # Legacy reference sweep
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-10-23
+> **Closed:** 2026-10-23
 
 ## Specs
 
@@ -29,4 +30,4 @@
 - L6 — Initial close missed residual plan pointers in `forge.md` and `bastion.md`, the `AGENTS.md` execution-review and dispatch wording, and the story Proof. Audit-7 found them; the index link was present but inserted inside the table.
 - L7 — Fixed the residual pointers, repointed the story Proof to S7–S10, and moved the index note after the table. Audit-8 then found the unlabeled Herald plan-staging line and incomplete sweep accounting; both are fixed.
 - L8 — Final re-sweep is clean: no unlabeled active new-work pointer remains. The only `plans/` lifecycle text is explicitly legacy (Herald).
-- L9 — Independent audit-9 PASS, no findings. The feature is closed.
+- L9 — Close: independent audit-9 PASS, no findings. The feature is closed.

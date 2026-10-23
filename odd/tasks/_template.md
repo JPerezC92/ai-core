@@ -14,7 +14,7 @@
 - T1 | S1 | route or owner | open | commit: pending
 - T2 | S2 | route or owner | open | commit: pending
 
-Allowed status: open, in progress, done.
+Allowed status: open, in progress, done. On close, every task is done.
 
 ## Log
 
