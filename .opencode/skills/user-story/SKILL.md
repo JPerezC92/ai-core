@@ -1,15 +1,17 @@
 ---
 name: user-story
-description: Define, revise, and collision-review durable user-story contracts before implementation planning. Reconciles catalogues, shared ownership and dependencies, discusses behavioural criteria, records approval with truthful pending history when needed, and hands selected criteria to plan-enforce. Use when defining or modifying a story, checking collisions, preparing shared-story delivery or adoption, or settling feature behaviour before planning.
+description: Legacy migration-only story workflow. New work uses the ODD feature document at odd/tasks/<feature-name>.md and the odd-workflow skill. Retains user-story for existing stories and migration.
 license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.3.2
+  version: 1.3.3
 ---
 <!-- core:begin -->
 
 ## What I do
+
+> **Migration-only:** New work uses the ODD feature document at `odd/tasks/<feature-name>.md` and the `odd-workflow` skill. This skill remains for existing stories and migration.
 
 Own the pre-plan feature contract. I create or revise a durable user story that states a feature's persona, observable goal, scenarios, and acceptance criteria; verify it against the whole story catalogue for semantic collisions; obtain explicit approval; and hand the approved story and its selected criteria to `plan-enforce`.
 
@@ -65,7 +67,7 @@ I settle **what the feature is** — never **how or when it is built**. Approval
 |---|---|---|
 | `draft` | Work in progress; discussion may still change it | No |
 | `active` | The approved contract | Yes |
-| `superseded` | Retained history replaced by another story | No |
+| `superseded` | Retained history replaced by another story or an ODD feature document | No |
 
 A `draft` may be persisted without approval. Only an explicitly approved (`active`) story is a planning contract.
 

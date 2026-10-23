@@ -1,15 +1,17 @@
 ---
 name: plan-enforce
-description: Enforce plan-first discipline for non-trivial tasks. Creates or resumes a plan artifact in plans/ before code-writing work, and verifies a user-confirmed PR merge before branch cleanup. Use when the user asks to plan work, types /plan, Cipher is about to dispatch Forge for implementation, or a user confirms a PR merge.
+description: Legacy migration-only plan workflow. New work uses the ODD feature document at odd/tasks/<feature-name>.md and the odd-workflow skill. Retains plan-enforce for existing plans and user-confirmed PR merge cleanup.
 license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.23.7
+  version: 1.23.8
 ---
 <!-- core:begin -->
 
 ## Mandatory core
+
+> **Migration-only:** New work uses the ODD feature document at `odd/tasks/<feature-name>.md` and the `odd-workflow` skill. This skill remains for legacy plans and user-confirmed PR merge cleanup.
 
 ### What I do
 

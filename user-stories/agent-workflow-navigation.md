@@ -3,8 +3,9 @@
 
 > **Created:** 2026-10-21
 > **Title:** Agent workflow navigation
-> **Status:** active
-> **version:** 1.0.0
+> **Status:** superseded
+> **Superseded by:** `odd/tasks/odd-core-reorganization.md`
+> **version:** 1.1.0
 > **Epic:** core-governance
 > **Affected areas:** `AGENTS.md`, `knowledge/agent-workflow.md`, `knowledge/agents.md`
 
@@ -33,10 +34,10 @@
 
 ## Proof
 
-- AC1 → `knowledge/agent-workflow.md` `Find the governing source` · written, unverified
-- AC2 → `knowledge/agent-workflow.md` `Assess the request` · written, unverified
-- AC3 → `knowledge/agent-workflow.md` `Report an outcome` · written, unverified
-- AC4 → `knowledge/agent-workflow.md` `Handle a conflict` · written, unverified
+- AC1 → `odd/tasks/odd-core-reorganization.md` S7 · migrated, unverified
+- AC2 → `odd/tasks/odd-core-reorganization.md` S8 · migrated, unverified
+- AC3 → `odd/tasks/odd-core-reorganization.md` S9 · migrated, unverified
+- AC4 → `odd/tasks/odd-core-reorganization.md` S10 · migrated, unverified
 
 ## Constraints
 
@@ -61,6 +62,7 @@ Identified observations, not live release: F03 no-audit probe was exit 0, then e
 ## Revision tracking
 
 - Guide, ADR, clearance, and root pointer are written. AC1–AC4 stay pending until independent acceptance and matching delivery history. No passing result or matching reference is invented.
+- 2026-10-23 — Superseded by `odd/tasks/odd-core-reorganization.md`; AC1–AC4 migrate as S7–S10. Retained as durable history; no delivery reference is claimed.
 
 ## Change log
 <!-- project:end -->

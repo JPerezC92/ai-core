@@ -71,7 +71,7 @@ Test levels: unit — call `execute()` with ports mocked; integration — the ad
 
 #### File-Type Branch Trigger
 - File ends in `.ts` or `.tsx` and is in the application source tree → apply the language-agnostic contract, then the TypeScript (NestJS) section below
-- File ends in `.py` and is in the backend tooling paths, ticket tooling paths, or an exact active-plan path under `.opencode/skills/*/scripts/` → apply Python backend rules (see `##### PYTHON BACKEND — backend tooling paths, ticket tooling, and plan-scoped skill scripts`)
+- File ends in `.py` and is in the backend tooling paths, ticket tooling paths, or an exact path named in the active feature document's `## Tasks` or the assignment under `.opencode/skills/*/scripts/` → apply Python backend rules (see `##### PYTHON BACKEND — backend tooling paths, ticket tooling, and feature-scoped skill scripts`)
 - File is outside both zones → emit `[UNCERTAIN]` and ask Cipher 🔓 (Lead Orchestrator) which ruleset applies
 
 #### TypeScript — NestJS
@@ -191,9 +191,9 @@ The same three layers as the language-agnostic section:
 - The module, IO, typing, and Pydantic rules below are this contract's Python syntax specifics; they do not replace the layers above.
 - This project's concrete Python module roles are in `## Project extensions` → `### Local Configuration`.
 
-##### PYTHON BACKEND — backend tooling paths, ticket tooling, and plan-scoped skill scripts
+##### PYTHON BACKEND — backend tooling paths, ticket tooling, and feature-scoped skill scripts
 
-Applied when the file being verified ends in `.py` and lives under a backend tooling path, the ticket tooling path, or at an exact plan-manifested `.opencode/skills/*/scripts/` path. Apply the language-agnostic contract first, then this Python section. No language branch suspends the contract.
+Applied when the file being verified ends in `.py` and lives under a backend tooling path, the ticket tooling path, or at an exact feature-document-named `.opencode/skills/*/scripts/` path. Apply the language-agnostic contract first, then this Python section. No language branch suspends the contract.
 
 ###### MODULE BOUNDARIES
 
@@ -211,9 +211,9 @@ Applied when the file being verified ends in `.py` and lives under a backend too
 - [ ] Scripts do not import from backend tooling packages — the two zones are independent — VIOLATION if crossed
 - [ ] Backend tooling files do not import from ticket tooling — same boundary in reverse — VIOLATION if crossed
 
-**Plan-scoped skill scripts** (`.opencode/skills/*/scripts/*.py`):
+**Feature-scoped skill scripts** (`.opencode/skills/*/scripts/*.py`):
 
-- [ ] The exact file path is named in the active `plan-enforce` plan's `## Writes` manifest; a wildcard or folder-level authorization is insufficient
+- [ ] The exact file path is named in the active feature document's `## Tasks` or the assignment; a wildcard or folder-level authorization is insufficient
 - [ ] The script is audited by Bastion 🧱 (Backend & Scripts Architect) after every edit before Forge 🔨 (Implementer) proceeds
 - [ ] The script does not import from the ticket or backend tooling zones; those zones remain independent implementation boundaries
 - [ ] The script keeps file IO and subprocess/network effects at its entry point or a clearly named IO helper (infrastructure), never in a domain function
@@ -234,7 +234,7 @@ Applied when the file being verified ends in `.py` and lives under a backend too
 
 - [ ] No `from mcp_servers import ...` style cross-zone imports
 - [ ] No ticket tooling script importing from backend tooling packages or vice versa
-- [ ] No plan-scoped skill script importing from the ticket or backend tooling zones
+- [ ] No feature-scoped skill script importing from the ticket or backend tooling zones
 
 ##### Python Language Rules
 
