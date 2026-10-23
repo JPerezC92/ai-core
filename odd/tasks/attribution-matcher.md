@@ -23,9 +23,9 @@
 - T2 | S1, S4, S6, S7 | Implement `.opencode/skills/git-pr/scripts/scan_attribution.py` with a deterministic snapshot CLI | done | commit: 461e96ba7dcb1879a6a23eb2247109056abf0775
 - T3 | S4, S5, S7 | Add `attribution_testkit.py` and cohesive matcher, exclusion, validation, and CLI test modules | done | commit: 461e96ba7dcb1879a6a23eb2247109056abf0775
 - T4 | S1, S6 | Add the Inquisitor project-extension binding for Cipher-owned snapshot matching | done | commit: 461e96ba7dcb1879a6a23eb2247109056abf0775
-- T5 | S1, S8 | Run the exact matcher at the matcher-delivery PR's immutable head and record the result | open | commit: pending
+- T5 | S1, S8 | Run the exact matcher at the matcher-delivery PR's immutable head and record the result | done | commit: 7053a6cc8064e95e647b7c7529672055f5f62f9d
 - T6 | S9 | Update the core-sync agent-version contract test for Inquisitor 1.7.0 and make it independently collectible | done | commit: 461e96ba7dcb1879a6a23eb2247109056abf0775
-- T7 | S8 | Retire DEBT-007 in the same PR only after the exact head-bound scan passes | open | commit: pending
+- T7 | S8 | Retire DEBT-007 in the same PR only after the exact head-bound scan passes | in progress | commit: pending
 - T8 | S10 | Retarget `git-pr` skill motivation/goal lookup from plans to the ODD feature document and advance its version | done | commit: 84c4864c38104606c65fecfea4659229429ed4ed
 
 Allowed status: open, in progress, done. `pending` is valid for open or in-progress work. A task marked done must cite its completed work-unit commit. A feature closes only when every task is done and committed.
@@ -53,4 +53,6 @@ Allowed status: open, in progress, done. `pending` is valid for open or in-progr
 - L19 — User authorized push and PR creation for the matcher. Pre-write inspection found `git-pr` Step 2 still requires a plan; T8 retargets this prerequisite to the ODD feature document so the PR can be drafted without the old flow.
 - L20 — `git-pr/SKILL.md` Step 2 original input is blob `a5ee41c54fd33ea940f5e1e11c7ddf8051ed331c`; candidate SHA256 `F98A135D22642E0C4B4D92FB593E0E752AFD5C6373952FD800579E8077B0DF50`. Retained: do not select by filename/date/status; stop on missing/ambiguous owner; use governing context for Summary; retain commit-subject ticket references. Translated: plan Context to feature Specs/Tasks/Log. Retired: plan-layout/archive search and reopen guidance for new-work PR drafting, because the feature document is now the single ODD record.
 - L21 — Inquisitor snapshot assembly now states the scanner's required input constraints: positive integer PR number, 7–64 hex head, non-empty base, one title/body, at least one sourced commit message, and non-empty safe changed-file paths. Inquisitor candidate SHA256: `406E9EBFC9FE4074D6F241DB8BD8EAA97EDB7A7A072861193DBF4FD929B8833F`.
+- L22 — Exact scan at PR #81 immutable head `7053a6cc8064e95e647b7c7529672055f5f62f9d`, base `origin/main`: snapshot `output/audits/pr-81-attribution-snapshot-7053a6-v2.json`; matcher output had `matches: []`, policy self-exclusion recorded, exit 0.
+- L23 — T7 removed DEBT-007 from `knowledge/debt.md` and reduced the open-debt count from five to four in this matcher PR after the exact scan returned no matches at PR #81 head `7053a6cc8064e95e647b7c7529672055f5f62f9d`. The task remains in progress until the removal is committed and the new head is scanned.
 - L22 — T8 delivered in commit `84c4864c38104606c65fecfea4659229429ed4ed`: `git-pr` now reads the governing ODD feature record and keeps its diff-only scope and ambiguity stop.
