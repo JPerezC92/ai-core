@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.1.0
+  version: 1.2.0
 ---
 <!-- core:begin -->
 
