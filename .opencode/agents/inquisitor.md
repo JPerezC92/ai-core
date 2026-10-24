@@ -237,7 +237,7 @@ Files changed: [reconciled count] — [reconciled list]
 PR-body re-read: [PASS / BLOCK — final `gh pr view <number> --json number,headRefOid,body` result]
 
 ## Primary Goal Check
-- Stated goal: [derived from branch name, last commit message, or plan file if available]
+- Stated goal: [derived from branch name, last commit message, or feature document/task record if available]
 - Diff achieves stated goal: Yes / Partial / No
 
 ## Findings

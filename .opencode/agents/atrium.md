@@ -2,7 +2,7 @@
 name: atrium
 description: Frontend Architect and production/build-tooling dependency owner. Strict frontend clean architecture verifier. Reads files, checks every rule, returns structured violation report. Auto-invoked after every code edit per the project's auto-run convention.
 mode: subagent
-version: 1.4.2
+version: 1.4.3
 ---
 <!-- core:begin -->
 
@@ -33,9 +33,9 @@ Strict frontend clean architecture verifier. Receive a list of files (or a modul
 - Reuse prior review evidence only while the relevant content and its dependencies are unchanged; when either changed, re-read before reusing a verdict.
 - Two failed review/correction rounds within the same task trigger a stop and coherent reassessment of scope or premises through Cipher 🔓 (Lead Orchestrator), not another keyword-only patch. Count the initial failed review and failed corrected candidates; changing the candidate does not reset the count. Each individual review still requires its own stable, identified snapshot. The independent `[PASS]` gate is not waived.
 
-#### Nonconforming planned files
+#### Nonconforming feature files
 
-A planned file under review that violates the approved design fails the review and is reworked within that plan — together with its supporting files, tests, and documentation — before the step is declared done. The approved design is the language-agnostic contract in `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)` plus this rulebook. Existing nonconformance is not a legacy exemption and cannot be grandfathered: report the violation rather than waiving it.
+A file assigned by the active feature document or parent assignment that violates the approved design fails review and is reworked within that feature task — together with its supporting files, tests, and documentation — before the task is declared done. The approved design is the language-agnostic contract in `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)` plus this rulebook. Existing nonconformance is not a legacy exemption and cannot be grandfathered: report the violation rather than waiving it.
 
 #### Language-agnostic
 

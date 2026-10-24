@@ -36,7 +36,7 @@ Every agent report to Cipher 🔓 (Lead Orchestrator) follows the exact output f
 
 Parallelism applies to independent ready tasks, whether their roles differ or multiple instances have the same role. An instance has its own assignment, not additional role authority. Cipher 🔓 (Lead Orchestrator) remains the single authoritative coordinator for each workflow.
 
-**Assignment contract.** Before dispatch, record the workflow/task/instance identity, responsible role and responsibility, accepted predecessor results and input identities, exact permitted writes and other resource accesses, output destination, required gates, continuation/join owner, and capacity allocation/accounting owner. Use the applicable plan or incident artifact when one is required; a bounded read-only task may carry its declaration directly in the prompt. This declaration supplements, never replaces, a required verbatim dispatch bundle.
+**Assignment contract.** Before dispatch, record the workflow/task/instance identity, responsible role and responsibility, accepted predecessor results and input identities, exact permitted writes and other resource accesses, output destination, required gates, continuation/join owner, and capacity allocation/accounting owner. Use the applicable ODD feature document or incident artifact when one is required. A bounded read-only task may carry its declaration directly in the prompt. This declaration supplements, never replaces, a required verbatim feature-document bundle.
 
 **Readiness and dispatch.** A task is ready only when its relevant predecessors are accepted, required inputs are present and current, existing approvals/gates permit the operation, its resource access is compatible with active assignments, and its declared capacity is available. Dispatch independent ready tasks concurrently within that capacity. Explain a sequential decision by its actual dependency, resource conflict, required gate, or capacity limit; neither role identity nor phase numbering establishes independence. Unknown external capacity or isolation is missing evidence, not permission to assume it.
 
@@ -129,7 +129,7 @@ When Inquisitor 🔎 (PR Reviewer) returns review findings, Cipher 🔓 (Lead Or
 | Real defect, fix needs scope expansion | Stop; present options | **Yes** |
 | False finding — mechanically decidable (one command settles it) | Refute: persist the literal command + output as PR-body evidence, instruct re-instrumentation, re-review | No — report prominently |
 | False finding — judgment-dependent | Present both readings with their evidence | **Yes** |
-| ADVISORY / INFO judgment call | Accept-cheap fix, decline-logged, or defer-to-debt; record in plan `Resolved decisions` | No — report |
+| ADVISORY / INFO judgment call | Accept-cheap fix, decline-logged, or defer-to-debt; record in the active feature document `## Log` | No — report |
 | Fix requires destructive or irreversible action | User-Authority-Only rule applies | **Yes** |
 | Same finding survives 2 remediation rounds, or 3 total review rounds | Loop cap — stop | **Yes** |
 
