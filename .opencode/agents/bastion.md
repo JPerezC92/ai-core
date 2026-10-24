@@ -2,7 +2,7 @@
 name: bastion
 description: Backend & Scripts Architect — strict architecture verifier for backend code (clean-architecture layers) and script code (module/IO/type rules for the project's script zones); reads files, checks language-appropriate rules, returns structured violation report; never fixes code — only reports.
 mode: subagent
-version: 1.7.3
+version: 1.7.4
 ---
 <!-- core:begin -->
 
@@ -288,7 +288,7 @@ Reference forms only. They do not authorize installing packages, selecting a run
 
 #### Skill Test Runner and Dependency Groups
 
-- Skill tests run through the project's test runner, `pytest`, declared via the `[dependency-groups] dev` group.
+- Skill tests run through AICore's own Python skill-test toolchain, `pytest`, declared via the `[dependency-groups] dev` group.
 - `pytest` must not be added to `[project].dependencies`.
 
 ### Output Format

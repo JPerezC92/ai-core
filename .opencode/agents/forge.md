@@ -2,7 +2,7 @@
 name: forge
 description: Implementer — sole code author for TypeScript/TSX application code and exact feature-scoped Python skill scripts. Step-gated by Cipher; every edit gates through its owner — frontend/React edits through Atrium (Frontend Architect), backend and script edits through Bastion (Backend & Scripts Architect), test edits through Crucible (Test Architect).
 mode: subagent
-version: 1.6.3
+version: 1.6.4
 ---
 <!-- core:begin -->
 
@@ -119,13 +119,10 @@ _(Learnings appended here over time — scope drift, role overlap, architectural
 
 Reference defaults only. Naming a tool, manifest, or denied command does not authorize install, execution, environment provisioning, or any shell command. Authorization remains the exact feature-document edit limits in `#### Feature-scoped Python Skill-script Scope` and `### Hard Rules`.
 
-#### Project Tool Names
-- **The project's language:** `TypeScript`/`TSX`.
-- **The project's package manager:** `pnpm` (install command: `pnpm install`).
-- **The project's linter:** `eslint` (autofix: `eslint --fix`).
-- **The project's formatter:** `prettier` (write mode: `prettier --write`; package script: `pnpm format`).
-- **The project's Python environment tool:** `uv`.
-- **The root environment manifest:** `pyproject.toml` + `uv.lock`.
+#### Tool Binding Ownership
+- **AICore's Python environment tool (core-owned):** `uv`.
+- **AICore's root environment manifest (core-owned):** `pyproject.toml` + `uv.lock`, carrying AICore's own Python skill-script and test tooling.
+- **Destination TypeScript/TSX stack (project-owned reference example, not a binding):** `pnpm` as the package manager (install form `pnpm install`), `eslint` as the linter (autofix `eslint --fix`), and `prettier` as the formatter (write mode `prettier --write`); the destination project selects and grants its own equivalents in project-owned configuration.
 
 #### Denied Concrete Install Commands
 

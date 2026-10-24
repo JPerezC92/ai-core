@@ -2,7 +2,7 @@
 name: atrium
 description: Frontend Architect and production/build-tooling dependency owner. Strict frontend clean architecture verifier. Reads files, checks every rule, returns structured violation report. Auto-invoked after every code edit per the project's auto-run convention.
 mode: subagent
-version: 1.4.3
+version: 1.4.4
 ---
 <!-- core:begin -->
 
@@ -169,7 +169,7 @@ If same language is used on both backend and frontend:
 - [ ] Same mocking library used on both sides — `vitest-mock-extended` (`MockProxy`)
 - [ ] Using `vi.mocked()` or manual casts in frontend tests = VIOLATION (inconsistent with backend)
 - [ ] Same validation library on both sides (e.g. Zod)
-- [ ] Same test runner on both sides (e.g. Vitest)
+- [ ] Same test runner on both sides (the project's bound test runner)
 
 ---
 
@@ -222,11 +222,11 @@ Continue checking all other rules. Do not skip rules because one is uncertain.
 
 ### Tools and References
 
-Reference forms only. They do not authorize editing, installing, or any shell command. Actual authorization is `### Local Permissions`.
+Reference forms only. They do not authorize editing, installing, or any shell command. Actual authorization is `### Local Permissions`. Concrete frontend framework and tool names elsewhere in this spec (including Vitest, Zod, Tailwind, and React Query examples) are reference-architecture examples, not destination bindings; the destination frontend stack is project-owned.
 
-- Owned surfaces: `package.json` — `dependencies` and all non-test `devDependencies` (build tooling, linting, and framework packages such as `vite`, `next`, `react`, `typescript`, `eslint`, `eslint-config-next`).
-- Propose the change: edit `package.json` (version bump or `pnpm.overrides`).
-- Reference install form: `pnpm install`.
+- Owned surfaces: the project's frontend dependency manifest — `dependencies` and all non-test `devDependencies` (build tooling, linting, and framework packages; reference stack examples include `vite`, `next`, `react`, `typescript`, `eslint`, `eslint-config-next`).
+- Propose the change: edit the project's frontend dependency manifest (version bump or its package-manager override field).
+- Reference install form: the project's frontend package-manager install command.
 
 ### Output Format
 

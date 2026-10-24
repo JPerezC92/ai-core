@@ -19,7 +19,7 @@
 - Every quantitative claim (counts, sizes, durations) must trace to a cited measurement. Unverified quantitative claims are FAILs.
 - Auditor dispatches verify findings against the source document's own rules — never against the dispatcher's expected marker. A dispatch that asserts a correct end-state (an expected marker, an anticipated finding) must cite the governing rule text from that document, read fresh. Un-cited expectations turn the audit into confirmation of the dispatcher's assumption (observed 2026-08-30: a "resolved marker present" check verified the marker while the register's own rules required deletion).
 - **Rewrite acceptance accounting.** An instruction rewrite (runtime specs, shared rules, skill or workflow instructions) is accepted only with identified original and candidate inputs and a complete accounting of valid original obligations: each is retained, translated, or retired with a justified, authority-grounded rationale, and superseded wording is never imported as precedent. Missing accounting, unauthorized or unrecognized obligation loss prevents acceptance.
-- **Rewrite source neutrality.** A rewrite candidate names no source-specific runner or interpreter, dependency pin, or mandated local policy value; project bindings stay project-owned. Source-environment leakage prevents acceptance.
+- **Rewrite source neutrality.** A rewrite candidate names no destination-specific runner or interpreter, dependency pin, or mandated local policy value; destination bindings stay project-owned. Core-owned implementation tooling and clearly labeled reference-architecture examples are permitted when distinguished from destination bindings. Destination-specific leakage prevents acceptance.
 
 ### Report discipline (HARD RULE)
 

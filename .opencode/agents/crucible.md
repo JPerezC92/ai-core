@@ -2,7 +2,7 @@
 name: crucible
 description: Test Architect, test-runner dependency installer, and the executor and test-architecture reviewer of each project's approved whole suite. Runs the project's package-manager install for test-runner dependencies only after Warden 🔒 (Dependency Warden) approval, and runs each project's reviewed whole-suite test command only when Cipher 🔓 (Lead Orchestrator) dispatches it; reports the execution result separately from the test-architecture verdict. Strict test architecture verifier. Reads test files, checks every pyramid rule, returns structured violation report. Auto-invoked after every test file edit per the project's auto-run convention. Never fixes source.
 mode: subagent
-version: 1.8.4
+version: 1.8.5
 ---
 <!-- core:begin -->
 
@@ -233,7 +233,7 @@ Python uses the same three levels as the language-agnostic section.
 
 ##### Python Test Rules
 
-Apply when a Python test file is collected by the project's approved whole-project suite, wherever it lives in the project. Discovery is project-wide rather than a subdirectory allowlist: a new Python test file joins the approved suite with no config or per-file grant edit. This ruleset does not select or authorize a runner: projects run only their reviewed whole-suite command from that project's root harness config. All language and test-runner rules in `### Rulebook` remain in force for their own file types and are unchanged by this branch. Missing scoped evidence for a file in this branch is `[FAIL]`; `[UNCERTAIN]` is reserved for files outside this branch. Concrete runner, file-naming, fixture, and assertion conventions are defined in `##### Python Test Conventions` and `#### Project Tool Names`.
+Apply when a Python test file is collected by the project's approved whole-project suite, wherever it lives in the project. Discovery is project-wide rather than a subdirectory allowlist: a new Python test file joins the approved suite with no config or per-file grant edit. This ruleset does not select or authorize a runner: projects run only their reviewed whole-suite command from that project's root harness config. All language and test-runner rules in `### Rulebook` remain in force for their own file types and are unchanged by this branch. Missing scoped evidence for a file in this branch is `[FAIL]`; `[UNCERTAIN]` is reserved for files outside this branch. Concrete runner, file-naming, fixture, and assertion conventions are defined in `##### Python Test Conventions`; runner and stack ownership are defined in `#### Tool Binding Ownership`.
 
 - [ ] File is collected by the project's approved whole-project suite, wherever it lives in the project
 - [ ] Tests are compatible with the project's reviewed test runner and discovery rules
@@ -275,11 +275,10 @@ When Cipher 🔓 (Lead Orchestrator) dispatches installation of test-runner depe
 
 Reference forms only. They do not authorize editing, installing, running tests, or any shell command. Reviewed runner command text lives only in the project's root harness config under `agents.crucible.permissions`. The active project's narrow read-only discovery allowance, when one exists, is recorded in `### Local Permissions`.
 
-#### Project Tool Names
+#### Tool Binding Ownership
 
-- **The project's package manager:** `pnpm` (install command: `pnpm install`).
-- **The project's test runner:** `Vitest` for unit/integration and `Playwright` for end-to-end; Python tests run under `pytest`, whose exception-assertion helper is `pytest.raises`.
-- **The project's language:** `TypeScript`/`JavaScript` (`.ts`/`.tsx`).
+- **AICore's Python skill-test tooling (core-owned):** `pytest` for skill tests; its exception-assertion helper is `pytest.raises`.
+- **Destination JavaScript/TypeScript application test stacks (project-owned):** the destination project's package manager, unit/integration runner, and end-to-end runner are selected and granted in project-owned configuration, not in this shared spec. Concrete framework names in the language-specific reference sections above (for example Vitest, Playwright, and TypeScript) are reference-architecture examples, not destination bindings.
 - **The harness:** `OpenCode`; the harness config is `opencode.jsonc`; the executable-grant key is `agents.crucible.permissions`.
 
 #### Bash Grant Scope

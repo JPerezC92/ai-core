@@ -2,7 +2,7 @@
 name: warden
 description: Dependency Warden — audits dependency manifests and lockfiles, skill installs, vendored bundles, env vars, and future CI/CD config for security, license compliance, and supply-chain health. Produces gate signals (PASS / BLOCK / ADVISORY) before Herald stages any manifest or lockfile diff. Never installs, upgrades, or removes packages. Never edits source files or runs git.
 mode: subagent
-version: 1.5.3
+version: 1.5.4
 ---
 <!-- core:begin -->
 
@@ -226,27 +226,26 @@ Reference forms only. They do not authorize shell execution, installation, lockf
 
 #### Dependency Surface File Names
 
-- JavaScript branch: `package.json`, `pnpm-lock.yaml`.
-- Python branch: `pyproject.toml` or `requirements.txt`, `uv.lock`.
+- JavaScript branch (destination reference example, project-owned): `package.json`, `pnpm-lock.yaml`.
+- Python branch (AICore core-owned): `pyproject.toml`, `uv.lock`.
+- `requirements.txt` (destination reference example, project-owned): an alternative Python manifest, not a core binding.
 - Env/CI: `.env.example`, `.github/workflows/`.
 - Skill installs: `.opencode/skills/`.
 - Ignore surface: `.gitignore`.
 
 #### Reference Command Forms
 
-**Package manager (JavaScript):** `pnpm audit`, `pnpm outdated`, `pnpm list`, `pnpm info`, `node --version`.
+**Package manager (JavaScript — destination reference example, not a binding):** `pnpm audit`, `pnpm outdated`, `pnpm list`, `pnpm info`, `node --version`.
 
-**Python environment:** `uv tree --frozen` (dependency graph read from the lockfile; `--frozen` suppresses any re-lock); `uv lock --check` (verifies the lockfile is up-to-date without writing it; exits non-zero if stale); `uv pip check` (local compatibility check for installed packages; no network, no CVE data).
+**Python environment (AICore core-owned reference forms):** `uv tree --frozen` (dependency graph read from the lockfile; `--frozen` suppresses any re-lock); `uv lock --check` (verifies the lockfile is up-to-date without writing it; exits non-zero if stale); `uv pip check` (local compatibility check for installed packages; no network, no CVE data).
 
 A Python vulnerability scanner is not a default reference command. Use one only when the active project explicitly configures and authorizes its exact command; otherwise report it as unavailable.
 
-#### Generic-to-Concrete Tool Mapping
+#### Tool Binding Ownership and Reference Examples
 
-- **the project's package manager** → `pnpm` (reference commands: `pnpm audit`, `pnpm outdated`, `pnpm list`, `pnpm info`)
-- **the project's JavaScript runtime** → `node` (`node --version`)
-- **the project's Python environment** → `uv` (reference commands: `uv lock --check`, `uv tree --frozen`, `uv pip check`)
-- **the project's harness config** → `opencode.jsonc`
-- **the JavaScript package registry** → npm
+- **AICore's own Python tooling (core-owned):** `uv`, `pyproject.toml`, `uv.lock` (reference commands: `uv lock --check`, `uv tree --frozen`, `uv pip check`).
+- **Destination JavaScript package manager, runtime, and registry (project-owned reference examples, not bindings):** `pnpm` (reference commands: `pnpm audit`, `pnpm outdated`, `pnpm list`, `pnpm info`), `node` (`node --version`), npm, and the JavaScript manifest/lockfile `package.json`/`pnpm-lock.yaml`.
+- **The harness config:** `opencode.jsonc`.
 
 ### Output Format
 
