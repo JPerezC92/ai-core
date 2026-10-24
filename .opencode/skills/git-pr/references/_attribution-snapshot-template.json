@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "pr_number": 0,
+  "head_sha": "",
+  "base": "",
+  "artifacts": [
+    {
+      "surface": "pr-title",
+      "source": "",
+      "content": ""
+    },
+    {
+      "surface": "pr-body",
+      "source": "",
+      "content": ""
+    },
+    {
+      "surface": "commit-message",
+      "source": "",
+      "content": ""
+    }
+  ],
+  "changed_files": [
+    {
+      "path": "",
+      "content": ""
+    }
+  ]
+}

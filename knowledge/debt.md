@@ -27,15 +27,6 @@ Each entry MUST include:
 <!-- project:begin -->
 **Open debts: 5.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; see the standing-condition record in `user-stories/plan-lifecycle-governance.md`.
 
-### DEBT-007
-
-- **ID** — `DEBT-007`
-- **Date** — 2026-10-18
-- **Description** — The forbidden-AI-attribution matcher's literal token set is not recorded in any repository-readable surface, so the exact-token attribution scan cannot be reproduced from the checkout; PR reviews fall back to a conventional attribution-token scan.
-- **Direct evidence** — PR #70 review at head `b82cdcad04c51eb0b5c3eeae78f2db651b75f88c` (finding 1): the matcher's tokens are defined outside every readable repo surface (`inquisitor.md` keeps them external; `herald.md` carries policy prose only); the conventional scan over both commit subjects and full message bodies, the PR title and body, and all four changed-file bodies returned zero matches.
-- **Resolution criteria** — The approved matcher's literal token set is recorded in a repository surface the reviewing role can read, and the exact-token scan runs and is documented at a PR head.
-- **Explicit deferral decision** — 2026-10-18 — user directed "add them as debts"; deferred at the PR #70 review by Inquisitor 🔎 (PR Reviewer), adjudicated `defer-to-debt` by Cipher 🔓 (Lead Orchestrator).
-
 ### DEBT-011
 
 - **ID** — `DEBT-011`
@@ -72,5 +63,14 @@ Each entry MUST include:
 - **Resolution criteria** — (1) After user-authorized implementation, Cipher runs the remaining applicable lifecycle events in order without a new prompt to continue. (2) Archive-before-release still holds; a PR is opened only after archive, not instead of it. (3) Independent review of one later delivery that close-out and the release PR both happen without a “what are you waiting for” prompt.
 - **Explicit deferral decision** — 2026-10-22 — user directed add as a debt; Cipher 🔓 (Lead Orchestrator) records the recurrent stop as nonblocking. This record does not replace continuing the current release PR.
 
-**ID to use for the next new debt:** `DEBT-015`. This is an allocation counter, not an open debt.
+### DEBT-015
+
+- **ID** — `DEBT-015`
+- **Date** — 2026-10-23
+- **Description** — Cipher 🔓 (Lead Orchestrator) recommended merging PR #81 before PR #80 based on stale session context that said PR #80 was still open, without first checking live PR states or comparing the feature branch with current `main`. This gave the user an incorrect merge order and delayed identifying that PR #80 had already merged and PR #81 needed reconciliation.
+- **Direct evidence** — In the conversation on 2026-10-23, Cipher 🔓 (Lead Orchestrator) said “merge #81 first” and described PR #80 as still open. Herald's subsequent live `gh pr view` evidence showed PR #80 `MERGED` at commit `06e3aff022abf67084cfb0c9e02ace97912d7364`; live `main` was at that same commit. PR #81 remained `OPEN`, based on `3fda46693831a1fcce60a7eec6ad34bb28907341`; GitHub reported `mergeable=CONFLICTING` and `mergeStateStatus=DIRTY`. The compare endpoint reported PR #81 one commit behind live `main`; `.opencode/agents/inquisitor.md` was the overlapping path.
+- **Resolution criteria** — Before giving merge-order or readiness advice, inspect live metadata for every involved PR (state, base, head, merge commit, and mergeability) and the current base-branch SHA; compare each PR head against that live base, identify overlapping paths, and disclose whether the advice relies on current state. An independent review of a later merge-order recommendation must confirm it matches the captured live metadata.
+- **Explicit deferral decision** — 2026-10-23 — user directed “and add as a debt the error u maded”; Cipher 🔓 (Lead Orchestrator) records the stale-state recommendation as a nonblocking process debt. This record does not authorize merging PR #81 or bypassing its refresh, validation, or review gates.
+
+**ID to use for the next new debt:** `DEBT-016`. This is an allocation counter, not an open debt.
 <!-- project:end -->
