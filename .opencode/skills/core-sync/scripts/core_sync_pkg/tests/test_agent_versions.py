@@ -8,13 +8,13 @@ from core_sync_pkg.domain.regions import split_frontmatter
 
 
 EXPECTED_SOURCE_VERSIONS: dict[str, str] = {
-    "atrium.md": "1.4.2",
+    "atrium.md": "1.4.3",
     "augur.md": "1.2.2",
-    "bastion.md": "1.7.2",
-    "crucible.md": "1.8.3",
-    "forge.md": "1.6.2",
-    "herald.md": "1.6.2",
-    "inquisitor.md": "1.6.2",
+    "bastion.md": "1.7.3",
+    "crucible.md": "1.8.4",
+    "forge.md": "1.6.3",
+    "herald.md": "1.7.0",
+    "inquisitor.md": "1.6.3",
     "investigator.md": "1.3.2",
     "ledger.md": "1.5.0",
     "lumen.md": "1.2.1",

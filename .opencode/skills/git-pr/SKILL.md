@@ -5,14 +5,14 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.7.2
+  version: 1.7.3
   domain: git
 ---
 
 ## Steps
 
 1. Establish scope: the commits on the branch and the complete diff from the merge base with the project's configured base ref (`$BASE`, substituted with the project's actual base) to the current head, sampling the highest-signal files when the change set is large. That diff is the only scope evidence; a whitespace or staging diagnostic never is. An unresolvable or ambiguous configured base stops the draft and is reported as a blocker; never substitute a base of your own choosing.
-2. Find the governing plan for this diff among active or completed single-file/subfolder layouts: `plans/*.md`, `plans/<slug>/plan.md`, archived `plans/.completed/*.md`, and `plans/.completed/<slug>/plan.md`. Read candidate content to establish which plan governs the change; do not pick merely by filename, latest date, or active status. Missing or ambiguous governing plan → stop and report the inspected candidates and gap to the coordinator/requester before drafting. Read the selected plan's Context for motivation; use ticket references from recent commit subjects where present. The Summary explains why, which usually lives there rather than in the diff. Archived plans are read-only context, not reopened just to draft.
+2. Find the governing ODD feature document for this diff at `odd/tasks/<feature-name>.md` from the branch/task context and reconciled changed files; do not choose merely by filename, date, or status. Read its `## Specs`, relevant `## Tasks`, and `## Log` for intent and current state; use ticket references from recent commit subjects where present. The Summary explains why, which usually lives in the feature record rather than the diff. If no unique applicable feature document exists, stop and report the inspected candidates and gap to the coordinator/requester before drafting.
 3. Derive the title and body from the diff. When the current branch follows `type/scope/description` and its type or scope disagrees with the derived title, keep the diff-derived title and report both values explicitly: a branch is evidence of intent, not authority.
 4. Before any draft write, obtain a read-only effective-ignore check for the exact `output/pr-draft.md` path through the existing Git owner (Herald 📯 (Release Manager) when the roster is installed, otherwise the authorized requester). Confirm the actual path is ignored, including negation rules and whether it is already tracked; merely finding an ignore entry is not proof. Check a not-yet-created path prospectively. Not ignored, tracked, denied, failed, or inconclusive → stop and report the checked path and observed blocker to the coordinator/requester for separately authorized remediation by the existing ignore-configuration owner. This skill never edits `.gitignore` or other ignore configuration. While remediation is blocked, pending, or declined, create/overwrite neither draft nor directory and do not hand off a stale file as ready. Resume only after a fresh successful check; this grants no new Git-command authority.
 5. Write `output/pr-draft.md` in the shape below only after that check succeeds. Create `output/` if needed. Never write `pr-draft.md` at the repository root or create a second PR-description artifact.
