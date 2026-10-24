@@ -1,11 +1,11 @@
 ---
 name: odd-workflow
-description: Create and maintain the single ODD feature document at odd/tasks/<feature-name>.md. Use when starting a feature, adding a spec or task, recording a decision, changing a requirement, or closing a feature.
+description: Create and maintain the single ODD feature document in odd/tasks/. Use when starting a feature, adding a spec or task, recording a decision, changing a requirement, or closing a feature.
 license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.2.0
+  version: 1.3.0
 ---
 <!-- core:begin -->
 
@@ -24,7 +24,7 @@ Create, read, update, and close the single feature document for a feature. I do 
 
 ### Before the first write
 
-For non-trivial work, the feature document exists before the first state-changing action. Read-only requests stay read-only and create no artifact. The existing plan-enforce threshold decides whether work is non-trivial; this skill does not change it.
+Classify using `knowledge/agent-workflow.md` `### ODD protocol`: work is small only when it is understood, risk-contained, and resumable from the request plus diff; counts do not decide. Read-only and small work create no durable feature artifact. For authorized non-small state-changing work, the governing feature document exists before the first state-changing action. Authorization and safety/review gates remain independent; plan-enforce does not classify new work.
 
 ### Change a requirement
 
@@ -37,6 +37,10 @@ Report the verified outcome, every failed or pending check, and the next step. R
 ### Handoff
 
 Pass a reference to the feature document and its `S#`, never a paraphrase. The worker reads until `## Log` and reports which specs it covered.
+
+### Feature scope
+
+The feature's `Specs` and `Tasks` bound its requirements and work; they do not reserve an exclusive set of files. A feature may touch a shared rule or file when its canonical owner and authority are clear. Record relevant dependencies in the feature record and coordinate overlapping writes under `knowledge/agents.md` `### Safe parallel task coordination (HARD RULE)`; never invent a file-level isolation rule.
 
 ### Delivery boundary
 

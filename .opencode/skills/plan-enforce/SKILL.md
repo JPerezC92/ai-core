@@ -1,11 +1,11 @@
 ---
 name: plan-enforce
-description: Legacy migration-only plan workflow. New work uses the ODD feature document at odd/tasks/<feature-name>.md and the odd-workflow skill. Retains plan-enforce for existing plans and user-confirmed PR merge cleanup.
+description: Legacy migration-only plan workflow for existing plans, explicit migration requests that change scope or require a new phase, and user-confirmed PR merge cleanup. New work uses the ODD feature document maintained by odd-workflow. Use when the user explicitly asks to inspect, resume, or migrate an existing legacy plan/story, update the scope or phase of an identified active legacy plan, or verify cleanup after a user-confirmed PR merge.
 license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.23.8
+  version: 2.0.0
 ---
 <!-- core:begin -->
 
@@ -15,13 +15,12 @@ metadata:
 
 ### What I do
 
-Create or resume a plan before non-trivial implementation work, then enforce its scope, phase gates, and pre-release completion lifecycle.
+Manage explicitly authorized legacy-plan migration and existing legacy-plan lifecycle/cleanup only. This skill is not the classifier or tracker for new work; ODD governs new work.
 
 ### When to use me
 
-- User types `/plan` or asks to create, resume, or show a plan.
-- Cipher 🔓 (Lead Orchestrator) is about to dispatch Forge 🔨 (Implementer).
-- A current task changes scope or requires a new implementation phase.
+- User explicitly asks to inspect, resume, or migrate an existing legacy plan/story record.
+- An explicitly identified active legacy plan changes scope or requires a new implementation phase.
 - A user confirms a PR merge and the merged branch needs verification before cleanup.
 
 ### Arguments
@@ -46,9 +45,9 @@ Use one `question` call. The first option is the parsed value when one is availa
 
 ### Stash safety gate
 
-**Mandatory loading:** read `references/_lifecycle-contract.md`'s loading instructions and operation table, then load its common lifecycle rules and every additional section applicable to the event, including named subsections. Standalone read-only stash inventory/status uses its separate bounded rows. Do not load unrelated post-merge proof during planning. Missing, unread, incomplete, or conflicting **applicable** content blocks the operation; these summaries are not a fallback.
+**Mandatory loading:** Read `references/_lifecycle-contract.md`'s loading instructions, operation table, and applicable common/extra sections only; standalone read-only stash inventory/status uses its bounded rows. Do not load unrelated post-merge proof during planning. Missing, unread, incomplete, or conflicting applicable text blocks; this summary is not a fallback.
 
-Apply its ordered **Stash safety gate** for the mapped events, including creation, resumption, archival, reopening, and every Forge 🔨 (Implementer) dispatch: live read-only inventory with SHA/fingerprint and both ancestry directions, complete write/delete manifest, then collision check. `PLANNED_PATH_OVERLAP` blocks the affected write/dispatch. Never mutate stash/refs in this gate; erasure remains user-only. Its **Stash status query** defines the mechanical verdict and inconclusive response.
+Apply its ordered stash gate for mapped events: live read-only inventory (SHA/fingerprint, both ancestry directions), complete write/delete manifest, then collision check. `PLANNED_PATH_OVERLAP` blocks. Never mutate stash/refs; erasure is user-only. The contract's stash-status query defines the verdict and inconclusive response.
 
 ### Check for active plan
 
@@ -56,7 +55,7 @@ Apply its ordered **Stash safety gate** for the mapped events, including creatio
 2. Scan `plans/*.md` (excluding `.completed/`) and `plans/*/plan.md`.
 3. Read candidate plan files and select those with `Status: active`.
 4. If one active plan exists, read it and, for subfolder layout only, its `phase-*.md` siblings; derive its manifest and run the post-scope collision check before showing the plan or dispatching Forge 🔨 (Implementer). Resumption also requires the current independent-audit `[PASS]` under **Plan lifecycle rules** and the **Independent audit gate**.
-5. If no active plan exists, continue to **Create new plan**. If multiple exist, Cipher 🔓 (Lead Orchestrator) stops and asks the user to select one; a delegated run reports the candidates and gap to Cipher 🔓.
+5. If no active legacy plan exists, stop and report unless the user explicitly requested migrating identified legacy plan/story material; new work is classified and tracked through ODD, never by creating a plan here. If multiple plans exist, Cipher 🔓 (Lead Orchestrator) stops and asks the user to select one; a delegated run reports the candidates and gap to Cipher 🔓.
 
 An archived plan is never resumed directly from `plans/.completed/`. Restore it to `plans/`, set `Status: active`, and append `Reopened: YYYY-MM-DD HH:MM` before resuming.
 
@@ -156,7 +155,7 @@ Crucible 🔥 (Test Architect) executes each declared approved test command; For
 
 ### User stories
 
-Stories (`user-stories/<feature-slug>.md`) are durable; plans are temporal and never archive/delete stories. `user-story` owns pre-plan behavior discussion, ownership, creation, revision and collision analysis; its `references/_consistency-checklist.md` is the canonical format/hygiene contract. Planning consumes approved (`active`) stories and selected criteria, never drafts or renegotiated choices. Cite every touched story under `## Critical files / tools`; missing ownership stops planning and routes to `user-story`.
+Stories (`user-stories/<feature-slug>.md`) are durable; plans are temporal and never archive/delete stories. For existing legacy work, `user-story` owns pre-plan behavior discussion, ownership, creation, revision, and collision analysis; its `references/_consistency-checklist.md` is the canonical format/hygiene contract. New work uses ODD instead. Legacy planning consumes approved (`active`) stories and selected criteria, never drafts or renegotiated choices. Cite every touched story under `## Critical files / tools`; missing legacy ownership stops planning and routes to `user-story`.
 
 ### User-story scope
 
@@ -246,27 +245,27 @@ For an all-pending-changes analysis, inspect and disposition every nonignored mo
 
 ### Plan lifecycle rules
 
-Apply **Plan lifecycle rules** and **Reopen rule** from the loaded lifecycle contract for every lifecycle event. Only incomplete plans enter Git; completed tracked plans retire by deletions in their completing PR, never an archive commit. No plan deletion, merge command, or stash mutation occurs during archival. Scope changes retain user approval and invalidate affected assignments/evidence. Cipher 🔓 (Lead Orchestrator) must not report the plan complete or its PR/release done until goal checkmarks, Outcome, completed metadata, archive, and filesystem verification have occurred; an opened, reviewed, or merged PR or shipped status does not replace that sequence. If close-out was skipped after a ship report, restore the still-active plan, run that same pre-release sequence, then archive; post-merge branch cleanup still does not archive.
+Apply the loaded **Plan lifecycle rules** and **Reopen rule** for every event. Only incomplete plans enter Git; completed tracked plans retire as deletions in their completing PR, never an archive commit. During archival, no plan deletion, merge command, or stash mutation. Scope changes require user approval and invalidate affected evidence. Completion requires all goals checked, Outcome, completed metadata, archive, and filesystem verification; PR status or shipped status is not completion. If close-out was skipped, restore the active plan and complete the same pre-release sequence before archiving.
 
-**User confirms PR merge:** apply **Post-merge proof and cleanup** from the loaded lifecycle contract. Require live MERGED metadata, exact immutable head match, checked fetch/ancestry/extraction, and per-path parity before force deletion; use safe deletion when tip ancestry holds. Fast-forward local base and delete remote only if present. Any proof error blocks deletion; merge remains user-only and no post-merge archive step exists. Skipped close-out is repaired by restoring the still-active plan and running the same pre-release sequence, not by archiving here.
+**User confirms PR merge:** follow the loaded contract's **Post-merge proof and cleanup**. Require live MERGED state and pinned head; verify ancestry or, for squash/rebase, checked path extraction and per-path parity. Use safe deletion when branch-tip ancestry proves the merge; otherwise force-delete only after parity passes. Any proof failure blocks cleanup. After proof, fast-forward local base and delete remote only if present. The user alone merges; there is no post-merge archive. If close-out was skipped, restore the plan and complete pre-release close-out before archiving.
 
 ### Documentation discipline
 
-Documentation ships with the change, in the same plan: every behavior change carries its affected documentation through discovery, the manifest, and completion.
+Documentation ships with each behavior change in the same plan.
 
-- **Discovery** names every affected documentation surface (README, `knowledge/` registers, skill prose, user stories, reference docs) and its owner, with the evidence that the surface is affected (see **Bounded discovery before scope confirmation**).
-- **Manifest** lists each affected documentation path as an `Add` / `Modify` / `Delete` row, exactly like code paths; for subfolder layout the union of phase `**Writes:**` must equal it, and each row appears in at least one phase's writes. An eligible single-file plan records these actions and paths in its explicit write/delete instructions, without phase IO.
-- **Completion** reviews each documented path against the delivered behavior, reading the actual documentation content — never the plan's description of it. A shipped behavior change whose documentation is missing or contradicts the delivered behavior blocks `## Outcome` and archival (see **Acceptance-criterion reconciliation**).
+- **Discovery** names affected surfaces (README, `knowledge/`, skills, stories, references), owners, and evidence.
+- **Manifest** lists each documentation path/action; for subfolder plans it equals the union of phase `**Writes:**`, while single-file plans list paths in their write/delete instructions.
+- **Completion** reads actual documents; missing or behavior-contradicting documentation blocks Outcome and archival.
 
-Published documents, durable criteria, Goal `Done when:`, and every `## Change log` entry must not cite temporal `plans/` or `output/` paths; cite a commit SHA, PR number, or ticket ID instead (see `.opencode/skills/user-story/references/_consistency-checklist.md`). Plans are untracked and machine-local: a plan folder is never a traceability anchor.
+Published documents, durable criteria, Goal `Done when:`, and Change log entries cite commit SHA/PR/ticket, never temporal `plans/` or `output/` paths. Plans are untracked and machine-local; they are not traceability anchors.
 
 ### Examples
 
-**New/existing plan:** derive all writes and check stash collisions before creation/dispatch. **Independent work:** two same-role research instances read frozen inputs into distinct reports; cross-role writers own disjoint files with no changing shared dependency. Dispatch concurrently only after readiness/capacity checks. **Collision:** two writers targeting one file, even different sections, stay blocked until serialized or verified isolation. **Stale non-overlapping stash:** offer user-run apply or retention, never erasure. **Cleanup:** use confirmed `$PR_NUMBER`/`$BRANCH` and the post-merge proof sequence.
+**Plan:** derive writes and check stash collisions. **Parallel work:** require frozen inputs, distinct outputs, disjoint writes, stable dependencies, and readiness/capacity. Same-file overlap blocks until serialized or isolated. **Stale stash:** user-run apply or retention, never erase. **Cleanup:** confirmed PR/branch IDs plus lifecycle proof.
 
 ### Troubleshooting
 
-**Live SHA unavailable:** remote/auth failure; resolve and rerun, never cache. **Stash overlap:** change scope or stay blocked; never erase (user may apply). **Cleanup proof fails:** mismatch, unchecked extraction or parity diff; retain branch, re-fetch/reevaluate. **Inventory denied:** retain targeted destructive denies followed by read-only stash list/show allows. **Lifecycle reference missing/unread:** load the applicable sections or stop, never use summaries. **Stale review:** changed input/content invalidates the verdict; hold the new candidate stable and obtain fresh applicable review. **Unfinished predecessor:** pending/failed/still-mutating worker; block dependent dispatch/completion, collect its attributable return and observed cessation, then accept or redispatch through the parent.
+**Live SHA/inventory:** resolve auth/remote and rerun; never cache. **Stash overlap:** change scope or stop; never erase. **Cleanup proof failure:** retain branch and re-fetch/re-evaluate. **Inventory denied:** preserve denies; use only permitted read-only forms. **Missing lifecycle text:** load or stop. **Stale review:** freeze inputs and get fresh review. **Unfinished predecessor:** block dependents until its return and observed cessation; parent accepts or redispatches.
 
 ### Plan and checklist templates
 
