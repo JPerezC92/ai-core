@@ -23,6 +23,7 @@ The document carries `"schema": 1`. The version stays **v1** through every compa
 | Story payload | `user-stories/<slug>.md` (portable) | `{"mode": "region"}` | core region only (shared contract); project region is destination-owned |
 | Story payload (source-local) | `user-stories/<slug>.md` (source-only) | *(absent — not cleared)* | story exists in the source catalogue but is never delivered |
 | Knowledge documents | `knowledge/*.md` | `{"mode": "region"}` | core region only (core/project markers) |
+| Testing architecture | `testing-architecture/**/*.md` | `{"mode": "region"}` | core region only (core/project markers); stack guides are reference implementations, not destination bindings |
 | Agent specs | `.opencode/agents/*.md` | `{"mode": "region"}` | core region only (core/project markers) |
 | Persona profiles | `agents/*/profile.md` | `{"mode": "region"}` | core region only |
 | Skill roots | `.opencode/skills/<name>/` | `{"mode": <default>, "region_files": [<paths>]?}` | see below |
@@ -51,6 +52,16 @@ The six cleared `knowledge/` sources are region rows whose core/project split ex
 - The debt register's core is frame-only and carries no table: its records are the source's own filed history, and the frame is the retired template seed's payload.
 - Whatever the class, destination-owned records live in the destination's project region and are never substituted by a sync.
 
+## Testing architecture distribution
+
+The `testing-architecture/` area is a shared rulebook and stack-reference set, not a knowledge register. It contains one language-agnostic contract, one stack-guide template, and the cleared stack guides. Each is an explicit per-file `region` row; the core region ships and the destination owns its project region.
+
+- `testing-architecture/architecture.md` carries the language-agnostic test contract and the stack-guide index.
+- `testing-architecture/stacks/_template.md` carries the single template for a new stack guide.
+- `testing-architecture/stacks/<stack>.md` carries a reviewed stack implementation. Concrete runners and frameworks in a guide are reference implementations, not universal destination bindings.
+- A destination may add a selected stack or framework binding in its project region or project-owned configuration; it must not weaken the shared contract.
+- Adding a new stack guide uses the template and requires an authorized ODD feature and parity review before it is treated as `reference`.
+
 ## Story distribution
 
 Twelve shared story contracts use explicit per-file `region` rows. The core region holds the approved shared contract (H1/metadata, Persona, Goal, Scenario, Acceptance criteria with shared marks, portable Proof, Constraints). The project region holds source-local or destination-local evidence, approval records, revision tracking, and Change log. Six non-cleared stories (`core-sync`, `aicore-adoption-governance`, `python-pytest`, `concise-skill-authoring`, `pr-review-corrections`, `response-note-drafting`) and the source `user-stories/index.md` are **not cleared** and never ship. Existence in the source catalogue alone is not clearance.
@@ -61,7 +72,7 @@ A literal region marker pair inside a raw template or fenced example is ordinary
 
 - Root entries cover **skill roots only** for now. Agent specs, persona profiles, and every other non-skill source stay per-file rows; the scope widens only with an explicit design change (which, being compatible, does not bump the version).
 - The sync tool's own skill (`.opencode/skills/core-sync/`) is never a cleared key and reaches no destination.
-- Only region-mode rows use active core/project ownership markers — `SKILL.md` within a skill root, and region file rows (the root runtime, agent specs, persona profiles, knowledge documents, shared stories). Raw and merge transport does not interpret ownership markers; marker literals in a raw reference or fenced example remain ordinary copied bytes, not a separate region binding.
+- Only region-mode rows use active core/project ownership markers — `SKILL.md` within a skill root, and region file rows (the root runtime, agent specs, persona profiles, knowledge documents, testing-architecture documents, shared stories). Raw and merge transport does not interpret ownership markers; marker literals in a raw reference or fenced example remain ordinary copied bytes, not a separate region binding.
 - Modes: `region` (delivers only the source core region; the destination owns its project region), `raw` (byte-for-byte copy), `merge` (top-level key merge — config only; the `mcp` key merges by server name, keeping destination-only MCP servers and making a same-named entry core-wins).
 
 ## Validation
