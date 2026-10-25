@@ -12,21 +12,21 @@ from core_sync_pkg.domain.regions import split_frontmatter  # noqa: E402
 
 EXPECTED_SOURCE_VERSIONS: dict[str, str] = {
     "atrium.md": "1.4.6",
-    "augur.md": "1.2.2",
+    "augur.md": "1.2.3",
     "bastion.md": "1.7.6",
-    "crucible.md": "1.9.1",
-    "forge.md": "1.6.6",
-    "herald.md": "1.7.0",
-    "inquisitor.md": "1.7.1",
-    "investigator.md": "1.3.2",
-    "ledger.md": "1.5.0",
-    "lumen.md": "1.2.1",
+    "crucible.md": "1.9.2",
+    "forge.md": "1.6.7",
+    "herald.md": "1.7.1",
+    "inquisitor.md": "1.7.2",
+    "investigator.md": "1.3.3",
+    "ledger.md": "1.5.1",
+    "lumen.md": "1.2.2",
     "marshal.md": "1.4.0",
-    "quill.md": "1.4.0",
+    "quill.md": "1.4.1",
     "scribe.md": "1.2.2",
-    "sentinel.md": "1.15.4",
-    "vault.md": "1.6.1",
-    "warden.md": "1.5.4",
+    "sentinel.md": "1.15.5",
+    "vault.md": "1.6.2",
+    "warden.md": "1.6.0",
 }
 
 

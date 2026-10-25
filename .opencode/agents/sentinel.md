@@ -2,7 +2,7 @@
 name: sentinel
 description: Quality Guardian — line-by-line auditor of all in-scope agent documents, odd/tasks/, knowledge/agents.md, and knowledge/agent-workflow.md; legacy plans/ and user-stories/ remain in migration scope. Auto-fixes mechanical violations and reports judgment calls. Does NOT audit ticket data, docs/wiki, problem records, code, configuration, lockfiles, or temporal output.
 mode: subagent
-version: 1.15.4
+version: 1.15.5
 ---
 <!-- core:begin -->
 
@@ -159,7 +159,7 @@ Applies to every runtime spec in the Dev-team, Incident-team, and Cross-cutting 
 | SP-1 | `.opencode/agents/*.md` runtime specs have frontmatter with `name`, `description`, `mode`, and `version` fields. `AGENTS.md` is Cipher's root runtime spec by design: it is exempt only from OpenCode frontmatter fields, and must contain the root H1 and, inside `## Mandatory core`, the `### Identity & Role` section with an explicit runtime-spec declaration. | Report only |
 | SP-2 | `.opencode/agents/*.md` runtime specs have a valid `mode` value (`primary`, `subagent`, or `all`). `AGENTS.md` is exempt only from mode validation; all other applicable SP checks remain required. | Report only |
 | SP-3 | **Agent-surface core regions.** Every `.opencode/agents/*.md` runtime spec and every `agents/<name>/profile.md` persona profile carries exactly one ordered `<!-- core:begin -->` … `<!-- core:end -->` pair immediately after its frontmatter closing `---`. Any source-only content is confined to that file's optional `<!-- project:begin -->` … `<!-- project:end -->` region and never appears inside its core region; a profile without project-specific content carries the core pair alone. A governed agent spec carries technical framing above the body — an H1 title and a `**Persona / personality:**` reference line to `agents/<name>/profile.md`. No `> **Rule layout:**` marker is used. Governed `.opencode/agents/*.md` specs use `## Mandatory core` with exactly these H3 headings in order: `Your Role`, `Roster Context`, `Rulebook`, `Workflow`, `Tools and References`, `Output Format`, `Stop and Report`, `Hard Rules`. **Semantic ownership:** inherited architecture, workflows, templates, reference defaults, role authority, and safety constraints stay in core; only evidenced checkout configuration, actual local grants, selected operational bindings, and local history belong in project. A heading, framework name, example, or "this project" phrase does not determine ownership. `core-sync` copies the core region. A destination runtime spec carries exactly one core region (bytes equal to the selected source core) and may carry its own `<!-- project:begin -->` … `<!-- project:end -->` region. `AGENTS.md` (the root) keeps its orchestrator layout as the format exception: a core region for the reusable root contract and a project region for source-only content (project identity, environment, reuse guide, memory) that is never delivered; it is not forced onto the eight-H3 skeleton. A destination root runtime omits every upstream-core, management-tool, and lineage reference. Persona profiles keep the CV heading order in Rule 5, not this runtime skeleton. Superseded: optional-layout / markerless whole-body core wording. | Safe hybrid: auto-fix only under Rule 5; otherwise report only |
-| SP-4 | Every roster mention uses `Name Emoji (Role)` form on first mention per section; subsequent mentions in the same section may drop the parenthetical (icon mandatory). The exact structural labels `Cipher owns:` and `Cipher does NOT:` in `AGENTS.md` are the only exception. | Yes — insert `Emoji (Role)` after bare-name first mentions |
+| SP-4 | Every prose mention of a roster member uses the full `Name Emoji (Role)` form — not first-mention-only and not per-section. Possessives use the bare-name form (`Augur's brief`). The exact structural labels `Cipher owns:` and `Cipher does NOT:` in `AGENTS.md` are the only exception. | Yes — insert `Emoji (Role)` after every bare-name mention |
 | SP-5 | No assumption statements — unsupported claims about system behavior must be labeled `hipótesis:` or removed | Report only |
 | SP-6 | No broken skill references; every cited skill path resolves to an actual directory | Report only |
 | SP-7 | No broken `knowledge/*.md` references; every cited knowledge file exists at the stated path | Report only |
@@ -187,7 +187,7 @@ Applies to `knowledge/agents.md` whenever Cipher 🔓 (Lead Orchestrator) reques
 
 | # | Check | Auto-fix? |
 |---|---|---|
-| KD-1 | Every roster member mention uses `Name Emoji (Role)` form on first mention per section; possessives stay bare-name | Yes — insert `Emoji (Role)` after bare-name mentions |
+| KD-1 | Every roster member mention uses the full `Name Emoji (Role)` form — every prose mention, not first-mention-only; possessives stay bare-name | Yes — insert `Emoji (Role)` after bare-name mentions |
 | KD-2 | No assumption statements — unsupported claims about system behavior must be labeled `hipótesis:` or removed | Report only |
 | KD-7 | No unfilled template placeholders (`<...>`, `TODO`, `TBD`) | Yes — auto-fix only when the replacement is unambiguous from context |
 
