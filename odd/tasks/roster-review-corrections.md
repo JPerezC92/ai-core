@@ -1,8 +1,9 @@
 # Roster review corrections
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-10-25
+> **Closed:** 2026-10-25
 
 ## Specs
 
@@ -16,13 +17,13 @@
 
 ## Tasks
 
-- T1 | S5, S6 | Cipher 🔓 (Lead Orchestrator): inventory and classify findings 4–11 with exact files, owners, and user-decision boundaries before further edits | open | commit: pending
-- T2 | S2 | Marshal 🎖️ (HR Director): align Warden and Herald dependency-gate authority; Cipher documents, user decides | open | commit: pending
-- T3 | S3, S4 | Marshal 🎖️ (HR Director): encode zero-open-findings PASS and fix-first disposition in shared review/report guidance and affected reviewer specs | open | commit: pending
-- T4 | S5 | Marshal 🎖️ (HR Director): apply the bounded fixes or decision stops for findings 4–11 | open | commit: pending
-- T5 | S1, S7 | Forge 🔨 (Implementer): align the source-version fixture after approved runtime versions; Crucible 🔥 (Test Architect) and Bastion 🧱 (Backend & Scripts Architect) review the test-file edit | open | commit: pending
-- T6 | S3, S4, S7 | Sentinel 🛡️ (Quality Guardian): independent combined audit; require zero open findings | open | commit: pending
-- T7 | S7 | Cipher 🔓 (Lead Orchestrator): validate, record evidence, and close only after T6 returns zero open findings | open | commit: pending
+- T1 | S5, S6 | Cipher 🔓 (Lead Orchestrator): inventory and classify findings 4–11 with exact files, owners, and user-decision boundaries before further edits | done | commit: 4baaae41c6dbec9ae6db27e6f664567e7eb8a85e
+- T2 | S2 | Marshal 🎖️ (HR Director): align Warden and Herald dependency-gate authority; Cipher documents, user decides | done | commit: 4baaae41c6dbec9ae6db27e6f664567e7eb8a85e
+- T3 | S3, S4 | Marshal 🎖️ (HR Director): encode zero-open-findings PASS and fix-first disposition in shared review/report guidance and affected reviewer specs | done | commit: 4baaae41c6dbec9ae6db27e6f664567e7eb8a85e
+- T4 | S5 | Marshal 🎖️ (HR Director): apply the bounded fixes or decision stops for findings 4–11 | done | commit: 4baaae41c6dbec9ae6db27e6f664567e7eb8a85e
+- T5 | S1, S7 | Forge 🔨 (Implementer): align the source-version fixture after approved runtime versions; Crucible 🔥 (Test Architect) and Bastion 🧱 (Backend & Scripts Architect) review the test-file edit | done | commit: 4baaae41c6dbec9ae6db27e6f664567e7eb8a85e
+- T6 | S3, S4, S7 | Sentinel 🛡️ (Quality Guardian): independent combined audit; require zero open findings | done | commit: 4baaae41c6dbec9ae6db27e6f664567e7eb8a85e
+- T7 | S7 | Cipher 🔓 (Lead Orchestrator): validate, record evidence, and close only after T6 returns zero open findings | done | commit: 4baaae41c6dbec9ae6db27e6f664567e7eb8a85e
 
 Allowed status: open, in progress, done. `pending` is valid for open or in-progress work. A task marked done must cite its completed work-unit commit. A feature closes only when every task is done and committed.
 
@@ -39,3 +40,4 @@ Allowed status: open, in progress, done. `pending` is valid for open or in-progr
 - L9 — Audit evidence accepted from full-roster-review/read-only-1: 11 defects, 3 decision/authority boundaries, all 16 runtime specs and 17 profiles reviewed. Findings 1–2 are accepted small predecessors; findings 3–11 are governed here. This document was created before the first non-small correction.
 - L10 — Final independent audit returned zero open findings across the 15-file candidate and root runtime. Findings 1–11 are resolved; dependency BLOCK has no agent override, ADVISORY is fix-first with user authority, PASS requires zero open findings, and fix-first disposition is recorded in shared guidance. The root `AGENTS.md` naming corrections advanced it to `3.0.5`; no fixture entry applies to the root. The reviewed whole suite passed: `738 passed in 5.60s`.
 - L11 — DEBT-017 and DEBT-018 remain open and nonblocking; this feature neither resolves nor ignores them. No application implementation, dependency, permission, destination, legacy plan/story, or historical record change is included. Publication remains separately authorized.
+- L12 — Close: T1–T7 completed in work commit `4baaae41c6dbec9ae6db27e6f664567e7eb8a85e`. Final Sentinel audit reports zero open findings across the 15-file candidate and root runtime; Crucible test architecture passed; exact suite `uv run --frozen --group dev pytest -q` exited 0 with `738 passed in 5.60s`; ODD validation must be rerun on this closed record before publication. Root `AGENTS.md` is 3.0.5; 12 agent versions and the 16-entry fixture align. No push, PR, merge, or tag performed.
