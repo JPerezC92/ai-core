@@ -24,7 +24,6 @@ The document carries `"schema": 1`. The version stays **v1** through every compa
 | Story payload (source-local) | `user-stories/<slug>.md` (source-only) | *(absent — not cleared)* | story exists in the source catalogue but is never delivered |
 | Knowledge documents | `knowledge/*.md` | `{"mode": "region"}` | core region only (core/project markers) |
 | Architecture documents | explicit files under `architecture/` | `{"mode": "region"}` | core region only (core/project markers); common/shape contracts, implementation and testing templates/guides, and navigation; tools remain destination-owned |
-| Testing compatibility | four retained files under `testing-architecture/` | `{"mode": "region"}` | rule-free section pointers to canonical testing documents; existing bindings remain valid |
 | Agent specs | `.opencode/agents/*.md` | `{"mode": "region"}` | core region only (core/project markers) |
 | Persona profiles | `agents/*/profile.md` | `{"mode": "region"}` | core region only |
 | Skill roots | `.opencode/skills/<name>/` | `{"mode": <default>, "region_files": [<paths>]?}` | see below |
@@ -63,11 +62,11 @@ The `architecture/` area is a shared contract and stack-reference set, not a kno
 - `architecture/testing/architecture.md` carries the language-agnostic test contract and the stack-guide index.
 - `architecture/testing/stacks/_template.md` carries the single testing stack-guide template, distinct from the implementation-guide template.
 - `architecture/testing/stacks/typescript.md` and `architecture/testing/stacks/python.md` preserve the reviewed testing implementations. Concrete runners and frameworks are reference implementations, not universal destination bindings.
-- The four old rows, `testing-architecture/architecture.md` and `testing-architecture/stacks/{_template,typescript,python}.md`, remain cleared compatibility pointers with existing heading targets; they carry no competing normative rules. Removing them would break existing bindings and is not authorized by this transition.
+- Testing documents ship only from `architecture/testing/`; the obsolete root compatibility files and their four clearance rows are removed.
 - A destination may add a selected stack or framework binding in its project region or project-owned configuration; it must not weaken the shared contract.
 - Adding a new stack guide uses the template and requires an authorized ODD feature and parity review before it is treated as `reference`.
 
-New required documents ship with their consumers and compatibility pointers at one selected revision. A destination must authorize `core-sync init --bind-cleared` enrollment for the new paths; `apply` alone does not enroll absent or markerless files. The destination itself reconciles displaced duplicates and local extensions; nonempty `pending` and the reconciliation blocker prevent acceptance, and `core-sync check` must exit `0`. This source registry authorizes neither manual binding edits nor destination mutation and does not claim migration completed. Source-local ADRs, review histories, and inventories stay outside distributed core; documentation review is not implementation-conformance proof.
+New required documents ship with their consumers at one selected revision. A destination must authorize `core-sync init --bind-cleared` enrollment for the new paths; `apply` alone does not enroll absent or markerless files. The destination itself reconciles displaced duplicates and local extensions; nonempty `pending` and the reconciliation blocker prevent acceptance, and `core-sync check` must exit `0`. This source registry authorizes neither manual binding edits nor destination mutation and does not claim migration completed. Source-local ADRs, review histories, and inventories stay outside distributed core; documentation review is not implementation-conformance proof.
 
 ## Story distribution
 
@@ -79,7 +78,7 @@ A literal region marker pair inside a raw template or fenced example is ordinary
 
 - Root entries cover **skill roots only** for now. Agent specs, persona profiles, and every other non-skill source stay per-file rows; the scope widens only with an explicit design change (which, being compatible, does not bump the version).
 - The sync tool's own skill (`.opencode/skills/core-sync/`) is never a cleared key and reaches no destination.
-- Only region-mode rows use active core/project ownership markers — `SKILL.md` within a skill root, and region file rows (the root runtime, agent specs, persona profiles, knowledge documents, architecture documents and testing compatibility pointers, shared stories). Raw and merge transport does not interpret ownership markers; marker literals in a raw reference or fenced example remain ordinary copied bytes, not a separate region binding.
+- Only region-mode rows use active core/project ownership markers — `SKILL.md` within a skill root, and region file rows (the root runtime, agent specs, persona profiles, knowledge documents, architecture documents, shared stories). Raw and merge transport does not interpret ownership markers; marker literals in a raw reference or fenced example remain ordinary copied bytes, not a separate region binding.
 - Modes: `region` (delivers only the source core region; the destination owns its project region), `raw` (byte-for-byte copy), `merge` (top-level key merge — config only; the `mcp` key merges by server name, keeping destination-only MCP servers and making a same-named entry core-wins).
 
 ## Validation

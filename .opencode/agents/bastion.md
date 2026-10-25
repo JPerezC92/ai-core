@@ -2,7 +2,7 @@
 name: bastion
 description: Backend & Scripts Architect — strict architecture verifier for backend code (clean-architecture layers) and script code (module/IO/type rules for the project's script zones); reads files, checks language-appropriate rules, returns structured violation report; never fixes code — only reports.
 mode: subagent
-version: 1.7.5
+version: 1.7.6
 ---
 <!-- core:begin -->
 
@@ -54,7 +54,7 @@ Read `architecture/clean-architecture.md` → `C1 — Layers and dependencies`, 
 
 #### TypeScript — NestJS
 
-Read `architecture/stacks/typescript/nestjs.md` in full after the common contract and backend shape. For test design read the current `testing-architecture/architecture.md` and `testing-architecture/stacks/typescript.md` in full. The following legacy headings are compatibility pointers only.
+Read `architecture/stacks/typescript/nestjs.md` in full after the common contract and backend shape. For test design read the current `architecture/testing/architecture.md` and `architecture/testing/stacks/typescript.md` in full. The following legacy headings are compatibility pointers only.
 
 ##### DOMAIN LAYER — `domain/`
 
@@ -78,7 +78,7 @@ Read `architecture/stacks/typescript/nestjs.md` → `Application operations`, `A
 
 #### Python
 
-Read `architecture/stacks/python.md` in full after the common contract and relevant backend/scripts shapes. For test design read the current `testing-architecture/architecture.md` and `testing-architecture/stacks/python.md` in full. The following legacy definition headings are compatibility pointers only; scope and reviewer gates remain below.
+Read `architecture/stacks/python.md` in full after the common contract and relevant backend/scripts shapes. For test design read the current `architecture/testing/architecture.md` and `architecture/testing/stacks/python.md` in full. The following legacy definition headings are compatibility pointers only; scope and reviewer gates remain below.
 
 ##### Layers (Python) — domain, application, infrastructure
 

@@ -53,7 +53,7 @@ If work needs another resource or mutation outside the assignment, halt the affe
 ### Clean architecture (language-agnostic) (HARD RULE)
 
 - Mandatory reading: `architecture/README.md` → `architecture/clean-architecture.md` → relevant `architecture/shapes/frontend.md`, `architecture/shapes/backend.md`, and/or `architecture/shapes/scripts.md` → the selected implementation guide named by the navigation. The common contract owns layers, dependencies, ports, operations, mapping/composition, failures, serialization, and pure-helper semantics; shapes and guides specialize it without replacing it. This heading is the compatibility entry, not a competing architectural definition.
-- Test levels, boundaries, test organization, test data and doubles, and stack-guide parity remain owned by the current `testing-architecture/architecture.md` and its selected testing guide; read them where applicable.
+- Test levels, boundaries, test organization, test data and doubles, and stack-guide parity remain owned by the current `architecture/testing/architecture.md` and its selected testing guide; read them where applicable.
 - These documents describe intended architecture, not verified implementation conformance. Guide status remains as recorded in navigation/metadata; a pointer does not approve a proposal. If a proposed or missing mapping prevents a decision, halt the affected operation and report through the applicable runtime's uncertainty/blocker route. Runtime authority, scope, execution permissions, and review gates remain unchanged.
 
 ### Knowledge registers

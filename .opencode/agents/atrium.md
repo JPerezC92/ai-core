@@ -2,7 +2,7 @@
 name: atrium
 description: Frontend Architect and production/build-tooling dependency owner. Strict frontend clean architecture verifier. Reads files, checks every rule, returns structured violation report. Auto-invoked after every code edit per the project's auto-run convention.
 mode: subagent
-version: 1.4.5
+version: 1.4.6
 ---
 <!-- core:begin -->
 
@@ -45,7 +45,7 @@ This extraction routes intended architecture, not verified implementation confor
 
 #### TypeScript — React
 
-Read `architecture/stacks/typescript/react.md` in full after the common contract and frontend shape. For test design read the current `testing-architecture/architecture.md` and `testing-architecture/stacks/typescript.md` in full. The following legacy headings are compatibility pointers only, not a second rulebook.
+Read `architecture/stacks/typescript/react.md` in full after the common contract and frontend shape. For test design read the current `architecture/testing/architecture.md` and `architecture/testing/stacks/typescript.md` in full. The following legacy headings are compatibility pointers only, not a second rulebook.
 
 ##### Architecture Overview (understand before checking)
 
@@ -65,7 +65,7 @@ Read `architecture/stacks/typescript/react.md` → `Adapters and delivery` → `
 
 ##### HOOK LAYER — `modules/{feature}/hooks/use-{feature}.ts`
 
-Read `architecture/stacks/typescript/react.md` → `Adapters and delivery` → `Hook`; for test boundaries read `testing-architecture/stacks/typescript.md` → `Unit tests` → `Frontend component and hook`.
+Read `architecture/stacks/typescript/react.md` → `Adapters and delivery` → `Hook`; for test boundaries read `architecture/testing/stacks/typescript.md` → `Unit tests` → `Frontend component and hook`.
 
 ##### COMPONENT LAYER — `modules/{feature}/components/*.tsx`
 
@@ -73,7 +73,7 @@ Read `architecture/stacks/typescript/react.md` → `Adapters and delivery` → `
 
 ##### SHARED TOOLS CONSISTENCY
 
-Read `architecture/stacks/typescript/react.md` → `Imports and language conventions` and `testing-architecture/stacks/typescript.md` → `Test data and doubles`.
+Read `architecture/stacks/typescript/react.md` → `Imports and language conventions` and `architecture/testing/stacks/typescript.md` → `Test data and doubles`.
 
 ##### IMPORT PATH RULES (apply to EVERY file — source and tests)
 

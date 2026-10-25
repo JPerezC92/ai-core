@@ -65,18 +65,6 @@
     "architecture/testing/stacks/python.md": {
       "mode": "region"
     },
-    "testing-architecture/architecture.md": {
-      "mode": "region"
-    },
-    "testing-architecture/stacks/_template.md": {
-      "mode": "region"
-    },
-    "testing-architecture/stacks/typescript.md": {
-      "mode": "region"
-    },
-    "testing-architecture/stacks/python.md": {
-      "mode": "region"
-    },
     ".opencode/skills/git-branch-name/": {
       "mode": "raw"
     },
