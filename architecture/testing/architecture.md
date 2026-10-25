@@ -7,9 +7,9 @@ This is the language-agnostic contract for test design and test-architecture rev
 
 Authority is split deliberately:
 
-- `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)` owns the layer and dependency contract.
+- `architecture/clean-architecture.md` owns the layer and dependency contract.
 - This document owns the test-level, boundary, and parity contract.
-- `testing-architecture/stacks/<stack>.md` owns concrete syntax, file paths, tools, and examples for one stack.
+- `architecture/testing/stacks/<stack>.md` owns concrete syntax, file paths, tools, and examples for one stack.
 - `.opencode/agents/crucible.md` owns the review procedure, routing, verdict format, and execution boundaries.
 
 A stack guide applies this contract. It does not redefine the levels or weaken a boundary.
@@ -64,7 +64,7 @@ A test-architecture verdict is separate from a test-execution result. A passing 
 
 1. Read this contract.
 2. Identify the code's stack and application shape.
-3. Read the applicable guide in `testing-architecture/stacks/`.
+3. Read the applicable guide in `architecture/testing/stacks/`.
 4. If no applicable guide exists, emit `[UNCERTAIN]` and report the missing guide. Do not infer a runner, a rule, or a file convention from another language.
 
 A guide is `proposed` until it has passed review, `reference` while it is the reviewed implementation, and `superseded` when replaced. A `proposed` guide cannot support a verdict.
@@ -98,7 +98,7 @@ A section is complete or explicitly marked `N/A` with a language or runtime reas
 ## Adding a stack guide
 
 1. Create an authorized ODD feature; do not add a guide as incidental work.
-2. Copy `testing-architecture/stacks/_template.md`.
+2. Copy `architecture/testing/stacks/_template.md`.
 3. Research the stack's official documentation and inspect representative repository tests.
 4. Map every template section to the agnostic contract; mark every non-applicable section `N/A` with a reason.
 5. Label the guide `proposed` until the applicable architecture owner, the test architect, and the document owner review it.
@@ -108,8 +108,8 @@ Research is not approval. An unverified guide must not be used to issue a verdic
 
 ## References
 
-- `knowledge/agents.md` — clean architecture and failure classification.
-- `testing-architecture/stacks/_template.md` — the only stack-guide template.
+- `architecture/clean-architecture.md` — clean architecture and failure classification.
+- `architecture/testing/stacks/_template.md` — the only stack-guide template.
 - `.opencode/agents/crucible.md` — review procedure and routing.
 
 <!-- core:end -->

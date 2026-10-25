@@ -5,7 +5,7 @@
 > **Stack:** Python application, script, and CLI code; pytest reference implementation
 > **Guide owner:** Crucible 🔥 (Test Architect)
 > **Reviewed:** 2026-10-25 — `testing-architecture-layering`
-> **Contract:** `testing-architecture/architecture.md`
+> **Contract:** `architecture/testing/architecture.md`
 
 ## Applicability and ownership
 

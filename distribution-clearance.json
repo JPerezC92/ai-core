@@ -26,16 +26,43 @@
     "knowledge/diagnostic-system-design.md": {
       "mode": "region"
     },
-    "testing-architecture/architecture.md": {
+    "architecture/README.md": {
       "mode": "region"
     },
-    "testing-architecture/stacks/_template.md": {
+    "architecture/clean-architecture.md": {
       "mode": "region"
     },
-    "testing-architecture/stacks/typescript.md": {
+    "architecture/shapes/frontend.md": {
       "mode": "region"
     },
-    "testing-architecture/stacks/python.md": {
+    "architecture/shapes/backend.md": {
+      "mode": "region"
+    },
+    "architecture/shapes/scripts.md": {
+      "mode": "region"
+    },
+    "architecture/stacks/_template.md": {
+      "mode": "region"
+    },
+    "architecture/stacks/typescript/react.md": {
+      "mode": "region"
+    },
+    "architecture/stacks/typescript/nestjs.md": {
+      "mode": "region"
+    },
+    "architecture/stacks/python.md": {
+      "mode": "region"
+    },
+    "architecture/testing/architecture.md": {
+      "mode": "region"
+    },
+    "architecture/testing/stacks/_template.md": {
+      "mode": "region"
+    },
+    "architecture/testing/stacks/typescript.md": {
+      "mode": "region"
+    },
+    "architecture/testing/stacks/python.md": {
       "mode": "region"
     },
     ".opencode/skills/git-branch-name/": {

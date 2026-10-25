@@ -35,6 +35,8 @@ Every repeatable artifact has exactly one template. Create a new file by copying
 |---|---|
 | Feature document | `odd/tasks/_template.md` |
 | Feature-document checklist | `.opencode/skills/odd-workflow/references/_checklist.md` |
+| Implementation stack guide | `architecture/stacks/_template.md` |
+| Testing stack guide | `architecture/testing/stacks/_template.md` |
 | Legacy plan, migration only | `.opencode/skills/plan-enforce/references/_template.md` |
 | Legacy story, migration only | `.opencode/skills/user-story/references/_template-user-story.md` |
 
@@ -46,7 +48,9 @@ Identify both obligations, their authority, owner, impact, and disposition. Stop
 
 Put each concern in its owner. Before growing a file, remove duplication or extract a named responsibility with purpose, applicability, owner, and an explicit read-pointer. Do not split by arbitrary parts.
 
-Extract skill support to `.opencode/skills/<skill>/references/<concern>.md`; executable tooling to `scripts/`; a new common policy to `knowledge/<concern>.md`. Move each obligation to one home, replace the old body with a pointer, update consumers, and verify links and clearance before deleting the old copy. Shared required extracts ship with clearance; source-local history is not a shared dependency.
+Extract skill support to `.opencode/skills/<skill>/references/<concern>.md`; executable tooling to `scripts/`; a new common policy to `knowledge/<concern>.md`. Architecture definitions belong in `architecture/`: select through `architecture/README.md`, read `architecture/clean-architecture.md`, applicable `architecture/shapes/`, and the selected implementation guide in `architecture/stacks/`; testing definitions belong in `architecture/testing/architecture.md` and its selected stack guide. Agent runtimes retain authority, execution, scope, gates, dependency ownership, and reporting, not competing definition copies. Source-local ADRs explain decisions under `docs/architecture/decisions/` and are not required shared dependencies. Move each obligation to one home, replace the old body with a pointer, update consumers, and verify links and clearance before deleting the old copy. Shared required extracts ship with clearance; source-local history is not a shared dependency.
+
+New architecture paths and their consumers ship together through explicit per-file clearance; destination-authorized `core-sync init --bind-cleared` enrollment is required for new or markerless paths, not `apply` alone. Destination reconciliation remains destination-owned; pending reconciliation blocks acceptance. Documentation review does not establish implementation conformance or authorize application remediation.
 
 Durable history lives at its owner: the feature document's `## Log`, the story's change log if a story still exists, the ADR, and `docs/architecture/history/`. A plan's `## Resolved decisions` is temporal; it does not replace the owner record.
 <!-- core:end -->

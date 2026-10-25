@@ -1,6 +1,6 @@
 # Cipher — Lead Orchestrator
 
-> **Spec version:** 3.0.1
+> **Spec version:** 3.0.3
 
 <!-- core:begin -->
 ## Mandatory core
@@ -105,16 +105,19 @@ AICore is a **reusable, agnostic core**: another project adopts it as a complete
 2. **Keep the shared infrastructure** the agents reference:
    - `knowledge/agents.md` (shared rules), `knowledge/agent-workflow.md` (shared workflow entry), and `knowledge/debt.md` (accepted-debt register)
    - `knowledge/symptoms.md` (symptom-class catalog) and `knowledge/problems.md` (known-problem register)
-   - `testing-architecture/` — the language-agnostic test contract, stack-guide template, and reviewed stack guides
+   - `architecture/README.md` — architecture navigation and selection; `architecture/clean-architecture.md` — the common contract; `architecture/shapes/` — application responsibilities; `architecture/stacks/` — implementation guides and template
+   - `architecture/testing/` — the language-agnostic test contract, stack-guide template, and reviewed stack guides
    - `odd/tasks/` — ODD feature documents, one file per feature, created from `odd/tasks/_template.md`; legacy `plans/` and `user-stories/` remain migration inputs
    - `output/` for temporal artifacts (audits, research, design — gitignored; agents create it on first write)
-3. **Adapt the stack-specific rulebooks** if your stack differs:
-   - `atrium.md` — the React Query / sonner / Zod / Tailwind frontend rulebook
-   - `bastion.md` — the backend & scripts rulebook (NestJS + Python)
+3. **Select the applicable architecture guides and reviewers** if your stack differs:
+   - `architecture/README.md` — common-contract, shape, implementation-guide, and testing-guide selection and ownership
+   - `atrium.md` — the frontend reviewer; architecture definitions live in the common contract, frontend shape, and React implementation guide
+   - `bastion.md` — the backend & scripts reviewer; architecture definitions live in the common contract, applicable shapes, and NestJS/Python implementation guides
    - `crucible.md` — the test-architecture reviewer and stack-guide router
-   - `testing-architecture/stacks/` — reviewed TypeScript/Python guides plus the template for a destination-owned guide
+   - `architecture/stacks/` — implementation guides plus the template for a destination-owned implementation guide
+   - `architecture/testing/stacks/` — reviewed TypeScript/Python testing guides plus the template for a destination-owned testing guide
    - `lumen.md` — the visual-system tool references
-   These are reference architectures. If your stack differs, change only the destination-owned project-extensions section before enrollment, or add a destination-owned stack guide from the template. Do not replace the mandatory rulebook body.
+   These are reference architectures; agent runtime specs retain review procedures and authority, not competing architecture rulebooks. If your stack differs, change only the destination-owned project-extensions section before enrollment, or add a destination-owned stack guide from the applicable template. Do not replace the mandatory rulebook body. New architecture paths require enrollment with their consumers as one applicable set; `apply` alone does not enroll missing or markerless paths. Documentation approval does not establish implementation conformance.
 4. **Point the tokens to your project** — substitute your real tooling only in destination-owned project extensions or destination configuration. Do not edit protected mandatory text to retokenize it. The core ships neutral on purpose.
 5. **The `ticket-runbook` skill** scaffolds a per-ticket working analysis and collapses it to one ticket record at close; adapt its template paths and validator to your project.
 6. **Do not bump synced spec versions locally** — copies of synced or derived surfaces (root runtime spec, agent runtime specs, shared skills' versioned specs) keep the AICore ancestor's version (lineage map: root spec ← AGENTS.md, domain derivations ← investigator.md, everything else ← its same-name counterpart). Record destination-local changes in the destination's git history and the feature document `## Log`, never in the spec version field. Each destination root runtime spec adds a visible `> **Local version:** MAJOR.MINOR.PATCH` marker and each destination-derived agent spec adds frontmatter `local-version: MAJOR.MINOR.PATCH`; AICore ancestor surfaces omit `local-version`. Initialize local-version at `1.0.0` when adopting the matching AICore version. A destination-local runtime-spec edit advances only that surface's local SemVer: major for an incompatible local authority or safety change, minor for a new local enforceable capability or rule, and patch for a compatible local correction or clarification. An AICore sync never resets local-version; Git diff against the ancestor, not a version field, selects token-bearing merge behavior. `local-version` complements, never replaces, this single-lineage version policy and has no model, permission, or runtime-behavior effect.

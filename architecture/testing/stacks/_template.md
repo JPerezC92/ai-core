@@ -5,9 +5,9 @@
 > **Stack:** <language, framework, and application shape>
 > **Guide owner:** <role>
 > **Reviewed:** pending
-> **Contract:** `testing-architecture/architecture.md`
+> **Contract:** `architecture/testing/architecture.md`
 
-> **Template use:** Copy this file to `testing-architecture/stacks/<stack>.md` and fill every section. Keep the heading order. A section is complete or explicitly `N/A` with a language or runtime reason. Do not remove a section because the stack appears simpler. Delete these template-use instructions and the placeholders after review.
+> **Template use:** Copy this file to `architecture/testing/stacks/<stack>.md` and fill every section. Keep the heading order. A section is complete or explicitly `N/A` with a language or runtime reason. Do not remove a section because the stack appears simpler. Delete these template-use instructions and the placeholders after review.
 
 ## Applicability and ownership
 
