@@ -1,0 +1,43 @@
+<!-- core:begin -->
+# Clean architecture
+
+## Purpose and authority
+
+This contract owns common architecture semantics. Application shapes own responsibility/layout specialization; implementation guides own syntax and library mappings. A language or library is never a layer and cannot suspend this contract. These are intended architecture decisions, not evidence that existing code conforms. Documentation approval and implementation verification are separate.
+
+## C1 — Layers and dependencies
+
+The same layers apply across languages: domain, application, infrastructure; static dependencies point inward, infrastructure → application → domain. Shape-specific folders bind these responsibilities without renaming the layers. The application imports only domain types and ports, never frameworks or concrete adapters. Runtime effects through injected domain ports are allowed: a runtime call graph is not the static-import graph.
+
+## C2 — Domain and ports
+
+Domain imports no framework or infrastructure. Entities and typed ports speak domain types, not raw external records. Domain business errors carry stable codes and messages. Concrete entity representation and port syntax belong in the selected shape/stack guide.
+
+## C3 — Application operation
+
+Each use case is one named business operation exposing a single `execute()`. It depends on injected domain ports, not concrete IO. Policy belongs here or in domain, never in adapters or presentation.
+
+## C4 — Mapping and composition
+
+Adapters map outside data to domain data through a single mapping/parsing step and contain no business rules. Composition supplies concrete adapters to use cases only at the edge.
+
+## C5 — Failures
+
+A business failure is a typed domain error returned as a value, never thrown by the business operation. Boundary exceptions (framework/transport) and programming exceptions (including IO crashes) remain exceptions; do not fabricate domain errors from arbitrary caught exceptions or impose exception-as-result wrappers. A documented business-failure response may be mapped to the corresponding domain error. Presentation may bind returned business errors and propagated exceptions to its error channel without reclassifying them.
+
+## C6 — Serialization
+
+Business operations consume and return domain types. Transport serialization belongs to the delivery edge (controller/handler/view), never inside `execute()`.
+
+## C7 — Pure helpers
+
+A pure helper needs no artificial use-case wrapper. A module that decides policy and calls infrastructure does need the application-operation boundary.
+
+## Testing and execution
+
+The current test-design authority is `architecture/testing/architecture.md`, with its selected stack guide. It alone owns test levels, organization, doubles, evidence, and test-guide parity. Agent runtime specs own execution authority, edit scope, checkpoints, review procedures, and uncertainty routing. This document grants none of those permissions.
+<!-- core:end -->
+
+<!-- project:begin -->
+## Project extensions
+<!-- project:end -->

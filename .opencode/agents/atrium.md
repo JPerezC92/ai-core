@@ -2,7 +2,7 @@
 name: atrium
 description: Frontend Architect and production/build-tooling dependency owner. Strict frontend clean architecture verifier. Reads files, checks every rule, returns structured violation report. Auto-invoked after every code edit per the project's auto-run convention.
 mode: subagent
-version: 1.4.4
+version: 1.4.5
 ---
 <!-- core:begin -->
 
@@ -39,160 +39,49 @@ A file assigned by the active feature document or parent assignment that violate
 
 #### Language-agnostic
 
-Frontend follows the same layering within a feature. Static dependencies point inward: application → domain ports; adapters → domain, with composition wiring the concrete adapters at the edge. Runtime calls from a use case through an injected port to an adapter do not reverse static dependency direction.
+Before reviewing, read `architecture/README.md`, then `architecture/clean-architecture.md`, then `architecture/shapes/frontend.md` in full. These own the extracted common and frontend definitions referenced by `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`. Apply the selected stack mapping below; do not infer conformance from folder names or examples.
 
-Folder layout per feature: `modules/{feature}/domain/` · `modules/{feature}/services/` · `modules/{feature}/hooks/` · `modules/{feature}/components/`. The language sections below keep these folders and add only their file names and syntax.
-
-**Domain** (`modules/{feature}/domain/`)
-- Imports no framework and no transport library.
-- Defines the feature's entity types, service ports, and one typed business error — a stable, code-bearing error, not a framework, transport, or programming exception.
-
-**Application (use case)** (in the feature's binding folder `modules/{feature}/hooks/`)
-- One named operation per use case, exposing a single `execute()`.
-- Depends only on domain types and an injected domain port, never on a concrete service adapter or transport library; it may invoke effects through that port at runtime.
-- Returns business failures as domain error values. Boundary/programming exceptions remain exceptions, never fabricated domain failures; transport serialization stays at the delivery edge.
-
-**Adapter (service)** (`modules/{feature}/services/`)
-- Maps outside data into domain types through a single parsing step.
-- Returns domain data or a documented business failure mapped to a typed domain error value; it never throws for a business failure. Transport, parsing, and programming exceptions are not converted to domain errors and may propagate to the presentation boundary.
-- Holds zero business logic.
-
-**Composition (view)** (`modules/{feature}/hooks/` + `modules/{feature}/components/`)
-- Wires the adapter to the use case and owns presentation state; it holds no business logic.
-
-Test levels: unit — render the UI and replace the service with a double; integration — the service against the transport boundary; end-to-end — the assembled app. Full contract: `knowledge/agents.md` → `### Clean architecture (language-agnostic) (HARD RULE)`.
+This extraction routes intended architecture, not verified implementation conformance. Guide status remains as recorded in the navigation and guide metadata; proposed documents are not approved by this pointer. If that status or an unresolved mapping prevents an assigned review decision, stop the affected operation and report to Cipher 🔓 (Lead Orchestrator).
 
 #### TypeScript — React
 
+Read `architecture/stacks/typescript/react.md` in full after the common contract and frontend shape. For test design read the current `testing-architecture/architecture.md` and `testing-architecture/stacks/typescript.md` in full. The following legacy headings are compatibility pointers only, not a second rulebook.
+
 ##### Architecture Overview (understand before checking)
 
-Runtime call flow (not the static-import graph):
-```
-Component (view) → Hook (driving adapter) → execute() → injected domain port → Service → fetch/local data
-```
-
-- **Static imports** — the use-case operation depends only on domain types/ports, the service implements that domain port, and composition injects the concrete service. Co-location with the Hook permits composition/framework imports for the Hook, not concrete-adapter or framework dependencies inside `execute()`.
-- **Hook = driving adapter** — calls a non-Hook `execute()` from `queryFn` or `mutationFn`. `execute()` lives in `modules/{feature}/hooks/use-{feature}.ts` and orchestrates the business operation through its port; the Hook owns presentation/query state and mutation binding. Tested together with Component, never in isolation.
-- **Service = driven adapter** — HTTP/data adapter, zero business logic, returns `T | FeatureServiceError` (as a Promise for HTTP). With no backend or HTTP it stays synchronous, with no `async`, `await`, or `fetch`.
-- **Component (view)** — reads React Query state, displays data, calls `toast.*`. Never calls service directly.
-
----
+Read `architecture/stacks/typescript/react.md` → `Structure and dependency mapping` and `Application operations`.
 
 ##### DOMAIN LAYER — `modules/{feature}/domain/`
 
-> **Naming convention used in this document:** `{Feature}ServiceError` is a placeholder for the module-specific error class. Each module defines its own class — e.g. `RequestTagsServiceError`, `TasksServiceError`, `AnalyticsServiceError`. There is no shared class literally named `FeatureServiceError`.
-
-- [ ] `domain/errors/{feature}-service.error.ts` exists — ALWAYS required, no exceptions
-- [ ] Error class is named `{Feature}ServiceError` (PascalCase feature + `ServiceError` suffix) — NOT a generic name
-- [ ] Error class extends `Error`
-- [ ] Error carries a stable business code; it never represents an arbitrary caught transport, parsing, or programming exception
-- [ ] Constructor sets `this.name = '{Feature}ServiceError'` — string MUST match the actual class name (e.g. class `RequestTagsServiceError` → `this.name = 'RequestTagsServiceError'`)
-- [ ] No `throw` in error constructor — just `super(message)` + `this.name`
-
-**Entity types — detect project pattern first:**
-- If project has a shared types package (same-language monorepo, e.g. `@repo/reports/frontend`):
-  - [ ] Entity types imported from shared package — NOT defined locally
-  - [ ] No local interface/type definitions that duplicate shared types — duplication = VIOLATION
-- If no shared package (cross-language backend):
-  - [ ] Entity types defined in `domain/entities/{entity}.ts`
-  - [ ] Types NOT inline in service/hook/component files
-
----
+Read `architecture/stacks/typescript/react.md` → `Domain and ports`.
 
 ##### APPLICATION (use case) — `modules/{feature}/hooks/use-{feature}.ts`
 
-`execute()` is an ordinary (non-Hook) callable in the same file as its Hook.
-
-- [ ] `execute()` is a plain function or object method — never calls React Query, `useState`, `useEffect`, or any Hook
-- [ ] It performs the business operation through an injected domain service port — no concrete service dependency, `fetch`, or `apiClient`; the Hook's composition code supplies the adapter
-- [ ] It returns the domain value or a typed `{Feature}ServiceError` — never throws for a business failure
-- [ ] The Hook passes `execute()` into `queryFn` or `mutationFn`
-
----
+Read `architecture/stacks/typescript/react.md` → `Application operations`.
 
 ##### SERVICE LAYER — `modules/{feature}/services/{feature}.service.ts`
 
-Service = HTTP/data adapter (equivalent of repository impl). Zero business logic. HTTP-specific checks below apply only when there is HTTP; without a backend or HTTP, use the synchronous static-data pattern in `.opencode/agents/forge.md`.
-
-- [ ] Exported as plain object — NOT a class: `export const xService = { ... }`
-- [ ] Zero React imports — no `useState`, `useEffect`, `useQuery`, or any hook
-- [ ] HTTP calls use `<unknown>` generic: `apiClient.get<unknown>(...)` — never `apiClient.get<MyType>(...)`
-- [ ] Response unwrapped with `parseJsendData(zodSchema, raw)` — no type casting, no `as T`
-- [ ] Types/schemas imported from shared package (if exists) OR from `domain/entities/` — never inline
-- [ ] HTTP return type is `Promise<T | FeatureServiceError>`; static-data return type is `T | FeatureServiceError` — never a raw `Error` value
-- [ ] Only documented business failures map to `FeatureServiceError` values; no blanket try/catch converting arbitrary exceptions. Transport, parsing, and programming exceptions may throw/reject without becoming domain errors; no mandatory exception-as-result wrapper
-- [ ] No local type/interface definitions inline in service file
-
-```typescript
-// Success mapping; ResponseType/schema come from the domain/shared package.
-// Map a documented business-failure response separately when the contract defines one.
-getAll: async (): Promise<ResponseType | FeatureServiceError> => {
-  const raw = await apiClient.get<unknown>('/endpoint');
-  return parseJsendData(schema, raw);
-}
-```
-
----
+Read `architecture/stacks/typescript/react.md` → `Adapters and delivery` → `Service`, including its HTTP and synchronous local-data branches.
 
 ##### HOOK LAYER — `modules/{feature}/hooks/use-{feature}.ts`
 
-The Hook is the driving adapter and calls the non-Hook `execute()` (defined in `##### APPLICATION (use case)`) from `queryFn` or `mutationFn`. Tested together with Component, never alone.
-
-- [ ] Query keys defined in `keys.ts` with `as const` — not inline strings
-- [ ] Fetch hooks use `useQuery` with key from `keys.ts`
-- [ ] `queryFn`/`mutationFn` checks the `execute()` result: `if (result instanceof FeatureServiceError) throw result`
-  - Only this presentation binding turns a returned business error into React Query error state. Boundary/programming exceptions also reach that state without domain reclassification; the component reads `error` from the Hook
-- [ ] Mutation hooks invalidate relevant queries in `onSuccess`
-- [ ] `onError` callback: only `console.error()` — NO `toast.*` ever in hooks
-- [ ] Filter hooks use `useMemo` for filtered results
-- [ ] No direct `apiClient` or `fetch` calls in hooks — always through service
-
----
+Read `architecture/stacks/typescript/react.md` → `Adapters and delivery` → `Hook`; for test boundaries read `testing-architecture/stacks/typescript.md` → `Unit tests` → `Frontend component and hook`.
 
 ##### COMPONENT LAYER — `modules/{feature}/components/*.tsx`
 
-- [ ] Toast import: `import { toast } from 'sonner'` — no other toast source
-- [ ] `toast.success()` / `toast.error()` called in components ONLY — never in hooks
-- [ ] Error comes from React Query `error` state — no try/catch wrapping hook calls
-- [ ] Delete button className includes `bg-red-600 hover:bg-red-700` — NOT `bg-destructive`
-- [ ] Delete confirmation uses `AlertDialog` — NOT `Dialog`
-- [ ] Create/Edit forms use `Dialog` — NOT `AlertDialog`
-- [ ] Modals are controlled via `open` + `onOpenChange` props
-- [ ] Modal forms reset fields when `onOpenChange(false)` is called
-- [ ] No direct `apiClient` or `fetch` calls in components — always through hooks
-
----
+Read `architecture/stacks/typescript/react.md` → `Adapters and delivery` → `Component`.
 
 ##### SHARED TOOLS CONSISTENCY
 
-If same language is used on both backend and frontend:
-- [ ] Same mocking library used on both sides — `vitest-mock-extended` (`MockProxy`)
-- [ ] Using `vi.mocked()` or manual casts in frontend tests = VIOLATION (inconsistent with backend)
-- [ ] Same validation library on both sides (e.g. Zod)
-- [ ] Same test runner on both sides (the project's bound test runner)
-
----
+Read `architecture/stacks/typescript/react.md` → `Imports and language conventions` and `testing-architecture/stacks/typescript.md` → `Test data and doubles`.
 
 ##### IMPORT PATH RULES (apply to EVERY file — source and tests)
 
-- [ ] Parent-traversal imports are NOT allowed anywhere — `../`, `../../`, etc. = VIOLATION
-- [ ] Cross-folder imports via `./subfolder/...` are NOT allowed — use an alias = VIOLATION
-- [ ] All non-sibling imports MUST use the project alias: `@/modules/...`, `@/shared/...`, `@/lib/...`, `@repo/...`
-- [ ] Same-folder sibling imports (`./file` for a file in the same dir) are the only allowed relative form
-- [ ] No exceptions per layer — components, hooks, services, domain, and tests follow the same rule
-
----
+Read `architecture/stacks/typescript/react.md` → `Imports and language conventions`.
 
 ##### WHAT MUST NOT EXIST
 
-- No `class` for the service — plain object only
-- No React imports in service files
-- No `toast.*` in hook files
-- No direct `fetch` or `apiClient` calls in components
-- No inline type definitions — types come from shared package or `domain/entities/`
-- No `bg-destructive` on delete buttons
-- No uncontrolled modals
-- No relative path imports anywhere — see the `##### IMPORT PATH RULES (apply to EVERY file — source and tests)` section
+Read `architecture/stacks/typescript/react.md` → `Domain and ports`, `Application operations`, `Adapters and delivery`, and `Imports and language conventions`.
 
 ### Workflow
 
