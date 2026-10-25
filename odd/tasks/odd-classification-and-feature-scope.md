@@ -1,8 +1,9 @@
 # ODD classification and feature scope
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-10-24
+> **Closed:** 2026-10-24
 
 ## Specs
 
@@ -17,12 +18,12 @@
 
 ## Tasks
 
-- T1 | S1, S2, S3 | Cipher 🔓 (Lead Orchestrator): reconcile all active threshold references against the pinned ODD source and identify the bounded surfaces to update; leave historical plans/features untouched | in progress | commit: pending
-- T2 | S1, S2, S4, S5, S6, S7, S8 | Cipher 🔓 (Lead Orchestrator): update `AGENTS.md`, `knowledge/agent-workflow.md`, the ODD skill/checklist, README, and the stale diagnostic workflow map with the ODD classification and bounded-scope rule | in progress | commit: pending
-- T3 | S3, S6, S7, S8 | Cipher 🔓 (Lead Orchestrator): retarget `plan-enforce` and `user-story` new-work triggers to ODD while preserving legacy-plan/story migration, active-plan scope/phase changes, and user-confirmed merge-cleanup procedures; Vault 🔐 (Catalog Steward) audits both skills | in progress | commit: pending
-- T4 | S4, S5, S7 | Sentinel 🛡️ (Quality Guardian): audit the complete original/candidate obligation accounting and check cross-reference consistency | open | commit: pending
-- T5 | S1, S2, S3, S4, S5, S6, S7, S8 | Cipher 🔓 (Lead Orchestrator): run feature validation and evaluate the gate packet; Crucible 🔥 (Test Architect) runs the reviewed whole suite. Close only with all evidence current | open | commit: pending
-- T6 | S6, S8 | Cipher 🔓 (Lead Orchestrator): record the Gremlins/Unicode warning as non-blocking DEBT-016 in `knowledge/debt.md` and preserve its evidence without blocking this feature | in progress | commit: pending
+- T1 | S1, S2, S3 | Cipher 🔓 (Lead Orchestrator): reconcile all active threshold references against the pinned ODD source and identify the bounded surfaces to update; leave historical plans/features untouched | done | commit: 802333c3635c7571d2f00dbfa35f0aa5687be122
+- T2 | S1, S2, S4, S5, S6, S7, S8 | Cipher 🔓 (Lead Orchestrator): update `AGENTS.md`, `knowledge/agent-workflow.md`, the ODD skill/checklist, README, and the stale diagnostic workflow map with the ODD classification and bounded-scope rule | done | commit: 802333c3635c7571d2f00dbfa35f0aa5687be122
+- T3 | S3, S6, S7, S8 | Cipher 🔓 (Lead Orchestrator): retarget `plan-enforce` and `user-story` new-work triggers to ODD while preserving legacy-plan/story migration, active-plan scope/phase changes, and user-confirmed merge-cleanup procedures; Vault 🔐 (Catalog Steward) audits both skills | done | commit: 802333c3635c7571d2f00dbfa35f0aa5687be122
+- T4 | S4, S5, S7 | Sentinel 🛡️ (Quality Guardian): audit the complete original/candidate obligation accounting and check cross-reference consistency | done | commit: 802333c3635c7571d2f00dbfa35f0aa5687be122
+- T5 | S1, S2, S3, S4, S5, S6, S7, S8 | Cipher 🔓 (Lead Orchestrator): run feature validation and evaluate the gate packet; Crucible 🔥 (Test Architect) runs the reviewed whole suite. Close only with all evidence current | done | commit: 802333c3635c7571d2f00dbfa35f0aa5687be122
+- T6 | S6, S8 | Cipher 🔓 (Lead Orchestrator): record the Gremlins/Unicode warning as non-blocking DEBT-016 in `knowledge/debt.md` and preserve its evidence without blocking this feature | done | commit: 802333c3635c7571d2f00dbfa35f0aa5687be122
 
 Allowed status: open, in progress, done. `pending` is valid for open or in-progress work. A task marked done must cite its completed work-unit commit. A feature closes only when every task is done and committed.
 
@@ -47,3 +48,4 @@ Allowed status: open, in progress, done. `pending` is valid for open or in-progr
 - L17 — Sentinel found the authority change was classified too low. Because `plan-enforce` loses new-work classification authority, `AGENTS.md` advances `2.12.0`→`3.0.0`, `plan-enforce` advances `1.23.8`→`2.0.0`, and `user-story` advances `1.3.3`→`2.0.0`; `odd-workflow` remains `1.3.0` for its added rule.
 - L18 — Sentinel also found two stale new-work routes: `user-story` still created stories and handed them to `plan-enforce`, and `knowledge/diagnostic-system-design.md` still said plan-enforce starts programming work. Both now route new work to ODD; `user-story` advances `1.3.3`→`2.0.0` because its new-work authority is removed. Historical stories/plans remain untouched.
 - L19 — Final Vault 🔐 [PASS] on `plan-enforce` `815B2346830CC6566C11DF03CB35E8FC406ED86E082342ABACB01BCE25B3DC35` (v2.0.0, 4,965 words) and `user-story` `2228DCC53FA966B969E28BA54A32662BEAC71CE4F01088998F7273258A517FF8` (v2.0.0); plan-enforce/user-story legacy routes and all lifecycle safeguards retained. Sentinel 🛡️ final [PASS] on the complete accounting; it corrected DEBT-016's line reference to L10. DEBT-016 remains nonblocking and does not block this feature.
+- L20 — Close: work unit `802333c3635c7571d2f00dbfa35f0aa5687be122` delivered the ODD resumability classification, legacy-only plan/story routing, bounded feature scope, diagnostic-map correction, and DEBT-016. Vault and Sentinel passed; whole suite 738 passed; validator all nine docs `ok`. No merge occurred; push/PR remains separately authorized.
