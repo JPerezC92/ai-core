@@ -1,8 +1,9 @@
 # Testing architecture layering
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-10-25
+> **Closed:** 2026-10-25
 
 ## Specs
 
@@ -20,14 +21,14 @@
 
 ## Tasks
 
-- T1 | S1, S2, S3, S9 | Cipher 🔓 (Lead Orchestrator): inventory every current test-architecture obligation and record its generic, TypeScript, or Python destination | open | commit: pending
-- T2 | S1, S4 | Cipher 🔓 (Lead Orchestrator): create `testing-architecture/architecture.md` and `testing-architecture/stacks/_template.md` | open | commit: pending
-- T3 | S2, S3, S9, S11 | Cipher 🔓 (Lead Orchestrator): create `testing-architecture/stacks/typescript.md` and `testing-architecture/stacks/python.md` from the template, moving existing rules without semantic change and proving section-by-section Python parity with TypeScript | open | commit: pending
-- T4 | S5, S6 | Marshal 🎖️ (HR Director): retarget Crucible 1.9.0 to the agnostic contract plus applicable stack guides, and replace the duplicated test-level block in `knowledge/agents.md` with a pointer | open | commit: pending
-- T5 | S7, S8, S11 | Cipher 🔓 (Lead Orchestrator): write ADR 0002, add the stack-guide parity index, update clearance and distribution documentation, README, and the root reuse description | open | commit: pending
-- T6 | S5, S10 | Forge 🔨 (Implementer): align the source-version contract fixture to Crucible 1.9.0; Crucible 🔥 (Test Architect) reviews the test-file edit | open | commit: pending
-- T7 | S9, S10, S11 | Sentinel 🛡️ (Quality Guardian): audit the complete original/candidate accounting, cross-stack parity, source neutrality, and document coherence | open | commit: pending
-- T8 | S10 | Cipher 🔓 (Lead Orchestrator): run validation, record evidence, close the feature, and report remaining risk | open | commit: pending
+- T1 | S1, S2, S3, S9 | Cipher 🔓 (Lead Orchestrator): inventory every current test-architecture obligation and record its generic, TypeScript, or Python destination | done | commit: 70287c486168ca7d743bcda59d3f3f67f2f3dee1
+- T2 | S1, S4 | Cipher 🔓 (Lead Orchestrator): create `testing-architecture/architecture.md` and `testing-architecture/stacks/_template.md` | done | commit: 70287c486168ca7d743bcda59d3f3f67f2f3dee1
+- T3 | S2, S3, S9, S11 | Cipher 🔓 (Lead Orchestrator): create `testing-architecture/stacks/typescript.md` and `testing-architecture/stacks/python.md` from the template, moving existing rules without semantic change and proving section-by-section Python parity with TypeScript | done | commit: 70287c486168ca7d743bcda59d3f3f67f2f3dee1
+- T4 | S5, S6 | Marshal 🎖️ (HR Director): retarget Crucible 1.9.0 to the agnostic contract plus applicable stack guides, and replace the duplicated test-level block in `knowledge/agents.md` with a pointer | done | commit: 70287c486168ca7d743bcda59d3f3f67f2f3dee1
+- T5 | S7, S8, S11 | Cipher 🔓 (Lead Orchestrator): write ADR 0002, add the stack-guide parity index, update clearance and distribution documentation, README, and the root reuse description | done | commit: 70287c486168ca7d743bcda59d3f3f67f2f3dee1
+- T6 | S5, S10 | Forge 🔨 (Implementer): align the source-version contract fixture to Crucible 1.9.0; Crucible 🔥 (Test Architect) reviews the test-file edit | done | commit: 70287c486168ca7d743bcda59d3f3f67f2f3dee1
+- T7 | S9, S10, S11 | Sentinel 🛡️ (Quality Guardian): audit the complete original/candidate accounting, cross-stack parity, source neutrality, and document coherence | done | commit: 70287c486168ca7d743bcda59d3f3f67f2f3dee1
+- T8 | S10 | Cipher 🔓 (Lead Orchestrator): run validation, record evidence, close the feature, and report remaining risk | done | commit: 70287c486168ca7d743bcda59d3f3f67f2f3dee1
 
 Allowed status: open, in progress, done. `pending` is valid for open or in-progress work. A task marked done must cite its completed work-unit commit. A feature closes only when every task is done and committed.
 
@@ -46,3 +47,4 @@ Allowed status: open, in progress, done. `pending` is valid for open or in-progr
 - L11 — Documentation/version evidence: Crucible 🔥 (Test Architect) is currently `1.8.5`; the source-version contract fixture is `.opencode/skills/core-sync/scripts/core_sync_pkg/tests/test_agent_versions.py`. The split adds an enforceable routing capability, so Crucible 🔥 advances to `1.9.0` and the fixture must move with it. The change is documentation-only apart from that fixture and Crucible's spec.
 - L12 — Sentinel audit findings and dispositions: (1) legacy Proof/heading references are preserved by explicit compatibility-pointer headings in Crucible rather than editing `user-stories/clean-architecture-contract.md` or `.opencode/agents/bastion.md`; (2) feature-record S6/S11 stale `knowledge/testing-architecture.md` paths corrected to `testing-architecture/architecture.md`; (3) the stack index gained a parity-evidence column; (4) root `AGENTS.md` advanced `3.0.0`→`3.0.1` for the compatible reuse-guide pointer change; (5) Python gained an explicit parser/loader unit row; (6) the generic organization rule now retains the UI-unit location; (7) Crucible's duplicated rule wording was reduced to a procedural reference. The stale historical `knowledge/diagnostic-system-design.md` row remains historical and is not rewritten.
 - L13 — Sentinel round 3: the stack-index parity evidence was changed from a source-only `odd/tasks/...` path to portable review evidence (`Reviewed 2026-10-25; 10/10 sections; cross-stack table complete`) so no shipped core region points at an undistributed feature record. No testing rule changed.
+- L14 — Close: T1–T8 are complete in work commit `70287c486168ca7d743bcda59d3f3f67f2f3dee1`. Final Sentinel audit `[PASS]` with 0 blocking and 0 advisory; whole suite 738 passed; ODD validator all feature documents `ok`; Crucible 1.9.0 and the source-version fixture agree. The agnostic contract, stack template, TypeScript and Python guides, ADR 0002, clearance, and pointers are delivered. No push, PR, merge, or tag was performed; publication remains separately authorized.
