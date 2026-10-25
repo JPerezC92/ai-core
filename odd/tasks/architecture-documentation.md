@@ -1,8 +1,9 @@
 # Architecture documentation
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-10-25
+> **Closed:** 2026-10-25
 
 ## Specs
 
@@ -20,13 +21,13 @@
 
 ## Tasks
 
-- T1 | S1, S2, S6, S11 | Augur 🔮 (Research Analyst): inventory source obligations, consumers, and distribution transition behavior; return the ownership map and any blocker before dependent writes | in progress | commit: pending
-- T2 | S3, S4, S7, S9 | Scribe ✍️ (Docs & Problems Manager): author navigation, generic and shape contracts, templates, stack guides, and ADR from accepted inventory; no invented decisions | open | commit: pending
-- T3 | S5, S8, S10 | Marshal 🎖️ (HR Director): retarget the four runtime specs and shared pointers while preserving authority and compatibility; Sentinel 🛡️ (Quality Guardian) reviews the edit checkpoint | open | commit: pending
-- T4 | S6, S8 | Scribe ✍️ (Docs & Problems Manager): apply only the accepted testing-path transition and distribution/documentation wiring; stop if tool or destination mutation is needed | open | commit: pending
-- T5 | S10 | Forge 🔨 (Implementer): align only the source-version fixture; return for Bastion 🧱 (Backend & Scripts Architect) and Crucible 🔥 (Test Architect) gates | open | commit: pending
-- T6 | S1, S2, S4, S8, S9, S10, S11 | Sentinel 🛡️ (Quality Guardian): independently review complete obligation preservation, parity, document authority, references, and distribution on stable identified inputs | open | commit: pending
-- T7 | S10 | Cipher 🔓 (Lead Orchestrator): validate document anatomy, coordinate applicable owner checks and authorized work-unit commits, record evidence, and close only when all requirements are established | open | commit: pending
+- T1 | S1, S2, S6, S11 | Augur 🔮 (Research Analyst): inventory source obligations, consumers, and distribution transition behavior; return the ownership map and any blocker before dependent writes | done | commit: 69365b02fd8e53ccaa6c32a90d9b9a5aef97d309
+- T2 | S3, S4, S7, S9 | Scribe ✍️ (Docs & Problems Manager): author navigation, generic and shape contracts, templates, stack guides, and ADR from accepted inventory; no invented decisions | done | commit: 69365b02fd8e53ccaa6c32a90d9b9a5aef97d309
+- T3 | S5, S8, S10 | Marshal 🎖️ (HR Director): retarget the four runtime specs and shared pointers while preserving authority and compatibility; Sentinel 🛡️ (Quality Guardian) reviews the edit checkpoint | done | commit: 69365b02fd8e53ccaa6c32a90d9b9a5aef97d309
+- T4 | S6, S8 | Scribe ✍️ (Docs & Problems Manager): apply only the accepted testing-path transition and distribution/documentation wiring; stop if tool or destination mutation is needed | done | commit: 69365b02fd8e53ccaa6c32a90d9b9a5aef97d309
+- T5 | S10 | Forge 🔨 (Implementer): align only the source-version fixture; return for Bastion 🧱 (Backend & Scripts Architect) and Crucible 🔥 (Test Architect) gates | done | commit: 69365b02fd8e53ccaa6c32a90d9b9a5aef97d309
+- T6 | S1, S2, S4, S8, S9, S10, S11 | Sentinel 🛡️ (Quality Guardian): independently review complete obligation preservation, parity, document authority, references, and distribution on stable identified inputs | done | commit: 69365b02fd8e53ccaa6c32a90d9b9a5aef97d309
+- T7 | S10 | Cipher 🔓 (Lead Orchestrator): validate document anatomy, coordinate applicable owner checks and authorized work-unit commits, record evidence, and close only when all requirements are established | done | commit: 69365b02fd8e53ccaa6c32a90d9b9a5aef97d309
 
 Allowed status: open, in progress, done. `pending` is valid for open or in-progress work. A task marked done must cite its completed work-unit commit. A feature closes only when every task is done and committed.
 
@@ -45,3 +46,4 @@ Allowed status: open, in progress, done. `pending` is valid for open or in-progr
 - L11 — User approved Python backend entity mapping closest to TypeScript: ordinary framework-free domain classes, internal underscore storage, read-only per-field `@property` access including identity, and `@classmethod create(...)` implementing the existing valid-instance factory contract. No public identity setter, invented validity/error semantics, constructor token mechanism, or enforced-privacy claim is introduced. This choice does not ban dataclasses/Pydantic in other roles. Python HTTP/repository/serializer/framework choices remain unselected. Documentation updated; runtime extraction and review remain pending.
 - L12 — Combined documentation gate accepted: exact original runtime/shared-rule/testing copies from revision cfeacfab5b4d5414f4f001f7d4c0fab64ab6b006 were compared with the complete candidate by Sentinel 🛡️ (Quality Guardian). No rule loss or unauthorized mandate found; old testing paths retain rule-free pointers, thirteen canonical architecture sources have explicit region clearance, and no destination migration is claimed. Runtime patch versions: Atrium 1.4.5, Bastion 1.7.5, Forge 1.6.5, Crucible 1.9.1; root 3.0.2.
 - L13 — Bastion 🧱 (Backend & Scripts Architect) and Crucible 🔥 (Test Architect) passed the four-value version-fixture edit. Crucible 🔥 (Test Architect) executed `uv run --frozen --group dev pytest -q`, exit 0: `738 passed in 5.84s`. ODD validator passed all feature records. Reviewed guide statuses were promoted and ADR 0003 accepted after the combined gate; application conformance, code adoption, destination updates, and publication remain outside this result.
+- L14 — Close: documentation work and recorded verification committed as 69365b02fd8e53ccaa6c32a90d9b9a5aef97d309 on docs/architecture/extract-shared-contracts. T1–T7 are done. Canonical contracts, guides, templates, runtime read-pointers and compatibility/distribution wiring are complete. Python HTTP/database/framework selections remain deliberately unselected, not implied equivalents. No application rewrite, destination update, push, PR, or merge performed. Research and the separate adoption-status branch preserved.
