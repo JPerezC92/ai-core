@@ -9,9 +9,9 @@ Read this entry before acting. ODD is the governing workflow: one feature docume
 
 1. **Authorize** — Does the request authorize a change? Read-only requests stay read-only. Findings do not silently expand authorization.
 2. **Explore** — Read the governing source and its required dependents, proportionately. Load applicable instructions and relevant dependencies.
-3. **Resolve uncertainty** — Ask one focused question for a real user-only decision; investigate accessible facts first. Delegated workers report gaps to Cipher and never invoke the user-facing question tool.
-4. **Classify** — Small work is understood, risk is contained, and resumable from the request plus the diff. Large work is anything else. File, command, test, or todo counts never decide it. The existing plan-enforce threshold remains the authority; ODD classification does not override it.
-5. **Track before the first write** — For non-trivial work, create or update the feature document before the first state-changing action. Read-only work creates no artifact.
+3. **Resolve uncertainty** — Ask one focused question for a real user-only decision; investigate accessible facts first. Delegated workers report gaps to Cipher 🔓 (Lead Orchestrator) and never invoke the user-facing question tool.
+4. **Classify** — Work is small only when it is understood, risk-contained, and resumable from the request plus diff; all three conditions must hold. Non-small work is anything else. Counts of files, commands, tests, fixes, tasks, or requested todo lists never decide classification. This ODD test is the authority for new work; `plan-enforce` handles existing legacy plans and user-confirmed legacy PR-merge cleanup, not new-work classification.
+5. **Track before the first write** — Read-only and small work create no durable feature artifact. For authorized non-small state-changing work, create or update the governing feature document before the first state-changing action. Authorization and applicable safety/review gates remain independent.
 6. **Implement task by task** — Work the tasks in the feature document in order, one coherent slice at a time. Tests and documentation ship with the slice. Do not invent a runner or a test where none applies.
 7. **Close** — Report the verified outcome, every failed or pending check, and the next step. Reproduce a reported failure before deciding it already works.
 
@@ -22,6 +22,7 @@ Read this entry before acting. ODD is the governing workflow: one feature docume
 - `## Tasks` carries one line per task: stable ID, linked `S#`, route or owner, status, and commit.
 - `## Log` carries `L1` = the original request verbatim, then corrections, evidence, and rationale appended in order.
 - A requirement change rewrites only the affected spec and reopens only its task.
+- Feature scope is the requirement/task boundary, not an exclusive file reservation. Shared-rule and shared-file changes are allowed when explicitly scoped, authorized through their canonical owner, and coordinated under `knowledge/agents.md` `### Safe parallel task coordination (HARD RULE)`; overlapping writes are serialized.
 - Handoffs reference the document and its `S#`; the worker reads until `## Log` and reports which specs it covered.
 - No second tracker, no Engram mirror, no per-request context injection.
 - The Log holds decisions and evidence, not a running execution transcript.

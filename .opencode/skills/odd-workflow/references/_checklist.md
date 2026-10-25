@@ -11,8 +11,10 @@
 ## Before the first write
 
 - [ ] The request is authorized; read-only work stays read-only.
-- [ ] Non-trivial work has the feature document before the first state-changing action.
-- [ ] The plan-enforce threshold is unchanged.
+- [ ] Classify with the ODD test: small only when understood, risk-contained, and resumable from request plus diff; counts never decide.
+- [ ] Read-only and small work create no durable feature artifact; non-small state-changing work has its authorized ODD feature document before the first mutation.
+- [ ] Authorization and applicable safety/review gates are checked independently of classification.
+- [ ] Feature scope is expressed through Specs/Tasks, not treated as an exclusive file partition; shared-resource overlap names its canonical owner/dependency and follows serialized-writer coordination.
 
 ## Change
 

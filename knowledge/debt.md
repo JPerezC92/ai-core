@@ -25,7 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 5.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; see the standing-condition record in `user-stories/plan-lifecycle-governance.md`.
+**Open debts: 6.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; see the standing-condition record in `user-stories/plan-lifecycle-governance.md`.
 
 ### DEBT-011
 
@@ -72,5 +72,14 @@ Each entry MUST include:
 - **Resolution criteria** — Before giving merge-order or readiness advice, inspect live metadata for every involved PR (state, base, head, merge commit, and mergeability) and the current base-branch SHA; compare each PR head against that live base, identify overlapping paths, and disclose whether the advice relies on current state. An independent review of a later merge-order recommendation must confirm it matches the captured live metadata.
 - **Explicit deferral decision** — 2026-10-23 — user directed “and add as a debt the error u maded”; Cipher 🔓 (Lead Orchestrator) records the stale-state recommendation as a nonblocking process debt. This record does not authorize merging PR #81 or bypassing its refresh, validation, or review gates.
 
-**ID to use for the next new debt:** `DEBT-016`. This is an allocation counter, not an open debt.
+### DEBT-016
+
+- **ID** — `DEBT-016`
+- **Date** — 2026-10-24
+- **Description** — Repository-authored Markdown uses curly quotation marks (U+201C/U+201D) and em dashes (U+2014), including inside verbatim user quotations and feature Log entries. The Gremlins VS Code extension flags these as dangerous characters, creating warning noise on otherwise valid documentation. The project has no approved Unicode policy for distinguishing legitimate punctuation from unsafe invisible/confusable characters.
+- **Direct evidence** — In `odd/tasks/odd-classification-and-feature-scope.md` entry `L10`, the Gremlins extension flagged the curly quotes around the user's policy direction. A UTF-8 codepoint inspection of that entry returned `U+2014` and four `U+201C`/`U+201D` characters. The same punctuation style appears throughout existing project documentation and `knowledge/debt.md`.
+- **Resolution criteria** — (1) Define the allowed character set for repository-authored prose, including curly quotes, em dashes, and verbatim user quotations. (2) Configure or document the Gremlins policy so legitimate punctuation is not reported as unsafe while genuinely dangerous invisible/confusable characters remain flagged. (3) Apply the policy to active documentation without altering the meaning or verbatim provenance of historical quotations. (4) Independently verify that editor/CI checks and repository content agree.
+- **Explicit deferral decision** — 2026-10-24 — user: "i have a vscode plugin called gremlins, its telling me u are introducing dangerous characters ... add that as a debt"; Cipher 🔓 (Lead Orchestrator) records the policy/tooling mismatch as nonblocking documentation debt. This record does not authorize changing quoted user text, editor settings, or repository content.
+
+**ID to use for the next new debt:** `DEBT-017`. This is an allocation counter, not an open debt.
 <!-- project:end -->

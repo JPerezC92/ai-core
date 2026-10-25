@@ -21,7 +21,7 @@
 
 ## Ownership
 
-- Story creation and ownership decisions belong to the `user-story` skill: CREATE of a new story file is forbidden until that skill has reconciled `user-stories/index.md` with the files, read every story body, presented grounded UPDATE / rename / CREATE / supersession choices, and received an explicit user choice. `plan-enforce` consumes an approved story and never renegotiates the story choice.
+- Legacy story creation and ownership decisions belong to the `user-story` skill: CREATE of a new story file is forbidden until that skill has reconciled `user-stories/index.md` with the files, read every story body, presented grounded UPDATE / rename / CREATE / supersession choices, and received an explicit user choice. New work uses ODD, not a new story. `plan-enforce` consumes an approved legacy story and never renegotiates the story choice.
 - Approved vs draft: only an approved (`active`) story is a planning contract; a `draft` is in-progress discussion and is not consumed by `plan-enforce`. Approval establishes feature behavior only — it is not implementation evidence, a permission grant, or execution authorization.
 
 ## Ownership and transport
