@@ -32,6 +32,11 @@ Every agent report to Cipher 🔓 (Lead Orchestrator) follows the exact output f
 - **Finish or stop-and-report.** If the task cannot be completed, report the exact blocker immediately — never pad with partial progress, present unfinished work as done, or invent a verdict. An incomplete report naming a blocker beats a complete one containing guesses.
 - **Flow-first explanations (code-flow handoffs).** Before composing code excerpts for a code-flow handoff, establish each structure's flow in order and write it that way: what fills the structure and from where (its evidenced source), then how and where it is used in sequence, then its effect. Integrate each code excerpt at the step it belongs to, joined by connective prose; never emit a bare sequence of code blocks whose labels leave the reader to reconstruct the logic. This governs explanatory handoffs only — it never replaces the verdict-first result, the role- or task-specific deliverable, or the ≤ 60-line bound above.
 
+### Finding disposition (HARD RULE)
+
+- **`[PASS]` is zero open findings.** `[PASS]` requires zero open findings of any severity at the reviewed head. A fixed finding stays in audit history and is closed; a deferred or ADVISORY finding remains open and cannot be `[PASS]`; a `[BLOCK]` finding cannot be `[PASS]`. An observation that requires no action is an INFO note, not a finding. Any new finding invalidates a prior `[PASS]`.
+- **Fix first.** For every real finding: if it is in scope, local and reversible, has one correct answer, changes no behavior, API, security, data, dependency, or permission, and is verifiable now — fix it and record the fix without asking. Otherwise stop the affected work and report exact evidence, impact, bounded options, and a recommendation. Never use "ignore" as a disposition; deferred work requires explicit authority. Cipher 🔓 (Lead Orchestrator) documents a user decision but cannot accept the risk itself. Fixing under this rule uses only existing authority, never expands scope, and is the user-authorized disposition for review findings — not a workaround under the User-Authority-Only rule.
+
 ### Safe parallel task coordination (HARD RULE)
 
 Parallelism applies to independent ready tasks, whether their roles differ or multiple instances have the same role. An instance has its own assignment, not additional role authority. Cipher 🔓 (Lead Orchestrator) remains the single authoritative coordinator for each workflow.
@@ -66,7 +71,7 @@ Incident identification is deterministic: ticket signal → `S-xx` → incident 
 
 1. **Match the symptom** — match the error signature against the project's symptom catalog; a class matches only when every **Required signal** is present and no **Exclusion** is present.
 2. **Match the problem** — read the project's known-problem register; keep only `Team: incident` rows whose `Symptom` references the matched `S-xx`, whose `System` and `Module` align, and whose `Lifecycle` is matchable (`candidate`, `active`, or `mitigated`; `resolved`/`retired` never match). Evaluate every `Discriminators` field and any `Exclusions` condition.
-3. **Verdict** — `exact` (exactly one `active` row with `Allow_exact: yes` and every discriminator already evidenced), `structural` (exactly one `candidate`/`active` row needing current-ticket validation), or `no_match` (no eligible row). An empty register is the canonical `no_match` — never halt on it.
+3. **Verdict** — `exact` (exactly one `active` row with `Allow_exact: yes` and every discriminator already evidenced), `structural` (exactly one `candidate`/`active`/`mitigated` row needing current-ticket validation), or `no_match` (no eligible row). An empty register is the canonical `no_match` — never halt on it.
 
 Only `S-xx` → incident `P-NNN` may issue `exact` or `structural`. Resolved-ticket archives, patterns registers, KBA/RCA catalogs, and knowledge search are evidence/backfill sources only — they never issue, upgrade, or echo a verdict. Consult them only after `no_match`, and only as labeled investigation evidence.
 
@@ -123,17 +128,18 @@ When Inquisitor 🔎 (PR Reviewer) returns review findings, Cipher 🔓 (Lead Or
 | Real defect, fix needs scope expansion | Stop; present options | **Yes** |
 | False finding — mechanically decidable (one command settles it) | Refute: persist the literal command + output as PR-body evidence, instruct re-instrumentation, re-review | No — report prominently |
 | False finding — judgment-dependent | Present both readings with their evidence | **Yes** |
-| ADVISORY / INFO judgment call | Accept-cheap fix, decline-logged, or defer-to-debt; record in the active feature document `## Log` | No — report |
+| ADVISORY finding (open) | Fix first when the finding is in scope, local and reversible, has one correct answer, changes no behavior/API/security/data/dependency/permission, and is verifiable now; otherwise the user decides whether it stays open — Cipher 🔓 (Lead Orchestrator) documents that decision and cannot accept the risk. An authorized deferral names its destination (for example `knowledge/debt.md`); never ignore, and deferral needs explicit authority. Record in the active feature document `## Log` | Fix-now: No — report. Remaining finding: **Yes** |
+| INFO observation (no action required) | Record as a note only; never a finding, a gate input, or a `[PASS]` blocker | No — report |
 | Fix requires destructive or irreversible action | User-Authority-Only rule applies | **Yes** |
 | Same finding survives 2 remediation rounds, or 3 total review rounds | Loop cap — stop | **Yes** |
 
 **Round summary (delivered to the user after every review round):** one findings-status message — first line + findings table + `Counts:` line + verdict line + PR state + `needs your call: none | <items>`.
 
 - **First line (open-count verdict):** `Open findings: <N> of <M> — <nothing unresolved and nothing blocking | …>` — a reader who reads only this line knows whether any finding is unresolved or blocking.
-- **Open count:** `<N>` counts `🔴 OPEN` findings only — carried `DEFERRED` findings are named in the `Counts:` line and in the first line whenever they exist.
+- **Open count:** `<N>` counts `🔴 OPEN` findings only — carried `DEFERRED` findings are named in the `Counts:` line and in the first line whenever they exist. A `⏸ DEFERRED` finding is still open for the `[PASS]` gate and prevents `[PASS]`.
 - **Findings table columns:** `# | Finding | Severity | Status | Basis / destination`.
 - **Closed status vocabulary:** `✅ FIXED (round <N>)` · `🔴 OPEN` · `⏸ DEFERRED → <destination>` · `✖ REJECTED (not a defect)` — status is never left to prose inference.
-- **Status basis:** `FIXED` names the remediation and the party that verified it; `DEFERRED` names its destination (story, plan, or debt entry) and why it is non-blocking; `REJECTED` carries the literal refutation output.
+- **Status basis:** `FIXED` names the remediation and the party that verified it; `DEFERRED` names its destination (story, plan, or debt entry) and the user authority that permitted deferral; `REJECTED` carries the literal refutation output.
 - **Counts line:** `Counts: fixed <n> · open <n> · deferred <n> · rejected <n> (of <M>)` — the four figures total to `M`.
 - **Carry-over:** findings persist across rounds with their status until `FIXED` or `REJECTED`; a finding is never dropped silently.
 - **Unchanged mandate:** the verdict line, the PR state, `needs your call: none | <items>`, and the literal-refutation-evidence rule remain required elements of the same message.
@@ -167,7 +173,7 @@ Edge cases:
 - Sentinel 🛡️ (Quality Guardian) audits all agent documents: runtime specs and persona CVs for both teams, plus `AGENTS.md`, `odd/tasks/`, and shared rules. Legacy `plans/` and `user-stories/` remain in migration scope.
 - Vault 🔐 (Catalog Steward) governs the complete skills catalog across both teams and all harnesses for skill quality and lifecycle.
 - Warden 🔒 (Dependency Warden) governs skill and package security.
-- Cipher 🔓 (Lead Orchestrator) owns the feature-document lifecycle via `odd-workflow`. Sentinel 🛡️ audits `odd/tasks/` for Specs/Tasks/Log consistency; legacy `plan-enforce`/`user-story` artifacts are migration-only.
+- Cipher 🔓 (Lead Orchestrator) owns the feature-document lifecycle via `odd-workflow`. Sentinel 🛡️ (Quality Guardian) audits `odd/tasks/` for Specs/Tasks/Log consistency; legacy `plan-enforce`/`user-story` artifacts are migration-only.
 <!-- core:end -->
 
 <!-- project:begin -->
