@@ -25,7 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 6.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; see the standing-condition record in `user-stories/plan-lifecycle-governance.md`.
+**Open debts: 7.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; see the standing-condition record in `user-stories/plan-lifecycle-governance.md`.
 
 ### DEBT-011
 
@@ -81,5 +81,14 @@ Each entry MUST include:
 - **Resolution criteria** — (1) Shared all-agent guidance distinguishes proven consumers and explicit governing compatibility contracts or user mandates from hypothetical external concerns. (2) Hypothetical concerns are informational, not new blockers, scope requirements, or retention obligations. (3) Actual compatibility obligations are investigated and reported with their evidence and governing authority; decisions requiring user authority are surfaced rather than obligations being silently ignored. (4) Reviewers check the evidence-to-constraint link. (5) Exercise both a no-evidenced-adopter case and an evidenced-required-consumer case, recording expected and observed decisions, and obtain independent review of the guidance and both cases.
 - **Explicit deferral decision** — 2026-10-25 — user directed “that is a problem add that as a debt to fix, any agent cant think that way”; Cipher 🔓 (Lead Orchestrator) records this as nonblocking process debt for later correction. This record authorizes no rule implementation, compatibility-source removal, branch creation, destination edits, or release action.
 
-**ID to use for the next new debt:** `DEBT-018`. This is an allocation counter, not an open debt.
+### DEBT-018
+
+- **ID** — `DEBT-018`
+- **Date** — 2026-10-25
+- **Description** — Inconsistent PR test-evidence presentation between releases, without an established consistent presentation template. PR #87 uses a wide, verbose four-column table (test-plan item, literal input/action, observed verdict, executor). Deciding and aligning a reusable, readable format is deferred; this record does not establish that tables are prohibited.
+- **Direct evidence** — In the current conversation on 2026-10-25, the user supplied a screenshot and questioned the difference in PR evidence presentation; the assistant acknowledged the inconsistency. The conversation identifies PR #87's four-column presentation and reports an earlier PR presented differently. The earlier PR's live format was not independently verified; this record relies on the conversation evidence, not a live comparison or a finding that the existing table violates a rule.
+- **Resolution criteria** — (1) Inspect the canonical PR drafting skill/template and reviewer obligations before deciding the format. (2) Define one reusable, consistent, readable PR evidence template preserving exact test-plan item, literal input/action, observed result and executor, with immutable-head scope traceability and evidence supporting each checked item. (3) Align the drafting and reviewing consumers with that template without weakening evidence obligations. (4) Obtain independent review and demonstrate the consistent format and preserved traceability on a later PR.
+- **Explicit deferral decision** — 2026-10-25 — user directed “ass that as a debt to solve later please”; Cipher 🔓 (Lead Orchestrator) records this as nonblocking presentation/process debt for later resolution. This record authorizes no live PR/body edit, template or workflow change, branch creation, implementation, or release action.
+
+**ID to use for the next new debt:** `DEBT-019`. This is an allocation counter, not an open debt.
 <!-- project:end -->
