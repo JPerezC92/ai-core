@@ -25,16 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 1.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; see the standing-condition record in `user-stories/plan-lifecycle-governance.md`.
-
-### DEBT-015
-
-- **ID** — `DEBT-015`
-- **Date** — 2026-10-23
-- **Description** — Cipher 🔓 (Lead Orchestrator) recommended merging PR #81 before PR #80 based on stale session context that said PR #80 was still open, without first checking live PR states or comparing the feature branch with current `main`. This gave the user an incorrect merge order and delayed identifying that PR #80 had already merged and PR #81 needed reconciliation.
-- **Direct evidence** — In the conversation on 2026-10-23, Cipher 🔓 (Lead Orchestrator) said “merge #81 first” and described PR #80 as still open. Herald's subsequent live `gh pr view` evidence showed PR #80 `MERGED` at commit `06e3aff022abf67084cfb0c9e02ace97912d7364`; live `main` was at that same commit. PR #81 remained `OPEN`, based on `3fda46693831a1fcce60a7eec6ad34bb28907341`; GitHub reported `mergeable=CONFLICTING` and `mergeStateStatus=DIRTY`. The compare endpoint reported PR #81 one commit behind live `main`; `.opencode/agents/inquisitor.md` was the overlapping path.
-- **Resolution criteria** — Before giving merge-order or readiness advice, inspect live metadata for every involved PR (state, base, head, merge commit, and mergeability) and the current base-branch SHA; compare each PR head against that live base, identify overlapping paths, and disclose whether the advice relies on current state. An independent review of a later merge-order recommendation must confirm it matches the captured live metadata.
-- **Explicit deferral decision** — 2026-10-23 — user directed “and add as a debt the error u maded”; Cipher 🔓 (Lead Orchestrator) records the stale-state recommendation as a nonblocking process debt. This record does not authorize merging PR #81 or bypassing its refresh, validation, or review gates.
+**Open debts: 0.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; see the standing-condition record in `user-stories/plan-lifecycle-governance.md`.
 
 **ID to use for the next new debt:** `DEBT-019`. This is an allocation counter, not an open debt.
 <!-- project:end -->
