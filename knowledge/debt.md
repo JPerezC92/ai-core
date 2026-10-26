@@ -25,7 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 6.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; see the standing-condition record in `user-stories/plan-lifecycle-governance.md`.
+**Open debts: 5.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; see the standing-condition record in `user-stories/plan-lifecycle-governance.md`.
 
 ### DEBT-011
 
@@ -71,15 +71,6 @@ Each entry MUST include:
 - **Direct evidence** — In the conversation on 2026-10-23, Cipher 🔓 (Lead Orchestrator) said “merge #81 first” and described PR #80 as still open. Herald's subsequent live `gh pr view` evidence showed PR #80 `MERGED` at commit `06e3aff022abf67084cfb0c9e02ace97912d7364`; live `main` was at that same commit. PR #81 remained `OPEN`, based on `3fda46693831a1fcce60a7eec6ad34bb28907341`; GitHub reported `mergeable=CONFLICTING` and `mergeStateStatus=DIRTY`. The compare endpoint reported PR #81 one commit behind live `main`; `.opencode/agents/inquisitor.md` was the overlapping path.
 - **Resolution criteria** — Before giving merge-order or readiness advice, inspect live metadata for every involved PR (state, base, head, merge commit, and mergeability) and the current base-branch SHA; compare each PR head against that live base, identify overlapping paths, and disclose whether the advice relies on current state. An independent review of a later merge-order recommendation must confirm it matches the captured live metadata.
 - **Explicit deferral decision** — 2026-10-23 — user directed “and add as a debt the error u maded”; Cipher 🔓 (Lead Orchestrator) records the stale-state recommendation as a nonblocking process debt. This record does not authorize merging PR #81 or bypassing its refresh, validation, or review gates.
-
-### DEBT-018
-
-- **ID** — `DEBT-018`
-- **Date** — 2026-10-25
-- **Description** — Inconsistent PR test-evidence presentation between releases, without an established consistent presentation template. PR #87 uses a wide, verbose four-column table (test-plan item, literal input/action, observed verdict, executor). Deciding and aligning a reusable, readable format is deferred; this record does not establish that tables are prohibited.
-- **Direct evidence** — In the current conversation on 2026-10-25, the user supplied a screenshot and questioned the difference in PR evidence presentation; the assistant acknowledged the inconsistency. The conversation identifies PR #87's four-column presentation and reports an earlier PR presented differently. The earlier PR's live format was not independently verified; this record relies on the conversation evidence, not a live comparison or a finding that the existing table violates a rule.
-- **Resolution criteria** — (1) Inspect the canonical PR drafting skill/template and reviewer obligations before deciding the format. (2) Define one reusable, consistent, readable PR evidence template preserving exact test-plan item, literal input/action, observed result and executor, with immutable-head scope traceability and evidence supporting each checked item. (3) Align the drafting and reviewing consumers with that template without weakening evidence obligations. (4) Obtain independent review and demonstrate the consistent format and preserved traceability on a later PR.
-- **Explicit deferral decision** — 2026-10-25 — user directed “ass that as a debt to solve later please”; Cipher 🔓 (Lead Orchestrator) records this as nonblocking presentation/process debt for later resolution. This record authorizes no live PR/body edit, template or workflow change, branch creation, implementation, or release action.
 
 **ID to use for the next new debt:** `DEBT-019`. This is an allocation counter, not an open debt.
 <!-- project:end -->
