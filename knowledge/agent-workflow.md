@@ -3,7 +3,7 @@
 <!-- core:begin -->
 ## Mandatory core
 
-Read this entry before acting. ODD is the governing workflow: one feature document per feature, tracked before the first write. This entry routes work; it does not grant authority, replace an owner procedure, or prove delivery.
+Read this entry before acting. ODD is the governing workflow: read-only and small work create no durable feature artifact; authorized non-small state-changing work has one governing feature document before the first mutation. This entry routes work; it does not grant authority, replace an owner procedure, or prove delivery.
 
 ### ODD protocol
 
@@ -12,8 +12,8 @@ Read this entry before acting. ODD is the governing workflow: one feature docume
 3. **Resolve uncertainty** — Ask one focused question for a real user-only decision; investigate accessible facts first. Delegated workers report gaps to Cipher 🔓 (Lead Orchestrator) and never invoke the user-facing question tool.
 4. **Classify** — Work is small only when it is understood, risk-contained, and resumable from the request plus diff; all three conditions must hold. Non-small work is anything else. Counts of files, commands, tests, fixes, tasks, or requested todo lists never decide classification. This ODD test is the authority for new work; `plan-enforce` handles existing legacy plans and user-confirmed legacy PR-merge cleanup, not new-work classification.
 5. **Track before the first write** — Read-only and small work create no durable feature artifact. For authorized non-small state-changing work, create or update the governing feature document before the first state-changing action. Authorization and applicable safety/review gates remain independent.
-6. **Implement task by task** — Work the tasks in the feature document in order, one coherent slice at a time. Tests and documentation ship with the slice. Do not invent a runner or a test where none applies.
-7. **Close** — Report the verified outcome, every failed or pending check, and the next step. Reproduce a reported failure before deciding it already works.
+6. **Implement task by task** — Deliver coherent slices in dependency order, respecting owner gates; dispatch independent ready tasks concurrently under the shared coordination rules. Define applicable acceptance checks and collect actual verification evidence with each task, not only at PR preparation. Tests and documentation ship with the slice. Follow the odd-workflow skill's implementation evidence procedure; never invent a runner or a test where none applies.
+7. **Close** — Apply the odd-workflow skill's independent semantic completion review before a feature completion claim; anatomy validation or a green suite alone is insufficient. Report the verified outcome, every failed or pending check, and the next step. Reproduce a reported failure before deciding it already works.
 
 ### Feature document
 
