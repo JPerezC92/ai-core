@@ -21,6 +21,13 @@
 - **Rewrite acceptance accounting.** An instruction rewrite (runtime specs, shared rules, skill or workflow instructions) is accepted only with identified original and candidate inputs and a complete accounting of valid original obligations: each is retained, translated, or retired with a justified, authority-grounded rationale, and superseded wording is never imported as precedent. Missing accounting, unauthorized or unrecognized obligation loss prevents acceptance.
 - **Rewrite source neutrality.** A rewrite candidate names no destination-specific runner or interpreter, dependency pin, or mandated local policy value; destination bindings stay project-owned. Core-owned implementation tooling and clearly labeled reference-architecture examples are permitted when distinguished from destination bindings. Destination-specific leakage prevents acceptance.
 
+### Compatibility constraints (HARD RULE)
+
+- **A constraint binds only when proven.** Proven means one of: a named destination or binding the project actually serves, an explicit governing compatibility contract, or an explicit user mandate. Name which one establishes the constraint and cite its evidence; a proven obligation is investigated and reported with that evidence and its authority.
+- **Hypothetical concerns stay informational.** A possible consumer, adopter, or breakage with no named subject, contract, or mandate is an observation only. It is never a blocker, scope requirement, retention obligation, or architecture veto, and it never stalls work that existing authority covers. Report it with what evidence would make it proven.
+- **Reviewers check the evidence-to-constraint link.** Report an unsupported constraint as unsupported rather than accepting it, and never dismiss a proven constraint as hypothetical.
+- This rule adds no permission and does not weaken the User-Authority-Only rule or any actual compatibility obligation.
+
 ### Report discipline (HARD RULE)
 
 Every agent report to Cipher 🔓 (Lead Orchestrator) follows the exact output format in its dispatch and leads with the result:
@@ -132,6 +139,8 @@ When Inquisitor 🔎 (PR Reviewer) returns review findings, Cipher 🔓 (Lead Or
 | INFO observation (no action required) | Record as a note only; never a finding, a gate input, or a `[PASS]` blocker | No — report |
 | Fix requires destructive or irreversible action | User-Authority-Only rule applies | **Yes** |
 | Same finding survives 2 remediation rounds, or 3 total review rounds | Loop cap — stop | **Yes** |
+
+**PR-body presentation:** the PR body's `## Findings / blockers`, `## Test evidence`, `## Open debt`, and verdict line follow `.opencode/skills/git-pr/references/_pr-evidence-format.md` exactly. The designated evidence writer owns that content; the round-summary vocabulary below is the chat surface, not the body's status column.
 
 **Round summary (delivered to the user after every review round):** one findings-status message — first line + findings table + `Counts:` line + verdict line + PR state + `needs your call: none | <items>`.
 
