@@ -10,7 +10,7 @@ Publication baseline supplied by the coordinator: `main` includes PR #88 at merg
 
 ## Completed core-workflow delivery
 
-Twelve of the thirteen non-template documents currently in `odd/tasks/` have closed headers, done tasks with commit references, and close evidence. The thirteenth, [Review process hardening](../../odd/tasks/review-process-hardening.md), is active and unpublished, so it is not counted as delivery here. This was a document inspection, not a new validator or test execution.
+All thirteen non-template documents currently in `odd/tasks/` have closed headers, done tasks with commit references, and close evidence. [Review process hardening](../../odd/tasks/review-process-hardening.md) is closed locally but unpublished, so it is not counted as merged delivery here. This was a document inspection, not a new validator or test execution.
 
 | Delivery | Scope and owning evidence |
 |---|---|
@@ -52,4 +52,4 @@ Python HTTP framework, repository library, error-registry layout and serializer/
 
 ## Local follow-up versus published delivery
 
-The current local `review-process-hardening` branch is **active and not published**. It retires DEBT-017 and implements the canonical PR evidence template and DEBT-018 resolution criteria 1–3; DEBT-018 remains open pending demonstration on a later PR. None of that is counted as merged adoption delivery, and nothing here claims the branch is merged, that a template is universally adopted, or that any implementation conforms to the architecture guides. The earlier follow-up content (mentor-related changes and the DEBT-018 record) is now part of the supplied published history in PR #88. This local dashboard is likewise not a publication claim. Current remote state beyond the supplied merge SHAs, historical test reruns, commit-object verification and a complete upstream-source fidelity audit were outside this bounded inspection.
+The current local `review-process-hardening` feature is **closed locally but unpublished**. It retires DEBT-017 and implements the canonical PR evidence template and DEBT-018 resolution criteria 1–3; DEBT-018 remains open pending demonstration on a later PR. None of that is counted as merged adoption delivery, and nothing here claims the branch is merged, that a template is universally adopted, or that any implementation conforms to the architecture guides. The earlier follow-up content (mentor-related changes and the DEBT-018 record) is now part of the supplied published history in PR #88. This local dashboard is likewise not a publication claim. Current remote state beyond the supplied merge SHAs, historical test reruns, commit-object verification and a complete upstream-source fidelity audit were outside this bounded inspection.
