@@ -25,7 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 7.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; see the standing-condition record in `user-stories/plan-lifecycle-governance.md`.
+**Open debts: 6.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; see the standing-condition record in `user-stories/plan-lifecycle-governance.md`.
 
 ### DEBT-011
 
@@ -71,15 +71,6 @@ Each entry MUST include:
 - **Direct evidence** — In the conversation on 2026-10-23, Cipher 🔓 (Lead Orchestrator) said “merge #81 first” and described PR #80 as still open. Herald's subsequent live `gh pr view` evidence showed PR #80 `MERGED` at commit `06e3aff022abf67084cfb0c9e02ace97912d7364`; live `main` was at that same commit. PR #81 remained `OPEN`, based on `3fda46693831a1fcce60a7eec6ad34bb28907341`; GitHub reported `mergeable=CONFLICTING` and `mergeStateStatus=DIRTY`. The compare endpoint reported PR #81 one commit behind live `main`; `.opencode/agents/inquisitor.md` was the overlapping path.
 - **Resolution criteria** — Before giving merge-order or readiness advice, inspect live metadata for every involved PR (state, base, head, merge commit, and mergeability) and the current base-branch SHA; compare each PR head against that live base, identify overlapping paths, and disclose whether the advice relies on current state. An independent review of a later merge-order recommendation must confirm it matches the captured live metadata.
 - **Explicit deferral decision** — 2026-10-23 — user directed “and add as a debt the error u maded”; Cipher 🔓 (Lead Orchestrator) records the stale-state recommendation as a nonblocking process debt. This record does not authorize merging PR #81 or bypassing its refresh, validation, or review gates.
-
-### DEBT-017
-
-- **ID** — `DEBT-017`
-- **Date** — 2026-10-25
-- **Description** — Roster-wide process defect: agents elevate hypothetical external adopter or backward-compatibility needs into requirements or vetoes controlling approved source architecture, without an evidenced affected consumer, governing compatibility obligation, or explicit user mandate. Correcting this reasoning across all agents is deferred; this entry does not prohibit compatibility work or dismiss verified dependencies.
-- **Direct evidence** — In the architecture-documentation feature, S6 and L7 retained cleared `testing-architecture/` root compatibility sources based on possible persisted destination bindings; no affected adopter was identified. During the user's challenge, the assistant acknowledged that it had no evidence of an affected adopter and that hypothetical compatibility concerns had influenced the retention decision. The observed source-sync semantics establish that an old binding would fail if it existed, not that such a binding or actual dependency exists. This evidence does not establish that verified existing dependencies are irrelevant.
-- **Resolution criteria** — (1) Shared all-agent guidance distinguishes proven consumers and explicit governing compatibility contracts or user mandates from hypothetical external concerns. (2) Hypothetical concerns are informational, not new blockers, scope requirements, or retention obligations. (3) Actual compatibility obligations are investigated and reported with their evidence and governing authority; decisions requiring user authority are surfaced rather than obligations being silently ignored. (4) Reviewers check the evidence-to-constraint link. (5) Exercise both a no-evidenced-adopter case and an evidenced-required-consumer case, recording expected and observed decisions, and obtain independent review of the guidance and both cases.
-- **Explicit deferral decision** — 2026-10-25 — user directed “that is a problem add that as a debt to fix, any agent cant think that way”; Cipher 🔓 (Lead Orchestrator) records this as nonblocking process debt for later correction. This record authorizes no rule implementation, compatibility-source removal, branch creation, destination edits, or release action.
 
 ### DEBT-018
 

@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.7.4
+  version: 1.8.0
   domain: git
 ---
 
@@ -36,6 +36,8 @@ When the branch has no commits ahead of the base, report that there is nothing t
 
 ### Body
 
+Read `references/_pr-evidence-format.md` in full before drafting. It is the canonical format for the completed body, including the mandatory findings and test-evidence tables.
+
 ```markdown
 ## Summary
 - <what changed and why — one line each, at most three>
@@ -43,11 +45,15 @@ When the branch has no commits ahead of the base, report that there is nothing t
 ## Test plan
 - [ ] <action and the observable expected result>
 - [ ] <edge case or regression and its expected result>
+
+## Findings / blockers
+No review findings yet.
 ```
 
 - **Summary**: the motivation, not a restatement of the diff.
 - **Test plan**: at least two concrete, executable steps, each naming the action and its expected result. Every item is an unchecked `- [ ]` checkbox in the draft — never `[x]`, a result, or a claim that something ran.
-- Keep the whole body under 20 lines.
+- **Findings / blockers**: the initial draft states `No review findings yet.` with no table. After review, this section follows `references/_pr-evidence-format.md`: the mandatory findings table, or `No findings.` when the review produced none.
+- **Line budget**: keep the initial draft under 20 lines. After review, the findings and test-evidence tables extend the body only as required — one row per finding or checked item, no duplicated prose, no padding.
 
 ### Breaking changes
 
@@ -71,30 +77,19 @@ Title: <title>
 
 ### Post-PR evidence contract
 
-After the PR exists, its body remains the sole evidence surface — never comments, reviews, or a second document. Before any checkbox changes from `- [ ]` to `- [x]`, one complete row is required:
+Read `references/_pr-evidence-format.md` in full before writing post-review evidence. It is canonical for the findings, test-evidence, open-debt, and verdict sections.
 
-````markdown
-## Test evidence
-- Test-plan item: `<exact checkbox text>`
-  - PR: `#<number>`
-  - Commit under test / immutable head SHA: `<head-sha>`
-  - Base: `$BASE`
-  - Scope command: `git diff "$BASE"...<head-sha>`
-  - Input: `<literal performed input>`
-  - Command (only when actually executed): `<literal executed command>`
-  - Observed output: `<literal observed verdict>`
-  - Executor: `<person or agent>`
-````
+After the PR exists, its body remains the sole evidence surface — never comments, reviews, or a second document. Before any checkbox changes from `- [ ]` to `- [x]`, the current-head evidence block and one row for that item must exist. The block records the PR number, immutable head SHA, base, and literal scope command once; the table maps every checked test-plan item to exactly one row with the exact item text, literal action/input, verdict-only observed result, and actual executor.
 
 **Verdict-only observed output.** Record the human-readable verdict — for a test run, the pass/fail summary line and exit code where relevant. Never paste progress bars, per-test dots, stack traces, or raw dumps unless the requester explicitly asks.
 
 **Manual actions.** A genuinely performed manual check records its literal action or input, observed result and actual executor. Include a command only when one actually ran; never invent one, and never let a bare tick directive or a manual/optional label stand in for a performed check.
 
-**Atomic join.** The single designated evidence writer validates the complete head-bound row first, then persists the row and its matching tick in one body write and live-rereads the same head and body. A changed head, divergent body, or failed reread rejects the write and blocks acceptance; missing or partial evidence leaves the item unchecked.
+**Atomic join.** The single designated evidence writer validates the complete current-head block first, then persists the rows and their matching ticks in one body write and live-rereads the same head and body. The same join owns every post-review findings, evidence, open-debt, and verdict write; no other post-review body writer updates them. A changed head, divergent body, or failed reread rejects the write and blocks acceptance; missing or partial evidence leaves the item unchecked.
 
 **Execution ownership.** An execution owner that runs an item but does not own the PR body never reports the PR complete. The item stays unchecked until the designated writer has persisted the row and tick at the review join.
 
-**Separate prose corrections.** A later authorized factual prose correction belongs to its own serialized writer, only after observed release of the evidence writer, and must preserve evidence rows, ticks and unrelated prose.
+**Separate prose corrections.** A later authorized factual prose correction belongs to its own serialized writer, only after observed release of the evidence writer, and must preserve every findings/evidence/open-debt/verdict row, every tick, and unrelated prose.
 
 ## Rules
 
