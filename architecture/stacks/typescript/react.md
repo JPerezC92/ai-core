@@ -28,13 +28,13 @@ Keep the frontend shape's feature folders. Runtime flow: Component → Hook (dri
 ### Service
 
 - `modules/{feature}/services/{feature}.service.ts` exports a plain object (`export const xService = { ... }`), never a class; no React imports or local inline types/interfaces, no business logic.
-- With HTTP: request unknown (`apiClient.get<unknown>(...)`), then unwrap/validate once with `parseJsendData(zodSchema, raw)`. No type casts or `as T`. Return `Promise<T | FeatureServiceError>`, never a raw `Error` value. Implement `architecture/shapes/frontend.md` → `F2 — Operation and adapter` by mapping documented business-failure responses to returned `{Feature}ServiceError` values, not thrown/rejected business failures. Do not blanket-catch unrelated exceptions into domain errors; preserve their exception identity.
-- Without backend/HTTP: remain synchronous, returning `T | FeatureServiceError`, not `Promise<T>`. No `async`, `await`, `fetch`, or HTTP. A typed data service may be `export const featureService = { getAll: (): EntityType[] | FeatureServiceError => localDataArray };` with typed domain imports. Do not invent a failure just to fill the union. Exceptions may propagate unchanged.
+- With HTTP: request unknown (`apiClient.get<unknown>(...)`), then unwrap/validate once with `parseJsendData(zodSchema, raw)`. No type casts or `as T`. Return `Promise<T | {Feature}ServiceError>`, never a raw `Error` value. Implement `architecture/shapes/frontend.md` → `F2 — Operation and adapter` by mapping documented business-failure responses to returned `{Feature}ServiceError` values, not thrown/rejected business failures. Do not blanket-catch unrelated exceptions into domain errors; preserve their exception identity.
+- Without backend/HTTP: remain synchronous, returning `T | {Feature}ServiceError`, not `Promise<T>`. No `async`, `await`, `fetch`, or HTTP. A typed data service may be `export const featureService = { getAll: (): EntityType[] | TasksServiceError => localDataArray };` with typed domain imports. Do not invent a failure just to fill the union. Exceptions may propagate unchanged.
 
 ### Hook
 
 - Query keys live in `keys.ts` with `as const`, not inline strings. Fetch Hooks use `useQuery` and those keys.
-- `queryFn`/`mutationFn` checks `if (result instanceof FeatureServiceError) throw result`. Only this presentation binding turns returned business errors into React Query error state; propagated exceptions reach it without domain reclassification.
+- `queryFn`/`mutationFn` checks `if (result instanceof TasksServiceError) throw result`. Only this presentation binding turns returned business errors into React Query error state; propagated exceptions reach it without domain reclassification.
 - Mutation `onSuccess` invalidates relevant queries. `onError` only calls `console.error()`, never `toast.*`. Filter Hooks use `useMemo`.
 - No direct `apiClient`/`fetch`; call through the operation's injected service port. For the Hook/component test boundary, read `architecture/testing/stacks/typescript.md` → `Unit tests` → `Frontend component and hook`.
 
