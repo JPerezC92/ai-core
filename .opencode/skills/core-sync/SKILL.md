@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.2.1
+  version: 2.2.2
 ---
 
 ## What I do
@@ -105,7 +105,7 @@ Records are either file rows `{ "mode": "region"|"raw"|"merge", "role"?: "root" 
 The sync tool expands skill roots at every sync: `region_files` members deliver only their core region, all other files use the root's default mode, `__pycache__`/`*.pyc` caches never join, and new files join automatically.
 The declared mode is authoritative for distribution, so an explicit `--bind`/`--bind-raw` declaration whose mode conflicts with the source record fails closed (exit `2`); the sync tool's own `core-sync` skill is never cleared. Skill files join automatically via their root row after that root's test or review passes; per-file rows are for non-skill sources.
 
-The format's source of truth is `distribution-clearance.definition.md`.
+Read `distribution-clearance.definition.md` in full as the format's source of truth.
 
 `root` (optional) is the destination root runtime file, relative to the destination directory (e.g. `CLAUDE.md`). When absent it is detected from the destination instruction files in priority order: `AGENTS.md`/`agents.md`, then `CLAUDE.md`/`claude.md`, then `instructions.md`; the detected spelling is preserved. When present, it must follow the same canonical safe relative POSIX and NUL-free path rules as `source` and `destinations`; malformed values are rejected before filesystem operations. When the resolved root file is missing, the blocker is skipped silently. Destination projects use `.aicore/core.yaml` as the canonical bindings path when a root blocker may be generated; that pairs with `.aicore/reconciliation/init.yaml`.
 

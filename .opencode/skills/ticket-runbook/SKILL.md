@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.6.0
+  version: 2.6.1
   dependencies: PyYAML==6.0.3
 ---
 <!-- core:begin -->
@@ -167,7 +167,7 @@ Run immediately after scaffolding, before each step-header advance, and after ev
 
 1. **Re-read** the written set: the analysis working-set state file, each written analysis step file (see **Working-set and record schema**), and the ticket folder structure.
 2. **Mechanical pass** — immediately after scaffolding, run the validator script (see **Validator script**) with `<analysis-dir> --scaffold`; it verifies the header plus the copied step structure while later template bodies remain intentional. Before advancing completed step `NAME`, run the validator script (see **Validator script**) with `<analysis-dir> --step NAME`; a completed step must contain no unfilled tokens. After the header advances, reserve default full validation — the validator script with `<analysis-dir>` — for all completed steps through the header. Fix anything it reports.
-3. **Analysis pass** — re-read each file against the consistency checklist (see **Working-set and record templates**): at scaffold time, verify the identify-step artifact's `Pre` has this ticket's context while later template bodies intentionally remain unfilled; after completion, verify no completed step has unfilled tokens. In every mode, verify header values match evidence (`SLA-due`, the identification-verdict field vs the register match, kill-switch counters reflect actual consumption), folder structure complete (the project's screenshots directory, validations directory, ticket record, and response-draft file; see **Working-set and record schema**), and the project's screenshot naming convention. Never invent a value to satisfy a check — stop and ask.
+3. **Analysis pass** — read `references/_consistency-checklist.md` in full, then re-read each file against it: at scaffold time, verify the identify-step artifact's `Pre` has this ticket's context while later template bodies intentionally remain unfilled; after completion, verify no completed step has unfilled tokens. In every mode, verify header values match evidence (`SLA-due`, the identification-verdict field vs the register match, kill-switch counters reflect actual consumption), folder structure complete (the project's screenshots directory, validations directory, ticket record, and response-draft file; see **Working-set and record schema**), and the project's screenshot naming convention. Never invent a value to satisfy a check — stop and ask.
 4. **Repeat** until a clean pass, then report the pass count.
 5. **Cap (S-07):** after 3 iterations, or the same violation persisting twice unchanged, stop-and-ask instead of looping.
 

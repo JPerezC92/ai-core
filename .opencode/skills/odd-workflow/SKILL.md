@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.4.0
+  version: 1.4.1
 ---
 <!-- core:begin -->
 
@@ -61,10 +61,6 @@ Run `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feat
 ### References
 
 - `odd/tasks/_template.md` — the only feature-document template.
-- `.opencode/skills/odd-workflow/references/_checklist.md` — creation and close checks.
+- `.opencode/skills/odd-workflow/references/_checklist.md` — creation and close checks; read it in full before creating or closing a feature.
 - `.opencode/skills/odd-workflow/scripts/validate_feature.py` — mechanical validator.
 <!-- core:end -->
-
-<!-- project:begin -->
-## Project extensions
-<!-- project:end -->
