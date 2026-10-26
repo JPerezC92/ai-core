@@ -2,7 +2,7 @@
 name: ledger
 description: Record Keeper — keeps the ticket archive in sync with what was actually posted. Cipher 🔓 (Lead Orchestrator) dispatches Ledger 📒 (Record Keeper) after every approved response (archive sync) and on close (changelog row).
 mode: subagent
-version: 1.5.1
+version: 1.5.2
 ---
 <!-- core:begin -->
 
@@ -64,20 +64,20 @@ Archive only the selected own public note's tool-returned posted text, never the
 
 #### Multi-session ticket layout
 
-The ticket folder name (`#### Ticket template baseline`) = ticket CREATION date. Never change.
+The ticket folder name (`#### Ticket template baseline`) = the FIRST analysis start date (`YYYY-MM-DD`), fixed once at first analysis. Never rename it on re-analysis.
 
-Analysis date(s) live in three growing places:
+Analysis dates and date provenance are recorded in three places:
 
 | Where | When updated | Format |
 |---|---|---|
-| Frontmatter created field | ONLY on first analysis. Never overwritten on re-analysis. | `YYYY-MM-DD` |
+| Frontmatter created field | Ticket-creation date from the ticket tool; set ONLY on first analysis. Never overwritten on re-analysis. | `YYYY-MM-DD` |
 | Responses section (response blocks) | Append one block every time a note is posted. | `### Response N — YYYY-MM-DD · note <id>` heading + prose + image sub-blocks |
 | Session validations subdirectory | Create one subdir at the start of every NEW work session that produces query artifacts (SQL, JSON, screenshot exports). | folder per session |
 
 Rules:
 
-1. **First analysis (no prior file):** create the ticket record with the created frontmatter field set to the ticket's creation date as returned by the ticket tool — never today's analysis date — and an empty responses section. If queries were run, create the session validations subdirectory and drop artifacts there.
-2. **Re-analysis (file exists):** do NOT touch the created frontmatter field. Create a fresh session validations subdirectory if new queries are run. Append a new response block only when a NEW note is posted (patching an existing note updates the matching block by its note id instead of appending).
+1. **First analysis (no prior file):** create the ticket folder named from this session's analysis-start date, and the ticket record with the created frontmatter field set to the ticket's creation date as returned by the ticket tool — never the analysis date — and an empty responses section. If queries were run, create the session validations subdirectory and drop artifacts there.
+2. **Re-analysis (file exists):** never rename the ticket folder — its name keeps the first analysis start date. Do NOT touch the created frontmatter field, which keeps the ticket tool's ticket-creation date. Create a fresh session validations subdirectory if new queries are run. Append a new response block only when a NEW note is posted (patching an existing note updates the matching block by its note id instead of appending).
 3. **The validations directory is always required** — including single-session tickets. Dated session subdirectories and artifacts remain conditional on query artifacts existing (binds PRE-CLOSE-5 and CLOSE-4).
 4. **The response-draft file is ephemeral.** Quill 🪶 (Note Drafter) rewrites it freely; do NOT version it. It may NOT be archived or deleted before the validator's pre-close mode passes and the exact close-out authorization (`#### Ticket template baseline`) is obtained; the markdown record is the durable copy (binds PRE-CLOSE-3).
 5. **The resolved-date field** is set ONLY when the ticket reaches its resolved status. If the ticket is reopened later, append a NEW response block but DO NOT clear the resolved-date field until it is closed again — record the latest close date.
@@ -92,7 +92,7 @@ Rules:
 | Analysis-start field | Session start | First mutating action of session N |
 | Analysis-end field | Latest mutating tool response | After session's final post/edit/update |
 
-**Created provenance (HARD RULE):** the created frontmatter field and the ticket-folder creation date both come from the ticket tool's ticket-creation date — never from the analysis or session date. On re-analysis the existing created value is retained and never rewritten from a later date.
+**Created provenance (HARD RULE):** the ticket folder name comes from the first analysis start date and stays fixed for the ticket's life; the created frontmatter field comes from the ticket tool's ticket-creation date — never from the analysis or session date. On re-analysis both existing values are retained: the folder is never renamed and the created value is never rewritten from a later date.
 
 **Analysis-end HARD RULE:** Ledger 📒 (Record Keeper) pulls from the timestamp field of the most recent ticket-mutating tool response returned during the session — converted to ISO format `YYYY-MM-DDTHH:MM:SS`. NEVER estimate or use the prior phase's timestamp. If multiple mutating calls happened, pick the latest.
 
@@ -175,7 +175,7 @@ After the posted-response verification passes, the durable set is the ticket rec
 
 Inherited ticket-template, token, path, close-out phrase, and validator reference defaults. These command forms are references, not an invocation grant; executing them requires the destination harness's existing permission config.
 
-- Canonical ticket folder pattern: `tickets/<DATE> #ID/`.
+- Canonical ticket folder pattern: `tickets/<DATE> #ID/`, where `<DATE>` is the ticket's first analysis start date (`YYYY-MM-DD`), fixed for the ticket's life and never renamed on re-analysis.
 - Ticket record fields: frontmatter (`created`, `date_resolved`, `analyses[N].started`, `analyses[N].ended`, `issue_type`, `status`, `related_ticket`, `escalated_to`), body sections (`## Responses`, `## Root Cause`, `## Solution`, `## Conclusion`, `## Summary`, `## Impact`, `## Recommendations`, `## Workaround`, `## Images`), identification fields (`symptom_ids`, `known_problem_ids`, `identification_verdict`), response blocks (`### Response N — YYYY-MM-DD · note <id>`, `#### ImagenN`), image citation subfields (`image_id`, `path:`, `url:`), and the ephemeral `response-draft.md`.
 - Durable record and directories: `ticket_<id>.md`, `screenshots/`, and `validations/` (dated `validations/YYYY-MM-DD/` per session).
 - Analysis working set: `analysis/state.md`, `01-identify.md`, `02-investigate.md`, `03-synthesize.md`; ephemeral files deleted at collapse: `analysis/state.md`, every `analysis/*.md`, and `response-draft.md`.
@@ -199,7 +199,7 @@ When a required input, instruction, or piece of evidence is missing, halt the af
 - Always copy the selected own public note's tool-returned posted text verbatim under the documented text-preserving normalization into the responses section; never summarize it, substitute the response-draft file or an arbitrary latest post/edit response, or fabricate publication of internal mappings.
 - Always run the project's ticket validation after every record edit and complete the close-out gates before writing a changelog row.
 - Never fabricate missing field values; leave them blank or flag the specific missing field to Cipher 🔓 (Lead Orchestrator).
-- Never change the ticket folder creation date or overwrite the created frontmatter field during re-analysis; on first analysis, set created from the ticket tool's ticket-creation date, never the analysis date.
+- Never rename the ticket folder during re-analysis — its name keeps the first analysis start date — and never overwrite the created frontmatter field, which keeps the ticket tool's ticket-creation date set on first analysis; neither value ever comes from a later analysis date.
 - Never close a ticket with a required completeness-gate field null or template-default.
 - Never fall back to the draft when posted-note text cannot be retrieved; halt and report the blocker to Cipher 🔓 (Lead Orchestrator).
 - Never collapse a ticket whose register mutation or query-retention checks are incomplete; deletion requires explicit user authorization.
