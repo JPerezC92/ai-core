@@ -1,8 +1,9 @@
 # Review process hardening
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-10-25
+> **Closed:** 2026-10-25
 
 ## Specs
 
@@ -16,13 +17,13 @@
 
 ## Tasks
 
-- T1 | S1 | Cipher 🔓 (Lead Orchestrator): inventory current PR drafting/review evidence obligations and choose the single format; no writes beyond this record | open | commit: pending
-- T2 | S1 | Scribe ✍️ (Docs & Problems Manager): create the reusable evidence reference/template and align `git-pr`; Vault 🔐 (Catalog Steward) reviews the skill change | open | commit: pending
-- T3 | S1 | Marshal 🎖️ (HR Director): align Herald 📯 (Release Manager) and Inquisitor 🔎 (PR Reviewer) bodies with the template and preserve immutable-head/evidence rules | open | commit: pending
-- T4 | S3, S4 | Marshal 🎖️ (HR Director): add the shared compatibility-evidence rule; exercise the two cases and record them | open | commit: pending
-- T5 | S4 | Sentinel 🛡️ (Quality Guardian): independently review the rule and both cases; zero open findings required | open | commit: pending
-- T6 | S2, S5 | Cipher 🔓 (Lead Orchestrator): refresh the adoption summary and record DEBT-018 as intentionally still open pending later demonstration | open | commit: pending
-- T7 | S7 | Cipher 🔓 (Lead Orchestrator): validate, record evidence, retire DEBT-017 if criteria are met, and close only after T5 is zero-open | open | commit: pending
+- T1 | S1 | Cipher 🔓 (Lead Orchestrator): inventory current PR drafting/review evidence obligations and choose the single format; no writes beyond this record | done | commit: 6553819916cce4f71a8e7dee2b4f9a384e707d2c
+- T2 | S1 | Scribe ✍️ (Docs & Problems Manager): create the reusable evidence reference/template and align `git-pr`; Vault 🔐 (Catalog Steward) reviews the skill change | done | commit: 6553819916cce4f71a8e7dee2b4f9a384e707d2c
+- T3 | S1 | Marshal 🎖️ (HR Director): align Herald 📯 (Release Manager) and Inquisitor 🔎 (PR Reviewer) bodies with the template and preserve immutable-head/evidence rules | done | commit: 6553819916cce4f71a8e7dee2b4f9a384e707d2c
+- T4 | S3, S4 | Marshal 🎖️ (HR Director): add the shared compatibility-evidence rule; exercise the two cases and record them | done | commit: 6553819916cce4f71a8e7dee2b4f9a384e707d2c
+- T5 | S4 | Sentinel 🛡️ (Quality Guardian): independently review the rule and both cases; zero open findings required | done | commit: 6553819916cce4f71a8e7dee2b4f9a384e707d2c
+- T6 | S2, S5 | Cipher 🔓 (Lead Orchestrator): refresh the adoption summary and record DEBT-018 as intentionally still open pending later demonstration | done | commit: 6553819916cce4f71a8e7dee2b4f9a384e707d2c
+- T7 | S7 | Cipher 🔓 (Lead Orchestrator): validate, record evidence, retire DEBT-017 if criteria are met, and close only after T5 is zero-open | done | commit: 6553819916cce4f71a8e7dee2b4f9a384e707d2c
 
 ## Log
 
@@ -37,3 +38,4 @@
 - L9 — DEBT-017 case B (evidenced required consumer): the canonical reference, `git-pr` SKILL, Herald 📯 (Release Manager), Inquisitor 🔎 (PR Reviewer), and `knowledge/agents.md` are named files bound by this feature. Expected = observed: each obligation surfaced from cited authority and aligned; independent review remains T5.
 - L10 — Final Vault skill-quality review passed after two mechanical formatting fixes; final Sentinel audit returned zero open findings. The suite passed: `738 passed in 6.70s`. Versions: git-pr 1.8.0, Herald 1.7.2, Inquisitor 1.7.3; fixture 16/16.
 - L11 — DEBT-017 criteria (1)–(5) are met and its entry was removed from `knowledge/debt.md` in this clearing feature; open debts are six and next ID remains DEBT-019. DEBT-018 remains open with criteria 1–3 implemented and later-PR demonstration pending; the status dashboard records the local-only, unpublished state.
+- L12 — Close: T1–T7 completed in work commit `6553819916cce4f71a8e7dee2b4f9a384e707d2c`. The canonical PR evidence standard, Herald/Inquisitor alignment, compatibility rule/cases, DEBT-017 retirement, DEBT-018 remaining-open record, status refresh, Vault skill review, zero-open Sentinel audit, 738-test suite, and ODD validation are recorded. No push, PR, merge, or tag performed; publication remains separately authorized.
