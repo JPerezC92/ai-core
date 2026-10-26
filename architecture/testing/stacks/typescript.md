@@ -187,7 +187,7 @@ test.afterEach(async () => {
 | End-to-end tests | Covered | HTTP and browser entry points are defined. |
 | Test data and doubles | Covered | Factories, `faker`, `MockProxy`, and one-runner consistency are defined. |
 | Execution and evidence | Covered | Execution stays project-owned; architecture and execution verdicts stay separate. |
-| Cross-stack parity | Covered | The guide uses the shared contract and declares frontend-only scope. |
+| Cross-stack parity | Covered | The guide uses the shared contract and covers backend and frontend scope. |
 | Open decisions | Covered | None; the reference decisions are resolved for this guide. |
 
 ## Open decisions

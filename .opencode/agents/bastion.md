@@ -2,7 +2,7 @@
 name: bastion
 description: Backend & Scripts Architect — strict architecture verifier for backend code (clean-architecture layers) and script code (module/IO/type rules for the project's script zones); reads files, checks language-appropriate rules, returns structured violation report; never fixes code — only reports.
 mode: subagent
-version: 1.7.6
+version: 1.7.7
 ---
 <!-- core:begin -->
 
@@ -185,11 +185,11 @@ Every prose mention of a roster member uses `Name Emoji (Role)` form (e.g. `Ciph
 
 AICore's concrete Python module-role mapping to `#### Python`. The required application entry is `execute()` with typed domain results/errors, not a serialized transport response. Legacy `*_logic()` entries or application JSON serialization are nonconforming, not an on-touch exemption; apply `#### Nonconforming feature files` without implying an unrelated repository-wide migration. A destination maps its own equivalents under the same contract.
 
-- **Domain:** `constants.py` (data only) and pure transformation functions (`chunk_*`, `parse_*`).
-- **Application:** the `tools/` operation module — one named use case exposing a single `execute()`; async, typed parameters and injected domain ports, typed domain result or domain error value. No JSON serialization inside the business operation.
-- **Composition/delivery:** the script/server entry wires the adapters; the delivery handler calls `execute()` and serializes its domain result/error to JSON at the transport edge.
-- **Infrastructure:** `loaders.py`, `build.py`, `validate_tickets.py` (file IO) and `client.py` (typed HTTP/network client wrapping `requests`/`httpx`).
-- `TypedDict` is used for structured intermediate data (chunk metadata, search-hit records).
-- `from __future__ import annotations` is required in files whose Pydantic models or complex type aliases use forward references.
-- Example pure transformation: `def chunk_ticket(data: dict[str, object], source_file: str) -> list[Chunk]`; the violation form takes a `Path` and performs `open(path)` internally.
+- **Domain:** `constants.py` (data only) and pure rule/parsing modules (`rules.py`, `markers.py`, `regions.py`, `parse_*`), with typed ports and errors; no IO.
+- **Application:** one named use-case module per operation under `application/` (for example `apply_core_revision.py`, `verify_destinations.py`, `validate.py`, `find_models.py`) exposing a single `execute()`; typed parameters and injected domain ports, typed domain result or domain error value. No JSON serialization inside the business operation.
+- **Composition/delivery:** the package entry or composition module (`entry.py`, `infrastructure/composition.py`, or the script entry) wires the adapters; the delivery handler calls `execute()` and serializes its domain result/error to JSON at the transport edge.
+- **Infrastructure:** `filesystem.py`, `stores.py`, `reader.py`, `cli.py`, `process.py` — file IO, stores, readers, and CLI/process adapters.
+- `TypedDict` for structured intermediate data (for example parsed bindings, markers, or model records).
+- `from __future__ import annotations` where forward references require it.
+- Example pure transformation: `def parse_region(marker: str) -> Region | None: ...`; the violation form takes a `Path` and performs `read_text()` internally.
 <!-- project:end -->

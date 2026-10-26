@@ -11,10 +11,10 @@ from core_sync_pkg.domain.regions import split_frontmatter  # noqa: E402
 
 
 EXPECTED_SOURCE_VERSIONS: dict[str, str] = {
-    "atrium.md": "1.4.6",
+    "atrium.md": "1.4.7",
     "augur.md": "1.2.3",
-    "bastion.md": "1.7.6",
-    "crucible.md": "1.9.2",
+    "bastion.md": "1.7.7",
+    "crucible.md": "1.9.3",
     "forge.md": "1.6.7",
     "herald.md": "1.7.2",
     "inquisitor.md": "1.8.0",
