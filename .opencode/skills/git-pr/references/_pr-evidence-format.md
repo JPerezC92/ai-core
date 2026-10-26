@@ -88,14 +88,16 @@ Then the mandatory table:
 
 Rules:
 
-- The header block is part of every row's evidence: each row is bound to that PR number, immutable head, base, and scope command. Never repeat those values per row, and never accept a row without that binding.
+- The header block is part of every row's evidence: each row is applicable to that authenticated PR number, current immutable head, base, and scope command. It does not assert that every run executed at that head. Never repeat those current review values per row, and never accept a row without that binding.
 - Every checked item has exactly one row. No checked item lacks a row, and no item has two rows. Re-running an item at the same head updates its one row.
 - Copy the test-plan item verbatim. Never paraphrase or renumber it.
 - Literal action/input is the exact command that ran. When a command consumed input, record the command and the input in that cell. When no command ran, record the exact manual action or input. Never invent a command, and never add a command field for a manual check.
 - Observed result is the human-readable verdict only: for a test run, the pass/fail summary line and the exit code where relevant. Never progress bars, per-test dots, stack traces, raw dumps, or source bodies. Full logs stay outside the body.
 - Executor is the actual person or agent that performed the check, never the body writer by default. CI records its workflow or run identifier.
 - Record literal values: the base ref, the head SHA, and the scope command with that base and head. Never write the `$BASE` token.
-- One head only. A changed head invalidates every row and tick; replace the block, re-verify every required item at the new head, and never mix heads or carry a stale row forward.
+- One current review head only. Authenticate the latest live PR head and exact diff, update the header, and reclassify every required item's evidence before the atomic row/tick join. A changed head alone, PR creation or body-only edit does not invalidate unaffected code-test evidence. Reuse sufficient task-time evidence across commits only when actual tested inputs and relevant dependencies, configuration and environment are unchanged or have an explicit proven equivalent-input mapping. Unknown equivalence fails closed; relevant changes, incomplete provenance, missing coverage or a genuinely required final combined check require an impact-scoped rerun with its stated reason. Never carry stale evidence forward or omit final combined review.
+- For reused evidence, keep the original literal command/action and consumed inputs in Literal action/input, the original observed verdict/exit status in Observed result, and actual executor plus original run identity in Executor. Include the original tested content/commit and a concise current-input applicability/equivalence proof mapping or durable proof citation in Literal action/input. Never present an old run as newly executed at the header head. Keep the existing header/columns; no extra tracker or parallel evidence section.
+- Every PR-body/prose change requires a fresh attribution scan covering the actual persisted body, through the existing authorized executor route, and final live-body reread before any gate. A pre-write scan is insufficient. This requirement is independent of unchanged code-test evidence and adds no command or mutation authority; preserve the exclusive single writer and atomic row/tick join.
 - A checked item's row records a passing verdict. A failed or unresolved check stays `- [ ]` and is recorded as a finding; it never appears as a passing row.
 - Only author-evidenced N/A may exclude a required item. `manual` or `optional` alone never omits, ticks, or satisfies an item.
 

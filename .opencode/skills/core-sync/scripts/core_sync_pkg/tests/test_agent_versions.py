@@ -17,7 +17,7 @@ EXPECTED_SOURCE_VERSIONS: dict[str, str] = {
     "crucible.md": "1.9.2",
     "forge.md": "1.6.7",
     "herald.md": "1.7.2",
-    "inquisitor.md": "1.7.3",
+    "inquisitor.md": "1.8.0",
     "investigator.md": "1.3.3",
     "ledger.md": "1.5.2",
     "lumen.md": "1.2.2",
