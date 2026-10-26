@@ -5,5 +5,4 @@ node_modules/
 .opencode/magic-context/
 __pycache__/
 output/
-plans/.completed/
 .secrets/
