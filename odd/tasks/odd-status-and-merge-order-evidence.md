@@ -1,0 +1,37 @@
+# ODD status refresh and live merge-order evidence
+
+> **Status:** active
+> **Owner:** Cipher 🔓 (Lead Orchestrator)
+> **Created:** 2026-10-26
+
+## Specs
+
+- S1 — Refresh `docs/architecture/odd-adoption-status.md` from inspected feature records and live PR metadata through merged PR #99. Distinguish historical snapshots, merged delivery, documented architecture and unverified implementation conformance. Replace stale counts, debt status and self-referential publication claims without inventing delivery history; only DEBT-015 remains open until its retirement is verified.
+- S2 — Publish two real, independently based PR slices from verified live main: the dashboard refresh and removal of the obsolete `plans/.completed/` entry from `.gitignore`. Verify `plans/` is absent and no active dependency requires the entry; change no other ignore rule. Preserve research, unrelated refs and worktrees. Neither PR depends on the other's branch or presumes a merge order.
+- S3 — Once both PRs actually exist, capture live state, base/head SHAs, merge commits, mergeability, live main SHA, ancestry/behind relationships and exact changed-path overlaps for both. Cipher 🔓 (Lead Orchestrator) gives a recommendation grounded in that snapshot, distinguishing semantic publication preference from a hard Git dependency. No merge order is predetermined by this document.
+- S4 — Obtain independent review of the recommendation against the captured live metadata. Retire DEBT-015 only after its actual criteria are verified; preserve the DEBT-019 high-water counter and all merged retirements. Carry retirement in the demonstrating dashboard PR, not the ignore-cleanup PR. Refresh affected comparison and review evidence after any relevant head/base change; never fabricate independence or erase another retirement.
+- S5 — Record essential metadata, comparisons, recommendation, executor/action and independent observed verdict durably in this Log or the canonical PR evidence. Temporal snapshots alone are insufficient. No application, dependency, permission or model-configuration change; docs-only checks do not invent suite execution.
+- S6 — Obtain independent semantic completion review, validate the feature document, and close before claiming feature completion. A second PR may carry a reviewed work slice while evidence collection remains active; do not mark pending publication or verification tasks done with an unrelated commit.
+
+## Tasks
+
+- T1 | S1, S2 | Herald 📯 (Release Manager): establish two isolated branches/worktrees from verified main; capture originals and live metadata; preserve the current feature record and research | open | commit: pending
+- T2 | S1, S5 | Scribe ✍️ (Docs & Problems Manager): refresh the status snapshot from verified records, preserving factual and ownership boundaries | open | commit: pending
+- T3 | S1, S5 | Sentinel 🛡️ (Quality Guardian): independently review the bounded candidate and durable evidence; documentation-owner review remains separately applicable | open | commit: pending
+- T4 | S2, S3 | Herald 📯 (Release Manager): publish the reviewed work slice; capture both live PRs and exact-base comparisons | open | commit: pending
+- T5 | S3, S4, S5 | Cipher 🔓 (Lead Orchestrator): issue the snapshot-grounded recommendation; Inquisitor 🔎 (PR Reviewer) independently verifies it and the PR boundary | open | commit: pending
+- T6 | S4, S5, S6 | Cipher 🔓 (Lead Orchestrator): coordinate justified DEBT-015 retirement and register reconciliation, final review, committed task evidence and truthful feature close | open | commit: pending
+- T7 | S2, S5 | Scribe ✍️ (Docs & Problems Manager): verify and remove only the obsolete plans ignore entry in the isolated cleanup worktree; Warden 🔒 (Dependency Warden) independently reviews the configuration delta | open | commit: pending
+
+Allowed status: open, in progress, done. `pending` is valid for open or in-progress work. A task marked done must cite its completed work-unit commit. A feature closes only when every task is done and committed.
+
+## Log
+
+- L1 — please create the moment now
+- L2 — Non-small: dashboard history refresh, independent branch publication, live multi-PR comparison, independent recommendation review and conditional debt reconciliation span mutable external state. This feature document precedes implementation. No artificial empty PR or predetermined passing verdict.
+- L3 — Herald 📯 (Release Manager), status-refresh/preflight1, read-only: live main and local origin/main are `2e4e2fd7ba277fa48a5af64630bf1c4bab322323`; PR #99 OPEN at `6a6feef0591c12f492b35d242df7576eb17b8759`, local branch `docs/debt/retire-debt-011`; only its register commit is above main; research is untracked and preserved. Independent second branch must start from main, not #99. PRs #92–#98 verified MERGED; dashboard still dated 2026-10-25 through #91. No merge-order advice yet because the second PR does not exist.
+- L4 — Correction: user reported PR #99 merged and requested pulling it. Herald 📯 (Release Manager) verified merge `9fe79586d56d14c4cfac18c43dd5bd7aab786bea`, fast-forwarded main, deleted only the verified feature refs and preserved this untracked feature record and research. L3 is historical, not current-state advice.
+- L5 — User approved “yes” to two genuine changes: dashboard refresh and removing obsolete `plans/.completed/` from `.gitignore`. S1/S2/S4 and T1 updated, T7 added. Both PRs start from verified main independently. “Either order” is a permissible recommendation if supported by actual metadata and path comparisons, not a predetermined result. No implementation has begun; this is the execution-review checkpoint after the scope update.
+- L6 — T1: Herald 📯 (Release Manager) verified live main `9fe79586d56d14c4cfac18c43dd5bd7aab786bea` and established isolated worktrees `odd-status-refresh` / `remove-plans-ignore`, branches `docs/workflow/odd-status-refresh` / `chore/repo/remove-plans-ignore`, both at that base. Captured PR #92–#99 as MERGED and originals under ignored `output/audits/odd-status-originals/`. Expected independent branches without inherited peer commits; observed both HEADs equal main. Research and unrelated refs preserved. Dashboard worktree is now the authoritative feature-record writer; root copy is a preserved earlier checkpoint.
+- L7 — T2/T3: Scribe ✍️ (Docs & Problems Manager) refreshed the dashboard by reading owning records and captured live metadata; expected accurate dated history and no premature retirement, observed PR #92–#99 history, fifteen closed records plus this active candidate, DEBT-015 open, DEBT-019 preserved. Sentinel 🛡️ (Quality Guardian) rejected unsupported small-work classifications and permanent-untracked wording; author corrected both; independent follow-up PASS zero open on full 71-line candidate. These were static/manual reads, not executable suite runs. Prior review calls interrupted by server restart returned no verdict and authorized no edits.
+- L8 — T7: Scribe ✍️ (Docs & Problems Manager) removed only `plans/.completed/` plus LF (18 bytes) from `.gitignore`; original SHA-256 `95586c2ee94fcbd685af780d0836b3b752ff9e0d1272c05750ab2e54419c7951`, candidate `e12c533a04e9e1ac632f9fa8537bf9894567612364cca7c327e71d361d7d13bd`. Expected absent plans directory and eight unchanged other rules; observed both. Warden 🔒 (Dependency Warden) independent review PASS, no secrets/manifest/lock impact; `.secrets/` preserved. No suite applies to this text-only delta. Publication and the actual two-PR comparison remain pending.
