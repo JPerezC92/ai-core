@@ -1,8 +1,9 @@
 # ODD status refresh and live merge-order evidence
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-10-26
+> **Closed:** 2026-10-26
 
 ## Specs
 
@@ -15,13 +16,13 @@
 
 ## Tasks
 
-- T1 | S1, S2 | Herald 📯 (Release Manager): establish two isolated branches/worktrees from verified main; capture originals and live metadata; preserve the current feature record and research | open | commit: pending
-- T2 | S1, S5 | Scribe ✍️ (Docs & Problems Manager): refresh the status snapshot from verified records, preserving factual and ownership boundaries | open | commit: pending
-- T3 | S1, S5 | Sentinel 🛡️ (Quality Guardian): independently review the bounded candidate and durable evidence; documentation-owner review remains separately applicable | open | commit: pending
-- T4 | S2, S3 | Herald 📯 (Release Manager): publish the reviewed work slice; capture both live PRs and exact-base comparisons | open | commit: pending
-- T5 | S3, S4, S5 | Cipher 🔓 (Lead Orchestrator): issue the snapshot-grounded recommendation; Inquisitor 🔎 (PR Reviewer) independently verifies it and the PR boundary | open | commit: pending
-- T6 | S4, S5, S6 | Cipher 🔓 (Lead Orchestrator): coordinate justified DEBT-015 retirement and register reconciliation, final review, committed task evidence and truthful feature close | open | commit: pending
-- T7 | S2, S5 | Scribe ✍️ (Docs & Problems Manager): verify and remove only the obsolete plans ignore entry in the isolated cleanup worktree; Warden 🔒 (Dependency Warden) independently reviews the configuration delta | open | commit: pending
+- T1 | S1, S2 | Herald 📯 (Release Manager): establish two isolated branches/worktrees from verified main; capture originals and live metadata; preserve the current feature record and research | done | commit: ec668081f72991d8165504889a326d0f9ff90bc8
+- T2 | S1, S5 | Scribe ✍️ (Docs & Problems Manager): refresh the status snapshot from verified records, preserving factual and ownership boundaries | done | commit: ec668081f72991d8165504889a326d0f9ff90bc8
+- T3 | S1, S5 | Sentinel 🛡️ (Quality Guardian): independently review the bounded candidate and durable evidence; documentation-owner review remains separately applicable | done | commit: ec668081f72991d8165504889a326d0f9ff90bc8
+- T4 | S2, S3 | Herald 📯 (Release Manager): publish the reviewed work slice; capture both live PRs and exact-base comparisons | done | commit: ec668081f72991d8165504889a326d0f9ff90bc8
+- T5 | S3, S4, S5 | Cipher 🔓 (Lead Orchestrator): issue the snapshot-grounded recommendation; Inquisitor 🔎 (PR Reviewer) independently verifies it and the PR boundary | done | commit: dd9cd2e3bb883b04a808ae377e7c9ddaf3da2527
+- T6 | S4, S5, S6 | Cipher 🔓 (Lead Orchestrator): coordinate justified DEBT-015 retirement and register reconciliation, final review, committed task evidence and truthful feature close | done | commit: dd9cd2e3bb883b04a808ae377e7c9ddaf3da2527
+- T7 | S2, S5 | Scribe ✍️ (Docs & Problems Manager): verify and remove only the obsolete plans ignore entry in the isolated cleanup worktree; Warden 🔒 (Dependency Warden) independently reviews the configuration delta | done | commit: 79b94bd09f585b5b8da386f15d83e302787def67
 
 Allowed status: open, in progress, done. `pending` is valid for open or in-progress work. A task marked done must cite its completed work-unit commit. A feature closes only when every task is done and committed.
 
@@ -39,3 +40,5 @@ Allowed status: open, in progress, done. `pending` is valid for open or in-progr
 - L10 — T5 recommendation by Cipher 🔓 (Lead Orchestrator), grounded in L9: no Git merge-order dependency. Complete reviews first; prefer #101 before #100 so the dashboard/evidence PR can record the cleanup's final status. This is a semantic publication preference, not a hard dependency. #100 remains an active slice and is not ready to merge. Inquisitor 🔎 (PR Reviewer), independent instance order-review1, read the actual DEBT-015 criteria and captured comparisons, authenticated unchanged live heads/state/files, and returned PASS zero open; judged the recommendation accurate and the criteria clearable in this demonstrating PR. Mergeability/main comparisons were accepted from Herald's identified snapshot, not claimed independently rerun. Relevant later head/base changes require updated comparisons. DEBT-015 retirement and final PR review remain pending.
 - L11 — PR #101 final review by Inquisitor 🔎 (PR Reviewer): PASS zero open, two checked items and matching rows; actual persisted-body attribution scan command `uv run --frozen python3 .opencode/skills/git-pr/scripts/scan_attribution.py --policy .opencode/skills/git-pr/references/_attribution-patterns.json --snapshot output/audits/plans-ignore-pr-final.json` executor Cipher 🔓 (Lead Orchestrator), exit 0, matches `[]`, exclusions `[]`, head `79b94bd09f585b5b8da386f15d83e302787def67`. Final body SHA-256 `6ca81aab454676533727a9287b853470bb48909483a2b53c57e8b821dd316267`; live reread equality verified. Initial malformed snapshot rejected with `snapshot pr_number must be a positive integer`, exit 1; Herald 📯 (Release Manager) rebuilt both snapshots with complete six-key schema and integer PR numbers before successful scans. No false passing run or suite claimed.
 - L12 — T6 edit by Scribe ✍️ (Docs & Problems Manager): removed only DEBT-015 and changed open count 1 to 0, preserving DEBT-019 and the provisional note; dashboard distinguishes inspection-main's one debt from proposed candidate retirement. Expected retirement only after actual L9/L10 evidence and independent review; observed that order. #101 remains OPEN, not presumed merged; merge preference is not a required Git dependency. Combined semantic review and PR #100 final gate remain pending, so no feature-completion claim yet.
+
+- L13 — Close: T1–T7 have matching delivery commits above. Sentinel combined semantic review returned PASS zero open on the three-file candidate after independent Inquisitor verification of the real merge-order recommendation. Snapshot exists at G:/projects-personal/ai-core/output/audits/merge-order-live.json; L9–L12 preserve essential evidence durably. Candidate register has zero open debts; main at the inspection base still has DEBT-015 until this PR merges. PR #101 reviewed PASS remains unmerged; #100 final boundary review is next, not claimed complete here. Source-local status record remains informative, not workflow authority or an implementation-conformance certificate.
