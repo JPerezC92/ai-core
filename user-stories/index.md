@@ -1,5 +1,7 @@
 # User Stories
 
+> **Migration-only catalog.** New work uses `odd/tasks/<feature-name>.md`; the current workflow authority is [`knowledge/agent-workflow.md`](../knowledge/agent-workflow.md). Statuses below describe legacy contracts, not active execution or permission to replace ODD. Historical `plans/` references identify former locations; they do not imply those files still exist. Use the legacy owner procedures only for explicitly scoped migration.
+
 | Slug | Title | Status | Epic | Affected areas |
 |---|---|---|---|---|
 | `diagnostic-system` | Diagnostic system | active | incident-diagnostics | `knowledge/symptoms.md`, `knowledge/problems.md`, `knowledge/diagnostic-system-design.md` |

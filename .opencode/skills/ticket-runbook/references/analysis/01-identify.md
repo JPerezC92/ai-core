@@ -19,7 +19,7 @@ Supporting evidence instances may return bounded attributed results against comp
 4. Evaluate every candidate row's `Discriminators` against the current ticket and disqualify a row when any `Exclusions` condition is present.
 5. Issue exactly one verdict — `exact`, `structural`, or `no_match` — and write it to `identification_verdict` in `state.md`:
    - `exact`: exactly one `active` incident `P-NNN` with `Allow_exact: yes` and every discriminator already evidenced in the ticket.
-   - `structural`: exactly one `candidate` or `active` incident `P-NNN`.
+   - `structural`: exactly one `candidate`, `active`, or `mitigated` incident `P-NNN`.
    - `no_match`: no eligible incident `P-NNN` remains. An empty register is valid and yields `no_match` — never halt.
 6. If more than one incident `P-NNN` remains eligible, do not choose — record every candidate and return `no_match` with an ambiguity note.
 7. Verdict-source restriction: archives, patterns registers, KBA/RCA catalogs, and knowledge search are evidence/backfill only. They never issue a verdict. Consult them only after a `no_match`, and label what they return as evidence.

@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.6.1
+  version: 2.6.3
   dependencies: PyYAML==6.0.3
 ---
 <!-- core:begin -->
@@ -83,7 +83,7 @@ Run this order. Do not skip or reorder, and do not consult any other source for 
 | Verdict | Condition |
 |---|---|
 | `exact` | Exactly one `active` incident `P-NNN` with `Allow_exact: yes` remains, and **every** discriminator is already evidenced in the current ticket. |
-| `structural` | Exactly one `candidate` or `active` incident `P-NNN` remains; its hypothesis still requires current-ticket validation. |
+| `structural` | Exactly one `candidate`, `active`, or `mitigated` incident `P-NNN` remains; its hypothesis still requires current-ticket validation. |
 | `no_match` | No eligible incident `P-NNN` remains. **An empty problem register (see Register paths) always yields `no_match` — never halt on an empty register.** |
 | `pending` | Initial scaffold value only; replaced in this step. |
 

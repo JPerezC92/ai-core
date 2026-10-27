@@ -11,7 +11,7 @@ Same-query-reruns: "0/2"
 <!-- identification_verdict valid values:
      pending    — set at scaffold; the identify step replaces it
      exact      — exactly one active incident P-NNN with allow_exact: yes and every discriminator already evidenced
-     structural — exactly one candidate or active incident P-NNN; its hypothesis still needs current-ticket validation
+     structural — exactly one candidate, active, or mitigated incident P-NNN; its hypothesis still needs current-ticket validation
      no_match   — no eligible incident P-NNN (an empty register always yields no_match)
 -->
 

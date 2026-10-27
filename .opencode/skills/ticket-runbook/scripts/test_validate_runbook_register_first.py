@@ -105,7 +105,7 @@ class ValidateRunbookRegisterFirstTests:
             "exact", ["P-002"], vr.parse_problem_register(_register(active))
         ) == []
 
-    def test_structural_requires_candidate_or_active(self) -> None:
+    def test_structural_accepts_candidate_active_or_mitigated(self) -> None:
         mitigated = _row(
             id="P-001",
             date="2026-01-01",
@@ -115,10 +115,9 @@ class ValidateRunbookRegisterFirstTests:
             allow_exact="no",
             status="open",
         )
-        violations = vr.check_identification_consistency(
+        assert vr.check_identification_consistency(
             "structural", ["P-001"], vr.parse_problem_register(_register(mitigated))
-        )
-        assert any("VERDICT-8" in item for item in violations), violations
+        ) == []
         candidate = _row(
             id="P-002",
             date="2026-01-01",
@@ -131,6 +130,83 @@ class ValidateRunbookRegisterFirstTests:
         assert vr.check_identification_consistency(
             "structural", ["P-002"], vr.parse_problem_register(_register(candidate))
         ) == []
+        active = _row(
+            id="P-003",
+            date="2026-01-01",
+            team="incident",
+            symptom="S-05",
+            lifecycle="active",
+            allow_exact="yes",
+            status="open",
+        )
+        assert vr.check_identification_consistency(
+            "structural", ["P-003"], vr.parse_problem_register(_register(active))
+        ) == []
+        exact_mitigated = vr.check_identification_consistency(
+            "exact", ["P-001"], vr.parse_problem_register(_register(mitigated))
+        )
+        assert any("VERDICT-6" in item for item in exact_mitigated), exact_mitigated
+
+    def test_structural_rejects_resolved_and_retired(self) -> None:
+        resolved = _row(
+            id="P-004",
+            date="2026-01-01",
+            team="incident",
+            symptom="S-05",
+            lifecycle="resolved",
+            allow_exact="no",
+            status="closed",
+        )
+        retired = _row(
+            id="P-005",
+            date="2026-01-01",
+            team="incident",
+            symptom="S-05",
+            lifecycle="retired",
+            allow_exact="no",
+            status="closed",
+        )
+        resolved_violations = vr.check_identification_consistency(
+            "structural",
+            ["P-004"],
+            vr.parse_problem_register(_register(resolved)),
+        )
+        retired_violations = vr.check_identification_consistency(
+            "structural",
+            ["P-005"],
+            vr.parse_problem_register(_register(retired)),
+        )
+        assert any("VERDICT-8" in v for v in resolved_violations), resolved_violations
+        assert any("VERDICT-8" in v for v in retired_violations), retired_violations
+
+    def test_structural_requires_exactly_one_cited_p_nnn(self) -> None:
+        candidate_one = _row(
+            id="P-001",
+            date="2026-01-01",
+            team="incident",
+            symptom="S-05",
+            lifecycle="candidate",
+            allow_exact="no",
+            status="open",
+        )
+        candidate_two = _row(
+            id="P-002",
+            date="2026-01-01",
+            team="incident",
+            symptom="S-05",
+            lifecycle="candidate",
+            allow_exact="no",
+            status="open",
+        )
+        violations = vr.check_identification_consistency(
+            "structural",
+            ["P-001", "P-002"],
+            vr.parse_problem_register(_register(candidate_one, candidate_two)),
+        )
+        assert violations == [
+            "VERDICT-9: structural requires exactly one cited P-NNN "
+            "(cited: ['P-001', 'P-002'])"
+        ]
 
     def test_no_match_rejects_cited_p_nnn(self) -> None:
         active = _row(

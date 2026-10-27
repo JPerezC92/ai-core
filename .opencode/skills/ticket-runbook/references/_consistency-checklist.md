@@ -38,7 +38,7 @@ Run every command from the project root. The validator enforces only the mechani
 - Only `S-xx` → `Team: incident` `P-NNN` can produce `exact` or `structural`. Resolved-ticket archives, patterns registers, KBA/RCA catalogs, and knowledge search MUST NOT issue a verdict. *(analysis)*
 - **An empty register is valid and yields `no_match`; never halt on an empty register.** *(delegated when `identification_verdict`/cited IDs are parsed)*
 - `exact`: exactly one cited `P-NNN`, `Lifecycle: active`, `Allow_exact: yes`, and every discriminator already evidenced in the current ticket. *(cited-ID/lifecycle delegated; discriminator evidence is analysis)*
-- `structural`: exactly one cited `P-NNN` with `Lifecycle: candidate` or `active`. *(delegated)*
+- `structural`: exactly one cited `P-NNN` with `Lifecycle: candidate`, `active`, or `mitigated`. *(delegated)*
 - `no_match`: no cited `P-NNN`. `pending` is scaffold-only and must be replaced when the identify step closes. *(delegated)*
 - Lifecycle `resolved` / `retired` rows are never matched; `mitigated` is `structural` only. *(analysis)*
 

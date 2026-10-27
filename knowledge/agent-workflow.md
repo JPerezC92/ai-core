@@ -15,6 +15,22 @@ Read this entry before acting. ODD is the governing workflow: read-only and smal
 6. **Implement task by task** — Deliver coherent slices in dependency order, respecting owner gates; dispatch independent ready tasks concurrently under the shared coordination rules. Define applicable acceptance checks and collect actual verification evidence with each task, not only at PR preparation. Tests and documentation ship with the slice. Follow the odd-workflow skill's implementation evidence procedure; never invent a runner or a test where none applies.
 7. **Close** — Apply the odd-workflow skill's independent semantic completion review before a feature completion claim; anatomy validation or a green suite alone is insufficient. Report the verified outcome, every failed or pending check, and the next step. Reproduce a reported failure before deciding it already works.
 
+### Task-specific navigation
+
+Use the ODD classification and authorization rules above before choosing a change route. Start with the assignment's exact source paths, relevant dependencies, applicable runtime and skill; explore further only where the task or an unresolved fact requires it. This is the workflow router, not another task tracker.
+
+| Task | Applicable read-pointers and boundary |
+|---|---|
+| Read-only explanation or inspection | Read the governing source and relevant dependencies. No feature artifact; unrelated read-only questions do not trigger blanket architecture reading. Architecture-dependent explanations follow the shared clean-architecture applicability rule. |
+| Authorized non-small change | Read the governing `odd/tasks/<feature-name>.md` through `## Log`, the assigned `S#` and relevant Log evidence, then the named source/dependency paths and owner procedure. The authorized feature document precedes mutations; small work remains artifact-free. |
+| Implementation or architecture/conformance review | Follow `knowledge/agents.md` → Clean architecture → `architecture/README.md` for common contract, applicable shapes and selected implementation guide. Preserve the owner's required full reads, relevant context, warmups and fresh-read checkpoints. |
+| Testing design, test edit or test review | Follow `architecture/testing/architecture.md` and its applicable stack guide, with `.opencode/agents/crucible.md` and any additionally applicable language-owner procedure. Execution/install and edit gates remain runtime-owned. |
+| Research or saved-evidence reuse | Follow `.opencode/agents/augur.md` → Research Workflow and the project's configured catalog, matching topics, cited evidence, template and publication owner. Inspect applicability/freshness before reuse and investigate bounded gaps; unrelated tasks do not require a research detour. |
+| Incident identification | Follow `knowledge/agents.md` → Register-first identification and the assigned incident runtime/skill: symptom → incident problem → verdict, before evidence-only archive/pattern/KBA lookup after `no_match`. |
+| Legacy migration or historical context | Use the named legacy owner/skill only when the task requires it. History, research and persona material do not replace current rules or become general prerequisites; retain any owner-required persona reads. |
+
+Crosslinks locate owners; they do not require recursive rereading of every linked document. This does not waive runtime-required fresh/full reads or relevant dependency exploration. If a required pointer is missing, stop the affected operation and report the exact configured path, expected owner and missing evidence to Cipher 🔓 (Lead Orchestrator); never guess a replacement. An optional unconfigured/unavailable research catalog follows the research runtime's explicit gap-reporting route instead.
+
 ### Feature document
 
 - One feature owns one document: `odd/tasks/<feature-name>.md`.
