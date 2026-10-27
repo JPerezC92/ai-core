@@ -179,6 +179,35 @@ class ValidateRunbookRegisterFirstTests:
         assert any("VERDICT-8" in v for v in resolved_violations), resolved_violations
         assert any("VERDICT-8" in v for v in retired_violations), retired_violations
 
+    def test_structural_requires_exactly_one_cited_p_nnn(self) -> None:
+        candidate_one = _row(
+            id="P-001",
+            date="2026-01-01",
+            team="incident",
+            symptom="S-05",
+            lifecycle="candidate",
+            allow_exact="no",
+            status="open",
+        )
+        candidate_two = _row(
+            id="P-002",
+            date="2026-01-01",
+            team="incident",
+            symptom="S-05",
+            lifecycle="candidate",
+            allow_exact="no",
+            status="open",
+        )
+        violations = vr.check_identification_consistency(
+            "structural",
+            ["P-001", "P-002"],
+            vr.parse_problem_register(_register(candidate_one, candidate_two)),
+        )
+        assert violations == [
+            "VERDICT-9: structural requires exactly one cited P-NNN "
+            "(cited: ['P-001', 'P-002'])"
+        ]
+
     def test_no_match_rejects_cited_p_nnn(self) -> None:
         active = _row(
             id="P-001",

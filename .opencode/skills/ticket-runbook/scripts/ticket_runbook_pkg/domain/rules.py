@@ -733,7 +733,8 @@ def check_identification_consistency(
         - ``pending`` is scaffold-only.
         - ``exact``/``structural`` cite at least one incident P-NNN.
         - ``exact`` cites exactly one ``active`` row with ``allow_exact: yes``.
-        - ``structural`` cites only ``candidate``/``active``/``mitigated`` rows.
+        - ``structural`` cites exactly one ``candidate``/``active``/``mitigated``
+          row.
         - An empty register can only yield ``no_match``.
 
     Violations:
@@ -744,6 +745,7 @@ def check_identification_consistency(
         VERDICT-6: exact cites a non-active row
         VERDICT-7: exact cites a row with allow_exact != yes
         VERDICT-8: structural cites a row outside candidate|active|mitigated
+        VERDICT-9: structural cites more than one P-NNN
     """
     violations: list[str] = []
     incident_rows = [row for row in register_rows if row["team"] == "incident"]
@@ -794,6 +796,11 @@ def check_identification_consistency(
                 )
 
     if verdict == "structural":
+        if len(cited) != 1:
+            violations.append(
+                f"VERDICT-9: structural requires exactly one cited P-NNN "
+                f"(cited: {cited})"
+            )
         for row in matched:
             if row["lifecycle"] not in ("candidate", "active", "mitigated"):
                 violations.append(

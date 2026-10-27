@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.6.2
+  version: 2.6.3
   dependencies: PyYAML==6.0.3
 ---
 <!-- core:begin -->
