@@ -24,7 +24,7 @@ EXPECTED_SOURCE_VERSIONS: dict[str, str] = {
     "marshal.md": "1.4.0",
     "quill.md": "1.4.1",
     "scribe.md": "1.2.2",
-    "sentinel.md": "1.15.5",
+    "sentinel.md": "1.15.6",
     "vault.md": "1.6.2",
     "warden.md": "1.6.0",
 }

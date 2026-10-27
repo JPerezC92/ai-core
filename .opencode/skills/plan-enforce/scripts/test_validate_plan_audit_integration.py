@@ -100,7 +100,7 @@ class ValidatePlanAuditIntegrationTests:
         write_fixture(tmp_path, "phase-01-owner.md", VALID_PHASE)
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
-            result = vp.validate_plan_dir(str(tmp_path), stories_dir=None)
+            result = vp.validate_plan_dir(str(tmp_path))
         assert result == 0
         assert stdout.getvalue() == f"ok  plan: {tmp_path}  phases: 1\n"
 
@@ -112,7 +112,7 @@ class ValidatePlanAuditIntegrationTests:
         stdout = io.StringIO()
         stderr = io.StringIO()
         with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
-            result = vp.validate_plan_dir(str(tmp_path), stories_dir=None)
+            result = vp.validate_plan_dir(str(tmp_path))
         assert result == 1
         assert stderr.getvalue() == f"{_MISSING_AUDIT}\n"
         assert stdout.getvalue() == ""

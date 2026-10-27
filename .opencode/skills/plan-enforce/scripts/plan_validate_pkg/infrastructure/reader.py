@@ -1,6 +1,6 @@
 """Infrastructure layer: file IO and snapshot loading for the plan validator.
 
-Loads plan/phase/story text from disk and delegates every rule to the domain
+Loads plan/phase text from disk and delegates every rule to the domain
 layer; holds no rule logic of its own.
 """
 
@@ -12,11 +12,8 @@ from typing import Optional
 from plan_validate_pkg.domain.rules import (
     PhaseSnapshot,
     PlanSnapshot,
-    StoryIndexSnapshot,
-    StorySnapshot,
     check_phase_snapshot,
     check_plan_snapshot,
-    check_story_index_snapshot,
 )
 
 
@@ -49,24 +46,6 @@ def load_phase_snapshots(plan_dir: Path) -> list[PhaseSnapshot]:
     return snapshots
 
 
-def load_story_snapshot(story_path: Path) -> StorySnapshot:
-    """Load a user-story file and derive its index slug."""
-    return {"slug": story_path.stem, "content": load_text(story_path)}
-
-
-def load_story_index_snapshot(user_stories_dir: Path) -> StoryIndexSnapshot:
-    """Discover and load user-story files plus an optional index at the IO boundary."""
-    index_path = user_stories_dir / "index.md"
-    story_paths = sorted(
-        path for path in user_stories_dir.glob("*.md") if path.name != "index.md"
-    )
-    return {
-        "index_path": str(index_path),
-        "index_content": load_text(index_path) if index_path.is_file() else None,
-        "stories": [load_story_snapshot(path) for path in story_paths],
-    }
-
-
 def check_plan_file(plan_path: Path) -> list[str]:
     snapshot = load_plan_snapshot(plan_path)
     if snapshot is None:
@@ -79,7 +58,3 @@ def check_phase_file(phase_path: Path) -> list[str]:
     if snapshot is None:
         return [f"MISSING-FILE: {phase_path} not found"]
     return check_phase_snapshot(snapshot)
-
-
-def check_story_index(user_stories_dir: str) -> list[str]:
-    return check_story_index_snapshot(load_story_index_snapshot(Path(user_stories_dir)))

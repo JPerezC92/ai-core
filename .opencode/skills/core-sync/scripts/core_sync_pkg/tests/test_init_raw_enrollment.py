@@ -35,23 +35,23 @@ class RawInitEnrollmentTests:
         source = tmp_path / "source"
         destination = tmp_path / "destination"
         raw_bytes = b'{\r\n  "payload": "raw"\r\n}\n\xff\x00'
-        _write_bytes_file(source, "git-pr-drafting.md", raw_bytes)
-        (destination / "user-stories").mkdir(parents=True)
+        _write_bytes_file(source, ".opencode/skills/git-commit/SKILL.md", raw_bytes)
+        (destination / ".opencode/skills/git-commit").mkdir(parents=True)
         root_path = _write_file(destination, "CLAUDE.md", "# Root remains unchanged\n")
         bindings_path = tmp_path / "bindings.yaml"
         save_bindings(
             bindings_path,
             _bindings_with_entries(REV_B, [], root="CLAUDE.md"),
         )
-        destination_path = destination / "user-stories/git-pr-drafting.md"
+        destination_path = destination / ".opencode/skills/git-commit/SKILL.md"
         report_path = reconciliation_report_path(bindings_path)
         args = _init_args(source, destination, bindings_path, REV_A)
         args.extend(
             [
                 "--bind-raw",
-                "git-pr-drafting.md=user-stories/git-pr-drafting.md",
+                ".opencode/skills/git-commit/SKILL.md=.opencode/skills/git-commit/SKILL.md",
                 "--bind-raw",
-                "git-pr-drafting.md=user-stories/git-pr-drafting.md",
+                ".opencode/skills/git-commit/SKILL.md=.opencode/skills/git-commit/SKILL.md",
             ]
         )
 
@@ -62,7 +62,8 @@ class RawInitEnrollmentTests:
         assert updated is not None
         assert updated["bindings"] == [
             _binding_entry(
-                "git-pr-drafting.md", ["user-stories/git-pr-drafting.md"]
+                ".opencode/skills/git-commit/SKILL.md",
+                [".opencode/skills/git-commit/SKILL.md"],
             )
         ]
         assert updated["pending"] == []

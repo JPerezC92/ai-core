@@ -54,7 +54,6 @@ Every repeatable artifact has exactly one template. Create a new file by copying
 | Implementation stack guide | `architecture/stacks/_template.md` |
 | Testing stack guide | `architecture/testing/stacks/_template.md` |
 | Legacy plan, migration only | `.opencode/skills/plan-enforce/references/_template.md` |
-| Legacy story, migration only | `.opencode/skills/user-story/references/_template-user-story.md` |
 
 ### Conflict
 
@@ -68,7 +67,7 @@ Extract skill support to `.opencode/skills/<skill>/references/<concern>.md`; exe
 
 New architecture paths and their consumers ship together through explicit per-file clearance; destination-authorized `core-sync init --bind-cleared` enrollment is required for new or markerless paths, not `apply` alone. Destination reconciliation remains destination-owned; pending reconciliation blocks acceptance. Documentation review does not establish implementation conformance or authorize application remediation.
 
-Durable history lives at its owner: the feature document's `## Log`, the story's change log if a story still exists, the ADR, and `docs/architecture/history/`. A plan's `## Resolved decisions` is temporal; it does not replace the owner record.
+Durable history lives at its owner: the feature document's `## Log`, the ADR, and `docs/architecture/history/`. A plan's `## Resolved decisions` is temporal; it does not replace the owner record.
 <!-- core:end -->
 
 <!-- project:begin -->

@@ -27,7 +27,7 @@ class ValidatePlanCliTests:
         write_fixture(tmp_path, "phase-01-owner.md", VALID_PHASE)
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
-            result = vp.validate_plan_dir(str(tmp_path), stories_dir=None)
+            result = vp.validate_plan_dir(str(tmp_path))
         assert result == 0
         assert stdout.getvalue() == f"ok  plan: {tmp_path}  phases: 1\n"
 
@@ -36,7 +36,7 @@ class ValidatePlanCliTests:
     ) -> None:
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):
-            result = vp.validate_plan_dir(str(tmp_path), stories_dir=None)
+            result = vp.validate_plan_dir(str(tmp_path))
         assert result == 1
         assert stderr.getvalue() == f"MISSING-FILE: {tmp_path / 'plan.md'} not found\n"
 
@@ -51,7 +51,7 @@ class ValidatePlanCliTests:
         write_fixture(tmp_path, "phase-01-owner.md", VALID_PHASE)
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):
-            result = vp.validate_plan_dir(str(tmp_path), stories_dir=None)
+            result = vp.validate_plan_dir(str(tmp_path))
         assert result == 1
         assert stderr.getvalue() == "UNFILLED-TOKEN: YYYY-MM-DD\n"
 
@@ -90,6 +90,30 @@ class ValidatePlanCliTests:
         write_fixture(tmp_path, "phase-02-owner.md", PHASE_TWO)
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
-            result = vp.validate_plan_dir(str(tmp_path), stories_dir=None)
+            result = vp.validate_plan_dir(str(tmp_path))
         assert result == 0
         assert stdout.getvalue() == f"ok  plan: {tmp_path}  phases: 2\n"
+
+    def test_run_plan_dir_valid_fixture_returns_zero(self, tmp_path: Path) -> None:
+        write_fixture(tmp_path, "plan.md", VALID_PLAN)
+        write_fixture(tmp_path, "phase-01-owner.md", VALID_PHASE)
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            result = vp.run([str(tmp_path)])
+        assert result == 0
+        assert stdout.getvalue() == f"ok  plan: {tmp_path}  phases: 1\n"
+
+    def test_run_single_file_valid_plan_returns_zero(self, tmp_path: Path) -> None:
+        plan_file = write_fixture(tmp_path, "plan.md", VALID_PLAN)
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            result = vp.run(["--single-file", str(plan_file)])
+        assert result == 0
+        assert stdout.getvalue() == f"ok  single-file plan: {plan_file}\n"
+
+    def test_run_missing_plan_returns_one(self, tmp_path: Path) -> None:
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            result = vp.run([str(tmp_path)])
+        assert result == 1
+        assert stderr.getvalue() == f"MISSING-FILE: {tmp_path / 'plan.md'} not found\n"

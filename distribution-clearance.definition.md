@@ -20,8 +20,6 @@ The document carries `"schema": 1`. The version stays **v1** through every compa
 |---|---|---|---|
 | Root runtime | `AGENTS.md` | `{"mode": "region", "role": "root"}` | core region only; `role: root` is unique to this row |
 | Harness config | `opencode.jsonc` | `{"mode": "merge"}` | top-level JSON(C) key merge, destination-only keys preserved; the `mcp` key merges by server name, keeping destination-only MCP servers and making a same-named entry core-wins |
-| Story payload | `user-stories/<slug>.md` (portable) | `{"mode": "region"}` | core region only (shared contract); project region is destination-owned |
-| Story payload (source-local) | `user-stories/<slug>.md` (source-only) | *(absent — not cleared)* | story exists in the source catalogue but is never delivered |
 | Knowledge documents | `knowledge/*.md` | `{"mode": "region"}` | core region only (core/project markers) |
 | Architecture documents | explicit files under `architecture/` | `{"mode": "region"}` | core region only (core/project markers); common/shape contracts, implementation and testing templates/guides, and navigation; tools remain destination-owned |
 | Agent specs | `.opencode/agents/*.md` | `{"mode": "region"}` | core region only (core/project markers) |
@@ -33,8 +31,8 @@ Agent specs and persona profiles migrate as **per-file rows** — one row per fi
 ## Skill-root records
 
 - `mode` is the default mode of every file under the root.
-- `region_files` is optional (absent = empty subset) and names root-relative files that instead use **region** mode. Today the only member is `SKILL.md` — within a skill root, the only file type governed by active core/project ownership markers. Raw references may illustrate marker literals without interpreting them, as described under **Story distribution**.
-- Current classification: the five workflow roots (`odd-workflow`, `plan-enforce`, `query-verification`, `ticket-runbook`, `user-story`) declare `{"mode": "raw", "region_files": ["SKILL.md"]}`; the six tooling roots (`git-branch-name`, `git-commit`, `git-pr`, `op-agent-creator`, `op-model`, `op-skill-creator`) declare `{"mode": "raw"}`.
+- `region_files` is optional (absent = empty subset) and names root-relative files that instead use **region** mode. Today the only member is `SKILL.md` — within a skill root, the only file type governed by active core/project ownership markers. Raw references may illustrate marker literals without interpreting them, as described under **Scope rules**.
+- Current classification: the four workflow roots (`odd-workflow`, `plan-enforce`, `query-verification`, `ticket-runbook`) declare `{"mode": "raw", "region_files": ["SKILL.md"]}`; the six tooling roots (`git-branch-name`, `git-commit`, `git-pr`, `op-agent-creator`, `op-model`, `op-skill-creator`) declare `{"mode": "raw"}`.
 - **Expansion** — the sync tool identifies the files at every sync: every file under the root joins the sync set; `region_files` members deliver only their core region; all others copy byte-for-byte; interpreter caches (`__pycache__` path parts, `*.pyc` suffixes) never join. Files added under a root later join automatically. Clearance records durable ownership, not file inventories.
 
 ## Knowledge distribution classes
@@ -68,17 +66,11 @@ The `architecture/` area is a shared contract and stack-reference set, not a kno
 
 New required documents ship with their consumers at one selected revision. A destination must authorize `core-sync init --bind-cleared` enrollment for the new paths; `apply` alone does not enroll absent or markerless files. The destination itself reconciles displaced duplicates and local extensions; nonempty `pending` and the reconciliation blocker prevent acceptance, and `core-sync check` must exit `0`. This source registry authorizes neither manual binding edits nor destination mutation and does not claim migration completed. Source-local ADRs, review histories, and inventories stay outside distributed core; documentation review is not implementation-conformance proof.
 
-## Story distribution
-
-Twelve shared story contracts use explicit per-file `region` rows. The core region holds the approved shared contract (H1/metadata, Persona, Goal, Scenario, Acceptance criteria with shared marks, portable Proof, Constraints). The project region holds source-local or destination-local evidence, approval records, revision tracking, and Change log. Six non-cleared stories (`core-sync`, `aicore-adoption-governance`, `python-pytest`, `concise-skill-authoring`, `pr-review-corrections`, `response-note-drafting`) and the source `user-stories/index.md` are **not cleared** and never ship. Existence in the source catalogue alone is not clearance.
-
-A literal region marker pair inside a raw template or fenced example is ordinary content: raw mode copies it byte-for-byte without interpreting it. Only region-mode rows carry active core/project markers.
-
 ## Scope rules
 
 - Root entries cover **skill roots only** for now. Agent specs, persona profiles, and every other non-skill source stay per-file rows; the scope widens only with an explicit design change (which, being compatible, does not bump the version).
 - The sync tool's own skill (`.opencode/skills/core-sync/`) is never a cleared key and reaches no destination.
-- Only region-mode rows use active core/project ownership markers — `SKILL.md` within a skill root, and region file rows (the root runtime, agent specs, persona profiles, knowledge documents, architecture documents, shared stories). Raw and merge transport does not interpret ownership markers; marker literals in a raw reference or fenced example remain ordinary copied bytes, not a separate region binding.
+- Only region-mode rows use active core/project ownership markers — `SKILL.md` within a skill root, and region file rows (the root runtime, agent specs, persona profiles, knowledge documents, architecture documents). Raw and merge transport does not interpret ownership markers; marker literals in a raw reference or fenced example remain ordinary copied bytes, not a separate region binding.
 - Modes: `region` (delivers only the source core region; the destination owns its project region), `raw` (byte-for-byte copy), `merge` (top-level key merge — config only; the `mcp` key merges by server name, keeping destination-only MCP servers and making a same-named entry core-wins).
 
 ## Validation

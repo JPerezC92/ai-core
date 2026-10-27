@@ -107,12 +107,6 @@
         "SKILL.md"
       ]
     },
-    ".opencode/skills/user-story/": {
-      "mode": "raw",
-      "region_files": [
-        "SKILL.md"
-      ]
-    },
     ".opencode/agents/lumen.md": {
       "mode": "region"
     },
@@ -210,42 +204,6 @@
       "mode": "region"
     },
     "agents/warden/profile.md": {
-      "mode": "region"
-    },
-    "user-stories/agent-workflow-navigation.md": {
-      "mode": "region"
-    },
-    "user-stories/clean-architecture-contract.md": {
-      "mode": "region"
-    },
-    "user-stories/diagnostic-system.md": {
-      "mode": "region"
-    },
-    "user-stories/git-pr-drafting.md": {
-      "mode": "region"
-    },
-    "user-stories/incident-query-verification.md": {
-      "mode": "region"
-    },
-    "user-stories/op-model-configuration.md": {
-      "mode": "region"
-    },
-    "user-stories/plan-lifecycle-governance.md": {
-      "mode": "region"
-    },
-    "user-stories/post-merge-branch-cleanup.md": {
-      "mode": "region"
-    },
-    "user-stories/pr-test-evidence-collection.md": {
-      "mode": "region"
-    },
-    "user-stories/register-first-incident-identification.md": {
-      "mode": "region"
-    },
-    "user-stories/safe-roster-parallelism.md": {
-      "mode": "region"
-    },
-    "user-stories/user-story.md": {
       "mode": "region"
     }
   }
