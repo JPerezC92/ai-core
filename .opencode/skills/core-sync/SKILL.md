@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.2.0
+  version: 2.2.2
 ---
 
 ## What I do
@@ -101,11 +101,11 @@ A region-mode source is markerless only when it has no exact core markers or pro
 A binding carries no `mode`: the distribution mode is owned by source clearance (below). A persisted `mode` key is read as a declaration; a persisted `raw` declaration whose source record is not `raw` fails closed (exit `2`), and the key is dropped on the next save.
 `pending` lists outstanding paths; `check` requires it to be empty. A region, raw, or merge binding whose `source` is absent from the source-side `distribution-clearance.json` (`schema: 1`, read from `--source`) is not cleared for distribution and cannot be synchronized.
 That file is `{"schema": 1, "cleared": {…}}` — the only accepted version label; any other is rejected (exit `2`), and there is no legacy or migration machinery.
-Records are either file rows `{ "mode": "region"|"raw"|"merge", "role"?: "root" }` (the root runtime `AGENTS.md` is the only `role: root`; agent specs and persona profiles are per-file region rows) or skill-root rows — keys ending in `/` with `{ "mode": <default>, "region_files": [<root-relative paths>]? }` for the ten `.opencode/skills/*` roots (the four workflow roots use `{"mode":"raw","region_files":["SKILL.md"]}`, the six tooling roots `{"mode":"raw"}`).
+Records are either file rows `{ "mode": "region"|"raw"|"merge", "role"?: "root" }` (the root runtime `AGENTS.md` is the only `role: root`; agent specs and persona profiles are per-file region rows) or skill-root rows — keys ending in `/` with `{ "mode": <default>, "region_files": [<root-relative paths>]? }` as declared by `distribution-clearance.json`.
 The sync tool expands skill roots at every sync: `region_files` members deliver only their core region, all other files use the root's default mode, `__pycache__`/`*.pyc` caches never join, and new files join automatically.
 The declared mode is authoritative for distribution, so an explicit `--bind`/`--bind-raw` declaration whose mode conflicts with the source record fails closed (exit `2`); the sync tool's own `core-sync` skill is never cleared. Skill files join automatically via their root row after that root's test or review passes; per-file rows are for non-skill sources.
 
-The format's source of truth is `distribution-clearance.definition.md`.
+Read `distribution-clearance.definition.md` in full as the format's source of truth.
 
 `root` (optional) is the destination root runtime file, relative to the destination directory (e.g. `CLAUDE.md`). When absent it is detected from the destination instruction files in priority order: `AGENTS.md`/`agents.md`, then `CLAUDE.md`/`claude.md`, then `instructions.md`; the detected spelling is preserved. When present, it must follow the same canonical safe relative POSIX and NUL-free path rules as `source` and `destinations`; malformed values are rejected before filesystem operations. When the resolved root file is missing, the blocker is skipped silently. Destination projects use `.aicore/core.yaml` as the canonical bindings path when a root blocker may be generated; that pairs with `.aicore/reconciliation/init.yaml`.
 

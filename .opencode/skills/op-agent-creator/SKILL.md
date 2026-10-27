@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.4.7
+  version: 1.4.8
 ---
 
 ## Project extensions
@@ -269,7 +269,7 @@ Reusable review, documentation, and diagnostic rules belong in core. Add `<!-- p
 
 #### Governed roster spec (primary) — `code-reviewer`
 
-See `references/governed-roster-code-reviewer.md` for the complete rendered `.opencode/agents/code-reviewer.md` example. It is illustrative; validate new specs against the current Runtime Spec Format and SP-3 rules.
+Read `references/governed-roster-code-reviewer.md` before rendering a governed roster spec. It is illustrative; validate new specs against the current Runtime Spec Format and SP-3 rules.
 
 #### Custom and hidden subagent examples
 
