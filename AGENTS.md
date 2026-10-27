@@ -1,6 +1,6 @@
 # Cipher — Lead Orchestrator
 
-> **Spec version:** 3.0.5
+> **Spec version:** 3.0.6
 
 <!-- core:begin -->
 ## Mandatory core
@@ -111,12 +111,12 @@ AICore is a **reusable, agnostic core**: another project adopts it as a complete
    - `output/` for temporal artifacts (audits, research, design — gitignored; agents create it on first write)
 3. **Select the applicable architecture guides and reviewers** if your stack differs:
    - `architecture/README.md` — common-contract, shape, implementation-guide, and testing-guide selection and ownership
-   - `atrium.md` — the frontend reviewer; architecture definitions live in the common contract, frontend shape, and React implementation guide
-   - `bastion.md` — the backend & scripts reviewer; architecture definitions live in the common contract, applicable shapes, and NestJS/Python implementation guides
-   - `crucible.md` — the test-architecture reviewer and stack-guide router
+   - `.opencode/agents/atrium.md` — the frontend reviewer; architecture definitions live in the common contract, frontend shape, and React implementation guide
+   - `.opencode/agents/bastion.md` — the backend & scripts reviewer; architecture definitions live in the common contract, applicable shapes, and NestJS/Python implementation guides
+   - `.opencode/agents/crucible.md` — the test-architecture reviewer and stack-guide router
    - `architecture/stacks/` — implementation guides plus the template for a destination-owned implementation guide
    - `architecture/testing/stacks/` — reviewed TypeScript/Python testing guides plus the template for a destination-owned testing guide
-   - `lumen.md` — the visual-system tool references
+   - `.opencode/agents/lumen.md` — the visual-system tool references
    These are reference architectures; agent runtime specs retain review procedures and authority, not competing architecture rulebooks. If your stack differs, change only the destination-owned project-extensions section before enrollment, or add a destination-owned stack guide from the applicable template. Do not replace the mandatory rulebook body. New architecture paths require enrollment with their consumers as one applicable set; `apply` alone does not enroll missing or markerless paths. Documentation approval does not establish implementation conformance.
 4. **Point the tokens to your project** — substitute your real tooling only in destination-owned project extensions or destination configuration. Do not edit protected mandatory text to retokenize it. The core ships neutral on purpose.
 5. **The `ticket-runbook` skill** scaffolds a per-ticket working analysis and collapses it to one ticket record at close; adapt its template paths and validator to your project.
@@ -151,6 +151,13 @@ Running a synchronization is the *entire* operator action for a destination: run
 
 - `python3` is the interpreter (not `python`); skill tests run with `uv run --frozen --group dev pytest`; the root UV environment locks runtime dependencies (PyYAML) separately from the `dev` group (pytest).
 - Every Python command runs through the project's virtual environment (`uv run --frozen …`), never a bare or global interpreter.
+
+### Saved-research bindings
+
+- Catalog: `docs/research/README.md`; single new-record template: `docs/research/_template.md`.
+- Durable topic storage: `docs/research/<domain>/<topic>/README.md`, with supporting files beside an existing multi-file publication. Transient briefs/drafts/audits: `output/research/`.
+- Research procedure owner: `.opencode/agents/augur.md`, reached through `knowledge/agent-workflow.md`. These are this source project's storage selections, not new shared dependencies or a competing research procedure.
+- Durable repository-document preparation and catalog updates route through Cipher 🔓 (Lead Orchestrator) to Scribe ✍️ (Docs & Problems Manager), with exact assigned authored paths and existing approval/review gates. A storage binding grants no automatic publication or catalog-edit authority; external docs/wiki publishing and problem-record mutations remain governed by their existing approval workflows.
 
 ### Memory system
 
