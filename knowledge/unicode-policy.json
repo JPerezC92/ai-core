@@ -1,0 +1,226 @@
+{
+  "version": 1,
+  "id": "markdown-text-integrity",
+  "default_classification": "allow",
+  "decoding": {
+    "encoding": "utf-8",
+    "invalid_sequence": {
+      "id": "ERR-UTF8",
+      "severity": "error",
+      "class": "invalid_utf8",
+      "rationale": "Bytes that are not well-formed UTF-8 are not Unicode scalar values and cannot be classified by a code-point range."
+    }
+  },
+  "rules": [
+    {
+      "id": "ERR-NUL",
+      "severity": "error",
+      "class": "nul",
+      "rationale": "NUL is a stable error: it is not Markdown text and truncates or corrupts many tools.",
+      "codepoints": [
+        {
+          "cp": 0,
+          "hex": "U+0000"
+        }
+      ]
+    },
+    {
+      "id": "ERR-C0",
+      "severity": "error",
+      "class": "c0_controls",
+      "rationale": "Unexpected C0 controls excluding TAB U+0009, LF U+000A, and CR U+000D, which are omitted here and therefore allowed by default_classification. Includes DEL U+007F. NUL is a separate rule.",
+      "ranges": [
+        {
+          "start": 1,
+          "end": 8,
+          "start_hex": "U+0001",
+          "end_hex": "U+0008"
+        },
+        {
+          "start": 11,
+          "end": 12,
+          "start_hex": "U+000B",
+          "end_hex": "U+000C"
+        },
+        {
+          "start": 14,
+          "end": 31,
+          "start_hex": "U+000E",
+          "end_hex": "U+001F"
+        },
+        {
+          "start": 127,
+          "end": 127,
+          "start_hex": "U+007F",
+          "end_hex": "U+007F"
+        }
+      ]
+    },
+    {
+      "id": "ERR-C1",
+      "severity": "error",
+      "class": "c1_controls",
+      "rationale": "C1 controls U+0080 through U+009F are unexpected in repository Markdown.",
+      "ranges": [
+        {
+          "start": 128,
+          "end": 159,
+          "start_hex": "U+0080",
+          "end_hex": "U+009F"
+        }
+      ]
+    },
+    {
+      "id": "WARN-BIDI",
+      "severity": "warning",
+      "class": "bidi_controls",
+      "rationale": "Unicode Bidi_Control inventory: ALM, LRM, RLM, embeddings, overrides, PDF, and isolates. Invisible direction controls can reorder display versus storage. A highlight is contextual, not proof of a malicious or broken file.",
+      "codepoints": [
+        {
+          "cp": 1564,
+          "hex": "U+061C"
+        },
+        {
+          "cp": 8206,
+          "hex": "U+200E"
+        },
+        {
+          "cp": 8207,
+          "hex": "U+200F"
+        },
+        {
+          "cp": 8234,
+          "hex": "U+202A"
+        },
+        {
+          "cp": 8235,
+          "hex": "U+202B"
+        },
+        {
+          "cp": 8236,
+          "hex": "U+202C"
+        },
+        {
+          "cp": 8237,
+          "hex": "U+202D"
+        },
+        {
+          "cp": 8238,
+          "hex": "U+202E"
+        },
+        {
+          "cp": 8294,
+          "hex": "U+2066"
+        },
+        {
+          "cp": 8295,
+          "hex": "U+2067"
+        },
+        {
+          "cp": 8296,
+          "hex": "U+2068"
+        },
+        {
+          "cp": 8297,
+          "hex": "U+2069"
+        }
+      ]
+    },
+    {
+      "id": "WARN-ZWSP",
+      "severity": "warning",
+      "class": "zero_width_space",
+      "rationale": "Zero-width space is invisible and is a contextual warning, not a universal source defect.",
+      "codepoints": [
+        {
+          "cp": 8203,
+          "hex": "U+200B"
+        }
+      ]
+    },
+    {
+      "id": "WARN-NBSP",
+      "severity": "warning",
+      "class": "non_breaking_space",
+      "rationale": "Non-breaking space is a contextual warning. It is not an unexpected C1 control.",
+      "codepoints": [
+        {
+          "cp": 160,
+          "hex": "U+00A0"
+        }
+      ]
+    },
+    {
+      "id": "WARN-SHY",
+      "severity": "warning",
+      "class": "soft_hyphen",
+      "rationale": "Soft hyphen is a contextual warning, not an automatic defect.",
+      "codepoints": [
+        {
+          "cp": 173,
+          "hex": "U+00AD"
+        }
+      ]
+    },
+    {
+      "id": "WARN-FFFD",
+      "severity": "warning",
+      "class": "replacement_character",
+      "rationale": "U+FFFD present as a decoded scalar is a contextual warning. It is distinct from ill-formed UTF-8, which never becomes a scalar.",
+      "codepoints": [
+        {
+          "cp": 65533,
+          "hex": "U+FFFD"
+        }
+      ]
+    }
+  ],
+  "editor_projection": {
+    "scope": "[markdown]",
+    "setting_key": "gremlins.characters",
+    "overrides": [
+      {
+        "codepoint": 8211,
+        "hex": "U+2013",
+        "gremlins_key": "2013",
+        "severity": "none",
+        "description": "en dash"
+      },
+      {
+        "codepoint": 8212,
+        "hex": "U+2014",
+        "gremlins_key": "2014",
+        "severity": "none",
+        "description": "em dash"
+      },
+      {
+        "codepoint": 8216,
+        "hex": "U+2018",
+        "gremlins_key": "2018",
+        "severity": "none",
+        "description": "left single quotation mark"
+      },
+      {
+        "codepoint": 8217,
+        "hex": "U+2019",
+        "gremlins_key": "2019",
+        "severity": "none",
+        "description": "right single quotation mark"
+      },
+      {
+        "codepoint": 8220,
+        "hex": "U+201C",
+        "gremlins_key": "201c",
+        "severity": "none",
+        "description": "left double quotation mark"
+      },
+      {
+        "codepoint": 8221,
+        "hex": "U+201D",
+        "gremlins_key": "201d",
+        "severity": "none",
+        "description": "right double quotation mark"
+      }
+    ]
+  }
+}

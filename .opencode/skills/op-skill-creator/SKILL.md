@@ -1,11 +1,11 @@
 ---
 name: op-skill-creator
-description: Create, revise, rename, or migrate an OpenCode skill by collecting its inputs, validating portable metadata, and writing SKILL.md under the project's skills directory. Use when the user wants to create a new OpenCode skill, rewrite an existing skill, rename a skill, migrate a skill into `.opencode/skills/`, or add a prefix to a skill name.
+description: Create, revise, rename, or migrate an OpenCode skill by collecting its inputs, validating portable metadata, and writing SKILL.md under the project's skills directory. Optionally names a caller-supplied Markdown text-integrity checker; skill writing remains the core intent. Use when the user wants to create a new OpenCode skill, rewrite an existing skill, rename a skill, migrate a skill into `.opencode/skills/`, or add a prefix to a skill name.
 license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.5.1
+  version: 1.6.0
   source: opencode-docs-skills
 ---
 
@@ -88,3 +88,16 @@ A local convention is reported as local, never as a portable or runtime requirem
 - No fabricated metadata, no invented history, no new tool, runner, shell or argument authority.
 - A missing required input, conflicting authoritative behavior, or unresolved migration choice stops the operation and reports it; it is never guessed.
 - No completion claim before a reviewer who authored neither the change nor its evidence returns zero open findings after comparing the actual request, Specs, delivered content, accounting and evidence. The catalog-owner audit is part of that gate. A pending audit is not completion. Small or read-only work has no feature Specs; do not invent them.
+
+## Optional Markdown text integrity
+
+Optional only — not a pre-write check, completion gate, or mandatory every-task scan. Distinct from skill metadata, feature anatomy, and fenced-language validation.
+
+- Read the project's Markdown text-integrity policy when present; absence is not a blocker and not a default path.
+- The caller supplies `--policy PATH`. This skill does not hardcode a source-root policy file or imply destination synchronization.
+- Read `scripts/check_markdown_text.py` explicitly; it is not loaded automatically.
+- CLI shape via the project's `<python>` binding is a usage reference, not a shell grant or install: `<python> .opencode/skills/op-skill-creator/scripts/check_markdown_text.py --policy PATH [--check-editor PATH] PATH [PATH ...]`
+- Required: `--policy PATH` and one or more explicit Markdown file or directory paths. Optional: `--check-editor PATH`. No implicit repository-root scan.
+- Read-only: no formatting, Git, network, or runtime dependency installation.
+- Exit 0: no errors (warnings may exist; they are not file defects). Exit 1: content errors or editor-projection drift. Exit 2: policy, input, or IO failure.
+- No ASCII-only mode. En dashes, emoji, joiners, and ordinary Unicode prose are not errors merely because they are non-ASCII. Editor highlighting is not the checker's complete semantics.
