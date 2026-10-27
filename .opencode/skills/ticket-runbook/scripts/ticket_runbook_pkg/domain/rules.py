@@ -56,7 +56,7 @@ ALLOWED_PHASES: frozenset[str] = frozenset(STEP_NAMES)
 # Allowed values for the state.md identification_verdict header field.
 # - "pending"    : initial value set at scaffold time
 # - "exact"      : exactly one active incident P-NNN, every discriminator evidenced
-# - "structural" : exactly one candidate or active incident P-NNN
+# - "structural" : exactly one candidate, active, or mitigated incident P-NNN
 # - "no_match"   : no eligible incident P-NNN (an empty register always yields this)
 ALLOWED_IDENTIFICATION_VERDICTS: frozenset[str] = frozenset(
     {"pending", "exact", "structural", "no_match"}
@@ -733,7 +733,7 @@ def check_identification_consistency(
         - ``pending`` is scaffold-only.
         - ``exact``/``structural`` cite at least one incident P-NNN.
         - ``exact`` cites exactly one ``active`` row with ``allow_exact: yes``.
-        - ``structural`` cites only ``candidate``/``active`` rows.
+        - ``structural`` cites only ``candidate``/``active``/``mitigated`` rows.
         - An empty register can only yield ``no_match``.
 
     Violations:
@@ -743,7 +743,7 @@ def check_identification_consistency(
         VERDICT-5: exact cites more than one P-NNN
         VERDICT-6: exact cites a non-active row
         VERDICT-7: exact cites a row with allow_exact != yes
-        VERDICT-8: structural cites a row outside candidate|active
+        VERDICT-8: structural cites a row outside candidate|active|mitigated
     """
     violations: list[str] = []
     incident_rows = [row for row in register_rows if row["team"] == "incident"]
@@ -795,9 +795,9 @@ def check_identification_consistency(
 
     if verdict == "structural":
         for row in matched:
-            if row["lifecycle"] not in ("candidate", "active"):
+            if row["lifecycle"] not in ("candidate", "active", "mitigated"):
                 violations.append(
-                    f"VERDICT-8: structural requires candidate|active "
+                    f"VERDICT-8: structural requires candidate|active|mitigated "
                     f"({row['id']} is {row['lifecycle']})"
                 )
 
