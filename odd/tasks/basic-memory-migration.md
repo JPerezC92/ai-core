@@ -1,0 +1,39 @@
+# Basic Memory migration
+
+> **Status:** active
+> **Owner:** Cipher 🔓 (Lead Orchestrator)
+> **Created:** 2026-10-28
+> **Objective:** Switch project memory to Basic Memory while preserving existing memories.sh data.
+> **Branch:** chore/tooling/adopt-memory-and-analysis-mcp
+> **Delivery:** One reviewed migration slice; forecast 120 authored additions plus deletions excluding generated notes; migration-note volume depends on inspected source entries.
+> **Runner:** N/A — live MCP write/search/read verification and static instruction review; no application test runner applies
+
+## Specs
+
+- S1 — User authorization: "ok can u do it please" in response to the four-step migration proposal. Update AICore instructions to Basic Memory, keeping `memory/` separate from authoritative `knowledge/`. Verify all valid project-scoping and repository-first obligations are retained or translated.
+- S2 — Review existing memories.sh entries and migrate useful project-owned entries without deleting originals. Acceptance: bounded source inventory, per-entry migration disposition and provenance, no foreign-project state or secrets copied, original store retained. Missing source access blocks removal rather than implying an empty store.
+- S3 — Verify saving, searching, and reading a note through the configured Basic Memory MCP. Acceptance: actual project-scoped write, search, and read evidence referring to the migrated note; do not invent a synthetic durable fact.
+- S4 — Remove the old `memories` MCP entry only after successful migration verification; preserve its database as backup. Do not uninstall its CLI or modify destination projects, global OpenCode configuration, historical audit evidence, or legacy V1 configuration.
+
+## Tasks
+
+- T1 | S2 | inline (coordinator-owned MCP source inventory following delegated repository discovery) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
+- T2 | S1, S2, S3 | delegated (document authorship and instruction review owners; source inventory precedes notes) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
+- T3 | S4 | inline (coordinator-owned reversible config removal after verified predecessor) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
+- T4 | S1, S2, S3, S4 | delegated (independent instruction, dependency and semantic completion gates) — Sentinel 🛡️ (Quality Guardian) | in progress | commit: pending
+
+## Log
+
+- L1 — 2026-10-28 original request: "ok can u do it please"
+- L2 — 2026-10-28 accepted context: preceding proposal was to update agent instructions, review and migrate useful memories.sh entries preserving originals, verify saving/searching/reading, and remove the old MCP only after verification while retaining its database.
+- L3 — 2026-10-28 classified non-small: persistent data migration and runtime instruction change require source-content inspection, obligation accounting, and independent acceptance. No application test applies; live MCP operations and static configuration/instruction review are the proportional checks.
+- L4 — 2026-10-28 read-only inventory `memory-migration/inventory-1`: active surfaces are `AGENTS.md:149`, `README.md:114`, `opencode.jsonc:173–184`, and memories-related portions of `knowledge/debt.md:30–36`. Preserve unrelated Chrome debt, original acceptance history and `opencode.v1.jsonc`. Source entry inventory remains pending. No implementation performed.
+- L5 — 2026-10-28 user execution approval: "proceed".
+- L6 — 2026-10-28 Cipher source inventory: `memories.list_memories(limit=100)` returned "No memories found."; `memories.get_context(limit=10)` returned "No context found. Use add_memory to store rules and knowledge." No exposed entries required migration; these results do not establish global database emptiness. No original entries, database files, reminders, or CLI installations changed.
+- L7 — 2026-10-28 Scribe docs-1 updated only AGENTS project memory binding and README memory paragraph, preserving original obligations through translated project-scoped operations, cache-only authority, disabled magic-context and native compaction. Basic Memory `write_note(project="ai-core", directory="/", title="Basic Memory transition inventory 2026-10-28", overwrite=false, output_format="json")` created factual inventory note; exact-title `search_notes(project="ai-core", search_type="title", page_size=5)` returned one result with no further page; `read_note(project="ai-core", identifier="ai-core/basic-memory-transition-inventory-2026-10-28", start_line=1, end_line=40, output_format="json")` returned complete lines 1–18. Entity `3e6c98cf-2ede-4c98-908f-9781bc77e951`; write/read checksum `7fe2ad57350c8f811d95baf49fb93054131b9346c1f8d81d4b89cd62b0cd456c`. MCP calls have no shell exit code.
+- L8 — 2026-10-28 Sentinel review-1 accepted exact original instruction reads and two single-line replacement hunks; preservation gate PASS, zero instruction findings. Cipher then removed only the active `memories` MCP entry after the successful write/search/read predecessor. Historical V1 config remains unchanged. Final configuration/debt and semantic review pending; no commits authorized.
+- L9 — 2026-10-28 Warden dependency-1 found stale active memories-risk wording; Scribe docs-2 updated only DEBT-019 description, criteria and removal evidence, preserving original audit/acceptance and unrelated Chrome risk. Warden re-review PASS with zero migration-scoped findings; Chrome debt remains open outside this migration.
+- L10 — 2026-10-28 Cipher ran `opencode mcp list`: exit 0; astgrep, basic-memory, chrome-devtools, context7 and semgrep connected; no memories server listed. `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feature.py odd/tasks/basic-memory-migration.md`: exit 0, `ok`. Tasks remain in progress solely pending final independent acceptance and an authorized commit; no Git action authorized.
+- L11 — 2026-10-28 Sentinel final-1 independently compared S1–S4, accepted original instruction identities, delivered content and recorded evidence: PASS operational-switch semantic completion, zero scoped findings. Cipher accepts operational delivery. Retained database contents were not independently inspected; bounded empty source results do not imply global emptiness. Tasks remain in progress pending authorized commit; feature not closed and no release claimed.
+- L12 — 2026-10-28 release request: "create PR". Scope correction: "u should ship all just omit G:\projects-personal\ai-core\Inteligencia artificial sin sobreingeniería por qué creé Gentle AI (curso).txt". Ship all inspected pending tooling/migration paths; preserve and exclude that transcript. This authorizes branch, commit, push and PR, not merge.
+- L13 — 2026-10-28 evaluated release packet: Sentinel final-1 PASS operational migration; Warden combined config ADVISORY A1 (PATH-resolved Basic Memory/Semgrep and astgrep transitive dependencies not fully pinned), disclosed immediately before user's ship-all instruction and accepted for this release by that instruction. Existing accepted Chrome DEBT-019 remains disclosed. All five configured MCP servers connected; bounded note write/search/read and feature validation passed. No application/test files changed, so no whole-suite execution claimed. Release includes earlier authorized astgrep and Semgrep setup alongside Basic Memory migration. Branch selected `chore/tooling/adopt-memory-and-analysis-mcp`; final PR-head review remains required.

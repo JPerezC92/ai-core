@@ -146,5 +146,5 @@ Running a synchronization is the *entire* operator action for a destination: run
 
 ### Memory system
 
-- This project uses the local memories.sh store via the `memories` MCP server — agents call `get_context` / `search_memories` at session start and write durable knowledge via `add_memory` scoped to this project only (never the global scope). magic-context is disabled here via `magic-context.jsonc`; native opencode compaction owns session context.
+- This project uses Basic Memory via the `basic-memory` MCP server, with project `ai-core` rooted at repo `memory/` — agents use `search_notes` / `read_note` at session start and `write_note` / `edit_note` for cache updates, passing `project="ai-core"` on every read and write (never global or other-project scope). Notes cache repo-derivable facts; authoritative durable knowledge stays in repo surfaces (`knowledge/`, skill Troubleshooting), never memory-only. magic-context is disabled here via `magic-context.jsonc`; native opencode compaction owns session context.
 <!-- project:end -->
