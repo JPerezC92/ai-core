@@ -1,6 +1,7 @@
 # Reproducible MCP environments
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-10-28
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-10-28
 > **Objective:** Resolve PR #110 F1 with three independent repository-owned locked UV tooling environments.
@@ -21,7 +22,7 @@
 - T2 | S1, S2 | inline (coordinator-owned configuration/manifests and authorized UV lock generation after dependency approval; no feature code) — Cipher 🔓 (Lead Orchestrator) | done | commit: df7dec838d97cb827a7238a56d9adb12b3aa7d87
 - T3 | S3 | delegated (runtime and setup documentation ownership) — Scribe ✍️ (Docs & Problems Manager) | done | commit: df7dec838d97cb827a7238a56d9adb12b3aa7d87
 - T4 | S1, S2, S3, S4 | delegated (independent dependency, instruction and semantic review before release) — Sentinel 🛡️ (Quality Guardian) | done | commit: df7dec838d97cb827a7238a56d9adb12b3aa7d87
-- T5 | S4 | delegated (authorized PR continuation through release owner and immutable-head review) — Herald 📯 (Release Manager) | in progress | commit: pending
+- T5 | S4 | delegated (authorized PR continuation through release owner and immutable-head review) — Herald 📯 (Release Manager) | done | commit: 98b884b46b6f44676e3229fe9b846fdac912afc7
 
 ## Log
 
@@ -37,3 +38,5 @@
 - L10 — 2026-10-28 checks also exposed unrelated tool-specific limitations: astgrep `test_match_code_rule` returned a generic tool error; Basic Memory compatibility `fetch` explicitly refused this MCP client and directed use of `read_note`. No retry loop or upstream fix attempted; ordinary AST and native note operations passed as recorded in L9. These optional compatibility operations are not claimed verified. Initial transient pending states during server reload settled to connected; no full-suite or cross-platform execution claim.
 - L11 — 2026-10-28 Warden final review PASS for exact F1 Python reproducibility scope; prior PATH/version and transitive-resolution defect resolved. External Rust installation, cached-wheel limitations, unavailable vulnerability scan and unrelated baseline/Chrome risks remain separately disclosed, not falsely resolved. Sentinel final documentation/obligation gate PASS; root interpreter obligations retained. Cipher accepts these gates for release to existing PR #110; immutable-head PR verification remains pending. Pending task commit fields will be reconciled against the actual delivery commit before feature closure.
 - L12 — 2026-10-28 Herald released the remediation as commit `df7dec838d97cb827a7238a56d9adb12b3aa7d87` on `chore/tooling/adopt-memory-and-analysis-mcp`, message `fix(tooling): make MCP Python environments reproducible`. Verified literal scope `git diff --name-only df7dec8^ df7dec8` is exactly the eleven authorized paths; excluded transcript remained untracked and untouched; nested `.venv/` covered by existing `.gitignore` line 4. T1–T4 reconciled to that existing commit. T5 remains in progress pending immutable-head PR review; no merge, no vulnerability-clean claim.
+- L13 — 2026-10-28 Inquisitor immutable-head review at `98b884b46b6f44676e3229fe9b846fdac912afc7`: [ADVISORY], five commits, 15 changed paths, no scope creep, no naming or dead-artifact findings, 3/3 test-plan items verified, F1 and F2 carried as DEFERRED per prior user acceptance. Coordinator ran the authoritative `uv run --frozen python3 .opencode/skills/git-pr/scripts/scan_attribution.py --policy .opencode/skills/git-pr/references/_attribution-patterns.json --snapshot output/audits/pr-110-attribution-snapshot-98b884b.json`: exit 0, `matches: []`, head matches. Residual risks are the PATH-resolved external Rust ast-grep binary and carried Chrome DEBT-019, both documented and accepted; no vulnerability-clean claim.
+- L14 — Close: 2026-10-28 F1 Python reproducibility defect resolved by three locked repo-local UV environments, verified frozen syncs, connected launchers and bounded native MCP operations. Feature complete; PR #110 remains open and unmerged pending further user authorization, and publication of this closure is a separate bookkeeping commit.
