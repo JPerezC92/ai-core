@@ -1,11 +1,12 @@
 # Agent MCP workflow adoption
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-10-28
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-10-28
 > **Objective:** Integrate the configured Basic Memory, astgrep and Semgrep MCPs into applicable agent work without expanding authority.
-> **Branch:** N/A — no feature branch created or Git action authorized
-> **Delivery:** one instruction-only reviewable slice; forecast 220 authored additions plus deletions, generated files excluded; running count: no work-unit commits yet
+> **Branch:** docs/agents/adopt-mcp-workflows
+> **Delivery:** one reviewable slice; forecast 220 authored additions plus deletions; implementation commit cc34ec6: +113/-33 = 146 authored changed lines across 16 paths, no generated exclusions; closure is a separate bookkeeping commit, not yet hashed
 > **Runner:** `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feature.py odd/tasks/agent-mcp-workflow-adoption.md`; Markdown checks and scoped native MCP operations
 
 ## Specs
@@ -19,10 +20,10 @@
 
 ## Tasks
 
-- T1 | S1, S2, S3, S5 | delegated (cross-role instructions need original-obligation and effective-tool inventory before authorship; author-1 independently inspected original instructions, configured servers and its own exposed APIs; other-role exposure remains unverified) — Augur 🔮 (Research Analyst) | open | commit: pending
-- T2 | S1, S2, S3, S5 | delegated (one serialized documentation writer for shared policy and role consumers after accepted inventory; author-1 instruction candidate awaits independent review and downstream version-contract assertions) — Scribe ✍️ (Docs & Problems Manager) | open | commit: pending
-- T3 | S2, S3, S4, S6 | delegated (independent semantic preservation and MCP safety review after stable candidate) — Sentinel 🛡️ (Quality Guardian) and Warden 🔒 (Dependency Warden) | open | commit: pending
-- T4 | S1, S3, S4, S6 | inline (coordinator joins bounded role evidence and mechanical checks after accepted reviews) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
+- T1 | S1, S2, S3, S5 | delegated (cross-role instructions need original-obligation and effective-tool inventory before authorship; bounded instance exposure checked) — Augur 🔮 (Research Analyst) | done | commit: cc34ec6
+- T2 | S1, S2, S3, S5 | delegated (one serialized documentation writer for shared policy and role consumers after accepted inventory) — Scribe ✍️ (Docs & Problems Manager) | done | commit: cc34ec6
+- T3 | S2, S3, S4, S6 | delegated (independent semantic preservation and MCP safety review after stable candidate) — Sentinel 🛡️ (Quality Guardian) and Warden 🔒 (Dependency Warden) | done | commit: cc34ec6
+- T4 | S1, S3, S4, S6 | inline (coordinator joins bounded role evidence and mechanical checks after accepted reviews) — Cipher 🔓 (Lead Orchestrator) | done | commit: cc34ec6
 
 ## Log
 
@@ -41,3 +42,5 @@
 - L13 — 2026-10-28 Forge 🔨 (Implementer) version-1 updated only seven expected version literals in the authorized test file; root has no assertion in that test. Crucible 🔥 (Test Architect) test-gate-1 and Bastion 🧱 (Backend & Scripts Architect) script-gate-1 independently returned [PASS] for literal/runtime parity. Candidate test SHA256 `A113C76022B64A764573D2B54D0418E7AFF1E2E553E41BAA65EA23C860F47A51`. No test logic or permission change. Because executable test scope now includes this version contract, the approved whole suite applies rather than the earlier instruction-only N/A.
 - L14 — 2026-10-28 Augur 🔮 (Research Analyst) acceptance-1 read all 186 lines of .opencode/skills/odd-workflow/scripts/validate_feature.py (coordinator on-disk SHA256 `6EA40522639B1D9D4583056CCCC1EDFB147A55E80073D2D373BD05EBBCE03555`). Basic Memory bounded lookup/read supplied no validator-specific authority. Actual astgrep.find_code(project_folder="G:\\projects-personal\\ai-core\\.opencode\\skills\\odd-workflow\\scripts", pattern="TASK_RE = $VALUE", language="python", max_results=5) returned one match at lines 20–23. Actual Semgrep semgrep_scan_with_custom_rule supplied full source under relative label .opencode/skills/odd-workflow/scripts/validate_feature.py with explicit rule validator-dynamic-code-or-shell for eval(...), exec(...) and subprocess.$FUNC(..., shell=True, ...); version 1.182.1 returned results=[], errors=[], skipped_rules=[]. Transport restored literal backticks before submission; byte-level newline fidelity was not independently verified. This is supplied-content evidence, not an on-disk or general vulnerability scan; indirect/aliased execution is not covered. Evidence establishes only this instance's successful exposure. No privacy settings changed and no auto/platform/SCA calls occurred.
 - L15 — 2026-10-28 Crucible 🔥 (Test Architect) executed `uv run --frozen --group dev pytest -q` from checkout root against the stable candidate: exit 0, 758 passed and 6 skipped. Prior test-architecture verdict remains scoped separately. Coordinator executed `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feature.py odd/tasks/agent-mcp-workflow-adoption.md`: exit 0, ok before this evidence append. Instruction and code inputs stayed stable during checks; all delegates released resources. No Git delivery authorized; task completion/closure waits for actual commit references, not a fabricated done state.
+- L16 — 2026-10-28 release reconciliation: user authorized "create PR". Herald 📯 (Release Manager) delivered the authorized scope in commit cc34ec6a853ed94d15bffba5df6067440c320c78 and opened PR https://github.com/JPerezC92/ai-core/pull/111. Branch and task references now reflect that actual commit; template and transcript remain untouched. The final immutable-head attribution/evidence gate remains pending; no merge authorized.
+- L17 — Close: 2026-10-28 implementation and actual work-unit delivery complete; Sentinel 🛡️ (Quality Guardian) completion-1 independently accepted S1–S6, original-to-candidate accounting and combined evidence with [PASS], zero open semantic findings. L12–L15 record scoped reviews, actual MCP use and suite results. This bookkeeping closure is not final PR-gate acceptance or universal runtime-adoption certification. PR review identified missing attribution evidence; that release gate remains required before reporting the PR ready.
