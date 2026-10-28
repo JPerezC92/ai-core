@@ -17,10 +17,10 @@
 
 ## Tasks
 
-- T1 | S2 | inline (coordinator-owned MCP source inventory following delegated repository discovery) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T2 | S1, S2, S3 | delegated (document authorship and instruction review owners; source inventory precedes notes) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T3 | S4 | inline (coordinator-owned reversible config removal after verified predecessor) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T4 | S1, S2, S3, S4 | delegated (independent instruction, dependency and semantic completion gates) — Sentinel 🛡️ (Quality Guardian) | in progress | commit: pending
+- T1 | S2 | inline (coordinator-owned MCP source inventory following delegated repository discovery) — Cipher 🔓 (Lead Orchestrator) | done | commit: a439a09094f65e20bc470ee5ba2b0187b7585484
+- T2 | S1, S2, S3 | delegated (document authorship and instruction review owners; source inventory precedes notes) — Scribe ✍️ (Docs & Problems Manager) | done | commit: a439a09094f65e20bc470ee5ba2b0187b7585484
+- T3 | S4 | inline (coordinator-owned reversible config removal after verified predecessor) — Cipher 🔓 (Lead Orchestrator) | done | commit: a439a09094f65e20bc470ee5ba2b0187b7585484
+- T4 | S1, S2, S3, S4 | delegated (independent instruction, dependency and semantic completion gates) — Sentinel 🛡️ (Quality Guardian) | done | commit: a439a09094f65e20bc470ee5ba2b0187b7585484
 
 ## Log
 
@@ -37,3 +37,4 @@
 - L11 — 2026-10-28 Sentinel final-1 independently compared S1–S4, accepted original instruction identities, delivered content and recorded evidence: PASS operational-switch semantic completion, zero scoped findings. Cipher accepts operational delivery. Retained database contents were not independently inspected; bounded empty source results do not imply global emptiness. Tasks remain in progress pending authorized commit; feature not closed and no release claimed.
 - L12 — 2026-10-28 release request: "create PR". Scope correction: "u should ship all just omit G:\projects-personal\ai-core\Inteligencia artificial sin sobreingeniería por qué creé Gentle AI (curso).txt". Ship all inspected pending tooling/migration paths; preserve and exclude that transcript. This authorizes branch, commit, push and PR, not merge.
 - L13 — 2026-10-28 evaluated release packet: Sentinel final-1 PASS operational migration; Warden combined config ADVISORY A1 (PATH-resolved Basic Memory/Semgrep and astgrep transitive dependencies not fully pinned), disclosed immediately before user's ship-all instruction and accepted for this release by that instruction. Existing accepted Chrome DEBT-019 remains disclosed. All five configured MCP servers connected; bounded note write/search/read and feature validation passed. No application/test files changed, so no whole-suite execution claimed. Release includes earlier authorized astgrep and Semgrep setup alongside Basic Memory migration. Branch selected `chore/tooling/adopt-memory-and-analysis-mcp`; final PR-head review remains required.
+- L14 — 2026-10-28 implementation and operational review delivered in commit `a439a09094f65e20bc470ee5ba2b0187b7585484`, PR https://github.com/JPerezC92/ai-core/pull/110. Reconciled T1–T4 with that existing implementation commit; T4 is Sentinel operational semantic review already passed in L11, not the separate PR-boundary review. Feature remains active until bookkeeping and immutable-head PR review complete. Transcript excluded and preserved untracked.
