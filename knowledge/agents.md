@@ -8,7 +8,7 @@
 - **Core is the shared source of truth.** In a region-governed document, every reusable baseline guideline, rule, architecture obligation, workflow, approval or review gate, template, and shared behavioural contract belongs in the `core` region. Only the selected upstream revision defines that shared baseline; destination content cannot replace its authority.
 - **Classify by meaning, not wording.** A heading, file location, framework name, example, or phrase such as "this project" does not make a shared obligation project-owned. Shared defaults and their concrete interpretations remain core; an evidenced project-specific selection or operational binding belongs in `project`.
 - **Project extensions preserve the baseline.** The `project` region holds genuine project-specific configuration, operational bindings, actual local grants, requirements, records, evidence, and history. Extensions may specialize the baseline only where it permits; they must never override, weaken, or contradict a shared rule. A local grant never creates authority forbidden by core.
-- **Shared contracts retain shared status.** A shared story's persona, goal, scenarios, acceptance criteria and their shared completion status, governing constraints, and portable Proof references belong in core. A shared completion mark reports evidence-established delivery of the shared capability; inheriting it does not establish that verification ran in the destination. Project-specific verification results and source-local execution or release history remain project-owned and must not be represented as shared or destination-wide evidence.
+- **Shared contracts retain shared status.** A shared completion mark reports evidence-established delivery of the shared capability; inheriting it does not establish that verification ran in the destination. Project-specific verification results and source-local execution or release history remain project-owned and must not be represented as shared or destination-wide evidence.
 - **Keep the ownership boundary intact.** Shared core changes originate upstream and reach destinations through the authorized synchronization workflow. Never edit destination core to record local completion or accommodate an extension; record genuine local requirements and evidence in project-owned content without changing the shared contract. Source-only project content never becomes a payload merely because it appears beside shared rules.
 
 ### Evidence discipline (HARD RULE)
@@ -149,7 +149,7 @@ When Inquisitor 🔎 (PR Reviewer) returns review findings, Cipher 🔓 (Lead Or
 - **Open count:** `<N>` counts `🔴 OPEN` findings only — carried `DEFERRED` findings are named in the `Counts:` line and in the first line whenever they exist. A `⏸ DEFERRED` finding is still open for the `[PASS]` gate and prevents `[PASS]`.
 - **Findings table columns:** `# | Finding | Severity | Status | Basis / destination`.
 - **Closed status vocabulary:** `✅ FIXED (round <N>)` · `🔴 OPEN` · `⏸ DEFERRED → <destination>` · `✖ REJECTED (not a defect)` — status is never left to prose inference.
-- **Status basis:** `FIXED` names the remediation and the party that verified it; `DEFERRED` names its destination (story, plan, or debt entry) and the user authority that permitted deferral; `REJECTED` carries the literal refutation output.
+- **Status basis:** `FIXED` names the remediation and the party that verified it; `DEFERRED` names its destination (feature Log, plan, or debt entry) and the user authority that permitted deferral; `REJECTED` carries the literal refutation output.
 - **Counts line:** `Counts: fixed <n> · open <n> · deferred <n> · rejected <n> (of <M>)` — the four figures total to `M`.
 - **Carry-over:** findings persist across rounds with their status until `FIXED` or `REJECTED`; a finding is never dropped silently.
 - **Unchanged mandate:** the verdict line, the PR state, `needs your call: none | <items>`, and the literal-refutation-evidence rule remain required elements of the same message.
@@ -180,10 +180,10 @@ Every refutation, either kind, carries literal command output in the round summa
 
 Edge cases:
 - Roster additions/changes go through Marshal 🎖️ (HR Director) with Augur's brief.
-- Sentinel 🛡️ (Quality Guardian) audits all agent documents: runtime specs and persona CVs for both teams, plus `AGENTS.md`, `odd/tasks/`, and shared rules. Legacy `plans/` and `user-stories/` remain in migration scope.
+- Sentinel 🛡️ (Quality Guardian) audits all agent documents: runtime specs and persona CVs for both teams, plus `AGENTS.md`, `odd/tasks/`, and shared rules. Legacy `plans/` remain in migration scope.
 - Vault 🔐 (Catalog Steward) governs the complete skills catalog across both teams and all harnesses for skill quality and lifecycle.
 - Warden 🔒 (Dependency Warden) governs skill and package security.
-- Cipher 🔓 (Lead Orchestrator) owns the feature-document lifecycle via `odd-workflow`. Sentinel 🛡️ (Quality Guardian) audits `odd/tasks/` for Specs/Tasks/Log consistency; legacy `plan-enforce`/`user-story` artifacts are migration-only.
+- Cipher 🔓 (Lead Orchestrator) owns the feature-document lifecycle via `odd-workflow`. Sentinel 🛡️ (Quality Guardian) audits `odd/tasks/` for Specs/Tasks/Log consistency; legacy `plan-enforce` artifacts are migration-only.
 <!-- core:end -->
 
 <!-- project:begin -->

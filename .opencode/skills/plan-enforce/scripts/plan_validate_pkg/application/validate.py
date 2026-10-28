@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Optional
 
 from plan_validate_pkg.domain.rules import (
     check_phase_snapshot,
@@ -17,13 +16,12 @@ from plan_validate_pkg.domain.rules import (
 )
 from plan_validate_pkg.infrastructure.reader import (
     check_plan_file,
-    check_story_index,
     load_phase_snapshots,
     load_plan_snapshot,
 )
 
 
-def validate_plan_dir(plan_dir: str, stories_dir: Optional[str]) -> int:
+def validate_plan_dir(plan_dir: str) -> int:
     base = Path(plan_dir)
     violations: list[str] = []
 
@@ -39,9 +37,6 @@ def validate_plan_dir(plan_dir: str, stories_dir: Optional[str]) -> int:
 
     for phase_snapshot in phase_snapshots:
         violations.extend(check_phase_snapshot(phase_snapshot))
-
-    if stories_dir:
-        violations.extend(check_story_index(stories_dir))
 
     if violations:
         for v in violations:

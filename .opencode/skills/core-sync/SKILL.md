@@ -1,11 +1,11 @@
 ---
 name: core-sync
-description: "Synchronize cleared source files into bound destinations at a pinned revision. Region mode enrolls or updates shared core while preserving destination-owned content; raw mode copies whole files byte-for-byte; merge mode replaces source-owned top-level JSON/JSONC keys while preserving destination-only content — except the `mcp` key, which merges by server name so a destination-only MCP server survives while a same-named server entry is core-wins. Tracks pending region reconciliation and its root blocker. Use when distributing shared skills, agents, or per-file region stories, mirroring whole-file references, merging config keys, checking drift, or reconciling destination project content."
+description: "Synchronize cleared source files into bound destinations at a pinned revision. Region mode enrolls or updates shared core while preserving destination-owned content; raw mode copies whole files byte-for-byte; merge mode replaces source-owned top-level JSON/JSONC keys while preserving destination-only content — except the `mcp` key, which merges by server name so a destination-only MCP server survives while a same-named server entry is core-wins. Tracks pending region reconciliation and its root blocker. Use when distributing shared skills, agents, or per-file region sources, mirroring whole-file references, merging config keys, checking drift, or reconciling destination project content."
 license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.2.2
+  version: 2.2.3
 ---
 
 ## What I do
@@ -18,7 +18,7 @@ The sync operator only **runs this tool and reads its report**. The operator MUS
 
 ## When to use me
 
-- A core-owned file (skill, agent, or individually cleared shared story) changed and bound destination copies must be brought current.
+- A core-owned file (skill, agent, or individually cleared region source) changed and bound destination copies must be brought current.
 - A markerless destination must be enrolled into the core/project region model (`init`).
 - A whole file, such as a raw-cleared reference, must be mirrored verbatim rather than by active regions (raw mode).
 - A JSON/JSONC object config's top-level keys must be merged into a destination that keeps its own keys and comments, with the `mcp` key merged by server name so destination-only MCP servers survive and a same-named server entry is core-wins (merge mode) — e.g. `opencode.jsonc`.
@@ -160,10 +160,9 @@ The clearance gate runs before any bound-source payload read or destination muta
 
 ## Examples
 
-To enroll a complete applicable cleared set at one revision, including individually
-region-cleared shared stories, use bulk enrollment from the source checkout against a
-clean, saved destination. Inspect the selected revision's clearance first; a story is
-not deliverable merely because it exists in the source catalogue. The command below
+To enroll a complete applicable cleared set at one revision, use bulk enrollment from the source checkout against a
+clean, saved destination. Inspect the selected revision's clearance first; a path is
+not deliverable merely because it exists in the source tree. The command below
 requires the source's other applicable preconditions too, including existing merge
 targets:
 
@@ -178,15 +177,13 @@ New region destinations discovered by `--bind-cleared` may be absent: `init` cre
 their targets and parents, renders the source core plus an empty project region, and
 records pending reconciliation. An explicit region `--bind SOURCE=DESTINATION` alone
 does not create an absent target; nor does `apply` enroll a missing or markerless one.
-For an already-present markerless story, `init` retains its previous body in project.
-Already marked region stories refresh their core while preserving outside bytes.
+For an already-present markerless region destination, `init` retains its previous body in project.
+Already marked region destinations refresh their core while preserving outside bytes.
 
-Shared stories use explicit per-file `region` clearance, not raw story transport or a
-story-directory root. Keep H1/shared metadata through Constraints in core; source-local
-evidence, revision tracking, and Change log do not ship. The canonical user-story
-template remains a raw reference: its fenced generated-story markers are literal
-template content, not active regions governing that raw file. Raw mode does not parse
-or strip those literals.
+Per-file `region` clearance is not raw whole-file transport or a directory-root copy.
+Source-local project content does not ship. A raw-cleared reference may contain fenced
+marker literals: those bytes are ordinary template or example content, not active regions
+governing that raw file. Raw mode does not parse or strip those literals.
 
 To mirror a raw-cleared whole-file reference, add its mapping with `--bind-raw` and run
 `init`; an explicitly declared `--bind-raw` (or persisted raw) target still requires an
@@ -195,33 +192,6 @@ existing parent, so a missing parent remains drift. A raw target newly enrolled 
 (such as `opencode.jsonc`) needs no dedicated flag and requires an existing destination.
 Modes and revision rules are unchanged.
 
-### Shared-story reconciliation
-
-1. **Preflight legacy hints.** Inspect existing bindings before a raw-to-region update.
-   If a binding persists an explicit `mode: raw` hint, it conflicts with region clearance
-   and fails closed with exit `2`. Only if present, remove that obsolete hint through
-   separately authorized destination bindings maintenance, retaining source/destination
-   mappings and pending state, before enrollment; source clearance owns the actual mode.
-   Normal saves omit mode hints, but a conflicting hint cannot be
-   removed by a synchronization that already fails preflight. Never bypass the gate,
-   retain raw transport for a shared story, or assume all adopters have this hint.
-2. **Reconcile displaced bodies.** Read the report and story. Remove duplicate old shared
-   H1/metadata/contracts/Proof from project, retaining genuine local requirements,
-   evidence and history. Never edit protected core; resolve behavioural conflicts through
-   approved source revision or noncontradictory local ownership review.
-3. **Initialize local history.** Fresh region creation does not copy source project
-   sections or seed local records. Add an empty project-owned Change log and local
-   evidence sections as needed, without fabricating a receipt event, anchor or passing
-   destination result. Shared completion marks survive adoption but do not prove local
-   execution. Apply the user-story checklist's history gate for actual local deliveries.
-4. **Reconcile the catalogue.** Maintain one destination-owned `user-stories/index.md`
-   listing actual shared/local files and mirroring their metadata. Preserve local rows;
-   do not transport the source index or import source-only stories by copying its rows.
-5. **Accept only after reconciliation.** Clear pending paths through the existing blocker
-   procedure and require `check` exit `0`. Recurring updates use `apply` then `check` at
-   the selected revision; new or markerless paths require enrollment first. These steps
-   document existing operations, not authority to mutate an adopter or change core locally.
-
 ## Troubleshooting
 
 - **Raw byte drift (`check` exits 1):** the destination file differs from its source. Run `apply` or `init` with the intended source revision, then run `check` again.
@@ -229,8 +199,8 @@ Modes and revision rules are unchanged.
 - **Merge destination missing (exit 1):** merge never creates a destination. `check`, `apply`, and `init` all require an existing merge target, so a missing one is drift, not enrollment. Create the destination object file first, then re-run.
 - **Malformed JSONC (`check`/`apply`/`init` exits 2):** a merge source or destination is not a single JSON/JSONC object — a non-object top level, or malformed syntax such as an unterminated comment or a duplicate key. Merge is object-only; correct the document.
 - **Raw destination missing (exit 1):** `apply` and `check` always require the target to exist. `init` also requires an existing target for a raw mapping already stored in YAML. A newly registered `--bind-cleared` mapping creates an absent raw target and any missing parent directories; an explicitly declared `--bind-raw` mapping can create an absent target only when its parent directory already exists, so its missing parent fails before writes. Repeating a declaration for an existing mapping does not enable creation.
-- **New shared story missing:** use supported `init --bind-cleared` enrollment for newly discovered region mappings, not raw copying or an absent explicit `--bind` target. Inspect all applicable-set preconditions before running it; bulk `--bind-cleared` creates missing parent directories for raw targets, while an explicit `--bind-raw` target still requires an existing parent.
-- **Legacy raw hint or duplicate story metadata:** cause: prior whole-file transport or displaced markerless content. Follow **Shared-story reconciliation**; resolve a persisted raw hint before preflight and remove displaced duplicate shared text only from project. Retain genuine local evidence and reconcile the local index before acceptance.
+- **New region mapping missing:** use supported `init --bind-cleared` enrollment for newly discovered region mappings, not raw copying or an absent explicit `--bind` target. Inspect all applicable-set preconditions before running it; bulk `--bind-cleared` creates missing parent directories for raw targets, while an explicit `--bind-raw` target still requires an existing parent.
+- **Legacy raw hint or duplicate shared text:** cause: prior whole-file transport or displaced markerless content. If a binding persists an explicit `mode: raw` hint, it conflicts with region clearance and fails closed with exit `2`. Only if present, remove that obsolete hint through separately authorized destination bindings maintenance, retaining source/destination mappings and pending state, before enrollment; source clearance owns the actual mode. Normal saves omit mode hints; a conflicting hint cannot be removed by a synchronization that already fails preflight. Never bypass the gate or assume every adopter has this hint. Remove displaced duplicate shared text only from project, retaining genuine local evidence and history. Never edit protected core. Fresh region creation does not copy source project sections or seed local records. Clear pending through the existing blocker procedure and require `check` exit `0`; recurring updates use `apply` then `check` at the selected revision, and new or markerless paths require enrollment first. These steps document existing operations, not authority to mutate an adopter or change core locally.
 - **Stale non-region-bound pending path (`check` exits 1):** the binding changed from region to raw or merge while the destination was listed in `pending`. Run `apply` or `init` to remove the obsolete reconciliation entry; `check` does not mutate the bindings file.
 - **Conflicting binding declaration (`init` exits 2):** the requested destination path is already mapped to a different source. This is a bindings-metadata conflict, not a destination-content conflict; same mappings are idempotent, region content is reconciled through the `project` region/blocker, raw content is replaced by its selected whole-file source, and merge content is re-derived by top-level key (with the `mcp` key merged by server name).
 - **Source not cleared for distribution (exit 1):** the bound `source` is absent from `distribution-clearance.json`. Skill files join automatically via their root row once its test or review passes; per-file rows are for non-skill sources, so for those run the file's test or review and add its per-file row. That file is the clearance record, not a content manifest.

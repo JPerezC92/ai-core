@@ -1,18 +1,14 @@
 """
-Validate a plan directory (or single-file plan) against the plan/phase/story
+Validate a plan directory (or single-file plan) against the plan/phase
 consistency checklist.
 
 Usage (from project root):
     <python> .opencode/skills/plan-enforce/scripts/validate_plan.py <plan_dir>
     <python> .opencode/skills/plan-enforce/scripts/validate_plan.py <plan.md> --single-file
-    <python> .opencode/skills/plan-enforce/scripts/validate_plan.py <plan_dir> --stories <dir>
-    <python> .opencode/skills/plan-enforce/scripts/validate_plan.py <plan.md> --single-file --stories <dir>
 
 Mechanical/repetitive subset only: Status enum, Completed line, required
-sections, unfilled <...>/TBD/date placeholders, the completed-plan audit gate
-(auditor/verdict/date), and user-stories index mirroring (`--stories` applies
-to both layouts; with `--single-file`, the entry composes it at the CLI edge).
-Single-file layout runs
+sections, unfilled <...>/TBD/date placeholders, and the completed-plan audit
+gate (auditor/verdict/date). Single-file layout runs
 content-only checks and never looks for phase files; subfolder layout
 adds phase sections + blockquote labels, the canonical phase executor-command
 table shape, goal trace, manifest equality, and verification parity. Semantic
@@ -42,9 +38,6 @@ from plan_validate_pkg import (
     PhaseSnapshot,
     PlanMetadata,
     PlanSnapshot,
-    StoryIndexSnapshot,
-    StoryMetadata,
-    StorySnapshot,
     check_audit_gate,
     check_completed_line,
     check_goal_trace,
@@ -57,17 +50,12 @@ from plan_validate_pkg import (
     check_plan_snapshot,
     check_required_sections,
     check_status,
-    check_story_index,
-    check_story_index_snapshot,
     check_verification_parity,
     load_phase_snapshot,
     load_phase_snapshots,
     load_plan_snapshot,
-    load_story_index_snapshot,
-    load_story_snapshot,
     load_text,
     parse_plan_metadata,
-    parse_story_metadata,
     validate_plan_dir,
     validate_plan_snapshot,
     validate_single_file,
@@ -87,9 +75,6 @@ __all__ = [
     "PhaseSnapshot",
     "PlanMetadata",
     "PlanSnapshot",
-    "StoryIndexSnapshot",
-    "StoryMetadata",
-    "StorySnapshot",
     "check_audit_gate",
     "check_completed_line",
     "check_goal_trace",
@@ -102,17 +87,12 @@ __all__ = [
     "check_plan_snapshot",
     "check_required_sections",
     "check_status",
-    "check_story_index",
-    "check_story_index_snapshot",
     "check_verification_parity",
     "load_phase_snapshot",
     "load_phase_snapshots",
     "load_plan_snapshot",
-    "load_story_index_snapshot",
-    "load_story_snapshot",
     "load_text",
     "parse_plan_metadata",
-    "parse_story_metadata",
     "validate_plan_dir",
     "validate_plan_snapshot",
     "validate_single_file",

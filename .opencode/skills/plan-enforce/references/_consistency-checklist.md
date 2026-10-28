@@ -2,9 +2,7 @@
 
 > Canonical contract for plan, phase, audit, and completion artifacts written by the `plan-enforce` skill. Applied at write-time by that skill's post-write self-verification loop (analysis) and mechanically by `scripts/validate_plan.py` (repetitive subset). Sentinel 🛡️ (Quality Guardian) audits `plans/` against this same checklist — keep the two in lockstep.
 >
-> User-story artifacts are governed by the `user-story` skill's own contract at
-> `.opencode/skills/user-story/references/_consistency-checklist.md`. Ticket working
-> artifacts are governed by `.opencode/skills/ticket-runbook/references/_consistency-checklist.md`.
+> Ticket working artifacts are governed by `.opencode/skills/ticket-runbook/references/_consistency-checklist.md`.
 
 ## plan.md
 
@@ -18,7 +16,7 @@
 - For subfolder plans, Manifest equality: `## Write/delete manifest` is an `Action`/`Path` table using only `Modify`, `Add`, or `Delete`, and its normalized path set equals the union of every phase's `**Writes:**` paths (`none` contributes nothing).
 - Verification parity: the count of `## Verification` `- ⬜` / `- ✅` bullets equals the number of phase files; each verification checkbox traces to a phase output.
 - Audit gate: `## Audit` (when present) carries a `Verdict` in `[PENDING]`, `[PASS]`, `[FAIL]`; a `Status: completed` plan carries `[PASS]` with a non-empty `Auditor` and a set `Date`. An unknown verdict or an audit missing on a completed plan is a violation.
-- Single-file layout: subfolder-only rules are Manifest equality (path set vs phase `Writes:`), Verification parity (one checkbox per phase file), phase sections/labels/verify tables, and dispatch-table goal trace. A single-file plan still requires `Status`/`Completed`, the required sections, no unfilled placeholders, the audit gate, goal prose with Issue/How/Files, and its complete in-file write/delete paths, outputs, and verification. Mechanical invocation: single-file plans use `<plan.md> --single-file`; a single-file plan touching `user-stories/index.md` additionally uses `--stories user-stories` — index mirroring applies in either layout.
+- Single-file layout: subfolder-only rules are Manifest equality (path set vs phase `Writes:`), Verification parity (one checkbox per phase file), phase sections/labels/verify tables, and dispatch-table goal trace. A single-file plan still requires `Status`/`Completed`, the required sections, no unfilled placeholders, the audit gate, goal prose with Issue/How/Files, and its complete in-file write/delete paths, outputs, and verification. Mechanical invocation: single-file plans use `<plan.md> --single-file`.
 
 ## Coordination and accepted joins (semantic review)
 
@@ -38,7 +36,6 @@
 
 - After plan files are written, the last user-facing message is human-readable prose per goal in order Issue, Goal, How, Files. A recap file table may follow and must not replace that prose. Dense dumps and table-only briefs are a violation.
 - Forge 🔨 (Implementer) is not dispatched in the plan-creation turn. `ExitPlanMode` is not authorization to implement.
-- CREATE of a new story file requires an explicit UPDATE / rename / CREATE user choice after every story body has been read. The index may locate candidates; unread bodies are not reviewed. CREATE without that choice is a violation.
 
 ## Audit gate
 
@@ -66,24 +63,12 @@
 - Completion evidence is the layered matrix on the current snapshot: code architecture, test architecture, test execution, and model/guidance verdicts, each with its scope and verdict. A passing execution never substitutes for a required architecture verdict, and a planning-readiness audit is never the completion audit. `## Outcome` and goal checkmarks require this evidence, accepted joins, reconciliation of committed/materially-changed criteria and introduced regressions, and respect for Constraints; unselected unfulfilled commitments stay `⬜`, while evidence-grounded existing shared marks are preserved rather than reset. A done-claim for the plan or its PR/release without that close-out — every confirmed goal marked complete, Outcome written, completed metadata set, and the plan archived with filesystem verification — is a failed completion; an opened, reviewed, or merged PR, or a shipped status, does not replace the sequence.
 - Apply **Story ownership and current evidence** from the loaded lifecycle contract: source work reconciles shared criteria at the authorized source; destination work records project-owned outcomes without changing inherited core, criteria, marks, or Proof. Inherited `✅` and synchronization do not prove the current plan's checks or regressions passed. Review actual proving surfaces/current evidence and required contract dependencies, not inherited status alone; no local completion overlay or weakening requirement is permitted.
 - Apply **History finalization gate** independently of execution success: approved staged persistence/planning may retain truthful pending history outside the feature log and shared core, with unimplemented criteria pending and future Proof unverified. Missing or nonmatching final references block completion, goal checkmarks, Outcome, completed metadata, archive, and release handoff until the real matching reference and compliant bounded entry are established. No fabricated delivery, borrowed anchor, or new Git/external-artifact authorization follows from this permission to prepare.
-- Review adoption against the story checklist: initialize empty local history without a receipt event, preserve genuine local evidence/history, remove displaced duplicate contract/metadata, and reconcile one project-owned catalogue of actual shared/local stories. Source project sections and source index do not ship. Actual local deliveries retain the matching-history requirement; no missing source-local history is repaired by editing destination core.
 - Load the applicable sections of `references/_lifecycle-contract.md` per its operation table before lifecycle operations; missing/unread/incomplete/conflicting **applicable** content blocks them, with no summary fallback. Review the loaded stash inventory/status, criterion dispositions, completion/archive/reopen/cancellation, lifecycle events, or post-merge proof against actual evidence as that operation requires. Required command order/exits, live SHA/fingerprint, both ancestry directions, immutable head match, checked NUL path extraction, per-path parity, safe versus force deletion, fast-forward and conditional remote deletion remain intact; no new mutation authority is granted.
 - Every admitted finding states the confirmed goal, the governing normative clause, the actual actor and the shipped path it controls (distinct from a helper or fixture), expected versus observed, affected scope, a reproduction or static fact, severity with literal output, and a keep / fix / reject-scope decision.
 - Replaced, superseded, or newly wired behavior carries a recorded legacy/dead-code sweep; no dead symbol, inert field, or stale mapping survives completion.
 - Instruction rewrites (runtime specs, shared rules, skill or workflow instructions) are accepted only with identified original and candidate inputs and complete accounting of valid original obligations: each retained, translated, or justifiably retired with a justified, authority-grounded rationale, and superseded wording never imported as precedent. The reviewer reads the actual original and candidate content — never an author's summary — when an obligation comparison is required; the source-neutrality check confirms no source-specific runner or interpreter, dependency pin, or mandated local policy value. Missing accounting, unauthorized or unrecognized obligation loss, or source-environment leakage prevents acceptance.
 - An all-pending-changes analysis dispositions every nonignored modified, deleted, and untracked path as `ship` / `fix` / `drop` from inspected content; manifest absence never proves unrelatedness.
 
-## user-stories
-
-Story format and hygiene are owned by the `user-story` skill — see
-`.opencode/skills/user-story/references/_consistency-checklist.md`. `plan-enforce`
-consumes an approved (`active`) story and its selected criteria and never renegotiates
-the story choice. Approved-criteria completion scope, shared/local ownership, dependency
-and revision review, destination reconciliation, behaviour/Proof separation, staged
-persistence/history, and the `## Constraints` contract are defined there. Review the
-actual contract and project evidence; do not auto-check criteria or treat source-only
-references as destination requirements. Unresolved source changes return to the owner.
-
 ## Loop rule
 
-Analysis items (everything above) are the skill's responsibility — a value must match evidence, never be invented to satisfy a check. `scripts/validate_plan.py` enforces only the mechanical/repetitive subset: enum values, section presence, placeholder/TBD detection, subfolder goal trace, manifest equality, verification parity, the completed-plan audit gate, index mirroring, and the presence/shape of each phase's executor-command table. It is a helper, not the authority. Executor authority, goal wording, audit quality and coordination/lifecycle acceptance are analysis items, never a mechanical pass.
+Analysis items (everything above) are the skill's responsibility — a value must match evidence, never be invented to satisfy a check. `scripts/validate_plan.py` enforces only the mechanical/repetitive subset: enum values, section presence, placeholder/TBD detection, subfolder goal trace, manifest equality, verification parity, the completed-plan audit gate, and the presence/shape of each phase's executor-command table. It is a helper, not the authority. Executor authority, goal wording, audit quality and coordination/lifecycle acceptance are analysis items, never a mechanical pass.

@@ -69,12 +69,6 @@ class PlanMetadata(TypedDict, total=False):
     Completed: str
 
 
-class StoryMetadata(TypedDict, total=False):
-    """Structured metadata fields used when checking a user-story index."""
-
-    Status: str
-
-
 class PlanSnapshot(TypedDict):
     """Loaded plan file content and its display path."""
 
@@ -87,28 +81,6 @@ class PhaseSnapshot(TypedDict):
 
     name: str
     content: str
-
-
-class StorySnapshot(TypedDict):
-    """Loaded user-story content and its index slug."""
-
-    slug: str
-    content: str
-
-
-class StoryIndexSnapshot(TypedDict):
-    """Loaded user-story index content and discoverable story files."""
-
-    index_path: str
-    index_content: Optional[str]
-    stories: list[StorySnapshot]
-
-
-class StoryIndexRow(TypedDict):
-    """A single parsed user-story index row: its slug and Status cell."""
-
-    slug: str
-    status: str
 
 
 def _strip_backticks(line: str) -> str:
@@ -582,90 +554,4 @@ def check_phase_snapshot(snapshot: PhaseSnapshot) -> list[str]:
             findings.append(f"MISSING-LABEL: {phase_name} is missing **{label}:**")
     findings.extend(check_phase_verify_table(phase_name, content))
     findings.extend(f"{phase_name}: {f}" for f in check_placeholders(content))
-    return findings
-
-
-def parse_story_metadata(content: str) -> StoryMetadata:
-    """Extract structured metadata used by user-story index validation.
-
-    Only the leading metadata block — every line before the first level-2
-    section heading — is parsed, so a fenced example deeper in the body cannot
-    override the story's real header values.
-    """
-    metadata_region = content.split("\n## ", 1)[0]
-    fields: StoryMetadata = {}
-    for line in metadata_region.splitlines():
-        m = re.match(r">\s*\*\*(\w[\w ]*):\*\*\s*(.*)$", line)
-        if m and m.group(1).strip() == "Status":
-            fields["Status"] = m.group(2).strip()
-    return fields
-
-
-def _parse_story_index_rows(content: str) -> Optional[list[StoryIndexRow]]:
-    """Parse the index's first table into slug/Status rows.
-
-    Returns None when there is no parseable Slug/Status table, so callers can
-    fall back to substring mirroring.
-    """
-    block = _extract_table_block(content.splitlines())
-    if not block:
-        return None
-    header = _split_table_row(block[0])
-    if "Slug" not in header or "Status" not in header:
-        return None
-    slug_col = header.index("Slug")
-    status_col = header.index("Status")
-    rows: list[StoryIndexRow] = []
-    for row_line in block[1:]:
-        cells = _split_table_row(row_line)
-        if _is_table_separator(cells):
-            continue
-        slug = cells[slug_col].replace("`", "").strip() if slug_col < len(cells) else ""
-        status = cells[status_col].strip() if status_col < len(cells) else ""
-        rows.append({"slug": slug, "status": status})
-    return rows
-
-
-def check_story_index_snapshot(snapshot: StoryIndexSnapshot) -> list[str]:
-    """Evaluate an already-loaded user-story index snapshot without file IO."""
-    stories = snapshot["stories"]
-    if not stories:
-        return []
-
-    findings: list[str] = []
-    index_content = snapshot["index_content"]
-    if index_content is None:
-        findings.append(
-            f"MISSING-INDEX: {snapshot['index_path']} not found but story files exist"
-        )
-        return findings
-
-    rows = _parse_story_index_rows(index_content)
-
-    for story in stories:
-        slug = story["slug"]
-        if rows is None:
-            if slug not in index_content:
-                findings.append(
-                    f"INDEX-MISSING: story slug `{slug}` not listed in index.md"
-                )
-                continue
-            fields = parse_story_metadata(story["content"])
-            status = fields.get("Status", "")
-            if status and status not in index_content:
-                findings.append(
-                    f"INDEX-MISMATCH: story `{slug}` Status {status!r} not mirrored in index.md"
-                )
-            continue
-
-        match = next((row for row in rows if row["slug"] == slug), None)
-        if match is None:
-            findings.append(f"INDEX-MISSING: story slug `{slug}` not listed in index.md")
-            continue
-        fields = parse_story_metadata(story["content"])
-        status = fields.get("Status", "")
-        if status and match["status"] != status:
-            findings.append(
-                f"INDEX-MISMATCH: story `{slug}` Status {status!r} not mirrored in index.md"
-            )
     return findings

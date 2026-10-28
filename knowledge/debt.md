@@ -25,7 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 0.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; see the standing-condition record in `user-stories/plan-lifecycle-governance.md`.
+**Open debts: 0.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; the standing-condition record is preserved in Git history at baseline `db58a74daab8bcddf5731f653dff9c6eed6c1fd4` (former `user-stories/plan-lifecycle-governance.md`), not an active path.
 
 **ID to use for the next new debt:** `DEBT-019`. This is an allocation counter, not an open debt.
 <!-- project:end -->

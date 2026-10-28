@@ -1,11 +1,11 @@
 ---
 name: plan-enforce
-description: Legacy migration-only plan workflow for existing plans, explicit migration requests that change scope or require a new phase, and user-confirmed PR merge cleanup. New work uses the ODD feature document maintained by odd-workflow. Use when the user explicitly asks to inspect, resume, or migrate an existing legacy plan/story, update the scope or phase of an identified active legacy plan, or verify cleanup after a user-confirmed PR merge.
+description: Legacy migration-only plan workflow for existing plans, explicit migration requests that change scope or require a new phase, and user-confirmed PR merge cleanup. New work uses the ODD feature document maintained by odd-workflow. Use when the user explicitly asks to inspect, resume, or migrate an existing legacy plan, update the scope or phase of an identified active legacy plan, or verify cleanup after a user-confirmed PR merge.
 license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.0.0
+  version: 2.0.1
 ---
 <!-- core:begin -->
 
@@ -19,7 +19,7 @@ Manage explicitly authorized legacy-plan migration and existing legacy-plan life
 
 ### When to use me
 
-- User explicitly asks to inspect, resume, or migrate an existing legacy plan/story record.
+- User explicitly asks to inspect, resume, or migrate an existing legacy plan record.
 - An explicitly identified active legacy plan changes scope or requires a new implementation phase.
 - A user confirms a PR merge and the merged branch needs verification before cleanup.
 
@@ -55,7 +55,7 @@ Apply its ordered stash gate for mapped events: live read-only inventory (SHA/fi
 2. Scan `plans/*.md` (excluding `.completed/`) and `plans/*/plan.md`.
 3. Read candidate plan files and select those with `Status: active`.
 4. If one active plan exists, read it and, for subfolder layout only, its `phase-*.md` siblings; derive its manifest and run the post-scope collision check before showing the plan or dispatching Forge 🔨 (Implementer). Resumption also requires the current independent-audit `[PASS]` under **Plan lifecycle rules** and the **Independent audit gate**.
-5. If no active legacy plan exists, stop and report unless the user explicitly requested migrating identified legacy plan/story material; new work is classified and tracked through ODD, never by creating a plan here. If multiple plans exist, Cipher 🔓 (Lead Orchestrator) stops and asks the user to select one; a delegated run reports the candidates and gap to Cipher 🔓.
+5. If no active legacy plan exists, stop and report unless the user explicitly requested migrating identified legacy plan material; new work is classified and tracked through ODD, never by creating a plan here. If multiple plans exist, Cipher 🔓 (Lead Orchestrator) stops and asks the user to select one; a delegated run reports the candidates and gap to Cipher 🔓.
 
 An archived plan is never resumed directly from `plans/.completed/`. Restore it to `plans/`, set `Status: active`, and append `Reopened: YYYY-MM-DD HH:MM` before resuming.
 
@@ -65,7 +65,7 @@ Detect `G1..Gn` from the approved selected criteria (or Context/Goals when skipp
 
 #### Detect
 
-Extract the goals from the approved selected criteria (or from Context/Goals when stories are skipped) before writing any plan file. Do not invent feature behavior from task phrasing:
+Extract the goals from the approved selected criteria (or from Context/Goals) before writing any plan file. Do not invent feature behavior from task phrasing:
 
 1. Number them `G1`, `G2`, … in order of importance.
 2. State each goal as what must be true when the plan is done — an observable condition, not an activity.
@@ -77,14 +77,14 @@ Extract the goals from the approved selected criteria (or from Context/Goals whe
 
 Before `question`, run bounded discovery and send one regular Markdown message with visibly separate inputs:
 
-1. `**Goals**`: one Markdown bullet per goal, full observable condition and selected approved-story criterion trace (or Context when stories are skipped).
-2. `**Plan classification**`: detected type, story scope (create/update/skipped with reason), and goal-bloat status (`none` or triggered flag).
+1. `**Goals**`: one Markdown bullet per goal, full observable condition and selected criterion trace (or Context).
+2. `**Plan classification**`: detected type and goal-bloat status (`none` or triggered flag).
 3. `**Discovery**`: affected code/documentation/dependency evidence and paths read.
 4. Keep these details outside the compact `question` control, never in its text.
 
 #### Confirm (pre-file gate)
 
-Before ANY plan file, make exactly one short `question` call: proceed with or revise the displayed goals/classification. In that single round confirm all four: full `G1..Gn` conditions, detected type, triggered goal-bloat flag, and story scope for programming/feature-visible changes (whether CREATE/UPDATE is needed). No `plan.md`/phase file until confirmation; no skipped Markdown presentation, second question round, or paraphrased confirmation.
+Before ANY plan file, make exactly one short `question` call: proceed with or revise the displayed goals/classification. In that single round confirm all three: full `G1..Gn` conditions, detected type, and triggered goal-bloat flag. No `plan.md`/phase file until confirmation; no skipped Markdown presentation, second question round, or paraphrased confirmation.
 
 #### Persist
 
@@ -153,24 +153,16 @@ Every phase runbook has one non-empty `## Verify commands` Markdown table with e
 
 Crucible 🔥 (Test Architect) executes each declared approved test command; Forge 🔨 (Implementer) writes tests; Bastion 🧱 (Backend & Scripts Architect) audits applicable Python implementation. A plan editing a Python test in reviewed discovery areas must list the reviewed whole-suite command (Project extensions), obtain Bastion 🧱 (Backend & Scripts Architect) `[PASS]` on applicable implementation edits, then dispatch Crucible 🔥 (Test Architect) to return `[PASS]` or `[FAIL]`. `[UNCERTAIN]` is not acceptable. Cipher 🔓 (Lead Orchestrator) checks the exact command before dispatch; runner permissions are in the root opencode config under `agents.crucible.permissions` and gate command text, not sandbox execution. Existing TypeScript / Atrium 🏛️ (Frontend Architect) and Crucible 🔥 (Test Architect) gates remain unchanged.
 
-### User stories
+### Planning input
 
-Stories (`user-stories/<feature-slug>.md`) are durable; plans are temporal and never archive/delete stories. For existing legacy work, `user-story` owns pre-plan behavior discussion, ownership, creation, revision, and collision analysis; its `references/_consistency-checklist.md` is the canonical format/hygiene contract. New work uses ODD instead. Legacy planning consumes approved (`active`) stories and selected criteria, never drafts or renegotiated choices. Cite every touched story under `## Critical files / tools`; missing legacy ownership stops planning and routes to `user-story`.
-
-### User-story scope
-
-Programming plans ALWAYS carry a story for each feature touched by writes under application source, backend tooling, `scripts/`, `.opencode/skills/**/scripts/`, or ticket tooling. At the goals gate, flag non-programming changes to feature-visible behavior and confirm whether a story is needed. Pure docs/process/tooling plans skip stories; `## Context` / `## Goals` record the work.
-
-### Planning input — approved story and selected criteria
-
-Read the approved (`active`) story, selected criteria, Proof, Constraints, and applicable project-owned approval/history tracking together. Intent governs, never invented intent or overriding task phrasing; drafts are not planning contracts. An approved revision with explicitly pending history may feed planning under the lifecycle contract's **History finalization gate**. Inherited marks never prove current-plan or destination checks. Trace goals to selected criteria (or Context/Goals when skipped), respect Constraints, and apply **Story ownership and current evidence**; no approved owner means route to `user-story` before plan creation.
+Read the existing legacy plan's Context, Goals, Constraints, and applicable project-owned approval/history tracking together. Intent governs, never invented intent or overriding task phrasing. An approved revision with explicitly pending history may feed planning under the lifecycle contract's **History finalization gate**. Inherited marks never prove current-plan or destination checks. Trace goals to selected criteria (or Context/Goals), respect Constraints, and apply **Story ownership and current evidence**.
 
 ### Bounded discovery before scope confirmation
 
-Before the **combined scope confirmation** (goals, plan type, goal-bloat, user-story scope — see **Goal lifecycle** and **Create new plan**), run a bounded, read-only discovery pass and fold its evidence into that same confirmation:
+Before the **combined scope confirmation** (goals, plan type, goal-bloat — see **Goal lifecycle** and **Create new plan**), run a bounded, read-only discovery pass and fold its evidence into that same confirmation:
 
 1. **Affected code.** Locate and read the modules, services, public interfaces, and call sites the selected criteria touch. Never plan against a path you have not inspected.
-2. **Affected documentation.** Identify every durable documentation surface the behavior change alters (README, `knowledge/` registers, skill prose, user stories, reference docs) and name its owner. Same-change documentation is planned here, not after the fact (see **Documentation discipline**).
+2. **Affected documentation.** Identify every durable documentation surface the behavior change alters (README, `knowledge/` registers, skill prose, reference docs) and name its owner. Same-change documentation is planned here, not after the fact (see **Documentation discipline**).
 3. **Affected dependencies.** Identify packages, contracts, and cross-module interfaces the change reads or alters, with their version or interface constraints.
 4. **Planned-file design conformance.** Read every file the manifest will modify or add and assess its current design against `knowledge/agents.md` **Clean architecture (language-agnostic) (HARD RULE)** and the applicable language profile. Nonconforming planned files require rework in this plan, including necessary supporting files/tests/docs in the manifest before execution. No legacy exemption or behavioral-patch substitute; no unrelated repository-wide migration.
 5. **Bound the pass.** Discovery is scoped to the selected criteria and their direct dependents; it names the paths read and the evidence found. It never edits files, installs dependencies, or widens into unrelated subsystems.
@@ -201,7 +193,7 @@ A test-first behavior slice may record **expected red**: the designated executor
 ### Create new plan
 
 1. Run the initial inventory; choose subfolder layout unless ALL five single-file criteria in `references/_template.md` are met (1 owner, ≤30 instruction lines, no phase IO contracts, no external state mutation, no improvisation risk).
-2. Consume the approved story and selected criteria without renegotiation (see **Planning input**). If ownership is missing or CREATE/UPDATE is needed, route to `user-story` and stop before files. Record skipped stories in Context. Do not re-filter unread catalogue bodies here.
+2. Consume the existing plan's confirmed goals and selected criteria without renegotiation (see **Planning input**). Do not invent new feature behavior from task phrasing.
 3. Derive slug, the complete write/delete manifest, and execution instructions in memory; derive phases only for subfolder layout. Detect numbered `G1..Gn` from those selected criteria (see **Goal lifecycle**).
 4. Run bounded discovery; present goals/classification/evidence, then Cipher 🔓 (Lead Orchestrator) makes the single short confirming `question` before files. Confirm path-detected template type with goals. A delegated run reports the confirmation packet to Cipher 🔓 and never invokes `question`.
 5. Run the post-scope collision check; stop on overlap.
@@ -217,11 +209,11 @@ After written plans pass self-verification, Cipher 🔓 (Lead Orchestrator) send
 
 ### Post-write self-verification loop
 
-Run after each coherent plan/phase/story/index write batch and every Forge 🔨 (Implementer) dispatch that mutates plan artifacts; repeat until clean:
+Run after each coherent plan/phase write batch and every Forge 🔨 (Implementer) dispatch that mutates plan artifacts; repeat until clean:
 
-1. Re-read each written `plan.md`, phase file, story, and index.
-2. Mechanical pass, by layout: active subfolder plans touching stories/index use `<plan-dir> --stories user-stories`; no-story subfolder plans use `<plan-dir>`; single-file plans use `<plan.md> --single-file`, and when a single-file plan touches `user-stories/index.md` add `--stories user-stories`. Both layouts check Status/Completed, required sections, placeholders, and the completed-plan audit gate. Apply index mirroring in either layout when stories/index are touched. Subfolder layout additionally checks phase sections/labels, executor-command tables, goal trace, manifest equality, and verification parity; do not impose those phase checks on single-file plans.
-3. Analysis pass against the consistency checklist: evidence-match goals and Issue/How/Files; check output/verification trace, explicit allowed writes, and applicable story/index metadata. Check phase/goal links and Writes/manifest equality only for subfolder layout; single-file review checks its complete in-file execution contract instead. Reconcile selected/materially-changed criteria and regressions at completion under the lifecycle contract's ownership and history rules; preparation may retain truthful pending criteria/history. Preserve unselected commitments and inherited core. When the write revises or replaces existing instructions, run rewrite-acceptance accounting: identify the original and candidate content and disposition every valid original obligation as retained, translated, or justifiably retired with an authority-grounded rationale, plus a source-neutrality check (no source-specific runner or interpreter, dependency pin, or mandated local policy value); superseded wording is never imported as precedent. Read actual files, diffs, and command output, never their description; never invent a value. Escalate missing decisions through the existing question-routing rule.
+1. Re-read each written `plan.md` and phase file.
+2. Mechanical pass, by layout: subfolder plans use `<plan-dir>`; single-file plans use `<plan.md> --single-file`. Both layouts check Status/Completed, required sections, placeholders, and the completed-plan audit gate. Subfolder layout additionally checks phase sections/labels, executor-command tables, goal trace, manifest equality, and verification parity; do not impose those phase checks on single-file plans.
+3. Analysis pass against the consistency checklist: evidence-match goals and Issue/How/Files; check output/verification trace and explicit allowed writes. Check phase/goal links and Writes/manifest equality only for subfolder layout; single-file review checks its complete in-file execution contract instead. Reconcile selected/materially-changed criteria and regressions at completion under the lifecycle contract's ownership and history rules; preparation may retain truthful pending criteria/history. Preserve unselected commitments and inherited core. When the write revises or replaces existing instructions, run rewrite-acceptance accounting: identify the original and candidate content and disposition every valid original obligation as retained, translated, or justifiably retired with an authority-grounded rationale, plus a source-neutrality check (no source-specific runner or interpreter, dependency pin, or mandated local policy value); superseded wording is never imported as precedent. Read actual files, diffs, and command output, never their description; never invent a value. Escalate missing decisions through the existing question-routing rule.
 4. Repeat to zero findings and report `self-verification passes: N`. After 3 iterations or the same unchanged violation twice, stop-and-ask (S-07).
 
 Mechanical success never substitutes for actual-content semantic self-review.
@@ -253,7 +245,7 @@ Apply the loaded **Plan lifecycle rules** and **Reopen rule** for every event. O
 
 Documentation ships with each behavior change in the same plan.
 
-- **Discovery** names affected surfaces (README, `knowledge/`, skills, stories, references), owners, and evidence.
+- **Discovery** names affected surfaces (README, `knowledge/`, skills, references), owners, and evidence.
 - **Manifest** lists each documentation path/action; for subfolder plans it equals the union of phase `**Writes:**`, while single-file plans list paths in their write/delete instructions.
 - **Completion** reads actual documents; missing or behavior-contradicting documentation blocks Outcome and archival.
 
@@ -276,8 +268,6 @@ Plan-enforce templates and references:
 - Phase template: `references/_phase-template.md`
 - Plan/phase/audit/completion checklist: `references/_consistency-checklist.md`
 - Mandatory lifecycle contract: `references/_lifecycle-contract.md` (load applicable sections per its operation table)
-
-The canonical user-story template and story-hygiene checklist are owned by the `user-story` skill at `.opencode/skills/user-story/references/`.
 <!-- core:end -->
 
 <!-- project:begin -->

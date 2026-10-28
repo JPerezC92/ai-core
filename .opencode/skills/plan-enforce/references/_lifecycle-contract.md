@@ -107,7 +107,7 @@ cannot weaken core. A destination cannot remove a shared promise to unblock itse
 
 Preserve unchanged criterion identities on revision; explicitly account for approved
 changes/retirements, positional remapping where necessary, Proof and dependencies under
-the story checklist. Read current proving surfaces and evidence before retaining marks.
+this contract. Read current proving surfaces and evidence before retaining marks.
 Do not blanket-reset inherited status or claim unchanged marks prove new work.
 
 A plan reconciles only the acceptance criteria it **committed to deliver** — the selected criteria of the approved story that its goals trace to — the criteria it **materially changes**, and any regression it introduced. Other legitimate unfulfilled commitments the plan did not select stay `⬜` and do not block completion; evidence-grounded existing shared marks are preserved, not reset:
@@ -122,9 +122,8 @@ Reconciliation is fail-closed on adverse evidence: `## Outcome` and the archive 
 
 ### History finalization gate
 
-An explicitly approved (`active`) story revision may be persisted and consumed for
-planning before its delivery-history reference exists. Read the story checklist's
-**Bounded change log** procedure, including staged persistence: record truthful local approval
+An explicitly approved (`active`) legacy-plan revision may be persisted and consumed for
+planning before its delivery-history reference exists. Staged persistence: record truthful local approval
 and known pending history in project-owned Revision tracking, outside the feature log
 and shipped core. Leave unimplemented criteria pending and future Proof targets explicitly
 unverified. Approval is not delivery, evidence, or implementation authorization.

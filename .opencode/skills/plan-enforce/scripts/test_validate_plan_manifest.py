@@ -82,7 +82,7 @@ class ValidatePlanManifestTests:
         write_fixture(tmp_path, "phase-02-owner.md", PHASE_TWO)
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):
-            result = vp.validate_plan_dir(str(tmp_path), stories_dir=None)
+            result = vp.validate_plan_dir(str(tmp_path))
         assert result == 1
         assert stderr.getvalue() == (
             "MANIFEST: phase Writes path `src/b.py` is missing from the "
