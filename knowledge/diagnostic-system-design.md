@@ -169,7 +169,7 @@ This is a readable map of the shared diagnostic system's current definitions. It
 |---|---|---|
 | 1 | Dev issue found | The issue may come from an audit, dependency/configuration failure, build/test failure, or application defect. |
 | 2 | Classify an unexpected tool error | Shared rules direct the agent to match a symptom class and search `Team: dev` records. |
-| 3 | Begin programming work | Create or update the governing ODD feature document before the first non-small write; `plan-enforce` is legacy-only. |
+| 3 | Begin programming work | Create or update the governing ODD feature document before the first non-small write. |
 | 4 | Implement and verify | Forge 🔨 (Implementer) implements; the applicable architect/test gates review the change. |
 | 5 | Release flow | Herald 📯 (Release Manager) handles authorized Git work; Inquisitor 🔎 (PR Reviewer) reviews the PR boundary. |
 | 6 | Search or reuse known Dev problems | **Gap:** ODD/Forge 🔨 (Implementer) do not currently enforce the `Team: dev` symptom/problem lookup. |

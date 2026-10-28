@@ -149,7 +149,7 @@ When Inquisitor 🔎 (PR Reviewer) returns review findings, Cipher 🔓 (Lead Or
 - **Open count:** `<N>` counts `🔴 OPEN` findings only — carried `DEFERRED` findings are named in the `Counts:` line and in the first line whenever they exist. A `⏸ DEFERRED` finding is still open for the `[PASS]` gate and prevents `[PASS]`.
 - **Findings table columns:** `# | Finding | Severity | Status | Basis / destination`.
 - **Closed status vocabulary:** `✅ FIXED (round <N>)` · `🔴 OPEN` · `⏸ DEFERRED → <destination>` · `✖ REJECTED (not a defect)` — status is never left to prose inference.
-- **Status basis:** `FIXED` names the remediation and the party that verified it; `DEFERRED` names its destination (feature Log, plan, or debt entry) and the user authority that permitted deferral; `REJECTED` carries the literal refutation output.
+- **Status basis:** `FIXED` names the remediation and the party that verified it; `DEFERRED` names its destination (feature Log or debt entry) and the user authority that permitted deferral; `REJECTED` carries the literal refutation output.
 - **Counts line:** `Counts: fixed <n> · open <n> · deferred <n> · rejected <n> (of <M>)` — the four figures total to `M`.
 - **Carry-over:** findings persist across rounds with their status until `FIXED` or `REJECTED`; a finding is never dropped silently.
 - **Unchanged mandate:** the verdict line, the PR state, `needs your call: none | <items>`, and the literal-refutation-evidence rule remain required elements of the same message.
@@ -180,10 +180,10 @@ Every refutation, either kind, carries literal command output in the round summa
 
 Edge cases:
 - Roster additions/changes go through Marshal 🎖️ (HR Director) with Augur's brief.
-- Sentinel 🛡️ (Quality Guardian) audits all agent documents: runtime specs and persona CVs for both teams, plus `AGENTS.md`, `odd/tasks/`, and shared rules. Legacy `plans/` remain in migration scope.
+- Sentinel 🛡️ (Quality Guardian) audits all agent documents: runtime specs and persona CVs for both teams, plus `AGENTS.md`, `odd/tasks/`, and shared rules.
 - Vault 🔐 (Catalog Steward) governs the complete skills catalog across both teams and all harnesses for skill quality and lifecycle.
 - Warden 🔒 (Dependency Warden) governs skill and package security.
-- Cipher 🔓 (Lead Orchestrator) owns the feature-document lifecycle via `odd-workflow`. Sentinel 🛡️ (Quality Guardian) audits `odd/tasks/` for Specs/Tasks/Log consistency; legacy `plan-enforce` artifacts are migration-only.
+- Cipher 🔓 (Lead Orchestrator) owns the feature-document lifecycle via `odd-workflow`. Sentinel 🛡️ (Quality Guardian) audits `odd/tasks/` for Specs/Tasks/Log consistency.
 <!-- core:end -->
 
 <!-- project:begin -->

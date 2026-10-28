@@ -32,7 +32,7 @@ Agent specs and persona profiles migrate as **per-file rows** — one row per fi
 
 - `mode` is the default mode of every file under the root.
 - `region_files` is optional (absent = empty subset) and names root-relative files that instead use **region** mode. Today the only member is `SKILL.md` — within a skill root, the only file type governed by active core/project ownership markers. Raw references may illustrate marker literals without interpreting them, as described under **Scope rules**.
-- Current classification: the four workflow roots (`odd-workflow`, `plan-enforce`, `query-verification`, `ticket-runbook`) declare `{"mode": "raw", "region_files": ["SKILL.md"]}`; the six tooling roots (`git-branch-name`, `git-commit`, `git-pr`, `op-agent-creator`, `op-model`, `op-skill-creator`) declare `{"mode": "raw"}`.
+- Current classification: the three workflow roots (`odd-workflow`, `query-verification`, `ticket-runbook`) declare `{"mode": "raw", "region_files": ["SKILL.md"]}`; the six tooling roots (`git-branch-name`, `git-commit`, `git-pr`, `op-agent-creator`, `op-model`, `op-skill-creator`) declare `{"mode": "raw"}`.
 - **Expansion** — the sync tool identifies the files at every sync: every file under the root joins the sync set; `region_files` members deliver only their core region; all others copy byte-for-byte; interpreter caches (`__pycache__` path parts, `*.pyc` suffixes) never join. Files added under a root later join automatically. Clearance records durable ownership, not file inventories.
 
 ## Knowledge distribution classes

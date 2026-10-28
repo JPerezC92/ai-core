@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.4.1
+  version: 1.4.2
 ---
 <!-- core:begin -->
 
@@ -24,7 +24,7 @@ Create, read, update, and close the single feature document for a feature. I do 
 
 ### Before the first write
 
-Classify using `knowledge/agent-workflow.md` `### ODD protocol`: work is small only when it is understood, risk-contained, and resumable from the request plus diff; counts do not decide. Read-only and small work create no durable feature artifact. For authorized non-small state-changing work, the governing feature document exists before the first state-changing action. Authorization and safety/review gates remain independent; plan-enforce does not classify new work.
+Classify using `knowledge/agent-workflow.md` `### ODD protocol`: work is small only when it is understood, risk-contained, and resumable from the request plus diff; counts do not decide. Read-only and small work create no durable feature artifact. For authorized non-small state-changing work, the governing feature document exists before the first state-changing action. Authorization and safety/review gates remain independent.
 
 ### Change a requirement
 

@@ -12,7 +12,7 @@ package = false
 
 [tool.pytest.ini_options]
 testpaths = ["."]
-norecursedirs = ["node_modules", ".venv", "output", "plans/.completed", "build", "dist", "__pycache__", ".git"]
+norecursedirs = ["node_modules", ".venv", "output", "build", "dist", "__pycache__", ".git"]
 python_files = ["test_*.py"]
 python_classes = ["*Tests"]
 addopts = ["-n", "auto"]
