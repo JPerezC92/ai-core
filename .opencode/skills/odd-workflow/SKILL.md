@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.4.2
+  version: 1.5.0
 ---
 <!-- core:begin -->
 
@@ -18,9 +18,14 @@ Create, read, update, and close the single feature document for a feature. I do 
 ### Create a feature document
 
 - Copy `odd/tasks/_template.md` to `odd/tasks/<feature-name>.md`; never reconstruct the format by research.
-- Fill `## Specs` with numbered `S#` requirements, exact strings, and acceptance checks.
-- Fill `## Tasks` with one line per task: stable ID, linked `S#`, route or owner, status (`open`, `in progress`, `done`), and commit. Use `commit: pending` only while status is `open` or `in progress`; `done` requires a 7–64 character hexadecimal commit identifier.
-- Fill `## Log` with `L1` = the original request verbatim, then corrections, evidence, and rationale in order.
+- Fill the short header with `Status`, `Owner`, and `Created` and always show all four context fields: `Objective`, `Branch`, `Delivery`, and `Runner`. Fill each field with the actual value or `N/A — reason`; do not silently omit a field, and never invent a branch or runner. Existing closed feature documents are not retrofitted. `Delivery` carries the chosen strategy, authored-line forecast, and slice boundaries; `Runner` is the literal applicable command.
+- Fill `## Specs` with numbered `S#` requirements, exact strings, and acceptance checks. Preserve the user's exact requirements, strings, errors, commands, and examples verbatim; do not paraphrase, normalize, or add unrequested requirements. Record genuine uncertainty as evidence or a focused question, never an unsupported assumption.
+- Fill `## Tasks` with one line per task: stable ID, linked `S#`, route (`inline` or `delegated`) with the reason/trigger that decided it — responsible owner, status (`open`, `in progress`, `done`), and commit. Record the route and its trigger evidence, not the route label alone. Use `commit: pending` only while status is `open` or `in progress`; `done` requires a 7–64 character hexadecimal commit identifier. One authorized coherent work-unit commit may evidence several tasks; do not require one commit per task. High-risk units may use separate reviewable commits.
+- Fill `## Log` with `L1` = the original request verbatim; record each later user correction as its own entry dated and quoted verbatim, with evidence and rationale in separate entries rather than merged into the correction text.
+
+### Delivery forecast
+
+Forecast authored additions plus deletions, excluding generated files, and record the chosen delivery strategy and slice boundaries compactly in the existing document. Maintain a running count from work-unit commits; when the forecast OR the running count exceeds about 400 authored changed lines, apply the chosen strategy before the next commit. Keep the ~400-line task size advisory — not a hard cap, classification input, automatic review trigger, or delivery-slice boundary — separate from that feature-level strategy trigger, and add no second tracker.
 
 ### Before the first write
 
@@ -33,6 +38,8 @@ Rewrite only the affected spec and reopen only its task. Do not append a new pro
 ### Implement and verify
 
 Deliver coherent tasks in dependency order with their tests and documentation. Respect accepted predecessors and owner gates; independent ready tasks may run concurrently under the shared coordination rules. Define each task's applicable acceptance checks and collect actual evidence during implementation, not only when preparing a PR.
+
+Conditional test-first: when a relevant runnable deterministic test and a clear expected outcome exist, observe RED before implementation, then GREEN and refactor; otherwise record the actual exception and run proportionate checks. Carry the actual runner and evidence to workers; never invent a runner or add a test harness. Existing architecture/edit gates, whole-suite ownership, and independent completion review remain binding.
 
 For feature work, record compact evidence in the existing `## Log`: task/spec, exact tested input/content or commit identity, relevant dependency and environment/configuration identities, responsible executor, literal command (including invocation and arguments) or manual action, expected result, observed result/verdict, and exit status when applicable. Preserve original execution provenance. If no executable check applies, record the actual static/manual verification or justified N/A; never invent a test. This is evidence, not an execution transcript, new heading, or second tracker. Read-only and small work do not acquire a mandatory feature document or evidence template.
 
@@ -52,11 +59,11 @@ The feature's `Specs` and `Tasks` bound its requirements and work; they do not r
 
 ### Delivery boundary
 
-Closing the feature document is not delivery. Commit, push, PR, release, and archive require explicit user authorization. A PR is a reviewable slice — work-unit commits or the feature's task slice — never the accumulated branch and never a substitute for the feature document. Git execution remains with Herald; merge remains user-only.
+Closing the feature document is not delivery. Commit, push, PR, release, and archive require explicit user authorization. A PR is a reviewable slice — work-unit commits or the feature's task slice — never the accumulated branch and never a substitute for the feature document. Git execution remains with Herald 📯 (Release Manager); merge remains user-only.
 
 ### Validate
 
-Run `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feature.py odd/tasks` before closing. The script is **mechanical anatomy only**; exit 0 proves the headings, `S#`/`T#`/`L1`, task status, and placeholders are correct. It does not prove that a spec is meaningful, a task is complete, or the evidence is true — the independent semantic review above owns that, with acceptance by Cipher 🔓 (Lead Orchestrator).
+Run `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feature.py odd/tasks` before closing. The script is **mechanical anatomy only**; exit 0 proves the headings, `S#`/`T#`/`L1`, task status, 7–64 character hexadecimal commit references, and placeholders are correct. It does not prove verbatim fidelity, that a spec is meaningful, that a runner applies or ran, that a task is complete, or that the evidence is true — the independent semantic review above owns that, with acceptance by Cipher 🔓 (Lead Orchestrator).
 
 ### References
 

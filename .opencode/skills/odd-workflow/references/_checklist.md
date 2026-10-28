@@ -4,10 +4,11 @@
 
 - [ ] This is authorized non-small state-changing work; read-only and small work require no feature artifact or new evidence template.
 - [ ] Copy `odd/tasks/_template.md`; do not invent the format.
-- [ ] Header carries Status, Owner, Created.
-- [ ] `## Specs` has numbered `S#` with exact strings or acceptance checks.
-- [ ] `## Tasks` has stable IDs, linked `S#`, route or owner, status (`open`, `in progress`, `done`), and commit. `pending` is only for open/in-progress tasks; done tasks cite a 7–64 character hexadecimal commit identifier.
-- [ ] `## Log` starts with `L1` = the original request verbatim.
+- [ ] Header carries Status, Owner, and Created and always shows all four context fields — Objective, Branch, Delivery, and Runner — each filled with the actual value or `N/A — reason`; no field is silently omitted, and no branch or runner is invented. Existing closed feature documents are not retrofitted.
+- [ ] `## Specs` has numbered `S#` with exact strings and acceptance checks: the user's exact requirements, strings, errors, commands, and examples are preserved verbatim with their checks alongside, and nothing is paraphrased, normalized, or added unrequested. Uncertainty is recorded as evidence or a focused question, not an unsupported assumption.
+- [ ] `## Tasks` has stable IDs, linked `S#`, route (`inline` or `delegated`) with the reason/trigger that decided it — responsible owner, status (`open`, `in progress`, `done`), and commit; the route and its trigger evidence are recorded, not the route label alone. `pending` is only for open/in-progress tasks; done tasks cite a 7–64 character hexadecimal commit identifier. One authorized coherent work-unit commit may evidence several tasks; one commit per task is not required, and high-risk units may use separate reviewable commits.
+- [ ] Authored additions plus deletions are forecast excluding generated files; the chosen strategy and slice boundaries are recorded compactly in this document, and a running count is maintained from work-unit commits so the strategy is applied before the next commit when either the forecast or the running count exceeds about 400 authored changed lines. The ~400-line task size stays advisory and separate — no hard cap, classification input, automatic review trigger, delivery-slice boundary, or second tracker is introduced.
+- [ ] `## Log` starts with `L1` = the original request verbatim; each later user correction is its own dated, verbatim entry, with evidence and rationale in separate entries rather than merged into the correction text.
 
 ## Before the first write
 
@@ -25,6 +26,7 @@
 ## Implement and verify
 
 - [ ] Coherent tasks follow dependency order and owner gates; independent ready tasks may proceed concurrently under shared coordination rules.
+- [ ] Conditional test-first: when a relevant runnable deterministic test and a clear expected outcome exist, RED is observed before implementation, then GREEN and refactor; otherwise the actual exception and proportionate checks are recorded. No runner or test harness is invented; architecture/edit gates, whole-suite ownership, and independent completion review remain binding.
 - [ ] Each task defines applicable acceptance checks and collects actual evidence during implementation; its tests and documentation ship with the slice.
 - [ ] Compact existing-Log evidence identifies task/spec, exact tested content/input or commit, relevant dependencies and environment/configuration, executor, literal command/invocation/arguments or manual action, expected and observed results/verdict, and applicable exit status; original execution provenance is preserved.
 - [ ] No applicable executable check means actual static/manual verification or justified N/A, never an invented test or execution transcript.
