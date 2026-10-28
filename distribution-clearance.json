@@ -89,12 +89,6 @@
         "SKILL.md"
       ]
     },
-    ".opencode/skills/plan-enforce/": {
-      "mode": "raw",
-      "region_files": [
-        "SKILL.md"
-      ]
-    },
     ".opencode/skills/query-verification/": {
       "mode": "raw",
       "region_files": [

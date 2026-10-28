@@ -13,7 +13,7 @@ This directory holds AICore's explanatory decisions, historical accounting and r
 
 - **Operational rules and registers:** [knowledge/agents.md](../knowledge/agents.md), [knowledge/debt.md](../knowledge/debt.md), [knowledge/symptoms.md](../knowledge/symptoms.md), [knowledge/problems.md](../knowledge/problems.md) and [knowledge/diagnostic-system-design.md](../knowledge/diagnostic-system-design.md).
 - **Architecture and testing definitions:** [architecture/README.md](../architecture/README.md) selects common/shape/implementation guides and the separate testing contract/guides. Documentation review does not establish code conformance.
-- **Current feature scope and decisions:** `odd/tasks/<feature-name>.md`. Historical plan locators may no longer exist.
+- **Current feature scope and decisions:** `odd/tasks/<feature-name>.md`.
 - **Research preparation/publication ownership:** [AGENTS.md → Saved-research bindings](../AGENTS.md#saved-research-bindings) selects this repository's storage and owner; `.opencode/agents/augur.md` owns research procedure. Cipher 🔓 (Lead Orchestrator) assigns exact repository-document writes to Scribe ✍️ (Docs & Problems Manager), subject to existing approvals and reviews. A catalog entry is not publication authorization.
 - **Temporary artifacts:** `output/research/`, `output/audits/` and `output/design/` are gitignored drafts/reports, not the sole durable home of reusable evidence.
 

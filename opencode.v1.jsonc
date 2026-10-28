@@ -119,7 +119,7 @@
             "*ruff format --check*": "allow",
             "uvx *": "deny",
             "uv tool run *": "deny",
-            // Stash safety gate (plan-enforce) — model agents may
+            // Stash safety gate — model agents may
             // `git stash push`/`save` (park work) and `git stash apply`
             // (recover, non-destructive — the entry survives as a durable
             // backup). `pop`/`drop`/`clear`/`update-ref` stay denied below;
@@ -149,8 +149,7 @@
             "git stash list": "allow",
             "git stash show -u": "allow",
             "git stash show -u *": "allow",
-            "mv plans/*-*": "allow",
-            // Redirect denies LAST so no later allow can shadow them; narrowed to
+                // Redirect denies LAST so no later allow can shadow them; narrowed to
             // catastrophic absolute targets so /tmp and /dev/null stay usable.
             // (A fork bomb is not expressible as a glob because the shell tool
             // emits only the inner command nodes; accepted as a documented gap.)
