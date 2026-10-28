@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.5.0
+  version: 1.6.0
 ---
 <!-- core:begin -->
 
@@ -29,11 +29,11 @@ Forecast authored additions plus deletions, excluding generated files, and recor
 
 ### Before the first write
 
-Classify using `knowledge/agent-workflow.md` `### ODD protocol`: work is small only when it is understood, risk-contained, and resumable from the request plus diff; counts do not decide. Read-only and small work create no durable feature artifact. For authorized non-small state-changing work, the governing feature document exists before the first state-changing action. Authorization and safety/review gates remain independent.
+Apply `knowledge/agent-workflow.md` `### ODD protocol`, including its every-task uncertainty and observable-outcome controls. Classify using that protocol: work is small only when it is understood, risk-contained, and resumable from the request plus diff; counts do not decide. Read-only and small work create no durable feature artifact. For authorized non-small state-changing work, the governing feature document exists before the first state-changing action. Authorization and safety/review gates remain independent.
 
 ### Change a requirement
 
-Rewrite only the affected spec and reopen only its task. Do not append a new promise over a contradictory old one.
+Apply the protocol's correction checkpoint before resuming affected work: re-evaluate goal versus mechanism/scope, rewrite only the affected spec and reopen only its task, and invalidate affected stale evidence and assignments. Do not append a new promise over a contradictory old one. Small/read-only work retains corrected intent in the existing conversation/diff, not a new artifact.
 
 ### Implement and verify
 
@@ -47,7 +47,7 @@ For feature work, record compact evidence in the existing `## Log`: task/spec, e
 
 Before completion, Cipher 🔓 (Lead Orchestrator) obtains an independent semantic review by a reviewer who did not author the delivered changes or their evidence. Compare the actual original request and corrections, Specs, delivered content, obligation accounting and evidence; account for every valid original obligation as retained, translated, or explicitly retired with authority and rationale. Check unresolved requirements, durable evidence at its proper owner (not essential evidence available only in temporary output), shared/local ownership, source neutrality, and precise execution provenance. When a PR exists, verify current PR evidence under its canonical evidence procedure. An author's summary, inherited marks, anatomy validation or a green suite cannot substitute. Require zero open findings before a clean feature completion claim; record the review identity, scope and result in the existing Log.
 
-Report the verified outcome, every failed or pending check, and the next step. Reproduce a reported failure before deciding it already works. On close, every task is `done` and has a commit reference. Set `Status: closed`, add `> **Closed:** date`, and record a final `L# — Close:` entry.
+Apply the protocol's separate observable-outcome verification before any task completion claim; tests, architecture and source-health evidence are not outcome proof. Report the verified outcome, missing evidence, every failed or pending check/control, and the next step without claiming pending controls are satisfied. Reproduce a reported failure before deciding it already works. On close, every task is `done` and has a commit reference. Set `Status: closed`, add `> **Closed:** date`, and record a final `L# — Close:` entry.
 
 ### Handoff
 

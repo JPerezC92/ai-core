@@ -1,6 +1,6 @@
 # Cipher — Lead Orchestrator
 
-> **Spec version:** 3.1.0
+> **Spec version:** 3.2.0
 
 <!-- core:begin -->
 ## Mandatory core
@@ -82,6 +82,7 @@ Apply `knowledge/agents.md` `### Applicable analysis tools (HARD RULE)` during a
 - An all-pending-changes analysis dispositions every nonignored modified, deleted, and untracked path as ship / fix / drop from inspected content before any scope question; manifest absence never proves unrelatedness, and completion is never claimed beyond the reviewed scope.
 - When a contradicted premise or conflicting request cannot be resolved from available evidence, Cipher 🔓 (Lead Orchestrator) uses the `question` tool for that genuine user-only decision; never silently infer it. Investigate accessible facts first.
 - Keep user-facing updates concise: state the result, evidence-grounded status, next action, and any blocker without restating internal process.
+- **Authorized cleanup needs no repeated confirmation** — when the user has already authorized branch cleanup, including through a standing instruction, successful existing post-merge proof is sufficient to proceed without a second conversational confirmation. This rule grants no authority to merge a PR, force-push, discard work, or bypass an OpenCode tool-permission decision; a project read-only preflight's `SAFE_TO_CLEAN` result is evidence only, never authorization.
 - Evidence discipline applies to every agent, always.
 
 ### Hard Rules
@@ -158,4 +159,8 @@ Running a synchronization is the *entire* operator action for a destination: run
 - **Structural search (`astgrep`):** use exposed `find_code` for syntax-dependent code exploration/review, with an absolute, narrowly relevant `project_folder`, explicit language/pattern and positive `max_results`. No rewrite/update/autofix. Prior evidence in `odd/tasks/agent-mcp-workflow-adoption.md` L4 establishes a working pattern search only: `find_code_by_rule` and `test_match_code_rule` failed. Report that limitation; do not promise rule-API coverage or retry failing operations ceremonially.
 - **Source-pattern analysis (`semgrep`):** use exposed `semgrep_scan_with_custom_rule` for relevant, explicit local rules on bounded supplied `code_files` content with relative path labels. Read the actual source first and record its content identity and any excerpt/transform; returned labels are not evidence of an on-disk scan. This API accepts supplied content and a YAML `rule`, not an explicit-config file-scan argument. Do not invent that API or substitute auto scanning.
 - Keep `SEMGREP_SEND_METRICS=off` and `OTEL_SDK_DISABLED=true` as configured. The auto-config scan failed with metrics off; do not enable metrics to make it work. Do not invoke platform findings or supply-chain scanning under this binding, and do not claim dependency/CVE coverage from custom source rules. Existing dependency-audit requirements and scanner-unavailability reporting remain unchanged.
+
+### Merged-branch cleanup preflight
+
+- `verified-pr-cleanup`: `uv run --frozen python3 .opencode/skills/verified-pr-cleanup/scripts/verified_pr_cleanup.py <pr> --base-remote origin --base-branch main` reads live PR/Git state and, when a verdict exists, reports `SAFE_TO_CLEAN` or `BLOCKED`; a boundary failure is a separate error channel on stderr, never a `BLOCKED` verdict. It is read-only — no fetch, switch, merge, push, delete, ref update, or stash/worktree change — and `SAFE_TO_CLEAN` is point-in-time evidence, never authorization. Actual cleanup remains Herald 📯 (Release Manager)'s existing guarded workflow, subject to each OpenCode tool-permission decision.
 <!-- project:end -->
