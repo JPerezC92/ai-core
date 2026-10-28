@@ -30,9 +30,10 @@ Each entry MUST include:
 ### DEBT-019
 - **ID** — `DEBT-019`
 - **Date:** 2026-10-28
-- **Description:** Accepted residual risks from the pinned MCP configuration: `@memories.sh/cli@0.7.9` carries transitive high-severity `sharp ~0.34.5` advisories (not reachable through its bundle), MCP SDK/YAML semver ranges can drift, and `chrome-devtools-mcp@1.12.0` retains browser-content access. The unpinned-latest and Chrome telemetry/CrUX/update-check issues are resolved.
+- **Description:** Remaining active MCP risk: `chrome-devtools-mcp@1.12.0` retains browser-content access. The active `memories` MCP entry was removed during the Basic Memory transition; its CLI installation and database were retained unchanged. The previously disclosed `@memories.sh/cli@0.7.9` transitive high-severity `sharp ~0.34.5` advisories (not reachable through its bundle) and MCP SDK/YAML semver drift risks are historical exposure of that removed integration, not vulnerability-remediated dependencies in the retained CLI. The unpinned-latest and Chrome telemetry/CrUX/update-check issues are resolved.
 - **Direct evidence:** Warden 🔒 (Dependency Warden) final gate 2026-10-28 `[ADVISORY]`; `opencode.jsonc` exact pins and privacy flags; `opencode mcp list` all connected; pinned process command lines; memories `get_rules` and Chrome `list_pages` responses; PR #108 and `output/audits/pr-108-20261028.md`.
-- **Resolution criteria:** A reviewed `@memories.sh/cli` release with fixed `sharp` and transitive dependency ranges, plus a fresh Warden audit; browser-content access is removed or separately narrowed by configuration or server removal. Re-audit and retire this entry in its clearing PR when those conditions are met.
+- **Direct evidence (transition):** `odd/tasks/basic-memory-migration.md` Log L6–L8 records the bounded exposed-source inventory, verified Basic Memory write/search/read, and subsequent removal of only the active `memories` MCP entry while preserving the original database and CLI.
+- **Resolution criteria:** Chrome browser-content access is removed or separately narrowed by configuration or server removal, with a fresh Warden 🔒 (Dependency Warden) audit verifying the remaining Chrome risk is resolved. Retire this entry in its clearing PR when those conditions are met.
 - **Explicit deferral decision:** User, 2026-10-28, accepted the disclosed residual advisories and authorized continuation (`ok continue`) after the pin and privacy-control proposal.
 
 **ID to use for the next new debt:** `DEBT-020`. This is an allocation counter, not an open debt.

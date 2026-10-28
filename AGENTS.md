@@ -136,6 +136,7 @@ Running a synchronization is the *entire* operator action for a destination: run
 
 - `python3` is the interpreter (not `python`); skill tests run with `uv run --frozen --group dev pytest`; the root UV environment locks runtime dependencies (PyYAML) separately from the `dev` group (pytest).
 - Every Python command runs through the project's virtual environment (`uv run --frozen …`), never a bare or global interpreter.
+- Narrow exception: the three MCP tooling projects `.opencode/tooling/basic-memory/`, `.opencode/tooling/astgrep/`, and `.opencode/tooling/semgrep/` each use their own locked environment through `uv run --frozen --project <tooling-directory> …`. This does not authorize other environments or root dependency changes; repository Python scripts still use `uv run --frozen python3 …`. Provisioning is documented in `docs/tooling.md`.
 
 ### Saved-research bindings
 
@@ -146,5 +147,5 @@ Running a synchronization is the *entire* operator action for a destination: run
 
 ### Memory system
 
-- This project uses the local memories.sh store via the `memories` MCP server — agents call `get_context` / `search_memories` at session start and write durable knowledge via `add_memory` scoped to this project only (never the global scope). magic-context is disabled here via `magic-context.jsonc`; native opencode compaction owns session context.
+- This project uses Basic Memory via the `basic-memory` MCP server, with project `ai-core` rooted at repo `memory/` — agents use `search_notes` / `read_note` at session start and `write_note` / `edit_note` for cache updates, passing `project="ai-core"` on every read and write (never global or other-project scope). Notes cache repo-derivable facts; authoritative durable knowledge stays in repo surfaces (`knowledge/`, skill Troubleshooting), never memory-only. magic-context is disabled here via `magic-context.jsonc`; native opencode compaction owns session context.
 <!-- project:end -->
