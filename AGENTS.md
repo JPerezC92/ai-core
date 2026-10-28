@@ -136,6 +136,7 @@ Running a synchronization is the *entire* operator action for a destination: run
 
 - `python3` is the interpreter (not `python`); skill tests run with `uv run --frozen --group dev pytest`; the root UV environment locks runtime dependencies (PyYAML) separately from the `dev` group (pytest).
 - Every Python command runs through the project's virtual environment (`uv run --frozen …`), never a bare or global interpreter.
+- Narrow exception: the three MCP tooling projects `.opencode/tooling/basic-memory/`, `.opencode/tooling/astgrep/`, and `.opencode/tooling/semgrep/` each use their own locked environment through `uv run --frozen --project <tooling-directory> …`. This does not authorize other environments or root dependency changes; repository Python scripts still use `uv run --frozen python3 …`. Provisioning is documented in `docs/tooling.md`.
 
 ### Saved-research bindings
 

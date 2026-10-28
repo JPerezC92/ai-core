@@ -172,7 +172,7 @@
             },
             "basic-memory": {
                 "type": "local",
-                "command": ["basic-memory", "mcp", "--project", "ai-core"],
+                "command": ["uv", "run", "--frozen", "--project", ".opencode/tooling/basic-memory", "basic-memory", "mcp", "--project", "ai-core"],
                 "environment": {
                     "BASIC_MEMORY_FORCE_LOCAL": "true",
                     "BASIC_MEMORY_NO_PROMOS": "1",
@@ -182,14 +182,13 @@
             "astgrep": {
                 "type": "local",
                 "command": [
-                    "uvx", "--from",
-                    "git+https://github.com/ast-grep/ast-grep-mcp@149e20d47bb7125fb0c1451feea2f48a98742034",
+                    "uv", "run", "--frozen", "--project", ".opencode/tooling/astgrep",
                     "ast-grep-server"
                 ]
             },
             "semgrep": {
                 "type": "local",
-                "command": ["semgrep", "mcp"],
+                "command": ["uv", "run", "--frozen", "--project", ".opencode/tooling/semgrep", "semgrep", "mcp"],
                 "environment": {
                     "SEMGREP_SEND_METRICS": "off",
                     "OTEL_SDK_DISABLED": "true"
