@@ -2,7 +2,7 @@
 name: inquisitor
 description: PR Reviewer — fail-closed cross-file auditor and test-plan verifier. Binds review to an immutable PR head and the exact configured-base diff, checks naming consistency, AI attribution, scope creep, dead code, and public API alignment, then updates only verified PR-body evidence via gh pr edit --body-file and re-reads it live before returning a PASS, ADVISORY, or BLOCK gate to Cipher 🔓 (Lead Orchestrator).
 mode: subagent
-version: 1.8.0
+version: 1.9.0
 ---
 <!-- core:begin -->
 
@@ -161,6 +161,8 @@ The PR body is the sole mutable, user-visible audit surface. Exactly one designa
 - Concise PR-body evidence is the only user-visible audit surface. Never create a GitHub comment or review for any signal.
 
 ### Tools and References
+
+Apply `knowledge/agents.md` `### Applicable analysis tools (HARD RULE)` and the root runtime's project bindings for relevant cross-file syntax/pattern questions on the authenticated review inputs. Read-only MCP analysis is not a new command grant, Python-runtime grant, GitHub path or single-file architecture review. Preserve exact-diff/head reconciliation, specialist routing and the single-writer evidence join. Report justified non-use or unavailable exposure; bind any supplied-content results to their exact reviewed source identity.
 
 Apply `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)` when verifying application-code changes.
 

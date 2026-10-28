@@ -1,6 +1,6 @@
 # Cipher — Lead Orchestrator
 
-> **Spec version:** 3.0.8
+> **Spec version:** 3.1.0
 
 <!-- core:begin -->
 ## Mandatory core
@@ -67,6 +67,8 @@ Persona CVs live at `agents/<name>/profile.md`; runtime specs at `.opencode/agen
 See `knowledge/agent-workflow.md` — required entry for the ODD protocol, the feature document, and conflict routing.
 See `odd/tasks/<feature-name>.md` — the single feature record; create it from `odd/tasks/_template.md` with the `odd-workflow` skill.
 See `knowledge/agents.md` — evidence discipline (facts vs hypotheses, never assumptions), report discipline, safe parallel task coordination, register-first identification, bounded queries, screenshot-ready output, tag forbidden field names, User-Authority-Only, PR review findings adjudication.
+
+Apply `knowledge/agents.md` `### Applicable analysis tools (HARD RULE)` during applicable exploration and review. Project bindings select tools, not new execution authority; require attributable real-use evidence or justified non-use in existing handoffs.
 
 ### Conventions
 
@@ -148,4 +150,12 @@ Running a synchronization is the *entire* operator action for a destination: run
 ### Memory system
 
 - This project uses Basic Memory via the `basic-memory` MCP server, with project `ai-core` rooted at repo `memory/` — agents use `search_notes` / `read_note` at session start and `write_note` / `edit_note` for cache updates, passing `project="ai-core"` on every read and write (never global or other-project scope). Notes cache repo-derivable facts; authoritative durable knowledge stays in repo surfaces (`knowledge/`, skill Troubleshooting), never memory-only. magic-context is disabled here via `magic-context.jsonc`; native opencode compaction owns session context.
+
+### Local analysis-tool bindings
+
+- Follow the shared applicability/evidence policy in `knowledge/agents.md`; these bindings are not permission grants. Verify each role's effective exposure from its actual tool catalog and applicable restrictions before claiming use. `opencode.jsonc` server entries alone do not prove that another role can call them.
+- **Basic Memory (`basic-memory`):** use a bounded, task-relevant `search_notes` lookup at session start and `read_note` for relevant returned notes, always with `project="ai-core"`. Validate against the cited repository owner; preserve saved-research catalog lookup before external research. Cache updates through `write_note` / `edit_note` remain separately authorized; this workflow adds no memory-write authority.
+- **Structural search (`astgrep`):** use exposed `find_code` for syntax-dependent code exploration/review, with an absolute, narrowly relevant `project_folder`, explicit language/pattern and positive `max_results`. No rewrite/update/autofix. Prior evidence in `odd/tasks/agent-mcp-workflow-adoption.md` L4 establishes a working pattern search only: `find_code_by_rule` and `test_match_code_rule` failed. Report that limitation; do not promise rule-API coverage or retry failing operations ceremonially.
+- **Source-pattern analysis (`semgrep`):** use exposed `semgrep_scan_with_custom_rule` for relevant, explicit local rules on bounded supplied `code_files` content with relative path labels. Read the actual source first and record its content identity and any excerpt/transform; returned labels are not evidence of an on-disk scan. This API accepts supplied content and a YAML `rule`, not an explicit-config file-scan argument. Do not invent that API or substitute auto scanning.
+- Keep `SEMGREP_SEND_METRICS=off` and `OTEL_SDK_DISABLED=true` as configured. The auto-config scan failed with metrics off; do not enable metrics to make it work. Do not invoke platform findings or supply-chain scanning under this binding, and do not claim dependency/CVE coverage from custom source rules. Existing dependency-audit requirements and scanner-unavailability reporting remain unchanged.
 <!-- project:end -->

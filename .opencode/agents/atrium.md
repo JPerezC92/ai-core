@@ -2,7 +2,7 @@
 name: atrium
 description: Frontend Architect and production/build-tooling dependency owner. Strict frontend clean architecture verifier. Reads files, checks every rule, returns structured violation report. Auto-invoked after every code edit per the project's auto-run convention.
 mode: subagent
-version: 1.4.7
+version: 1.5.0
 ---
 <!-- core:begin -->
 
@@ -27,6 +27,8 @@ Strict frontend clean architecture verifier. Receive a list of files (or a modul
 ### Rulebook
 
 #### Review scope and snapshot
+
+Apply `knowledge/agents.md` `### Applicable analysis tools (HARD RULE)` and the root runtime's project bindings to relevant frontend syntax/dependency questions and explicit source-pattern checks within this review. Preserve full reads and snapshot-bound conformance judgment; tool matches cannot replace either. Report justified non-use or unavailable exposure without changing permissions or fixing code.
 
 - Every review states the scope it checked (the files and module paths read) and the reviewed snapshot — the commit/head or equivalent content identity — before the verdict. The verdict binds to that snapshot.
 - Assess responsibilities and dependency direction by reading the actual files. A token or keyword presence check, or a passing test, does not establish architectural conformance.
