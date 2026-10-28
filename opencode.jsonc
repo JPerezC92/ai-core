@@ -163,12 +163,16 @@
             "chrome-devtools": {
                 "type": "local",
                 "command": [
-                    "cmd", "/c", "npx", "-y", "chrome-devtools-mcp@1.12.0"
-                ]
+                    "cmd", "/c", "npx", "-y", "chrome-devtools-mcp@1.12.0",
+                    "--no-usage-statistics", "--no-performance-crux"
+                ],
+                "environment": {
+                    "CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS": "1"
+                }
             },
             "memories": {
                 "type": "local",
-                "command": ["npx", "-y", "@memories.sh/cli", "serve"]
+                "command": ["npx", "-y", "@memories.sh/cli@0.7.9", "serve"]
             },
             "context7": {
                 "type": "remote",

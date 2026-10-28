@@ -25,7 +25,15 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 0.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; the standing-condition record is preserved in Git history at baseline `db58a74daab8bcddf5731f653dff9c6eed6c1fd4` (former `user-stories/plan-lifecycle-governance.md`), not an active path.
+**Open debts: 1.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; the standing-condition record is preserved in Git history at baseline `db58a74daab8bcddf5731f653dff9c6eed6c1fd4` (former `user-stories/plan-lifecycle-governance.md`), not an active path.
 
-**ID to use for the next new debt:** `DEBT-019`. This is an allocation counter, not an open debt.
+### DEBT-019
+- **ID** — `DEBT-019`
+- **Date:** 2026-10-28
+- **Description:** Accepted residual risks from the pinned MCP configuration: `@memories.sh/cli@0.7.9` carries transitive high-severity `sharp ~0.34.5` advisories (not reachable through its bundle), MCP SDK/YAML semver ranges can drift, and `chrome-devtools-mcp@1.12.0` retains browser-content access. The unpinned-latest and Chrome telemetry/CrUX/update-check issues are resolved.
+- **Direct evidence:** Warden 🔒 (Dependency Warden) final gate 2026-10-28 `[ADVISORY]`; `opencode.jsonc` exact pins and privacy flags; `opencode mcp list` all connected; pinned process command lines; memories `get_rules` and Chrome `list_pages` responses; PR #108 and `output/audits/pr-108-20261028.md`.
+- **Resolution criteria:** A reviewed `@memories.sh/cli` release with fixed `sharp` and transitive dependency ranges, plus a fresh Warden audit; browser-content access is removed or separately narrowed by configuration or server removal. Re-audit and retire this entry in its clearing PR when those conditions are met.
+- **Explicit deferral decision:** User, 2026-10-28, accepted the disclosed residual advisories and authorized continuation (`ok continue`) after the pin and privacy-control proposal.
+
+**ID to use for the next new debt:** `DEBT-020`. This is an allocation counter, not an open debt.
 <!-- project:end -->
