@@ -191,7 +191,7 @@ Three message types cover every user-facing status report:
 2. **Findings or blocked** — something unresolved needs adjudication: use the `### PR review findings (adjudication)` findings table with one unique `Counts:` line. Blockers, checks, and decisions are reported outside the finding counts.
 3. **Completion** — `ALL FINISHED` with delivered scope, verification, deferred items, and next options when the authorized scope is exhausted, or the compact ready-to-merge message when its conditions hold and no scope remains open.
 
-**Distinct concepts.** A **finding** is a rule-grounded defect or gap needing disposition. **Severity** is text (`HIGH`/`MEDIUM`/`LOW`) attached to a finding. An **open advisory finding** is one that remains after the fix-first rule in `### Finding disposition (HARD RULE)`: in-scope, local, reversible, one-answer, verifiable-now advisories are fixed without asking; otherwise the user decides whether it stays open. While open it is not fixed or clean; once fixed, it closes like any fixed finding. A **blocker** prevents an operation from proceeding until an external condition changes. A **check** is verification evidence that is passed, failed, or pending. A **decision** is a user-only choice. Findings, checks, and decisions are separate: zero findings never means ready while a required check is pending or a decision is outstanding.
+**Distinct concepts.** A **finding** is a rule-grounded defect or gap needing disposition. **Severity** is text (`HIGH`/`MEDIUM`/`LOW`) attached to a finding. An **open advisory finding** follows the complete rule in `### Finding disposition (HARD RULE)`, including every fix-first condition and exclusion; advisory status creates no blanket approval requirement or permission to fix. While open it is not fixed or clean; once fixed, it closes like any fixed finding. A **blocker** is an unmet prerequisite preventing the affected operation. Name its resolution owner and next action: coordinator/agent-resolvable blockers are resolved within existing authority, not automatically escalated to the user; user-only blockers name the exact required user action. A **check** is verification evidence that is passed, failed, or pending. A **decision** is a user-only choice. Findings, checks, and decisions are separate: zero findings never means ready while a required check is pending or a decision is outstanding.
 
 **State emojis.** Emojis mark state, never severity, and never replace required text.
 
@@ -212,24 +212,27 @@ Three message types cover every user-facing status report:
 - Unresolved, pending, or advisory items never become a clean `[PASS]`; `[PASS]` still requires zero open findings of any severity.
 - The PR-body evidence schema, findings-table columns, round-summary format, and compact ready path above remain unchanged; this section references them and introduces no second tracker.
 
-**Examples.**
+**Illustrative examples only — invented fixture identities/results below demonstrate format, not actual execution, published content, or feature status.**
 
-**Progress.** `workflow-execution-reliability · T4 — ✅ COMPLETE — presentation standard written to its owner. Evidence: knowledge/agents.md ### Message presentation. Next: T6 independent re-review. Continuing.`
+**Progress.** `example-feature · T4 — Step 6 Implement task by task — 🟡 IN PROGRESS — authored slice finished; owner gate pending. Evidence: example feature Log, candidate C1. Next: coordinator dispatches the authorized owner review. No user action needed: review dispatch is within existing authority. Continuing.`
 
 **Findings or blocked.**
 
-Unresolved findings: 1 of 2 — open 1, deferred 0; not ready — one required check failed
+Unresolved findings: 1 of 2 — open 1, deferred 0; not ready — behavior-changing remediation requires a user decision
 
 | ID | Finding | Severity | Status | Evidence | Owner / next action | Needs your decision? |
 |---|---|---|---|---|---|---|
-| F1 | KBA title omits the required system prefix | MEDIUM | 🔴 OPEN | `docs/wiki/kba/incident-timeout.md` title | Scribe ✍️ (Docs & Problems Manager) — retitle as `SYSTEM\|MODULE\|Description` | **Yes** — the retitle changes a published URL |
-| F2 | Runbook links a retired skill path | LOW | ✅ FIXED (round 1) | re-review round 1, `docs/wiki/kba/incident-timeout.md` body | closed — verifier: re-review round 1 | No |
+| F1 | Retry procedure contradicts the specified stop condition | MEDIUM | 🔴 OPEN | fixture candidate C1, procedure §Retry vs spec S1, review R1 | Cipher 🔓 (Lead Orchestrator) — recommend authorizing the behavior-changing correction; await decision before routing remediation | Yes — authorize correction or explicitly defer to the feature Log; neither is assumed |
+| F2 | Runbook links a retired skill path | LOW | ✅ FIXED (round 1) | fixture C1 §Links, fix C0→C1; independent verifier R1 confirmed replacement resolves | closed — verifier: fixture review R1 | No |
 
 Counts: fixed 1 · open 1 · deferred 0 · rejected 0 (of 2)
 
-Blockers: none.
-Checks: ❌ markdown text-integrity — failed on `docs/wiki/kba/incident-timeout.md`.
-Decisions: ❓ F1 — approve the URL-changing retitle, or keep the current title.
+Verdict: ❌ [FAIL] — F1 remains open.
+PR state: not opened — non-PR remediation review.
+Blockers: 🚧 BLOCKED — F1 correction needs user authorization; affected remediation only.
+Checks: ✅ PASS — fixture text-integrity check at C1; this does not establish outcome acceptance.
+Next action: Cipher 🔓 (Lead Orchestrator) presents the bounded F1 decision; after authorization, route correction and obtain current review.
+Needs your decision: ❓ F1 — authorize the behavior-changing correction, or explicitly authorize deferral to the feature Log.
 
 **Completion.** `ALL FINISHED — delivered: the authorized documentation scope; verification: required checks and independent review recorded in the feature Log; deferred: none; next options: open the PR, or stop here.`
 
