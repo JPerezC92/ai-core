@@ -1,11 +1,12 @@
 # PR release-readiness discipline
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-10-28
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-10-28
 > **Objective:** Prevent PRs from opening or being reported complete with unactioned review findings or unverified release claims.
 > **Branch:** docs/workflow/pr-release-readiness
-> **Delivery:** single documentation slice; forecast 70 authored additions plus deletions, generated files excluded; actual at ad26af3 is 48 additions plus 1 deletion; no code or test harness
+> **Delivery:** single documentation and configuration slice; forecast 70 authored additions plus deletions, generated files excluded; actual through b9b9116 is 53 additions plus 1 deletion in the feature/docs commit and the separate permission-fix commit, generated files excluded; no code or test harness
 > **Runner:** `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feature.py odd/tasks/pr-release-readiness-discipline.md`; Markdown/text-integrity check on changed docs
 
 ## Specs
@@ -21,14 +22,13 @@
 
 ## Tasks
 
-- T7 | S7 | inline (explicit user-authorized Herald feature-push permission, Warden-reviewed patterns; configuration only, outside Forge's role) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-
 - T1 | S2, S4 | delegated (single serialized documentation writer for the four existing workflow owners; exact paths named in S4) — Scribe ✍️ (Docs & Problems Manager) | done | commit: ad26af3
 - T2 | S2, S3, S4 | delegated (independent semantic/workflow review after implementation; no edits) — Sentinel 🛡️ (Quality Guardian) | done | commit: ad26af3
 - T3 | S2, S4 | delegated (skill catalog audit of the updated ODD skill; no edits) — Vault 🔐 (Catalog Steward) | done | commit: ad26af3
 - T4 | S1, S2, S3, S4 | inline (coordinator validation, feature closure and actual commit evidence) — Cipher 🔓 (Lead Orchestrator) | done | commit: ad26af3
-- T5 | S2, S4, S5, S6 | delegated (single documentation writer replaces conflicting chat presentation and updates its existing consumers) — Scribe ✍️ (Docs & Problems Manager) | open | commit: pending
-- T6 | S4, S5, S6 | delegated (independent semantic and catalog review verifies approved presentation and preserved PR-body evidence) — Sentinel 🛡️ (Quality Guardian) and Vault 🔐 (Catalog Steward) | open | commit: pending
+- T5 | S2, S4, S5, S6 | delegated (single documentation writer replaces conflicting chat presentation and updates its existing consumers) — Scribe ✍️ (Docs & Problems Manager) | done | commit: b9b9116
+- T6 | S4, S5, S6 | delegated (independent semantic and catalog review verifies approved presentation and preserved PR-body evidence) — Sentinel 🛡️ (Quality Guardian) and Vault 🔐 (Catalog Steward) | done | commit: b9b9116
+- T7 | S7 | inline (explicit user-authorized Herald feature-push permission, Warden-reviewed patterns; configuration only, outside Forge's role) — Cipher 🔓 (Lead Orchestrator) | done | commit: b9b9116
 
 ## Log
 
@@ -40,3 +40,4 @@
 - L6 — User correction, verbatim: "improve the new using things fropp the olds and show me again". Later approval and requirement, verbatim: "ok use taht , but what u will shgow me when u dont found nothing? i need a clear message like ready to emrge". Execution authorization, verbatim: "ok implement it". Reopened for the approved combined rendered chat table and explicit zero-finding ready message; old chat columns/action-line requirements must be replaced, not duplicated. The PR-body evidence format is unchanged. Exact implementation paths remain the four S4 owners; feature and Markdown checks plus independent reviews apply, no executable scope or suite change.
 - L7 — Presentation implementation: Scribe ✍️ (Docs & Problems Manager) changed only the four S4 owners, with knowledge/agents.md as the single canonical chat presentation. ODD skill advances 1.7.0 to 1.8.0. Stable IDs, severity, evidence, actions, explicit user-authorized deferrals/destinations, fixed/rejected history, counts, literal refutation output, review gates and PR-body schema are retained; old competing chat columns/action lines and verbose empty-clean summary are superseded with S5/S6 user authority. Source inputs are immediate originals at 7a618bd, exported byte-exact to output/audits/pr115-presentation-originals/ and compared against coordinator-hashed candidates. Sentinel 🛡️ (Quality Guardian) semantic T6 PASS after reading actual originals; Vault 🔐 (Catalog Steward) current-content catalog PASS. No executable/test/permission changes or suite execution; Markdown check exited 0. Feature remains active pending actual delivery references and PR re-review; no Ready-to-merge claim is made by this implementation checkpoint.
 - L8 — Loaded push check: Herald 📯 (Release Manager) committed the six approved paths as 283be0a4d846d1d9a87e142cf0b5cadcc5078456, then the separate ordinary feature push was denied before execution; PR #115 remains at 7a618bd. Warden 🔒 (Dependency Warden) traced the error to actual OpenCode V2 matcher source d142014e41eb7b117114b3c9372cf46279dec78b, packages/core/src/util/wildcard.ts: a trailing space-star becomes optional, so deny `git push origin * *` also matches a single branch argument. Corrected only that resource to `git push origin * ?*`, requiring an additional nonempty argument. Warden verified the on-disk correction PASS; other branch-prefix, option, refspec, tab and cleanup rules are retained. This is a permission-pattern defect, not evidence of a failed restart. Loaded correction remains unverified until configuration reload; no denied invocation is retried or bypassed.
+- L9 — Close: 2026-10-28 presentation and permission correction delivered to PR #115 at local head `b9b9116` (pushed as fast-forward from `7a618bd`). Loaded policy test succeeded: Herald `git push origin docs/workflow/pr-release-readiness` was allowed with no prompt; the earlier denial was confirmed as the trailing-space-star matcher bug, corrected to `git push origin * ?*`. Sentinel 🛡️ (Quality Guardian) and Vault 🔐 (Catalog Steward) reviewed the approved combined presentation; feature/Markdown checks passed. T5/T6/T7 are done; no code or test harness changed. PR #115 remains open for Inquisitor 🔎 (PR Reviewer) at `b9b9116`; no merge or Ready-to-merge claim is made by this closure.
