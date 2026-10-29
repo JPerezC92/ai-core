@@ -39,6 +39,14 @@ Every agent report to Cipher 🔓 (Lead Orchestrator) follows the exact output f
 - **Finish or stop-and-report.** If the task cannot be completed, report the exact blocker immediately — never pad with partial progress, present unfinished work as done, or invent a verdict. An incomplete report naming a blocker beats a complete one containing guesses.
 - **Flow-first explanations (code-flow handoffs).** Before composing code excerpts for a code-flow handoff, establish each structure's flow in order and write it that way: what fills the structure and from where (its evidenced source), then how and where it is used in sequence, then its effect. Integrate each code excerpt at the step it belongs to, joined by connective prose; never emit a bare sequence of code blocks whose labels leave the reader to reconstruct the logic. This governs explanatory handoffs only — it never replaces the verdict-first result, the role- or task-specific deliverable, or the ≤ 60-line bound above.
 
+### Shell command contract (HARD RULE)
+
+- Run one bare shell command per invocation. Do not append `;`, `&&`, `||`, `|`, `>`, `2>`, `echo "EXIT=$?"`, `Out-String`, or temporary-file capture wrappers.
+- Use the shell tool's captured output and exit status; do not create a temp file just to recover them.
+- If multiple operations are required, issue separate invocations or use a dedicated skill/script; never hide a restricted segment inside a compound command.
+- A wrapper-induced permission prompt is a command defect. Fix the command; do not widen permissions to accommodate it.
+- Report the exact failed command and literal permission/error output; never bypass a deny.
+
 ### Finding disposition (HARD RULE)
 
 - **`[PASS]` is zero open findings.** `[PASS]` requires zero open findings of any severity at the reviewed head. A fixed finding stays in audit history and is closed; a deferred or ADVISORY finding remains open and cannot be `[PASS]`; a `[BLOCK]` finding cannot be `[PASS]`. An observation that requires no action is an INFO note, not a finding. Any new finding invalidates a prior `[PASS]`.
@@ -53,6 +61,8 @@ Parallelism applies to independent ready tasks, whether their roles differ or mu
 **Readiness and dispatch.** A task is ready only when its relevant predecessors are accepted, required inputs are present and current, existing approvals/gates permit the operation, its resource access is compatible with active assignments, and its declared capacity is available. Dispatch independent ready tasks concurrently within that capacity. Explain a sequential decision by its actual dependency, resource conflict, required gate, or capacity limit; neither role identity nor phase numbering establishes independence. Unknown external capacity or isolation is missing evidence, not permission to assume it.
 
 **Resource ownership.** One active writer owns a canonical mutable resource at a time. Include file creation/deletion/rename, aliases and overlapping directory footprints, shared contracts/exports/fixtures, generated and formatter/autofix outputs, reports, registers/indexes, external records, browser/auth sessions, environments, Git/worktree state and PR bodies. Whole-file writes conflict even if intended text regions differ; deleting a directory conflicts with its descendants. Nominal reads that refresh authentication or otherwise mutate state declare that effect. Shared reads may overlap on unchanged inputs. Reject conflicting access before dispatch unless isolation is actually verified; separate agent sessions or prompts are not proof of isolation or a filesystem lock.
+
+**Worktree ownership.** Git worktree creation belongs to Herald 📯 (Release Manager); no other agent uses OpenCode worktree tools. The built-in `worktree_remove` tool bypasses this build's permission and policy checks, so removal is manual `git worktree remove`; no agent calls `worktree_remove`.
 
 **Outputs and evidence.** Allocate destinations before dispatch and attribute every return/report to its task instance and consumed inputs. Concurrent outputs must not overwrite one another. A governing fixed output path remains exclusively owned and serialized; do not rename it merely to create parallelism. Reviewers that may auto-fix are writers of that footprint, not automatically read-only. Hold reviewed content and relevant dependencies stable, record their identities and review scope, and invalidate affected verdicts after a relevant change. A current review of one slice never substitutes for the applicable combined-candidate or completion gate.
 

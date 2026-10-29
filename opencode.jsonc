@@ -13,7 +13,12 @@
             "model": "deepseek/deepseek-flash",
             "color": "#e5a00d",
             "permissions": [
-                { "action": "question", "resource": "*", "effect": "allow" }
+                { "action": "question", "resource": "*", "effect": "allow" },
+                // Cipher retains session move/rename. Worktree creation is
+                // Herald-owned; removal is manual because the built-in
+                // worktree_remove tool bypasses this build's policy layer.
+                { "action": "opencode_session_move", "resource": "*", "effect": "allow" },
+                { "action": "opencode_session_rename", "resource": "*", "effect": "allow" }
             ]
         },
         "crucible": {
@@ -56,6 +61,10 @@
                 { "action": "shell", "resource": "git merge --ff-only origin/main", "effect": "allow" },
                 { "action": "shell", "resource": "git branch -d -- *", "effect": "allow" },
                 { "action": "shell", "resource": "git branch -D -- *", "effect": "allow" },
+                // Worktree creation is a Git workspace operation and belongs to
+                // Herald. Removal is manual because the built-in worktree_remove
+                // tool bypasses this build's permission/policy layer.
+                { "action": "opencode_worktree_create", "resource": "*", "effect": "allow" },
                 // Herald-only ordinary feature pushes to origin; no base, force,
                 // destination-refspec or extra-argument grant. Cooperative scope,
                 // not a sandbox. Cleanup exceptions remain ordered afterward.
@@ -97,6 +106,27 @@
         { "action": "subagent", "resource": "*", "effect": "allow" },
         { "action": "skill", "resource": "*", "effect": "allow" },
         { "action": "question", "resource": "*", "effect": "deny" },
+        // Shared Basic Memory cache: agents may write/edit cache notes, but
+        // destructive operations stay blocked or manual. Argument rules are
+        // behavioural: write_note must not overwrite; edit_note uses checksums.
+        { "action": "basic-memory_write_note", "resource": "*", "effect": "allow" },
+        { "action": "basic-memory_edit_note", "resource": "*", "effect": "allow" },
+        { "action": "basic-memory_delete_note", "resource": "*", "effect": "deny" },
+        { "action": "basic-memory_move_note", "resource": "*", "effect": "deny" },
+        { "action": "basic-memory_create_memory_project", "resource": "*", "effect": "deny" },
+        { "action": "basic-memory_delete_project", "resource": "*", "effect": "deny" },
+        // Semgrep custom local rules are allowed; platform/supply-chain
+        // findings are outside this project's binding.
+        { "action": "semgrep_semgrep_scan_with_custom_rule", "resource": "*", "effect": "allow" },
+        { "action": "semgrep_semgrep_scan_supply_chain", "resource": "*", "effect": "deny" },
+        { "action": "semgrep_semgrep_findings", "resource": "*", "effect": "deny" },
+        // Chrome DevTools MCP is available to every agent. DEBT-019 browser
+        // content exposure is recorded; no per-tool Chrome ACL is used.
+        // Session mutation is Cipher-only. Worktree creation belongs to Herald;
+        // no agent uses worktree_remove, which bypasses this build's checks.
+        { "action": "opencode_worktree_create", "resource": "*", "effect": "deny" },
+        { "action": "opencode_session_move", "resource": "*", "effect": "deny" },
+        { "action": "opencode_session_rename", "resource": "*", "effect": "deny" },
         { "action": "edit", "resource": "*", "effect": "allow" },
         { "action": "external_directory", "resource": "*", "effect": "allow" },
         { "action": "shell", "resource": "*", "effect": "allow" },
