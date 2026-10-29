@@ -1,8 +1,9 @@
 # Domain and use-case conventions ADRs
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-10-29
+> **Closed:** 2026-10-29
 > **Objective:** Record the project's domain-model and use-case conventions in ADRs and their existing architecture owners before any code remediation.
 > **Branch:** docs/architecture/domain-use-case-conventions
 > **Delivery:** Two source-local ADRs (`0004`, `0005`) plus the operative definitions in the architecture core (`clean-architecture.md` C3 and the Python/NestJS `Application operations` sections); ~260 authored additions, 0 deletions; slice 1 = ADRs, slice 2 = core definitions and removal of the project-extension copies. No code edits.
@@ -18,10 +19,10 @@
 
 ## Tasks
 
-- T1 | S2 | delegated (ADR authoring is a documentation task; Scribe ✍️ owns documentation) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T2 | S3 | delegated (same owner and trigger) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T3 | S4 | delegated (same owner; exact core paths and removal of the project-extension copies) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T4 | S2, S3, S4 | delegated (independent semantic review; reviewer must not have authored the ADRs or convention edits) — general reviewer | in progress | commit: pending
+- T1 | S2 | delegated (ADR authoring is a documentation task; Scribe ✍️ owns documentation) — Scribe ✍️ (Docs & Problems Manager) | done | commit: f7b5417
+- T2 | S3 | delegated (same owner and trigger) — Scribe ✍️ (Docs & Problems Manager) | done | commit: f7b5417
+- T3 | S4 | delegated (same owner; exact core paths and removal of the project-extension copies) — Scribe ✍️ (Docs & Problems Manager) | done | commit: f7b5417
+- T4 | S2, S3, S4 | delegated (independent semantic review; reviewer must not have authored the ADRs or convention edits) — general reviewer | done | commit: f7b5417
 
 ## Log
 
@@ -35,3 +36,4 @@
 - L8 — 2026-10-29 — Separately authorized small implementation fixes were completed outside this feature after L7: `ValidateCloseOut` parse handling (`CLOSE-7`), the domain entity/value-object split (`entities.py`, `value_objects.py`, `ports.py`), the `entry.py` CLI-wrapper rename, and `preflight_cleanup.py`. They are not part of this feature's S5 docs-only scope and are not claimed as its completion evidence; the feature remains active at step 6 content-complete / step 7 commit-gate.
 - L9 — User correction, 2026-10-29, verbatim: "thats wrong a commit dont require my authorization if u do taht u will stop in each task thats onoyous".
 - L10 — 2026-10-29 — Decision: local commits are standing-authorized as part of finishing a task; per-commit confirmation is removed. Recorded in `AGENTS.md` project extension `### Local commit authorization` and as `DEBT-023`. Push, PR, merge, tag, release, and archive remain separately authorized. Next: Herald commits the docs and verified fixes; the tasks receive the commit reference.
+- L11 — Close: 2026-10-29 — T1–T4 done against docs commit `f7b5417` on branch `docs/architecture/domain-use-case-conventions`; independent review round 3 verified the ADR 0004 ownership fix; ODD validator returned `ok`; `DEBT-019` remains out of scope and untouched. Separate small fixes are committed as `f659dcb` and `b77f9b5` and are not part of this feature's scope (L8). No push, PR, merge, tag, or release was performed.
