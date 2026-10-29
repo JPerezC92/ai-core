@@ -25,17 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 1.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; the standing-condition record is preserved in Git history at baseline `db58a74daab8bcddf5731f653dff9c6eed6c1fd4` (former `user-stories/plan-lifecycle-governance.md`), not an active path.
-
-### DEBT-019
-- **ID** — `DEBT-019`
-- **Date:** 2026-10-28
-- **Description:** Remaining active MCP risk: `chrome-devtools-mcp@1.12.0` retains browser-content access. The active `memories` MCP entry was removed during the Basic Memory transition; its CLI installation and database were retained unchanged. The previously disclosed `@memories.sh/cli@0.7.9` transitive high-severity `sharp ~0.34.5` advisories (not reachable through its bundle) and MCP SDK/YAML semver drift risks are historical exposure of that removed integration, not vulnerability-remediated dependencies in the retained CLI. The unpinned-latest and Chrome telemetry/CrUX/update-check issues are resolved.
-- **Direct evidence:** Warden 🔒 (Dependency Warden) final gate 2026-10-28 `[ADVISORY]`; `opencode.jsonc` exact pins and privacy flags; `opencode mcp list` all connected; pinned process command lines; memories `get_rules` and Chrome `list_pages` responses; PR #108 and `output/audits/pr-108-20261028.md`.
-- **Direct evidence (transition):** `odd/tasks/basic-memory-migration.md` Log L6–L8 records the bounded exposed-source inventory, verified Basic Memory write/search/read, and subsequent removal of only the active `memories` MCP entry while preserving the original database and CLI.
-- **Direct evidence (2026-10-29 mitigation):** `opencode.jsonc` denies six high-risk Chrome MCP capabilities globally: `evaluate_script`, `upload_file`, `handle_dialog`, `take_heapsnapshot`, `screencast_start`, and `screencast_stop`. The loaded catalog exposes 26 of 32 Chrome tools. This narrows the exposure but does not resolve DEBT-019; browser screenshots, snapshots, console/network reads and the remaining interaction tools still expose browser content.
-- **Resolution criteria:** Chrome browser-content access is removed or separately narrowed by configuration or server removal, with a fresh Warden 🔒 (Dependency Warden) audit verifying the remaining Chrome risk is resolved. Retire this entry in its clearing PR when those conditions are met.
-- **Explicit deferral decision:** User, 2026-10-28, accepted the disclosed residual advisories and authorized continuation (`ok continue`) after the pin and privacy-control proposal.
+**Open debts: 0.** The DEBT-008/009/010 deletion made in clearing commit `5eed3317…` is recorded as **provisional**, not a settled retirement; the standing-condition record is preserved in Git history at baseline `db58a74daab8bcddf5731f653dff9c6eed6c1fd4` (former `user-stories/plan-lifecycle-governance.md`), not an active path.
 
 **ID to use for the next new debt:** `DEBT-021`. This is an allocation counter, not an open debt.
 <!-- project:end -->
