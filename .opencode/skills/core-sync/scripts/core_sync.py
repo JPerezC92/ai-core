@@ -77,7 +77,7 @@ from core_sync_pkg.domain.constants import (
     BindingMode,
 )
 from core_sync_pkg.domain.errors import MalformedSourceMarkers
-from core_sync_pkg.domain.markers import _exact_marker_line_indices, find_markers
+from core_sync_pkg.domain.markers import find_markers
 from core_sync_pkg.domain.reconciliation import (
     find_reconcile_block,
     reconciliation_report_path,
@@ -125,7 +125,6 @@ __all__ = [
     "split_regions",
     "sync_reconciliation_blocker",
     "write_text",
-    "_exact_marker_line_indices",
 ]
 
 
