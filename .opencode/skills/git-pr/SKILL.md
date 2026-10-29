@@ -5,16 +5,16 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.8.0
+  version: 1.8.1
   domain: git
 ---
 
 ## Steps
 
 1. Establish scope: the commits on the branch and the complete diff from the merge base with the project's configured base ref (`$BASE`, substituted with the project's actual base) to the current head, sampling the highest-signal files when the change set is large. That diff is the only scope evidence; a whitespace or staging diagnostic never is. An unresolvable or ambiguous configured base stops the draft and is reported as a blocker; never substitute a base of your own choosing.
-2. Read `knowledge/agent-workflow.md` and establish the governing ODD classification and authorized intent from the request/assignment, branch/task context, scoped commits and reconciled diff:
-   - **Small work** is understood, risk-contained, and resumable from the request plus diff. Use the authorized request/assignment with the scoped commits and diff for intent and current state; require no artificial feature document.
-   - **Non-small work** requires a unique governing ODD feature document at `odd/tasks/<feature-name>.md` that existed before implementation's first state-changing action. Identify it from the task context and reconciled changed files, never merely by filename, date, or status; read its `## Specs`, relevant `## Tasks`, and `## Log` for intent and current state. A missing document or timing evidence is a blocker, not permission to document implementation retroactively.
+2. Read `knowledge/agent-workflow.md` and apply `### ODD protocol` for classification; do not restate that protocol here. Establish authorized intent from the request/assignment, branch/task context, scoped commits and reconciled diff:
+   - **Small work:** use the authorized request/assignment with the scoped commits and diff for intent and current state; require no artificial feature document.
+   - **Non-small work:** identify the unique governing ODD feature document at `odd/tasks/<feature-name>.md` from the task context and reconciled changed files, never merely by filename, date, or status; read its `## Specs`, relevant `## Tasks`, and `## Log` for intent and current state. A missing document or timing evidence is a blocker, not permission to document implementation retroactively.
    - **Explicit legacy migration** may consume its existing legacy input for intent; it is not an alternative workflow for new work and does not waive applicable ODD classification or timing requirements.
    Use ticket references from recent commit subjects where present. The Summary explains why, grounded in the applicable authorized intent rather than inferred from the diff alone. If classification, authority, intent, or the required document's applicability is ambiguous or missing, investigate accessible evidence, then stop and report unresolved gaps and inspected candidates to the coordinator/requester before drafting; never infer an answer.
 3. Derive the title and body from the diff. When the current branch follows `type/scope/description` and its type or scope disagrees with the derived title, keep the diff-derived title and report both values explicitly: a branch is evidence of intent, not authority.

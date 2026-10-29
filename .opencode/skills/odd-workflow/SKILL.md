@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.8.0
+  version: 1.8.1
 ---
 <!-- core:begin -->
 
@@ -29,7 +29,7 @@ Forecast authored additions plus deletions, excluding generated files, and recor
 
 ### Before the first write
 
-Apply `knowledge/agent-workflow.md` `### ODD protocol`, including its every-task uncertainty and observable-outcome controls. Classify using that protocol: work is small only when it is understood, risk-contained, and resumable from the request plus diff; counts do not decide. Read-only and small work create no durable feature artifact. For authorized non-small state-changing work, creating the governing feature document from `odd/tasks/_template.md` is the sole authorized bootstrap write; no other mutation precedes it. Revise an existing governing document before affected work resumes. Authorization and safety/review gates remain independent. That protocol's `#### Step reporting and transitions` owns step reporting, the state/evidence/next-action fields, and scope-bounded continuation — follow it rather than restating it. The execution-review pause after creating the document or materially replanning is owned by `AGENTS.md` → Conventions.
+Apply `knowledge/agent-workflow.md` `### ODD protocol`, including its every-task uncertainty and observable-outcome controls. Do not restate that protocol here. That protocol's `#### Step reporting and transitions` owns step reporting, the state/evidence/next-action fields, and scope-bounded continuation. The execution-review pause after creating the document or materially replanning is owned by `AGENTS.md` → Conventions.
 
 ### Change a requirement
 
