@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from ticket_runbook_pkg.application.validate import (
+from ticket_runbook_pkg.application.validate_analysis import (
     ValidateAnalysis as _ValidateAnalysis,
 )
 from ticket_runbook_pkg.application.validate_close_out import ValidateCloseOut
