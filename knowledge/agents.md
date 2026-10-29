@@ -150,6 +150,8 @@ When Inquisitor 🔎 (PR Reviewer) returns review findings, Cipher 🔓 (Lead Or
 | Fix requires destructive or irreversible action | User-Authority-Only rule applies | **Yes** |
 | Same finding survives 2 remediation rounds, or 3 total review rounds | Loop cap — stop | **Yes** |
 
+**Finding actions:** before remediation, Cipher 🔓 (Lead Orchestrator) presents every finding as an action line carrying its ID, disposition (`fix` / `defer` / `reject`), owner, concrete action, and user-decision flag. A raw findings list is not an acceptable handoff. The dispositions, authority rules, refutation evidence, and loop cap above are unchanged; this adds no tracker and no additional approval.
+
 **PR-body presentation:** the PR body's `## Findings / blockers`, `## Test evidence`, `## Open debt`, and verdict line follow `.opencode/skills/git-pr/references/_pr-evidence-format.md` exactly. The designated evidence writer owns that content; the round-summary vocabulary below is the chat surface, not the body's status column.
 
 **Round summary (delivered to the user after every review round):** one findings-status message — first line + findings table + `Counts:` line + verdict line + PR state + `needs your call: none | <items>`.
