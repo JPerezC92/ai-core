@@ -93,11 +93,10 @@
             ]
         }
     },
-    // Project instructions (optional — point at your own docs):
-    // "instructions": [
-    //     "./knowledge/cipher-hard-rules.md",
-    //     "./knowledge/operational-gates.md"
-    // ],
+    "instructions": [
+        "knowledge/agent-workflow.md",
+        "knowledge/agents.md"
+    ],
     "permissions": [
         { "action": "read", "resource": "*", "effect": "allow" },
         { "action": "read", "resource": "*.env", "effect": "deny" },
