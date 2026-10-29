@@ -1,11 +1,12 @@
 # Release workflow home
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-10-29
+> **Closed:** 2026-10-29
 > **Objective:** Give the release workflow one home, keep ODD free of it, and inject that home in `instructions` only as a replacement, not a second copy.
-> **Branch:** N/A — not created yet
-> **Delivery:** single serialized documentation work unit; forecast 180 authored lines (generated files excluded); slice: new home, move packet out of ODD, pointers, config inject, clearance
+> **Branch:** `docs/release/workflow-home`
+> **Delivery:** single serialized documentation work unit; forecast 180 authored lines (generated files excluded); running count 1 work-unit commit `eeeef0c` plus this close-record commit; slice: new home, move packet out of ODD, pointers, config inject, clearance
 > **Runner:** `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feature.py odd/tasks/release-workflow-home.md` and `uv run --frozen python3 .opencode/skills/op-skill-creator/scripts/check_markdown_text.py --policy knowledge/unicode-policy.json odd/tasks/release-workflow-home.md knowledge/release.md knowledge/agent-workflow.md AGENTS.md .opencode/skills/odd-workflow/SKILL.md .opencode/skills/odd-workflow/references/_checklist.md`
 
 ## Specs
@@ -18,10 +19,10 @@
 
 ## Tasks
 
-- T1 | S1, S3, S4, S5 | inline (new shared knowledge file plus ODD extract; one writer) — Cipher 🔓 (Lead Orchestrator): create `knowledge/release.md`, move the two headings out of `knowledge/agent-workflow.md`, strengthen Keep files small | open | commit: pending
-- T2 | S2, S3, S4, S5 | inline (same serialized writer; AGENTS, config, skill, checklist, clearance share the new home) — Cipher 🔓 (Lead Orchestrator): pointer consumers, `instructions` replacement inject, clearance row | open | commit: pending
-- T3 | S1, S2, S3, S4, S5 | delegated (independent semantic review) — Sentinel 🛡️ (Quality Guardian): no competing copies, ODD not a junk drawer, inject is replacement not extra copy | open | commit: pending
-- T4 | S2, S5 | inline (coordinator validation) — Cipher 🔓 (Lead Orchestrator): runner, accept, close after work-unit commit | open | commit: pending
+- T1 | S1, S3, S4, S5 | inline (new shared knowledge file plus ODD extract; one writer) — Cipher 🔓 (Lead Orchestrator): create `knowledge/release.md`, move the two headings out of `knowledge/agent-workflow.md`, strengthen Keep files small | done | commit: eeeef0c
+- T2 | S2, S3, S4, S5 | inline (same serialized writer; AGENTS, config, skill, checklist, clearance share the new home) — Cipher 🔓 (Lead Orchestrator): pointer consumers, `instructions` replacement inject, clearance row | done | commit: eeeef0c
+- T3 | S1, S2, S3, S4, S5 | delegated (independent semantic review) — Sentinel 🛡️ (Quality Guardian): no competing copies, ODD not a junk drawer, inject is replacement not extra copy | done | commit: eeeef0c
+- T4 | S2, S5 | inline (coordinator validation) — Cipher 🔓 (Lead Orchestrator): runner, accept, close after work-unit commit | done | commit: eeeef0c
 
 ## Log
 
@@ -29,4 +30,5 @@
 - L2 — 2026-10-29 prior correction, verbatim: "i am talking about taht  but be critical and not compliant , and this should be included in instrction opencode config too rigth?"
 - L3 — Classified non-small: new shared knowledge file, ODD extract, config inject, clearance. Sole bootstrap write is this record.
 - L4 — Execution-review was the accepted proposal (one home, move not copy, inject instead of as well as). User authorized go. Implementation follows in this authorized scope.
-- L5 — 2026-10-29 T1/T2 authored: `knowledge/release.md` created; ODD PR headings replaced by pointer; Keep files small forbids attaching new flows to ODD; AGENTS 3.2.3 pointer; `instructions` adds `knowledge/release.md`; skill 1.8.2 and checklist Delivery are pointers; clearance region row. T3 Sentinel 🛡️ (Quality Guardian) sentinel-1 `[PASS]`, zero findings. Validator `ok`. Markdown check exit 0, no diagnostics. Pending work-unit commit.
+- L5 — 2026-10-29 T1/T2 authored: `knowledge/release.md` created; ODD PR headings replaced by pointer; Keep files small forbids attaching new flows to ODD; AGENTS 3.2.3 pointer; `instructions` adds `knowledge/release.md`; skill 1.8.2 and checklist Delivery are pointers; clearance region row. T3 Sentinel 🛡️ (Quality Guardian) sentinel-1 `[PASS]`, zero findings. Validator `ok`. Markdown check exit 0, no diagnostics. Work-unit commit `eeeef0c8ada308378b586b5f27cc154ee86229c8` (short `eeeef0c`) on `docs/release/workflow-home`.
+- L6 — Close: T1–T4 done against `eeeef0c`. Release home is `knowledge/release.md`; ODD points; `instructions` injects that home with the other two, not Herald/Inquisitor/git-pr. Deferred: none. Push/PR not claimed.
