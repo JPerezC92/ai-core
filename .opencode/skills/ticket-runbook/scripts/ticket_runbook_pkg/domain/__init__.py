@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from .entities import ProblemRow
+from .ports import ClockPort, RegisterRowsPort
 from .rules import (
     ALLOWED_ALLOW_EXACT,
     ALLOWED_IDENTIFICATION_VERDICTS,
@@ -22,11 +24,6 @@ from .rules import (
     STEP_FILE_BY_NAME,
     STEP_FILES,
     STEP_NAMES,
-    AnalysisHeader,
-    CloseOutSnapshot,
-    ModeFindings,
-    ProblemRow,
-    TicketIdentification,
     check_concurrent_session,
     check_identification_consistency,
     check_identification_verdict,
@@ -43,6 +40,12 @@ from .rules import (
     parse_problem_register,
     parse_state_header,
     parse_ticket_record,
+)
+from .value_objects import (
+    AnalysisHeader,
+    CloseOutSnapshot,
+    ModeFindings,
+    TicketIdentification,
 )
 
 __all__ = [

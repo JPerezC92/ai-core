@@ -60,6 +60,19 @@ class ValidateRunbookCloseOutTests:
         assert any("CLOSE-6" in item for item in violations), violations
         assert vr.validate_close_out(str(ticket_dir), str(tmp_path)) == 1
 
+    def test_close_out_reports_unparseable_ticket_record(
+        self, tmp_path: Path
+    ) -> None:
+        ticket_dir = _ticket_dir(tmp_path)
+        (ticket_dir / "ticket_999999.md").write_text(
+            "---\nsymptom_ids: [\n", encoding="utf-8"
+        )
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            result = vr.validate_close_out(str(ticket_dir), str(tmp_path))
+        assert result == 1
+        assert "CLOSE-7" in stderr.getvalue()
+
     def test_close_out_fails_before_and_passes_after_collapse(
         self, tmp_path: Path
     ) -> None:

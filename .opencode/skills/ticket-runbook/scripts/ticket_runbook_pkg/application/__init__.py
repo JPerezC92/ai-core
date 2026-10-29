@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ticket_runbook_pkg.domain.rules import RegisterRowsPort
+from ticket_runbook_pkg.domain.ports import RegisterRowsPort
 
 from .validate import ValidateAnalysis
 from .validate_close_out import ValidateCloseOut

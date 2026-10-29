@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
+from ticket_runbook_pkg.domain.ports import ClockPort
 from ticket_runbook_pkg.domain.rules import (
     STEP_FILES,
-    AnalysisHeader,
-    ClockPort,
-    ModeFindings,
     check_concurrent_session,
     check_identification_verdict,
     check_kill_switches,
@@ -14,6 +12,10 @@ from ticket_runbook_pkg.domain.rules import (
     check_sla_clock,
     check_step_files_exist,
     check_step_files_have_required_sections,
+)
+from ticket_runbook_pkg.domain.value_objects import (
+    AnalysisHeader,
+    ModeFindings,
 )
 
 __all__ = ["ValidateScaffold"]

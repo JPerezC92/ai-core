@@ -16,7 +16,7 @@ from _ticket_runbook_testkit import (  # noqa: E402
     _make_analysis,
     _patch_header,
 )
-from ticket_runbook_pkg.domain.rules import AnalysisHeader  # noqa: E402
+from ticket_runbook_pkg.domain.value_objects import AnalysisHeader  # noqa: E402
 
 
 def _header(analysis_dir: Path) -> AnalysisHeader:

@@ -18,21 +18,23 @@ from ticket_runbook_pkg.application.validate_scaffold import (
 from ticket_runbook_pkg.application.validate_step import (
     ValidateStep as _ValidateStep,
 )
+from ticket_runbook_pkg.domain.entities import ProblemRow
+from ticket_runbook_pkg.domain.ports import ClockPort
 from ticket_runbook_pkg.domain.rules import (
     REQUIRED_ANALYSIS_FILES,
     STATE_FILE,
     STEP_FILE_BY_NAME,
     STEP_FILES,
-    AnalysisHeader,
-    ClockPort,
-    CloseOutSnapshot,
-    ModeFindings,
-    ProblemRow,
     _cited_image_paths,
     check_concurrent_session as _check_concurrent_session,
     check_sla_clock as _check_sla_clock,
     parse_problem_register,
     parse_state_header,
+)
+from ticket_runbook_pkg.domain.value_objects import (
+    AnalysisHeader,
+    CloseOutSnapshot,
+    ModeFindings,
 )
 
 
@@ -44,24 +46,25 @@ def _system_clock() -> datetime:
     return datetime.now()
 
 
-def check_sla_clock(
+def cli_check_sla_clock(
     header: AnalysisHeader, now: Optional[datetime] = None
 ) -> Optional[str]:
-    """Edge-compatible SLA warning; an omitted ``now`` is resolved here only."""
+    """CLI/edge wrapper for the SLA warning; an omitted ``now`` is resolved here only."""
     resolved = now if now is not None else _system_clock()
     return _check_sla_clock(header, resolved)
 
 
-def check_concurrent_session(
+def cli_check_concurrent_session(
     header: AnalysisHeader, now: Optional[datetime] = None
 ) -> Optional[str]:
-    """Edge-compatible concurrency warning; an omitted ``now`` is resolved here only."""
+    """CLI/edge wrapper for the concurrency warning; an omitted ``now`` is
+    resolved here only."""
     resolved = now if now is not None else _system_clock()
     return _check_concurrent_session(header, resolved)
 
 
-class ValidateAnalysis:
-    """Edge-compatible wrapper delegating to the clock-injected analysis use case."""
+class CliValidateAnalysis:
+    """CLI/edge wrapper delegating to the clock-injected analysis use case."""
 
     def __init__(self, clock: Optional[ClockPort] = None) -> None:
         """Accept an optional clock; a concrete system clock is chosen here."""
@@ -79,8 +82,8 @@ class ValidateAnalysis:
         return self._inner.execute(header, step_contents, analysis_dir)
 
 
-class ValidateScaffold:
-    """Edge-compatible wrapper delegating to the clock-injected scaffold use case."""
+class CliValidateScaffold:
+    """CLI/edge wrapper delegating to the clock-injected scaffold use case."""
 
     def __init__(self, clock: Optional[ClockPort] = None) -> None:
         """Accept an optional clock; a concrete system clock is chosen here."""
@@ -98,8 +101,8 @@ class ValidateScaffold:
         return self._inner.execute(header, step_contents, analysis_dir)
 
 
-class ValidateStep:
-    """Edge-compatible wrapper delegating to the clock-injected step use case."""
+class CliValidateStep:
+    """CLI/edge wrapper delegating to the clock-injected step use case."""
 
     def __init__(self, clock: Optional[ClockPort] = None) -> None:
         """Accept an optional clock; a concrete system clock is chosen here."""
@@ -236,7 +239,7 @@ def validate(analysis_dir: str) -> int:
         return 1
 
     step_contents = load_step_file_contents(Path(analysis_dir))
-    findings = ValidateAnalysis(_system_clock).execute(
+    findings = CliValidateAnalysis(_system_clock).execute(
         header, step_contents, analysis_dir
     )
 
@@ -269,7 +272,7 @@ def validate_scaffold(analysis_dir: str) -> int:
         return 1
 
     step_contents = load_step_file_contents(Path(analysis_dir))
-    findings = ValidateScaffold(_system_clock).execute(
+    findings = CliValidateScaffold(_system_clock).execute(
         header, step_contents, analysis_dir
     )
 
@@ -297,7 +300,7 @@ def validate_step(analysis_dir: str, step_name: str) -> int:
         return 1
 
     step_contents = load_step_file_contents(Path(analysis_dir))
-    findings = ValidateStep(_system_clock).execute(
+    findings = CliValidateStep(_system_clock).execute(
         header, step_contents, step_name, analysis_dir
     )
 

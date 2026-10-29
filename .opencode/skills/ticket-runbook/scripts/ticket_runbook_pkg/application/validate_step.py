@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
+from ticket_runbook_pkg.domain.ports import ClockPort
 from ticket_runbook_pkg.domain.rules import (
     STEP_FILE_BY_NAME,
-    AnalysisHeader,
-    ClockPort,
-    ModeFindings,
     check_concurrent_session,
     check_identification_verdict,
     check_kill_switches,
@@ -14,6 +12,10 @@ from ticket_runbook_pkg.domain.rules import (
     check_single_step_file_exists,
     check_single_step_sections,
     check_sla_clock,
+)
+from ticket_runbook_pkg.domain.value_objects import (
+    AnalysisHeader,
+    ModeFindings,
 )
 
 __all__ = ["ValidateStep"]
