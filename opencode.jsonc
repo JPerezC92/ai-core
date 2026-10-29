@@ -120,8 +120,14 @@
         { "action": "semgrep_semgrep_scan_with_custom_rule", "resource": "*", "effect": "allow" },
         { "action": "semgrep_semgrep_scan_supply_chain", "resource": "*", "effect": "deny" },
         { "action": "semgrep_semgrep_findings", "resource": "*", "effect": "deny" },
-        // Chrome DevTools MCP is available to every agent. DEBT-019 browser
-        // content exposure is recorded; no per-tool Chrome ACL is used.
+        // Chrome DevTools MCP remains available to every agent; these six
+        // highest-risk capabilities are denied globally.
+        { "action": "chrome-devtools_evaluate_script", "resource": "*", "effect": "deny" },
+        { "action": "chrome-devtools_upload_file", "resource": "*", "effect": "deny" },
+        { "action": "chrome-devtools_handle_dialog", "resource": "*", "effect": "deny" },
+        { "action": "chrome-devtools_take_heapsnapshot", "resource": "*", "effect": "deny" },
+        { "action": "chrome-devtools_screencast_start", "resource": "*", "effect": "deny" },
+        { "action": "chrome-devtools_screencast_stop", "resource": "*", "effect": "deny" },
         // Session mutation is Cipher-only. Worktree creation belongs to Herald;
         // no agent uses worktree_remove, which bypasses this build's checks.
         { "action": "opencode_worktree_create", "resource": "*", "effect": "deny" },
