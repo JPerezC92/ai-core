@@ -68,7 +68,7 @@ def _parse_binding_entry(
     return {"source": source, "destinations": resolved, "mode": mode}
 
 
-def _parse_init_binding_spec(
+def parse_init_binding_spec(
     spec: str, mode: BindingMode
 ) -> Optional[tuple[str, str, BindingMode]]:
     """Parse one exact `SOURCE=DEST` init declaration with safe paths."""
@@ -85,7 +85,7 @@ def _parse_init_binding_spec(
     return (source, destination, mode)
 
 
-def _merge_init_binding_options(
+def merge_init_binding_options(
     bindings: Bindings, region_specs: list[str], raw_specs: list[str]
 ) -> tuple[Optional[str], set[str]]:
     """Merge CLI declarations and report raw destinations newly registered here."""
@@ -100,7 +100,7 @@ def _merge_init_binding_options(
         *((spec, MODE_RAW) for spec in raw_specs),
     ]
     for spec, mode in declarations:
-        declaration = _parse_init_binding_spec(spec, mode)
+        declaration = parse_init_binding_spec(spec, mode)
         if declaration is None:
             return (f"malformed or unsafe binding declaration: {spec!r}", set())
         source, destination, declaration_mode = declaration
@@ -236,7 +236,7 @@ def binding_mode_conflict(
     return None
 
 
-def _non_region_destination_paths(
+def non_region_destination_paths(
     bindings: Bindings, mode_of: dict[str, str]
 ) -> set[str]:
     """Return destinations whose source is declared raw or merge in clearance."""
@@ -248,7 +248,7 @@ def _non_region_destination_paths(
     }
 
 
-def _normalize_pending(
+def normalize_pending(
     pending: list[str], non_region_destinations: set[str]
 ) -> list[str]:
     """Return pending paths that still have a region to reconcile."""

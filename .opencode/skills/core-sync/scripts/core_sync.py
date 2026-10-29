@@ -56,8 +56,8 @@ from core_sync_pkg.infrastructure.composition import main
 from core_sync_pkg.domain.bindings import (
     BindingEntry,
     Bindings,
-    _parse_init_binding_spec,
     parse_bindings,
+    parse_init_binding_spec,
     serialize_bindings,
 )
 from core_sync_pkg.domain.constants import (
@@ -117,6 +117,7 @@ __all__ = [
     "main",
     "outside_bytes",
     "parse_bindings",
+    "parse_init_binding_spec",
     "reconciliation_report_path",
     "save_bindings",
     "serialize_bindings",
@@ -124,7 +125,6 @@ __all__ = [
     "split_regions",
     "sync_reconciliation_blocker",
     "write_text",
-    "_parse_init_binding_spec",
     "_exact_marker_line_indices",
 ]
 

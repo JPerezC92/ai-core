@@ -14,9 +14,9 @@ from core_sync_pkg.domain.ports import (
     UseCaseResult,
 )
 from core_sync_pkg.domain.bindings import (
-    _non_region_destination_paths,
-    _normalize_pending,
     binding_mode_conflict,
+    non_region_destination_paths,
+    normalize_pending,
     uncleared_sources,
 )
 from core_sync_pkg.domain.clearance import expand_clearance
@@ -121,11 +121,11 @@ class VerifyDestinations:
                 return DomainError(CODE_DRIFT, f"missing source: {source_path}")
             source_cores[entry["source"]] = source_core
 
-        non_region_destinations = _non_region_destination_paths(bindings, mode_of)
+        non_region_destinations = non_region_destination_paths(bindings, mode_of)
         stale_non_region_pending = [
             path for path in bindings["pending"] if path in non_region_destinations
         ]
-        normalized_pending = _normalize_pending(
+        normalized_pending = normalize_pending(
             bindings["pending"], non_region_destinations
         )
         self._root_runtime.write_blocker(

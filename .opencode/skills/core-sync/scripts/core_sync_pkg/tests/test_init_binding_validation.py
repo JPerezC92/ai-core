@@ -20,7 +20,7 @@ from _core_sync_testkit import (  # noqa: E402
     _write_file,
 )
 from core_sync_pkg.domain.bindings import (  # noqa: E402
-    _parse_init_binding_spec,
+    parse_init_binding_spec,
 )
 from core_sync_pkg.domain.constants import MODE_REGION  # noqa: E402
 from core_sync_pkg.domain.reconciliation import (  # noqa: E402
@@ -119,7 +119,7 @@ class InitBindingValidationTests:
         )
 
         for source, destination in valid_mappings:
-            assert _parse_init_binding_spec(
+            assert parse_init_binding_spec(
                 f"{source}={destination}", MODE_REGION
             ) == (source, destination, MODE_REGION)
 

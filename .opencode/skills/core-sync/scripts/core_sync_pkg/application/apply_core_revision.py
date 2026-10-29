@@ -14,9 +14,9 @@ from core_sync_pkg.domain.ports import (
     UseCaseResult,
 )
 from core_sync_pkg.domain.bindings import (
-    _non_region_destination_paths,
-    _normalize_pending,
     binding_mode_conflict,
+    non_region_destination_paths,
+    normalize_pending,
     uncleared_sources,
 )
 from core_sync_pkg.domain.clearance import expand_clearance
@@ -209,8 +209,8 @@ class ApplyCoreRevision:
             self._destination_writer.write_bytes(destination_path, raw_content)
 
         bindings["core_revision"] = source_revision
-        bindings["pending"] = _normalize_pending(
-            bindings["pending"], _non_region_destination_paths(bindings, mode_of)
+        bindings["pending"] = normalize_pending(
+            bindings["pending"], non_region_destination_paths(bindings, mode_of)
         )
         self._bindings_store.save(bindings_path, bindings)
         self._root_runtime.write_blocker(
