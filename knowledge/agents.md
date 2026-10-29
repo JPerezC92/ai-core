@@ -49,7 +49,7 @@ Every agent report to Cipher 🔓 (Lead Orchestrator) follows the exact output f
 
 ### Finding disposition (HARD RULE)
 
-- **`[PASS]` is zero open findings.** `[PASS]` requires zero open findings of any severity at the reviewed head. A fixed finding stays in audit history and is closed; a deferred or ADVISORY finding remains open and cannot be `[PASS]`; a `[BLOCK]` finding cannot be `[PASS]`. An observation that requires no action is an INFO note, not a finding. Any new finding invalidates a prior `[PASS]`.
+- **`[PASS]` is zero open findings.** `[PASS]` requires zero open findings of any severity at the reviewed head. A fixed finding stays in audit history and is closed; a deferred finding, or an open advisory finding, remains open and cannot be `[PASS]`; a fixed advisory closes like any fixed finding; a `[BLOCK]` finding cannot be `[PASS]`. An observation that requires no action is an INFO note, not a finding. Any new finding invalidates a prior `[PASS]`.
 - **Fix first.** For every real finding: if it is in scope, local and reversible, has one correct answer, changes no behavior, API, security, data, dependency, or permission, and is verifiable now — fix it and record the fix without asking. Otherwise stop the affected work and report exact evidence, impact, bounded options, and a recommendation. Never use "ignore" as a disposition; deferred work requires explicit authority. Cipher 🔓 (Lead Orchestrator) documents a user decision but cannot accept the risk itself. Fixing under this rule uses only existing authority, never expands scope, and is the user-authorized disposition for review findings — not a workaround under the User-Authority-Only rule.
 
 ### Safe parallel task coordination (HARD RULE)
@@ -182,6 +182,56 @@ When Inquisitor 🔎 (PR Reviewer) returns review findings, Cipher 🔓 (Lead Or
 - `Needs your decision: merge the PR`
 
 Do not show an empty findings table. If findings existed, an optional `Fixed: <N> · Open: 0` count may accompany the compact message; verified fixed/rejected history remains in the PR body and available audit evidence. This compact path supersedes only the verbose chat summary, never PR history or merge authority. Missing checks, stale evidence, an outstanding acceptance decision, or any open/deferred finding means not ready: use the combined round summary with the concrete next action instead, without implying clean `[PASS]` or permission to merge.
+
+### Message presentation
+
+Three message types cover every user-facing status report:
+
+1. **Progress** — a step or task advanced and no user action is required: identity, state, result, evidence pointer, next action. Field-level ODD reporting is owned by `knowledge/agent-workflow.md` `#### Step reporting and transitions`.
+2. **Findings or blocked** — something unresolved needs adjudication: use the `### PR review findings (adjudication)` findings table with one unique `Counts:` line. Blockers, checks, and decisions are reported outside the finding counts.
+3. **Completion** — `ALL FINISHED` with delivered scope, verification, deferred items, and next options when the authorized scope is exhausted, or the compact ready-to-merge message when its conditions hold and no scope remains open.
+
+**Distinct concepts.** A **finding** is a rule-grounded defect or gap needing disposition. **Severity** is text (`HIGH`/`MEDIUM`/`LOW`) attached to a finding. An **open advisory finding** is one that remains after the fix-first rule in `### Finding disposition (HARD RULE)`: in-scope, local, reversible, one-answer, verifiable-now advisories are fixed without asking; otherwise the user decides whether it stays open. While open it is not fixed or clean; once fixed, it closes like any fixed finding. A **blocker** prevents an operation from proceeding until an external condition changes. A **check** is verification evidence that is passed, failed, or pending. A **decision** is a user-only choice. Findings, checks, and decisions are separate: zero findings never means ready while a required check is pending or a decision is outstanding.
+
+**State emojis.** Emojis mark state, never severity, and never replace required text.
+
+| Emoji | State |
+|---|---|
+| ✅ | COMPLETE / FIXED / PASS |
+| 🟡 | IN PROGRESS / PENDING |
+| 🚧 | BLOCKED |
+| ⏭️ | NOT APPLICABLE / SKIPPED |
+| 🔴 | OPEN |
+| ⏸ | DEFERRED |
+| ✖ | REJECTED |
+| ❌ | FAIL / ERROR |
+| ⚠️ | ADVISORY |
+| ❓ | DECISION REQUIRED |
+
+- Never show an empty findings table; state the absence of findings in prose.
+- Unresolved, pending, or advisory items never become a clean `[PASS]`; `[PASS]` still requires zero open findings of any severity.
+- The PR-body evidence schema, findings-table columns, round-summary format, and compact ready path above remain unchanged; this section references them and introduces no second tracker.
+
+**Examples.**
+
+**Progress.** `workflow-execution-reliability · T4 — ✅ COMPLETE — presentation standard written to its owner. Evidence: knowledge/agents.md ### Message presentation. Next: T6 independent re-review. Continuing.`
+
+**Findings or blocked.**
+
+Unresolved findings: 1 of 2 — open 1, deferred 0; not ready — one required check failed
+
+| ID | Finding | Severity | Status | Evidence | Owner / next action | Needs your decision? |
+|---|---|---|---|---|---|---|
+| F1 | KBA title omits the required system prefix | MEDIUM | 🔴 OPEN | `docs/wiki/kba/incident-timeout.md` title | Scribe ✍️ (Docs & Problems Manager) — retitle as `SYSTEM\|MODULE\|Description` | **Yes** — the retitle changes a published URL |
+| F2 | Runbook links a retired skill path | LOW | ✅ FIXED (round 1) | re-review round 1, `docs/wiki/kba/incident-timeout.md` body | closed — verifier: re-review round 1 | No |
+
+Counts: fixed 1 · open 1 · deferred 0 · rejected 0 (of 2)
+
+Blockers: none.
+Checks: ❌ markdown text-integrity — failed on `docs/wiki/kba/incident-timeout.md`.
+Decisions: ❓ F1 — approve the URL-changing retitle, or keep the current title.
+
+**Completion.** `ALL FINISHED — delivered: the authorized documentation scope; verification: required checks and independent review recorded in the feature Log; deferred: none; next options: open the PR, or stop here.`
 
 ### Roster ownership table
 

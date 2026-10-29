@@ -18,6 +18,7 @@
 - [ ] Read-only and small work create no durable feature artifact; non-small state-changing work has its authorized ODD feature document before the first mutation.
 - [ ] Authorization and applicable safety/review gates are checked independently of classification.
 - [ ] Feature scope is expressed through Specs/Tasks, not treated as an exclusive file partition; shared-resource overlap names its canonical owner/dependency and follows serialized-writer coordination.
+- [ ] After creating the governing document or materially replanning, the execution-review pause is presented — Issue → Goal → How → Files, the gate, and the decision needed — before implementation; routine Log/evidence updates do not restart it, and creating the document is the sole bootstrap write. Owner: `AGENTS.md` → Conventions.
 
 ## Change
 
@@ -31,6 +32,8 @@
 - [ ] Each task defines applicable acceptance checks and collects actual evidence during implementation; its tests and documentation ship with the slice.
 - [ ] Compact existing-Log evidence identifies task/spec, exact tested content/input or commit, relevant dependencies and environment/configuration, executor, literal command/invocation/arguments or manual action, expected and observed results/verdict, and applicable exit status; original execution provenance is preserved.
 - [ ] No applicable executable check means actual static/manual verification or justified N/A, never an invented test or execution transcript.
+- [ ] After each completed step, the report carries feature/task identity, step number/name, state, result, evidence pointer, and next action, using the standardized emoji state; a skipped step states its reason, and a checkpoint or owner-gate return is not step completion. Owner: `knowledge/agent-workflow.md` → `#### Step reporting and transitions`.
+- [ ] Work continues to the next ready task within the active authorized scope; only a required decision, permission, or blocker stops it, naming the exact user action. Exhausted scope ends with `ALL FINISHED` (delivered scope, verification, deferred items, next options), never with unrelated work. Owners: `knowledge/agent-workflow.md` → `#### Step reporting and transitions`; `knowledge/agents.md` → `### Message presentation`.
 
 ## Close
 
@@ -43,12 +46,13 @@
 - [ ] Review checks unresolved requirements, durable evidence at its owner rather than temporary-output-only proof, shared/local ownership, source neutrality, precise invocation provenance, and current PR evidence under the canonical procedure when a PR exists.
 - [ ] The existing Log records review identity, scope and result; zero findings remain open before a clean completion claim. Anatomy, a green suite, inherited marks and the author's summary are not semantic completion evidence.
 - [ ] `Status` is `closed`, a `Closed:` date is present, and the Log has a `Close:` entry.
+- [ ] Completion is presented as `ALL FINISHED` (delivered scope, verification, deferred items, next options) or the eligible compact ready-to-merge message, with findings, blockers, checks, and decisions kept separate, no empty findings table, and no unrelated work selected. Owner: `knowledge/agents.md` → `### Message presentation`.
 - [ ] `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feature.py odd/tasks` exits 0. This is mechanical anatomy only; independent semantic review and acceptance by Cipher 🔓 (Lead Orchestrator) remain required.
 
 ## Delivery
 
 - [ ] Closing the feature document is not delivery.
-- [ ] Commit, push, PR, release, and archive have explicit user authorization.
+- [ ] Explicit authorization may be standing; local commits are standing-authorized only when the project says so. Push, PR, merge, tag, release, and archive remain separately authorized, a tool-permission denial is never bypassed, and Git execution stays with Herald 📯 (Release Manager).
 - [ ] A PR is a reviewable slice, not the accumulated branch.
 - [ ] Before a PR is opened, the release-readiness packet is verified and recorded in the existing feature record or PR draft: exact test-plan actions or commands with observed results, every applicable gate status, each task's and the feature's open-or-closed status, excluded or unrelated paths, unverified user-only controls, and each body claim against its evidence. Missing, contradictory or stale evidence blocks PR creation.
 - [ ] After every review round, presentation follows the canonical combined rendered chat summary or eligible compact ready message in `knowledge/agents.md` `### PR review findings (adjudication)`, including its accounting and readiness conditions; a raw findings list is not an accepted handoff. Fix-first, deferral authority, refutation evidence, the loop cap, all existing gates and the PR-body evidence schema are unchanged.

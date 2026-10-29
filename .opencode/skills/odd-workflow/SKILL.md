@@ -29,7 +29,7 @@ Forecast authored additions plus deletions, excluding generated files, and recor
 
 ### Before the first write
 
-Apply `knowledge/agent-workflow.md` `### ODD protocol`, including its every-task uncertainty and observable-outcome controls. Classify using that protocol: work is small only when it is understood, risk-contained, and resumable from the request plus diff; counts do not decide. Read-only and small work create no durable feature artifact. For authorized non-small state-changing work, the governing feature document exists before the first state-changing action. Authorization and safety/review gates remain independent.
+Apply `knowledge/agent-workflow.md` `### ODD protocol`, including its every-task uncertainty and observable-outcome controls. Classify using that protocol: work is small only when it is understood, risk-contained, and resumable from the request plus diff; counts do not decide. Read-only and small work create no durable feature artifact. For authorized non-small state-changing work, the governing feature document exists before the first state-changing action. Authorization and safety/review gates remain independent. That protocol's `#### Step reporting and transitions` owns step reporting, the state/evidence/next-action fields, and scope-bounded continuation — follow it rather than restating it. Creating the governing document is the sole bootstrap write; the execution-review pause after creating it or materially replanning is owned by `AGENTS.md` → Conventions.
 
 ### Change a requirement
 
@@ -47,7 +47,7 @@ For feature work, record compact evidence in the existing `## Log`: task/spec, e
 
 Before completion, Cipher 🔓 (Lead Orchestrator) obtains an independent semantic review by a reviewer who did not author the delivered changes or their evidence. Compare the actual original request and corrections, Specs, delivered content, obligation accounting and evidence; account for every valid original obligation as retained, translated, or explicitly retired with authority and rationale. Check unresolved requirements, durable evidence at its proper owner (not essential evidence available only in temporary output), shared/local ownership, source neutrality, and precise execution provenance. When a PR exists, verify current PR evidence under its canonical evidence procedure. An author's summary, inherited marks, anatomy validation or a green suite cannot substitute. Require zero open findings before a clean feature completion claim; record the review identity, scope and result in the existing Log.
 
-Apply the protocol's separate observable-outcome verification before any task completion claim; tests, architecture and source-health evidence are not outcome proof. Report the verified outcome, missing evidence, every failed or pending check/control, and the next step without claiming pending controls are satisfied. Reproduce a reported failure before deciding it already works. On close, every task is `done` and has a commit reference. Set `Status: closed`, add `> **Closed:** date`, and record a final `L# — Close:` entry.
+Apply the protocol's separate observable-outcome verification before any task completion claim; tests, architecture and source-health evidence are not outcome proof. Report the verified outcome, missing evidence, every failed or pending check/control, and the next step without claiming pending controls are satisfied. Reproduce a reported failure before deciding it already works. When the authorized scope is complete, present it with the `ALL FINISHED` format in `knowledge/agents.md` `### Message presentation`; do not select unrelated work. On close, every task is `done` and has a commit reference. Set `Status: closed`, add `> **Closed:** date`, and record a final `L# — Close:` entry.
 
 ### Handoff
 
@@ -59,7 +59,7 @@ The feature's `Specs` and `Tasks` bound its requirements and work; they do not r
 
 ### Delivery boundary
 
-Closing the feature document is not delivery. Commit, push, PR, release, and archive require explicit user authorization. A PR is a reviewable slice — work-unit commits or the feature's task slice — never the accumulated branch and never a substitute for the feature document. Git execution remains with Herald 📯 (Release Manager); merge remains user-only.
+Closing the feature document is not delivery. Explicit authorization may be supplied per action or through an applicable standing instruction; local commits are standing-authorized only when the project says so. Push, PR, merge, tag, release, and archive remain separately authorized, and a tool-permission denial is never bypassed. A PR is a reviewable slice — work-unit commits or the feature's task slice — never the accumulated branch and never a substitute for the feature document. Git execution remains with Herald 📯 (Release Manager); merge remains user-only.
 
 ### Release readiness and review findings
 

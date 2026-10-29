@@ -17,6 +17,20 @@ Read this entry before acting. ODD is the governing workflow: read-only and smal
 
 These uncertainty and outcome controls apply to every task, including small and read-only work. On a user correction, Cipher 🔓 (Lead Orchestrator) re-evaluates the requested goal against the mechanism and scope, updates affected Specs/tasks before affected work resumes, and invalidates stale assignments and evidence; unrelated work stays unchanged. Small/read-only work keeps corrected intent in the existing conversation/diff, without a feature artifact. Workers report affected gaps and stale evidence to the coordinator. Use the existing workflow and gates: no new tracker, count threshold, extra ritual/pause or user confirmation is introduced, and existing approvals remain binding.
 
+#### Step reporting and transitions
+
+- **Step report:** after each completed step, report feature/task identity; step number and name; state; result; evidence pointer; next action.
+- **States:** ✅ COMPLETE · 🟡 IN PROGRESS · 🚧 BLOCKED · ⏭️ NOT APPLICABLE/SKIPPED. The full vocabulary and presentation rules live in `knowledge/agents.md` `### Message presentation`.
+- **Continuation:** continue to the next ready task inside the active authorized scope; task completion is not a stop. If a required decision, permission, or blocker stops progress, name the exact user action required. If the authorized scope is exhausted, say `ALL FINISHED` with delivered scope, verification, deferred items, and next options; do not select unrelated work.
+- **Skipped steps:** a skipped or inapplicable step states its reason. A checkpoint or owner-gate return (`AWAITING_REVIEW`, `BLOCKED`) is not step completion.
+- **Transitions:** the seven steps are not seven implementation tasks; step 6 repeats task-level delivery. A failed review stays in step 6 unless it exposes a requirement or scope change, which returns to the affected earlier step. Step 7 is incomplete while any required review or check remains.
+- **Bootstrap and pause:** creating the governing feature document is the sole bootstrap write. The execution-review pause after creating it or materially replanning is owned by `AGENTS.md` → Conventions; this protocol points to it and does not duplicate it.
+
+**Examples.**
+
+- **Normal step, no user action required:** `workflow-execution-reliability · T4 — Step 6 Implement task by task — ✅ COMPLETE — presentation standard written to its owner. Evidence: knowledge/agents.md ### Message presentation. Next: T6 independent semantic review. Continuing.`
+- **Skipped step:** `workflow-execution-reliability · T5 — Step 6 RED/GREEN cycle — ⏭️ NOT APPLICABLE/SKIPPED — reason: documentation-only change, so no runnable deterministic test or harness exists and the recorded proportionate check applies instead. Next: T6 independent semantic review. Continuing.`
+
 ### PR release readiness
 
 Before opening a PR, Cipher 🔓 (Lead Orchestrator) assembles and verifies one release-readiness packet: the exact test-plan actions or commands with their observed results; every applicable gate status; the open-or-closed status of each task and of the feature; excluded or unrelated paths; unverified user-only controls; and each body claim against its evidence. Missing, contradictory, or stale evidence blocks PR creation until resolved — a partially verified packet is never an acceptable substitute. This applies to every PR, including docs-only changes, and introduces no tracker, no second approval ritual, and no change to existing authorizations or gates.
