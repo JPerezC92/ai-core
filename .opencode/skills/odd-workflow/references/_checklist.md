@@ -52,9 +52,7 @@
 - [ ] Closing the feature document is not delivery.
 - [ ] Explicit authorization may be standing; local commits are standing-authorized only when the project says so. Push, PR, merge, tag, release, and archive remain separately authorized, a tool-permission denial is never bypassed, and Git execution stays with Herald 📯 (Release Manager).
 - [ ] A PR is a reviewable slice, not the accumulated branch.
-- [ ] Before a PR is opened, the release-readiness packet is verified and recorded in the existing feature record or PR draft: exact test-plan actions or commands with observed results, every applicable gate status, each task's and the feature's open-or-closed status, excluded or unrelated paths, unverified user-only controls, and each body claim against its evidence. Missing, contradictory or stale evidence blocks PR creation.
-- [ ] After every review round, presentation follows the canonical combined rendered chat summary or eligible compact ready message in `knowledge/agents.md` `### PR review findings (adjudication)`, including its accounting and readiness conditions; a raw findings list is not an accepted handoff. Fix-first, deferral authority, refutation evidence, the loop cap, all existing gates and the PR-body evidence schema are unchanged.
-- [ ] These release-readiness and finding-action checks apply to docs-only PRs too and introduce no tracker and no new approval.
+- [ ] Apply `knowledge/release.md` before a PR is opened and after every review round. Do not restate that workflow here.
 
 ## Forbidden
 

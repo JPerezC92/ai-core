@@ -32,13 +32,9 @@ These uncertainty and outcome controls apply to every task, including small and 
 - **Authored slice, owner gate pending:** `example-feature · T4 — Step 6 Implement task by task — 🟡 IN PROGRESS — authored presentation slice finished; applicable owner review pending. Evidence: candidate slice and pending gate recorded in the example feature Log. Next: obtain owner verdict before completing step 6; step 7 independent feature acceptance follows delivery gates. No user action needed: the coordinator can dispatch the authorized review. Continuing.`
 - **Skipped check, not a completed phase:** `example-feature · T5 — Step 6 Implement task by task — 🟡 IN PROGRESS; RED/GREEN check ⏭️ NOT APPLICABLE — reason: prose-only slice has no applicable executable test; manual walkthrough is recorded in the example feature Log. Next: finish pending owner review, then independent feature acceptance. Continuing.`
 
-### PR release readiness
+### Release workflow
 
-Before opening a PR, Cipher 🔓 (Lead Orchestrator) assembles and verifies one release-readiness packet: the exact test-plan actions or commands with their observed results; every applicable gate status; the open-or-closed status of each task and of the feature; excluded or unrelated paths; unverified user-only controls; and each body claim against its evidence. Missing, contradictory, or stale evidence blocks PR creation until resolved — a partially verified packet is never an acceptable substitute. This applies to every PR, including docs-only changes, and introduces no tracker, no second approval ritual, and no change to existing authorizations or gates.
-
-### Post-review finding actions
-
-After each review round, Cipher 🔓 (Lead Orchestrator) uses the canonical combined rendered chat summary or, only when eligible, compact ready message in `knowledge/agents.md` `### PR review findings (adjudication)`. That owner defines finding presentation, accounting and readiness conditions; a raw findings list is not an acceptable handoff. Its fix-first rule, deferral authority, refutation evidence and loop cap remain unchanged, as do all existing gates; no tracker or additional approval step is introduced.
+Apply `knowledge/release.md`. That file owns PR release readiness and post-review finding actions. This entry does not restate them.
 
 ### Task-specific navigation
 
@@ -89,6 +85,8 @@ Identify both obligations, their authority, owner, impact, and disposition. Stop
 ### Keep files small
 
 Put each concern in its owner. Before growing a file, remove duplication or extract a named responsibility with purpose, applicability, owner, and an explicit read-pointer. Do not split by arbitrary parts.
+
+A distinct workflow (for example release) belongs in `knowledge/<flow>.md`, not in this ODD protocol file and not in an agent runtime. Move the obligation, replace the old body with a pointer, and inject the new home through `instructions` only when it replaces law that was already injected — never as a second copy. Project grants for that flow live in that file's `project` region or in `AGENTS.md` project extensions, not in this core protocol.
 
 Extract skill support to `.opencode/skills/<skill>/references/<concern>.md`; executable tooling to `scripts/`; a new common policy to `knowledge/<concern>.md`. Architecture definitions belong in `architecture/`: select through `architecture/README.md`, read `architecture/clean-architecture.md`, applicable `architecture/shapes/`, and the selected implementation guide in `architecture/stacks/`; testing definitions belong in `architecture/testing/architecture.md` and its selected stack guide. Agent runtimes retain authority, execution, scope, gates, dependency ownership, and reporting, not competing definition copies. Source-local ADRs explain decisions under `docs/architecture/decisions/` and are not required shared dependencies. Move each obligation to one home, replace the old body with a pointer, update consumers, and verify links and clearance before deleting the old copy. Shared required extracts ship with clearance; source-local history is not a shared dependency.
 

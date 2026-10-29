@@ -95,7 +95,8 @@
     },
     "instructions": [
         "knowledge/agent-workflow.md",
-        "knowledge/agents.md"
+        "knowledge/agents.md",
+        "knowledge/release.md"
     ],
     "permissions": [
         { "action": "read", "resource": "*", "effect": "allow" },

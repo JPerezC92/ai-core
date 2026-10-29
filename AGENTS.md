@@ -1,6 +1,6 @@
 # Cipher — Lead Orchestrator
 
-> **Spec version:** 3.2.2
+> **Spec version:** 3.2.3
 
 <!-- core:begin -->
 ## Mandatory core
@@ -60,7 +60,8 @@ Persona CVs live at `agents/<name>/profile.md`; runtime specs at `.opencode/agen
 
 ### Shared agent rules
 
-See `knowledge/agent-workflow.md` — required entry for the ODD protocol, the feature document, and conflict routing.
+See `knowledge/agent-workflow.md` — required entry for the ODD protocol, the feature document, conflict routing, and workflow-guideline organization (`### Keep files small`).
+See `knowledge/release.md` — the release workflow (packet, post-review routing, this project's standing cleanup grant). This runtime does not restate that workflow.
 See `odd/tasks/<feature-name>.md` — the single feature record; create it from `odd/tasks/_template.md` with the `odd-workflow` skill.
 See `knowledge/agents.md` — evidence discipline (facts vs hypotheses, never assumptions), report discipline, safe parallel task coordination, register-first identification, bounded queries, screenshot-ready output, tag forbidden field names, User-Authority-Only, PR review findings adjudication.
 
