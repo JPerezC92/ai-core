@@ -25,7 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 4.**
+**Open debts: 8.**
 
 ### DEBT-021 — ODD execution-gate bypass
 
@@ -63,5 +63,41 @@ Each entry MUST include:
 - **Resolution criteria:** After each completed task or step, Cipher reports status and continues to the next ready task without using task completion as a stop; scope expansion requires explicit user direction; any genuine stop names a concrete blocker or gate, not a self-created boundary. Demonstrate on the current rename and the next task.
 - **Explicit deferral decision:** User instruction 2026-10-29: "add that error as a debt, then continue". The user accepted the process debt and directed continuation.
 
-**ID to use for the next new debt:** `DEBT-025`. This is an allocation counter, not an open debt.
+### DEBT-025 — Core-sync write-target policy in the infrastructure adapter
+
+- **ID:** DEBT-025
+- **Date:** 2026-10-29
+- **Description:** `core_sync_pkg/infrastructure/filesystem.py` → `preflight_write_targets` decides symbolic-link, non-regular-file, alias, root-escape, and source-tree inode-sharing policy inside an infrastructure adapter. C3/C4 require policy in the application or domain. Feature-sized remediation: extract a pure domain policy over typed target facts, leave the adapter to collect resolved paths/inodes, and return typed errors from the use cases.
+- **Direct evidence:** Bastion 🧱 (Backend & Scripts Architect) review `implementation-review/task1/bastion1` finding 1; `filesystem.py:177-370`; `architecture/clean-architecture.md` C3/C4.
+- **Resolution criteria:** Write-target policy lives in domain/application; the adapter performs IO and mapping only; tests cover symlink, non-regular file, alias, root escape, and inode sharing; Bastion `[PASS]` and the whole suite pass.
+- **Explicit deferral decision:** User instruction 2026-10-29: "if that requiere its own feature just add as a debt to do it later but dont left any broken". Accepted for later feature work; not started.
+
+### DEBT-026 — Query-verification split and typed business errors
+
+- **ID:** DEBT-026
+- **Date:** 2026-10-29
+- **Description:** `query_verification.py` is a ~1,002-line module with two operations (`validate`, `evaluate`) that mixes sidecar parsing, SQL safety, adapter evaluation, file IO, and CLI. `ValidationError(ValueError)` has no stable code and is raised for business failures. Feature-sized remediation: split domain/application/infrastructure/edge, one use case per module with a single `execute()`, and return typed domain errors.
+- **Direct evidence:** Bastion review findings 2–3; `query_verification.py:196,813-931`; `architecture/clean-architecture.md` C1/C2/C3/C5 and `architecture/shapes/scripts.md` P1/P2.
+- **Resolution criteria:** One use-case module per operation; pure domain parsing/safety/evaluation; typed domain errors returned as values; no business failure escapes the operation; Bastion and Crucible `[PASS]`; suite passes.
+- **Explicit deferral decision:** User instruction 2026-10-29: "if that requiere its own feature just add as a debt to do it later but dont left any broken". Accepted for later feature work; not started.
+
+### DEBT-027 — Scan-attribution application operation and typed errors
+
+- **ID:** DEBT-027
+- **Date:** 2026-10-29
+- **Description:** `git-pr/scripts/scan_attribution.py` exposes `scan_attribution()` rather than an application `execute()` and raises `PolicyValidationError`/`SnapshotValidationError` for malformed policy or snapshot, so business failures escape the operation. Medium remediation: an application operation returning `ScanResult | DomainError`, validation returning typed errors, and `main` keeping only serialization.
+- **Direct evidence:** Bastion review finding 4; `scan_attribution.py:205` and `:76-82`; `architecture/clean-architecture.md` C3/C5.
+- **Resolution criteria:** Application `execute()` returns a typed result or domain error; business failures no longer throw; `main` serializes only; tests and Bastion `[PASS]`; suite passes.
+- **Explicit deferral decision:** User instruction 2026-10-29: "if that requiere its own feature just add as a debt to do it later but dont left any broken". Accepted for later work; not started.
+
+### DEBT-028 — Validate-feature application operation and typed result
+
+- **ID:** DEBT-028
+- **Date:** 2026-10-29
+- **Description:** `odd-workflow/scripts/validate_feature.py` exposes `validate_feature(text) -> list[str]` rather than an application `execute()` and mixes policy with `main` IO. Medium remediation: an application operation returning a typed result or domain error, with the entry reading and printing only.
+- **Direct evidence:** Bastion review finding 6; `validate_feature.py:58`; `architecture/clean-architecture.md` C3 and `architecture/shapes/scripts.md` P1/P2.
+- **Resolution criteria:** Application operation with `execute()` and a typed result/error; IO stays at the entry; tests and Bastion `[PASS]`; suite passes.
+- **Explicit deferral decision:** User instruction 2026-10-29: "if that requiere its own feature just add as a debt to do it later but dont left any broken". Accepted for later work; not started.
+
+**ID to use for the next new debt:** `DEBT-029`. This is an allocation counter, not an open debt.
 <!-- project:end -->
