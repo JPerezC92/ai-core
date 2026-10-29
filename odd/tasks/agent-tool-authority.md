@@ -1,11 +1,12 @@
 # Agent tool authority and prompt determinism
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-10-29
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-10-29
 > **Objective:** Make ODD authority and evidence gates enforceable in OpenCode, and make the routine ODD path prompt-free, without new MCP servers, a second tracker, broad permission grants, or weakened hard stops.
-> **Branch:** N/A — planning only; execution branch not created
-> **Delivery:** planning-only task breakdown now; eventual implementation is one reviewed authority/config/docs slice, forecast 300 authored additions plus deletions excluding generated files, split before 400 authored changed lines; no implementation is authorized by this record
+> **Branch:** fix/config/agent-tool-authority
+> **Delivery:** actual at 9a3fe8a is 121 additions plus 2 deletions across four files in two commits (caf36fd and 9a3fe8a), generated files excluded; no application code or test harness
 > **Runner:** `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feature.py odd/tasks/agent-tool-authority.md`
 
 ## Specs
@@ -27,18 +28,18 @@
 
 ## Tasks
 
-- T2 | S2, S3 | inline (first: complete the Explore phase; the draft feature record exists but is not accepted; read-only baseline audit, no config edits) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T3 | S4, S14 | inline (depends on T2; authority-matrix design and decision ownership) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T5 | S8 | inline (depends on T2; may run in parallel with T3; ODD gate assessment; existing workflow before any plugin) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T4 | S5, S6, S7 | inline (depends on T2, T3, T5; minimal permission design; no implementation) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T1 | S1 | delegated (draft feature record exists; finalize and commit only after T2, T3, T4, T5, using `odd/tasks/_template.md` under `.opencode/skills/odd-workflow/SKILL.md` → `### Create a feature document`; documentation author, Cipher owns content acceptance) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T6 | S4, S5, S6, S7 | delegated (depends on T3, T4; independent security review of the exact matrix and rules; no edits) — Warden 🔒 (Dependency Warden) | open | commit: pending
-- T7 | S5, S6, S7 | inline (depends on T6; apply the approved exact permission config after execution review) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T8 | S9, S10, S14 | delegated (depends on T7; document the command contract and routine operations after the config is fixed; no config) — Scribe ✍️ (Docs & Problems Manager) | open | commit: pending
-- T9 | S9, S10 | inline (depends on T7 and T8; run the routine-flow prompt-free and negative tests after restart, including write_note with overwrite=True, edit_note without expected_checksum, edit_note replace_section, delete_note, create_memory_project, and observation of one exact normalized deny) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T10 | S12 | delegated (depends on T9; branch, commit, push, and PR execution only after gates) — Herald 📯 (Release Manager) | open | commit: pending
-- T11 | S12 | delegated (depends on T10; independent PR review at the immutable head) — Inquisitor 🔎 (PR Reviewer) | open | commit: pending
-- T12 | S8, S12, S13, S14 | inline (depends on T11; release-readiness, evidence reconciliation, and feature closure) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
+- T2 | S2, S3 | inline (first: complete the Explore phase; the draft feature record exists but is not accepted; read-only baseline audit, no config edits) — Cipher 🔓 (Lead Orchestrator) | done | commit: 9a3fe8a
+- T3 | S4, S14 | inline (depends on T2; authority-matrix design and decision ownership) — Cipher 🔓 (Lead Orchestrator) | done | commit: 9a3fe8a
+- T5 | S8 | inline (depends on T2; may run in parallel with T3; ODD gate assessment; existing workflow before any plugin) — Cipher 🔓 (Lead Orchestrator) | done | commit: 9a3fe8a
+- T4 | S5, S6, S7 | inline (depends on T2, T3, T5; minimal permission design; no implementation) — Cipher 🔓 (Lead Orchestrator) | done | commit: 9a3fe8a
+- T1 | S1 | delegated (draft feature record exists; finalize and commit only after T2, T3, T4, T5, using `odd/tasks/_template.md` under `.opencode/skills/odd-workflow/SKILL.md` → `### Create a feature document`; documentation author, Cipher owns content acceptance) — Scribe ✍️ (Docs & Problems Manager) | done | commit: 9a3fe8a
+- T6 | S4, S5, S6, S7 | delegated (depends on T3, T4; independent security review of the exact matrix and rules; no edits) — Warden 🔒 (Dependency Warden) | done | commit: 9a3fe8a
+- T7 | S5, S6, S7 | inline (depends on T6; apply the approved exact permission config after execution review) — Cipher 🔓 (Lead Orchestrator) | done | commit: 9a3fe8a
+- T8 | S9, S10, S14 | delegated (depends on T7; document the command contract and routine operations after the config is fixed; no config) — Scribe ✍️ (Docs & Problems Manager) | done | commit: 9a3fe8a
+- T9 | S9, S10 | inline (depends on T7 and T8; run the routine-flow prompt-free and negative tests after restart, including write_note with overwrite=True, edit_note without expected_checksum, edit_note replace_section, delete_note, create_memory_project, and observation of one exact normalized deny) — Cipher 🔓 (Lead Orchestrator) | done | commit: 9a3fe8a
+- T10 | S12 | delegated (depends on T9; branch, commit, push, and PR execution only after gates) — Herald 📯 (Release Manager) | done | commit: 9a3fe8a
+- T11 | S12 | delegated (depends on T10; independent PR review at the immutable head) — Inquisitor 🔎 (PR Reviewer) | done | commit: 9a3fe8a
+- T12 | S8, S12, S13, S14 | inline (depends on T11; release-readiness, evidence reconciliation, and feature closure) — Cipher 🔓 (Lead Orchestrator) | done | commit: 9a3fe8a
 
 ## Log
 
@@ -77,3 +78,5 @@
 - L33 — 2026-10-29 Chrome expansion: user directed that `new_page`, `close_page`, `drag`, `hover`, and `resize_page` be allowed for all agents. Global exact allows were added; the loaded catalog now shows 25 of 32 Chrome tools. The remaining denied seven are `upload_file`, `evaluate_script`, `handle_dialog`, `emulate`, `screencast_start`, `screencast_stop`, and `take_heapsnapshot`. Warden final review remains pending; no commit or PR.
 - L34 — 2026-10-29 Warden final block remediation: S4/S6 now record the user-directed Chrome availability for every role and the seven residual denies; worktree creation is Herald-only and removal is manual. The config comments no longer claim Cipher-only worktree mutation or Herald worktree_remove use. No capability change; Warden final re-review remains.
 - L35 — 2026-10-29 user correction: all Chrome DevTools tools, not 25 of 32, must be available to every agent. The seven residual Chrome denies were removed; the loaded catalog shows 32/32. S4/S6 now record the full grant and DEBT-019 browser-content exposure; no sandbox claim. PR #117 must be updated to the new head and re-reviewed.
+- L36 — 2026-10-29 T9 completion: Herald created a temporary worktree at `C:\Users\dexm7\.local\share\opencode\worktree\b8afcc\t9-authority-check`, then removed it manually with `git worktree remove` exit 0; the path is absent and `git worktree list` shows only the main checkout. Question authority remains config-level: global deny, Plan/Build allow, no subagent allow. Chrome DevTools is server-level 32/32 for every agent; DEBT-019 remains open. No worktree_remove call.
+- L37 — Close: 2026-10-29 PR #117 merged as `6af3679acfe34cb239fa16052acb1c2a65a6b012`; branch `fix/config/agent-tool-authority` cleaned locally and remotely. T1–T12 are done against `9a3fe8a`; the feature is closed. DEBT-019 remains open; no merge was performed by Cipher.
