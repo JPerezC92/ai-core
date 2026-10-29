@@ -21,7 +21,7 @@ Bind backend folders to `domain/`, `application/use-cases/`, and `infrastructure
 
 ## Application operations
 
-Use a pure TypeScript class, not function/plain object; one `execute()`. Constructor receives repository/service interfaces, not concrete classes. Only domain imports, no `@Injectable()`, `@Controller()`, or other NestJS decorator. Return domain errors, never `throw new XError()`. When `findById` returns null, the operation checks it and returns its domain not-found error; repositories must not throw `NotFoundException`.
+Use a pure TypeScript class, not function/plain object; one `execute()`. The class is `<Verb><Object>UseCase` in `application/use-cases/<verb>-<object>.use-case.ts`, with one public `execute()`. Constructor receives repository/service interfaces, not concrete classes. Only domain imports, no `@Injectable()`, `@Controller()`, or other NestJS decorator. Return domain errors, never `throw new XError()`. When `findById` returns null, the operation checks it and returns its domain not-found error; repositories must not throw `NotFoundException`.
 
 ## Adapters and delivery
 

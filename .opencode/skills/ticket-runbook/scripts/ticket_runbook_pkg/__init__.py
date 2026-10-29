@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from ticket_runbook_pkg.application import (
-    RegisterRowsPort,
     ValidateCloseOut,
     ValidatePreClose,
 )
+from ticket_runbook_pkg.domain.entities import ProblemRow
+from ticket_runbook_pkg.domain.ports import RegisterRowsPort
 from ticket_runbook_pkg.domain.rules import (
     ALLOWED_ALLOW_EXACT,
     ALLOWED_IDENTIFICATION_VERDICTS,
@@ -27,11 +28,6 @@ from ticket_runbook_pkg.domain.rules import (
     STEP_FILE_BY_NAME,
     STEP_FILES,
     STEP_NAMES,
-    AnalysisHeader,
-    CloseOutSnapshot,
-    ModeFindings,
-    ProblemRow,
-    TicketIdentification,
     check_identification_consistency,
     check_identification_verdict,
     check_kill_switches,
@@ -47,12 +43,19 @@ from ticket_runbook_pkg.domain.rules import (
     parse_state_header,
     parse_ticket_record,
 )
+from ticket_runbook_pkg.domain.value_objects import (
+    AnalysisHeader,
+    CloseOutSnapshot,
+    ModeFindings,
+    TicketIdentification,
+)
+# No-argument public compatibility surface; the use cases live in ``application``.
 from ticket_runbook_pkg.entry import (
-    ValidateAnalysis,
-    ValidateScaffold,
-    ValidateStep,
-    check_concurrent_session,
-    check_sla_clock,
+    CliValidateAnalysis as ValidateAnalysis,
+    CliValidateScaffold as ValidateScaffold,
+    CliValidateStep as ValidateStep,
+    cli_check_concurrent_session as check_concurrent_session,
+    cli_check_sla_clock as check_sla_clock,
     load_close_out_snapshot,
     load_register_rows,
     load_state_header,

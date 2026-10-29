@@ -28,7 +28,7 @@ Use `ConfigDict(...)`, never legacy inner `class Config`. Constraints use `Field
 
 ## Application operations
 
-One named operation exposes one `execute()`, takes typed parameters and injected domain IO ports, and returns a typed domain result/error, never raises for business failures. It imports no concrete client/builder or filesystem/network library. Boundary/programming exceptions remain exceptions. A missing backend lookup stays empty at the port; the operation decides its domain error. Pure helpers do not need an artificial operation wrapper. Async operation binding is a destination/local choice where specified, not a universal rewrite of every pure function.
+One named operation exposes one `execute()`, takes typed parameters and injected domain IO ports, and returns a typed domain result/error, never raises for business failures. The operation module is `application/<verb>_<object>.py`, exposing one public `execute()`; a class is used only when state or injected collaborators justify it, is named `<Verb><Object>`, and carries no `UseCase` suffix. It imports no concrete client/builder or filesystem/network library. Boundary/programming exceptions remain exceptions. A missing backend lookup stays empty at the port; the operation decides its domain error. Pure helpers do not need an artificial operation wrapper. Async operation binding is a destination/local choice where specified, not a universal rewrite of every pure function.
 
 ## Adapters and delivery
 

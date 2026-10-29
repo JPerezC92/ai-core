@@ -1,12 +1,19 @@
-"""Pure ticket-runbook rules: constants, typed models, parsers, and content-in/content-out checks."""
+"""Pure ticket-runbook rules: constants, parsers, and content-in/content-out checks."""
 
 from __future__ import annotations
 
 import re
 from datetime import datetime
-from typing import Optional, Protocol, TypedDict
+from typing import Optional
 
 import yaml
+
+from .entities import ProblemRow
+from .value_objects import (
+    AnalysisHeader,
+    CloseOutSnapshot,
+    TicketIdentification,
+)
 
 # ---------------------------------------------------------------------------
 # Kill-switch pilot values (tunable per project)
@@ -109,79 +116,6 @@ _HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
 _PROBLEM_ID_RE = re.compile(r"^P-\d+$")
 _SYMPTOM_ID_RE = re.compile(r"S-\d{2}")
 _CITED_PATH_RE = re.compile(r"\bpath:\s*\**\s*([^\n]+)")
-
-
-class AnalysisHeader(TypedDict):
-    """The seven required YAML frontmatter fields for ``analysis/state.md``."""
-
-    Phase: str
-    SLA_due: str
-    Updated: str
-    Hypotheses_outstanding: str
-    Query_budget: str
-    Identification_verdict: str
-    Same_query_reruns: str
-
-
-class ProblemRow(TypedDict):
-    """One parsed row of the ``knowledge/problems.md`` register."""
-
-    id: str
-    date: str
-    team: str
-    symptom: str
-    system: str
-    module: str
-    problem: str
-    discriminators: str
-    exclusions: str
-    evidence: str
-    root_cause: str
-    lifecycle: str
-    allow_exact: str
-    status: str
-
-
-class RegisterRowsPort(Protocol):
-    """Injected IO port that loads problem-register rows on demand."""
-
-    def __call__(self) -> list[ProblemRow]: ...
-
-
-class ClockPort(Protocol):
-    """Injected clock port returning one local naive timestamp per call."""
-
-    def __call__(self) -> datetime: ...
-
-
-class TicketIdentification(TypedDict):
-    """The identification fields parsed from a ``ticket_<id>.md`` record."""
-
-    symptom_ids: list[str]
-    known_problem_ids: list[str]
-    identification_verdict: str
-
-
-class CloseOutSnapshot(TypedDict):
-    """Filesystem values required to evaluate pre-close and close-out sets."""
-
-    ticket_file_names: list[str]
-    ticket_content: Optional[str]
-    working_analysis_files: list[str]
-    analysis_contents: dict[str, str]
-    response_draft_present: bool
-    screenshots_dir_present: bool
-    validations_dir_present: bool
-    missing_image_paths: list[str]
-    missing_ticket_paths: list[str]
-    unsafe_ticket_paths: list[str]
-
-
-class ModeFindings(TypedDict):
-    """Findings returned by one validation mode: blocking violations and warnings."""
-
-    violations: list[str]
-    warnings: list[str]
 
 
 # ── Parsing helpers ─────────────────────────────────────────────────────────

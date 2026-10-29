@@ -15,7 +15,7 @@ from _ticket_runbook_testkit import (  # noqa: E402
     _patch_header,
     _short_window_scenario,
 )
-from ticket_runbook_pkg.domain.rules import ModeFindings  # noqa: E402
+from ticket_runbook_pkg.domain.value_objects import ModeFindings  # noqa: E402
 
 
 class _FakeClock:

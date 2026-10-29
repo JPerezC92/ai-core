@@ -69,6 +69,9 @@
                 // destination-refspec or extra-argument grant. Cooperative scope,
                 // not a sandbox. Cleanup exceptions remain ordered afterward.
                 { "action": "shell", "resource": "git push origin docs/*", "effect": "allow" },
+                // Multi-segment docs branches (docs/architecture/..., docs/workflow/...):
+                // the single-segment docs/* rule does not cross `/`.
+                { "action": "shell", "resource": "git push origin docs/**", "effect": "allow" },
                 { "action": "shell", "resource": "git push origin feat/*", "effect": "allow" },
                 { "action": "shell", "resource": "git push origin fix/*", "effect": "allow" },
                 { "action": "shell", "resource": "git push origin chore/*", "effect": "allow" },

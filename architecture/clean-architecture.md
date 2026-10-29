@@ -15,7 +15,7 @@ Domain imports no framework or infrastructure. Entities and typed ports speak do
 
 ## C3 — Application operation
 
-Each use case is one named business operation exposing a single `execute()`. It depends on injected domain ports, not concrete IO. Policy belongs here or in domain, never in adapters or presentation.
+Each use case is one named business operation exposing a single `execute()`. It depends on injected domain ports, not concrete IO. One operation per module or file; its name states a business outcome, and `Service`, `Manager`, `Helper`, `Processor`, and `Util` are not use-case names. A composition root or CLI router may wire several operations but must not re-declare a use-case class. Policy belongs here or in domain, never in adapters or presentation. Data-only boundary/result records and functional domain modules are valid representations; enduring invariants and legal transitions belong in the domain, application-specific orchestration may stay in the use case, and adapters hold no business policy. A data-only record is anemic only when it claims to be the domain model while its rules are enforced elsewhere.
 
 ## C4 — Mapping and composition
 

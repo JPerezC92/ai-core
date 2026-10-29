@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from ticket_runbook_pkg.domain.ports import RegisterRowsPort
 from ticket_runbook_pkg.domain.rules import (
-    CloseOutSnapshot,
-    ModeFindings,
-    RegisterRowsPort,
     check_identification_consistency,
     evaluate_close_out,
     parse_ticket_record,
+)
+from ticket_runbook_pkg.domain.value_objects import (
+    CloseOutSnapshot,
+    ModeFindings,
 )
 
 __all__ = ["ValidateCloseOut"]
@@ -27,16 +29,22 @@ class ValidateCloseOut:
 
         if len(snapshot["ticket_file_names"]) == 1:
             if snapshot["ticket_content"] is not None:
-                record = parse_ticket_record(
-                    snapshot["ticket_content"],
-                    snapshot["ticket_file_names"][0],
-                )
-                violations.extend(
-                    check_identification_consistency(
-                        record["identification_verdict"],
-                        record["known_problem_ids"],
-                        load_register_rows(),
+                try:
+                    record = parse_ticket_record(
+                        snapshot["ticket_content"],
+                        snapshot["ticket_file_names"][0],
                     )
-                )
+                except ValueError as exc:
+                    violations.append(
+                        f"CLOSE-7: ticket record cannot be parsed: {exc}"
+                    )
+                else:
+                    violations.extend(
+                        check_identification_consistency(
+                            record["identification_verdict"],
+                            record["known_problem_ids"],
+                            load_register_rows(),
+                        )
+                    )
 
         return {"violations": violations, "warnings": []}

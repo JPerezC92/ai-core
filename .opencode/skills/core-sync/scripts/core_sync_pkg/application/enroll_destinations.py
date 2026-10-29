@@ -14,11 +14,11 @@ from core_sync_pkg.domain.ports import (
     UseCaseResult,
 )
 from core_sync_pkg.domain.bindings import (
-    _merge_init_binding_options,
-    _non_region_destination_paths,
-    _normalize_pending,
-    _parse_init_binding_spec,
     binding_mode_conflict,
+    merge_init_binding_options,
+    non_region_destination_paths,
+    normalize_pending,
+    parse_init_binding_spec,
     uncleared_sources,
 )
 from core_sync_pkg.domain.clearance import ClearanceRecord, expand_clearance
@@ -37,7 +37,7 @@ from core_sync_pkg.domain.errors import (
     MalformedSourceMarkers,
 )
 from core_sync_pkg.domain.jsonc import parse_object
-from core_sync_pkg.domain.markers import _has_exact_core_marker_lines
+from core_sync_pkg.domain.markers import has_exact_core_marker_lines
 from core_sync_pkg.domain.merge import merge_top_level
 from core_sync_pkg.domain.reconciliation import ReconciliationEntry
 from core_sync_pkg.domain.regions import (
@@ -90,7 +90,7 @@ class EnrollDestinations:
                 "root": None,
             }
 
-        declaration_error, explicit_new_raw = _merge_init_binding_options(
+        declaration_error, explicit_new_raw = merge_init_binding_options(
             bindings, region_specs, raw_specs
         )
         if declaration_error is not None:
@@ -188,7 +188,7 @@ class EnrollDestinations:
             [(s, MODE_RAW) for s in raw_specs]
             + [(s, MODE_REGION) for s in region_specs]
         ):
-            parsed = _parse_init_binding_spec(spec, declared)
+            parsed = parse_init_binding_spec(spec, declared)
             if parsed is None:
                 continue
             declared_source, _declared_destination, declared_mode = parsed
@@ -233,8 +233,8 @@ class EnrollDestinations:
         writes: list[tuple[Path, str]] = []
         raw_writes: list[tuple[Path, bytes]] = []
         entries: list[ReconciliationEntry] = []
-        pending = _normalize_pending(
-            bindings["pending"], _non_region_destination_paths(bindings, mode_of)
+        pending = normalize_pending(
+            bindings["pending"], non_region_destination_paths(bindings, mode_of)
         )
 
         for entry in bindings["bindings"]:
@@ -338,7 +338,7 @@ class EnrollDestinations:
                     )
                 destination_split = split_regions(destination_content)
                 if destination_split is None:
-                    if _has_exact_core_marker_lines(destination_content):
+                    if has_exact_core_marker_lines(destination_content):
                         return DomainError(
                             CODE_INVALID,
                             f"invalid destination markers: {destination_path}",

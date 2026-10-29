@@ -14,9 +14,9 @@ from core_sync_pkg.domain.constants import (
 )
 from core_sync_pkg.domain.errors import MalformedSourceMarkers
 from core_sync_pkg.domain.markers import (
-    _has_exact_core_marker_lines,
-    _has_exact_project_marker_lines,
     find_markers,
+    has_exact_core_marker_lines,
+    has_exact_project_marker_lines,
 )
 
 
@@ -83,7 +83,7 @@ def extract_source_core(content: str) -> str:
     region_split = split_regions(content)
     if region_split is not None:
         return region_split["region"]
-    if _has_exact_core_marker_lines(content) or _has_exact_project_marker_lines(
+    if has_exact_core_marker_lines(content) or has_exact_project_marker_lines(
         content
     ):
         raise MalformedSourceMarkers("source core markers are malformed")

@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
+from ticket_runbook_pkg.domain.ports import ClockPort
 from ticket_runbook_pkg.domain.rules import (
-    AnalysisHeader,
-    ClockPort,
-    ModeFindings,
     _current_step_rank,
     check_concurrent_session,
     check_identification_verdict,
@@ -14,6 +12,10 @@ from ticket_runbook_pkg.domain.rules import (
     check_sla_clock,
     check_step_files_exist,
     check_step_files_have_required_sections,
+)
+from ticket_runbook_pkg.domain.value_objects import (
+    AnalysisHeader,
+    ModeFindings,
 )
 
 __all__ = ["ValidateAnalysis"]

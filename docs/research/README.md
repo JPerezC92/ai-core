@@ -40,3 +40,11 @@ Use one primary subject domain and a stable topic slug: `docs/research/<domain>/
 - Dates / versions: fit-study research date and original independent-review date unknown; underlying ecosystem research dated 2026-10-22, primary ODD v4.2.0; foundation plan revision unknown.
 - Applicability / freshness: historical decision-support only. Claims that the old plan or `plan-enforce` binds new work are superseded by current local ODD authority, not re-adopted through preservation. Do not infer current debt/stage state from this snapshot.
 - Prior review scope: 2026-10-27 full-text preservation/applicability read by Scribe ✍️ (Docs & Problems Manager); no new source research, re-scoring or verification of original plan outcomes.
+
+### [Anemic domain models and use-case naming](architecture/anemic-domain-model-and-use-case-naming/README.md)
+
+- Domain / aliases / tags: `architecture`; anemic domain model, rich domain model, clean architecture, use case naming, interactor, transaction script, CRUD, DDD, functional domain model.
+- Scope: conceptual findings on anemic versus rich domain models in Clean Architecture and on use-case naming, with a local contract comparison; sources U1–U14 and L1–L10 in the record.
+- Dates / versions: researched 2026-10-28 by two Augur 🔮 (Research Analyst) units plus Cipher 🔓 (Lead Orchestrator) synthesis; mutable articles and vendor docs read 2026-10-28; Microsoft validation page revision `1811c6d1c9ec56ba2132295802c17b5dc7ef659b` (updated 2026-04-28). Books not read.
+- Applicability / freshness: design guidance and local-contract comparison, not implementation-conformance evidence or approved policy. Recheck changed vendor docs, new source editions, or a decision to make any naming rule normative.
+- Prior review scope: 2026-10-28 documentary synthesis by Scribe ✍️ (Docs & Problems Manager); no independent completion review, source refetch, or code audit.

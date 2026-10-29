@@ -56,8 +56,8 @@ from core_sync_pkg.infrastructure.composition import main
 from core_sync_pkg.domain.bindings import (
     BindingEntry,
     Bindings,
-    _parse_init_binding_spec,
     parse_bindings,
+    parse_init_binding_spec,
     serialize_bindings,
 )
 from core_sync_pkg.domain.constants import (
@@ -77,7 +77,7 @@ from core_sync_pkg.domain.constants import (
     BindingMode,
 )
 from core_sync_pkg.domain.errors import MalformedSourceMarkers
-from core_sync_pkg.domain.markers import _exact_marker_line_indices, find_markers
+from core_sync_pkg.domain.markers import find_markers
 from core_sync_pkg.domain.reconciliation import (
     find_reconcile_block,
     reconciliation_report_path,
@@ -117,6 +117,7 @@ __all__ = [
     "main",
     "outside_bytes",
     "parse_bindings",
+    "parse_init_binding_spec",
     "reconciliation_report_path",
     "save_bindings",
     "serialize_bindings",
@@ -124,8 +125,6 @@ __all__ = [
     "split_regions",
     "sync_reconciliation_blocker",
     "write_text",
-    "_parse_init_binding_spec",
-    "_exact_marker_line_indices",
 ]
 
 

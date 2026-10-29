@@ -6,7 +6,7 @@ from dataclasses import dataclass, field, replace
 
 import pytest
 
-from verified_pr_cleanup_pkg.application.cleanup import execute
+from verified_pr_cleanup_pkg.application.preflight_cleanup import execute
 from verified_pr_cleanup_pkg.domain.models import (
     BoundaryFailure,
     GitGateway,

@@ -77,7 +77,7 @@ def find_markers(content: str) -> tuple[int, int] | None:
     return (begins[0], ends[0])
 
 
-def _has_exact_core_marker_lines(content: str) -> bool:
+def has_exact_core_marker_lines(content: str) -> bool:
     """Return whether either exact core marker occurs outside a code fence."""
     lines = content.splitlines()
     return bool(
@@ -86,7 +86,7 @@ def _has_exact_core_marker_lines(content: str) -> bool:
     )
 
 
-def _has_exact_project_marker_lines(content: str) -> bool:
+def has_exact_project_marker_lines(content: str) -> bool:
     """Return whether either exact project marker occurs outside a code fence."""
     lines = content.splitlines()
     return bool(

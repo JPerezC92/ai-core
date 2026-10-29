@@ -163,4 +163,12 @@ Running a synchronization is the *entire* operator action for a destination: run
 ### Merged-branch cleanup preflight
 
 - `verified-pr-cleanup`: `uv run --frozen python3 .opencode/skills/verified-pr-cleanup/scripts/verified_pr_cleanup.py <pr> --base-remote origin --base-branch main` reads live PR/Git state and, when a verdict exists, reports `SAFE_TO_CLEAN` or `BLOCKED`; a boundary failure is a separate error channel on stderr, never a `BLOCKED` verdict. It is read-only — no fetch, switch, merge, push, delete, ref update, or stash/worktree change — and `SAFE_TO_CLEAN` is point-in-time evidence, never authorization. Actual cleanup remains Herald 📯 (Release Manager)'s existing guarded workflow, subject to each OpenCode tool-permission decision.
+
+### Local commit authorization
+
+- Local commits are standing-authorized as part of finishing a task; do not ask for per-commit confirmation. Push, PR, merge, tag, release, and archive remain separately authorized. Cipher relays Git work to Herald 📯 (Release Manager) and never executes it.
+
+### Stop and next-step reporting
+
+- Stop only when the user must decide or act; state the exact action required. If work remains, continue to the next ready task. If all pending work is finished, say `ALL FINISHED`, list the completed scope, and state the next steps or ask what to do next. Do not end a turn with informational text that requires no user action and names no next step.
 <!-- project:end -->
