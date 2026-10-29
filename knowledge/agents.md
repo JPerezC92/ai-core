@@ -49,7 +49,7 @@ Every agent report to Cipher 🔓 (Lead Orchestrator) follows the exact output f
 
 ### Finding disposition (HARD RULE)
 
-- **`[PASS]` is zero open findings.** `[PASS]` requires zero open findings of any severity at the reviewed head. A fixed finding stays in audit history and is closed; a deferred or ADVISORY finding remains open and cannot be `[PASS]`; a `[BLOCK]` finding cannot be `[PASS]`. An observation that requires no action is an INFO note, not a finding. Any new finding invalidates a prior `[PASS]`.
+- **`[PASS]` is zero open findings.** `[PASS]` requires zero open findings of any severity at the reviewed head. A fixed finding stays in audit history and is closed; a deferred finding, or an open advisory finding, remains open and cannot be `[PASS]`; a fixed advisory closes like any fixed finding; a `[BLOCK]` finding cannot be `[PASS]`. An observation that requires no action is an INFO note, not a finding. Any new finding invalidates a prior `[PASS]`.
 - **Fix first.** For every real finding: if it is in scope, local and reversible, has one correct answer, changes no behavior, API, security, data, dependency, or permission, and is verifiable now — fix it and record the fix without asking. Otherwise stop the affected work and report exact evidence, impact, bounded options, and a recommendation. Never use "ignore" as a disposition; deferred work requires explicit authority. Cipher 🔓 (Lead Orchestrator) documents a user decision but cannot accept the risk itself. Fixing under this rule uses only existing authority, never expands scope, and is the user-authorized disposition for review findings — not a workaround under the User-Authority-Only rule.
 
 ### Safe parallel task coordination (HARD RULE)
@@ -182,6 +182,59 @@ When Inquisitor 🔎 (PR Reviewer) returns review findings, Cipher 🔓 (Lead Or
 - `Needs your decision: merge the PR`
 
 Do not show an empty findings table. If findings existed, an optional `Fixed: <N> · Open: 0` count may accompany the compact message; verified fixed/rejected history remains in the PR body and available audit evidence. This compact path supersedes only the verbose chat summary, never PR history or merge authority. Missing checks, stale evidence, an outstanding acceptance decision, or any open/deferred finding means not ready: use the combined round summary with the concrete next action instead, without implying clean `[PASS]` or permission to merge.
+
+### Message presentation
+
+Three message types cover every user-facing status report:
+
+1. **Progress** — a step or task advanced and no user action is required: identity, state, result, evidence pointer, next action. Field-level ODD reporting is owned by `knowledge/agent-workflow.md` `#### Step reporting and transitions`.
+2. **Findings or blocked** — something unresolved needs adjudication: use the `### PR review findings (adjudication)` findings table with one unique `Counts:` line. Blockers, checks, and decisions are reported outside the finding counts.
+3. **Completion** — `ALL FINISHED` with delivered scope, verification, deferred items, and next options when the authorized scope is exhausted, or the compact ready-to-merge message when its conditions hold and no scope remains open.
+
+**Distinct concepts.** A **finding** is a rule-grounded defect or gap needing disposition. **Severity** is text (`HIGH`/`MEDIUM`/`LOW`) attached to a finding. An **open advisory finding** follows the complete rule in `### Finding disposition (HARD RULE)`, including every fix-first condition and exclusion; advisory status creates no blanket approval requirement or permission to fix. While open it is not fixed or clean; once fixed, it closes like any fixed finding. A **blocker** is an unmet prerequisite preventing the affected operation. Name its resolution owner and next action: coordinator/agent-resolvable blockers are resolved within existing authority, not automatically escalated to the user; user-only blockers name the exact required user action. A **check** is verification evidence that is passed, failed, or pending. A **decision** is a user-only choice. Findings, checks, and decisions are separate: zero findings never means ready while a required check is pending or a decision is outstanding.
+
+**State emojis.** Emojis mark state, never severity, and never replace required text.
+
+| Emoji | State |
+|---|---|
+| ✅ | COMPLETE / FIXED / PASS |
+| 🟡 | IN PROGRESS / PENDING |
+| 🚧 | BLOCKED |
+| ⏭️ | NOT APPLICABLE / SKIPPED |
+| 🔴 | OPEN |
+| ⏸ | DEFERRED |
+| ✖ | REJECTED |
+| ❌ | FAIL / ERROR |
+| ⚠️ | ADVISORY |
+| ❓ | DECISION REQUIRED |
+
+- Never show an empty findings table; state the absence of findings in prose.
+- Unresolved, pending, or advisory items never become a clean `[PASS]`; `[PASS]` still requires zero open findings of any severity.
+- The PR-body evidence schema, findings-table columns, round-summary format, and compact ready path above remain unchanged; this section references them and introduces no second tracker.
+
+**Illustrative examples only — invented fixture identities/results below demonstrate format, not actual execution, published content, or feature status.**
+
+**Progress.** `example-feature · T4 — Step 6 Implement task by task — 🟡 IN PROGRESS — authored slice finished; owner gate pending. Evidence: example feature Log, candidate C1. Next: coordinator dispatches the authorized owner review. No user action needed: review dispatch is within existing authority. Continuing.`
+
+**Findings or blocked.**
+
+Unresolved findings: 1 of 2 — open 1, deferred 0; not ready — behavior-changing remediation requires a user decision
+
+| ID | Finding | Severity | Status | Evidence | Owner / next action | Needs your decision? |
+|---|---|---|---|---|---|---|
+| F1 | Retry procedure contradicts the specified stop condition | MEDIUM | 🔴 OPEN | fixture candidate C1, procedure §Retry vs spec S1, review R1 | Cipher 🔓 (Lead Orchestrator) — recommend authorizing the behavior-changing correction; await decision before routing remediation | Yes — authorize correction or explicitly defer to the feature Log; neither is assumed |
+| F2 | Runbook links a retired skill path | LOW | ✅ FIXED (round 1) | fixture C1 §Links, fix C0→C1; independent verifier R1 confirmed replacement resolves | closed — verifier: fixture review R1 | No |
+
+Counts: fixed 1 · open 1 · deferred 0 · rejected 0 (of 2)
+
+Verdict: ❌ [FAIL] — F1 remains open.
+PR state: not opened — non-PR remediation review.
+Blockers: 🚧 BLOCKED — F1 correction needs user authorization; affected remediation only.
+Checks: ✅ PASS — fixture text-integrity check at C1; this does not establish outcome acceptance.
+Next action: Cipher 🔓 (Lead Orchestrator) presents the bounded F1 decision; after authorization, route correction and obtain current review.
+Needs your decision: ❓ F1 — authorize the behavior-changing correction, or explicitly authorize deferral to the feature Log.
+
+**Completion.** `ALL FINISHED — delivered: the authorized documentation scope; verification: required checks and independent review recorded in the feature Log; deferred: none; next options: open the PR, or stop here.`
 
 ### Roster ownership table
 
