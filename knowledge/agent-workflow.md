@@ -17,6 +17,14 @@ Read this entry before acting. ODD is the governing workflow: read-only and smal
 
 These uncertainty and outcome controls apply to every task, including small and read-only work. On a user correction, Cipher 🔓 (Lead Orchestrator) re-evaluates the requested goal against the mechanism and scope, updates affected Specs/tasks before affected work resumes, and invalidates stale assignments and evidence; unrelated work stays unchanged. Small/read-only work keeps corrected intent in the existing conversation/diff, without a feature artifact. Workers report affected gaps and stale evidence to the coordinator. Use the existing workflow and gates: no new tracker, count threshold, extra ritual/pause or user confirmation is introduced, and existing approvals remain binding.
 
+### PR release readiness
+
+Before opening a PR, Cipher 🔓 (Lead Orchestrator) assembles and verifies one release-readiness packet: the exact test-plan actions or commands with their observed results; every applicable gate status; the open-or-closed status of each task and of the feature; excluded or unrelated paths; unverified user-only controls; and each body claim against its evidence. Missing, contradictory, or stale evidence blocks PR creation until resolved — a partially verified packet is never an acceptable substitute. This applies to every PR, including docs-only changes, and introduces no tracker, no second approval ritual, and no change to existing authorizations or gates.
+
+### Post-review finding actions
+
+After each review round, Cipher 🔓 (Lead Orchestrator) uses the canonical combined rendered chat summary or, only when eligible, compact ready message in `knowledge/agents.md` `### PR review findings (adjudication)`. That owner defines finding presentation, accounting and readiness conditions; a raw findings list is not an acceptable handoff. Its fix-first rule, deferral authority, refutation evidence and loop cap remain unchanged, as do all existing gates; no tracker or additional approval step is introduced.
+
 ### Task-specific navigation
 
 Use the ODD classification and authorization rules above before choosing a change route. Start with the assignment's exact source paths, relevant dependencies, applicable runtime and skill; explore further only where the task or an unresolved fact requires it. This is the workflow router, not another task tracker.

@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.6.0
+  version: 1.8.0
 ---
 <!-- core:begin -->
 
@@ -60,6 +60,10 @@ The feature's `Specs` and `Tasks` bound its requirements and work; they do not r
 ### Delivery boundary
 
 Closing the feature document is not delivery. Commit, push, PR, release, and archive require explicit user authorization. A PR is a reviewable slice — work-unit commits or the feature's task slice — never the accumulated branch and never a substitute for the feature document. Git execution remains with Herald 📯 (Release Manager); merge remains user-only.
+
+### Release readiness and review findings
+
+Apply `knowledge/agent-workflow.md` `### PR release readiness` before opening any PR and `### Post-review finding actions` after every review round. For a feature, the pre-PR packet names the exact test-plan actions or commands with their observed results, every applicable gate status, each `T#` and the feature's open-or-closed status, excluded or unrelated paths, unverified user-only controls, and each PR-body claim against its evidence; missing, contradictory, or stale evidence blocks PR creation, and the `### Delivery boundary` authorization remains separately required. After review, use the canonical combined rendered chat summary or eligible compact ready message in `knowledge/agents.md` `### PR review findings (adjudication)`, including its accounting and readiness conditions — never a raw findings list. Both apply to docs-only PRs and introduce no tracker, no approval ritual, and no change to existing gates or the PR-body evidence schema.
 
 ### Validate
 
