@@ -226,6 +226,8 @@ def is_allowed_read_only_git_argv(arguments: tuple[str, ...]) -> bool:
             is_full_oid(arguments[4]) and is_full_oid(arguments[5])
             and arguments[6] == "--" and all(path for path in arguments[7:])
         )
+    if arguments == ("config", "--get", "core.sshcommand"):
+        return True
     if arguments == ("worktree", "list", "--porcelain"):
         return True
     return False

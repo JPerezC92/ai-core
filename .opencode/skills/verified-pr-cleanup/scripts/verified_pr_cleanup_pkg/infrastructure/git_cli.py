@@ -3,11 +3,21 @@
 from __future__ import annotations
 
 import os
+import shlex
 import shutil
 import subprocess
+from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
 
-from verified_pr_cleanup_pkg.domain.guards import github_repository_from_url, is_full_oid
+from verified_pr_cleanup_pkg.domain.guards import (
+    GITHUB_HOST,
+    GITHUB_SSH_USER,
+    github_repository_from_url,
+    is_full_oid,
+    is_safe_ssh_alias_host,
+    parse_ssh_remote,
+)
 from verified_pr_cleanup_pkg.domain.models import (
     BoundaryFailure,
     RepositoryIdentity,
@@ -15,6 +25,14 @@ from verified_pr_cleanup_pkg.domain.models import (
 )
 
 COMMAND_TIMEOUT_SECONDS = 60
+
+
+@dataclass(frozen=True)
+class _SshSettings:
+    """Effective hostname and user reported by `ssh -G`."""
+
+    hostname: str | None
+    user: str | None
 
 
 class GitCli:
@@ -32,15 +50,55 @@ class GitCli:
         push_urls = self._lines(self._git("remote", "get-url", "--push", "--all", remote))
         if len(fetch_urls) != 1 or len(push_urls) != 1:
             raise BoundaryFailure("Base remote must have exactly one fetch and push URL.")
-        fetch_identity = github_repository_from_url(fetch_urls[0])
-        push_identity = github_repository_from_url(push_urls[0])
-        if (
-            fetch_identity is None
-            or push_identity is None
-            or fetch_identity.full_name.casefold() != push_identity.full_name.casefold()
-        ):
+        fetch_identity = self._identity_from_url(fetch_urls[0])
+        push_identity = self._identity_from_url(push_urls[0])
+        if fetch_identity.full_name.casefold() != push_identity.full_name.casefold():
             raise BoundaryFailure("Base remote URLs do not identify one GitHub repository.")
         return fetch_identity
+
+    def _identity_from_url(self, value: str) -> RepositoryIdentity:
+        """Map one exact GitHub URL or resolve one SSH host alias through local config."""
+        identity = github_repository_from_url(value)
+        if identity is not None:
+            return identity
+        ssh_remote = parse_ssh_remote(value)
+        if ssh_remote is None or ssh_remote.user != GITHUB_SSH_USER:
+            raise BoundaryFailure("Base remote URL is not a recognised GitHub remote.")
+        self._require_github_ssh_alias(ssh_remote.host)
+        return RepositoryIdentity(owner=ssh_remote.owner, name=ssh_remote.repository)
+
+    def _require_github_ssh_alias(self, host: str) -> None:
+        """Expand one alias without connecting; require github.com and the git user."""
+        if not is_safe_ssh_alias_host(host):
+            raise BoundaryFailure("SSH host alias is not safe to expand.")
+        settings = self._parse_ssh_config(self._ssh("-G", host))
+        if settings.hostname is None or settings.user is None:
+            raise BoundaryFailure("SSH configuration expansion was inconclusive.")
+        if settings.hostname.casefold() != GITHUB_HOST or settings.user != GITHUB_SSH_USER:
+            raise BoundaryFailure("SSH host alias does not resolve to GitHub.")
+
+    @staticmethod
+    def _parse_ssh_config(output: bytes) -> _SshSettings:
+        """Extract hostname and user from `ssh -G` output; ambiguity fails closed."""
+        try:
+            text = output.decode("utf-8", errors="strict")
+        except UnicodeDecodeError as exc:
+            raise BoundaryFailure(
+                "SSH configuration expansion returned non-UTF-8 output."
+            ) from exc
+        values: dict[str, str] = {}
+        for line in text.splitlines():
+            if not line.strip():
+                continue
+            fields = line.split(None, 1)
+            if len(fields) != 2 or any(ord(character) < 32 for character in line):
+                raise BoundaryFailure("SSH configuration expansion was inconclusive.")
+            key, value = fields[0], fields[1].strip()
+            if key in {"hostname", "user"}:
+                if key in values:
+                    raise BoundaryFailure("SSH configuration expansion was ambiguous.")
+                values[key] = value
+        return _SshSettings(values.get("hostname"), values.get("user"))
 
     def validate_branch(self, branch: str) -> bool:
         """Check one base/head value as a valid refs/heads name."""
@@ -232,17 +290,66 @@ class GitCli:
         """Identify commands whose output is parsed as bytes/NUL-delimited records."""
         return self._git(*arguments, cwd=cwd)
 
+    def _ssh(self, *arguments: str) -> bytes:
+        """Expand one SSH host alias using Git's configured SSH command, connecting to nothing."""
+        configured = self._run(("config", "--get", "core.sshcommand"))
+        if configured.returncode == 0:
+            executable, command_arguments = self._parse_ssh_command(configured.stdout)
+        elif configured.returncode == 1:
+            resolved = shutil.which("ssh")
+            if resolved is None:
+                raise BoundaryFailure("SSH executable was not found on PATH.")
+            executable, command_arguments = resolved, ()
+        else:
+            raise BoundaryFailure("Could not read the configured SSH command.")
+        completed = self._run_process(executable, (*command_arguments, *arguments))
+        if completed.returncode != 0:
+            raise BoundaryFailure("SSH configuration expansion failed.")
+        return completed.stdout
+
+    @staticmethod
+    def _parse_ssh_command(output: bytes) -> tuple[str, tuple[str, ...]]:
+        """Split Git's configured SSH command into one executable and argv tokens."""
+        try:
+            text = output.decode("utf-8", errors="strict")
+        except UnicodeDecodeError as exc:
+            raise BoundaryFailure("Configured SSH command was not valid UTF-8.") from exc
+        text = text.strip()
+        if not text:
+            raise BoundaryFailure("Configured SSH command was empty.")
+        if any(ord(character) < 32 for character in text):
+            raise BoundaryFailure("Configured SSH command was malformed.")
+        try:
+            tokens = shlex.split(text)
+        except ValueError as exc:
+            raise BoundaryFailure("Configured SSH command was malformed.") from exc
+        if not tokens or not tokens[0]:
+            raise BoundaryFailure("Configured SSH command named no executable.")
+        expanded = tuple(os.path.expanduser(token) for token in tokens)
+        return expanded[0], expanded[1:]
+
     def _run(
         self, arguments: tuple[str, ...], cwd: Path | None = None
     ) -> subprocess.CompletedProcess[bytes]:
         """Run the supplied read-only Git argv without shell interpolation or optional locks."""
         environment = os.environ.copy()
         environment["GIT_OPTIONAL_LOCKS"] = "0"
+        return self._run_process(self._executable, arguments, cwd, environment)
+
+    @staticmethod
+    def _run_process(
+        executable: str,
+        arguments: tuple[str, ...],
+        cwd: Path | None = None,
+        environment: Mapping[str, str] | None = None,
+    ) -> subprocess.CompletedProcess[bytes]:
+        """Run one argv-only process with no shell and a bounded timeout."""
         try:
             return subprocess.run(
-                [self._executable, *arguments], cwd=cwd, capture_output=True,
+                [executable, *arguments], cwd=cwd, capture_output=True,
                 check=False, shell=False, timeout=COMMAND_TIMEOUT_SECONDS,
                 env=environment,
             )
         except (OSError, subprocess.TimeoutExpired) as exc:
-            raise BoundaryFailure("Git inventory process could not be completed safely.") from exc
+            raise BoundaryFailure("Process execution could not be completed safely.") from exc
+
