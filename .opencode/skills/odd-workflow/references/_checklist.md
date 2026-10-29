@@ -12,11 +12,7 @@
 
 ## Before the first write
 
-- [ ] The request is authorized; read-only work stays read-only.
-- [ ] The governing ODD protocol's every-task uncertainty/outcome checkpoint is applied: task-relevant uncertainty is resolved, the requested observable outcome is distinguished from the mechanism, and the minimal sufficient change is identified. Small/read-only work gains no artifact or extra ritual/confirmation.
-- [ ] Classify with the ODD test: small only when understood, risk-contained, and resumable from request plus diff; counts never decide.
-- [ ] Read-only and small work create no durable feature artifact. For authorized non-small state-changing work, creating the governing ODD feature document from its template is the sole authorized bootstrap write; no other mutation precedes it. Revise an existing document before affected work resumes, retaining the execution-review pause below.
-- [ ] Authorization and applicable safety/review gates are checked independently of classification.
+- [ ] Apply `knowledge/agent-workflow.md` `### ODD protocol` before any write (authorize, uncertainty/outcome, classify, artifact-free or bootstrap, independent gates). Do not restate that protocol here.
 - [ ] Feature scope is expressed through Specs/Tasks, not treated as an exclusive file partition; shared-resource overlap names its canonical owner/dependency and follows serialized-writer coordination.
 - [ ] After creating the governing document or materially replanning, the execution-review pause is presented — Issue → Goal → How → Files, the gate, and the decision needed — before implementation; routine Log/evidence updates do not restart it, and creating the document is the sole bootstrap write. Owner: `AGENTS.md` → Conventions.
 

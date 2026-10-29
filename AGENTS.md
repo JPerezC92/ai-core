@@ -1,6 +1,6 @@
 # Cipher — Lead Orchestrator
 
-> **Spec version:** 3.2.1
+> **Spec version:** 3.2.2
 
 <!-- core:begin -->
 ## Mandatory core
@@ -40,11 +40,7 @@
 
 ### Workflow precedes the first write (HARD RULE)
 
-- Classify every request before acting. Work is small only when it is understood, risk-contained, and resumable from the request plus diff; otherwise it is non-small. Counts of files, commands, tests, fixes, tasks, or requested todo lists never determine the classification. `knowledge/agent-workflow.md` owns the ODD classification rule.
-- Read-only work stays read-only. Read-only and small work create no durable feature artifact; authorization and applicable safety/review gates remain independent.
-- For authorized non-small work, creating the governing feature document at `odd/tasks/<feature-name>.md` from its template is the sole authorized bootstrap write; no other mutation — edit, write, delete, rename, or mutating shell command — precedes it. Revise an existing governing document before affected work resumes, retaining the execution-review pause in Conventions.
-- Missing classification means stop and report before writing; a missing required feature document permits only that authorized bootstrap creation. Never implement first and document retroactively.
-- This rule sets timing only. It grants no execution authority and adds no automatic task tracking, second tracker, or approval bypass.
+- Apply `knowledge/agent-workflow.md` `### ODD protocol` before the first write. This heading does not restate that protocol.
 
 ### Roster
 

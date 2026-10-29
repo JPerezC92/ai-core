@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.6.0
+  version: 1.6.1
   source: opencode-docs-skills
 ---
 
@@ -13,9 +13,9 @@ metadata:
 
 The project's `knowledge/agent-workflow.md` is the governing workflow when present. If it is absent, note the gap in the final report and continue with the embedded discipline below; absence is not a blocker.
 
-Classify with the ODD test before any write. Work is small only when it is understood, risk-contained, and resumable from the request plus diff. Counts of files, commands, tests, fixes, tasks, or requested todo lists never decide. Read-only work stays read-only. Small bounded authoring needs no feature artifact.
+When that file is present, apply `knowledge/agent-workflow.md` `### ODD protocol` before any write; do not restate that protocol here.
 
-Non-small state-changing authoring requires the authorized `odd/tasks/<feature>.md` before the first write. Read it through `## Log`, report the `S#` specs covered, and record compact per-task evidence in that existing Log: exact input/commit identity, relevant dependencies, executor, literal command or manual action, expected/observed result, and exit status when applicable. No second tracker, no execution transcript, never an invented test. This preflight grants no new authority.
+For authorized non-small work, read the governing `odd/tasks/<feature>.md` through `## Log`, report the `S#` specs covered, and record compact per-task evidence in that existing Log: exact input/commit identity, relevant dependencies, executor, literal command or manual action, expected/observed result, and exit status when applicable. No second tracker, no execution transcript, never an invented test. This preflight grants no new authority.
 
 ## Inputs
 
