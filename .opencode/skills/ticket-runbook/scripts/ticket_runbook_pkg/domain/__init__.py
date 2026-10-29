@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from .entities import ProblemRow
-from .ports import ClockPort, RegisterRowsPort
 from .rules import (
     ALLOWED_ALLOW_EXACT,
     ALLOWED_IDENTIFICATION_VERDICTS,
