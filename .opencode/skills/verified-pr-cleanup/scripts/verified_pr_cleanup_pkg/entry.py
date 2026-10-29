@@ -9,7 +9,7 @@ import sys
 from collections.abc import Sequence
 from datetime import datetime, timezone
 
-from verified_pr_cleanup_pkg.application.cleanup import execute
+from verified_pr_cleanup_pkg.application.preflight_cleanup import execute
 from verified_pr_cleanup_pkg.domain.guards import is_safe_remote_name
 from verified_pr_cleanup_pkg.domain.models import (
     BoundaryFailure,
