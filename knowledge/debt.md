@@ -25,7 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 8.**
+**Open debts: 9.**
 
 ### DEBT-021 — ODD execution-gate bypass
 
@@ -99,5 +99,14 @@ Each entry MUST include:
 - **Resolution criteria:** Application operation with `execute()` and a typed result/error; IO stays at the entry; tests and Bastion `[PASS]`; suite passes.
 - **Explicit deferral decision:** User instruction 2026-10-29: "if that requiere its own feature just add as a debt to do it later but dont left any broken". Accepted for later work; not started.
 
-**ID to use for the next new debt:** `DEBT-029`. This is an allocation counter, not an open debt.
+### DEBT-029 — Stop without a user-action requirement
+
+- **ID:** DEBT-029
+- **Date:** 2026-10-29
+- **Description:** Cipher stopped without a user-action requirement and left informational text that named no decision or next step. The stop did not distinguish "all pending work is finished" from "work remains," so the user had to ask why the turn ended.
+- **Direct evidence:** Conversation record 2026-10-29; user corrections "why u stopped now?", "stopo dodging, hey u should understand if u stop there should be a reason that require me to take an action, in other casu if u finalized all your pending why u dolnt senmt a clear message like ALL FINISHED, and next steps or ask about what to do next"; `AGENTS.md` project extension `### Stop and next-step reporting`; no code change.
+- **Resolution criteria:** Every stop either names the exact user action required or says `ALL FINISHED`, lists the completed scope, and states the next steps; if work remains, continue to the next ready task; informational evidence alone is not a stop reason. Demonstrate on the current push/PR and future tasks.
+- **Explicit deferral decision:** User instruction 2026-10-29: "add this error as a debt iun the workflow and then continue with the 5". The user accepted the process debt and directed the push/PR.
+
+**ID to use for the next new debt:** `DEBT-030`. This is an allocation counter, not an open debt.
 <!-- project:end -->
