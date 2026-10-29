@@ -1,8 +1,9 @@
 # Workflow execution reliability
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-10-29
+> **Closed:** 2026-10-29
 > **Objective:** Make ODD step reporting, scope-bounded continuation, execution-review timing, standing authorization, and finding/blocker presentation explicit and consistent.
 > **Branch:** docs/workflow/workflow-execution-reliability
 > **Delivery:** One documentation work-unit; forecast ~320 authored additions and ~20 deletions, excluding generated files; slice 1 = ODD protocol and presentation standard, slice 2 = root/skill/checklist pointers, slice 3 = debt correction and independent review. No code, no new tracker, no new approval.
@@ -22,13 +23,13 @@
 
 ## Tasks
 
-- T1 | S2 | delegated (ODD protocol definition; documentation owner) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T2 | S4 | inline (root runtime spec; Cipher owns the conventions) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T3 | S3, S5 | delegated (ODD skill delivery/continuation wording; documentation owner) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T4 | S6 | delegated (presentation standard, including the standardized emoji state markers, in the findings owner; documentation owner) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T5 | S8 | inline (debt correction; Cipher) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T6 | S9 | delegated (independent semantic review; reviewer must not have authored the changes) — Sentinel 🛡️ (Quality Guardian) | open | commit: pending
-- T7 | S1, S2, S3, S4, S5, S6, S7, S8, S9 | inline (close, validator, and commit coordination; Cipher + Herald) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
+- T1 | S2 | delegated (ODD protocol definition; documentation owner) — Scribe ✍️ (Docs & Problems Manager) | done | commit: 24e60c5
+- T2 | S4 | inline (root runtime spec; Cipher owns the conventions) — Cipher 🔓 (Lead Orchestrator) | done | commit: 24e60c5
+- T3 | S3, S5 | delegated (ODD skill delivery/continuation wording; documentation owner) — Scribe ✍️ (Docs & Problems Manager) | done | commit: 24e60c5
+- T4 | S6 | delegated (presentation standard, including the standardized emoji state markers, in the findings owner; documentation owner) — Scribe ✍️ (Docs & Problems Manager) | done | commit: 24e60c5
+- T5 | S8 | inline (debt correction; Cipher) — Cipher 🔓 (Lead Orchestrator) | done | commit: 24e60c5
+- T6 | S9 | delegated (independent semantic review; reviewer must not have authored the changes) — Sentinel 🛡️ (Quality Guardian) | done | commit: 24e60c5
+- T7 | S1, S2, S3, S4, S5, S6, S7, S8, S9 | inline (close, validator, and commit coordination; Cipher + Herald) — Cipher 🔓 (Lead Orchestrator) | done | commit: 24e60c5
 
 ## Log
 
@@ -41,3 +42,4 @@
 - L7 — 2026-10-29 — Implementation evidence: T1/T3/T4 edited by Scribe (agent-workflow, odd-workflow skill/checklist, agents); T2/T5 edited by Cipher (AGENTS, debt). Files: `knowledge/agent-workflow.md`, `knowledge/agents.md`, `AGENTS.md`, `.opencode/skills/odd-workflow/SKILL.md`, `.opencode/skills/odd-workflow/references/_checklist.md`, `knowledge/debt.md`. Markdown text-integrity check passed; ODD validator `ok`; Sentinel independent review pending. No code or test change.
 - L8 — 2026-10-29 — Sentinel review `task6/sentinel1` found 5 findings. Fixed: AGENTS pause wording (material replanning, gate, decision), ODD step examples, presentation examples, open-advisory wording, and S6 `[PASS]` wording. Re-review pending; no code.
 - L9 — 2026-10-29 — Sentinel re-review `task9/sentinel1` found 2 findings: the advisory sentence still bypassed fix-first, and the `ALL FINISHED` example invented a three-file/reviewed scope. Fixed in `knowledge/agents.md`; re-review pending; no code.
+- L10 — Close: 2026-10-29 — T1–T7 done against `24e60c5` on `docs/workflow/workflow-execution-reliability`; Sentinel `task11/sentinel1` `[PASS]`, zero open findings; ODD validator `ok`; Markdown text-integrity clean. No code/test change; no push, PR, merge, tag, or release. Deferred feature-sized debts `DEBT-025`–`DEBT-028` remain open.
