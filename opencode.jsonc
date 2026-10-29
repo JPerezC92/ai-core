@@ -73,7 +73,7 @@
                 { "action": "shell", "resource": "git push origin * -*", "effect": "deny" },
                 { "action": "shell", "resource": "git push origin *\t-*", "effect": "deny" },
                 { "action": "shell", "resource": "git push origin *:*", "effect": "deny" },
-                { "action": "shell", "resource": "git push origin * *", "effect": "deny" },
+                { "action": "shell", "resource": "git push origin * ?*", "effect": "deny" },
                 { "action": "shell", "resource": "git push origin *\t*", "effect": "deny" },
                 { "action": "shell", "resource": "git push origin --delete refs/heads/*", "effect": "allow" },
                 { "action": "shell", "resource": "git push origin --delete refs/heads/* -*", "effect": "deny" },
