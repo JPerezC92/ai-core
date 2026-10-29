@@ -29,6 +29,18 @@
                 { "action": "shell", "resource": "ls *", "effect": "allow" },
                 { "action": "shell", "resource": "wc *", "effect": "allow" }
             ]
+        },
+        // Read-only validator and direct cleanup only; merged/head/parity and
+        // work preservation are checked by workflow. TUI reload pending.
+        "herald": {
+            "permissions": [
+                { "action": "shell", "resource": "uv run --frozen python3 .opencode/skills/verified-pr-cleanup/scripts/verified_pr_cleanup.py *", "effect": "allow" },
+                { "action": "shell", "resource": "git branch -d -- *", "effect": "allow" },
+                { "action": "shell", "resource": "git branch -D -- *", "effect": "allow" },
+                { "action": "shell", "resource": "git push origin --delete refs/heads/*", "effect": "allow" },
+                { "action": "shell", "resource": "git push origin --delete refs/heads/* -*", "effect": "deny" },
+                { "action": "shell", "resource": "git push origin --delete refs/heads/*\t-*", "effect": "deny" }
+            ]
         }
     },
     // Project instructions (optional — point at your own docs):
@@ -97,6 +109,18 @@
         { "action": "shell", "resource": "sg *", "effect": "deny" },
         // Project virtual environment only: uv run is allowed, uvx is not.
         { "action": "shell", "resource": "uv run *", "effect": "allow" },
+        // The merged-branch cleanup validator stays denied to every agent as an
+        // *execution* only (after the broad `uv run *` allow so these rules
+        // match last); Herald's agent-scoped rule is intended to allow the
+        // identical command, with loaded precedence pending T9 verification.
+        // Each deny carries an interpreter prefix so bare path text — including
+        // `git add`/`git commit` arguments — never matches, keeping Git staging
+        // and path inspection allowed. The path match is textual — it scopes
+        // cooperation, not a sandbox.
+        { "action": "shell", "resource": "uv run *verified-pr-cleanup/scripts/verified_pr_cleanup.py*", "effect": "deny" },
+        { "action": "shell", "resource": "python *verified-pr-cleanup/scripts/verified_pr_cleanup.py*", "effect": "deny" },
+        { "action": "shell", "resource": "python3 *verified-pr-cleanup/scripts/verified_pr_cleanup.py*", "effect": "deny" },
+        { "action": "shell", "resource": "py *verified-pr-cleanup/scripts/verified_pr_cleanup.py*", "effect": "deny" },
         { "action": "shell", "resource": "uv run *ruff*--fix*", "effect": "deny" },
         { "action": "shell", "resource": "ruff *--fix*", "effect": "deny" },
         // Mutating package/format operations are denied regardless of wrapper.

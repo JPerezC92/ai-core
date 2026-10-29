@@ -13,6 +13,7 @@
 ## Before the first write
 
 - [ ] The request is authorized; read-only work stays read-only.
+- [ ] The governing ODD protocol's every-task uncertainty/outcome checkpoint is applied: task-relevant uncertainty is resolved, the requested observable outcome is distinguished from the mechanism, and the minimal sufficient change is identified. Small/read-only work gains no artifact or extra ritual/confirmation.
 - [ ] Classify with the ODD test: small only when understood, risk-contained, and resumable from request plus diff; counts never decide.
 - [ ] Read-only and small work create no durable feature artifact; non-small state-changing work has its authorized ODD feature document before the first mutation.
 - [ ] Authorization and applicable safety/review gates are checked independently of classification.
@@ -20,7 +21,7 @@
 
 ## Change
 
-- [ ] A requirement change rewrites only the affected spec.
+- [ ] A user correction re-evaluates goal versus mechanism/scope under the governing protocol; affected Specs/tasks are updated before affected work resumes, with stale assignments/evidence invalidated. Small/read-only intent stays in the existing conversation/diff. A requirement change rewrites only the affected spec.
 - [ ] The affected task is reopened; unrelated tasks stay unchanged.
 
 ## Implement and verify
@@ -33,8 +34,8 @@
 
 ## Close
 
-- [ ] The verified outcome is reported.
-- [ ] Every failed or pending check is reported.
+- [ ] The requested observable outcome is verified separately from tests, architecture or source-health checks before claiming any task done; the verified outcome is reported.
+- [ ] Missing evidence and every failed or pending check/control are reported honestly; pending controls are not represented as satisfied.
 - [ ] The next step is stated.
 - [ ] A reported failure was reproduced before deciding it already works.
 - [ ] Every task is `done` and has a commit reference.

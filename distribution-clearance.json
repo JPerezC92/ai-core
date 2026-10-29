@@ -101,6 +101,9 @@
         "SKILL.md"
       ]
     },
+    ".opencode/skills/verified-pr-cleanup/": {
+      "mode": "raw"
+    },
     ".opencode/agents/lumen.md": {
       "mode": "region"
     },
