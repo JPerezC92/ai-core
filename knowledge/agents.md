@@ -150,22 +150,28 @@ When Inquisitor 🔎 (PR Reviewer) returns review findings, Cipher 🔓 (Lead Or
 | Fix requires destructive or irreversible action | User-Authority-Only rule applies | **Yes** |
 | Same finding survives 2 remediation rounds, or 3 total review rounds | Loop cap — stop | **Yes** |
 
-**Finding actions:** before remediation, Cipher 🔓 (Lead Orchestrator) presents every finding as an action line carrying its ID, disposition (`fix` / `defer` / `reject`), owner, concrete action, and user-decision flag. A raw findings list is not an acceptable handoff. The dispositions, authority rules, refutation evidence, and loop cap above are unchanged; this adds no tracker and no additional approval.
+**Finding actions:** before remediation, Cipher 🔓 (Lead Orchestrator) uses the single round summary below to present every finding and its action. A raw findings list is not an acceptable handoff. The dispositions, authority rules, refutation evidence, and loop cap above are unchanged; this adds no tracker and no additional approval.
 
 **PR-body presentation:** the PR body's `## Findings / blockers`, `## Test evidence`, `## Open debt`, and verdict line follow `.opencode/skills/git-pr/references/_pr-evidence-format.md` exactly. The designated evidence writer owns that content; the round-summary vocabulary below is the chat surface, not the body's status column.
 
-**Round summary (delivered to the user after every review round):** one findings-status message — first line + findings table + `Counts:` line + verdict line + PR state + `needs your call: none | <items>`.
+**Round summary (delivered to the user after every review round):** one combined chat message — first line + rendered findings table when findings exist + `Counts:` line + verdict + PR state + concrete next action + `Needs your decision: none | <items>`. Use the compact ready path below only when all its conditions hold. Render tables directly, never inside code fences.
 
-- **First line (open-count verdict):** `Open findings: <N> of <M> — <nothing unresolved and nothing blocking | …>` — a reader who reads only this line knows whether any finding is unresolved or blocking.
-- **Open count:** `<N>` counts `🔴 OPEN` findings only — carried `DEFERRED` findings are named in the `Counts:` line and in the first line whenever they exist. A `⏸ DEFERRED` finding is still open for the `[PASS]` gate and prevents `[PASS]`.
-- **Findings table columns:** `# | Finding | Severity | Status | Basis / destination`.
-- **Closed status vocabulary:** `✅ FIXED (round <N>)` · `🔴 OPEN` · `⏸ DEFERRED → <destination>` · `✖ REJECTED (not a defect)` — status is never left to prose inference.
-- **Status basis:** `FIXED` names the remediation and the party that verified it; `DEFERRED` names its destination (feature Log or debt entry) and the user authority that permitted deferral; `REJECTED` carries the literal refutation output.
-- **Counts line:** `Counts: fixed <n> · open <n> · deferred <n> · rejected <n> (of <M>)` — the four figures total to `M`.
-- **Carry-over:** findings persist across rounds with their status until `FIXED` or `REJECTED`; a finding is never dropped silently.
-- **Unchanged mandate:** the verdict line, the PR state, `needs your call: none | <items>`, and the literal-refutation-evidence rule remain required elements of the same message.
+- **First line:** `Unresolved findings: <U> of <M> — open <O>, deferred <D>; <blocking state>` — a reader who reads only this line knows whether anything is unresolved or blocking, including missing checks or stale evidence even when `U` is zero.
+- **Findings table columns, exactly:** `ID | Finding | Severity | Status | Evidence | Owner / next action | Needs your decision?`.
+- **Identity and action:** preserve stable finding IDs and severities across rounds. Every row names its owner and concrete next action (including fix, proposed deferral or rejection as applicable), with an explicit user-decision flag; closed rows identify their verified disposition rather than inventing pending work.
+- **Status vocabulary:** `🔴 OPEN` · `✅ FIXED (round <N>)` · `⏸ DEFERRED → <destination>` · `✖ REJECTED (not a defect)`. A proposed deferral stays `🔴 OPEN`, explicitly labeled awaiting user authorization in its action/decision cells; it is not accepted debt.
+- **Evidence:** cite concrete head-bound evidence. `FIXED` identifies the remediation and verifier; `DEFERRED` identifies its durable destination (feature Log or debt entry) and explicit user authority; `REJECTED` preserves the refutation evidence. Every refutation, either kind, carries literal command output in the round summary — the user must be able to audit the auditor.
+- **Unique accounting:** `Counts: fixed <F> · open <O> · deferred <D> · rejected <R> (of <M>)`, where `F + O + D + R = M` unique findings and `U = O + D`. Count each ID once in its current status; proposed deferrals count only as open, authorized deferrals only as deferred. Every unresolved finding, including accepted deferred/ADVISORY work, prevents `[PASS]`; existing user-accepted `[ADVISORY]` gate policy is unchanged.
+- **Carry-over:** preserve fixed and rejected history as well as unresolved findings across rounds; never silently drop a finding. The PR-body schema and evidence writer remain unchanged. The summary reports the actual current verdict and PR state, the concrete next action and all outstanding user decisions, never a fabricated clean result.
 
-Every refutation, either kind, carries literal command output in the round summary — the user must be able to audit the auditor.
+**Compact ready path:** only for an authenticated, currently open PR with current head-bound review `[PASS]`, zero unresolved findings, every required check verified, and no outstanding acceptance decision other than whether to merge, use the heading `## ✅ Ready to merge — PR #<number>` and link the authenticated PR URL. Follow it with:
+
+- `Review: PASS — 0 open findings`
+- `Required checks: all verified`
+- `Blockers: none`
+- `Needs your decision: merge the PR`
+
+Do not show an empty findings table. If findings existed, an optional `Fixed: <N> · Open: 0` count may accompany the compact message; verified fixed/rejected history remains in the PR body and available audit evidence. This compact path supersedes only the verbose chat summary, never PR history or merge authority. Missing checks, stale evidence, an outstanding acceptance decision, or any open/deferred finding means not ready: use the combined round summary with the concrete next action instead, without implying clean `[PASS]` or permission to merge.
 
 ### Roster ownership table
 

@@ -23,7 +23,7 @@ Before opening a PR, Cipher 🔓 (Lead Orchestrator) assembles and verifies one 
 
 ### Post-review finding actions
 
-After each review round, Cipher 🔓 (Lead Orchestrator) presents every finding with an ID, its disposition (`fix` / `defer` / `reject`), the owner, a concrete action, and whether a user decision is required; a raw findings list is not an acceptable handoff. The fix-first rule, deferral authority, refutation evidence, and loop cap in `knowledge/agents.md` `### PR review findings (adjudication)` remain unchanged, as do all existing gates; no tracker or additional approval step is introduced.
+After each review round, Cipher 🔓 (Lead Orchestrator) uses the canonical combined rendered chat summary or, only when eligible, compact ready message in `knowledge/agents.md` `### PR review findings (adjudication)`. That owner defines finding presentation, accounting and readiness conditions; a raw findings list is not an acceptable handoff. Its fix-first rule, deferral authority, refutation evidence and loop cap remain unchanged, as do all existing gates; no tracker or additional approval step is introduced.
 
 ### Task-specific navigation
 
