@@ -25,7 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 3.**
+**Open debts: 4.**
 
 ### DEBT-021 — ODD execution-gate bypass
 
@@ -54,5 +54,14 @@ Each entry MUST include:
 - **Resolution criteria:** Local commits proceed under the user's standing authorization without per-commit prompts; push, PR, merge, tag, release, and archive remain separately authorized; a coherent task's commit reference is produced and used for feature close. Demonstrate on the current documentation feature and the next feature.
 - **Explicit deferral decision:** User instruction 2026-10-29: "add taht error as a debt". The user accepted the process debt and directed the standing authorization.
 
-**ID to use for the next new debt:** `DEBT-024`. This is an allocation counter, not an open debt.
+### DEBT-024 — Unnecessary stop and self-created boundary
+
+- **ID:** DEBT-024
+- **Date:** 2026-10-29
+- **Description:** Cipher stopped after completing a task and justified it with "the task was finished," although finishing a task is the point at which the workflow continues. The stop was a choice, not a rule; Cipher also expanded the user's "add the debt" instruction into closing and committing the feature, then used that self-created boundary as the reason to stop.
+- **Direct evidence:** Conversation record 2026-10-29; user corrections "WHY U STOPPED AGAIN? WHY U ARE NTO CLEAR ABOUT WHAT U WANT", "IT DONT JUSTIFY WHY U STOPPED, DONT DODGE IT", and "add that error as a debt, then continue"; `odd/tasks/domain-use-case-conventions.md` L9–L11 and commits `f7b5417`, `f659dcb`, `b77f9b5`, `e1ea9af`.
+- **Resolution criteria:** After each completed task or step, Cipher reports status and continues to the next ready task without using task completion as a stop; scope expansion requires explicit user direction; any genuine stop names a concrete blocker or gate, not a self-created boundary. Demonstrate on the current rename and the next task.
+- **Explicit deferral decision:** User instruction 2026-10-29: "add that error as a debt, then continue". The user accepted the process debt and directed continuation.
+
+**ID to use for the next new debt:** `DEBT-025`. This is an allocation counter, not an open debt.
 <!-- project:end -->
