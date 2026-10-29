@@ -33,7 +33,8 @@ Run the validator inside the repository checkout whose refs and linked worktrees
 ## Prerequisites
 
 - The GitHub CLI (`gh`) must be installed on `PATH` and authenticated for the target repository; the validator reads live PR state through `gh pr view`.
-- A missing executable or an authentication, authorization, or repository-read failure is a boundary failure: no decision exists, and it must not be reported as `BLOCKED` or as partial approval.
+- For an SSH or scp-style remote URL or alias, an SSH client and its configuration must be available locally: the validator resolves the alias through the repository's configured `core.sshcommand` (or `ssh` from `PATH` when unset) and `ssh -G`, which expands configuration without opening a connection.
+- A missing `gh` or `ssh` executable, absent or unreadable SSH configuration, an unresolvable alias, or an authentication, authorization, or repository-read failure is a boundary failure: no decision exists, and it must not be reported as `BLOCKED` or as partial approval.
 
 ## Command
 
@@ -45,7 +46,7 @@ uv run --frozen python3 .opencode/skills/verified-pr-cleanup/scripts/verified_pr
 
 The preflight passes only when all of these hold:
 
-- The configured base remote resolves to exactly one GitHub repository, and its fetch and push URLs identify the same repository.
+- The configured base remote resolves to exactly one GitHub repository: an HTTPS URL is parsed directly, while an SSH URL, scp-style URL, or configured host alias may be resolved through the repository's configured `core.sshcommand` via local `ssh -G` configuration expansion. The final requirement remains a canonical `github.com` host and `git` user, and its fetch and push URLs identify the same repository.
 - The live PR is the requested number in that repository, its canonical URL matches, it is `MERGED`, and its base branch equals the configured base branch.
 - A second complete read pins the same repository, PR number, head branch, immutable head OID, and base.
 - Remote and local configured base refs exist and are equal; a stale or divergent base is reported as fetch needed.
@@ -73,7 +74,7 @@ A boundary failure prints `Preflight boundary failure: <detail>` to stderr and e
 
 ## Read-only boundary
 
-The validator runs only read-only Git and GitHub CLI queries, including repository URL, ref-format validation, `ls-remote`, `rev-parse`, `merge-base`, checked `diff`, `worktree list`, and `gh pr view` metadata. It never performs a fetch, switch, checkout, merge, push, delete, ref update, stash change, worktree change, or file deletion, and it calls no alternate executor. Its Git interaction writes nothing to Git refs, objects, index, stash, or worktree state. The `uv run --frozen` launcher that starts the command may create or reuse its own environment and cache outside that boundary; that launcher behavior is not validator output or verdict evidence.
+The validator runs only read-only Git, SSH-configuration, and GitHub CLI queries, including repository URL, ref-format validation, `git config --get core.sshcommand`, `ssh -G` local configuration expansion, `ls-remote`, `rev-parse`, `merge-base`, checked `diff`, `worktree list`, and `gh pr view` metadata. It never performs a fetch, switch, checkout, merge, push, delete, ref update, stash change, worktree change, or file deletion, and it calls no alternate Git mutation executor. `ssh -G` only expands local SSH configuration; it opens no connection. Its read-only Git and SSH-configuration interaction writes nothing to Git refs, objects, index, stash, or worktree state. The `uv run --frozen` launcher that starts the command may create or reuse its own environment and cache outside that boundary; that launcher behavior is not validator output or verdict evidence.
 
 ## BLOCKED and fetch-needed handling
 
