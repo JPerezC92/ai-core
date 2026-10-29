@@ -6,7 +6,7 @@
 > **Created:** 2026-10-28
 > **Objective:** Prevent PRs from opening or being reported complete with unactioned review findings or unverified release claims.
 > **Branch:** docs/workflow/pr-release-readiness
-> **Delivery:** single documentation and configuration slice; forecast 70 authored additions plus deletions, generated files excluded; actual through b9b9116 is 53 additions plus 1 deletion in the feature/docs commit and the separate permission-fix commit, generated files excluded; no code or test harness
+> **Delivery:** single documentation and configuration slice; forecast 70 authored additions plus deletions, generated files excluded; actual through a467b9a is 96 additions plus 11 deletions from origin/main, with the post-7a618bd slice being 53 additions plus 17 deletions, generated files excluded; no code or test harness
 > **Runner:** `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feature.py odd/tasks/pr-release-readiness-discipline.md`; Markdown/text-integrity check on changed docs
 
 ## Specs
