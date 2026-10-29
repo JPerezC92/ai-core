@@ -1,8 +1,9 @@
 # Workflow execution reliability
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-10-29
+> **Closed:** 2026-10-29
 > **Objective:** Make ODD step reporting, scope-bounded continuation, execution-review timing, standing authorization, and finding/blocker presentation explicit and consistent.
 > **Branch:** docs/workflow/workflow-execution-reliability
 > **Delivery:** One documentation work-unit; forecast ~320 authored additions and ~20 deletions, excluding generated files; slice 1 = ODD protocol and presentation standard, slice 2 = root/skill/checklist pointers, slice 3 = debt correction and independent review. No code, no new tracker, no new approval.
@@ -23,13 +24,13 @@
 
 ## Tasks
 
-- T1 | S2, S10 | delegated (D1/D8: complete phase mapping and correct completion examples) — Scribe ✍️ (Docs & Problems Manager) | open | commit: pending
-- T2 | S4, S10 | inline (D4/D5: source-neutral authorization pointer and consistent bootstrap exception) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T3 | S3, S5, S10 | delegated (D5 and acceptance safeguards: align skill/checklist with canonical owners) — Scribe ✍️ (Docs & Problems Manager) | open | commit: pending
-- T4 | S6, S10 | delegated (D2/D3/D6: canonical fix-first pointer, blocker definition, complete reporting example) — Scribe ✍️ (Docs & Problems Manager) | open | commit: pending
+- T1 | S2, S10 | delegated (D1/D8: complete phase mapping and correct completion examples) — Scribe ✍️ (Docs & Problems Manager) | done | commit: e68cbc1
+- T2 | S4, S10 | inline (D4/D5: source-neutral authorization pointer and consistent bootstrap exception) — Cipher 🔓 (Lead Orchestrator) | done | commit: e68cbc1
+- T3 | S3, S5, S10 | delegated (D5 and acceptance safeguards: align skill/checklist with canonical owners) — Scribe ✍️ (Docs & Problems Manager) | done | commit: e68cbc1
+- T4 | S6, S10 | delegated (D2/D3/D6: canonical fix-first pointer, blocker definition, complete reporting example) — Scribe ✍️ (Docs & Problems Manager) | done | commit: e68cbc1
 - T5 | S8 | inline (debt correction; Cipher) — Cipher 🔓 (Lead Orchestrator) | done | commit: 24e60c5
-- T6 | S9, S10 | delegated (fresh independent whole-feature acceptance after separate remediation verification) — Sentinel 🛡️ (Quality Guardian) | open | commit: pending
-- T7 | S1, S2, S3, S4, S5, S6, S7, S8, S9, S10 | inline (D7: durable accounting, scenario evidence, validation and closure coordination) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
+- T6 | S9, S10 | delegated (fresh independent whole-feature acceptance after separate remediation verification) — Sentinel 🛡️ (Quality Guardian) | done | commit: e68cbc1
+- T7 | S1, S2, S3, S4, S5, S6, S7, S8, S9, S10 | inline (D7: durable accounting, scenario evidence, validation and closure coordination) — Cipher 🔓 (Lead Orchestrator) | done | commit: e68cbc1
 
 ## Log
 
@@ -62,3 +63,4 @@
 - L27 — Refreshed root candidate SHA-256 (coordinator `Get-FileHash -Algorithm SHA256 AGENTS.md`): `867AD8B50129DF04F1EAB828BF9AFE9FC4508952FA064F4B077846DF27038E6D`. Supersedes L15 root candidate hash only. Remediation accounting: root version TRANSLATED by required PATCH per L26; every other original-body disposition remains L20–L24. Whole-feature acceptance remains pending at this refreshed input set.
 - L28 — Current acceptance: independent `whole-acceptance/sentinel2` returned PASS, zero open findings, S1–S10 accepted over refreshed root L27 and other L15 candidate identities. D1–D8 remediation verification remains separate; D9 metadata fix verified on continuation. Source-level outcome: standardized reporting/continuation explicitly mapped across all seven phases; complete preservation accounting and adverse walkthroughs verified, not inferred from mechanical tests. No future agent-runtime compliance guarantee. Review writes/commands: none. Accumulated review history retained; corrective continuation authorized L11/L14.
 - L29 — Final coordinator checks, same literal commands as L18 on L27 candidate: text-integrity no diagnostics, exit 0. Feature validator first returned `uv trampoline failed to spawn Python child process` / `os error 4551`, exit 1; no document verdict was produced. Symptom catalog inspected; no dependency/permission/environment mutation. One isolated retry of the identical validator invocation printed `ok odd\tasks\workflow-execution-reliability.md`, exit 0. No application/test code changed and no test suite executed for this documentation-only correction. Candidate documentation is accepted, but commit/closure remains pending.
+- L30 — Close: corrected work committed as `e68cbc125caff34d853e5ada82c42f7f42892216`; whole-feature acceptance L28 and checks L29 apply to committed owner content, unchanged since review. T1–T4/T6–T7 done against corrective commit; T5's earlier debt correction remains delivered by `24e60c5`. Herald measured cumulative authored churn 207 additions + 64 deletions = 271 lines before this closure record, below the advisory delivery trigger. Existing debts stay open pending their actual criteria; no retirement, push, PR, merge, tag or release. Only lifecycle/evidence bookkeeping changed after acceptance; closure-record mechanical checks and local bookkeeping commit follow.
