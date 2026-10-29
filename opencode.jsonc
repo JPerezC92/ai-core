@@ -111,11 +111,12 @@
         { "action": "shell", "resource": "uv run *", "effect": "allow" },
         // The merged-branch cleanup validator stays denied to every agent as an
         // *execution* only (after the broad `uv run *` allow so these rules
-        // match last); only Herald's agent-scoped rule re-allows the identical
-        // command. Each deny carries an interpreter prefix so bare path text —
-        // including `git add`/`git commit` arguments — never matches, keeping
-        // Git staging and path inspection allowed. The path match is textual —
-        // it scopes cooperation, not a sandbox.
+        // match last); Herald's agent-scoped rule is intended to allow the
+        // identical command, with loaded precedence pending T9 verification.
+        // Each deny carries an interpreter prefix so bare path text — including
+        // `git add`/`git commit` arguments — never matches, keeping Git staging
+        // and path inspection allowed. The path match is textual — it scopes
+        // cooperation, not a sandbox.
         { "action": "shell", "resource": "uv run *verified-pr-cleanup/scripts/verified_pr_cleanup.py*", "effect": "deny" },
         { "action": "shell", "resource": "python *verified-pr-cleanup/scripts/verified_pr_cleanup.py*", "effect": "deny" },
         { "action": "shell", "resource": "python3 *verified-pr-cleanup/scripts/verified_pr_cleanup.py*", "effect": "deny" },
