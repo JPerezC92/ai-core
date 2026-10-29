@@ -88,56 +88,6 @@
                 { "action": "shell", "resource": "git push origin --delete refs/heads/* -*", "effect": "deny" },
                 { "action": "shell", "resource": "git push origin --delete refs/heads/*\t-*", "effect": "deny" }
             ]
-        },
-        "investigator": {
-            "permissions": [
-                // Read-only browser evidence plus the minimum interaction
-                // needed to reach the evidence page.
-                { "action": "chrome-devtools_list_pages", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_take_screenshot", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_take_snapshot", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_list_console_messages", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_get_console_message", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_list_network_requests", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_get_network_request", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_get_css_styles", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_performance_start_trace", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_performance_stop_trace", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_performance_analyze_insight", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_lighthouse_audit", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_select_page", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_wait_for", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_navigate_page", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_click", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_fill", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_fill_form", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_type_text", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_press_key", "resource": "*", "effect": "allow" }
-            ]
-        },
-        "lumen": {
-            "permissions": [
-                { "action": "chrome-devtools_list_pages", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_take_screenshot", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_take_snapshot", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_list_console_messages", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_get_console_message", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_list_network_requests", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_get_network_request", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_get_css_styles", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_performance_start_trace", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_performance_stop_trace", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_performance_analyze_insight", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_lighthouse_audit", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_select_page", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_wait_for", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_navigate_page", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_click", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_fill", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_fill_form", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_type_text", "resource": "*", "effect": "allow" },
-                { "action": "chrome-devtools_press_key", "resource": "*", "effect": "allow" }
-            ]
         }
     },
     // Project instructions (optional — point at your own docs):
@@ -170,35 +120,8 @@
         { "action": "semgrep_semgrep_scan_with_custom_rule", "resource": "*", "effect": "allow" },
         { "action": "semgrep_semgrep_scan_supply_chain", "resource": "*", "effect": "deny" },
         { "action": "semgrep_semgrep_findings", "resource": "*", "effect": "deny" },
-        // Chrome is denied by default. Every agent gets the read and basic
-        // interaction surface; upload/evaluate/dialog/page-lifecycle/screencast/
-        // heap tools remain denied by the wildcard.
-        { "action": "chrome-devtools_*", "resource": "*", "effect": "deny" },
-        { "action": "chrome-devtools_list_pages", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_take_screenshot", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_take_snapshot", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_list_console_messages", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_get_console_message", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_list_network_requests", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_get_network_request", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_get_css_styles", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_performance_start_trace", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_performance_stop_trace", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_performance_analyze_insight", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_lighthouse_audit", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_select_page", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_wait_for", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_navigate_page", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_click", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_fill", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_fill_form", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_type_text", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_press_key", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_new_page", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_close_page", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_drag", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_hover", "resource": "*", "effect": "allow" },
-        { "action": "chrome-devtools_resize_page", "resource": "*", "effect": "allow" },
+        // Chrome DevTools MCP is available to every agent. DEBT-019 browser
+        // content exposure is recorded; no per-tool Chrome ACL is used.
         // Session mutation is Cipher-only. Worktree creation belongs to Herald;
         // no agent uses worktree_remove, which bypasses this build's checks.
         { "action": "opencode_worktree_create", "resource": "*", "effect": "deny" },
