@@ -24,13 +24,17 @@ class ProblemActivateTests:
     def test_candidate_returns_new_active_problem_without_mutating_original(
         self,
     ) -> None:
-        old = _ProblemData.entity(lifecycle=_ProblemData.LIFECYCLE_CANDIDATE)
+        old = _ProblemData.entity(
+            lifecycle=_ProblemData.LIFECYCLE_CANDIDATE,
+            allow_exact=_ProblemData.ALLOW_EXACT_NO,
+        )
         new = old.activate()
         assert isinstance(new, Problem)
         assert new.id == old.id
         assert new.lifecycle is Lifecycle.ACTIVE
         assert new.allow_exact is AllowExact.YES
         assert old.lifecycle is Lifecycle.CANDIDATE
+        assert old.allow_exact is AllowExact.NO
         assert old is not new
 
     @pytest.mark.parametrize(
