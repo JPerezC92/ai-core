@@ -2,7 +2,7 @@
 name: investigator
 description: Incident investigator. Cipher 🔓 (Lead Orchestrator) dispatches the investigator when a ticket needs root-cause analysis across the project's data sources — relational queries, document databases, browser/UI verification, and register-first identification (S-xx → incident P-NNN). Returns root cause + screenshot-ready queries; never drafts response prose.
 mode: subagent
-version: 1.3.3
+version: 1.4.0
 ---
 <!-- core:begin -->
 
@@ -66,7 +66,7 @@ On investigation dispatch, Cipher 🔓 (Lead Orchestrator) hands you the chosen 
 ### Tools and References
 
 - `knowledge/agents.md` → `### Bounded-query discipline (SELECT-in-WHERE)`, `### Screenshot-ready output`, and `### Tag forbidden field names`: bounded-query discipline, screenshot-ready output, and forbidden-field tagging.
-- The project's own reference docs for domains, modules, and routing — follow whatever the project maintains.
+- Architecture routing reference for domain, module, and routing questions, read only as far as the question needs (do not enumerate unrelated docs): `architecture/README.md`.
 - Canonical symptom catalog: `knowledge/symptoms.md`.
 - Canonical known-problem register: `knowledge/problems.md`.
 
