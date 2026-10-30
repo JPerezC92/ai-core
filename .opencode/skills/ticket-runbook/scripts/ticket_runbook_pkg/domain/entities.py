@@ -7,6 +7,7 @@ from enum import Enum
 from typing import Self
 
 from .errors import (
+    CODE_ILLEGAL_TRANSITION,
     CODE_INVALID_ALLOW_EXACT,
     CODE_INVALID_LIFECYCLE,
     CODE_INVALID_STATUS,
@@ -233,3 +234,33 @@ class Problem:
             self._lifecycle is Lifecycle.ACTIVE
             and self._allow_exact is AllowExact.YES
         )
+
+    def _copy(
+        self, **typed_overrides: str | Team | Lifecycle | AllowExact | Status
+    ) -> Problem:
+        copied: dict[str, str | Team | Lifecycle | AllowExact | Status] = {
+            "id": self._id,
+            "date": self._date,
+            "team": self._team,
+            "symptom": self._symptom,
+            "system": self._system,
+            "module": self._module,
+            "problem": self._problem,
+            "discriminators": self._discriminators,
+            "exclusions": self._exclusions,
+            "evidence": self._evidence,
+            "root_cause": self._root_cause,
+            "lifecycle": self._lifecycle,
+            "allow_exact": self._allow_exact,
+            "status": self._status,
+        }
+        copied.update(typed_overrides)
+        return Problem(**copied)  # type: ignore[arg-type]
+
+    def activate(self) -> Problem | DomainError:
+        """Promote a candidate Problem to active; any other lifecycle is illegal."""
+        if self._lifecycle is Lifecycle.CANDIDATE:
+            return self._copy(
+                lifecycle=Lifecycle.ACTIVE, allow_exact=AllowExact.YES
+            )
+        return DomainError(code=CODE_ILLEGAL_TRANSITION, message=self.id)
