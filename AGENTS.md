@@ -1,6 +1,6 @@
 # Cipher — Lead Orchestrator
 
-> **Spec version:** 3.2.3
+> **Spec version:** 3.2.4
 
 <!-- core:begin -->
 ## Mandatory core
@@ -136,7 +136,7 @@ Running a synchronization is the *entire* operator action for a destination: run
 
 - `python3` is the interpreter (not `python`); skill tests run with `uv run --frozen --group dev pytest`; the root UV environment locks runtime dependencies (PyYAML) separately from the `dev` group (pytest).
 - Every Python command runs through the project's virtual environment (`uv run --frozen …`), never a bare or global interpreter.
-- Narrow exception: the three MCP tooling projects `.opencode/tooling/basic-memory/`, `.opencode/tooling/astgrep/`, and `.opencode/tooling/semgrep/` each use their own locked environment through `uv run --frozen --project <tooling-directory> …`. This does not authorize other environments or root dependency changes; repository Python scripts still use `uv run --frozen python3 …`. Provisioning is documented in `docs/tooling.md`.
+- Narrow exception: the two MCP tooling projects `.opencode/tooling/astgrep/` and `.opencode/tooling/semgrep/` each use their own locked environment through `uv run --frozen --project <tooling-directory> …`. This does not authorize other environments or root dependency changes; repository Python scripts still use `uv run --frozen python3 …`. Provisioning is documented in `docs/tooling.md`.
 
 ### Saved-research bindings
 
@@ -147,12 +147,16 @@ Running a synchronization is the *entire* operator action for a destination: run
 
 ### Memory system
 
-- This project uses Basic Memory via the `basic-memory` MCP server, with project `ai-core` rooted at repo `memory/` — agents use `search_notes` / `read_note` at session start and `write_note` / `edit_note` for cache updates, passing `project="ai-core"` on every read and write (never global or other-project scope). Notes cache repo-derivable facts; authoritative durable knowledge stays in repo surfaces (`knowledge/`, skill Troubleshooting), never memory-only. magic-context is disabled here via `magic-context.jsonc`; native opencode compaction owns session context.
+- This project uses the `memories` MCP server (`npx -y @memories.sh/cli@0.7.9 serve`) for cross-session agent memory and the `qmd` MCP server (`npx -y @tobilu/qmd@2.8.3 --index ai-core mcp`) for read-only retrieval over repository documents. Evidence and verified limits: `odd/tasks/agent-memory-and-repository-knowledge-search.md`.
+- Memory remains a cache of repo-derivable facts, never the authoritative home of durable knowledge. Authoritative knowledge stays in repository surfaces (`knowledge/`, skill Troubleshooting, `odd/tasks/`); a memory that is the only home of durable knowledge is a defect.
+- The memories database lives outside the repository at `~/.config/memories/local.db`. It is not version-controlled and this project records no backup procedure for it, so treat both MCPs as replaceable conveniences rather than storage of record.
+- magic-context is disabled here via `magic-context.jsonc`; native opencode compaction owns session context.
 
 ### Local analysis-tool bindings
 
 - Follow the shared applicability/evidence policy in `knowledge/agents.md`; these bindings are not permission grants. Verify each role's effective exposure from its actual tool catalog and applicable restrictions before claiming use. `opencode.jsonc` server entries alone do not prove that another role can call them.
-- **Basic Memory (`basic-memory`):** use a bounded, task-relevant `search_notes` lookup at session start and `read_note` for relevant returned notes, always with `project="ai-core"`. Validate against the cited repository owner; preserve saved-research catalog lookup before external research. Cache updates use a shared-cache write path: after a bounded search first, all agents may use `write_note` for new notes and `edit_note` with the current `expected_checksum` for existing-note updates, without a per-write prompt. `write_note` must omit `overwrite` or set it to `False`; `edit_note` must carry `expected_checksum`, must not use `replace_section` on curated content, and must not create a missing note (use `write_note`). These argument rules are behaviorally enforced, not solely ACL-enforced. This is a cache-only grant: deletes, moves, project creation/deletion, blind overwrites, and any change to authoritative knowledge remain manual or denied; durable knowledge must not originate or terminate in memory.
+- **Persistent memory (`memories`):** use a bounded, task-relevant `search_memories` or `get_context` lookup at session start, and again before concluding that prior-session context is unavailable. Use `add_memory` only for a deliberate, durable project fact, under the cache-write authorization in `knowledge/agents.md` `### Applicable analysis tools (HARD RULE)`; memory is never storage of record. Project scope is derived from the checkout's git remote; this repository's SSH alias yields `github.com-personal/JPerezC92/ai-core`, which differs from the `github.com` form, so pass `project_id` explicitly whenever a call must be unambiguous. Treat a recalled memory as a lead to verify against the cited repository owner, never as evidence on its own.
+- **Repository document retrieval (`qmd`):** use `query` with typed sub-queries — `lex` for exact terms, `vec` for meaning — plus an `intent`, then `get` or `multi_get` to read the document that came back. Collections are `tasks`, `knowledge`, `architecture`, and `research`. The exposed tools are read-only. Retrieval is discovery only: read and validate the authoritative file before concluding. The index is a snapshot, so files added or edited since the last `qmd update` are absent and a miss is not evidence of absence.
 - **Structural search (`astgrep`):** use exposed `find_code` for syntax-dependent code exploration/review, with an absolute, narrowly relevant `project_folder`, explicit language/pattern and positive `max_results`. No rewrite/update/autofix. Prior evidence in `odd/tasks/agent-mcp-workflow-adoption.md` L4 establishes a working pattern search only: `find_code_by_rule` and `test_match_code_rule` failed. Report that limitation; do not promise rule-API coverage or retry failing operations ceremonially.
 - **Source-pattern analysis (`semgrep`):** use exposed `semgrep_scan_with_custom_rule` for relevant, explicit local rules on bounded supplied `code_files` content with relative path labels. Read the actual source first and record its content identity and any excerpt/transform; returned labels are not evidence of an on-disk scan. This API accepts supplied content and a YAML `rule`, not an explicit-config file-scan argument. Do not invent that API or substitute auto scanning.
 - Keep `SEMGREP_SEND_METRICS=off` and `OTEL_SDK_DISABLED=true` as configured. The auto-config scan failed with metrics off; do not enable metrics to make it work. Do not invoke platform findings or supply-chain scanning under this binding, and do not claim dependency/CVE coverage from custom source rules. Existing dependency-audit requirements and scanner-unavailability reporting remain unchanged.
