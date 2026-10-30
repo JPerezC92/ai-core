@@ -1,10 +1,11 @@
 # Agent memory and repository knowledge search
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-10-30
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-10-30
 > **Objective:** Configure memories.sh for persistent agent memory and QMD for repository knowledge retrieval in OpenCode, then disconnect the Basic Memory MCP.
-> **Branch:** N/A — no branch was inspected or selected for this feature.
+> **Branch:** chore/config/replace-memory-mcp-servers
 > **Delivery:** One gated MCP-configuration slice; forecast ~100 authored repository lines added plus deleted, excluding generated/npm/model/index data; configure and verify both replacement MCPs before disconnecting Basic Memory.
 > **Runner:** N/A — acceptance requires OpenCode MCP discovery and bounded live MCP calls; no single runner covers both servers.
 
@@ -20,9 +21,9 @@
 
 ## Tasks
 
-- T1 | S1, S2, S4, S6, S7 | delegated (exact package identities, complete lifecycle-hook inventory, QMD model downloads, and tool permissions require Warden review before launch) — Warden 🔒 (Dependency Warden) | open | commit: pending
-- T2 | S1, S3, S4, S6 | inline (one serialized OpenCode MCP configuration plus the required user-local QMD collection/index configuration; depends on accepted T1) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T3 | S5 | inline (same `opencode.jsonc` writer; only after T2's replacement MCP checks pass) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
+- T1 | S1, S2, S4, S6, S7 | delegated (exact package identities, lifecycle-hook inventory, QMD model downloads, and tool permissions require Warden review before launch) — Warden 🔒 (Dependency Warden) | done | commit: 6e8f3bf
+- T2 | S1, S3, S4, S6 | inline (one serialized OpenCode MCP configuration plus the required user-local QMD collection/index configuration; depends on accepted T1) — Cipher 🔓 (Lead Orchestrator) | done | commit: 6e8f3bf
+- T3 | S5 | inline (same `opencode.jsonc` writer; executed only after the replacement MCP checks passed) — Cipher 🔓 (Lead Orchestrator) | done | commit: 6e8f3bf
 
 ## Log
 
@@ -53,3 +54,4 @@
 - L25 — Sentinel 🛡️ (Quality Guardian) review `T4/Sentinel1` returned `[FAIL]`; remediation in L23–L24 and the S4/S6 rewrites; re-review returned `[PASS]` with zero open findings and three INFO notes. Coordinator `git status --porcelain` confirms this feature touched only `opencode.jsonc` and this feature document; `Inteligencia artificial sin sobreingeniería por qué creé Gentle AI (curso).txt` and `odd/tasks/token-efficient-orchestration.md` are unrelated pre-existing work and were not staged or altered. The changed-file set is coordinator-owned evidence and was not independently re-verified by the reviewer; S4 was narrowed in review to match the disclosed suppression limit rather than an unenumerated transitive closure.
 - L26 — Cleanup executed after permissions were opened: `memories_forget_memory(id="QMiYYfA_0slJ")` and `memories_forget_memory(id="ACEARclawhdb")` both returned `Forgot memory`; subsequent `memories_search_memories` and `memories_list_memories` returned no results. Soft-deleted rows were deliberately left un-vacuumed because permanent purge is irreversible and buys nothing for already-hidden rows.
 - L27 — Known follow-up, not a defect and not fixed here: `AGENTS.md:150` and `:155` still instruct agents to use the `basic-memory` MCP with `project="ai-core"`, which no longer exists. S3 and the user's MCP-only scope forbid editing agent instructions, so this stale pointer is recorded for a separately authorized change and is not claimed repaired.
+- L28 — Close: T1–T3 delivered in commit `6e8f3bf6f30b3eec9bce817d3a931818cf6c4d95` on `chore/config/replace-memory-mcp-servers`. Verified outcomes: `opencode mcp list` shows `memories` and `qmd` connected with `basic-memory` absent; QMD indexed 80 documents and embedded 455 chunks from the four approved collections; keyword, semantic, `get` and `multi_get` retrieval returned expected documents; memories.sh persisted and retrieved an approved test note across a restarted OpenCode session; both test notes were removed and confirmed absent. Not verified and not claimed: QMD reranking and query expansion, alternate GPU backends, memories semantic search, fresh-machine provisioning, and complete transitive lifecycle-hook enumeration (suppressed uniformly instead). No push, PR, merge or tag was performed; that remains separately authorized.
