@@ -17,6 +17,8 @@ from core_sync_pkg.domain.markers import (
     find_markers,
     has_exact_core_marker_lines,
     has_exact_project_marker_lines,
+    line_without_terminator,
+    unfenced_line_indices,
 )
 
 
@@ -59,14 +61,18 @@ def outside_bytes(region_split: RegionSplit) -> str:
 def split_frontmatter(content: str) -> tuple[str, str]:
     """Split leading YAML frontmatter from the body, preserving both verbatim.
 
-    Returns `("", content)` when the content does not open with a `---` line or
-    has no closing delimiter.
+    A delimiter is an exact `---` line with no leading or trailing whitespace,
+    and a `---` line inside a fenced code block does not delimit. Returns
+    `("", content)` when the content does not open with a `---` line or has no
+    closing delimiter.
     """
     lines = content.splitlines(keepends=True)
-    if not lines or lines[0].strip() != FRONTMATTER_DELIMITER:
+    if not lines or line_without_terminator(lines[0]) != FRONTMATTER_DELIMITER:
         return ("", content)
-    for index in range(1, len(lines)):
-        if lines[index].strip() == FRONTMATTER_DELIMITER:
+    for index in unfenced_line_indices(lines):
+        if index == 0:
+            continue
+        if line_without_terminator(lines[index]) == FRONTMATTER_DELIMITER:
             return ("".join(lines[: index + 1]), "".join(lines[index + 1 :]))
     return ("", content)
 
@@ -112,13 +118,14 @@ def render_with_region(destination: RegionSplit, source_region: str) -> str:
 def render_init_file(destination_content: str, source_core: str) -> str:
     """Rebuild a markerless destination as a core region plus a project region.
 
-    The destination frontmatter is kept verbatim; the source core fills the new
-    core region; everything after the destination frontmatter is moved verbatim
-    into the new project region.
+    The destination frontmatter content is kept verbatim but always ends on its
+    own line so the core begin marker stays an exact line; the source core fills
+    the new core region; everything after the destination frontmatter is moved
+    verbatim into the new project region.
     """
     frontmatter, body = split_frontmatter(destination_content)
     return (
-        frontmatter
+        ensure_trailing_newline(frontmatter)
         + BEGIN
         + "\n"
         + ensure_trailing_newline(source_core)
@@ -132,8 +139,13 @@ def render_init_file(destination_content: str, source_core: str) -> str:
     )
 
 
-def _path_is_within(path: Path, root: Path) -> bool:
-    """Return whether a resolved path is equal to or nested under a root."""
+def path_is_within(path: Path, root: Path) -> bool:
+    """Return whether a resolved path is equal to or nested under a root.
+
+    Public containment predicate for the write-target preflight. Both arguments
+    are compared lexically, so callers resolve them first; symlinks are not
+    followed here.
+    """
     try:
         path.relative_to(root)
     except ValueError:

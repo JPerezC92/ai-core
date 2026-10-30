@@ -17,7 +17,7 @@ from core_sync_pkg.domain.reconciliation import (
     reconciliation_report_path,
     sync_reconciliation_blocker,
 )
-from core_sync_pkg.domain.regions import _path_is_within, extract_source_core
+from core_sync_pkg.domain.regions import extract_source_core, path_is_within
 
 
 def read_text(path: Path) -> str | None:
@@ -30,9 +30,18 @@ def read_text(path: Path) -> str | None:
 
 
 def write_text(path: Path, content: str) -> None:
-    """Write UTF-8 text to a path at the IO boundary."""
+    """Write UTF-8 text to a path at the IO boundary, terminated in LF only.
+
+    This is the package's single line-ending normalization point: `\r\n` and any
+    surviving lone `\r` become `\n` before the write, so every text file
+    core-sync writes carries LF terminators only. The open mode keeps
+    `newline=""` so no additional platform translation is layered on top.
+    `write_bytes` is deliberately outside this contract, so raw-mode payloads
+    stay byte-exact and binary content is never line-ending transformed.
+    """
+    normalized = content.replace("\r\n", "\n").replace("\r", "\n")
     with path.open("w", encoding="utf-8", newline="") as file:
-        file.write(content)
+        file.write(normalized)
 
 
 def read_bytes(path: Path) -> bytes | None:
@@ -56,8 +65,10 @@ def read_source_raw(path: Path) -> bytes | None:
 def read_source_text(path: Path) -> str | None:
     """Read a source file's whole text at the IO boundary (merge mode).
 
-    UTF-8 with no newline translation, matching the destination writer so a
-    merged document is compared and written byte-for-byte in the same encoding.
+    UTF-8 with no newline translation, so the reader preserves the source's raw
+    line endings for comparison. The writer intentionally normalizes text to LF,
+    so this reader does not mirror it and a merge write is not byte-for-byte;
+    byte-for-byte fidelity applies to raw mode (`write_bytes`) only.
     """
     return read_text(path)
 
@@ -190,7 +201,7 @@ def preflight_write_targets(
     except (OSError, RuntimeError) as error:
         return f"could not resolve source or destination root: {error}"
 
-    if _path_is_within(resolved_source, resolved_destination) or _path_is_within(
+    if path_is_within(resolved_source, resolved_destination) or path_is_within(
         resolved_destination, resolved_source
     ):
         return "source and destination roots overlap"
@@ -259,9 +270,9 @@ def preflight_write_targets(
                 lexical_target,
                 target_kind,
             )
-        if _path_is_within(resolved_target, resolved_source):
+        if path_is_within(resolved_target, resolved_source):
             return f"{target_kind} write target resolves inside source tree: {target}"
-        if target_kind in ("root", "destination payload") and not _path_is_within(
+        if target_kind in ("root", "destination payload") and not path_is_within(
             resolved_target, resolved_destination
         ):
             return f"{target_kind} write target escapes destination root: {target}"

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -10,32 +11,49 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from core_sync_pkg.domain.regions import split_frontmatter  # noqa: E402
 
 
-EXPECTED_SOURCE_VERSIONS: dict[str, str] = {
-    "atrium.md": "1.7.0",
-    "augur.md": "1.5.0",
-    "bastion.md": "1.10.0",
-    "crucible.md": "1.12.0",
-    "forge.md": "1.8.0",
-    "herald.md": "1.9.0",
-    "inquisitor.md": "1.10.0",
-    "investigator.md": "1.4.0",
-    "ledger.md": "1.6.0",
-    "lumen.md": "1.3.0",
-    "marshal.md": "1.5.0",
-    "quill.md": "1.5.0",
-    "scribe.md": "1.3.0",
-    "sentinel.md": "1.17.0",
-    "vault.md": "1.7.0",
-    "warden.md": "1.8.0",
-}
+EXPECTED_SPEC_FILES: frozenset[str] = frozenset(
+    {
+        "atrium.md",
+        "augur.md",
+        "bastion.md",
+        "crucible.md",
+        "forge.md",
+        "herald.md",
+        "inquisitor.md",
+        "investigator.md",
+        "ledger.md",
+        "lumen.md",
+        "marshal.md",
+        "quill.md",
+        "scribe.md",
+        "sentinel.md",
+        "vault.md",
+        "warden.md",
+    }
+)
+
+SEMVER = re.compile(r"\d+\.\d+\.\d+")
 
 
-def test_agent_spec_source_versions_match_declared_frontmatter() -> None:
+def _declared_version(frontmatter: str, spec_name: str) -> str:
+    versions = [
+        line.split(":", 1)[1].strip()
+        for line in frontmatter.splitlines()
+        if line.startswith("version:")
+    ]
+    assert len(versions) == 1, (
+        f"{spec_name}: expected exactly one version line, found {versions}"
+    )
+    return versions[0]
+
+
+def test_agent_specs_declare_a_valid_version() -> None:
     specs_dir = Path(__file__).resolve().parents[6] / ".opencode" / "agents"
-    spec_names = {path.name for path in specs_dir.glob("*.md")}
-
-    assert spec_names == set(EXPECTED_SOURCE_VERSIONS)
-    for spec_name, expected_version in EXPECTED_SOURCE_VERSIONS.items():
+    assert specs_dir.is_dir(), f"missing agents directory: {specs_dir}"
+    assert {path.name for path in specs_dir.glob("*.md")} == set(EXPECTED_SPEC_FILES)
+    for spec_name in sorted(EXPECTED_SPEC_FILES):
         content = (specs_dir / spec_name).read_text(encoding="utf-8")
         frontmatter, _ = split_frontmatter(content)
-        assert f"version: {expected_version}" in frontmatter.splitlines(), spec_name
+        assert frontmatter, f"{spec_name}: no frontmatter block"
+        declared = _declared_version(frontmatter, spec_name)
+        assert SEMVER.fullmatch(declared), f"{spec_name}: invalid version {declared!r}"

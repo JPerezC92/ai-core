@@ -12,6 +12,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from _core_sync_testkit import (  # noqa: E402
+    CRLF_MERGE_DESTINATION,
+    CRLF_MERGE_SOURCE,
     MERGE_MCP_DESTINATION,
     MERGE_MCP_RESULT,
     MERGE_MCP_SOURCE,
@@ -42,6 +44,34 @@ class MergeApplyTests:
         assert "// destination-only comment" in written
         assert '"custom": 42' in written
         assert parse_object(written) == {
+            "theme": "dark",
+            "shared": "source",
+            "custom": 42,
+        }
+
+    def test_apply_writes_lf_only_output_from_crlf_inputs(
+        self, tmp_path: Path
+    ) -> None:
+        source, destination, bindings_path = _merge_setup(
+            tmp_path,
+            source_content=CRLF_MERGE_SOURCE,
+            destination_content=CRLF_MERGE_DESTINATION,
+        )
+        destination_path = destination / "opencode.jsonc"
+
+        assert main(_apply_args(source, destination, bindings_path, REV_A)) == 0
+
+        written = destination_path.read_bytes()
+        assert b"\r" not in written
+        assert written == (
+            b"{\n"
+            b"  // destination-only comment\n"
+            b'  "shared": "source",\n'
+            b'  "custom": 42\n,\n'
+            b'  "theme": "dark"\n'
+            b"}\n"
+        )
+        assert parse_object(written.decode("utf-8")) == {
             "theme": "dark",
             "shared": "source",
             "custom": 42,
