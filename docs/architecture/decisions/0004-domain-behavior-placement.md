@@ -1,7 +1,8 @@
 # ADR 0004 — Domain behavior placement
 
-- **Status:** Proposed — pending review and explicit approval
+- **Status:** Accepted
 - **Date:** 2026-10-29
+- **Accepted:** 2026-10-29 — research finding, not a user preference. An entity without behavior is not an entity.
 
 ## Context
 
@@ -42,4 +43,4 @@ Unknown historical rationale for individual placement choices is unrecorded; the
 - An unresolved decision remains: no entity state-transition convention is selected. Until one is, teams must not add setters, and the "clean but anemic" risk stays a conscious choice rather than a resolved design.
 - A known nonconformance is recorded but not fixed: `preflight_write_targets(...)` in `core-sync` infrastructure holds write-target policy. It is reported as a remediation item, not grandfathered as a legacy exemption; the fix requires a separate authorized feature and the usual gates.
 - The evidence base is bounded: a documentary research synthesis plus the file-level review cited in feature L2, plus later authorized `Problem` entity evidence in `odd/tasks/problem-register-entity.md` (`5cda579`, closed 2026-10-29), with no repository-wide audit and no TypeScript application found at the research date. Placement judgment for unread paths remains unverified, and unknown historical rationale stays unrecorded.
-- Status is `Proposed`: the user directed the operative definitions into the architecture core, so the core rule is in force; this ADR remains the rationale record pending explicit approval, and approval establishes a documentation contract, not code conformance. This source-local ADR is explanation, not an undistributed dependency of shared contracts.
+- Status is `Accepted` because the research already settled what an entity is. That is not a preference vote. Shared rules stay in `architecture/clean-architecture.md` C3 and the stack guides; this ADR is the rationale record. This source-local ADR is explanation, not an undistributed dependency of shared contracts.
