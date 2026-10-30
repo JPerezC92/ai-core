@@ -7,7 +7,7 @@ Backend business applications. Read `architecture/clean-architecture.md` first. 
 
 ## B1 — Layout and domain
 
-Use `domain/` (entities, ports, errors), `application/` (one file per use case), and `infrastructure/` (adapters, repositories, composition). A stack names the concrete operation location. Entities have immutable identity fields, a read accessor per field, and a factory building valid instances. Ports return domain entities, not storage records. A missing lookup returns an empty result, never throws.
+Use `domain/` (entities, ports, errors), `application/` (one file per use case), and `infrastructure/` (adapters, repositories, composition). A stack names the concrete operation location. Entities have immutable identity fields, a read accessor per field, and a factory building valid instances. An entity's behavior enforces its own invariants, and no public setter or writable identity field is permitted. Ports return domain entities, not storage records. A missing lookup returns an empty result, never throws.
 
 ## B2 — Operation
 

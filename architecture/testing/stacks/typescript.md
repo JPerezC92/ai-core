@@ -4,7 +4,7 @@
 > **Status:** reference
 > **Stack:** TypeScript/TSX; NestJS-style backend and React frontend reference architecture
 > **Guide owner:** Crucible 🔥 (Test Architect)
-> **Reviewed:** 2026-10-25 — `testing-architecture-layering`
+> **Reviewed:** 2026-10-25 — `testing-architecture-layering`; entity-construction clause 2026-10-30
 > **Contract:** `architecture/testing/architecture.md`
 
 ## Applicability and ownership
@@ -163,6 +163,7 @@ test.afterEach(async () => {
 - The factory uses `faker` for data generation; no hardcoded values.
 - The factory imports entity types from the shared package when one exists, otherwise from `domain/entities/`.
 - The factory provides at least `create(overrides?)` and `createMany(count, overrides?)`.
+- When the test needs an entity rather than a data-only record, the factory builds it through the entity factory/`create()`; never assign entity fields directly to construct test data.
 - Use the same mocking library across backend and frontend: `vitest-mock-extended`.
 - `vi.mocked()` or a manual cast anywhere is a violation; use `MockProxy`.
 - Use the same test runner on both sides: Vitest. Do not mix in Jest or another unit runner.

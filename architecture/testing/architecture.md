@@ -73,8 +73,8 @@ A guide is `proposed` until it has passed review, `reference` while it is the re
 
 | Stack | Guide | Status | Scope | Parity evidence |
 |---|---|---|---|---|
-| TypeScript | `stacks/typescript.md` | reference | TypeScript/TSX backend and frontend reference architecture | Reviewed 2026-10-25; 10/10 sections; cross-stack table complete. |
-| Python | `stacks/python.md` | reference | Python application, script, and CLI reference architecture | Reviewed 2026-10-25; 10/10 sections; cross-stack table complete. |
+| TypeScript | `stacks/typescript.md` | reference | TypeScript/TSX backend and frontend reference architecture | Reviewed 2026-10-25; entity-construction clause 2026-10-30; 10/10 sections; cross-stack table complete. |
+| Python | `stacks/python.md` | reference | Python application, script, and CLI reference architecture | Reviewed 2026-10-25; entity-construction clause 2026-10-30; 10/10 sections; cross-stack table complete. |
 
 The index is part of the parity contract. Adding or changing a guide requires updating this table and the parity evidence.
 

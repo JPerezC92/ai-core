@@ -37,13 +37,14 @@ Agent specs and persona profiles migrate as **per-file rows** — one row per fi
 
 ## Knowledge distribution classes
 
-The seven cleared `knowledge/` sources are region rows whose core/project split expresses their distribution class:
+The eight cleared `knowledge/` sources are region rows whose core/project split expresses their distribution class:
 
 | Class | Files | Core ships |
 |---|---|---|
 | Shared rules | `knowledge/agents.md` | the shared rules; source-side extensions stay project |
 | Shared workflow | `knowledge/agent-workflow.md` | the reusable entry sequence; source-side extensions stay project |
 | Shared release workflow | `knowledge/release.md` | packet, post-review routing, and execution-owner pointers; source-side grants stay project |
+| Shared decision workflow | `knowledge/decisions.md` | the decision lifecycle and its propagation gate; the source-local ADR directory and its records stay project |
 | Record-bearing register (frame-only core) | `knowledge/debt.md` | the frame alone — the register carries no table; filed records never ship |
 | Shared catalog (full core) | `knowledge/problems.md`, `knowledge/symptoms.md` | the full catalog |
 | Living design (contract core, local refinement state) | `knowledge/diagnostic-system-design.md` | the shared contract; refinement state stays project |

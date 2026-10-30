@@ -29,6 +29,9 @@
     "knowledge/diagnostic-system-design.md": {
       "mode": "region"
     },
+    "knowledge/decisions.md": {
+      "mode": "region"
+    },
     "architecture/README.md": {
       "mode": "region"
     },

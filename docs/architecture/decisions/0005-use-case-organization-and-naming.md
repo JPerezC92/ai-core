@@ -1,7 +1,8 @@
 # ADR 0005 — Use-case organization and naming
 
-- **Status:** Proposed — pending review and explicit approval
+- **Status:** Accepted
 - **Date:** 2026-10-29
+- **Accepted:** 2026-10-30 — user approval recorded in `odd/tasks/adr-propagation-and-architecture-conformance.md` L13; propagation evidence: `architecture/clean-architecture.md` → C3, `architecture/stacks/python.md` → Application operations, and `architecture/stacks/typescript/nestjs.md` → Application operations, delivered in `878e93d`; the C3 consistency clause was completed under this feature's T2.
 
 ## Context
 
@@ -26,7 +27,7 @@ The governing feature `odd/tasks/domain-use-case-conventions.md` L2 (2026-10-29)
 - **`Service`, `Manager`, `Helper`, `Processor`, and `Util` are not use-case names.** They name a layer, a grouping, or a mechanism rather than one operation. A `Service` grouping is structurally incompatible with the one-operation rule; `Helper`/`Util` usually signal a pure helper, which is not a use case at all — C7 exempts it, and a pure transformation keeps the exemption without an artificial `execute()` wrapper.
 - **Composition roots and CLI routers may wire multiple operations.** An `entry.py`, `main.py`, composition module, NestJS module, or CLI router may construct adapters, select a mode, and call several operations. It must not re-declare a use-case class or a same-named wrapper over the application operation: that creates two types with one name, hides which one is authoritative, and reintroduces a second implementation surface. Wiring is not a second implementation.
 - **Consistency.** Choose one shape per stack and apply it to every use case. A mixed vocabulary is itself a review finding; it usually indicates an unresolved decision about what the operations are.
-- **Scope and ownership.** This ADR owns the rationale for use-case organization and naming. It does not change the layer contract, the one-file-per-use-case requirement, or the `execute()` requirement — those stay in `architecture/clean-architecture.md`, the backend shape, and the stack guides. This decision is realized in the architecture core (`C3` and the stack `Application operations` sections); this ADR is source-local rationale, not the definition owner.
+- **Scope and ownership.** This ADR owns the rationale for use-case organization and naming. It does not change the layer contract, the one-file-per-use-case requirement, or the `execute()` requirement — those stay in `architecture/clean-architecture.md`, the backend shape, and the stack guides. The operative text lives in the named owners: `architecture/clean-architecture.md` → `C3 — Application operation`, `architecture/stacks/python.md` → `Application operations`, and `architecture/stacks/typescript/nestjs.md` → `Application operations`, propagated in commit `878e93d`; the C3 consistency clause was completed under `odd/tasks/adr-propagation-and-architecture-conformance.md` T2. This ADR remains source-local rationale and is not the definition owner.
 - **Authorization boundary.** This is a documentation decision. It requires no rename, move, refactor, test edit, dependency change, permission change, or destination mutation. The evidenced defects are remediation items under `odd/tasks/domain-use-case-conventions.md` S5, to be handled only by a separate authorized feature with a current Bastion 🧱 (Backend & Scripts Architect) gate and applicable test evidence.
 
 ## Alternatives
@@ -44,5 +45,13 @@ The governing feature `odd/tasks/domain-use-case-conventions.md` L2 (2026-10-29)
 - Placement and discovery become predictable: a reader finds one operation per module and can infer its behavior from the name; review can flag a multi-operation module or a mechanism name mechanically instead of arguing style.
 - Naming becomes a diagnostic, not proof. A well-named use case can still be anemic, and a CRUD name can be legitimate in a simple domain; this ADR does not convert a naming judgment into a behavior-placement judgment, which is [ADR 0004 — Domain behavior placement](0004-domain-behavior-placement.md)'s scope.
 - Renames and splits carry a real cost — imports, tests, entry wiring, and any external invocation names — and are deliberately excluded here. Until that separate remediation lands, the evidenced defects remain known nonconformances to report, not exemptions to grandfather.
-- The one-file/one-operation rule is unchanged and already published in the Python guide and the backend shape; the naming pattern, the wrapper prohibition, and the explicit composition-root allowance now live in the architecture core (`C3` and the stack `Application operations` sections). This ADR remains the rationale record.
-- Unresolved and unrecorded: the appropriate granularity for simple single-entity reads (`Get<X>` is an acceptable read but weak business vocabulary), and any historical rationale for the existing exemplar spellings. No TypeScript application was found at the research date, so no TypeScript practice is verified. Status is `Proposed`: the user directed the operative definitions into the architecture core, so the core rule is in force; this ADR remains the rationale record pending explicit approval, and approval establishes a documentation contract, not code conformance. This source-local ADR is explanation, not an undistributed dependency of shared contracts.
+- The one-file/one-operation rule is unchanged and already published in the Python guide and the backend shape; the naming pattern, the wrapper prohibition, the explicit composition-root allowance, and the consistency rule now live in the architecture core (`C3` and the stack `Application operations` sections). This ADR remains the rationale record.
+- Unresolved and unrecorded: the appropriate granularity for simple single-entity reads (`Get<X>` is an acceptable read but weak business vocabulary), and any historical rationale for the existing exemplar spellings. No TypeScript application was found at the research date, so no TypeScript practice is verified. Status is `Accepted` as of 2026-10-30: the operative definitions were propagated into the architecture core in `878e93d`, with the C3 consistency clause completed under this feature's T2 in the same acceptance unit; acceptance establishes a documentation contract, not code conformance. This source-local ADR is explanation, not an undistributed dependency of shared contracts.
+
+## Propagation
+
+- `architecture/clean-architecture.md` → `C3 — Application operation` — naming pattern, wrapper prohibition, and composition-root allowance in `878e93d`; the consistency clause under `odd/tasks/adr-propagation-and-architecture-conformance.md` T2.
+- `architecture/stacks/python.md` → `Application operations` — `878e93d`.
+- `architecture/stacks/typescript/nestjs.md` → `Application operations` — `878e93d`.
+
+All three owners carry the operative text.

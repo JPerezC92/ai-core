@@ -14,7 +14,7 @@ Bind backend folders to `domain/`, `application/use-cases/`, and `infrastructure
 
 ## Domain and ports
 
-- Entities: `domain/entities/{entity}.entity.ts`; constructor fields `private readonly`, getter method per field, static `create()` factory. No `@nestjs/`, `drizzle-orm`, or infrastructure imports.
+- Entities: `domain/entities/{entity}.entity.ts`; constructor fields `private readonly`, getter method per field, static `create()` factory. Entity behavior enforces the entity's invariants, and `create()` builds a valid instance by enforcing them. No public setters and no writable identity field. No `@nestjs/`, `drizzle-orm`, or infrastructure imports.
 - Repository interfaces: `domain/repositories/{entity}.repository.interface.ts`; export `const X_REPOSITORY = Symbol('X_REPOSITORY')`. Return domain entities, not DB records; `findById(): Promise<Entity | null>` never throws for missing data. No framework/storage imports.
 - Errors: `domain/errors/{entity}-{suffix}.error.ts`; extend `DomainError`, with `readonly code` from `ERROR_CODES.*`, not a raw string. Constructor calls `super(ERROR_MESSAGES[ERROR_CODES.*](id))`.
 - Register codes in `shared/domain/errors/error-codes.ts`: SCREAMING_SNAKE_CASE, `_NOT_FOUND`, `_ALREADY_EXISTS`, or another suffix with HTTP mapping. Register messages as lambdas, not plain strings, in `shared/domain/errors/error.messages.ts`.
@@ -54,13 +54,13 @@ Read `architecture/testing/architecture.md` and `architecture/testing/stacks/typ
 | Obligation | Concrete mapping | Applicability or uncovered decision |
 |---|---|---|
 | C1 Layers/dependencies | Structure | Framework code only in infrastructure. |
-| C2 Domain/ports | Domain and ports | Entities, Symbol ports, centralized errors. |
+| C2 Domain/ports | Domain and ports | Entities with behavior and immutable identity, Symbol ports, centralized errors. |
 | C3 Operation | Application operations | Undecorated class with interface injection. |
 | C4 Mapping/composition | Adapters; Composition | Static mapping plus factory providers. |
 | C5 Failures | Application operations; Controllers | Null → returned error → delivery throw. |
 | C6 Serialization | Controllers | JSend DTO/response edge. |
 | C7 Helpers | Common contract | No artificial class wrapper for a pure helper. |
-| B1 Layout/domain | Structure; Domain and ports | Readonly fields, getters, factory, null lookup. |
+| B1 Layout/domain | Structure; Domain and ports | Readonly fields, getters, behavior, valid-instance factory, null lookup. |
 | B2 Operation | Application operations | Null policy in operation. |
 | B3 Infrastructure | Adapters and delivery | Repository port, static mapper, edge factories. |
 

@@ -75,6 +75,7 @@ Include one minimal example that demonstrates the entry point.
 
 - Factory or shared test-data helper:
 - Required factory methods:
+- Entity construction through the entity factory/`create()`; direct field assignment to build an entity is prohibited:
 - Data-generation policy:
 - One mocking library or facility per collaborator boundary:
 - Hermeticity rules:

@@ -2,7 +2,7 @@
 name: bastion
 description: Backend & Scripts Architect — strict architecture verifier for backend code (clean-architecture layers) and script code (module/IO/type rules for the project's script zones); reads files, checks language-appropriate rules, returns structured violation report; never fixes code — only reports.
 mode: subagent
-version: 1.8.0
+version: 1.9.0
 ---
 <!-- core:begin -->
 
@@ -157,10 +157,12 @@ This is the default audit format. If Cipher 🔓 (Lead Orchestrator)'s dispatch 
 
 ```
 [PASS] <rule>
-[FAIL] <file>:<line>
+[FAIL] <obligation-id> — <file>:<line>
        <what is wrong>
        Fix: <exact change required>
 ```
+
+Every `[FAIL]` finding cites the exact governing obligation ID from the architecture owner — `C1`–`C7`, `B1`–`B3`, `P1`–`P3`, or `F1`–`F3`; Crucible 🔥 (Test Architect) cites the `architecture/testing/architecture.md` or applicable guide section heading. A finding without the owner ID is incomplete.
 
 End with exactly one of:
 - `All checks passed.`
