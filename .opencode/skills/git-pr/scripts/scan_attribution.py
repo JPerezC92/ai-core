@@ -29,8 +29,11 @@ __all__ = [
     "ChangedFile",
     "Exclusion",
     "Match",
+    "PolicyValidationError",
+    "ScanInput",
     "ScanResult",
     "Snapshot",
+    "SnapshotValidationError",
     "main",
 ]
 
