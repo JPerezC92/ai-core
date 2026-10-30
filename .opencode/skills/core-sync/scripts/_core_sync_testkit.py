@@ -73,7 +73,51 @@ DEST_PLAIN = (
     "Old body line\n"
 )
 
+CRLF_SOURCE_MARKED = (
+    "---\r\n"
+    "name: sample\r\n"
+    "---\r\n"
+    "<!-- core:begin -->\r\n"
+    "\r\n"
+    "Core body line one\r\n"
+    "Core body line two\r\n"
+    "<!-- core:end -->\r\n"
+)
+
+CRLF_DEST_MARKED = (
+    "---\r\n"
+    "name: sample\r\n"
+    "---\r\n"
+    "<!-- core:begin -->\r\n"
+    "\r\n"
+    "Destination old body\r\n"
+    "<!-- core:end -->\r\n"
+    "\r\n"
+    "Destination project region\r\n"
+)
+
+CRLF_SOURCE_NO_MARKERS = (
+    "---\r\n"
+    "name: src\r\n"
+    "---\r\n"
+    "\r\n"
+    "Core body one\r\n"
+    "Core body two\r\n"
+)
+
+CRLF_DEST_PLAIN = (
+    "---\r\n"
+    "name: dest\r\n"
+    "---\r\n"
+    "\r\n"
+    "# Old title\r\n"
+    "\r\n"
+    "Old body line\r\n"
+)
+
 RAW_SOURCE_BYTES = b'{\n  "theme": "dark",\n  "model": "sample"\n}\n'
+
+RAW_CRLF_PAYLOAD_BYTES = b'{\r\n  "payload": "raw"\r\n}\r\n\xff\x00'
 
 MERGE_SOURCE = '{\n  "theme": "dark",\n  "shared": "source"\n}\n'
 
@@ -83,6 +127,16 @@ MERGE_DESTINATION = (
     '  "shared": "destination",\n'
     '  "custom": 42\n'
     "}\n"
+)
+
+CRLF_MERGE_SOURCE = '{\r\n  "theme": "dark",\r\n  "shared": "source"\r\n}\r\n'
+
+CRLF_MERGE_DESTINATION = (
+    "{\r\n"
+    "  // destination-only comment\r\n"
+    '  "shared": "destination",\r\n'
+    '  "custom": 42\r\n'
+    "}\r\n"
 )
 
 MERGE_DESTINATION_MERGED = (

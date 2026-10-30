@@ -12,6 +12,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from _core_sync_testkit import (  # noqa: E402
+    CRLF_DEST_MARKED,
+    CRLF_SOURCE_MARKED,
     DEST_MARKED,
     REV_A,
     REV_B,
@@ -24,6 +26,11 @@ from _core_sync_testkit import (  # noqa: E402
 from core_sync_pkg.domain.regions import outside_bytes, split_regions  # noqa: E402
 from core_sync_pkg.infrastructure.composition import main  # noqa: E402
 from core_sync_pkg.infrastructure.stores import save_bindings  # noqa: E402
+
+
+def _lf_terminated(text: str) -> str:
+    """Return `text` with every line terminator normalized to LF."""
+    return text.replace("\r\n", "\n").replace("\r", "\n")
 
 
 class ApplyContractTests:
@@ -65,25 +72,11 @@ class ApplyContractTests:
             "Destination project region\n"
         )
 
-    def test_apply_preserves_lf_only_outside_region(
+    def test_apply_writes_lf_only_output_from_crlf_inputs(
         self, tmp_path: Path
     ) -> None:
-        source_bytes = (
-            b"---\nname: source\n---\n"
-            b"<!-- core:begin -->\n"
-            b"Source core line one\nSource core line two\n"
-            b"<!-- core:end -->\n"
-        )
-        destination_bytes = (
-            b"---\nname: destination\n---\n"
-            b"<!-- core:begin -->\n"
-            b"Old core line\n"
-            b"<!-- core:end -->\n"
-            b"<!-- project:begin -->\n"
-            b"Project line one\nProject line two\n"
-            b"<!-- project:end -->\n"
-            b"Outside trailing line\n"
-        )
+        source_bytes = CRLF_SOURCE_MARKED.encode("utf-8")
+        destination_bytes = CRLF_DEST_MARKED.encode("utf-8")
         source = tmp_path / "source"
         destination = tmp_path / "destination"
         _write_bytes_file(source, "agent.md", source_bytes, mode="region")
@@ -100,23 +93,20 @@ class ApplyContractTests:
         source_split = split_regions(source_bytes.decode("utf-8"))
         assert original_split is not None
         assert source_split is not None
-        original_outside = outside_bytes(original_split).encode("utf-8")
+        expected_region = _lf_terminated(source_split["region"])
+        expected_outside = _lf_terminated(outside_bytes(original_split))
 
         assert main(_apply_args(source, destination, bindings_path, REV_A)) == 0
 
         updated_bytes = destination_path.read_bytes()
+        assert b"\r" not in updated_bytes
         updated_split = split_regions(updated_bytes.decode("utf-8"))
         assert updated_split is not None
-        assert updated_split["region"] == source_split["region"]
-        assert outside_bytes(updated_split).encode("utf-8") == original_outside
-        assert b"\r" not in updated_bytes
+        assert updated_split["region"] == expected_region
+        assert outside_bytes(updated_split) == expected_outside
+        assert b"---\nname: sample\n---\n<!-- core:begin -->\n" in updated_bytes
+        assert b"Core body line one\nCore body line two\n" in updated_bytes
         assert (
-            b"---\nname: destination\n---\n<!-- core:begin -->\n"
-            in updated_bytes
+            b"<!-- core:end -->\n\nDestination project region\n" in updated_bytes
         )
-        assert b"Source core line one\nSource core line two\n" in updated_bytes
-        assert (
-            b"<!-- core:end -->\n<!-- project:begin -->\n"
-            b"Project line one\nProject line two\n"
-            in updated_bytes
-        )
+        assert updated_bytes.endswith(b"Destination project region\n")

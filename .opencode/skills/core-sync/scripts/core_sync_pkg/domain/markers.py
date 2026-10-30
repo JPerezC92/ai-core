@@ -24,25 +24,34 @@ def _is_safe_relative(path: str) -> bool:
     return not windows_path.drive and not windows_path.root
 
 
-def _exact_marker_line_indices(lines: list[str], marker: str) -> list[int]:
-    """Return the indices of exact stripped `marker` lines outside code fences.
+def line_without_terminator(line: str) -> str:
+    """Return `line` with only its trailing CR/LF terminator removed.
 
-    Markdown fences use at least three matching backticks or tildes. A closer
-    must use the opening character at least as many times, have at most three
-    leading spaces, and contain no trailing content beyond horizontal
-    whitespace; marker-looking lines inside a fence are skipped.
+    No other whitespace is trimmed, so a padded line is not treated as its
+    unpadded counterpart.
+    """
+    return line.rstrip("\r\n")
+
+
+def unfenced_line_indices(lines: list[str]) -> list[int]:
+    """Return the indices of lines that are outside any Markdown code fence.
+
+    Fences use at least three matching backticks or tildes. A closer must use
+    the opening character at least as many times, have at most three leading
+    spaces, and contain no trailing content beyond horizontal whitespace. A
+    backtick fence whose info string contains a backtick does not open a fence.
+    Fence delimiter lines themselves are not returned.
     """
     active_fence: tuple[str, int] | None = None
-    matches: list[int] = []
+    indices: list[int] = []
     for index, line in enumerate(lines):
-        line_without_terminator = line.rstrip("\r\n")
-        stripped = line_without_terminator.strip()
+        text = line_without_terminator(line)
         if active_fence is not None:
             fence_char, fence_length = active_fence
             closing_pattern = (
                 rf" {{0,3}}{re.escape(fence_char)}{{{fence_length},}}[ \t]*"
             )
-            if re.fullmatch(closing_pattern, line_without_terminator):
+            if re.fullmatch(closing_pattern, text):
                 active_fence = None
             continue
 
@@ -54,11 +63,21 @@ def _exact_marker_line_indices(lines: list[str], marker: str) -> list[int]:
                 active_fence = (fence[0], len(fence))
                 continue
 
-        if active_fence is not None:
-            continue
-        if stripped == marker:
-            matches.append(index)
-    return matches
+        indices.append(index)
+    return indices
+
+
+def _exact_marker_line_indices(lines: list[str], marker: str) -> list[int]:
+    """Return the indices of exact stripped `marker` lines outside code fences.
+
+    Marker-looking lines inside a fence are skipped; see `unfenced_line_indices`
+    for the fence rule.
+    """
+    return [
+        index
+        for index in unfenced_line_indices(lines)
+        if line_without_terminator(lines[index]).strip() == marker
+    ]
 
 
 def find_markers(content: str) -> tuple[int, int] | None:

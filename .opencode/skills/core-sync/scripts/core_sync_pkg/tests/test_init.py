@@ -12,6 +12,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from _core_sync_testkit import (  # noqa: E402
+    CRLF_DEST_PLAIN,
+    CRLF_SOURCE_NO_MARKERS,
     DEST_PLAIN,
     REV_A,
     REV_B,
@@ -91,3 +93,34 @@ class InitContractTests:
             "<!-- project:end -->", 1
         )[0]
         assert project_body == "\n# Old title\n\nOld body line\n"
+
+    def test_init_writes_lf_only_output_from_crlf_inputs(
+        self, tmp_path: Path
+    ) -> None:
+        source, destination, bindings_path = self._setup(
+            tmp_path,
+            source_content=CRLF_SOURCE_NO_MARKERS,
+            destination_content=CRLF_DEST_PLAIN,
+        )
+
+        assert main(_init_args(source, destination, bindings_path, REV_A)) == 0
+
+        written = (destination / "agent.md").read_bytes()
+        assert b"\r" not in written
+        assert written == (
+            b"---\n"
+            b"name: dest\n"
+            b"---\n"
+            b"<!-- core:begin -->\n"
+            b"\n"
+            b"Core body one\n"
+            b"Core body two\n"
+            b"<!-- core:end -->\n"
+            b"\n"
+            b"<!-- project:begin -->\n"
+            b"\n"
+            b"# Old title\n"
+            b"\n"
+            b"Old body line\n"
+            b"<!-- project:end -->\n"
+        )

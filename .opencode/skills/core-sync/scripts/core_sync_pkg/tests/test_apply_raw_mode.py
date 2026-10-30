@@ -12,6 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from _core_sync_testkit import (  # noqa: E402
+    RAW_CRLF_PAYLOAD_BYTES,
     RAW_SOURCE_BYTES,
     REV_A,
     _apply_args,
@@ -37,3 +38,15 @@ class RawApplyTests:
         destination_path = destination / "opencode.jsonc"
         assert main(_apply_args(source, destination, bindings_path, REV_A)) == 0
         assert destination_path.read_bytes() == payload
+
+    def test_apply_keeps_raw_payload_byte_exact(self, tmp_path: Path) -> None:
+        source, destination, bindings_path = _raw_setup(
+            tmp_path,
+            source_content=RAW_CRLF_PAYLOAD_BYTES,
+            destination_content=b"stale\r\n",
+        )
+        destination_path = destination / "opencode.jsonc"
+
+        assert main(_apply_args(source, destination, bindings_path, REV_A)) == 0
+
+        assert destination_path.read_bytes() == RAW_CRLF_PAYLOAD_BYTES
