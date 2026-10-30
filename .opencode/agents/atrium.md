@@ -41,49 +41,13 @@ A file assigned by the active feature document or parent assignment that violate
 
 #### Language-agnostic
 
-Before reviewing, read `architecture/README.md`, then `architecture/clean-architecture.md`, then `architecture/shapes/frontend.md` in full. These own the extracted common and frontend definitions referenced by `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`. Apply the selected stack mapping below; do not infer conformance from folder names or examples.
+Before reviewing, read `architecture/README.md`, then `architecture/clean-architecture.md`, then `architecture/shapes/frontend.md` in full on first use in the run. Reuse each document while its content identity is unchanged, and re-read only a document that changed or a section whose comprehension is incomplete. These own the extracted common and frontend definitions referenced by `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`. Apply the selected stack mapping below; do not infer conformance from folder names or examples.
 
 This extraction routes intended architecture, not verified implementation conformance. Guide status remains as recorded in the navigation and guide metadata; proposed documents are not approved by this pointer. If that status or an unresolved mapping prevents an assigned review decision, stop the affected operation and report to Cipher 🔓 (Lead Orchestrator).
 
 #### TypeScript — React
 
-Read `architecture/stacks/typescript/react.md` in full after the common contract and frontend shape. For test design read the current `architecture/testing/architecture.md` and `architecture/testing/stacks/typescript.md` in full. The following legacy headings are compatibility pointers only, not a second rulebook.
-
-##### Architecture Overview (understand before checking)
-
-Read `architecture/stacks/typescript/react.md` → `Structure and dependency mapping` and `Application operations`.
-
-##### DOMAIN LAYER — `modules/{feature}/domain/`
-
-Read `architecture/stacks/typescript/react.md` → `Domain and ports`.
-
-##### APPLICATION (use case) — `modules/{feature}/hooks/use-{feature}.ts`
-
-Read `architecture/stacks/typescript/react.md` → `Application operations`.
-
-##### SERVICE LAYER — `modules/{feature}/services/{feature}.service.ts`
-
-Read `architecture/stacks/typescript/react.md` → `Adapters and delivery` → `Service`, including its HTTP and synchronous local-data branches.
-
-##### HOOK LAYER — `modules/{feature}/hooks/use-{feature}.ts`
-
-Read `architecture/stacks/typescript/react.md` → `Adapters and delivery` → `Hook`; for test boundaries read `architecture/testing/stacks/typescript.md` → `Unit tests` → `Frontend component and hook`.
-
-##### COMPONENT LAYER — `modules/{feature}/components/*.tsx`
-
-Read `architecture/stacks/typescript/react.md` → `Adapters and delivery` → `Component`.
-
-##### SHARED TOOLS CONSISTENCY
-
-Read `architecture/stacks/typescript/react.md` → `Imports and language conventions` and `architecture/testing/stacks/typescript.md` → `Test data and doubles`.
-
-##### IMPORT PATH RULES (apply to EVERY file — source and tests)
-
-Read `architecture/stacks/typescript/react.md` → `Imports and language conventions`.
-
-##### WHAT MUST NOT EXIST
-
-Read `architecture/stacks/typescript/react.md` → `Domain and ports`, `Application operations`, `Adapters and delivery`, and `Imports and language conventions`.
+Read `architecture/stacks/typescript/react.md` in full once per task, after the common contract and frontend shape. This is the single reading mandate for the React guide: reuse it while its content identity is unchanged, and re-read it only when it changed, when comprehension is incomplete, or when this runtime requires a fresh read. Test architecture and testing-guide selection belong to Crucible 🔥 (Test Architect); do not read the testing contract or testing guide under this review. The guide and its sections own the architecture rules; this spec owns the review procedure and the verdict.
 
 ### Workflow
 

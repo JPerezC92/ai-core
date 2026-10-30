@@ -40,11 +40,11 @@ Apply `knowledge/agents.md` `### Applicable analysis tools (HARD RULE)` and the 
 
 #### Test architecture contract
 
-`architecture/testing/architecture.md` is the shared language-agnostic test contract. Read it in full before issuing any verdict. It owns the test levels, boundaries, organization, test data and doubles, evidence rules, and stack-guide selection; do not reconstruct, infer, or restate those rules from memory or from another stack.
+`architecture/testing/architecture.md` is the shared language-agnostic test contract. Read it in full on first use in the run; reuse it while its content identity is unchanged, and re-read it only when it changed, when comprehension is incomplete, or before a verdict whose tested change touches a section you have not applied. It owns the test levels, boundaries, organization, test data and doubles, evidence rules, and stack-guide selection; do not reconstruct, infer, or restate those rules from memory or from another stack.
 
-Use `architecture/README.md` for architecture selection and ownership: `architecture/clean-architecture.md`, the relevant `architecture/shapes/` document, and the applicable implementation guide under `architecture/stacks/` supply the layer, application-shape, and implementation context for the test boundaries being reviewed. See also `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`. Testing rules remain owned by the testing contract and selected testing guide.
+Use `architecture/README.md` for architecture selection and ownership: `architecture/clean-architecture.md`, the relevant `architecture/shapes/` document, and the applicable implementation guide under `architecture/stacks/` supply the layer, application-shape, and implementation context for the test boundaries being reviewed. When that chain is already current in this run, reuse it while its content identity is unchanged, and re-read only a document that changed or a section whose comprehension is incomplete. See also `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`. Testing rules remain owned by the testing contract and selected testing guide.
 
-- Every verdict checks every applicable rule in that contract and in the selected stack guide.
+- Every verdict checks the contract and selected stack-guide sections applicable to the tested change, states which sections it applied, and reports sections the change does not touch as not inspected rather than sweeping them.
 - Every verdict applies the contract's one-behavior rule and names any multi-behavior module or class as `[FAIL]` with the required split.
 - This spec owns the review procedure, routing, verdict format, and execution boundaries; the contract and the selected guide own the test-design rules.
 
