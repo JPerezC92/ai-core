@@ -13,9 +13,11 @@ The same layers apply across languages: domain, application, infrastructure; sta
 
 Domain imports no framework or infrastructure. Entities and typed ports speak domain types, not raw external records. Domain business errors carry stable codes and messages. Concrete entity representation and port syntax belong in the selected shape/stack guide.
 
+An entity — as distinct from a data-only record or a functional domain module — is a class with behavior that enforces its invariants, an immutable identity, and a factory that builds a valid instance; it exposes no public setters and no writable identity field. No state-transition convention is selected: do not add setters to enable state change.
+
 ## C3 — Application operation
 
-Each use case is one named business operation exposing a single `execute()`. It depends on injected domain ports, not concrete IO. One operation per module or file; its name states a business outcome, and `Service`, `Manager`, `Helper`, `Processor`, and `Util` are not use-case names. A composition root or CLI router may wire several operations but must not re-declare a use-case class. Policy belongs here or in domain, never in adapters or presentation. Data-only boundary/result records and functional domain modules are valid representations; enduring invariants and legal transitions belong in the domain, application-specific orchestration may stay in the use case, and adapters hold no business policy. A data-only record is anemic only when it claims to be the domain model while its rules are enforced elsewhere.
+Each use case is one named business operation exposing a single `execute()`. It depends on injected domain ports, not concrete IO. One operation per module or file; its name states a business outcome, and `Service`, `Manager`, `Helper`, `Processor`, and `Util` are not use-case names. Choose one operation shape per stack and apply it to every use case; a mixed vocabulary is a review finding. A composition root or CLI router may wire several operations but must not re-declare a use-case class. Policy belongs here or in domain, never in adapters or presentation. Data-only boundary/result records and functional domain modules are valid representations; enduring invariants and legal transitions belong in the domain, application-specific orchestration may stay in the use case, and adapters hold no business policy. A data-only record is anemic only when it claims to be the domain model while allowing public mutation and its rules are enforced elsewhere.
 
 ## C4 — Mapping and composition
 

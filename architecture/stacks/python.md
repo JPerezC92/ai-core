@@ -57,7 +57,7 @@ Read `architecture/testing/architecture.md` and `architecture/testing/stacks/pyt
 | Obligation | Concrete mapping | Applicability or uncovered decision |
 |---|---|---|
 | C1 Layers/dependencies | Structure; Adapters and delivery | Python modules implement the same inward dependency graph. |
-| C2 Domain/ports | Domain and ports | Framework-free backend classes, underscore storage, read-only `@property`, `@classmethod create`; Protocol/ABC ports. |
+| C2 Domain/ports | Domain and ports | Framework-free backend classes with behavior and immutable identity, underscore storage, read-only `@property`, `@classmethod create`; Protocol/ABC ports. |
 | C3 Operation | Application operations | Typed callable with injected ports, no invented framework class. |
 | C4 Mapping/composition | Adapters and delivery | Loaders/builders/clients and entry wiring. |
 | C5 Failures | Application operations; delivery | Typed returned errors; exceptions remain exceptions. |
@@ -66,7 +66,7 @@ Read `architecture/testing/architecture.md` and `architecture/testing/stacks/pyt
 | P1 Responsibilities | Structure; Domain; Application | Data-only constants and typed transformations. |
 | P2 IO/delivery | Adapters and delivery | Explicit IO helpers and assembled entry. |
 | P3 Deployment | Deployment zones | Three independent zones and startup exceptions. |
-| B1 Backend domain/layout | Structure; Domain and ports | Immutable identity, per-field read-only properties, valid-instance class factory, and empty lookup preserved. |
+| B1 Backend domain/layout | Structure; Domain and ports | Entity behavior, immutable identity, per-field read-only properties, valid-instance class factory, and empty lookup preserved. |
 | B2 Backend operation | Application operations | Policy decides empty-result failure. |
 | B3 Backend infrastructure | Adapters and delivery | Single mapping and edge wiring, no mandatory NestJS factories. |
 | Frontend shape | Not selected | This guide covers CLI/backend, not a Python UI runtime; no Hook/toast equivalent invented. |

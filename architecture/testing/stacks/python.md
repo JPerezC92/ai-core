@@ -4,7 +4,7 @@
 > **Status:** reference
 > **Stack:** Python application, script, and CLI code; pytest reference implementation
 > **Guide owner:** Crucible 🔥 (Test Architect)
-> **Reviewed:** 2026-10-25 — `testing-architecture-layering`
+> **Reviewed:** 2026-10-25 — `testing-architecture-layering`; entity-construction clause 2026-10-30
 > **Contract:** `architecture/testing/architecture.md`
 
 ## Applicability and ownership
@@ -76,6 +76,7 @@ assert isinstance(result, TaskNotFoundError)
 
 - Use a shared test-data factory or helper, for example `_test_support.py`, for domain objects and external payloads. Do not use inline literals for test data.
 - The factory provides `create(**overrides)` and, when collections are needed, `create_many(count, **overrides)`. Deterministic values are acceptable; randomness is not required.
+- When the test needs an entity rather than a data-only record, the factory builds it through the entity factory/`create()`; never assign entity fields directly to construct test data.
 - Use `unittest.mock` for collaborator ports and controlled return values.
 - Use `monkeypatch` for process-wide boundaries such as environment variables, time, or transport. Do not use `monkeypatch` as a substitute for a port double, and do not mix `monkeypatch` and `unittest.mock` for the same collaborator.
 - Keep fixtures hermetic. Use `tmp_path` for filesystem isolation and the reviewed runner's fixture lifecycle for setup and teardown.

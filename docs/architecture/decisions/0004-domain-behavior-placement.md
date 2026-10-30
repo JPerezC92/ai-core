@@ -44,3 +44,19 @@ Unknown historical rationale for individual placement choices is unrecorded; the
 - A known nonconformance is recorded but not fixed: `preflight_write_targets(...)` in `core-sync` infrastructure holds write-target policy. It is reported as a remediation item, not grandfathered as a legacy exemption; the fix requires a separate authorized feature and the usual gates.
 - The evidence base is bounded: a documentary research synthesis plus the file-level review cited in feature L2, plus later authorized `Problem` entity evidence in `odd/tasks/problem-register-entity.md` (`5cda579`, closed 2026-10-29), with no repository-wide audit and no TypeScript application found at the research date. Placement judgment for unread paths remains unverified, and unknown historical rationale stays unrecorded.
 - Status is `Accepted` because the research already settled what an entity is. That is not a preference vote. Shared rules stay in `architecture/clean-architecture.md` C3 and the stack guides; this ADR is the rationale record. This source-local ADR is explanation, not an undistributed dependency of shared contracts.
+
+## Propagation
+
+Propagated by `odd/tasks/adr-propagation-and-architecture-conformance.md` T2. The operative rules and their applicability boundaries live in these owners, not in this record:
+
+- `architecture/clean-architecture.md` → `C2 — Domain and ports` (entity behavior enforcing its invariants, immutable identity, a factory building a valid instance, no public setters or writable identity) and `C3 — Application operation` (the anemic test includes public mutation).
+- `architecture/shapes/backend.md` → `B1 — Layout and domain` (entity behavior enforces its invariants; no public setter or writable identity field).
+- `architecture/shapes/frontend.md` → `F1 — Feature layout and domain` (entity types are data-only domain records by design, not rule-holding entities).
+- `architecture/shapes/scripts.md` → `P1 — Responsibilities` (a script type claiming identity and invariants but leaving its rules to callers is a nonconforming entity, not a record).
+- `architecture/stacks/typescript/nestjs.md` → `Domain and ports` (entity behavior plus a valid-instance `create()`), with the `C2` and `B1` `Obligation mapping` rows.
+- `architecture/stacks/python.md` → `Obligation mapping`, `C2` and `B1` rows (behavior and immutable identity).
+- `architecture/stacks/_template.md` → `Domain and ports` (future guides map the entity behavior, immutable identity, and factory/validity obligation and do not invent a state-transition convention).
+- `architecture/stacks/typescript/react.md` → `Domain and ports` (the `domain/entities/{entity}.ts` types are data-only domain records, not rule-holding entities) and its `C2` `Obligation mapping` row.
+- `architecture/testing/stacks/typescript.md`, `architecture/testing/stacks/python.md`, and `architecture/testing/stacks/_template.md` → `Test data and doubles` (test factories build entities through the entity factory/`create()`, never by assigning entity fields directly).
+
+No state-transition convention is selected by this decision; that remains an open question, so no owner adds setters to enable state change.

@@ -16,7 +16,7 @@ Keep the frontend shape's feature folders. Runtime flow: Component → Hook (dri
 
 - Always provide `domain/errors/{feature}-service.error.ts`. Define a module-specific `{Feature}ServiceError` class extending `Error` (for example `TasksServiceError`), never a generic shared class literally named `FeatureServiceError`.
 - Carry a stable business code. Constructor uses `super(message)` and sets `this.name` to the actual class name; it never throws. Do not represent arbitrary transport/parsing/programming exceptions with this class.
-- Detect shared types first: when a same-language shared package exists (e.g. `@repo/reports/frontend`), import entity types there, with no duplicate local types. Otherwise define them in `domain/entities/{entity}.ts`, never inline in services/hooks/components.
+- Detect shared types first: when a same-language shared package exists (e.g. `@repo/reports/frontend`), import entity types there, with no duplicate local types. Otherwise define them in `domain/entities/{entity}.ts`, never inline in services/hooks/components. Entity types — locally defined in `domain/entities/{entity}.ts` or imported from the shared package — are data-only domain records by design — not rule-holding entities: they carry data and enforce no invariants.
 - Domain includes the typed service port; domain and service contain no React imports. Types/schemas come from the shared package if present, otherwise domain entities.
 
 ## Application operations
@@ -61,7 +61,7 @@ Read `architecture/testing/architecture.md` and `architecture/testing/stacks/typ
 | Obligation | Concrete mapping | Applicability or uncovered decision |
 |---|---|---|
 | C1 Layers/dependencies | Structure and dependency mapping | Co-location does not permit operation framework imports. |
-| C2 Domain/ports | Domain and ports | Feature-specific error and shared/local types. |
+| C2 Domain/ports | Domain and ports | Feature-specific error, shared/local data-only domain records; no rule-holding entities. |
 | C3 Operation | Application operations | Ordinary function/object method, not a Hook. |
 | C4 Mapping/composition | Service and Hook | Unknown HTTP input, one parse; synchronous local-data branch. |
 | C5 Failures | Domain and ports; Service and Hook | Frontend F2 maps documented service failures to returned typed errors, never business-failure throws; unrelated exceptions retain identity. Query-state conversion is presentation-only. |

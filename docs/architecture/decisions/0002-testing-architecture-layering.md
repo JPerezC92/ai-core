@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-10-25
+- **Amended:** 2026-10-30 — path references relocated to `architecture/testing/` by ADR 0003; the `testing-architecture/` tree no longer exists. Decision text below is unchanged.
 
 ## Context
 

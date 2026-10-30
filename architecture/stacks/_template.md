@@ -14,7 +14,7 @@ Map each applicable shape's folders, domain, application, adapters, and composit
 
 ## Domain and ports
 
-Preserve concrete entity, port, error, naming, and validation decisions. Identify unsupported choices explicitly rather than inventing equivalents.
+Preserve concrete entity, port, error, naming, and validation decisions. Map the entity behavior, immutable identity, and factory/validity obligation, and do not invent a state-transition convention. Identify unsupported choices explicitly rather than inventing equivalents.
 
 ## Application operations
 
