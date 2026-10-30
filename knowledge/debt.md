@@ -25,7 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 9.**
+**Open debts: 7.**
 
 ### DEBT-021 — ODD execution-gate bypass
 
@@ -81,24 +81,6 @@ Each entry MUST include:
 - **Direct evidence:** Bastion review findings 2–3; `query_verification.py:196,813-931`; `architecture/clean-architecture.md` C1/C2/C3/C5 and `architecture/shapes/scripts.md` P1/P2.
 - **Resolution criteria:** One use-case module per operation; pure domain parsing/safety/evaluation; typed domain errors returned as values; no business failure escapes the operation; Bastion and Crucible `[PASS]`; suite passes.
 - **Explicit deferral decision:** User instruction 2026-10-29: "if that requiere its own feature just add as a debt to do it later but dont left any broken". Accepted for later feature work; not started.
-
-### DEBT-027 — Scan-attribution application operation and typed errors
-
-- **ID:** DEBT-027
-- **Date:** 2026-10-29
-- **Description:** `git-pr/scripts/scan_attribution.py` exposes `scan_attribution()` rather than an application `execute()` and raises `PolicyValidationError`/`SnapshotValidationError` for malformed policy or snapshot, so business failures escape the operation. Medium remediation: an application operation returning `ScanResult | DomainError`, validation returning typed errors, and `main` keeping only serialization.
-- **Direct evidence:** Bastion review finding 4; `scan_attribution.py:205` and `:76-82`; `architecture/clean-architecture.md` C3/C5.
-- **Resolution criteria:** Application `execute()` returns a typed result or domain error; business failures no longer throw; `main` serializes only; tests and Bastion `[PASS]`; suite passes.
-- **Explicit deferral decision:** User instruction 2026-10-29: "if that requiere its own feature just add as a debt to do it later but dont left any broken". Accepted for later work; not started.
-
-### DEBT-028 — Validate-feature application operation and typed result
-
-- **ID:** DEBT-028
-- **Date:** 2026-10-29
-- **Description:** `odd-workflow/scripts/validate_feature.py` exposes `validate_feature(text) -> list[str]` rather than an application `execute()` and mixes policy with `main` IO. Medium remediation: an application operation returning a typed result or domain error, with the entry reading and printing only.
-- **Direct evidence:** Bastion review finding 6; `validate_feature.py:58`; `architecture/clean-architecture.md` C3 and `architecture/shapes/scripts.md` P1/P2.
-- **Resolution criteria:** Application operation with `execute()` and a typed result/error; IO stays at the entry; tests and Bastion `[PASS]`; suite passes.
-- **Explicit deferral decision:** User instruction 2026-10-29: "if that requiere its own feature just add as a debt to do it later but dont left any broken". Accepted for later work; not started.
 
 ### DEBT-029 — Stop without a user-action requirement
 

@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
 
-from attribution_testkit import (
+# `e2e/` -> skill `scripts` root: parents[0] is `e2e`, parents[1] is `scripts`.
+SCRIPTS = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(SCRIPTS))
+
+from attribution_testkit import (  # noqa: E402
     load_approved_policy,
     make_attribution_line,
     make_changed_file,
@@ -19,10 +24,15 @@ from attribution_testkit import (
     make_snapshot_with_artifact_content,
     write_json,
 )
-from scan_attribution import main
+from attribution_scan.domain.records import PolicyValidationError  # noqa: E402
+from scan_attribution import main  # noqa: E402
 
 
 POLICY = load_approved_policy()
+
+# Narrow the shared factory result so a broken approved-policy fixture fails here
+# instead of surfacing as an unrelated rejection assertion in the cases below.
+assert not isinstance(POLICY, PolicyValidationError), "approved policy must validate"
 
 
 def _run_cli(
