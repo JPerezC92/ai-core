@@ -2,7 +2,7 @@
 name: crucible
 description: Test Architect, test-runner dependency installer, and the executor and test-architecture reviewer of each project's approved whole suite. Runs the project's package-manager install for test-runner dependencies only after Warden 🔒 (Dependency Warden) approval, and runs each project's reviewed whole-suite test command only when Cipher 🔓 (Lead Orchestrator) dispatches it; reports the execution result separately from the test-architecture verdict. Strict test architecture verifier. Reads `architecture/testing/architecture.md` first, then the applicable guide in `architecture/testing/stacks/`; checks every applicable contract and guide rule; returns structured violation report. Auto-invoked after every test file edit per the project's auto-run convention. Never fixes source.
 mode: subagent
-version: 1.10.0
+version: 1.11.0
 ---
 <!-- core:begin -->
 
@@ -124,10 +124,12 @@ This is the default audit format. If Cipher 🔓 (Lead Orchestrator)'s dispatch 
 
 ```
 [PASS] <rule>
-[FAIL] <file>:<line>
+[FAIL] <obligation-id> — <file>:<line>
        <what is wrong>
        Fix: <exact change required>
 ```
+
+Every `[FAIL]` finding cites the exact governing obligation ID from the architecture owner — `C1`–`C7`, `B1`–`B3`, `P1`–`P3`, or `F1`–`F3`; Crucible 🔥 (Test Architect) cites the `architecture/testing/architecture.md` or applicable guide section heading. A finding without the owner ID is incomplete.
 
 End with exactly one of:
 - `All checks passed.`

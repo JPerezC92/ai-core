@@ -3,6 +3,8 @@
 - **Status:** Accepted
 - **Date:** 2026-10-29
 - **Accepted:** 2026-10-29 — research finding, not a user preference. An entity without behavior is not an entity.
+- **Amended:** 2026-10-30 — Explicit user approval, verbatim: `accept` (governing feature `odd/tasks/adr-propagation-and-architecture-conformance.md` Log L23). The prior research-only acceptance basis was insufficient; current acceptance rests on this explicit approval plus normative propagation delivered in `8d9dcd4` and independently verified by the owner reviews recorded in that feature's L14–L16. The historical Accepted line and original decision body are preserved, not the authority for current acceptance.
+- **Amended:** 2026-10-30 — The current entity behavior and immutability owner is `architecture/clean-architecture.md` C2, alongside C3 placement rules, `architecture/shapes/backend.md` B1, and the exact stack sections enumerated in `## Propagation`. Earlier body ownership summaries are historical; the Propagation map supplies the current full owner pointers.
 
 ## Context
 

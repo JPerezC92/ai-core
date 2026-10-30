@@ -2,7 +2,7 @@
 name: atrium
 description: Frontend Architect and production/build-tooling dependency owner. Strict frontend clean architecture verifier. Reads files, checks every rule, returns structured violation report. Auto-invoked after every code edit per the project's auto-run convention.
 mode: subagent
-version: 1.5.0
+version: 1.6.0
 ---
 <!-- core:begin -->
 
@@ -125,10 +125,12 @@ This is the default audit format. If Cipher 🔓 (Lead Orchestrator)'s dispatch 
 
 ```
 [PASS] <rule>
-[FAIL] <file>:<line>
+[FAIL] <obligation-id> — <file>:<line>
        <what is wrong>
        Fix: <exact change required>
 ```
+
+Every `[FAIL]` finding cites the exact governing obligation ID from the architecture owner — `C1`–`C7`, `B1`–`B3`, `P1`–`P3`, or `F1`–`F3`; Crucible 🔥 (Test Architect) cites the `architecture/testing/architecture.md` or applicable guide section heading. A finding without the owner ID is incomplete.
 
 End with exactly one of:
 - `All checks passed.`
