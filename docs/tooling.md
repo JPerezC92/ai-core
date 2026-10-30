@@ -2,6 +2,8 @@
 
 This guide provides checkout-local setup instructions, not test evidence or authorization to provision before the required review gates. Run commands from the checkout root with UV >=0.13.1 and Python >=3.13,<3.14 available for the tooling projects.
 
+**Current bindings:** the tracked `opencode.jsonc` launches `astgrep` and `semgrep` through `uv run --frozen --project`, and launches the `memories` and `qmd` MCP servers through `npx`. The `basic-memory` server is **no longer configured**; its tooling environment, lockfile and `memory/` notes are retained, and the sections below keep working provisioning instructions for it in case it is reinstated by a separately authorized change. Replacement rationale and verified limits: `odd/tasks/agent-memory-and-repository-knowledge-search.md`.
+
 ## Provision the locked environments
 
 ```text
@@ -14,9 +16,9 @@ Each directory owns its manifest, lockfile and ignored `.venv/`. Do not activate
 
 The astgrep project uses UV's experimental `require-build-hashes` setting, requiring UV >=0.13.1. Its exact build-dependency hashes constrain `setuptools==84.2.1` and `packaging==26.3`. A cached built wheel may be reused without re-verifying those build inputs; this is not full build attestation. Basic Memory and Semgrep remain isolated in their own environments, with root dependencies untouched.
 
-## Register Basic Memory
+## Register Basic Memory (dormant)
 
-Replace `<checkout>` with this checkout's absolute path; retain quoting when the path contains spaces. Register the existing `memory/` directory through the locked Basic Memory environment:
+This section applies only if the `basic-memory` server is reinstated; it is not part of the current configuration. Replace `<checkout>` with this checkout's absolute path; retain quoting when the path contains spaces. Register the existing `memory/` directory through the locked Basic Memory environment:
 
 ```text
 uv run --frozen --project .opencode/tooling/basic-memory basic-memory project add ai-core '<checkout>/memory' --local
@@ -36,6 +38,6 @@ The reported version must be `0.51.0`. The ast-grep MCP Python lock does **not**
 
 ## Launch and privacy boundaries
 
-Use this checkout's tracked OpenCode configuration, without editing global OpenCode configuration or embedding machine-specific executable paths. The configuration launches the three servers with `uv run --frozen --project` and their respective root-relative tooling directory; launch OpenCode from the checkout root. Root Python scripts still use `uv run --frozen python3 ...`, and root tests retain their reviewed command. Tooling provisioning does not change root dependencies or the root `.venv`.
+Use this checkout's tracked OpenCode configuration, without editing global OpenCode configuration or embedding machine-specific executable paths. The configuration launches `astgrep` and `semgrep` with `uv run --frozen --project` and their respective root-relative tooling directory, and launches `memories` and `qmd` with `npx`; launch OpenCode from the checkout root. Root Python scripts still use `uv run --frozen python3 ...`, and root tests retain their reviewed command. Tooling provisioning does not change root dependencies or the root `.venv`.
 
-Keep the existing privacy controls unchanged: Basic Memory uses `BASIC_MEMORY_FORCE_LOCAL=true`, `BASIC_MEMORY_NO_PROMOS=1`, and `BASIC_MEMORY_AUTO_UPDATE=false`; Semgrep uses `SEMGREP_SEND_METRICS=off` and `OTEL_SDK_DISABLED=true`. This setup does not authorize changing other MCP servers, privacy settings, or memory stores. Locking dependencies is not a vulnerability-cleanliness claim.
+Keep the existing privacy controls unchanged: the `memories` server sets `MEMORIES_SKIP_POSTINSTALL=1` and both `npx` servers set `npm_config_ignore_scripts=true` so package lifecycle scripts never run; Semgrep uses `SEMGREP_SEND_METRICS=off` and `OTEL_SDK_DISABLED=true`. The retained Basic Memory environment used `BASIC_MEMORY_FORCE_LOCAL=true`, `BASIC_MEMORY_NO_PROMOS=1`, and `BASIC_MEMORY_AUTO_UPDATE=false` and would need those restored if it is reinstated. This setup does not authorize changing other MCP servers, privacy settings, or memory stores. Locking dependencies is not a vulnerability-cleanliness claim.
