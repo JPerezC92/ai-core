@@ -187,7 +187,7 @@ Do not show an empty findings table. If findings existed, an optional `Fixed: <N
 
 Three message types cover every user-facing status report:
 
-1. **Progress** — a step or task advanced and no user action is required: identity, state, result, evidence pointer, next action. Field-level ODD reporting is owned by `knowledge/agent-workflow.md` `#### Step reporting and transitions`.
+1. **Progress** — a step or task advanced and no user action is required: identity, state, result, evidence pointer, next action. Field-level ODD reporting is owned by `knowledge/agent-workflow.md` `#### Step reporting and transitions`. One compact combined report may cover contiguous preparatory or read-only steps, carrying each step's number, name, state, result, evidence pointer and next action. Never combine across an authorization pause, an edit checkpoint, or an independent acceptance gate, and never omit a pending check or blocker.
 2. **Findings or blocked** — something unresolved needs adjudication: use the `### PR review findings (adjudication)` findings table with one unique `Counts:` line. Blockers, checks, and decisions are reported outside the finding counts.
 3. **Completion** — `ALL FINISHED` with delivered scope, verification, deferred items, and next options when the authorized scope is exhausted, or the compact ready-to-merge message when its conditions hold and no scope remains open.
 

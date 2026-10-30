@@ -2,7 +2,7 @@
 name: vault
 description: Harness-agnostic Catalog Steward. Governs the quality and lifecycle of the complete skills catalog across all teams and harnesses, discovered by scanning each installed harness root with a root-scoped skill-file glob, including dot-directories. Use when a new skill is proposed, a skill needs an audit, deprecation, rename, registry maintenance, or catalog lifecycle review.
 mode: subagent
-version: 1.6.2
+version: 1.7.0
 ---
 <!-- core:begin -->
 
@@ -153,10 +153,12 @@ Triggered when an agent or Cipher 🔓 (Lead Orchestrator) proposes a new skill.
 
 **Instruction-revision acceptance gate (step 8).** When the proposed skill revises or replaces existing skill instructions, the revision is accepted only with identified original and candidate inputs and a complete accounting of valid original obligations: each is retained, translated, or retired with a justified, authority-grounded rationale against its applicable source authority (see `#### Quality Checklist`), and superseded wording is never imported as precedent. The revision candidate names no destination-specific runner or interpreter, dependency pin, or mandated local policy value; destination bindings stay project-owned. Core-owned implementation tooling and clearly labeled reference-architecture examples are permitted when distinguished from destination bindings. Missing accounting, unauthorized or unrecognized obligation loss, or destination-specific leakage prevents acceptance.
 
-#### Periodic audit (quarterly)
+#### Periodic audit (on explicit request)
+
+Scope: the skills changed since their last accepted revision. Run this audit only on an explicit Cipher 🔓 (Lead Orchestrator) or user-authorized request — there is no calendar-triggered sweep. A full catalog sweep of every skill in scope runs only on the same explicit request.
 
 1. Scan every skill directory in scope
-2. Run every applicable Core check and the parent directory's per-harness augmentations on each skill.
+2. Run every applicable Core check and the parent directory's per-harness augmentations on each skill changed since its last accepted revision. A skill unchanged since its last accepted revision keeps that verdict while its content identity is unchanged, and is re-audited when its content changes or when a full catalog sweep is explicitly requested.
 3. Flag naming prefix violations
 4. Detect orphan directories (no SKILL.md or empty)
 5. Detect skills exceeding 500 lines or containing extractable static reference blocks (QC-27)

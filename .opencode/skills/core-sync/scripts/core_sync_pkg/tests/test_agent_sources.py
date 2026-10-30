@@ -44,7 +44,7 @@ PROFILE_H2 = (
 )
 
 CORE_ANCHORS = {
-    "atrium.md": "DOMAIN LAYER",
+    "atrium.md": "typescript/react.md",
     "forge.md": "Static Data Service Pattern",
     "ledger.md": "Close out now",
     "sentinel.md": "node_modules/",
@@ -61,9 +61,7 @@ LOCAL_ONLY = {
         "of any conflicting harness allow.",
     ),
     "warden.md": (
-        "In AICore, no scanner is configured in Warden's permitted command list; "
-        "report it as unavailable and do not invoke direct `pip-audit`, `uvx`, "
-        "or `uv tool run`.",
+        "In AICore, use `uv audit --frozen` for the Python advisory check.",
         "Python-environment reference commands were added 2026-06-13 and "
         "validated against uv 0.11.8",
         "The project's reviewed whole-suite command is "
