@@ -8,7 +8,22 @@ from typing import Optional
 
 import yaml
 
-from .entities import ProblemRow
+from .entities import (
+    AllowExact,
+    IdentificationVerdict,
+    Lifecycle,
+    Problem,
+    Status,
+    Team,
+)
+from .errors import (
+    CODE_INVALID_ALLOW_EXACT,
+    CODE_INVALID_LIFECYCLE,
+    CODE_INVALID_STATUS,
+    CODE_INVALID_TEAM,
+    CODE_MISSING_SYMPTOM,
+    DomainError,
+)
 from .value_objects import (
     AnalysisHeader,
     CloseOutSnapshot,
@@ -66,7 +81,7 @@ ALLOWED_PHASES: frozenset[str] = frozenset(STEP_NAMES)
 # - "structural" : exactly one candidate, active, or mitigated incident P-NNN
 # - "no_match"   : no eligible incident P-NNN (an empty register always yields this)
 ALLOWED_IDENTIFICATION_VERDICTS: frozenset[str] = frozenset(
-    {"pending", "exact", "structural", "no_match"}
+    member.value for member in IdentificationVerdict
 )
 
 # Problem-register schema (knowledge/problems.md).
@@ -86,12 +101,25 @@ REGISTER_COLUMNS: tuple[str, ...] = (
     "allow_exact",
     "status",
 )
-ALLOWED_TEAMS: frozenset[str] = frozenset({"incident", "dev"})
-ALLOWED_LIFECYCLES: frozenset[str] = frozenset(
-    {"candidate", "active", "mitigated", "resolved", "retired"}
-)
-ALLOWED_ALLOW_EXACT: frozenset[str] = frozenset({"yes", "no"})
-ALLOWED_STATUSES: frozenset[str] = frozenset({"open", "closed"})
+ALLOWED_TEAMS: frozenset[str] = frozenset(member.value for member in Team)
+ALLOWED_LIFECYCLES: frozenset[str] = frozenset(member.value for member in Lifecycle)
+ALLOWED_ALLOW_EXACT: frozenset[str] = frozenset(member.value for member in AllowExact)
+ALLOWED_STATUSES: frozenset[str] = frozenset(member.value for member in Status)
+REGISTER_1 = "REGISTER-1"
+REGISTER_2 = "REGISTER-2"
+REGISTER_3 = "REGISTER-3"
+REGISTER_4 = "REGISTER-4"
+REGISTER_5 = "REGISTER-5"
+REGISTER_6 = "REGISTER-6"
+VERDICT_1 = "VERDICT-1"
+VERDICT_2 = "VERDICT-2"
+VERDICT_3 = "VERDICT-3"
+VERDICT_4 = "VERDICT-4"
+VERDICT_5 = "VERDICT-5"
+VERDICT_6 = "VERDICT-6"
+VERDICT_7 = "VERDICT-7"
+VERDICT_8 = "VERDICT-8"
+VERDICT_9 = "VERDICT-9"
 
 # Angle-bracket tokens that legitimately persist in fully-filled step files
 # (boilerplate references and convention placeholders, not data placeholders).
@@ -114,7 +142,6 @@ _FRACTION_RE = re.compile(r"^(\d+)/(\d+)$")
 _FILL_TOKEN_RE = re.compile(r"<[^>]+>")
 _HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
 _PROBLEM_ID_RE = re.compile(r"^P-\d+$")
-_SYMPTOM_ID_RE = re.compile(r"S-\d{2}")
 _CITED_PATH_RE = re.compile(r"\bpath:\s*\**\s*([^\n]+)")
 
 
@@ -280,10 +307,10 @@ def check_identification_verdict(header: AnalysisHeader) -> list[str]:
         VERDICT-1: value not in ALLOWED_IDENTIFICATION_VERDICTS
     """
     value = header["Identification_verdict"].strip()
-    if value not in ALLOWED_IDENTIFICATION_VERDICTS:
+    if IdentificationVerdict.from_cell(value) is None:
         allowed = ", ".join(sorted(ALLOWED_IDENTIFICATION_VERDICTS))
         return [
-            f"VERDICT-1: identification_verdict value {value!r} not in "
+            f"{VERDICT_1}: identification_verdict value {value!r} not in "
             f"allowed set ({allowed})"
         ]
     return []
@@ -555,37 +582,63 @@ def check_single_step_sections(
 # ── Register-first identification checks ─────────────────────────────────────
 
 
-def parse_problem_register(content: str) -> list[ProblemRow]:
+def _create_problem(cells: list[str]) -> Problem | DomainError:
+    """Map one register row's cells through ``Problem.create``."""
+    return Problem.create(
+        **{
+            column: cells[index]
+            for index, column in enumerate(REGISTER_COLUMNS)
+        }
+    )
+
+
+def _format_register_error(error: DomainError, problem_id: str) -> str:
+    """Map a ``Problem.create`` domain error onto a REGISTER-* finding string."""
+    if error.code == CODE_INVALID_TEAM:
+        return (
+            f"{REGISTER_2}: {problem_id} Team {error.message!r} not in "
+            f"({', '.join(sorted(ALLOWED_TEAMS))})"
+        )
+    if error.code == CODE_INVALID_LIFECYCLE:
+        return (
+            f"{REGISTER_3}: {problem_id} Lifecycle {error.message!r} not in "
+            f"({', '.join(sorted(ALLOWED_LIFECYCLES))})"
+        )
+    if error.code == CODE_INVALID_ALLOW_EXACT:
+        return (
+            f"{REGISTER_4}: {problem_id} Allow_exact {error.message!r} not in "
+            f"({', '.join(sorted(ALLOWED_ALLOW_EXACT))})"
+        )
+    if error.code == CODE_INVALID_STATUS:
+        return (
+            f"{REGISTER_5}: {problem_id} Status {error.message!r} not in "
+            f"({', '.join(sorted(ALLOWED_STATUSES))})"
+        )
+    if error.code == CODE_MISSING_SYMPTOM:
+        return (
+            f"{REGISTER_6}: {problem_id} Symptom {error.message!r} references no S-xx"
+        )
+    return f"{error.code}: {problem_id} {error.message}"
+
+
+def parse_problem_register(content: str) -> list[Problem]:
     """Parse the data rows of a ``knowledge/problems.md`` register.
 
-    Returns one ``ProblemRow`` per well-formed ``P-NNN`` row.  An empty register
-    (or a register with only header/separator/no-entry rows) returns ``[]``.
+    Returns one ``Problem`` per well-formed valid ``P-NNN`` row.  An empty
+    register (or a register with only header/separator/no-entry rows) returns
+    ``[]``.
     """
-    rows: list[ProblemRow] = []
+    rows: list[Problem] = []
     for line in content.splitlines():
         cells = _split_table_row(line)
         if not cells or not _PROBLEM_ID_RE.match(cells[0]):
             continue
         if len(cells) != len(REGISTER_COLUMNS):
             continue
-        rows.append(
-            ProblemRow(
-                id=cells[0],
-                date=cells[1],
-                team=cells[2],
-                symptom=cells[3],
-                system=cells[4],
-                module=cells[5],
-                problem=cells[6],
-                discriminators=cells[7],
-                exclusions=cells[8],
-                evidence=cells[9],
-                root_cause=cells[10],
-                lifecycle=cells[11],
-                allow_exact=cells[12],
-                status=cells[13],
-            )
-        )
+        created = _create_problem(cells)
+        if isinstance(created, DomainError):
+            continue
+        rows.append(created)
     return rows
 
 
@@ -608,57 +661,20 @@ def check_register_rows(content: str) -> list[str]:
         pi = cells[0]
         if len(cells) != len(REGISTER_COLUMNS):
             violations.append(
-                f"REGISTER-1: {pi} (line {lineno}) has {len(cells)} columns, "
+                f"{REGISTER_1}: {pi} (line {lineno}) has {len(cells)} columns, "
                 f"expected {len(REGISTER_COLUMNS)}"
             )
             continue
-        row = ProblemRow(
-            id=cells[0],
-            date=cells[1],
-            team=cells[2],
-            symptom=cells[3],
-            system=cells[4],
-            module=cells[5],
-            problem=cells[6],
-            discriminators=cells[7],
-            exclusions=cells[8],
-            evidence=cells[9],
-            root_cause=cells[10],
-            lifecycle=cells[11],
-            allow_exact=cells[12],
-            status=cells[13],
-        )
-        if row["team"] not in ALLOWED_TEAMS:
-            violations.append(
-                f"REGISTER-2: {pi} Team {row['team']!r} not in "
-                f"({', '.join(sorted(ALLOWED_TEAMS))})"
-            )
-        if row["lifecycle"] not in ALLOWED_LIFECYCLES:
-            violations.append(
-                f"REGISTER-3: {pi} Lifecycle {row['lifecycle']!r} not in "
-                f"({', '.join(sorted(ALLOWED_LIFECYCLES))})"
-            )
-        if row["allow_exact"] not in ALLOWED_ALLOW_EXACT:
-            violations.append(
-                f"REGISTER-4: {pi} Allow_exact {row['allow_exact']!r} not in "
-                f"({', '.join(sorted(ALLOWED_ALLOW_EXACT))})"
-            )
-        if row["status"] not in ALLOWED_STATUSES:
-            violations.append(
-                f"REGISTER-5: {pi} Status {row['status']!r} not in "
-                f"({', '.join(sorted(ALLOWED_STATUSES))})"
-            )
-        if not _SYMPTOM_ID_RE.search(row["symptom"]):
-            violations.append(
-                f"REGISTER-6: {pi} Symptom {row['symptom']!r} references no S-xx"
-            )
+        created = _create_problem(cells)
+        if isinstance(created, DomainError):
+            violations.append(_format_register_error(created, pi))
     return violations
 
 
 def check_identification_consistency(
     verdict: str,
     cited_problem_ids: list[str],
-    register_rows: list[ProblemRow],
+    register_rows: list[Problem],
 ) -> list[str]:
     """Check a verdict against the incident rows it cites.
 
@@ -682,64 +698,65 @@ def check_identification_consistency(
         VERDICT-9: structural cites more than one P-NNN
     """
     violations: list[str] = []
-    incident_rows = [row for row in register_rows if row["team"] == "incident"]
+    identified = IdentificationVerdict.from_cell(verdict)
+    incident_rows = [row for row in register_rows if row.is_incident]
     cited = list(dict.fromkeys(cited_problem_ids))
 
-    if verdict == "pending":
+    if identified is IdentificationVerdict.PENDING:
         return violations
 
-    if verdict == "no_match":
+    if identified is IdentificationVerdict.NO_MATCH:
         if cited:
             violations.append(
-                f"VERDICT-2: no_match must not cite a P-NNN (cited: {cited})"
+                f"{VERDICT_2}: no_match must not cite a P-NNN (cited: {cited})"
             )
         return violations
 
-    if verdict not in ("exact", "structural"):
+    if identified is not IdentificationVerdict.EXACT and identified is not IdentificationVerdict.STRUCTURAL:
         return violations
 
     if not cited:
         violations.append(
-            f"VERDICT-3: {verdict} requires a cited incident P-NNN"
+            f"{VERDICT_3}: {verdict} requires a cited incident P-NNN"
         )
         return violations
 
-    matched = [row for row in incident_rows if row["id"] in set(cited)]
+    matched = [row for row in incident_rows if row.id in set(cited)]
     for cid in cited:
-        if not any(row["id"] == cid for row in incident_rows):
+        if not any(row.id == cid for row in incident_rows):
             violations.append(
-                f"VERDICT-4: cited {cid} is not an incident P-NNN row"
+                f"{VERDICT_4}: cited {cid} is not an incident P-NNN row"
             )
 
-    if verdict == "exact":
+    if identified is IdentificationVerdict.EXACT:
         if len(cited) != 1:
             violations.append(
-                f"VERDICT-5: exact requires exactly one cited P-NNN "
+                f"{VERDICT_5}: exact requires exactly one cited P-NNN "
                 f"(cited: {cited})"
             )
         for row in matched:
-            if row["lifecycle"] != "active":
+            if row.lifecycle is not Lifecycle.ACTIVE:
                 violations.append(
-                    f"VERDICT-6: exact requires an active P-NNN "
-                    f"({row['id']} is {row['lifecycle']})"
+                    f"{VERDICT_6}: exact requires an active P-NNN "
+                    f"({row.id} is {row.lifecycle.value})"
                 )
-            if row["allow_exact"] != "yes":
+            if row.allow_exact is not AllowExact.YES:
                 violations.append(
-                    f"VERDICT-7: exact requires allow_exact=yes "
-                    f"({row['id']} is {row['allow_exact']})"
+                    f"{VERDICT_7}: exact requires allow_exact=yes "
+                    f"({row.id} is {row.allow_exact.value})"
                 )
 
-    if verdict == "structural":
+    if identified is IdentificationVerdict.STRUCTURAL:
         if len(cited) != 1:
             violations.append(
-                f"VERDICT-9: structural requires exactly one cited P-NNN "
+                f"{VERDICT_9}: structural requires exactly one cited P-NNN "
                 f"(cited: {cited})"
             )
         for row in matched:
-            if row["lifecycle"] not in ("candidate", "active", "mitigated"):
+            if not row.is_matchable:
                 violations.append(
-                    f"VERDICT-8: structural requires candidate|active|mitigated "
-                    f"({row['id']} is {row['lifecycle']})"
+                    f"{VERDICT_8}: structural requires candidate|active|mitigated "
+                    f"({row.id} is {row.lifecycle.value})"
                 )
 
     return violations
@@ -756,7 +773,7 @@ def parse_ticket_record(content: str, source: str) -> TicketIdentification:
         "symptom_ids": _coerce_str_list(data.get("symptom_ids")),
         "known_problem_ids": _coerce_str_list(data.get("known_problem_ids")),
         "identification_verdict": str(
-            data.get("identification_verdict", "pending")
+            data.get("identification_verdict", IdentificationVerdict.PENDING.value)
         ).strip(),
     }
 
@@ -782,7 +799,7 @@ def _cited_image_paths(content: str) -> list[str]:
 
 
 def evaluate_pre_close(
-    snapshot: CloseOutSnapshot, register_rows: list[ProblemRow]
+    snapshot: CloseOutSnapshot, register_rows: list[Problem]
 ) -> list[str]:
     """Evaluate pre-collapse readiness from an already-loaded snapshot."""
     violations: list[str] = []
