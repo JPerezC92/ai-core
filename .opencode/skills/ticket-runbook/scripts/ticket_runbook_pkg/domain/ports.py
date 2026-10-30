@@ -5,13 +5,13 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Protocol
 
-from .entities import ProblemRow
+from .entities import Problem
 
 
 class RegisterRowsPort(Protocol):
     """Injected IO port that loads problem-register rows on demand."""
 
-    def __call__(self) -> list[ProblemRow]: ...
+    def __call__(self) -> list[Problem]: ...
 
 
 class ClockPort(Protocol):

@@ -41,11 +41,11 @@ class ValidateRunbookRegisterFirstTests:
         )
         rows = vr.parse_problem_register(_register(row))
         assert len(rows) == 1
-        assert rows[0]["id"] == "P-001"
-        assert rows[0]["team"] == "incident"
-        assert rows[0]["symptom"] == "S-05, S-07"
-        assert rows[0]["lifecycle"] == "candidate"
-        assert rows[0]["allow_exact"] == "no"
+        assert rows[0].id == "P-001"
+        assert rows[0].team == "incident"
+        assert rows[0].symptom == "S-05, S-07"
+        assert rows[0].lifecycle == "candidate"
+        assert rows[0].allow_exact == "no"
 
     def test_register_schema_rejects_bad_lifecycle(self) -> None:
         row = _row(

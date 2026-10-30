@@ -6,7 +6,7 @@ from ticket_runbook_pkg.application import (
     ValidateCloseOut,
     ValidatePreClose,
 )
-from ticket_runbook_pkg.domain.entities import ProblemRow
+from ticket_runbook_pkg.domain.entities import Problem
 from ticket_runbook_pkg.domain.ports import RegisterRowsPort
 from ticket_runbook_pkg.domain.rules import (
     ALLOWED_ALLOW_EXACT,
@@ -92,7 +92,7 @@ __all__ = [
     "AnalysisHeader",
     "CloseOutSnapshot",
     "ModeFindings",
-    "ProblemRow",
+    "Problem",
     "TicketIdentification",
     "ValidateAnalysis",
     "ValidateCloseOut",

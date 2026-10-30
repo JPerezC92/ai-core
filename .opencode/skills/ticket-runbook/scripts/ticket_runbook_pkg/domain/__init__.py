@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .entities import ProblemRow
+from .entities import Problem
 from .rules import (
     ALLOWED_ALLOW_EXACT,
     ALLOWED_IDENTIFICATION_VERDICTS,
@@ -70,7 +70,7 @@ __all__ = [
     "AnalysisHeader",
     "CloseOutSnapshot",
     "ModeFindings",
-    "ProblemRow",
+    "Problem",
     "TicketIdentification",
     "check_concurrent_session",
     "check_identification_consistency",

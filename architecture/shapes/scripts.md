@@ -7,7 +7,7 @@ Scripts, CLIs, and tooling operations, including independently deployed tooling 
 
 ## P1 — Responsibilities
 
-Domain contains data-only constants and pure transformations. Transformations receive typed input data, never perform filesystem/network IO. Application operations take typed parameters and injected domain IO ports and expose `execute()` returning typed domain results/errors. Pure helpers retain the common helper exemption.
+Domain contains data-only constants and pure transformations. Transformations receive typed input data, never perform filesystem/network IO. When a script domain has identity and invariants, it may use the stack entity representation; data-only constants, pure transformations, and TypedDict records remain valid, and not every script type must become a class. Application operations take typed parameters and injected domain IO ports and expose `execute()` returning typed domain results/errors. Pure helpers retain the common helper exemption.
 
 ## P2 — IO and delivery
 

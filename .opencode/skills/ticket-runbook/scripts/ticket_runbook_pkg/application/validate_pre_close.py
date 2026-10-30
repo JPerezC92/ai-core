@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ticket_runbook_pkg.domain.entities import ProblemRow
+from ticket_runbook_pkg.domain.entities import Problem
 from ticket_runbook_pkg.domain.rules import (
     evaluate_pre_close,
 )
@@ -20,7 +20,7 @@ class ValidatePreClose:
     def execute(
         self,
         snapshot: CloseOutSnapshot,
-        register_rows: list[ProblemRow],
+        register_rows: list[Problem],
     ) -> ModeFindings:
         """Evaluate pre-collapse readiness from an already-loaded snapshot."""
         return {

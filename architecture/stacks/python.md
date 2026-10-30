@@ -19,6 +19,7 @@ Domain: data-only constant modules and pure transformation functions; ordinary f
 - Each backend entity exposes `@classmethod create(...)`, mapping the TypeScript static `create()` factory to Python class construction. The factory builds a valid instance by enforcing the entity's existing domain validity rules; this mapping introduces no new validity rules, error semantics, or constructor-access mechanism. Backend entities depend on neither Pydantic nor another framework; this representation choice does not ban dataclasses/Pydantic in unrelated roles.
 - `Protocol`/`ABC` ports speak domain types; typed business errors carry stable codes/messages, not arbitrary exceptions. A missing backend lookup returns an empty result, never throws; the operation decides its domain error.
 - Structured intermediate data uses `TypedDict` or the project's equivalent, not untyped `dict`.
+- An entity is a class with `create()` and behavior. `TypedDict` is structured intermediate or record data, not an entity; do not place behaviorless TypedDicts in `entities.py`.
 
 ### Pydantic models
 

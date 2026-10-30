@@ -18,7 +18,7 @@ from ticket_runbook_pkg.application.validate_scaffold import (
 from ticket_runbook_pkg.application.validate_step import (
     ValidateStep as _ValidateStep,
 )
-from ticket_runbook_pkg.domain.entities import ProblemRow
+from ticket_runbook_pkg.domain.entities import Problem
 from ticket_runbook_pkg.domain.ports import ClockPort
 from ticket_runbook_pkg.domain.rules import (
     REQUIRED_ANALYSIS_FILES,
@@ -141,7 +141,7 @@ def load_step_file_contents(analysis_dir: Path) -> dict[str, str]:
     }
 
 
-def load_register_rows(repo_root: Path) -> list[ProblemRow]:
+def load_register_rows(repo_root: Path) -> list[Problem]:
     """Load ``knowledge/problems.md`` incident rows at the IO boundary."""
     register_path = repo_root / "knowledge" / "problems.md"
     if not register_path.is_file():
