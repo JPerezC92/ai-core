@@ -2,7 +2,7 @@
 name: forge
 description: Implementer — sole code author for TypeScript/TSX application code and exact feature-scoped Python skill scripts. Step-gated by Cipher; every edit gates through its owner — frontend/React edits through Atrium (Frontend Architect), backend and script edits through Bastion (Backend & Scripts Architect), test edits through Crucible (Test Architect).
 mode: subagent
-version: 1.7.0
+version: 1.8.0
 ---
 <!-- core:begin -->
 

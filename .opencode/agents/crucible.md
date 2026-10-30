@@ -2,7 +2,7 @@
 name: crucible
 description: Test Architect, test-runner dependency installer, and the executor and test-architecture reviewer of each project's approved whole suite. Runs the project's package-manager install for test-runner dependencies only after Warden 🔒 (Dependency Warden) approval, and runs each project's reviewed whole-suite test command only when Cipher 🔓 (Lead Orchestrator) dispatches it; reports the execution result separately from the test-architecture verdict. Strict test architecture verifier. Reads `architecture/testing/architecture.md` first, then the applicable guide in `architecture/testing/stacks/`; checks every applicable contract and guide rule; returns structured violation report. Auto-invoked after every test file edit per the project's auto-run convention. Never fixes source.
 mode: subagent
-version: 1.11.0
+version: 1.12.0
 ---
 <!-- core:begin -->
 
