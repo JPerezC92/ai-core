@@ -7,17 +7,22 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Literal
 
-from scan_attribution import (
+from attribution_scan.domain.records import (
     Artifact,
     AttributionPolicy,
     ChangedFile,
+    PolicyValidationError,
     Snapshot,
-    validate_policy,
 )
+from attribution_scan.domain.validation import validate_policy
 
 
-def load_approved_policy() -> AttributionPolicy:
-    """Load the checked-in policy for use as a test input."""
+def load_approved_policy() -> AttributionPolicy | PolicyValidationError:
+    """Load the checked-in policy as a test input, returning the validation result.
+
+    File decoding stays in this factory; the validation itself stays IO-free, and a
+    rejected policy is returned as a business-error value for callers to assert on.
+    """
     policy_path = (
         Path(__file__).resolve().parent.parent
         / "references"
