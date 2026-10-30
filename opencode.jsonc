@@ -91,6 +91,19 @@
                 { "action": "shell", "resource": "git push origin --delete refs/heads/* -*", "effect": "deny" },
                 { "action": "shell", "resource": "git push origin --delete refs/heads/*\t-*", "effect": "deny" }
             ]
+        },
+        // Warden audit envelope: deny-all first, then the explicit audit
+        // commands. Agent rules load last, so this closes the global shell
+        // allow. An out-of-envelope need returns BLOCKED to Cipher instead of
+        // expanding the audit.
+        "warden": {
+            "permissions": [
+                { "action": "shell", "resource": "*", "effect": "deny" },
+                { "action": "shell", "resource": "uv audit*", "effect": "allow" },
+                { "action": "shell", "resource": "uv lock --check*", "effect": "allow" },
+                { "action": "shell", "resource": "uv tree --frozen*", "effect": "allow" },
+                { "action": "shell", "resource": "uv pip check*", "effect": "allow" }
+            ]
         }
     },
     "instructions": [

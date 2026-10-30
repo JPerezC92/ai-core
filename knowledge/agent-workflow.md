@@ -20,6 +20,7 @@ These uncertainty and outcome controls apply to every task, including small and 
 #### Step reporting and transitions
 
 - **Step report:** after each completed step, report feature/task identity; step number and name; state; result; evidence pointer; next action.
+- **Compact combined report:** contiguous preparatory or read-only steps may be reported once, carrying each step's number, name, state, result, evidence pointer and next action. Never combine across an authorization pause, an edit checkpoint, or an independent acceptance gate, and never omit a pending check or blocker.
 - **States:** ✅ COMPLETE · 🟡 IN PROGRESS · 🚧 BLOCKED · ⏭️ NOT APPLICABLE/SKIPPED. The full vocabulary and presentation rules live in `knowledge/agents.md` `### Message presentation`.
 - **Continuation:** continue to the next ready task inside the active authorized scope; task completion is not a stop. A blocker is an unmet prerequisite preventing the affected operation: name its resolution owner and next action. Resolve coordinator/agent-resolvable blockers within existing authority; only a genuine user-only decision or permission requires a user stop with the exact user action. If the authorized scope is exhausted and verified, say `ALL FINISHED` with delivered scope, verification, deferred items, and next options; do not select unrelated work.
 - **Skipped steps:** a skipped or inapplicable step states its reason. A checkpoint or owner-gate return (`AWAITING_REVIEW`, `BLOCKED`) is not step completion.
@@ -38,7 +39,7 @@ Apply `knowledge/release.md`. That file owns PR release readiness and post-revie
 
 ### Task-specific navigation
 
-Use the ODD classification and authorization rules above before choosing a change route. Start with the assignment's exact source paths, relevant dependencies, applicable runtime and skill; explore further only where the task or an unresolved fact requires it. This is the workflow router, not another task tracker.
+Use the ODD classification and authorization rules above before choosing a change route. Start with the assignment's exact source paths, relevant dependencies, applicable runtime and skill; explore further only where the task or an unresolved fact requires it. Content already current in the run — injected instructions, a file read in this session, an accepted agent return, an existing artifact — satisfies an ordinary reading requirement for that content; re-read it only when it changed, when the available evidence is incomplete, or when its owner requires a fresh read. Search the named path first and expand only for an identified dependency or evidence gap. Mandatory full-guide, full-file and fresh-read obligations are unaffected and remain binding. This is the workflow router, not another task tracker.
 
 | Task | Applicable read-pointers and boundary |
 |---|---|
