@@ -9,6 +9,7 @@ CODE_INVALID_LIFECYCLE = "invalid_lifecycle"
 CODE_INVALID_ALLOW_EXACT = "invalid_allow_exact"
 CODE_INVALID_STATUS = "invalid_status"
 CODE_MISSING_SYMPTOM = "missing_symptom_reference"
+CODE_ILLEGAL_TRANSITION = "illegal_transition"
 
 
 @dataclass(frozen=True)
