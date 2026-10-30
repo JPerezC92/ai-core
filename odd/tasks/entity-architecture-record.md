@@ -1,10 +1,11 @@
 # Entity architecture record
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-10-29
+> **Closed:** 2026-10-29
 > **Objective:** Record the real `Problem` entity in the architecture guides and ADR 0004 so docs match the code.
-> **Branch:** N/A — Herald 📯 (Release Manager) creates or continues a branch at the first commit
+> **Branch:** feat/ticket-runbook/add-problem-entity
 > **Delivery:** one documentation slice; forecast ~80 authored additions + ~40 deletions, generated files excluded; slice 1 = ADR 0004 evidence + Python/scripts entity-vs-record notes. No code. ADR 0005 unchanged.
 > **Runner:** `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feature.py odd/tasks/entity-architecture-record.md`
 
@@ -18,9 +19,9 @@
 
 ## Tasks
 
-- T1 | S2, S3, S4 | delegated (Scribe ✍️ owns documentation; architecture core and source-local ADR) — Scribe ✍️ (Docs & Problems Manager) | open | commit: pending
-- T2 | S1, S2, S3, S4, S5 | delegated (independent semantic review; reviewer must not have authored the docs) — Sentinel 🛡️ (Quality Guardian) | open | commit: pending
-- T3 | S1, S2, S3, S4, S5 | inline (coordinator validates, accepts, closes after work-unit commit) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
+- T1 | S2, S3, S4 | delegated (Scribe ✍️ owns documentation; architecture core and source-local ADR) — Scribe ✍️ (Docs & Problems Manager) | done | commit: 2f7255c5aabbebe9ee2e7467850b5459048b23c1
+- T2 | S1, S2, S3, S4, S5 | delegated (independent semantic review; reviewer must not have authored the docs) — Sentinel 🛡️ (Quality Guardian) | done | commit: 2f7255c5aabbebe9ee2e7467850b5459048b23c1
+- T3 | S1, S2, S3, S4, S5 | inline (coordinator validates, accepts, closes after work-unit commit) — Cipher 🔓 (Lead Orchestrator) | done | commit: 2f7255c5aabbebe9ee2e7467850b5459048b23c1
 
 ## Log
 
@@ -29,3 +30,4 @@
 - L3 — 2026-10-29 — Gap: `problem-register-entity` shipped code only. ADR 0004 is still `Proposed` and still describes functional `domain/` modules as the local observation without `Problem`. Python `Domain and ports` has entity syntax but does not forbid naming TypedDicts as entities. Scripts P1 names constants and pure transformations only. ADR 0005 stays untouched. ADR 0004 is not silently `Accepted`.
 - L4 — User authorization, 2026-10-29, verbatim: "GO"
 - L5 — 2026-10-29 — T1 scribe1 wrote ADR 0004 evidence, python.md entity-vs-TypedDict bullet, scripts.md P1 entity permission. Sentinel 🛡️ (Quality Guardian) sentinel1 [PASS], zero open. ADR 0004 remains Proposed. ADR 0005 untouched. No code.
+- L6 — Close: 2026-10-29 — T1–T3 done against `2f7255c5aabbebe9ee2e7467850b5459048b23c1` on `feat/ticket-runbook/add-problem-entity`. ADR 0004 records `Problem`; python.md and scripts.md P1 distinguish entity vs TypedDict. ADR 0004 still Proposed. ADR 0005 unchanged. No push, PR, merge, or tag.
