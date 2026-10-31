@@ -1,8 +1,9 @@
 # Directory-root distribution clearance
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-10-30
+> **Closed:** 2026-10-30
 > **Objective:** Clear the two agent directories wholesale so `distribution-clearance.json` carries one row per directory instead of one row per agent file.
 > **Branch:** main
 > **Delivery:** single work-unit commit; forecast ≈20 authored additions + ≈130 deletions (≈150 changed for the whole feature, far below the ~400-line strategy trigger), so no slice split is needed. Slices: definition/registry (T1→T2), skill instruction (T3), README (T4), verification (T5).
@@ -21,11 +22,11 @@
 
 ## Tasks
 
-- T1 | S4, S7 | delegated (format-owner prose; the definition must change first) — Scribe ✍️ (Docs & Problems Manager) | open | commit: pending
-- T2 | S2, S3 | inline (registry data edit validated mechanically; precedent `legacy-user-story-retirement` L8, where Cipher 🔓 (Lead Orchestrator) edited clearance rows directly — no prose authoring) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T3 | S5 | delegated (skill instruction prose plus version bump; Vault 🔐 (Catalog Steward) skill-quality gate applies) — Scribe ✍️ (Docs & Problems Manager) | open | commit: pending
-- T4 | S6 | delegated (README prose) — Scribe ✍️ (Docs & Problems Manager) | open | commit: pending
-- T5 | S2, S3, S8 | delegated (whole-suite execution belongs to the test-architecture owner; the focused registry-conformance test and the equivalence probe stay coordinator-run) — Crucible 🔥 (Test Architect) | open | commit: pending
+- T1 | S4, S7 | delegated (format-owner prose; the definition must change first) — Scribe ✍️ (Docs & Problems Manager) | done | commit: f6b8f1f
+- T2 | S2, S3 | inline (registry data edit validated mechanically; precedent `legacy-user-story-retirement` L8, where Cipher 🔓 (Lead Orchestrator) edited clearance rows directly — no prose authoring) — Cipher 🔓 (Lead Orchestrator) | done | commit: f6b8f1f
+- T3 | S5 | delegated (skill instruction prose plus version bump; Vault 🔐 (Catalog Steward) skill-quality gate applies) — Scribe ✍️ (Docs & Problems Manager) | done | commit: f6b8f1f
+- T4 | S6 | delegated (README prose) — Scribe ✍️ (Docs & Problems Manager) | done | commit: f6b8f1f
+- T5 | S2, S3, S8 | delegated (whole-suite execution belongs to the test-architecture owner; the focused registry-conformance test and the equivalence probe stay coordinator-run) — Crucible 🔥 (Test Architect) | done | commit: f6b8f1f
 
 ## Log
 
@@ -40,3 +41,4 @@
 - L9 — Independent semantic review round 1 (Sentinel 🛡️ (Quality Guardian), `[FAIL]`, 3 findings, all fixed under fix-first) and their dispositions. F1 `distribution-clearance.definition.md:34`: the Expansion bullet still said "all others copy byte-for-byte", true only while every root was `raw` and false for the two new region-default agent roots — corrected by Scribe to "every other file uses the root's default `mode` — `region` delivers only that file's core region, `raw` copies it byte-for-byte", with the rest of the bullet unchanged. F2 (this document, L5): the equivalence proof leaned on a temporary snapshot instead of a durable input — L5 now binds the pre-change input to the committed blob `74f4167:distribution-clearance.json` and states the reproduction recipe; the temporary scripts are labelled convenience copies. F3 (this document, L5): quantitative word counts carried no measuring command and 4,976 vs 4,975 was unexplained — L5 now names both instruments (Vault's PowerShell `Measure-Object -Word`; my `str.split()` count) and attributes the one-token gap to tokenization rather than content. Sentinel recorded no finding against the registry, the SKILL.md wording or version, the README line, the S8 boundary, or the instruction-rewrite accounting.
 - L10 — Note on one blocked check: a whole-suite dispatch also asked Crucible 🔥 (Test Architect) to measure the SKILL.md word count with a piped PowerShell expression, which the shell-command contract forbids and its permission set excludes; the measurement was therefore performed by Cipher 🔓 (Lead Orchestrator) with the interpreter instrument recorded in L5, and no permission was widened to accommodate the command.
 - L11 — Independent semantic review round 2 (Sentinel 🛡️ (Quality Guardian), `[FAIL]`, 1 new LOW finding; round-1 findings F1–F3 confirmed closed on the current text) and its disposition. Finding: this document's L5 attributed `rows: 35` to both sides of the equivalence comparison although the pre-change side is 66 rows and L2/L5 both say so — corrected to "rows 66 → 35; `expanded: 222` on both sides with `identical: True`". Sentinel independently reproduced the expansion on the current registry (`rows 35, roots 12, expanded 222`, raw 163 / region 58 / merge 1) and re-verified S1–S8, the header, `S#`/`T#`/`L#` consistency, `L1` verbatim, the S8 boundary, the instruction-rewrite accounting, and discoverability, with the validator reporting `ok`. It could not reproduce the pre-commit side or the suite results inside its read-only/no-git envelope; those remain Crucible's and my own recorded runs in L5.
+- L12 — Close: observable outcome verified separately from tests and reviews: `distribution-clearance.json` at commit `f6b8f1f` clears `.opencode/agents/` and `agents/` as two `region` directory roots (35 rows, 12 roots) and its expansion still yields the same 222-file path→mode map, so every agent ships exactly as before while the registry no longer carries per-file agent rows; `parse_clearance` accepts the document at `schema: 1`. Independent semantic acceptance: Sentinel 🛡️ (Quality Guardian) round 3 `[PASS]`, zero open findings, across the original request (L1), the follow-up (L7), S1–S8, the delivered text, the obligation accounting (L6), and evidence honesty; rounds 1–2 findings F1–F4 all closed and re-verified. Skill-quality gate: Vault 🔐 (Catalog Steward) `[PASS]` round 2. Suite: Crucible 🔥 (Test Architect) `887 passed, 6 skipped` exit 0 on the final candidate. Work-unit commit `f6b8f1f` on local `main` (5 files, +65/−117); not pushed, no PR, no tag, no destination mutation. Deferred intentionally: renaming the internal `SkillRootEntry`/`expand_skill_root` symbols to directory-root vocabulary is documentation-only terminology in code S8 excludes from this scope — recorded here rather than filed as debt, since no behaviour or obligation depends on the name.
