@@ -13,6 +13,10 @@ Before opening a PR, Cipher 🔓 (Lead Orchestrator) assembles and verifies one 
 
 After each review round, Cipher 🔓 (Lead Orchestrator) uses the canonical combined rendered chat summary or, only when eligible, compact ready message in `knowledge/agents.md` `### PR review findings (adjudication)`. That owner defines finding presentation, accounting and readiness conditions; a raw findings list is not an acceptable handoff. Its fix-first rule, deferral authority, refutation evidence and loop cap remain unchanged, as do all existing gates; no tracker or additional approval step is introduced.
 
+### Post-merge reporting
+
+After merge, verify and report the outcome; do not automatically edit tracked files or create bookkeeping commits solely to record merge or cleanup facts. A separately requested post-merge documentation change remains authorized through the normal task-branch route, subject to existing authority and gates. Commit and cleanup mechanics remain with Herald 📯 (Release Manager) in `.opencode/agents/herald.md`; this timing rule changes no cleanup authorization or safeguards.
+
 ### Execution owners
 
 - Git (branch, push, PR, delete): Herald 📯 (Release Manager)
