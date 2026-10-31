@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-10-25
+- **Amended:** 2026-10-30 — The per-file `region` clearance and protected-core-plus-project-extensions model for `architecture/` is retired in favour of whole-file `raw` distribution with no project region, per ADR 0006 and `odd/tasks/architecture-whole-file-distribution.md`. The decision body below is unchanged.
 
 ## Context
 

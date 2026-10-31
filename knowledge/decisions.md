@@ -60,7 +60,7 @@ An architecture owner states the current rule only, so it cannot also carry why 
 
 ### Discoverability
 
-A source-local record is linked from the `project` region of the project's architecture navigation; the shared core never links a source-local record. A record with no route from navigation is undiscoverable and treated as incomplete.
+Link a source-local record from the project's own navigation — the `project` region of its architecture navigation or, when that navigation ships whole-file to destinations, a source-local navigation document. The shared core never links a source-local record. Treat a record with no route from navigation as undiscoverable and incomplete.
 <!-- core:end -->
 
 <!-- project:begin -->
@@ -68,5 +68,5 @@ A source-local record is linked from the `project` region of the project's archi
 
 ### Decision records
 
-This source project's decision records live in `docs/architecture/decisions/`, created from `_template.md`. They are source-local rationale, not distributed shared dependencies, and their links belong in `architecture/README.md` → Project extensions.
+This source project's decision records live in `docs/architecture/decisions/`, created from `_template.md`. They are source-local rationale, not distributed shared dependencies, and their links belong in `docs/architecture/README.md`.
 <!-- project:end -->
