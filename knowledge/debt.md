@@ -25,7 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 8.**
+**Open debts: 10.**
 
 ### DEBT-021 — ODD execution-gate bypass
 
@@ -100,5 +100,23 @@ Each entry MUST include:
 - **Resolution criteria:** The architecture content model is stated once as a contract — which layer owns an agnostic rule, and what a language guide must do instead of restating it; contract sections carry stable rule IDs on the implementation and testing sides alike; every stack guide's mapping or parity table cites those IDs and states only the language-specific achievement; no guide restates a contract requirement verbatim; the two known drifts are mapped by ID so their `Covered` claims become verifiable; Bastion 🧱 (Backend & Scripts Architect) and Crucible 🔥 (Test Architect) return `[PASS]` on the result.
 - **Explicit deferral decision:** User instruction 2026-10-31: "there is a real problem and i think we will add it as a debt … u are trying to duplicated a instruction rigth now that tells me there isnt a clear documentation of how is organsed the architecture content, y we duplicated ther intruction what happend when u try to modify 1? u will modify the base and alll the specific languaje files". The user accepted the content-model debt and directed that it be registered rather than repaired inside the distribution migration.
 
-**ID to use for the next new debt:** `DEBT-031`. This is an allocation counter, not an open debt.
+### DEBT-031 — ADR 0006 introduced without authorization and left with an inaccurate status
+
+- **ID:** DEBT-031
+- **Date:** 2026-10-31
+- **Description:** While delivering `odd/tasks/architecture-whole-file-distribution.md`, Cipher 🔓 (Lead Orchestrator) created a new decision record, `docs/architecture/decisions/0006-architecture-whole-file-distribution.md`, as an inferred consequence of the repository's decision lifecycle (`knowledge/decisions.md`) and ADR 0003's recorded region model. The user never asked for it. The record was then listed inside a plan summary whose only stated open question was a different one, so the user's `"A"` answer was treated as covering its creation — a silent inference. Finally its status transition was presented as a delivery blocker, although the operative rule was already in force in `architecture/README.md` §Contract boundaries and nothing in the delivery depended on the record's status. The record therefore remains `Proposed` while its rule is enforced by the architecture owners, so the label is inaccurate (`knowledge/decisions.md:33` "recorded, not in force" versus the owner text already imposing the rule).
+- **Direct evidence:** Conversation record 2026-10-31 including the user's question "why we are talking about ADR 0006 acceptance ??? when it was introduced as a todo in the task?"; `odd/tasks/architecture-whole-file-distribution.md` S11, T8, T14, L14, L15; `docs/architecture/decisions/0006-architecture-whole-file-distribution.md:3` (`Status: Proposed`) and `:59`; `knowledge/decisions.md:33–34`.
+- **Resolution criteria:** The record's fate is an explicit user decision recorded verbatim, not an agent inference — either `Accepted` with the approval text recorded, or removed with its content folded into ADR 0003's amendment. New decision records are proposed to the user as their own explicit choice before they become feature specs. A record's status is never presented as a delivery gate for work whose operative rule already lives in its owner.
+- **Explicit deferral decision:** User instruction 2026-10-31: "add the thing about ADR 0006 as a debt". The user deferred the record's disposition and directed that it be registered instead of settled now.
+
+### DEBT-032 — Reviewer dispatched without prior coordinator self-verification
+
+- **ID:** DEBT-032
+- **Date:** 2026-10-31
+- **Description:** On the same feature, Cipher 🔓 (Lead Orchestrator) dispatched the corpus auditor three times and re-gated an owner reviewer twice, each round verifying corrections that Cipher could and should have verified itself first. Findings raised by the audit were produced by Cipher's own bookkeeping — a `done` task without a commit reference, five specs missing acceptance clauses, a Log entry that merged a verbatim correction with its rationale, undated Log entries, a task ID in the `S#` column, an inaccurate line reference in a debt entry, and a delivery claim that predated the commits. Each round therefore measured the coordinator's proofreading rather than the reviewer's judgment, and the review loop went to its cap on a defect that a single self-check would have caught.
+- **Direct evidence:** Conversation record 2026-10-31 including the user's correction "about sentinel stop just raising it without a double chek of the fixes i presume u were lefting issues and calling him again and again, verify for issues then when u are sure call him again"; Sentinel 🛡️ (Quality Guardian) audit rounds 1–3 for `odd/tasks/architecture-whole-file-distribution.md` (findings S1–S6, then the narrowed S2 plus missing acceptance clauses and merged Log entry, then F1–F2); Crucible 🔥 (Test Architect) rounds 1–2 (C1–C4, then C3/C4 verification).
+- **Resolution criteria:** Before any owner-gate or audit dispatch, the coordinator runs its own mechanical verification of the candidate — document anatomy, acceptance-clause presence, Log separation and dating, evidence accuracy including file:line references, registry consistency, and the change's own observable predicates — and fixes what it finds. Reviewers are dispatched on a self-checked candidate, so their rounds judge substance rather than coordinator proofreading. Demonstrated on the next review dispatch of this feature and the next non-small feature.
+- **Explicit deferral decision:** User instruction 2026-10-31: "about sentinel stop just raising it without a double chek of the fixes i presume u were lefting issues and calling him again and again, verify for issues then when u are sure call him again". The user accepted the process debt and directed self-verification before the next review dispatch.
+
+**ID to use for the next new debt:** `DEBT-033`. This is an allocation counter, not an open debt.
 <!-- project:end -->
