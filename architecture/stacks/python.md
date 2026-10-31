@@ -1,4 +1,3 @@
-<!-- core:begin -->
 # Python implementation guide
 
 > **Status:** reference
@@ -75,8 +74,3 @@ Read `architecture/testing/architecture.md` and `architecture/testing/stacks/pyt
 ## Open decisions
 
 1. No Python HTTP framework, repository library, error registry layout, or serializer framework was selected in the source. A future selected adapter needs its documented mapping; CLI delivery is not an unexplained substitute for a web framework.
-<!-- core:end -->
-
-<!-- project:begin -->
-## Project extensions
-<!-- project:end -->

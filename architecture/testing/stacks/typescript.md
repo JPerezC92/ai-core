@@ -1,9 +1,7 @@
-<!-- core:begin -->
 # TypeScript testing guide
 
 > **Status:** reference
 > **Stack:** TypeScript/TSX; NestJS-style backend and React frontend reference architecture
-> **Guide owner:** Crucible 🔥 (Test Architect)
 > **Reviewed:** 2026-10-25 — `testing-architecture-layering`; entity-construction clause 2026-10-30
 > **Contract:** `architecture/testing/architecture.md`
 
@@ -12,6 +10,8 @@
 This guide applies to TypeScript and TSX backend and frontend code. It is a reference architecture: Vitest, supertest, React, and Playwright are reference choices, not destination-wide bindings. A destination owns its package manager, runner, and framework configuration in project-owned files.
 
 It covers the backend use-case, parser, repository, and HTTP entry-point boundaries, and the frontend component/hook and service boundaries. It does not cover another language, a non-React UI, or a destination-specific framework adapter that has no selected guide.
+
+A destination may replace the reference tool names, paths, or framework adapters with its own stack. It must preserve the contract levels, boundaries, returned-business-failure rule, one-behavior rule, factory rule, and execution/verdict separation.
 
 ## Test pyramid mapping
 
@@ -182,7 +182,7 @@ test.afterEach(async () => {
 |---|---|---|
 | Applicability and ownership | Covered | TypeScript-specific framework names are reference choices; the destination owns bindings. |
 | Test pyramid mapping | Covered | Backend and frontend map to the same three levels. |
-| File organization | Covered | Exact paths are reference layout; a destination may adapt them in its project extension. |
+| File organization | Covered | Exact paths are reference layout; a destination may adapt them in its own guide. |
 | Unit tests | Covered | Use-case, parser, and component/hook units are defined. |
 | Integration tests | Covered | Repository and service adapter boundaries are defined. |
 | End-to-end tests | Covered | HTTP and browser entry points are defined. |
@@ -194,11 +194,3 @@ test.afterEach(async () => {
 ## Open decisions
 
 None. Destination-specific runner and framework bindings remain project-owned; they are not open decisions in this reference guide.
-
-<!-- core:end -->
-
-<!-- project:begin -->
-## Project extensions
-
-A destination may replace the reference tool names, paths, or framework adapters with its selected stack. It must preserve the levels, boundaries, returned-business-failure rule, one-behavior rule, factory rule, and execution/verdict separation.
-<!-- project:end -->

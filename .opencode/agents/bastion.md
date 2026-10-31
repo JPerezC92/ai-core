@@ -84,7 +84,7 @@ The applicable `architecture/stacks/python.md` is read in full once under `#### 
 
 ##### Layers (Python) — domain, application, infrastructure
 
-Read `architecture/stacks/python.md` → `Structure and dependency mapping`, `Domain and ports`, `Application operations`, and `Adapters and delivery`. This project's concrete Python module roles remain in `## Project extensions` → `### Local Configuration`.
+Read `architecture/stacks/python.md` → `Structure and dependency mapping`, `Domain and ports`, `Application operations`, and `Adapters and delivery`. Concrete Python module roles are destination-owned configuration; the guide carries no project extension region.
 
 ##### PYTHON BACKEND — backend tooling paths, ticket tooling, and feature-scoped skill scripts
 

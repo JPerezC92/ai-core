@@ -7,6 +7,7 @@ This directory holds AICore's explanatory decisions, historical accounting and r
 | Saved research | [research/README.md](research/README.md) | Single catalog of reusable evidence; topic/source provenance, applicability and freshness, not execution approval. |
 | New research-record format | [research/_template.md](research/_template.md) | Single template for new domain/topic records; existing multi-file publications retain their supporting evidence. |
 | Architecture decisions | [architecture/decisions/](architecture/decisions/) | Source-local ADRs explaining decisions; current definitions remain in `architecture/`. |
+| Architecture selections and rationale | [architecture/README.md](architecture/README.md) | Source-local record navigation for current selections, decision records, and optional history; not distributed, because `architecture/` ships whole-file. Explanation only, never a shared dependency or a second architecture authority. |
 | ODD adoption assessment | [architecture/odd-adoption-status.md](architecture/odd-adoption-status.md) | Informational upstream/local alignment and dated delivery evidence; not workflow authority, an adoption certificate or a task tracker. |
 | Architecture history | [architecture/history/](architecture/history/) | Extraction accounting and prior historical records; preserved source-local history, not current implementation conformance or destination approval. |
 
