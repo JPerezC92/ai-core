@@ -27,24 +27,24 @@
 
 Unit A — distribution.
 
-- T1 | S1 | inline (mechanical marker removal, one correct answer, no judgment) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T2 | S1, S2, S5 | delegated (relocation plus shared-contract prose; Scribe authors, Bastion gates) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T3 | S5, S6 | delegated (testing-document prose under Crucible's owner gate) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T4 | S7 | inline (registry data change) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T5 | S7 | delegated (definition-document prose) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T6 | S8 | delegated (root reuse-guide prose) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T7 | S10 | inline (one stale pointer in a shared agent spec) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
+- T1 | S1 | inline (mechanical marker removal, one correct answer, no judgment) — Cipher 🔓 (Lead Orchestrator) | done | commit: eefa29c
+- T2 | S1, S2, S5 | delegated (relocation plus shared-contract prose; Scribe authors, Bastion gates) — Scribe ✍️ (Docs & Problems Manager) | done | commit: eefa29c
+- T3 | S5, S6 | delegated (testing-document prose under Crucible's owner gate) — Scribe ✍️ (Docs & Problems Manager) | done | commit: eefa29c
+- T4 | S7 | inline (registry data change) — Cipher 🔓 (Lead Orchestrator) | done | commit: eefa29c
+- T5 | S7 | delegated (definition-document prose) — Scribe ✍️ (Docs & Problems Manager) | done | commit: eefa29c
+- T6 | S8 | delegated (root reuse-guide prose) — Scribe ✍️ (Docs & Problems Manager) | done | commit: eefa29c
+- T7 | S10 | inline (one stale pointer in a shared agent spec) — Cipher 🔓 (Lead Orchestrator) | done | commit: eefa29c
 
 Unit B — records.
 
-- T8 | S11 | delegated (decision-record authoring) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T9 | S9 | delegated (shared-rule amendment with obligation accounting) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T10 | all | delegated (owner gate: common contract, backend/scripts shapes, implementation guides, README) — Bastion 🧱 (Backend & Scripts Architect) | in progress | commit: pending
-- T11 | S5, S6 | delegated (owner gate: testing contract and testing guides; depends on T3's authored slice, not on its ID) — Crucible 🔥 (Test Architect) | in progress | commit: pending
-- T12 | S5, S6 | delegated (owner gate: frontend shape and React guide; depends on T3's authored slice) — Atrium 🏛️ (Frontend Architect) | in progress | commit: pending
+- T8 | S11 | delegated (decision-record authoring) — Scribe ✍️ (Docs & Problems Manager) | done | commit: ffe8971
+- T9 | S9 | delegated (shared-rule amendment with obligation accounting) — Scribe ✍️ (Docs & Problems Manager) | done | commit: ffe8971
+- T10 | all | delegated (owner gate: common contract, backend/scripts shapes, implementation guides, README) — Bastion 🧱 (Backend & Scripts Architect) | done | commit: eefa29c
+- T11 | S5, S6 | delegated (owner gate: testing contract and testing guides; depends on T3's authored slice, not on its ID) — Crucible 🔥 (Test Architect) | done | commit: eefa29c
+- T12 | S5, S6 | delegated (owner gate: frontend shape and React guide; depends on T3's authored slice) — Atrium 🏛️ (Frontend Architect) | done | commit: eefa29c
 - T13 | S9, S11 | delegated (corpus audit: ADR lifecycle and shared-rule accounting) — Sentinel 🛡️ (Quality Guardian) | in progress | commit: pending
 - T14 | S11 | inline (record the user's explicit ADR 0006 approval verbatim, then close) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T15 | S3, S11 | delegated (remediate owner-gate findings C3, C4, S2, S3; Scribe authors, the gates re-review) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
+- T15 | S3, S11 | delegated (remediate owner-gate findings C3, C4, S2, S3; Scribe authors, the gates re-review) — Scribe ✍️ (Docs & Problems Manager) | done | commit: eefa29c/ffe8971
 
 ## Log
 
@@ -62,3 +62,4 @@ Unit B — records.
 - **L12** — 2026-10-30 — owner-gate results at the current head (no commit; verdicts are content-bound, not commit-bound). Bastion 🧱 `[PASS]`, zero findings. Atrium 🏛️ `[PASS]`, zero findings. Crucible 🔥 `[FAIL]`, 4 findings: C1 (typescript guide omits the contract's hermeticity rule) and C2 (typescript guide omits the missing-evidence rule) are pre-existing parity defects outside this feature's specs — held for a user decision; C3 (`"the document owner"` referent retired with the `Guide owner` field) and C4 (stale parity-evidence rows after the guide edits) fixed under T15. Sentinel 🛡️ `[FAIL]`, 6 findings: S1 (`done` task without a commit), S4 (S9 accounting absent from the Log), S5 (`T3` in the `S#` column), S6 (undated Log entries) fixed in this record; S2 (ADR 0006 claimed one work unit and a recorded commit) and S3 (ADR 0006 missing from the source-local ADR index) fixed under T15. Re-review of Crucible and Sentinel is held until the C1/C2 decision, because an unresolved finding cannot return `[PASS]`.
 - **L13** — 2026-10-31 — user correction, verbatim: "there is a real problem and i think we will add it as a debt think of it and as i remenber architecture have a base files containing agnostic instruction, and the files for specific languages explain the how to of the base agnostic instruction because diferent languajes can have diferent ways of how the agnostic instruction can be achieved. u are trying to duplicated a instruction rigth now that tells me there isnt a clear documentation of how is organsed the architecture content, y we duplicated ther intruction what happend when u try to modify 1? u will modify the base and alll the specific languaje files".
 - **L14** — 2026-10-31 — disposition and evidence for L13: C1 and C2 are reclassified as pre-existing content-model defects outside this change's scope and routed to `knowledge/debt.md` DEBT-030 under L13's explicit deferral authority, instead of being repaired here. The repair Crucible 🔥 (Test Architect) prescribed was rejected because copying a contract requirement into a second language guide gives that requirement a third home; the correct repair is a citation mechanism — stable rule IDs on the testing side — which is DEBT-030's resolution criterion. Evidence for the distinction: `architecture/stacks/_template.md:36–47` gives implementation guides stable obligation IDs plus a mandatory mapping table, while the testing side has none, so its `Covered` verdict cites nothing. Crucible 🔥 (Test Architect) re-gated and returned `[PASS]` with zero findings against the change. Basis for that verdict, stated explicitly: C1 and C2 are pre-existing defects outside this change's specs, so they are not findings against this change; they are routed to DEBT-030, which is non-blocking under `knowledge/debt.md:19` because it carries direct evidence, resolution criteria, and this explicit deferral decision. Review identity: Crucible 🔥 (Test Architect), scope `architecture/testing/architecture.md` and the three guides under `architecture/testing/stacks/` plus this feature's S5/S6 delivery, result `[PASS]`. The finding was real; the prescribed fix was wrong.
+- **L15** — 2026-10-31 — delivery evidence: Herald 📯 (Release Manager) created branch `docs/architecture/whole-file-distribution` from `main` at `75c9537` and committed both work units, Unit A `eefa29c5f42816effc18d69f2fe3c7d110126e68` (20 paths) and Unit B `ffe8971f436a3a78ea3d7eb63919510d19e7670f` (5 paths); the working tree was clean before the record update, and nothing was pushed, merged, or tagged. This resolves Sentinel 🛡️ (Quality Guardian)'s F1 factually rather than by wording: F1's premise was that ADR 0006 claimed delivery across two work units while no delivering commit existed; both commits now exist on the feature branch, so the claim is accurate and no third wording patch is made. Sentinel's F2 is addressed in L14 by naming the `[PASS]` basis and the review identity. Sentinel's audit remains `in progress` under the loop cap (`knowledge/agents.md` `### PR review findings (adjudication)`), and the exit is a user decision, not an agent one.
