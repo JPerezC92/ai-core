@@ -12,7 +12,7 @@ The document carries `"schema": 1`. The version stays **v1** through every compa
 { "schema": 1, "cleared": { "<repo-relative path>": <record>, ... } }
 ```
 
-`cleared` keys are unique repo-relative paths. A key ending in `/` is a **skill root**; every other key is a **file**.
+`cleared` keys are unique repo-relative paths. A key ending in `/` is a **directory root**; every other key is a **file**.
 
 ## Record kinds
 
@@ -22,18 +22,16 @@ The document carries `"schema": 1`. The version stays **v1** through every compa
 | Harness config | `opencode.jsonc` | `{"mode": "merge"}` | top-level JSON(C) key merge, destination-only keys preserved; the `mcp` key merges by server name, keeping destination-only MCP servers and making a same-named entry core-wins |
 | Knowledge documents | `knowledge/*.md` | `{"mode": "region"}` | core region only (core/project markers) |
 | Architecture documents | explicit files under `architecture/` | `{"mode": "region"}` | core region only (core/project markers); common/shape contracts, implementation and testing templates/guides, and navigation; tools remain destination-owned |
-| Agent specs | `.opencode/agents/*.md` | `{"mode": "region"}` | core region only (core/project markers) |
-| Persona profiles | `agents/*/profile.md` | `{"mode": "region"}` | core region only |
-| Skill roots | `.opencode/skills/<name>/` | `{"mode": <default>, "region_files": [<paths>]?}` | see below |
+| Directory roots | `.opencode/skills/<name>/`, `.opencode/agents/`, `agents/` | `{"mode": <default>, "region_files": [<paths>]?}` | root `mode` is the default mode of every file under the root; `region_files` overrides selected files; see below |
 
-Agent specs and persona profiles migrate as **per-file rows** — one row per file, one shared shape. They are not folded into root entries.
+Agent specs are covered by the `.opencode/agents/` directory root and persona profiles by the `agents/` directory root — both `{"mode": "region"}`, so every file under them delivers only its core region between markers (`.opencode/agents/` holds `<name>.md`; `agents/` holds `<name>/profile.md`).
 
-## Skill-root records
+## Directory-root records
 
 - `mode` is the default mode of every file under the root.
-- `region_files` is optional (absent = empty subset) and names root-relative files that instead use **region** mode. Today the only member is `SKILL.md` — within a skill root, the only file type governed by active core/project ownership markers. Raw references may illustrate marker literals without interpreting them, as described under **Scope rules**.
-- Current classification: the three workflow roots (`odd-workflow`, `query-verification`, `ticket-runbook`) declare `{"mode": "raw", "region_files": ["SKILL.md"]}`; the seven tooling roots (`git-branch-name`, `git-commit`, `git-pr`, `op-agent-creator`, `op-model`, `op-skill-creator`, `verified-pr-cleanup`) declare `{"mode": "raw"}`.
-- **Expansion** — the sync tool identifies the files at every sync: every file under the root joins the sync set; `region_files` members deliver only their core region; all others copy byte-for-byte; interpreter caches (`__pycache__` path parts, `*.pyc` suffixes) never join. Files added under a root later join automatically. Clearance records durable ownership, not file inventories.
+- `region_files` is optional (absent = empty subset) and names root-relative files that instead use **region** mode. Today the only member is `SKILL.md` — within a skill directory root, the only file type governed by active core/project ownership markers. Raw references may illustrate marker literals without interpreting them, as described under **Scope rules**.
+- Current classification (twelve roots): the seven tooling skill roots (`.opencode/skills/git-branch-name/`, `.opencode/skills/git-commit/`, `.opencode/skills/git-pr/`, `.opencode/skills/op-agent-creator/`, `.opencode/skills/op-model/`, `.opencode/skills/op-skill-creator/`, `.opencode/skills/verified-pr-cleanup/`) declare `{"mode": "raw"}`; the three workflow skill roots (`.opencode/skills/odd-workflow/`, `.opencode/skills/query-verification/`, `.opencode/skills/ticket-runbook/`) declare `{"mode": "raw", "region_files": ["SKILL.md"]}`; the two agent directories (`.opencode/agents/`, `agents/`) declare `{"mode": "region"}` — their files are all region-mode sources, so neither needs `region_files`.
+- **Expansion** — the sync tool identifies the files at every sync: every file under the root joins the sync set; `region_files` members deliver only their core region; every other file uses the root's default `mode` — `region` delivers only that file's core region, `raw` copies it byte-for-byte (mode semantics under **Scope rules**); interpreter caches (`__pycache__` path parts, `*.pyc` suffixes) never join. Files added under a root later join automatically. Clearance records durable ownership, not file inventories.
 
 ## Knowledge distribution classes
 
@@ -54,7 +52,7 @@ The eight cleared `knowledge/` sources are region rows whose core/project split 
 
 ## Architecture distribution
 
-The `architecture/` area is a shared contract and stack-reference set, not a knowledge register. Each cleared file has an explicit per-file `region` row; the core region ships and the destination owns its project region. No directory is cleared wholesale and no new root-expansion or schema behavior is introduced.
+The `architecture/` area is a shared contract and stack-reference set, not a knowledge register. Each cleared file has an explicit per-file `region` row; the core region ships and the destination owns its project region. Within `architecture/`, no directory is cleared wholesale: this selection is file rows only, and only the skill roots and the two agent directories are cleared as directory roots. Root expansion itself introduces no new schema behavior.
 
 - `architecture/README.md` owns navigation and selection; `architecture/clean-architecture.md` owns common semantics.
 - `architecture/shapes/frontend.md`, `architecture/shapes/backend.md`, and `architecture/shapes/scripts.md` own shape-specific responsibilities.
@@ -70,11 +68,12 @@ New required documents ship with their consumers at one selected revision. A des
 
 ## Scope rules
 
-- Root entries cover **skill roots only** for now. Agent specs, persona profiles, and every other non-skill source stay per-file rows; the scope widens only with an explicit design change (which, being compatible, does not bump the version).
+- Root entries are **directory roots**. A directory may be cleared as a root only when every file under it is intended for distribution; every other source stays an individually cleared file row. This is the explicit design change the earlier skill-root-only scope anticipated — it is compatible, so `schema` stays `1` and no version-migration path is introduced.
+- The tradeoff of that rule: clearing a directory clears everything that later lands in it. Files appearing under a cleared root join the sync set automatically, so a root is cleared only when every file under it — not merely the files present today — is meant for distribution.
 - The sync tool's own skill (`.opencode/skills/core-sync/`) is never a cleared key and reaches no destination.
-- Only region-mode rows use active core/project ownership markers — `SKILL.md` within a skill root, and region file rows (the root runtime, agent specs, persona profiles, knowledge documents, architecture documents). Raw and merge transport does not interpret ownership markers; marker literals in a raw reference or fenced example remain ordinary copied bytes, not a separate region binding.
+- Only region-mode rows use active core/project ownership markers — `SKILL.md` within a skill directory root, region file rows (the root runtime, knowledge documents, architecture documents), and the files expanded from the two `region` agent directory roots (`.opencode/agents/`, `agents/`). Raw and merge transport does not interpret ownership markers; marker literals in a raw reference or fenced example remain ordinary copied bytes, not a separate region binding.
 - Modes: `region` (delivers only the source core region; the destination owns its project region), `raw` (byte-for-byte copy), `merge` (top-level key merge — config only; the `mcp` key merges by server name, keeping destination-only MCP servers and making a same-named entry core-wins).
 
 ## Validation
 
-A document is valid when `core_sync_pkg.domain.clearance.parse_clearance` accepts it: schema exactly `1`; keys unique and repo-relative; skill-root keys end with `/`; `region_files` members are root-relative, stay inside the root, and contain no `..` or absolute paths; `role` appears at most once and only on a `region` record (this registry uses `role: root` on `AGENTS.md` only). Any other version label is rejected (exit 2) — there is no version migration.
+A document is valid when `core_sync_pkg.domain.clearance.parse_clearance` accepts it: schema exactly `1`; keys unique and repo-relative; directory-root keys end with `/`; `region_files` members are root-relative, stay inside the root, and contain no `..` or absolute paths; `role` appears at most once and only on a `region` record (this registry uses `role: root` on `AGENTS.md` only). Any other version label is rejected (exit 2) — there is no version migration.

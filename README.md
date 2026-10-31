@@ -64,7 +64,7 @@ docs/README.md                Source-local documentation map, not a second workf
 docs/research/                Durable research catalog, single template and domain/topic records
 docs/architecture/            Source-local ADRs and historical accounting, not shared dependencies
 odd/tasks/                    Current feature records and the canonical _template.md
-distribution-clearance.json   Per-file distribution clearance; definition in distribution-clearance.definition.md
+distribution-clearance.json   Distribution clearance registry (per-file and directory-root rows); definition in distribution-clearance.definition.md
 tests/                        Repository-level tests; skill tests stay with their scripts
 conftest.py                   Repository-wide pytest temporary-directory policy
 pyproject.toml  uv.lock       Python toolchain/dependencies and pytest discovery/worker configuration
