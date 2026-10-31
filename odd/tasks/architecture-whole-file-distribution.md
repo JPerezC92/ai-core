@@ -28,7 +28,7 @@
 Unit A — distribution.
 
 - T1 | S1 | inline (mechanical marker removal, one correct answer, no judgment) — Cipher 🔓 (Lead Orchestrator) | done | commit: eefa29c
-- T2 | S1, S2, S5 | delegated (relocation plus shared-contract prose; Scribe authors, Bastion 🧱 (Backend & Scripts Architect) gates) — Scribe ✍️ (Docs & Problems Manager) | done | commit: eefa29c
+- T2 | S1, S2, S5 | delegated (relocation plus shared-contract prose; Scribe ✍️ (Docs & Problems Manager) authors, Bastion 🧱 (Backend & Scripts Architect) gates) — Scribe ✍️ (Docs & Problems Manager) | done | commit: eefa29c
 - T3 | S5, S6 | delegated (testing-document prose under Crucible's owner gate) — Scribe ✍️ (Docs & Problems Manager) | done | commit: eefa29c
 - T4 | S7 | inline (registry data change) — Cipher 🔓 (Lead Orchestrator) | done | commit: eefa29c
 - T5 | S7 | delegated (definition-document prose) — Scribe ✍️ (Docs & Problems Manager) | done | commit: eefa29c
@@ -44,7 +44,7 @@ Unit B — records.
 - T12 | S5, S6 | delegated (owner gate: frontend shape and React guide; depends on T3's authored slice) — Atrium 🏛️ (Frontend Architect) | done | commit: eefa29c
 - T13 | S9, S11 | delegated (corpus audit: ADR lifecycle and shared-rule accounting) — Sentinel 🛡️ (Quality Guardian) | in progress | commit: pending
 - T14 | S11 | inline (record the user's explicit ADR 0006 approval verbatim, then close) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T15 | S3, S11 | delegated (remediate owner-gate findings C3, C4, S2, S3; Scribe authors, the gates re-review) — Scribe ✍️ (Docs & Problems Manager) | done | commit: ffe8971
+- T15 | S3, S11 | delegated (remediate owner-gate findings C3, C4, S2, S3; Scribe ✍️ (Docs & Problems Manager) authors, the gates re-review) — Scribe ✍️ (Docs & Problems Manager) | done | commit: ffe8971
 
 ## Log
 
