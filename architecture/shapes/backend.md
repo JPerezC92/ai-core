@@ -1,4 +1,3 @@
-<!-- core:begin -->
 # Backend application shape
 
 ## Applicability
@@ -20,8 +19,3 @@ A repository implements its domain port and contains no business rules. Adapters
 ## Testing selection
 
 Read `architecture/testing/architecture.md` and its applicable stack guide for operation, adapter, and assembled-entry-point tests.
-<!-- core:end -->
-
-<!-- project:begin -->
-## Project extensions
-<!-- project:end -->

@@ -1,4 +1,3 @@
-<!-- core:begin -->
 # Testing architecture
 
 ## Purpose
@@ -10,7 +9,6 @@ Authority is split deliberately:
 - `architecture/clean-architecture.md` owns the layer and dependency contract.
 - This document owns the test-level, boundary, and parity contract.
 - `architecture/testing/stacks/<stack>.md` owns concrete syntax, file paths, tools, and examples for one stack.
-- `.opencode/agents/crucible.md` owns the review procedure, routing, verdict format, and execution boundaries.
 
 A stack guide applies this contract. It does not redefine the levels or weaken a boundary.
 
@@ -58,6 +56,8 @@ Exercise the assembled entry point with its real composition and adapters. Asser
 
 The project owns its reviewed test commands and its test-runner configuration. This contract and its stack guides do not grant execution authority, install dependencies, or select a destination's runner.
 
+A destination adds its selected stack guide or local tool binding in its own project-owned configuration; it must not weaken this contract. A destination-specific runner or framework binding does not become a universal rule.
+
 A test-architecture verdict is separate from a test-execution result. A passing execution does not establish architecture conformance; a verdict is never inferred from an execution result alone.
 
 ## Stack-guide selection
@@ -73,8 +73,8 @@ A guide is `proposed` until it has passed review, `reference` while it is the re
 
 | Stack | Guide | Status | Scope | Parity evidence |
 |---|---|---|---|---|
-| TypeScript | `stacks/typescript.md` | reference | TypeScript/TSX backend and frontend reference architecture | Reviewed 2026-10-25; entity-construction clause 2026-10-30; 10/10 sections; cross-stack table complete. |
-| Python | `stacks/python.md` | reference | Python application, script, and CLI reference architecture | Reviewed 2026-10-25; entity-construction clause 2026-10-30; 10/10 sections; cross-stack table complete. |
+| TypeScript | `stacks/typescript.md` | reference | TypeScript/TSX backend and frontend reference architecture | Reviewed 2026-10-25; entity-construction clause 2026-10-30; documentation-only change reviewed 2026-10-30 (owner field retired; destination guidance relocated); 10/10 sections; cross-stack table complete. |
+| Python | `stacks/python.md` | reference | Python application, script, and CLI reference architecture | Reviewed 2026-10-25; entity-construction clause 2026-10-30; documentation-only change reviewed 2026-10-30 (owner field retired; destination guidance relocated; reference case reworded source-neutrally); 10/10 sections; cross-stack table complete. |
 
 The index is part of the parity contract. Adding or changing a guide requires updating this table and the parity evidence.
 
@@ -101,7 +101,7 @@ A section is complete or explicitly marked `N/A` with a language or runtime reas
 2. Copy `architecture/testing/stacks/_template.md`.
 3. Research the stack's official documentation and inspect representative repository tests.
 4. Map every template section to the agnostic contract; mark every non-applicable section `N/A` with a reason.
-5. Label the guide `proposed` until the applicable architecture owner, the test architect, and the document owner review it.
+5. Label the guide `proposed` until the applicable architecture owner, the test architect, and the owner of the governing ODD feature review it.
 6. Record the parity review and evidence before changing the status to `reference`.
 
 Research is not approval. An unverified guide must not be used to issue a verdict.
@@ -110,12 +110,3 @@ Research is not approval. An unverified guide must not be used to issue a verdic
 
 - `architecture/clean-architecture.md` — clean architecture and failure classification.
 - `architecture/testing/stacks/_template.md` — the only stack-guide template.
-- `.opencode/agents/crucible.md` — review procedure and routing.
-
-<!-- core:end -->
-
-<!-- project:begin -->
-## Project extensions
-
-A destination may add its selected stack guide or local tool binding here or in its own project-owned configuration. It must not weaken the shared contract. A destination-specific runner or framework binding does not become a universal rule.
-<!-- project:end -->

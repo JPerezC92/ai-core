@@ -1,4 +1,3 @@
-<!-- core:begin -->
 # TypeScript — NestJS implementation guide
 
 > **Status:** reference
@@ -67,8 +66,3 @@ Read `architecture/testing/architecture.md` and `architecture/testing/stacks/typ
 ## Open decisions
 
 None identified for this mapping.
-<!-- core:end -->
-
-<!-- project:begin -->
-## Project extensions
-<!-- project:end -->

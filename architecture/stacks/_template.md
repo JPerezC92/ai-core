@@ -1,4 +1,3 @@
-<!-- core:begin -->
 # <Stack> implementation guide
 
 > **Status:** proposed
@@ -50,8 +49,3 @@ Every common obligation and applicable shape obligation needs a mapping. Equal r
 ## Open decisions
 
 Name unresolved choices, source evidence, and resolution authority. Never hide a missing mapping or promote a proposal to an approved decision.
-<!-- core:end -->
-
-<!-- project:begin -->
-## Project extensions
-<!-- project:end -->

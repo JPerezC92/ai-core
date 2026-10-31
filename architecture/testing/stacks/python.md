@@ -1,17 +1,17 @@
-<!-- core:begin -->
 # Python testing guide
 
 > **Status:** reference
 > **Stack:** Python application, script, and CLI code; pytest reference implementation
-> **Guide owner:** Crucible 🔥 (Test Architect)
 > **Reviewed:** 2026-10-25 — `testing-architecture-layering`; entity-construction clause 2026-10-30
 > **Contract:** `architecture/testing/architecture.md`
 
 ## Applicability and ownership
 
-This guide applies to Python application, script, and CLI code that follows the clean-architecture layers. AICore's skill tests are the reference case: application operations, domain responsibilities, and infrastructure adapters live in importable packages, and an end-to-end test exercises the assembled entry point.
+This guide applies to Python application, script, and CLI code that follows the clean-architecture layers. The reference case is a skill suite: application operations, domain responsibilities, and infrastructure adapters live in importable packages, and an end-to-end test exercises the assembled entry point.
 
-pytest is the reference runner. A destination owns its reviewed Python runner and configuration; a different runner requires a selected guide or a project extension, not an assumption that these rules still apply unchanged. This guide does not cover a browser frontend, a JavaScript/TypeScript frontend, or a framework-specific adapter that has no selected guide.
+pytest is the reference runner. A destination owns its reviewed Python runner and configuration; a different runner requires its own destination-owned guide, not an assumption that these rules still apply unchanged. This guide does not cover a browser frontend, a JavaScript/TypeScript frontend, or a framework-specific adapter that has no selected guide.
+
+A destination may select a different Python runner, add a framework-specific adapter, or bind an isolated test database. It must preserve the three levels, returned-business-failure rule, one-behavior rule, factory rule, hermeticity rule, and execution/verdict separation.
 
 ## Test pyramid mapping
 
@@ -105,16 +105,8 @@ assert isinstance(result, TaskNotFoundError)
 | Test data and doubles | Covered | `unittest.mock` and a shared factory replace `MockProxy`/`faker`; deterministic data is declared as the Python difference. |
 | Execution and evidence | Covered | pytest is the reference runner; the project owns the command, as with Vitest. |
 | Cross-stack parity | Covered | This table declares every semantic difference. |
-| Open decisions | Covered | None; framework-specific adapters remain project extensions. |
+| Open decisions | Covered | None; framework-specific adapters belong in a destination-owned guide. |
 
 ## Open decisions
 
-None. A Python web framework, database library, or other framework-specific adapter may be documented in a destination project extension without changing the three levels or the shared rules.
-
-<!-- core:end -->
-
-<!-- project:begin -->
-## Project extensions
-
-A destination may select a different Python runner, add a framework-specific adapter, or bind an isolated test database here. It must preserve the three levels, returned-business-failure rule, one-behavior rule, factory rule, hermeticity rule, and execution/verdict separation.
-<!-- project:end -->
+None. A Python web framework, database library, or other framework-specific adapter may be documented in a destination-owned guide without changing the three levels or the shared rules.

@@ -1,4 +1,3 @@
-<!-- core:begin -->
 # Clean architecture
 
 ## Purpose and authority
@@ -38,8 +37,3 @@ A pure helper needs no artificial use-case wrapper. A module that decides policy
 ## Testing and execution
 
 The current test-design authority is `architecture/testing/architecture.md`, with its selected stack guide. It alone owns test levels, organization, doubles, evidence, and test-guide parity. Agent runtime specs own execution authority, edit scope, checkpoints, review procedures, and uncertainty routing. This document grants none of those permissions.
-<!-- core:end -->
-
-<!-- project:begin -->
-## Project extensions
-<!-- project:end -->

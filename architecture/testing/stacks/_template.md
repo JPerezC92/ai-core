@@ -1,9 +1,7 @@
-<!-- core:begin -->
 # <Stack> testing guide
 
 > **Status:** proposed
 > **Stack:** <language, framework, and application shape>
-> **Guide owner:** <role>
 > **Reviewed:** pending
 > **Contract:** `architecture/testing/architecture.md`
 
@@ -12,6 +10,8 @@
 ## Applicability and ownership
 
 State the exact language, application shapes, and file types this guide covers. Name the project-owned tool selection boundary: the guide may recommend a reference runner, but the destination owns its reviewed runner and configuration. Name what this guide does not cover.
+
+A destination may add its selected runner, framework adapter, or local tool binding. It must not weaken the shared contract.
 
 ## Test pyramid mapping
 
@@ -116,11 +116,3 @@ A difference is allowed only for language or runtime semantics. A thinner sectio
 ## Open decisions
 
 Record decisions that are genuinely unresolved, with the evidence needed to resolve them and the owner. Do not use this section to hide a missing rule. If there are none, write `None.`
-
-<!-- core:end -->
-
-<!-- project:begin -->
-## Project extensions
-
-A destination may add its selected runner, framework adapter, or local tool binding here. It must not weaken the shared contract.
-<!-- project:end -->

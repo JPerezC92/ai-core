@@ -1,4 +1,3 @@
-<!-- core:begin -->
 # Scripts and tooling application shape
 
 ## Applicability
@@ -20,8 +19,3 @@ Independent backend tooling packages, standalone ticket scripts, and feature-sco
 ## Testing selection
 
 Use the current `architecture/testing/architecture.md` and applicable stack guide. Importable CLI code is not automatically a unit boundary; test-design authority stays there.
-<!-- core:end -->
-
-<!-- project:begin -->
-## Project extensions
-<!-- project:end -->

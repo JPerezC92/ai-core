@@ -33,43 +33,43 @@
       "mode": "region"
     },
     "architecture/README.md": {
-      "mode": "region"
+      "mode": "raw"
     },
     "architecture/clean-architecture.md": {
-      "mode": "region"
+      "mode": "raw"
     },
     "architecture/shapes/frontend.md": {
-      "mode": "region"
+      "mode": "raw"
     },
     "architecture/shapes/backend.md": {
-      "mode": "region"
+      "mode": "raw"
     },
     "architecture/shapes/scripts.md": {
-      "mode": "region"
+      "mode": "raw"
     },
     "architecture/stacks/_template.md": {
-      "mode": "region"
+      "mode": "raw"
     },
     "architecture/stacks/typescript/react.md": {
-      "mode": "region"
+      "mode": "raw"
     },
     "architecture/stacks/typescript/nestjs.md": {
-      "mode": "region"
+      "mode": "raw"
     },
     "architecture/stacks/python.md": {
-      "mode": "region"
+      "mode": "raw"
     },
     "architecture/testing/architecture.md": {
-      "mode": "region"
+      "mode": "raw"
     },
     "architecture/testing/stacks/_template.md": {
-      "mode": "region"
+      "mode": "raw"
     },
     "architecture/testing/stacks/typescript.md": {
-      "mode": "region"
+      "mode": "raw"
     },
     "architecture/testing/stacks/python.md": {
-      "mode": "region"
+      "mode": "raw"
     },
     ".opencode/skills/git-branch-name/": {
       "mode": "raw"

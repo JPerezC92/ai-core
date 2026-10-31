@@ -1,4 +1,3 @@
-<!-- core:begin -->
 # Frontend application shape
 
 ## Applicability
@@ -20,8 +19,3 @@ The application operation is bound in `modules/{feature}/hooks/` and depends onl
 ## Testing selection
 
 Read `architecture/testing/architecture.md` and the applicable testing guide. Component/service/assembled-application boundaries are defined there, not redefined here.
-<!-- core:end -->
-
-<!-- project:begin -->
-## Project extensions
-<!-- project:end -->
