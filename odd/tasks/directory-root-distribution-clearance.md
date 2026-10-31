@@ -5,7 +5,7 @@
 > **Created:** 2026-10-30
 > **Closed:** 2026-10-30
 > **Objective:** Clear the two agent directories wholesale so `distribution-clearance.json` carries one row per directory instead of one row per agent file.
-> **Branch:** main
+> **Branch:** feat/core-sync/add-agent-directory-roots
 > **Delivery:** single work-unit commit; forecast ≈20 authored additions + ≈130 deletions (≈150 changed for the whole feature, far below the ~400-line strategy trigger), so no slice split is needed. Slices: definition/registry (T1→T2), skill instruction (T3), README (T4), verification (T5).
 > **Runner:** `uv run --frozen --group dev pytest .opencode/skills/core-sync/scripts/core_sync_pkg/domain/test_clearance_metadata.py` (focused registry conformance); whole suite `uv run --frozen --group dev pytest -q` executed by Crucible 🔥 (Test Architect).
 
