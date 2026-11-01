@@ -1,6 +1,7 @@
 # Architecture content model
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-11-01
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-01
 > **Objective:** State the architecture content model once, give the agnostic contracts stable rule IDs, and make every language guide — implementation and testing — cite those IDs instead of restating or omitting shared rules — clearing DEBT-030.
@@ -25,25 +26,25 @@
 
 ## Tasks
 
-- T1 | S3 | delegated (content-model authoring in the navigation document; single normative home) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T2 | S4 | delegated (testing-contract rule IDs across its normative bullets; authoring by the docs owner, reviewed by the test-architect gate in T8) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T3 | S5 | delegated (TypeScript guide mapping rewrite, including the two drifts, under the contract IDs) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T4 | S5 | delegated (Python guide mapping rewrite replacing the restatement at `:63`) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T5 | S6 | inline (both templates' table shape; mechanical, one correct answer) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T6 | S2, S3, S4, S5, S6 | inline (coordinator mechanical verification: ID uniqueness and coverage, no duplicated contract prose, resolver and marker checks, anatomy validator) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T7 | S3, S7 | delegated (owner gate: common contract, README, implementation-side consistency — read each implementation guide against `clean-architecture.md` and its shape, classifying every line as language-specific achievement, citable mapping, or restatement; report findings with citations, no rewrite by the reviewer) — Bastion 🧱 (Backend & Scripts Architect) | in progress | commit: pending
-- T8 | S7 | delegated (owner gate: testing contract and both guides) — Crucible 🔥 (Test Architect) | in progress | commit: pending
-- T9 | S7 | delegated (instruction obligation accounting and corpus consistency) — Sentinel 🛡️ (Quality Guardian) | in progress | commit: pending
-- T10 | S8 | inline (retire DEBT-030 with resolution evidence after gates pass) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T11 | S1, S2 | delegated (local work-unit commit only after gates; no push or PR authorization) — Herald 📯 (Release Manager) | in progress | commit: pending
-- T12 | S9, S10 | delegated (implementation guide `architecture/implementation/stacks/python.md`: cite `C`/`B`/`P` IDs in body and mapping table, state only the Python achievement, correct any verified restatement) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T13 | S9, S10 | delegated (implementation guide `architecture/implementation/stacks/typescript/react.md`: cite `C`/`F` IDs, state only the React achievement, correct verified restatement) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T14 | S9, S10 | delegated (implementation guide `architecture/implementation/stacks/typescript/nestjs.md`: cite `C`/`B` IDs, state only the NestJS achievement, correct verified restatement) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T15 | S9, S10 | delegated (agnostic contracts `clean-architecture.md` and `shapes/*`: confirm existing IDs, remove only verified competing layer/ownership definitions, add the content-model reference where ownership is restated) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T16 | S11 | delegated (perform the eight-file `git mv` into `architecture/implementation/`, creating directories, preserving history and refusing on any conflict) — Herald 📯 (Release Manager) | in progress | commit: pending
-- T17 | S11, S12 | delegated (pointer updates in live surfaces: `.opencode/agents/*`, `knowledge/*`, root `README.md`, root `AGENTS.md`, `docs/architecture/README.md`, `docs/architecture/odd-adoption-status.md`, clearance registry and its definition document; no historical record rewritten) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T18 | S12 | delegated (accepted ADRs receive `Amended:` path lines; bodies never rewritten) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T19 | S11, S12 | inline (coordinator verification: zero unresolved architecture references outside historical records, clearance parse, anatomy validator, resolver scan) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
+- T1 | S3 | delegated (content-model authoring in the navigation document; single normative home) — Scribe ✍️ (Docs & Problems Manager) | done | commit: d9f5681
+- T2 | S4 | delegated (testing-contract rule IDs across its normative bullets; authoring by the docs owner, reviewed by the test-architect gate in T8) — Scribe ✍️ (Docs & Problems Manager) | done | commit: d9f5681
+- T3 | S5 | delegated (TypeScript guide mapping rewrite, including the two drifts, under the contract IDs) — Scribe ✍️ (Docs & Problems Manager) | done | commit: d9f5681
+- T4 | S5 | delegated (Python guide mapping rewrite replacing the restatement at `:63`) — Scribe ✍️ (Docs & Problems Manager) | done | commit: d9f5681
+- T5 | S6 | inline (both templates' table shape; mechanical, one correct answer) — Cipher 🔓 (Lead Orchestrator) | done | commit: d9f5681
+- T6 | S2, S3, S4, S5, S6 | inline (coordinator mechanical verification: ID uniqueness and coverage, no duplicated contract prose, resolver and marker checks, anatomy validator) — Cipher 🔓 (Lead Orchestrator) | done | commit: d9f5681
+- T7 | S3, S7 | delegated (owner gate: common contract, README, implementation-side consistency — read each implementation guide against `clean-architecture.md` and its shape, classifying every line as language-specific achievement, citable mapping, or restatement; report findings with citations, no rewrite by the reviewer) — Bastion 🧱 (Backend & Scripts Architect) | done | commit: d9f5681
+- T8 | S7 | delegated (owner gate: testing contract and both guides) — Crucible 🔥 (Test Architect) | done | commit: d9f5681
+- T9 | S7 | delegated (instruction obligation accounting and corpus consistency) — Sentinel 🛡️ (Quality Guardian) | done | commit: d9f5681
+- T10 | S8 | inline (retire DEBT-030 with resolution evidence after gates pass) — Cipher 🔓 (Lead Orchestrator) | done | commit: d9f5681
+- T11 | S1, S2 | delegated (local work-unit commit only after gates; no push or PR authorization) — Herald 📯 (Release Manager) | done | commit: d9f5681
+- T12 | S9, S10 | delegated (implementation guide `architecture/implementation/stacks/python.md`: cite `C`/`B`/`P` IDs in body and mapping table, state only the Python achievement, correct any verified restatement) — Scribe ✍️ (Docs & Problems Manager) | done | commit: d9f5681
+- T13 | S9, S10 | delegated (implementation guide `architecture/implementation/stacks/typescript/react.md`: cite `C`/`F` IDs, state only the React achievement, correct verified restatement) — Scribe ✍️ (Docs & Problems Manager) | done | commit: d9f5681
+- T14 | S9, S10 | delegated (implementation guide `architecture/implementation/stacks/typescript/nestjs.md`: cite `C`/`B` IDs, state only the NestJS achievement, correct verified restatement) — Scribe ✍️ (Docs & Problems Manager) | done | commit: d9f5681
+- T15 | S9, S10 | delegated (agnostic contracts `clean-architecture.md` and `shapes/*`: confirm existing IDs, remove only verified competing layer/ownership definitions, add the content-model reference where ownership is restated) — Scribe ✍️ (Docs & Problems Manager) | done | commit: d9f5681
+- T16 | S11 | delegated (perform the eight-file `git mv` into `architecture/implementation/`, creating directories, preserving history and refusing on any conflict) — Herald 📯 (Release Manager) | done | commit: d9f5681
+- T17 | S11, S12 | delegated (pointer updates in live surfaces: `.opencode/agents/*`, `knowledge/*`, root `README.md`, root `AGENTS.md`, `docs/architecture/README.md`, `docs/architecture/odd-adoption-status.md`, clearance registry and its definition document; no historical record rewritten) — Scribe ✍️ (Docs & Problems Manager) | done | commit: d9f5681
+- T18 | S12 | delegated (accepted ADRs receive `Amended:` path lines; bodies never rewritten) — Scribe ✍️ (Docs & Problems Manager) | done | commit: d9f5681
+- T19 | S11, S12 | inline (coordinator verification: zero unresolved architecture references outside historical records, clearance parse, anatomy validator, resolver scan) — Cipher 🔓 (Lead Orchestrator) | done | commit: d9f5681
 
 ## Log
 
@@ -66,3 +67,4 @@
   - **Retained**: every language mechanism, code example, path, library name, mapping row, authority statement, gate, and status line; no rule was moved out of an owner without a surviving statement there.
   - **Candidate identity** (SHA-256, first 16 hex): `implementation/architecture.md` `cea3f29146c8aa6c`, `shapes/backend.md` `38cc437366ba0426`, `shapes/frontend.md` `e0324e9c0ab07658`, `shapes/scripts.md` `a4ea419e2c9b691b`, `stacks/_template.md` `dee3b806b595cc6a`, `stacks/python.md` `83e7fd39d69c61d9`, `stacks/typescript/nestjs.md` `9173c38a373322da`, `stacks/typescript/react.md` `839e2eda0b4c5f06`, `README.md` `b6778cb76e92fc91`, `testing/architecture.md` `546ec3058753b9df`, `testing/stacks/_template.md` `955328915d7667fd`, `testing/stacks/python.md` `717fd0b4c1fd643b`, `testing/stacks/typescript.md` `55b3973eeb719398`.
   - **Residual old-path categories** (recorded so the resolver result is complete): historical feature records (`odd/tasks/`), history documents (`docs/architecture/history/`), accepted-ADR bodies and their pre-existing metadata lines covered by an `Amended:` line, saved-research records including dated boundary bullets, and one relative link in `docs/README.md` that resolves under `docs/`. No live guidance surface depends on an old path.
+- L15 — Close: 2026-11-01 — delivered: the architecture content model stated once in `architecture/README.md`, stable identifiers on both contract families, every language guide citing identifiers while stating only its own achievement, family-first layout under `architecture/implementation/` and `architecture/testing/`, ADR 0003/0004/0005 relocation amendments, and DEBT-030 retired with its evidence in L12/L14. Verified: anatomy validator `ok`; clearance `parse_clearance` returns 35 entries with 13 architecture rows all `raw`; resolver reports no unresolved reference in live guidance; whole suite `966 passed, 6 skipped`; Bastion 🧱 (Backend & Scripts Architect) and Crucible 🔥 (Test Architect) `[PASS]`; Sentinel 🛡️ (Quality Guardian) remediation verification `[PASS]`. Deferred: none from this feature. Not authorized: push, PR, merge, tag, release.
