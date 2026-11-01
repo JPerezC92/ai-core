@@ -3,6 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-10-29
 - **Accepted:** 2026-10-30 — user approval recorded in `odd/tasks/adr-propagation-and-architecture-conformance.md` L13; propagation evidence: `architecture/clean-architecture.md` → C3, `architecture/stacks/python.md` → Application operations, and `architecture/stacks/typescript/nestjs.md` → Application operations, delivered in `878e93d`; the C3 consistency clause was completed under this feature's T2.
+- **Amended:** 2026-11-01 — Implementation-family references in this record map to `architecture/implementation/` paths per `odd/tasks/architecture-content-model.md` T18; the body is unchanged.
 
 ## Context
 

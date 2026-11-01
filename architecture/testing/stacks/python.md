@@ -9,13 +9,13 @@
 
 This guide applies to Python application, script, and CLI code that follows the clean-architecture layers. The reference case is a skill suite: application operations, domain responsibilities, and infrastructure adapters live in importable packages, and an end-to-end test exercises the assembled entry point.
 
-pytest is the reference runner. A destination owns its reviewed Python runner and configuration; a different runner requires its own destination-owned guide, not an assumption that these rules still apply unchanged. This guide does not cover a browser frontend, a JavaScript/TypeScript frontend, or a framework-specific adapter that has no selected guide.
+pytest is the reference runner. A destination owns its reviewed Python runner and configuration; a different runner requires its own destination-owned guide, not an assumption that these rules still apply unchanged (T20). This guide does not cover a browser frontend, a JavaScript/TypeScript frontend, or a framework-specific adapter that has no selected guide (T25).
 
-A destination may select a different Python runner, add a framework-specific adapter, or bind an isolated test database. It must preserve the three levels, returned-business-failure rule, one-behavior rule, factory rule, hermeticity rule, and execution/verdict separation.
+A destination may select a different Python runner, add a framework-specific adapter, or bind an isolated test database. It must preserve the contract rules this guide cites: the three levels (T2–T5), returned-business-failure classification (T6), one behavior per module and class (T11), factory-sourced test data (T15), hermeticity (T18), and the separation of execution evidence from the verdict (T19, T21).
 
 ## Test pyramid mapping
 
-The three levels are the same as the agnostic contract:
+The three levels are the contract's; Python states their targets, doubles, and assertions as follows (T2–T5):
 
 | Level | Target | Collaborators and doubles | Observable assertion |
 |---|---|---|---|
@@ -24,89 +24,89 @@ The three levels are the same as the agnostic contract:
 | Integration | One infrastructure adapter: repository, loader, builder, client, or parser | Real isolated dependency when possible; transport stubbed at its boundary | Raw external data to domain values |
 | End to end | Assembled CLI or service entry point | Real adapters and composition | Exit code, output, or observable service result |
 
-Python does not add a fourth level. A test that calls the CLI is not a unit test because the CLI is importable, and an in-memory adapter is not automatically a unit test.
+Python does not add a fourth level (T1). A test that calls the CLI is not a unit test because the CLI is importable, and an in-memory adapter is not automatically a unit test (T4).
 
 ## File organization
 
-- Unit tests sit with the application operation or domain responsibility: `application/test_<operation>.py` or `domain/test_<responsibility>.py`.
+- Unit tests sit with the application operation or domain responsibility: `application/test_<operation>.py` or `domain/test_<responsibility>.py` (T10).
 - Integration tests sit with the infrastructure adapter: `infrastructure/test_<adapter>.py`.
 - End-to-end tests sit in the project's end-to-end location: `e2e/test_<entrypoint>.py` or `tests/e2e/test_<entrypoint>.py`.
-- Test files are named `test_*.py` and are collected project-wide by the project's reviewed runner. There is no per-subdirectory allowlist.
-- One behavior per test module and per class or group. A multi-behavior module or class is a violation and must be split by behavior.
-- There is no line cap; behavior, not size, sets the split boundary.
+- Test files are named `test_*.py` and are collected project-wide by the project's reviewed runner. There is no per-subdirectory allowlist (T13).
+- One behavior per test module and per class or group. A multi-behavior module or class is a violation and must be split by behavior (T11).
+- A long `test_*.py` module holding one behavior stays whole and is never split by size (T12).
 - A pure helper may be tested beside its owning layer. Do not create an artificial use-case wrapper just to satisfy a path convention.
 
 ## Unit tests
 
-- Instantiate the use case or domain object directly. Do not go through the CLI, an HTTP server, or the full composition root.
+- Instantiate the use case or domain object directly. Do not go through the CLI, an HTTP server, or the full composition root (T2).
 - Call the application operation's `execute()` directly, or call the domain function under test.
-- Replace each port with a `unittest.mock.Mock`/`MagicMock` or a small hand-written fake. `unittest.mock` is the suite's mocking library; do not add a second mocking library for the same job.
-- Assert returned values. A business failure is a returned domain value:
+- Replace each port with a `unittest.mock.Mock`/`MagicMock` or a small hand-written fake. `unittest.mock` is the suite's mocking library; do not add a second mocking library for the same job (T16).
+- Assert the returned object with a direct `assert`; the domain error the operation returns is asserted by type, so no exception path is involved (T3):
 
 ```python
 result = use_case.execute(command)
 assert isinstance(result, TaskNotFoundError)
 ```
 
-- Do not use `pytest.raises` to assert a returned business failure. Use it only for an expected exception at a boundary or a CLI `SystemExit`.
-- Do not mock the use case or the domain function under test. Mock or fake its ports.
+- Do not use `pytest.raises` to assert a returned business failure. Use it only for an expected exception at a boundary or a CLI `SystemExit` (T6, T7).
+- Do not mock the use case or the domain function under test. Mock or fake its ports (T17).
 - Parser and loader unit tests mock the external library at its boundary and assert field mapping, type coercion, extraction, and the documented failure result. An empty or malformed input is a unit case when no real external service is needed.
 - These tests must be compatible with the project's reviewed runner and discovery rules.
 
 ## Integration tests
 
-- Instantiate the adapter directly with a real, isolated dependency: a temporary filesystem, an isolated test database, or a controlled local service.
-- Use `tmp_path` for filesystem work. Do not write into the repository or a developer's home directory.
-- When the dependency cannot be isolated, stub the transport boundary with `monkeypatch` or a small fake. Do not mock the adapter under test.
+- Instantiate the adapter directly with a real, isolated dependency: a temporary filesystem, an isolated test database, or a controlled local service (T4).
+- Use `tmp_path` for filesystem work. Do not write into the repository or a developer's home directory (T18).
+- When the dependency cannot be isolated, stub the transport boundary with `monkeypatch` or a small fake. Do not mock the adapter under test (T17).
 - Assert the mapping pipeline: raw record or payload, adapter method, domain value. Cover defaults and null handling, and assert that a missing identifier returns the documented empty value rather than throwing.
-- Do not use collaborator mocks here when the real isolated dependency is available. This level exists to test the real adapter boundary.
-- Keep setup and cleanup hermetic. A test must not depend on another test's files, database rows, environment variables, or process state.
+- Do not use collaborator mocks here when the real isolated dependency is available. This level exists to test the real adapter boundary (T8).
+- Each test owns the state it creates: `tmp_path` for every file and directory, plus the reviewed runner's fixture lifecycle for setup and teardown. Nothing carries over from an earlier test — not a file left under `tmp_path`, a row in the isolated test database, an environment variable set through `monkeypatch`, a stub installed at a transport boundary, or module-level process state (T18).
 - Use the reviewed runner's isolation facilities; do not replace `tmp_path` with a shared temporary directory.
 
 ## End-to-end tests
 
-- Exercise the assembled entry point: a CLI `main()` function, a service entry point, or the project's equivalent composition root.
+- Exercise the assembled entry point: a CLI `main()` function, a service entry point, or the project's equivalent composition root (T5).
 - Use real adapters with isolated data: `tmp_path` for files, an isolated test database for persistence, or a controlled local dependency.
 - Assert the observable result at the entry point: exit code, stdout/stderr, service response, or persisted output. Use `capsys` for captured CLI output when the reviewed runner provides it.
-- Use `pytest.raises(SystemExit)` only for an expected CLI exit. Do not use it for a returned business failure.
-- Do not call the use case directly in an end-to-end test. The test exists to prove the assembled entry point and its real composition.
-- Do not duplicate every unit or integration case here. Cover the end-to-end path, its wiring, and its user-visible failure behavior.
+- Use `pytest.raises(SystemExit)` only for an expected CLI exit. Do not use it for a returned business failure (T6, T7).
+- Do not call the use case directly in an end-to-end test; the assertion belongs to `main()` and the adapters it wires (T5).
+- Do not duplicate every unit or integration case here. Cover the end-to-end path, its wiring, and its user-visible failure behavior (T8).
 
 ## Test data and doubles
 
-- Use a shared test-data factory or helper, for example `_test_support.py`, for domain objects and external payloads. Do not use inline literals for test data.
+- Use a shared test-data factory or helper, for example `_test_support.py`, for domain objects and external payloads. Do not use inline literals for test data (T15).
 - The factory provides `create(**overrides)` and, when collections are needed, `create_many(count, **overrides)`. Deterministic values are acceptable; randomness is not required.
 - When the test needs an entity rather than a data-only record, the factory builds it through the entity factory/`create()`; never assign entity fields directly to construct test data.
-- Use `unittest.mock` for collaborator ports and controlled return values.
+- Use `unittest.mock` for collaborator ports and controlled return values (T16).
 - Use `monkeypatch` for process-wide boundaries such as environment variables, time, or transport. Do not use `monkeypatch` as a substitute for a port double, and do not mix `monkeypatch` and `unittest.mock` for the same collaborator.
-- Keep fixtures hermetic. Use `tmp_path` for filesystem isolation and the reviewed runner's fixture lifecycle for setup and teardown.
+- Isolate each fixture with `tmp_path` for filesystem work and the reviewed runner's fixture lifecycle for setup and teardown, so no fixture reads a file another test wrote or module-level state another test left behind (T18).
 - Do not use `unittest.TestCase` or `unittest.main()`. Use pytest test functions or non-`TestCase` classes with `test_*` methods.
 - Use direct `assert` statements and the reviewed runner's assertion helpers. Do not hide the expected value behind a custom assertion DSL.
 
 ## Execution and evidence
 
-- The project owns its reviewed whole-project Python command. This guide does not authorize running tests or installing dependencies.
+- The project owns its reviewed whole-project Python command (T19). This guide does not authorize running tests or installing dependencies.
 - Discovery is project-wide: a new `test_*.py` file joins the approved suite without a per-file grant or a subdirectory allowlist.
-- Test-architecture verdicts are separate from execution results. A passing run does not establish conformance.
+- Verdicts are issued from the reviewed test files; the reviewed command's `pytest` output is separate execution evidence and never the verdict itself (T21).
 - Every feature-spec happy case and rejection case must trace to a test at the appropriate level.
-- Missing scoped evidence for a file covered by this guide is a `[FAIL]`. `[UNCERTAIN]` is reserved for a file outside the declared scope or one with no applicable guide.
+- Report `[FAIL]` for a declared-scope file with no scoped test evidence, and reserve `[UNCERTAIN]` for a file this guide does not cover (T14).
 - The reviewed runner's configuration is the execution authority; the file locations above are reference layout, not a narrower execution grant.
 
 ## Cross-stack parity
 
-| Contract section | Coverage | Difference or N/A reason |
+| Contract section | Cited rule IDs | Language-specific achievement or N/A reason |
 |---|---|---|
-| Applicability and ownership | Covered | Python has no browser frontend; application, script, and CLI shapes are covered. |
-| Test pyramid mapping | Covered | The UI-specific frontend row has no Python equivalent; the CLI/service entry point is the end-to-end target. |
-| File organization | Covered | Python uses package-relative test modules and project-wide discovery; no TypeScript test-directory convention applies. |
-| Unit tests | Covered | Use-case/domain units use the same boundary and returned-value rules; parser/loader rules cover Python imports. |
-| Integration tests | Covered | Real isolated dependencies and transport stubs are defined; `tmp_path` replaces the frontend fetch stub. |
-| End-to-end tests | Covered | CLI/service entry points replace the browser and HTTP reference phases; no browser-phase rules apply. |
-| Test data and doubles | Covered | `unittest.mock` and a shared factory replace `MockProxy`/`faker`; deterministic data is declared as the Python difference. |
-| Execution and evidence | Covered | pytest is the reference runner; the project owns the command, as with Vitest. |
-| Cross-stack parity | Covered | This table declares every semantic difference. |
-| Open decisions | Covered | None; framework-specific adapters belong in a destination-owned guide. |
+| Applicability and ownership | T20, T25, T26 | Application, script, and CLI packages follow the layers; pytest is the reference runner and a destination selecting another runner adds its own guide instead of assuming these rules still apply. Python has no browser frontend, so the frontend scope has no equivalent here, and an unselected adapter has no inferred runner or file convention; the `reference` status records its review. |
+| Test pyramid mapping | T1, T2, T3, T4, T5 | The three levels are instantiated with Python targets and no fourth level is added: an operation's `execute()` or a pure domain responsibility, one adapter, and the assembled CLI or service entry point. The UI-specific frontend row has no Python equivalent. |
+| File organization | T10, T11, T12, T13 | Tests sit beside the module they exercise as `test_*.py` modules with project-wide discovery and no per-subdirectory allowlist; one behavior per module and per class, and a cohesive module is never split by size. |
+| Unit tests | T2, T3, T6, T7, T16, T17 | `execute()` or the domain function is instantiated directly; each port is replaced with `unittest.mock` or a small fake, and `pytest.raises` covers only a boundary exception or a CLI `SystemExit`, never a returned domain error. |
+| Integration tests | T4, T8, T17, T18 | One adapter runs against a real isolated dependency — `tmp_path`, an isolated test database, or a controlled local service — with `monkeypatch` at the transport when isolation is impossible. The residue classes are declared in the body: files under `tmp_path`, database rows, environment variables, transport stubs, and module-level state. |
+| End-to-end tests | T5, T7, T8 | The assembled `main()` or service entry point runs with real adapters and isolated data, asserting exit code, `capsys` output, or the service result; unit and integration cases are not duplicated here. |
+| Test data and doubles | T15, T16, T18 | A shared `_test_support.py` factory provides `create(**overrides)` and `create_many(...)` and builds entities through the entity factory; `unittest.mock` is the single mocking library, with `monkeypatch` reserved for process-wide boundaries such as environment variables, time, and transport. |
+| Execution and evidence | T14, T19, T21 | The project owns the reviewed whole-project command and project-wide discovery; `[FAIL]` and `[UNCERTAIN]` follow the declared scope, and the run's output stays separate from the verdict. |
+| Cross-stack parity | T28, T29 | The guide keeps the contract's ten sections in order and declares every semantic difference in this table; a section with no Python mechanism would be marked `N/A` with its reason rather than thinned. |
+| Open decisions | T20 | No open decision is used to hide a missing rule; a Python web framework or database adapter belongs in a destination-owned guide that adds no level and weakens no cited rule. |
 
 ## Open decisions
 
-None. A Python web framework, database library, or other framework-specific adapter may be documented in a destination-owned guide without changing the three levels or the shared rules.
+None. A Python web framework, database library, or other framework-specific adapter may be documented in a destination-owned guide without changing the three levels or the shared rules (T20).

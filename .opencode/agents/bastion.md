@@ -41,13 +41,13 @@ A file assigned by the active feature document or parent assignment that violate
 
 #### Language-agnostic
 
-Before reviewing, read `architecture/README.md`, then `architecture/clean-architecture.md`, then the relevant `architecture/shapes/backend.md` and/or `architecture/shapes/scripts.md` in full, then the applicable language guide in full — `architecture/stacks/typescript/nestjs.md` or `architecture/stacks/python.md`. Python backend tooling selects both shapes. These own the extracted definitions referenced by `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`. Reuse a document already read in the current session while its content identity is unchanged; re-read it fresh only when it changed, when comprehension is incomplete, or when this runtime requires a fresh read. The section pointers in the language sections locate the owned rules inside those guides and do not re-mandate a whole-guide read.
+Before reviewing, read `architecture/README.md`, then `architecture/implementation/architecture.md`, then the relevant `architecture/implementation/shapes/backend.md` and/or `architecture/implementation/shapes/scripts.md` in full, then the applicable language guide in full — `architecture/implementation/stacks/typescript/nestjs.md` or `architecture/implementation/stacks/python.md`. Python backend tooling selects both shapes. These own the extracted definitions referenced by `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`. Reuse a document already read in the current session while its content identity is unchanged; re-read it fresh only when it changed, when comprehension is incomplete, or when this runtime requires a fresh read. The section pointers in the language sections locate the owned rules inside those guides and do not re-mandate a whole-guide read.
 
 This extraction routes intended architecture, not verified implementation conformance. Guide status remains as recorded in the navigation and guide metadata; proposed documents are not approved by this pointer. If that status or an unresolved mapping prevents an assigned review decision, stop the affected operation and report to Cipher 🔓 (Lead Orchestrator).
 
 #### Dependency and error contract
 
-Read `architecture/clean-architecture.md` → `C1 — Layers and dependencies`, `C5 — Failures`, and `C6 — Serialization`.
+Read `architecture/implementation/architecture.md` → `C1 — Layers and dependencies`, `C5 — Failures`, and `C6 — Serialization`.
 
 #### File-Type Branch Trigger
 - File ends in `.ts` or `.tsx` and is in the application source tree → apply the language-agnostic contract, then the TypeScript (NestJS) section below
@@ -56,35 +56,35 @@ Read `architecture/clean-architecture.md` → `C1 — Layers and dependencies`, 
 
 #### TypeScript — NestJS
 
-The applicable `architecture/stacks/typescript/nestjs.md` is read in full once under `#### Language-agnostic`; reuse it there under that section's change-based rule. The following legacy headings are compatibility pointers only.
+The applicable `architecture/implementation/stacks/typescript/nestjs.md` is read in full once under `#### Language-agnostic`; reuse it there under that section's change-based rule. The following legacy headings are compatibility pointers only.
 
 ##### DOMAIN LAYER — `domain/`
 
-Read `architecture/stacks/typescript/nestjs.md` → `Domain and ports`.
+Read `architecture/implementation/stacks/typescript/nestjs.md` → `Domain and ports`.
 
 ##### APPLICATION LAYER — `application/use-cases/`
 
-Read `architecture/stacks/typescript/nestjs.md` → `Application operations`.
+Read `architecture/implementation/stacks/typescript/nestjs.md` → `Application operations`.
 
 ##### INFRASTRUCTURE LAYER — `infrastructure/`
 
-Read `architecture/stacks/typescript/nestjs.md` → `Adapters and delivery`, including `Adapters and repositories`, `Controllers`, and `Composition`.
+Read `architecture/implementation/stacks/typescript/nestjs.md` → `Adapters and delivery`, including `Adapters and repositories`, `Controllers`, and `Composition`.
 
 ##### IMPORT PATH RULES (apply to EVERY file — source and tests)
 
-Read `architecture/stacks/typescript/nestjs.md` → `Imports and language conventions`.
+Read `architecture/implementation/stacks/typescript/nestjs.md` → `Imports and language conventions`.
 
 ##### WHAT MUST NOT EXIST
 
-Read `architecture/stacks/typescript/nestjs.md` → `Application operations`, `Adapters and delivery`, and `Imports and language conventions`.
+Read `architecture/implementation/stacks/typescript/nestjs.md` → `Application operations`, `Adapters and delivery`, and `Imports and language conventions`.
 
 #### Python
 
-The applicable `architecture/stacks/python.md` is read in full once under `#### Language-agnostic`; reuse it there under that section's change-based rule. The following legacy definition headings are compatibility pointers only; scope and reviewer gates remain below.
+The applicable `architecture/implementation/stacks/python.md` is read in full once under `#### Language-agnostic`; reuse it there under that section's change-based rule. The following legacy definition headings are compatibility pointers only; scope and reviewer gates remain below.
 
 ##### Layers (Python) — domain, application, infrastructure
 
-Read `architecture/stacks/python.md` → `Structure and dependency mapping`, `Domain and ports`, `Application operations`, and `Adapters and delivery`. Concrete Python module roles are destination-owned configuration; the guide carries no project extension region.
+Read `architecture/implementation/stacks/python.md` → `Structure and dependency mapping`, `Domain and ports`, `Application operations`, and `Adapters and delivery`. Concrete Python module roles are destination-owned configuration; the guide carries no project extension region.
 
 ##### PYTHON BACKEND — backend tooling paths, ticket tooling, and feature-scoped skill scripts
 
@@ -92,7 +92,7 @@ Applied when the file being verified ends in `.py` and lives under a backend too
 
 ###### MODULE BOUNDARIES
 
-Read `architecture/stacks/python.md` → `Imports and language conventions` → `Deployment zones` and `Typing and modules`, and `Adapters and delivery` for feature-script IO separation.
+Read `architecture/implementation/stacks/python.md` → `Imports and language conventions` → `Deployment zones` and `Typing and modules`, and `Adapters and delivery` for feature-script IO separation.
 
 **Feature-scoped skill scripts** (`.opencode/skills/*/scripts/*.py`):
 
@@ -101,31 +101,31 @@ Read `architecture/stacks/python.md` → `Imports and language conventions` → 
 
 ###### PYDANTIC MODEL CONVENTIONS (applies to the project's model definitions and any future schema model)
 
-Read `architecture/stacks/python.md` → `Domain and ports` → `Pydantic models`.
+Read `architecture/implementation/stacks/python.md` → `Domain and ports` → `Pydantic models`.
 
 ###### Zone Import Prohibitions
 
-Read `architecture/stacks/python.md` → `Imports and language conventions` → `Deployment zones`.
+Read `architecture/implementation/stacks/python.md` → `Imports and language conventions` → `Deployment zones`.
 
 ##### Python Language Rules
 
-Read `architecture/stacks/python.md` under `#### Language-agnostic` — already read in full there and reusable per that section's change-based rule; the headings below preserve legacy reference targets only.
+Read `architecture/implementation/stacks/python.md` under `#### Language-agnostic` — already read in full there and reusable per that section's change-based rule; the headings below preserve legacy reference targets only.
 
 ###### LAYER BOUNDARIES — pure logic (domain) vs IO (infrastructure)
 
-Read `architecture/stacks/python.md` → `Domain and ports`, `Application operations`, and `Adapters and delivery`.
+Read `architecture/implementation/stacks/python.md` → `Domain and ports`, `Application operations`, and `Adapters and delivery`.
 
 ###### TYPE HINTS
 
-Read `architecture/stacks/python.md` → `Imports and language conventions` → `Typing and modules`, and `Domain and ports` for structured intermediate data.
+Read `architecture/implementation/stacks/python.md` → `Imports and language conventions` → `Typing and modules`, and `Domain and ports` for structured intermediate data.
 
 ###### EXPLICIT IMPORTS AND MODULE DOCUMENTATION
 
-Read `architecture/stacks/python.md` → `Imports and language conventions` → `Typing and modules`, and `Domain and ports` for constants modules.
+Read `architecture/implementation/stacks/python.md` → `Imports and language conventions` → `Typing and modules`, and `Domain and ports` for constants modules.
 
 ###### WHAT MUST NOT EXIST IN PYTHON FILES
 
-Read `architecture/stacks/python.md` → `Domain and ports`, `Application operations`, `Adapters and delivery`, and `Imports and language conventions`.
+Read `architecture/implementation/stacks/python.md` → `Domain and ports`, `Application operations`, `Adapters and delivery`, and `Imports and language conventions`.
 
 ###### Python Test Files
 Bastion 🧱 (Backend & Scripts Architect) owns Python implementation and script architecture for test files and audits them against the Python rules above after every edit; Bastion 🧱 (Backend & Scripts Architect) `[PASS]` is still required after every such edit. Python test-architecture review is deferred to Crucible 🔥 (Test Architect) `##### Python Test Rules`; that verdict is recorded as-is — never relabeled. Skill tests use the project's test runner and dependency groups; the test runner must not be added to the project's runtime dependencies.
@@ -190,7 +190,7 @@ Every prose mention of a roster member uses `Name Emoji (Role)` form (e.g. `Ciph
 AICore's concrete Python module-role mapping to `#### Python`. The required application entry is `execute()` with typed domain results/errors, not a serialized transport response. Legacy `*_logic()` entries or application JSON serialization are nonconforming, not an on-touch exemption; apply `#### Nonconforming feature files` without implying an unrelated repository-wide migration. A destination maps its own equivalents under the same contract.
 
 - **Domain:** `constants.py` (data only) and pure rule/parsing modules (`rules.py`, `markers.py`, `regions.py`, `parse_*`), with typed ports and errors; no IO.
-- **Application:** `architecture/stacks/python.md` → `Application operations` owns the operation definition, including one operation per module and its naming; the local mapping is `application/` operation modules (for example `apply_core_revision.py`, `verify_destinations.py`, `validate_analysis.py`, `find_models.py`). Typed parameters and injected domain ports, typed domain result or domain error value. No JSON serialization inside the business operation.
+- **Application:** `architecture/implementation/stacks/python.md` → `Application operations` owns the operation definition, including one operation per module and its naming; the local mapping is `application/` operation modules (for example `apply_core_revision.py`, `verify_destinations.py`, `validate_analysis.py`, `find_models.py`). Typed parameters and injected domain ports, typed domain result or domain error value. No JSON serialization inside the business operation.
 - **Composition/delivery:** the package entry or composition module (`entry.py`, `infrastructure/composition.py`, or the script entry) wires the adapters; the delivery handler calls `execute()` and serializes its domain result/error to JSON at the transport edge.
 - **Infrastructure:** `filesystem.py`, `stores.py`, `reader.py`, `cli.py`, `process.py` — file IO, stores, readers, and CLI/process adapters.
 - `TypedDict` for structured intermediate data (for example parsed bindings, markers, or model records).

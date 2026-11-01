@@ -109,7 +109,7 @@ Live `gh pr view` 2026-10-26: all eight MERGED, base `main`. Owning feature docu
 
 ### Architecture: documented, not implementation-certified
 
-[Architecture navigation](../../architecture/README.md) selects the [common contract](../../architecture/clean-architecture.md), applicable shapes and implementation guides, then the [testing contract](../../architecture/testing/architecture.md) and applicable testing guide. Runtime specs retain execution authority, procedures and review gates. Reference-guide acceptance and recorded passing suites establish neither existing-code conformance nor destination migration.
+[Architecture navigation](../../architecture/README.md) selects the [common contract](../../architecture/implementation/architecture.md), applicable shapes and implementation guides, then the [testing contract](../../architecture/testing/architecture.md) and applicable testing guide. Runtime specs retain execution authority, procedures and review gates. Reference-guide acceptance and recorded passing suites establish neither existing-code conformance nor destination migration.
 
 Python HTTP framework, repository library, error-registry layout and serializer/framework mappings remain unselected, as recorded in architecture navigation and ADR 0003. These are future decisions when applicable, not missing requirements blocking the completed documentation feature. Existing implementation adoption/remediation is unassessed here and requires separately authorized work. New destination architecture paths require authorized enrollment and reconciliation; source documentation completion does not prove any destination accepted them.
 

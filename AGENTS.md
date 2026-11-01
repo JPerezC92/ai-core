@@ -105,7 +105,7 @@ AICore is a **reusable, agnostic core**: another project adopts it as a complete
 2. **Keep the shared infrastructure** the agents reference:
    - `knowledge/agents.md` (shared rules), `knowledge/agent-workflow.md` (shared workflow entry), and `knowledge/debt.md` (accepted-debt register)
    - `knowledge/symptoms.md` (symptom-class catalog) and `knowledge/problems.md` (known-problem register)
-   - `architecture/README.md` — architecture navigation and selection; `architecture/clean-architecture.md` — the common contract; `architecture/shapes/` — application responsibilities; `architecture/stacks/` — implementation guides and template
+   - `architecture/README.md` — architecture navigation and selection; `architecture/implementation/architecture.md` — the common contract; `architecture/implementation/shapes/` — application responsibilities; `architecture/implementation/stacks/` — implementation guides and template
    - `architecture/testing/` — the language-agnostic test contract, stack-guide template, and reviewed stack guides
    - `odd/tasks/` — ODD feature documents, one file per feature, created from `odd/tasks/_template.md`
    - `output/` for temporal artifacts (audits, research, design — gitignored; agents create it on first write)
@@ -114,7 +114,7 @@ AICore is a **reusable, agnostic core**: another project adopts it as a complete
    - `.opencode/agents/atrium.md` — the frontend reviewer; architecture definitions live in the common contract, frontend shape, and React implementation guide
    - `.opencode/agents/bastion.md` — the backend & scripts reviewer; architecture definitions live in the common contract, applicable shapes, and NestJS/Python implementation guides
    - `.opencode/agents/crucible.md` — the test-architecture reviewer and stack-guide router
-   - `architecture/stacks/` — implementation guides plus the template for a destination-owned implementation guide
+   - `architecture/implementation/stacks/` — implementation guides plus the template for a destination-owned implementation guide
    - `architecture/testing/stacks/` — reviewed TypeScript/Python testing guides plus the template for a destination-owned testing guide
    - `.opencode/agents/lumen.md` — the visual-system tool references
    These are reference architectures; agent runtime specs retain review procedures and authority, not competing architecture rulebooks. If your stack differs, add a destination-owned stack guide from the applicable template; architecture documents ship whole-file and a destination never edits one in place. Do not replace the mandatory rulebook body. New architecture paths require enrollment with their consumers as one applicable set; `apply` alone does not enroll missing or markerless paths. Documentation approval does not establish implementation conformance.

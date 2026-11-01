@@ -25,7 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 12.**
+**Open debts: 11.**
 
 ### DEBT-021 — ODD execution-gate bypass
 
@@ -69,7 +69,7 @@ Each entry MUST include:
 - **ID:** DEBT-025
 - **Date:** 2026-10-29
 - **Description:** `core_sync_pkg/infrastructure/filesystem.py` → `preflight_write_targets` decides symbolic-link, non-regular-file, alias, root-escape, and source-tree inode-sharing policy inside an infrastructure adapter. C3/C4 require policy in the application or domain. Feature-sized remediation: extract a pure domain policy over typed target facts, leave the adapter to collect resolved paths/inodes, and return typed errors from the use cases.
-- **Direct evidence:** Bastion 🧱 (Backend & Scripts Architect) review `implementation-review/task1/bastion1` finding 1; `filesystem.py:177-370`; `architecture/clean-architecture.md` C3/C4.
+- **Direct evidence:** Bastion 🧱 (Backend & Scripts Architect) review `implementation-review/task1/bastion1` finding 1; `filesystem.py:177-370`; `architecture/implementation/architecture.md` C3/C4.
 - **Resolution criteria:** Write-target policy lives in domain/application; the adapter performs IO and mapping only; tests cover symlink, non-regular file, alias, root escape, and inode sharing; Bastion `[PASS]` and the whole suite pass.
 - **Explicit deferral decision:** User instruction 2026-10-29: "if that requiere its own feature just add as a debt to do it later but dont left any broken". Accepted for later feature work; not started.
 
@@ -78,7 +78,7 @@ Each entry MUST include:
 - **ID:** DEBT-026
 - **Date:** 2026-10-29
 - **Description:** `query_verification.py` is a ~1,002-line module with two operations (`validate`, `evaluate`) that mixes sidecar parsing, SQL safety, adapter evaluation, file IO, and CLI. `ValidationError(ValueError)` has no stable code and is raised for business failures. Feature-sized remediation: split domain/application/infrastructure/edge, one use case per module with a single `execute()`, and return typed domain errors.
-- **Direct evidence:** Bastion review findings 2–3; `query_verification.py:196,813-931`; `architecture/clean-architecture.md` C1/C2/C3/C5 and `architecture/shapes/scripts.md` P1/P2.
+- **Direct evidence:** Bastion review findings 2–3; `query_verification.py:196,813-931`; `architecture/implementation/architecture.md` C1/C2/C3/C5 and `architecture/implementation/shapes/scripts.md` P1/P2.
 - **Resolution criteria:** One use-case module per operation; pure domain parsing/safety/evaluation; typed domain errors returned as values; no business failure escapes the operation; Bastion and Crucible `[PASS]`; suite passes.
 - **Explicit deferral decision:** User instruction 2026-10-29: "if that requiere its own feature just add as a debt to do it later but dont left any broken". Accepted for later feature work; not started.
 
@@ -90,15 +90,6 @@ Each entry MUST include:
 - **Direct evidence:** Conversation record 2026-10-29; user corrections "why u stopped now?", "stopo dodging, hey u should understand if u stop there should be a reason that require me to take an action, in other casu if u finalized all your pending why u dolnt senmt a clear message like ALL FINISHED, and next steps or ask about what to do next"; `AGENTS.md` project extension `### Stop and next-step reporting`; no code change.
 - **Resolution criteria:** Every stop either names the exact user action required or says `ALL FINISHED`, lists the completed scope, and states the next steps; if work remains, continue to the next ready task; informational evidence alone is not a stop reason. Demonstrate on the current push/PR and future tasks.
 - **Explicit deferral decision:** User instruction 2026-10-29: "add this error as a debt iun the workflow and then continue with the 5". The user accepted the process debt and directed the push/PR.
-
-### DEBT-030 — Architecture content model: agnostic rule to language-guide mapping
-
-- **ID:** DEBT-030
-- **Date:** 2026-10-31
-- **Description:** `architecture/` has no single documented content model for how an agnostic rule is carried into a language guide. The ownership split exists only as scattered prose (`architecture/README.md:24`; `architecture/testing/architecture.md:6–15`; `architecture/stacks/_template.md:8,32,47`), and enforcement is asymmetric. Implementation guides carry stable obligation IDs (C1–C7, B1–B3, F1–F3, P1–P3) and a mandatory obligation-mapping table, so every mapping is citable and checkable. Testing guides carry no rule IDs at all: their cross-stack parity table states a free-text `Covered` verdict that cannot be verified against a named obligation. The consequence is either duplication or omission. `architecture/testing/stacks/python.md:63` restates the contract's general hermeticity requirement (`architecture/testing/architecture.md:53`) in Python terms instead of mapping to it, while `architecture/testing/stacks/typescript.md` states neither that requirement nor the missing-evidence rule (`architecture/testing/architecture.md:46`) and nevertheless marks both `Covered` at `:189` and `:190`. Adding a second language-local copy of a contract requirement — the obvious quick repair — worsens the model, because the requirement would then live in three places and every future edit must find them all.
-- **Direct evidence:** Crucible 🔥 (Test Architect) owner-gate findings C1 and C2 for `odd/tasks/architecture-whole-file-distribution.md`; `architecture/testing/stacks/typescript.md:160–177,189,190`; `architecture/testing/stacks/python.md:14,63,82,92`; `architecture/testing/architecture.md:46,53,96`; `architecture/stacks/_template.md:36–47`; `architecture/README.md:24`.
-- **Resolution criteria:** The architecture content model is stated once as a contract — which layer owns an agnostic rule, and what a language guide must do instead of restating it; contract sections carry stable rule IDs on the implementation and testing sides alike; every stack guide's mapping or parity table cites those IDs and states only the language-specific achievement; no guide restates a contract requirement verbatim; the two known drifts are mapped by ID so their `Covered` claims become verifiable; Bastion 🧱 (Backend & Scripts Architect) and Crucible 🔥 (Test Architect) return `[PASS]` on the result.
-- **Explicit deferral decision:** User instruction 2026-10-31: "there is a real problem and i think we will add it as a debt … u are trying to duplicated a instruction rigth now that tells me there isnt a clear documentation of how is organsed the architecture content, y we duplicated ther intruction what happend when u try to modify 1? u will modify the base and alll the specific languaje files". The user accepted the content-model debt and directed that it be registered rather than repaired inside the distribution migration.
 
 ### DEBT-031 — ADR 0006 introduced without authorization and left with an inaccurate status
 

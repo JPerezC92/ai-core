@@ -4,11 +4,11 @@ This document holds this repository's source-local architecture selections, deci
 
 ## Current source selections
 
-The previously approved import interpretations are mapped by `architecture/stacks/typescript/react.md` and `architecture/stacks/typescript/nestjs.md` → Imports and language conventions, and `architecture/stacks/python.md` → Imports and language conventions → Deployment zones. Those owners retain the sibling exceptions, non-sibling alias/absolute mappings, traversal prohibitions and deployment/startup boundaries; this navigation adds no competing portable contract.
+The previously approved import interpretations are mapped by `architecture/implementation/stacks/typescript/react.md` and `architecture/implementation/stacks/typescript/nestjs.md` → Imports and language conventions, and `architecture/implementation/stacks/python.md` → Imports and language conventions → Deployment zones. Those owners retain the sibling exceptions, non-sibling alias/absolute mappings, traversal prohibitions and deployment/startup boundaries; this navigation adds no competing portable contract.
 
-The approved Python backend-entity representation is mapped by `architecture/stacks/python.md` → Domain and ports and Obligation mapping. Its framework-free entity choice does not select a framework for unrelated DTO/configuration roles or establish application conformance.
+The approved Python backend-entity representation is mapped by `architecture/implementation/stacks/python.md` → Domain and ports and Obligation mapping. Its framework-free entity choice does not select a framework for unrelated DTO/configuration roles or establish application conformance.
 
-No Python HTTP framework, repository library, error registry layout or serializer framework mapping has been selected. These project selections remain open; current implementation patterns do not decide them. Follow `architecture/stacks/python.md` → Open decisions and the applicable runtime's uncertainty route when a missing mapping affects the task. Unselected bindings alone are not blockers for unrelated work.
+No Python HTTP framework, repository library, error registry layout or serializer framework mapping has been selected. These project selections remain open; current implementation patterns do not decide them. Follow `architecture/implementation/stacks/python.md` → Open decisions and the applicable runtime's uncertainty route when a missing mapping affects the task. Unselected bindings alone are not blockers for unrelated work.
 
 ## Decision rationale
 
