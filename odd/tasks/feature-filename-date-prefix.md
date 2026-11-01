@@ -1,10 +1,11 @@
 # Feature-filename date prefix
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-01
+> **Closed:** 2026-11-01
 > **Objective:** New feature documents carry their creation date in the filename as `YYYY-MM-DD-<feature-name>.md`, so a plain alphabetical sort shows `odd/tasks/` in creation order — a prefix only, with no index, no validator change, and no rename of existing documents.
-> **Branch:** N/A — not created yet; Herald 📯 (Release Manager) creates it at the first work-unit commit.
+> **Branch:** docs/odd/add-feature-date-prefix
 > **Delivery:** single slice, forecast under 25 authored additions plus deletions across the seven rule-owner surfaces, generated files excluded, with this document's own record counted separately; far below the ~400-line trigger, so no split strategy applies.
 > **Runner:** `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feature.py odd/tasks`
 
@@ -22,12 +23,12 @@
 
 ## Tasks
 
-- T1 | S2, S3, S5, S6, S8 | delegated (project binding routes durable repository-document preparation through Cipher 🔓 (Lead Orchestrator) to Scribe ✍️ (Docs & Problems Manager); seven owner surfaces must stay consistent) — Scribe ✍️ (Docs & Problems Manager) | open | commit: pending
-- T2 | S2, S3, S5, S8 | delegated (depends on T1; independent audit of the shared rule and this document; Sentinel 🛡️ (Quality Guardian) owns `AGENTS.md`, `knowledge/`, and `odd/tasks/` audits) — Sentinel 🛡️ (Quality Guardian) | open | commit: pending
-- T3 | S7 | inline (coordinator-owned non-Git mechanical check, run in Cipher's own shell per the dispatch contract) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T4 | S4, S6 | inline (diff-level verification that no existing document was renamed and no historical record was edited) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T5 | S1, S2, S3, S4, S5, S6, S7, S8 | inline (feature acceptance and close after independent semantic review) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T6 | S9 | delegated (depends on T1; serialized writer on `AGENTS.md` — runtime-spec version maintenance under the spec-version lifecycle is owned by the HR Director, not by the documentation author) — Marshal 🎖️ (HR Director) | open | commit: pending
+- T1 | S2, S3, S5, S6, S8 | delegated (project binding routes durable repository-document preparation through Cipher 🔓 (Lead Orchestrator) to Scribe ✍️ (Docs & Problems Manager); seven owner surfaces must stay consistent) — Scribe ✍️ (Docs & Problems Manager) | done | commit: 94bef55
+- T2 | S2, S3, S5, S8 | delegated (depends on T1; independent audit of the shared rule and this document; Sentinel 🛡️ (Quality Guardian) owns `AGENTS.md`, `knowledge/`, and `odd/tasks/` audits) — Sentinel 🛡️ (Quality Guardian) | done | commit: 94bef55
+- T3 | S7 | inline (coordinator-owned non-Git mechanical check, run in Cipher's own shell per the dispatch contract) — Cipher 🔓 (Lead Orchestrator) | done | commit: 94bef55
+- T4 | S4, S6 | inline (diff-level verification that no existing document was renamed and no historical record was edited) — Cipher 🔓 (Lead Orchestrator) | done | commit: 94bef55
+- T5 | S1, S2, S3, S4, S5, S6, S7, S8 | inline (feature acceptance and close after independent semantic review) — Cipher 🔓 (Lead Orchestrator) | done | commit: 94bef55
+- T6 | S9 | delegated (depends on T1; serialized writer on `AGENTS.md` — runtime-spec version maintenance under the spec-version lifecycle is owned by the HR Director, not by the documentation author) — Marshal 🎖️ (HR Director) | done | commit: 94bef55
 
 ## Log
 
@@ -44,3 +45,5 @@
 - L11 — 2026-11-01 — T2 audit result, Sentinel 🛡️ (Quality Guardian), round 1: `[FAIL]` with one MEDIUM and one LOW finding, zero mechanical violations. F1 (MEDIUM): the grandparent clause "Documents created before 2026-11-01 keep their undated names" in `knowledge/agent-workflow.md` contradicts S4, because four undated documents carry `Created: 2026-11-01` and therefore fall under a rule that on its wording requires them to be prefixed; a fixed calendar date in shared core text is also non-portable to a destination that adopts later. F2 (LOW): this document's forecast claimed seven documentation surfaces while S5 enumerated six. INFO, out of the audit envelope: `.opencode/skills/op-skill-creator/SKILL.md` still presented the undated pattern.
 - L12 — 2026-11-01 — dispositions for L11 under `knowledge/agents.md` "Finding disposition": all three are fixed rather than deferred or asked. F1 — the fix has one correct answer: effectivity-relative wording, which removes the calendar date and is portable, so no user decision is required; routed back to the rule-text author, Scribe ✍️ (Docs & Problems Manager), as a correction to T1 before its acceptance. F2 — corrected in this document. The INFO is closed as a real S2 inconsistency, since that surface presents the undated pattern for the governing feature document; S5 was amended to name it, and the file count in the Delivery forecast follows.
 - L13 — 2026-11-01 — T2 round 2: `[FAIL]` on a single LOW finding F3, with F1 and F2 verified fixed and the round-1 INFO closed. F3 was my own stale numeral: T1's route reason still said six owner surfaces after S5 was amended to seven. Fixed in this document under Cipher's feature-document ownership, not delegated. Round 2 also re-verified S1–S9 independently rather than only the deltas. This is the second of three total audit rounds; a same finding surviving two remediation rounds, or a third failing round, stops for user adjudication under the loop cap.
+- L14 — 2026-11-01 — T2 round 3 (final): `[PASS]`, zero open findings of any severity, F3 verified fixed with a three-way agreement on the surface count (`Delivery` forecast, T1 route reason, S5 enumeration). Sentinel 🛡️ (Quality Guardian) re-verified S1–S9 in full rather than delta-only and measured the document's numerals against the tree: 49 entries in `odd/tasks/` = 48 documents plus `_template.md`; four undated documents carrying `Created: 2026-11-01`; nine changed lines across the seven surfaces, inside the "under 25" forecast. Loop cap not triggered.
+- L15 — Close: 2026-11-01 — all six tasks are done and committed in the work unit `94bef55` on branch `docs/odd/add-feature-date-prefix`. Delivered: the date-prefix naming rule and its rationale in the shared rule owner, the dated pattern in all seven rule-owner surfaces, and the root spec bump to 3.4.0. Not delivered by design: no validator rule, no index document, no rename of any existing document, and no agent runtime spec version change. Verified by the anatomy validator (`odd/tasks` exits 0) and Sentinel 🛡️ (Quality Guardian) round-3 `[PASS]` with zero open findings. Nothing pushed; the branch is local.
