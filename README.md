@@ -8,7 +8,7 @@ A reusable, agnostic **agentic orchestration core** for [OpenCode](https://openc
 |---|---|
 | Act on a request | [AGENTS.md](AGENTS.md) is the lead runtime; [knowledge/agent-workflow.md](knowledge/agent-workflow.md) is the single workflow router, including ODD classification and task-specific reads. |
 | Check evidence, coordination or safety obligations | [knowledge/agents.md](knowledge/agents.md); runtime authority and automatic edit/release/PR gates remain in [AGENTS.md](AGENTS.md) and the assigned specialist runtime. |
-| Work on a feature | `odd/tasks/<feature-name>.md`, created from [odd/tasks/_template.md](odd/tasks/_template.md) through `.opencode/skills/odd-workflow/SKILL.md`; Specs, Tasks and Log are the single feature record. |
+| Work on a feature | `odd/tasks/<YYYY-MM-DD>-<feature-name>.md`, created from [odd/tasks/_template.md](odd/tasks/_template.md) through `.opencode/skills/odd-workflow/SKILL.md`; Specs, Tasks and Log are the single feature record. |
 | Select architecture or testing definitions | [architecture/README.md](architecture/README.md); [architecture/testing/architecture.md](architecture/testing/architecture.md) owns testing. Runtimes own procedures and gates; documentation acceptance is not implementation conformance. |
 | Reuse research or read explanatory documentation | [docs/README.md](docs/README.md) → [research catalog](docs/research/README.md). Research and history are evidence, not execution authority. |
 | Investigate an incident | `knowledge/symptoms.md`, `knowledge/problems.md`, and the register-first procedure in `knowledge/agents.md`; incident skills are `.opencode/skills/ticket-runbook/SKILL.md` and `.opencode/skills/query-verification/SKILL.md`. |

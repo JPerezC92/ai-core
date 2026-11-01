@@ -15,7 +15,7 @@ The project's `knowledge/agent-workflow.md` is the governing workflow when prese
 
 When that file is present, apply `knowledge/agent-workflow.md` `### ODD protocol` before any write; do not restate that protocol here.
 
-For authorized non-small work, read the governing `odd/tasks/<feature>.md` through `## Log`, report the `S#` specs covered, and record compact per-task evidence in that existing Log: exact input/commit identity, relevant dependencies, executor, literal command or manual action, expected/observed result, and exit status when applicable. No second tracker, no execution transcript, never an invented test. This preflight grants no new authority.
+For authorized non-small work, read the governing `odd/tasks/<YYYY-MM-DD>-<feature-name>.md` through `## Log`, report the `S#` specs covered, and record compact per-task evidence in that existing Log: exact input/commit identity, relevant dependencies, executor, literal command or manual action, expected/observed result, and exit status when applicable. No second tracker, no execution transcript, never an invented test. This preflight grants no new authority.
 
 ## Inputs
 
