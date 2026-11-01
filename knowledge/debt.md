@@ -25,7 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 11.**
+**Open debts: 12.**
 
 ### DEBT-021 — ODD execution-gate bypass
 
@@ -127,5 +127,14 @@ Each entry MUST include:
 - **Resolution criteria:** no doc or bookkeeping commit is created on a PR branch after its reviewed head is pushed unless it is pushed and re-reviewed in the same PR; the ready state is declared only when every local commit on the branch is contained in the pushed head, and any deliberate local-only work is named explicitly in the readiness message; post-merge cleanup then completes without a preflight BLOCK. Demonstrate on the next PR and its cleanup.
 - **Explicit deferral decision:** User instruction 2026-11-01 (verbatim): "FUCK HOW U WERE ABLE TO TELL ME READY TO MERGE IF THE BRANCH WERE NOT READY". The user directed that this failure be recorded rather than only discussed.
 
-**ID to use for the next new debt:** `DEBT-035`. This is an allocation counter, not an open debt.
+### DEBT-035 — Repeated authorization requests despite standing merged-branch cleanup authority
+
+- **ID:** DEBT-035
+- **Date:** 2026-11-01
+- **Description:** Cipher 🔓 (Lead Orchestrator) asked the user for a fresh confirmation before deleting an already-merged feature branch twice on the same day, even though the project standing-authorizes post-merge branch cleanup and the user had repeatedly signalled that redundant authorization questions are unwanted. On the second occurrence the user had already answered "merged" and still received a question instead of the cleanup action.
+- **Direct evidence:** User corrections verbatim "why are u requesting me authorization?? add that as an debt error" (recorded as DEBT-033) and later "WHY U ARE ASKING, WHY U AMKE THIS ERROR AGAIN"; merged-branch cleanup standing grant in `AGENTS.md` project section; PR #139 merged (squash `1cfa57dc190a2d833474e312b3d0a87663bc2148`) and PR #140 merged (squash `46c0cb2983e22d86595a4f2a5ab495e0614b068c`) with the branch `feat/git-pr/prepare-local-review` still undeleted at the time of the question.
+- **Resolution criteria:** When an applicable standing grant exists and the user has stated the triggering fact (e.g. "merged"), execute the authorized cleanup without a further confirmation; only genuinely missing authority, destructive actions outside the grant, or a real safety blocker justify a question, and that blocker must be named. Demonstrate on the next merged PR and record it here before retiring this debt.
+- **Explicit deferral decision:** User instruction 2026-11-01 (verbatim): "WHY U ARE ASKING, WHY U AMKE THIS ERROR AGAIN". Directed that this recurrence be recorded as debt.
+
+**ID to use for the next new debt:** `DEBT-036`. This is an allocation counter, not an open debt.
 <!-- project:end -->
