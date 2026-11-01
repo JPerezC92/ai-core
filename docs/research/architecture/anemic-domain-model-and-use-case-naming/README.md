@@ -342,6 +342,6 @@ A "no" on 1, 2, 3, or 6 is a naming finding. A "no" on 4 or 5 is a signal to ins
 ## Reuse and supersession notes
 
 - Reusable unchanged: the anemic/CA distinction; the behavior-placement table; the naming-shape assessment; the local contract comparison.
-- Recheck before reuse: vendor docs and mutable articles; any change to `architecture/clean-architecture.md` or the stack guides; any new TypeScript application.
+- Recheck before reuse: vendor docs and mutable articles; any change to `architecture/implementation/architecture.md` or the stack guides; any new TypeScript application.
 - Not reusable as policy: the naming recommendation is a proposal, not an existing rule. The local contract fixes only "one named business operation" and `execute()`.
 - Durable publication: this combined record is the selected shape from the brief's proposal; the two-record alternative (`docs/research/architecture/anemic-domain-model/` and `docs/research/architecture/use-case-naming/`) was not created. Catalog entry added in `docs/research/README.md`. Status: durable record created and cataloged in the working tree; no Git commit was performed.

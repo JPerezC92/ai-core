@@ -2,7 +2,7 @@
 
 ## Applicability
 
-Scripts, CLIs, and tooling operations, including independently deployed tooling packages. Read `architecture/clean-architecture.md` first. A smaller executable does not suspend the common contract.
+Scripts, CLIs, and tooling operations, including independently deployed tooling packages. Read `architecture/implementation/architecture.md` first. A smaller executable does not suspend the common contract.
 
 ## P1 — Responsibilities
 

@@ -2,11 +2,11 @@
 
 ## Purpose and authority
 
-This contract owns common architecture semantics. Application shapes own responsibility/layout specialization; implementation guides own syntax and library mappings. A language or library is never a layer and cannot suspend this contract. These are intended architecture decisions, not evidence that existing code conforms. Documentation approval and implementation verification are separate.
+Statement-layer ownership is defined in `architecture/README.md` → `## Content model`. These are intended architecture decisions, not evidence that existing code conforms. Documentation approval and implementation verification are separate.
 
 ## C1 — Layers and dependencies
 
-The same layers apply across languages: domain, application, infrastructure; static dependencies point inward, infrastructure → application → domain. Shape-specific folders bind these responsibilities without renaming the layers. The application imports only domain types and ports, never frameworks or concrete adapters. Runtime effects through injected domain ports are allowed: a runtime call graph is not the static-import graph.
+The same layers apply across languages: domain, application, infrastructure; static dependencies point inward, infrastructure → application → domain. A language or library is never a layer and cannot suspend this contract. Shape-specific folders bind these responsibilities without renaming the layers. The application imports only domain types and ports, never frameworks or concrete adapters. Runtime effects through injected domain ports are allowed: a runtime call graph is not the static-import graph.
 
 ## C2 — Domain and ports
 

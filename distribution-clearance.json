@@ -35,28 +35,28 @@
     "architecture/README.md": {
       "mode": "raw"
     },
-    "architecture/clean-architecture.md": {
+    "architecture/implementation/architecture.md": {
       "mode": "raw"
     },
-    "architecture/shapes/frontend.md": {
+    "architecture/implementation/shapes/frontend.md": {
       "mode": "raw"
     },
-    "architecture/shapes/backend.md": {
+    "architecture/implementation/shapes/backend.md": {
       "mode": "raw"
     },
-    "architecture/shapes/scripts.md": {
+    "architecture/implementation/shapes/scripts.md": {
       "mode": "raw"
     },
-    "architecture/stacks/_template.md": {
+    "architecture/implementation/stacks/_template.md": {
       "mode": "raw"
     },
-    "architecture/stacks/typescript/react.md": {
+    "architecture/implementation/stacks/typescript/react.md": {
       "mode": "raw"
     },
-    "architecture/stacks/typescript/nestjs.md": {
+    "architecture/implementation/stacks/typescript/nestjs.md": {
       "mode": "raw"
     },
-    "architecture/stacks/python.md": {
+    "architecture/implementation/stacks/python.md": {
       "mode": "raw"
     },
     "architecture/testing/architecture.md": {

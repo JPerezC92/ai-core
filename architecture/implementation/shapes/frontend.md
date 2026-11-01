@@ -2,11 +2,11 @@
 
 ## Applicability
 
-Feature-oriented frontend applications. Read `architecture/clean-architecture.md` first; this shape specializes responsibilities, not the common dependency/error rules. Syntax and libraries belong to the selected implementation guide.
+Feature-oriented frontend applications. Read `architecture/implementation/architecture.md` first. Statement-layer ownership is defined in `architecture/README.md` → `## Content model`.
 
 ## F1 — Feature layout and domain
 
-Use `modules/{feature}/domain/`, `services/`, `hooks/`, and `components/`. Domain defines entity types as data-only domain records — data structures by design, not rule-holding entities — plus service ports and one typed, stable code-bearing business error per feature; no framework or transport imports.
+Use `modules/{feature}/domain/`, `services/`, `hooks/`, and `components/`. Domain defines entity types as data-only domain records — data structures by design, not rule-holding entities — plus service ports and one typed, stable code-bearing business error per feature (`C2`).
 
 ## F2 — Operation and adapter
 

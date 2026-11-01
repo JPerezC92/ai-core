@@ -41,13 +41,13 @@ A file assigned by the active feature document or parent assignment that violate
 
 #### Language-agnostic
 
-Before reviewing, read `architecture/README.md`, then `architecture/clean-architecture.md`, then `architecture/shapes/frontend.md` in full on first use in the run. Reuse each document while its content identity is unchanged, and re-read only a document that changed or a section whose comprehension is incomplete. These own the extracted common and frontend definitions referenced by `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`. Apply the selected stack mapping below; do not infer conformance from folder names or examples.
+Before reviewing, read `architecture/README.md`, then `architecture/implementation/architecture.md`, then `architecture/implementation/shapes/frontend.md` in full on first use in the run. Reuse each document while its content identity is unchanged, and re-read only a document that changed or a section whose comprehension is incomplete. These own the extracted common and frontend definitions referenced by `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`. Apply the selected stack mapping below; do not infer conformance from folder names or examples.
 
 This extraction routes intended architecture, not verified implementation conformance. Guide status remains as recorded in the navigation and guide metadata; proposed documents are not approved by this pointer. If that status or an unresolved mapping prevents an assigned review decision, stop the affected operation and report to Cipher 🔓 (Lead Orchestrator).
 
 #### TypeScript — React
 
-Read `architecture/stacks/typescript/react.md` in full once per task, after the common contract and frontend shape. This is the single reading mandate for the React guide: reuse it while its content identity is unchanged, and re-read it only when it changed, when comprehension is incomplete, or when this runtime requires a fresh read. Test architecture and testing-guide selection belong to Crucible 🔥 (Test Architect); do not read the testing contract or testing guide under this review. The guide and its sections own the architecture rules; this spec owns the review procedure and the verdict.
+Read `architecture/implementation/stacks/typescript/react.md` in full once per task, after the common contract and frontend shape. This is the single reading mandate for the React guide: reuse it while its content identity is unchanged, and re-read it only when it changed, when comprehension is incomplete, or when this runtime requires a fresh read. Test architecture and testing-guide selection belong to Crucible 🔥 (Test Architect); do not read the testing contract or testing guide under this review. The guide and its sections own the architecture rules; this spec owns the review procedure and the verdict.
 
 ### Workflow
 

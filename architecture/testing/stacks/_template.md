@@ -96,22 +96,22 @@ Do not grant execution authority in this guide. Name the project configuration s
 
 ## Cross-stack parity
 
-Complete this table for every contract section:
+Complete this table for every contract section. Every row cites the contract rule identifiers the guide achieves; a coverage claim without a cited identifier is a defect. Follow `architecture/README.md` → `## Content model`.
 
-| Contract section | Coverage | Difference or N/A reason |
+| Contract section | Cited rule IDs | Language-specific achievement or N/A reason |
 |---|---|---|
-| Applicability and ownership | <covered / N/A> | <reason> |
-| Test pyramid mapping | <covered / N/A> | <reason> |
-| File organization | <covered / N/A> | <reason> |
-| Unit tests | <covered / N/A> | <reason> |
-| Integration tests | <covered / N/A> | <reason> |
-| End-to-end tests | <covered / N/A> | <reason> |
-| Test data and doubles | <covered / N/A> | <reason> |
-| Execution and evidence | <covered / N/A> | <reason> |
-| Cross-stack parity | <covered / N/A> | <reason> |
-| Open decisions | <covered / N/A> | <reason> |
+| Applicability and ownership | <T-IDs> | <how this stack achieves them, or the N/A reason> |
+| Test pyramid mapping | <T-IDs> | <how this stack achieves them, or the N/A reason> |
+| File organization | <T-IDs> | <how this stack achieves them, or the N/A reason> |
+| Unit tests | <T-IDs> | <how this stack achieves them, or the N/A reason> |
+| Integration tests | <T-IDs> | <how this stack achieves them, or the N/A reason> |
+| End-to-end tests | <T-IDs> | <how this stack achieves them, or the N/A reason> |
+| Test data and doubles | <T-IDs> | <how this stack achieves them, or the N/A reason> |
+| Execution and evidence | <T-IDs> | <how this stack achieves them, or the N/A reason> |
+| Cross-stack parity | <T-IDs> | <how this stack achieves them, or the N/A reason> |
+| Open decisions | <T-IDs> | <how this stack achieves them, or the N/A reason> |
 
-A difference is allowed only for language or runtime semantics. A thinner section is not a difference.
+A difference is allowed only for language or runtime semantics. A thinner section is not a difference. State only how this stack achieves a cited rule; never restate the rule, here or in the body.
 
 ## Open decisions
 
