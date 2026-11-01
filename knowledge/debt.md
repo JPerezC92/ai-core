@@ -25,7 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 12.**
+**Open debts: 11.**
 
 ### DEBT-021 — ODD execution-gate bypass
 
@@ -45,15 +45,6 @@ Each entry MUST include:
 - **Direct evidence:** Conversation record 2026-10-29; user instruction "add taht as a debt when u finish a step u should send a message of the status and continue"; `odd/tasks/domain-use-case-conventions.md` L1–L7; the step-status table delivered only after the user asked.
 - **Resolution criteria:** Every completed ODD step produces a concise status message with the step number, state, evidence pointer, and next step; work continues to the next step unless a required gate or blocker stops it; any skipped step is named with its reason. Demonstrate this across the remaining steps of the active feature and the next non-small feature.
 - **Explicit deferral decision:** User instruction 2026-10-29: "add taht as a debt when u finish a step u should send a message of the status and continue". The user accepted the process debt and directed continuation.
-
-### DEBT-023 — Per-commit authorization prompt
-
-- **ID:** DEBT-023
-- **Date:** 2026-10-29
-- **Description:** Cipher treated local commits as requiring a per-commit user decision and stopped after each task for that decision, although the user's standing direction is that local commits are part of finishing a task. This created repeated stops and blocked feature close on a commit reference.
-- **Direct evidence:** Conversation record 2026-10-29; user corrections "thats wrong a commit dont require my authorization if u do taht u will stop in each task thats onoyous" and "add taht error as a debt"; `odd/tasks/domain-use-case-conventions.md` L7/L8; no commit performed.
-- **Resolution criteria:** Local commits proceed under the user's standing authorization without per-commit prompts; push, PR, merge, tag, release, and archive remain separately authorized; a coherent task's commit reference is produced and used for feature close. Demonstrate on the current documentation feature and the next feature.
-- **Explicit deferral decision:** User instruction 2026-10-29: "add taht error as a debt". The user accepted the process debt and directed the standing authorization.
 
 ### DEBT-024 — Unnecessary stop and self-created boundary
 
