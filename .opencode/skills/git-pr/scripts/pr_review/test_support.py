@@ -1,8 +1,13 @@
-"""Build typed offline review inputs and deliberately invalid fixture variants."""
+"""Build typed offline review inputs, an isolated Git fixture, and deliberately invalid variants."""
 
 from __future__ import annotations
 
+import os
+import subprocess
+from pathlib import Path
 from typing import Literal, TypedDict
+
+import pytest
 
 from attribution_scan.domain.records import Artifact, AttributionPolicy, ChangedFile, Snapshot, ScanResult
 
@@ -385,3 +390,188 @@ def create_invalid_followup_decisions(defect: FollowupDefect) -> ReviewDecisions
     else:
         decisions["debt"][0]["evidence"] = ""
     return decisions
+
+
+GIT_SOURCE_PATH = "src/current.py"
+GIT_REMOVED_PATH = "src/deleted.py"
+GIT_METACHARACTER_PATH = "src/evil;touch injected.txt"
+GIT_SIDE_EFFECT_NAME = "injected.txt"
+GIT_RENAMED_FROM_PATH = "src/renamed-from.py"
+GIT_RENAMED_TO_PATH = "src/renamed-to.py"
+GIT_RENAMED_CONTENT = "renamed = 1\n"
+GIT_BASE_ONLY_PATH = "src/base-only.py"
+GIT_BASE_CONTENT = "value = 1\n"
+GIT_CHANGED_CONTENT = "value = 2\n"
+GIT_REMOVED_CONTENT = "gone = 1\n"
+GIT_METACHARACTER_CONTENT = "value = 3\n"
+GIT_BASE_ONLY_CONTENT = "side = 1\n"
+GIT_BASE_ONLY_CHANGED_CONTENT = "side = 2\n"
+GIT_BASE_MESSAGE = "feat: add source files"
+GIT_CHANGED_MESSAGE = "feat: change source files"
+GIT_BASE_ONLY_MESSAGE = "feat: change the base-only path"
+GIT_ORPHAN_MESSAGE = "feat: start an unrelated history"
+GIT_SIDE_BRANCH = "feature/base-side"
+GIT_HEAD_BRANCH = "feature/head-side"
+GIT_ORPHAN_BRANCH = "orphan-history"
+GIT_BINARY_CONTENT = b"\xff\xfe\x00not text\n"
+GIT_REDIRECTING_VARIABLES = ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE")
+
+
+class GitRepositoryFixture(TypedDict):
+    """Carry one isolated two-commit repository and the values its readers must return."""
+
+    directory: str
+    base: str
+    head: str
+    message: str
+    changed_paths: list[str]
+    deleted_paths: list[str]
+    bodies: dict[str, str]
+
+
+def create_fixture_environment() -> dict[str, str]:
+    """Return an environment without machine Git configuration or repository redirection."""
+    environment = os.environ.copy()
+    environment["GIT_CONFIG_GLOBAL"] = os.devnull
+    environment["GIT_CONFIG_NOSYSTEM"] = "1"
+    environment["GIT_OPTIONAL_LOCKS"] = "0"
+    for variable in GIT_REDIRECTING_VARIABLES:
+        environment.pop(variable, None)
+    return environment
+
+
+def isolate_fixture_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Remove machine Git configuration and repository redirection for one test."""
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", os.devnull)
+    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
+    for variable in GIT_REDIRECTING_VARIABLES:
+        monkeypatch.delenv(variable, raising=False)
+
+
+def run_fixture_git(directory: Path, *arguments: str) -> str:
+    """Run one fixture-only Git command inside the isolated temporary repository."""
+    completed = subprocess.run(
+        ["git", *arguments], cwd=directory, capture_output=True, check=False,
+        shell=False, env=create_fixture_environment(),
+    )
+    assert completed.returncode == 0, completed.stderr.decode("utf-8", errors="replace")
+    return completed.stdout.decode("utf-8", errors="replace")
+
+
+def commit_fixture_tree(directory: Path, message: str) -> str:
+    """Commit the staged fixture tree with local identity and return the new commit id."""
+    run_fixture_git(
+        directory, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+        "-c", "commit.gpgsign=false", "commit", "--quiet", "--message", message,
+    )
+    return run_fixture_git(directory, "rev-parse", "HEAD").strip()
+
+
+def create_committed_repository(directory: Path) -> GitRepositoryFixture:
+    """Build two commits whose second change adds, renames, and deletes one path each."""
+    (directory / "src").mkdir(parents=True)
+    run_fixture_git(directory, "init", "--quiet")
+    (directory / GIT_SOURCE_PATH).write_text(GIT_BASE_CONTENT, encoding="utf-8", newline="")
+    (directory / GIT_REMOVED_PATH).write_text(GIT_REMOVED_CONTENT, encoding="utf-8", newline="")
+    (directory / GIT_RENAMED_FROM_PATH).write_text(GIT_RENAMED_CONTENT, encoding="utf-8", newline="")
+    run_fixture_git(directory, "add", "--all")
+    base = commit_fixture_tree(directory, GIT_BASE_MESSAGE)
+    (directory / GIT_SOURCE_PATH).write_text(GIT_CHANGED_CONTENT, encoding="utf-8", newline="")
+    (directory / GIT_REMOVED_PATH).unlink()
+    (directory / GIT_METACHARACTER_PATH).write_text(GIT_METACHARACTER_CONTENT, encoding="utf-8", newline="")
+    run_fixture_git(directory, "mv", GIT_RENAMED_FROM_PATH, GIT_RENAMED_TO_PATH)
+    run_fixture_git(directory, "add", "--all")
+    head = commit_fixture_tree(directory, GIT_CHANGED_MESSAGE)
+    return {
+        "directory": str(directory), "base": base, "head": head, "message": GIT_CHANGED_MESSAGE,
+        "changed_paths": [GIT_SOURCE_PATH, GIT_REMOVED_PATH, GIT_METACHARACTER_PATH, GIT_RENAMED_TO_PATH],
+        "deleted_paths": [GIT_REMOVED_PATH],
+        "bodies": {
+            GIT_SOURCE_PATH: GIT_CHANGED_CONTENT,
+            GIT_METACHARACTER_PATH: GIT_METACHARACTER_CONTENT,
+            GIT_RENAMED_TO_PATH: GIT_RENAMED_CONTENT,
+        },
+    }
+
+
+def create_expected_git_snapshot(*, base: str, head: str) -> Snapshot:
+    """Build the snapshot the assembled command must produce for the shared Git fixture."""
+    local = create_local_snapshot()
+    number = local["pr_number"]
+    return {
+        "schema": local["schema"], "pr_number": number, "head_sha": head, "base": base,
+        "artifacts": [
+            {"surface": "pr-title", "source": f"PR #{number} title", "content": local["artifacts"][0]["content"]},
+            {"surface": "pr-body", "source": f"PR #{number} body", "content": create_body()},
+            {"surface": "commit-message", "source": head, "content": GIT_CHANGED_MESSAGE},
+        ],
+        "changed_files": [
+            {"path": GIT_SOURCE_PATH, "content": GIT_CHANGED_CONTENT},
+            {"path": GIT_REMOVED_PATH, "content": ""},
+            {"path": GIT_METACHARACTER_PATH, "content": GIT_METACHARACTER_CONTENT},
+            {"path": GIT_RENAMED_TO_PATH, "content": GIT_RENAMED_CONTENT},
+        ],
+    }
+
+
+def create_truncated_status_payload() -> str:
+    """Return one NUL-separated rename entry whose destination field is missing."""
+    return f"R100\0{GIT_RENAMED_FROM_PATH}\0"
+
+
+class GitDivergentFixture(TypedDict):
+    """Carry one repository whose base line holds a commit unreachable from its head."""
+
+    directory: str
+    ancestor: str
+    base: str
+    head: str
+    head_path: str
+    head_content: str
+    base_only_path: str
+    base_only_content: str
+
+
+def create_divergent_repository(directory: Path) -> GitDivergentFixture:
+    """Build a head line and a base line that diverge after their shared ancestor."""
+    (directory / "src").mkdir(parents=True)
+    run_fixture_git(directory, "init", "--quiet")
+    (directory / GIT_SOURCE_PATH).write_text(GIT_BASE_CONTENT, encoding="utf-8", newline="")
+    (directory / GIT_BASE_ONLY_PATH).write_text(GIT_BASE_ONLY_CONTENT, encoding="utf-8", newline="")
+    run_fixture_git(directory, "add", "--all")
+    ancestor = commit_fixture_tree(directory, GIT_BASE_MESSAGE)
+    run_fixture_git(directory, "checkout", "--quiet", "-b", GIT_SIDE_BRANCH)
+    (directory / GIT_BASE_ONLY_PATH).write_text(GIT_BASE_ONLY_CHANGED_CONTENT, encoding="utf-8", newline="")
+    run_fixture_git(directory, "add", "--all")
+    base = commit_fixture_tree(directory, GIT_BASE_ONLY_MESSAGE)
+    run_fixture_git(directory, "checkout", "--quiet", "-b", GIT_HEAD_BRANCH, ancestor)
+    (directory / GIT_SOURCE_PATH).write_text(GIT_CHANGED_CONTENT, encoding="utf-8", newline="")
+    run_fixture_git(directory, "add", "--all")
+    head = commit_fixture_tree(directory, GIT_CHANGED_MESSAGE)
+    return {
+        "directory": str(directory), "ancestor": ancestor, "base": base, "head": head,
+        "head_path": GIT_SOURCE_PATH, "head_content": GIT_CHANGED_CONTENT,
+        "base_only_path": GIT_BASE_ONLY_PATH, "base_only_content": GIT_BASE_ONLY_CHANGED_CONTENT,
+    }
+
+
+class GitOrphanFixture(TypedDict):
+    """Carry one commit and a second history that shares no ancestor with it."""
+
+    directory: str
+    base: str
+    orphan_head: str
+
+
+def create_orphan_repository(directory: Path) -> GitOrphanFixture:
+    """Build one commit and an orphan commit whose history includes no common ancestor."""
+    (directory / "src").mkdir(parents=True)
+    run_fixture_git(directory, "init", "--quiet")
+    (directory / GIT_SOURCE_PATH).write_text(GIT_BASE_CONTENT, encoding="utf-8", newline="")
+    run_fixture_git(directory, "add", "--all")
+    base = commit_fixture_tree(directory, GIT_BASE_MESSAGE)
+    run_fixture_git(directory, "checkout", "--quiet", "--orphan", GIT_ORPHAN_BRANCH)
+    (directory / GIT_SOURCE_PATH).write_text(GIT_CHANGED_CONTENT, encoding="utf-8", newline="")
+    run_fixture_git(directory, "add", "--all")
+    orphan_head = commit_fixture_tree(directory, GIT_ORPHAN_MESSAGE)
+    return {"directory": str(directory), "base": base, "orphan_head": orphan_head}
