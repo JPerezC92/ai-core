@@ -25,7 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 11.**
+**Open debts: 12.**
 
 ### DEBT-021 — ODD execution-gate bypass
 
@@ -127,5 +127,14 @@ Each entry MUST include:
 - **Resolution criteria:** Carry existing task-scoped release intent through orchestration without redundant confirmation when valid explicit or standing authority already covers the action; demonstrate this in the next authorized PR flow. Valid authorization, applicable gates, and tool permissions remain required. Genuinely missing authority, including for destructive actions or merge, must still be obtained; no unrelated future release is authorized by this record.
 - **Explicit deferral decision:** User instruction 2026-10-31: "why are u requesting me authorization?? add that as an debt error". The user directed registration of this process error as debt; its resolution remains open pending the demonstrated authorized PR flow.
 
-**ID to use for the next new debt:** `DEBT-034`. This is an allocation counter, not an open debt.
+### DEBT-034 — Post-review local commits on a merged PR branch and a premature ready-to-merge declaration
+
+- **ID:** DEBT-034
+- **Date:** 2026-11-01
+- **Description:** After pushing the reviewed immutable head of PR #139, Cipher 🔓 (Lead Orchestrator) created two feature-document-only commits locally on the same branch (`5020a39` close record, `106b69b` round-D evidence), never pushed them, then declared the PR ready to merge using the compact readiness message. The PR contents that merged were exactly the reviewed head, so no unreviewed content landed and no data was lost; however the readiness message omitted that local commits remained outside the PR, and the leftover unmerged local tip later made the post-merge cleanup preflight return BLOCKED.
+- **Direct evidence:** PR #139 merged as squash `1cfa57dc190a2d833474e312b3d0a87663bc2148`; reviewed head `7e48028`; `git merge-base --is-ancestor 5020a39 origin/main` exit 1 and same for `106b69b`; cleanup preflight `verified_pr_cleanup.py 139 --base-remote origin --base-branch main` returned status BLOCKED with `head_refs_match` failing (local `106b69b` vs `7e48028`); coordinator's ready-to-merge message in the live conversation; local preservation branch `docs/local-pr-body-finalization-record` at `106b69b`.
+- **Resolution criteria:** no doc or bookkeeping commit is created on a PR branch after its reviewed head is pushed unless it is pushed and re-reviewed in the same PR; the ready state is declared only when every local commit on the branch is contained in the pushed head, and any deliberate local-only work is named explicitly in the readiness message; post-merge cleanup then completes without a preflight BLOCK. Demonstrate on the next PR and its cleanup.
+- **Explicit deferral decision:** User instruction 2026-11-01 (verbatim): "FUCK HOW U WERE ABLE TO TELL ME READY TO MERGE IF THE BRANCH WERE NOT READY". The user directed that this failure be recorded rather than only discussed.
+
+**ID to use for the next new debt:** `DEBT-035`. This is an allocation counter, not an open debt.
 <!-- project:end -->
