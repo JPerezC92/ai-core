@@ -25,7 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 10.**
+**Open debts: 11.**
 
 ### DEBT-021 — ODD execution-gate bypass
 
@@ -118,5 +118,14 @@ Each entry MUST include:
 - **Resolution criteria:** Before any owner-gate or audit dispatch, the coordinator runs its own mechanical verification of the candidate — document anatomy, acceptance-clause presence, Log separation and dating, evidence accuracy including file:line references, registry consistency, and the change's own observable predicates — and fixes what it finds. Reviewers are dispatched on a self-checked candidate, so their rounds judge substance rather than coordinator proofreading. Demonstrated on the next review dispatch of this feature and the next non-small feature.
 - **Explicit deferral decision:** User instruction 2026-10-31: "about sentinel stop just raising it without a double chek of the fixes i presume u were lefting issues and calling him again and again, verify for issues then when u are sure call him again". The user accepted the process debt and directed self-verification before the next review dispatch.
 
-**ID to use for the next new debt:** `DEBT-033`. This is an allocation counter, not an open debt.
+### DEBT-033 — Redundant release authorization after task-scoped PR intent
+
+- **ID:** DEBT-033
+- **Date:** 2026-10-31
+- **Description:** Cipher 🔓 (Lead Orchestrator) interpreted the user's `@git-pr` invocation in the ongoing next-release-test context as draft-only, stopped after preparing the draft, and requested push/open-PR authorization again instead of carrying the existing task-scoped release intent through orchestration. This was an interpretation and continuation error, not a removal of release permission requirements or a grant for unrelated future releases.
+- **Direct evidence:** Conversation record 2026-10-31, as supplied in the coordinator dispatch `local-pr-body-finalization/user-correction/debt033`: prior response "Not pushed or published. Ready for your authorization to push and open the PR."; user correction "why are u requesting me authorization?? add that as an debt error" following the `@git-pr` invocation in the ongoing next-release-test context.
+- **Resolution criteria:** Carry existing task-scoped release intent through orchestration without redundant confirmation when valid explicit or standing authority already covers the action; demonstrate this in the next authorized PR flow. Valid authorization, applicable gates, and tool permissions remain required. Genuinely missing authority, including for destructive actions or merge, must still be obtained; no unrelated future release is authorized by this record.
+- **Explicit deferral decision:** User instruction 2026-10-31: "why are u requesting me authorization?? add that as an debt error". The user directed registration of this process error as debt; its resolution remains open pending the demonstrated authorized PR flow.
+
+**ID to use for the next new debt:** `DEBT-034`. This is an allocation counter, not an open debt.
 <!-- project:end -->
