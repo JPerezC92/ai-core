@@ -1,6 +1,7 @@
 # Local PR body finalization
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-10-31
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-10-31
 > **Objective:** Use one local working PR body and publish the completed review body once through reusable tooling.
@@ -19,7 +20,7 @@
 - T1 | S1, S2, S3 | delegated (executable tool and test authorship belong to Forge 🔨 (Implementer)) — Forge 🔨 (Implementer) | done | commit: abb4aaf01110cea212cdf0eb1372f2392560c58f
 - T2 | S1, S2, S3 | delegated (shared review/skill integration requires canonical instruction owners and independent review) — Cipher 🔓 (Lead Orchestrator) | done | commit: 9d8148b63c3a52d94fa44fce5ddd4fbb1a9ff8c1
 - T3 | S1, S2, S3 | delegated (GitHub release execution and independent PR evidence join retain separate existing owners) — Herald 📯 (Release Manager) | done | commit: 197f95ea5f54a10f344be245871d7b53baf4d885
-- T4 | S1, S2, S3 | inline (coordinator owns outcome acceptance and feature lifecycle after independent semantic review) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
+- T4 | S1, S2, S3 | inline (coordinator owns outcome acceptance and feature lifecycle after independent semantic review) — Cipher 🔓 (Lead Orchestrator) | done | commit: 7e4802842ca84e8b12e3c725a8a676d380486dcd
 
 ## Log
 
@@ -59,3 +60,11 @@
   - F5 (LOW, exclusion authority only in gitignored output/) — real. Author disposition restated here in durable form: the prepublication circular test-plan item 4 is excluded from the prepublication checkbox gate by the draft author (Cipher 🔓, `output/pr139-author-decisions.json`, head `197f95ea`), because it requires observations that occur after the sole upload; the item stays unchecked with no evidence row, and every postpublication control (upload, persisted verify, persisted-body scan, final reread) remains mandatory. This exclusion grants no permission to skip any control.
   - F6 (LOW, F5 fix authoring route unrecorded) — real; corrected in L27.
   - INFO noted by the reviewer: leftover empty directories `scripts/pr_body_finalization/` and a stale manual-assembly prescription in `inquisitor.md:318–326`; both are cleanup items for the next hardening pass, not gate inputs.
+- L30 — 2026-10-31 final PR-boundary gate: Inquisitor 🔎 (PR Reviewer), session `ses_e6b438141ffe6Zsxhez3xLvtbJ`, returned `[PASS]` for PR #139 at immutable head `7e4802842ca84e8b12e3c725a8a676d380486dcd` with zero open findings, closing all three items it had blocked on: attribution scan at this head (exit 0, no matches, executed on a snapshot built from the actual persisted body), the stale body head binding (re-bound by the designated evidence writer in its own single write), and the head-bound author N/A decision (re-issued at this head). Audit report `output/audits/pr-139-20261031.md`. Coordinator controls beside it: `validate --decisions` returned `prepared`, `verify` returned `prepared` with exact persisted-body equality, and the persisted-body attribution scan returned no matches. Body writes on #139: 4 total (creation plus three review rounds, the last a head re-bind). No comments, reviews, merges or force pushes.
+- L31 — 2026-10-31 acceptance accounting before close:
+  - S1 — met. One local working body accumulated the review; each completed review round was published with exactly one owner-executed write (`gh pr edit --body-file`), no intermediate review-body uploads; the extra rounds were caused by one genuine new defect (F5) and one required head re-bind, both disclosed, not by hidden ceremony.
+  - S2 — met in substance, with a stated limit. No speed-improvement claim is made. The measurable workflow property was measured: one uploaded review body per completed round and four total body writes including creation, versus the prior per-PR helper-script practice which this feature replaced with one reusable CLI. End-to-end elapsed timing was not captured and is not claimed; this interpretation is recorded so the limit is not represented as satisfied evidence.
+  - S3 — met. Local title/body stayed authoritative; GitHub was used only for identity/freshness, persisted verification and the final reread. ODD protocol unchanged.
+  - Independent semantic close review: Sentinel 🛡️ returned `[FAIL]` with six findings (L29); all six were adjudicated, five fixed in the delivered surfaces or Log and one (F2) resolved by the formal gate in L30. Re-audit of the ownership wording returned `[PASS]`. No finding was silently ignored or left open.
+  - Close: T1–T4 done with commit references; feature closed on the verified live outcome, not on tests alone.
+- L32 — Close: 2026-10-31 — delivered the reusable local review-preparation tool and the single-final-upload workflow, verified live on PR #139 at head `7e4802842ca84e8b12e3c725a8a676d380486dcd` with an independent PR-boundary `[PASS]`, coordinator `validate`/`verify`/attribution controls all green, and all close-review findings adjudicated and closed.
