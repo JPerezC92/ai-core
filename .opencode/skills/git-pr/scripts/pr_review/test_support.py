@@ -97,6 +97,57 @@ def create_divergence(field: RemoteField) -> ReviewMetadata:
     return create_metadata(body="Changed remotely")
 
 
+MetadataExtraSite = Literal["expected", "persisted", "both"]
+
+
+def create_metadata_with_undeclared_key(*, field: str = "url") -> dict[str, object]:
+    """Create owner-supplied metadata carrying a key outside the documented seven."""
+    metadata: dict[str, object] = dict(create_metadata())
+    metadata[field] = "https://example.invalid/JPerezC92/ai-core/pull/80"
+    return metadata
+
+
+MetadataDefect = Literal[
+    "non-object", "zero-number", "negative-number", "string-number",
+    "short-head", "non-hex-head", "long-head", "not-open-state",
+    "blank-base", "blank-head-ref", "blank-title",
+    "non-string-title", "non-string-base", "non-string-head-ref",
+    "non-string-state", "non-string-body",
+    "missing-field",
+]
+
+
+def create_invalid_metadata(defect: MetadataDefect) -> object:
+    """Create one named metadata rejection variant, including non-object input."""
+    if defect == "non-object":
+        return tuple(create_metadata().items())
+    if defect == "missing-field":
+        incomplete = dict(create_metadata())
+        del incomplete["body"]
+        return incomplete
+    rejections: dict[str, tuple[str, object]] = {
+        "zero-number": ("number", 0),
+        "negative-number": ("number", -1),
+        "string-number": ("number", "80"),
+        "short-head": ("headRefOid", "a" * 6),
+        "non-hex-head": ("headRefOid", "z" * 40),
+        "long-head": ("headRefOid", "a" * 65),
+        "not-open-state": ("state", "MERGED"),
+        "blank-base": ("baseRefName", "   "),
+        "blank-head-ref": ("headRefName", ""),
+        "blank-title": ("title", " "),
+        "non-string-title": ("title", 7),
+        "non-string-base": ("baseRefName", None),
+        "non-string-head-ref": ("headRefName", ["feat/release/body"]),
+        "non-string-state": ("state", True),
+        "non-string-body": ("body", 0),
+    }
+    field, invalid = rejections[defect]
+    metadata: dict[str, object] = dict(create_metadata())
+    metadata[field] = invalid
+    return metadata
+
+
 def create_invalid_inventory(defect: InventoryDefect) -> Snapshot:
     """Create a well-typed snapshot with a deliberately invalid inventory."""
     snapshot = create_snapshot()

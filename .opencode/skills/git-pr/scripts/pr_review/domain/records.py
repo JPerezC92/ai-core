@@ -21,6 +21,9 @@ class ReviewMetadata(TypedDict):
     body: str
 
 
+METADATA_FIELDS = ("number", "headRefOid", "baseRefName", "headRefName", "state", "title", "body")
+
+
 class LocalInventory(TypedDict):
     """Carry validated immutable content independently of locally authored prose."""
 
@@ -83,6 +86,11 @@ def parse_metadata(value: object) -> ReviewMetadata | ReviewPreparationError:
     """Validate decoded metadata without authenticating its external provenance."""
     if not isinstance(value, dict):
         return ReviewPreparationError("METADATA_INVALID", "metadata must be an object")
+    if set(value) != set(METADATA_FIELDS):
+        return ReviewPreparationError(
+            "METADATA_INVALID",
+            "metadata must contain exactly the documented fields: " + ", ".join(METADATA_FIELDS),
+        )
     if type(value.get("number")) is not int or value["number"] < 1:
         return ReviewPreparationError("METADATA_INVALID", "positive PR number required")
     fields = ("headRefOid", "baseRefName", "headRefName", "state", "title", "body")
