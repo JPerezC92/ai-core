@@ -1,8 +1,9 @@
 # DEBT-029 resolution
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-02
+> **Closed:** 2026-11-02
 > **Objective:** Stop demonstration-based resolution of DEBT-029 and cancel all open debts by explicit user authorization, without claiming resolution criteria were met.
 > **Branch:** docs/debt/debt-029-resolution (base e05f555ca8dd303c42832c5d46f35a7ba55baa27)
 > **Delivery:** Cancellation slice after S2: preserve user decision and unmet criteria in this Log, then delete every open register entry; forecast 80 authored additions plus deletions, excluding generated files; slice A (T1 mapping) already committed; slice B cancels DEBT-022, DEBT-029, and DEBT-032 and sets open count to 0 while leaving next ID `DEBT-037`. Publication remains separately authorized.
@@ -16,9 +17,9 @@
 ## Tasks
 
 - T1 | S1 | inline (coordinator-owned criterion mapping and this-feature demonstration evidence; no Git) — Cipher 🔓 (Lead Orchestrator) | done | commit: c934a7f
-- T2 | S2 | delegated (independent semantic acceptance of cancellation accounting; reviewer did not author the evidence; prior S1 demonstration review failed L9 and is not reused as a pass) — Sentinel 🛡️ (Quality Guardian) | open | commit: pending
-- T3 | S2 | delegated (register mutation belongs to documentation owner; delete DEBT-022, DEBT-029, and DEBT-032 only after this Log preserves cancellation evidence) — Scribe ✍️ (Docs & Problems Manager) | open | commit: pending
-- T4 | S2 | delegated (Git inventory and local work-unit commit belong to the Git owner; no publication authority inferred) — Herald 📯 (Release Manager) | open | commit: pending
+- T2 | S2 | delegated (independent semantic acceptance of cancellation accounting; reviewer did not author the evidence; prior S1 demonstration review failed L9 and is not reused as a pass) — Sentinel 🛡️ (Quality Guardian) | done | commit: 9324bf3
+- T3 | S2 | delegated (register mutation belongs to documentation owner; delete DEBT-022, DEBT-029, and DEBT-032 only after this Log preserves cancellation evidence) — Scribe ✍️ (Docs & Problems Manager) | done | commit: 9324bf3
+- T4 | S2 | delegated (Git inventory and local work-unit commit belong to the Git owner; no publication authority inferred) — Herald 📯 (Release Manager) | done | commit: 9324bf3
 
 ## Log
 
@@ -35,3 +36,5 @@
 - L11 — 2026-11-02 — Cancellation accounting (not resolution). Authority: `knowledge/debt.md` core **User-directed cancellation** and S2/L10. Demonstration-based DEBT-029 resolution stopped after L9 `[FAIL]`. Unmet criteria at cancellation, live register `knowledge/debt.md` open count 3, next ID `DEBT-037`: DEBT-022 — every completed ODD step produces numbered status and continuation across the remaining steps of the active feature and the next non-small feature (unmet per `odd/tasks/skill-script-conformance.md` L23 and this feature’s original S1 scope). DEBT-029 — every stop names user action or `ALL FINISHED`; remaining work continues; informational evidence is not a stop; demonstrate on the current push/PR and future tasks (unmet per L9 F1; historical push/PR not claimed). DEBT-032 — coordinator self-verification before owner-gate or audit dispatch, demonstrated on the next review dispatch of that feature and the next non-small feature (not claimed met here; L9 dispatch followed validator self-check on this feature only). Supporting evidence: L2, L7, L9; live headings DEBT-022, DEBT-029, DEBT-032. Entries may now be removed as cancelled, not resolved. No instruction rewrite. Next: T3 register mutation, then T2 cancellation review, then T4 commit.
 - L12 — 2026-11-02 — T3 Scribe ✍️ (Docs & Problems Manager) `scribe1` session `ses_e648e15f0ffeNHJiBYvlo8g2ZP` AWAITING_REVIEW: `knowledge/debt.md` project region only — DEBT-022, DEBT-029, DEBT-032 deleted; open count 3→0; next ID `DEBT-037` preserved; core region untouched. Coordinator live-read: no DEBT-022/029/032 headings; count text `0`; counter `DEBT-037`. Combined cancellation review next; no publication. Not claimed: resolution or criteria met.
 - L13 — 2026-11-02 — T2 Sentinel 🛡️ (Quality Guardian) `debt-029-resolution/T2-cancel/sentinel2` session `ses_e648d6745ffeXSIx0eiu9yafiV` `[PASS]`, zero findings. Cancellation accounting complete; retirement-as-resolved: no. Coordinator accepted. Continued to T4; not a stop because T2 finished.
+- L14 — 2026-11-02 — Cancellation commit `9324bf389bc50c34a651d6340d576f20be15d034` (`docs(debt): cancel DEBT-022 DEBT-029 DEBT-032`), Herald 📯 (Release Manager) `herald2` session `ses_e648d125affeCSCHRB1E2Gg1A7`: 2 files, +15/−35, authorized paths only, status clean. T2–T4 done against `9324bf3`. T1 remains `c934a7f`.
+- L15 — Close: 2026-11-02 — delivered: demonstration path stopped; DEBT-022, DEBT-029, DEBT-032 cancelled (not resolved); open count 3→0; `DEBT-037` unchanged. Verification: T2-cancel `[PASS]`; validator `ok` before T3; coordinator live-read empty register. Unmet criteria remain as recorded in L11. Not authorized: push, PR, merge, tag, release, archive.
