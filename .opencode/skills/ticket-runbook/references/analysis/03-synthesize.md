@@ -9,7 +9,7 @@
 
 Record workflow/ticket, task/instance, accepted predecessor/input identities, exact writes/other access, allocated destinations, gates, continuation/join owner and capacity/accounting owner in existing Markdown or the dispatch. Cipher 🔓 (Lead Orchestrator) remains the acceptance/accounting owner; this assigned synthesis instance is sole writer of the named working files. Read stable accepted investigation and supporting results with separate attribution; do not reset or independently mutate hypothesis/query/rerun counters. New investigation needs return to the coordinator through the existing order and allowances, never parallel queries or hypotheses.
 
-Hold outputs and dependencies stable through review; relevant changes invalidate affected evidence and joins. Return current input/output identities, actual counters, gate evidence and resource-use status for coordinator acceptance before downstream work. Supporting workers have no state-write grant. Screenshot/report destinations, response drafts, durable records, registers and browser/auth sessions retain their own exclusive resource assignments; a step return does not transfer them implicitly.
+Hold outputs and dependencies stable through review; relevant changes invalidate affected evidence and joins. Return current input/output identities, actual counters, gate evidence and resource-use status for coordinator acceptance before downstream work. Supporting workers have no state-write grant. Inbound `downloads/` and response `screenshots/response-N/` destinations, reports, response drafts, durable records, registers and browser/auth sessions retain their own exclusive resource assignments; a step return does not transfer them implicitly.
 
 ## Steps
 
@@ -26,7 +26,7 @@ Hold outputs and dependencies stable through review; relevant changes invalidate
 
 - **Artifact:** `03-synthesize.md` (filled).
 - **Schema:** root-cause block (≤3 bullets, each labeled Fact/Hypothesis), derivation target (named, not TBD), response surface (≤15 lines). Symptom evidence alone is never represented as root-cause proof or fix authorization.
-- **Handoff:** task/instance, consumed input/output identities, accepted supporting results, unchanged counter snapshot, validator/gate evidence and actual resource-use cessation status. Accept all screenshot producer results and existing local files before response drafting. Before collapse, require accepted finished producer/consumer results and no active working-file user, prior approved register mutation, durable retention, current pre-close/semantic gates and exact `Close out now` authorization; synthesis never authorizes deletion or fixes.
+- **Handoff:** task/instance, consumed input/output identities, accepted supporting results, unchanged counter snapshot, validator/gate evidence and actual resource-use cessation status. Accept all screenshot producer results and existing local files before response drafting; files for the response being drafted must exist under that response's `screenshots/response-N/` first. Before collapse, require accepted finished producer/consumer results and no active working-file user, prior approved register mutation, durable retention, current pre-close/semantic gates and exact `Close out now` authorization; synthesis never authorizes deletion or fixes.
 
 ## Root cause
 
@@ -51,7 +51,7 @@ Hold outputs and dependencies stable through review; relevant changes invalidate
 - ⬜ Response surface ≤15 lines
 - ⬜ Symptom evidence alone is not represented as root-cause proof or fix authorization; root-cause claims meet the evidence bar and fixes require user approval
 - ⬜ Stable relevant investigation/supporting results accepted; sole writer, conserved accounting and completed-step validation confirmed before header advance
-- ⬜ Screenshot files and accepted producer outputs precede drafting; downstream ownership transfers require observed prior-user cessation and explicit coordinator assignment
+- ⬜ Files for the response being drafted exist under `screenshots/response-N/` and accepted producer outputs precede drafting; downstream ownership transfers require observed prior-user cessation and explicit coordinator assignment
 
 ## Abort conditions
 

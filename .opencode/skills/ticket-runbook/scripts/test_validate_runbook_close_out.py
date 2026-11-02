@@ -10,7 +10,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 import validate_runbook as vr  # noqa: E402
-from _ticket_runbook_testkit import _pre_close_ticket_dir, _ticket_dir  # noqa: E402
+from _ticket_runbook_testkit import (  # noqa: E402
+    UNUSED_DOWNLOAD_PATH,
+    _empty_downloads_dir,
+    _pre_close_ticket_dir,
+    _ticket_dir,
+    _write_relative_file,
+)
 
 
 class ValidateRunbookCloseOutTests:
@@ -81,3 +87,29 @@ class ValidateRunbookCloseOutTests:
         shutil.rmtree(ticket_dir / "analysis")
         (ticket_dir / "response-draft.md").unlink()
         assert vr.validate_close_out(str(ticket_dir), str(tmp_path)) == 0
+
+    def test_close_out_rejects_unused_downloads_leftovers(
+        self, tmp_path: Path
+    ) -> None:
+        ticket_dir = _ticket_dir(tmp_path)
+        assert vr.evaluate_close_out(vr.load_close_out_snapshot(ticket_dir)) == []
+        _write_relative_file(ticket_dir, UNUSED_DOWNLOAD_PATH)
+        violations = vr.evaluate_close_out(vr.load_close_out_snapshot(ticket_dir))
+        assert violations
+        assert vr.validate_close_out(str(ticket_dir), str(ticket_dir)) == 1
+
+    def test_close_out_accepts_empty_downloads_directory(
+        self, tmp_path: Path
+    ) -> None:
+        ticket_dir = _ticket_dir(tmp_path)
+        _empty_downloads_dir(ticket_dir)
+        assert vr.evaluate_close_out(vr.load_close_out_snapshot(ticket_dir)) == []
+        assert vr.validate_close_out(str(ticket_dir), str(ticket_dir)) == 0
+
+    def test_close_out_accepts_absent_downloads_directory(
+        self, tmp_path: Path
+    ) -> None:
+        ticket_dir = _ticket_dir(tmp_path)
+        assert not (ticket_dir / "downloads").exists()
+        assert vr.evaluate_close_out(vr.load_close_out_snapshot(ticket_dir)) == []
+        assert vr.validate_close_out(str(ticket_dir), str(ticket_dir)) == 0

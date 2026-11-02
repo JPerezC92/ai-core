@@ -38,6 +38,7 @@ class CloseOutSnapshot(TypedDict):
     missing_image_paths: list[str]
     missing_ticket_paths: list[str]
     unsafe_ticket_paths: list[str]
+    leftover_download_files: list[str]
 
 
 class ModeFindings(TypedDict):

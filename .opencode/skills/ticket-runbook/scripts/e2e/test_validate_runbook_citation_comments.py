@@ -11,6 +11,8 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parents[1]))
 import validate_runbook as vr  # noqa: E402
 from _ticket_runbook_testkit import (  # noqa: E402
+    DIRECTORY_CITATION_PATH,
+    MISSING_CITED_IMAGE_PATH,
     _append_ticket_text,
     _appended_citation,
     _commented_citation,
@@ -60,10 +62,10 @@ class ValidateRunbookCitationCommentTests:
         ticket_file = ticket_dir / "ticket_999999.md"
         _append_ticket_text(ticket_file, _commented_citation())
         _append_ticket_text(
-            ticket_file, _appended_citation("screenshots/active_missing.png")
+            ticket_file, _appended_citation(MISSING_CITED_IMAGE_PATH)
         )
         snapshot = vr.load_close_out_snapshot(ticket_dir)
-        assert "screenshots/active_missing.png" in snapshot["missing_ticket_paths"]
+        assert MISSING_CITED_IMAGE_PATH in snapshot["missing_ticket_paths"]
         pre_close = vr.evaluate_pre_close(snapshot, [])
         assert any("PRE-CLOSE-7" in item for item in pre_close), pre_close
         assert vr.validate_pre_close(str(ticket_dir), str(tmp_path)) == 1
@@ -94,13 +96,13 @@ class ValidateRunbookCitationCommentTests:
         self, tmp_path: Path
     ) -> None:
         ticket_dir = _pre_close_ticket_dir(tmp_path)
-        (ticket_dir / "screenshots" / "frames").mkdir()
+        (ticket_dir / DIRECTORY_CITATION_PATH).mkdir(parents=True)
         ticket_file = ticket_dir / "ticket_999999.md"
         _append_ticket_text(ticket_file, _commented_citation())
-        _append_ticket_text(ticket_file, _appended_citation("screenshots/frames"))
+        _append_ticket_text(ticket_file, _appended_citation(DIRECTORY_CITATION_PATH))
         snapshot = vr.load_close_out_snapshot(ticket_dir)
         assert snapshot["unsafe_ticket_paths"] == []
-        assert "screenshots/frames" in snapshot["missing_ticket_paths"]
+        assert DIRECTORY_CITATION_PATH in snapshot["missing_ticket_paths"]
         pre_close = vr.evaluate_pre_close(snapshot, [])
         assert any("PRE-CLOSE-7" in item for item in pre_close), pre_close
         assert vr.validate_pre_close(str(ticket_dir), str(tmp_path)) == 1

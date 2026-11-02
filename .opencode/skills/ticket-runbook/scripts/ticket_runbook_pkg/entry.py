@@ -170,6 +170,21 @@ def _resolve_ticket_path(value: str, ticket_dir: Path) -> tuple[Path, bool]:
     return resolved, True
 
 
+def _leftover_download_files(ticket_dir: Path) -> list[str]:
+    """Return ticket-relative posix paths of files under ``downloads/``.
+
+    An absent or empty ``downloads/`` directory yields an empty list.
+    """
+    downloads = ticket_dir / "downloads"
+    if not downloads.is_dir():
+        return []
+    leftovers: list[str] = []
+    for path in sorted(downloads.rglob("*")):
+        if path.is_file():
+            leftovers.append(path.relative_to(ticket_dir).as_posix())
+    return leftovers
+
+
 def load_close_out_snapshot(ticket_dir: Path) -> CloseOutSnapshot:
     """Load pre-close/close-out filesystem values at the IO boundary."""
     analysis_dir = ticket_dir / "analysis"
@@ -220,6 +235,7 @@ def load_close_out_snapshot(ticket_dir: Path) -> CloseOutSnapshot:
         "missing_image_paths": missing_paths,
         "missing_ticket_paths": missing_ticket_paths,
         "unsafe_ticket_paths": unsafe_ticket_paths,
+        "leftover_download_files": _leftover_download_files(ticket_dir),
     }
 
 

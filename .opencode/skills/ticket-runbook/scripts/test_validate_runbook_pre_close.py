@@ -13,9 +13,12 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent))
 import validate_runbook as vr  # noqa: E402
 from _ticket_runbook_testkit import (  # noqa: E402
+    UNUSED_DOWNLOAD_PATH,
+    _empty_downloads_dir,
     _filesystem_bytes,
     _patch_header,
     _pre_close_ticket_dir,
+    _write_relative_file,
 )
 
 
@@ -196,3 +199,25 @@ class ValidateRunbookPreCloseTests:
             result = vr.validate_pre_close(str(ticket_dir), str(tmp_path))
         assert result == 1
         assert "KILL-2" in stderr.getvalue()
+
+    def test_pre_close_does_not_require_downloads_directory(
+        self, tmp_path: Path
+    ) -> None:
+        ticket_dir = _pre_close_ticket_dir(tmp_path)
+        assert not (ticket_dir / "downloads").exists()
+        assert vr.evaluate_pre_close(vr.load_close_out_snapshot(ticket_dir), []) == []
+        assert vr.validate_pre_close(str(ticket_dir), str(tmp_path)) == 0
+
+    def test_pre_close_accepts_empty_downloads_directory(
+        self, tmp_path: Path
+    ) -> None:
+        ticket_dir = _pre_close_ticket_dir(tmp_path)
+        _empty_downloads_dir(ticket_dir)
+        assert vr.evaluate_pre_close(vr.load_close_out_snapshot(ticket_dir), []) == []
+        assert vr.validate_pre_close(str(ticket_dir), str(tmp_path)) == 0
+
+    def test_pre_close_accepts_unused_downloads_files(self, tmp_path: Path) -> None:
+        ticket_dir = _pre_close_ticket_dir(tmp_path)
+        _write_relative_file(ticket_dir, UNUSED_DOWNLOAD_PATH)
+        assert vr.evaluate_pre_close(vr.load_close_out_snapshot(ticket_dir), []) == []
+        assert vr.validate_pre_close(str(ticket_dir), str(tmp_path)) == 0
