@@ -25,7 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 9.**
+**Open debts: 10.**
 
 ### DEBT-022 — ODD step-status reporting and continuation
 
@@ -110,5 +110,14 @@ Each entry MUST include:
 - **Explicit deferral decision:** User instruction 2026-11-01 (verbatim): "WHY U ARE ASKING, WHY U AMKE THIS ERROR AGAIN". Directed that this recurrence be recorded as debt.
 - **Correction (2026-11-01):** The standing merged-branch cleanup grant is recorded in `knowledge/release.md` → `### Standing merged-branch cleanup` (project region, citing `odd/tasks/verified-merged-branch-cleanup.md` L2), not in the `AGENTS.md` project section, which carries `### Merged-branch cleanup preflight` as the command binding only. The Direct evidence line above is preserved as recorded and the pointer is corrected here rather than rewritten.
 
-**ID to use for the next new debt:** `DEBT-036`. This is an allocation counter, not an open debt.
+### DEBT-036 — No in-force owner for the no-guide-owner prohibition
+
+- **ID:** DEBT-036
+- **Date:** 2026-11-01
+- **Description:** Removing `docs/architecture/decisions/0006-architecture-whole-file-distribution.md` at the user's explicit direction also removed this repository's only written statement that no agent or document owns a guideline and that no guide carries an owner field. The deleted record was `Status: Proposed`, so under `knowledge/decisions.md` ("recorded, not in force; no agent obligation arises from it") the rule was never operative and no obligation regresses. The three testing guides and the stack-guide template verifiably carry no owner field today, but nothing states the prohibition and nothing enforces it. Its text now survives only in ADR 0003's 2026-11-01 amendment, which is source-local rationale, not an owner.
+- **Direct evidence:** `docs/architecture/decisions/0006-architecture-whole-file-distribution.md:26` before deletion; `docs/architecture/decisions/0003-architecture-documentation.md:7`; Crucible 🔥 (Test Architect) coverage review instance `coverage-testing/1`, finding 1, `[FAIL]`; Inquisitor 🔎 (PR Reviewer) finding F1 on PR #147; `odd/tasks/2026-11-01-evidenced-debt-retirement.md` L6 and L19.
+- **Resolution criteria:** The prohibition is stated as a normative rule in its owning testing document — a rule identifier in `architecture/testing/architecture.md` with the guide `## Applicability and ownership` sections citing it — or the property is enforced mechanically; Crucible 🔥 (Test Architect) returns `[PASS]` on that change; and no guide gains an owner field.
+- **Explicit deferral decision:** User instructions 2026-11-01, verbatim: "CONTINUE UNTILL U SOLVE IT" and "is ready to merge or whaT???". The coordinator selected the conservative disposition — register the gap rather than drop it silently or add a normative rule without authority — and the deferred work remains a rulebook change the user may still elect.
+
+**ID to use for the next new debt:** `DEBT-037`. This is an allocation counter, not an open debt.
 <!-- project:end -->
