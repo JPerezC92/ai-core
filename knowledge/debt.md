@@ -25,7 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 9.**
+**Open debts: 7.**
 
 ### DEBT-022 — ODD step-status reporting and continuation
 
@@ -81,32 +81,14 @@ Each entry MUST include:
 - **Resolution criteria:** Before any owner-gate or audit dispatch, the coordinator runs its own mechanical verification of the candidate — document anatomy, acceptance-clause presence, Log separation and dating, evidence accuracy including file:line references, registry consistency, and the change's own observable predicates — and fixes what it finds. Reviewers are dispatched on a self-checked candidate, so their rounds judge substance rather than coordinator proofreading. Demonstrated on the next review dispatch of this feature and the next non-small feature.
 - **Explicit deferral decision:** User instruction 2026-10-31: "about sentinel stop just raising it without a double chek of the fixes i presume u were lefting issues and calling him again and again, verify for issues then when u are sure call him again". The user accepted the process debt and directed self-verification before the next review dispatch.
 
-### DEBT-033 — Redundant release authorization after task-scoped PR intent
+### DEBT-036 — Herald's cleanup command form does not match the permission grant it relies on
 
-- **ID:** DEBT-033
-- **Date:** 2026-10-31
-- **Description:** Cipher 🔓 (Lead Orchestrator) interpreted the user's `@git-pr` invocation in the ongoing next-release-test context as draft-only, stopped after preparing the draft, and requested push/open-PR authorization again instead of carrying the existing task-scoped release intent through orchestration. This was an interpretation and continuation error, not a removal of release permission requirements or a grant for unrelated future releases.
-- **Direct evidence:** Conversation record 2026-10-31, as supplied in the coordinator dispatch `local-pr-body-finalization/user-correction/debt033`: prior response "Not pushed or published. Ready for your authorization to push and open the PR."; user correction "why are u requesting me authorization?? add that as an debt error" following the `@git-pr` invocation in the ongoing next-release-test context.
-- **Resolution criteria:** Carry existing task-scoped release intent through orchestration without redundant confirmation when valid explicit or standing authority already covers the action; demonstrate this in the next authorized PR flow. Valid authorization, applicable gates, and tool permissions remain required. Genuinely missing authority, including for destructive actions or merge, must still be obtained; no unrelated future release is authorized by this record.
-- **Explicit deferral decision:** User instruction 2026-10-31: "why are u requesting me authorization?? add that as an debt error". The user directed registration of this process error as debt; its resolution remains open pending the demonstrated authorized PR flow.
+- **ID:** DEBT-036
+- **Date:** 2026-11-02
+- **Description:** `herald.md` templates the post-merge remote deletion as `git push "$BASE_REMOTE" --delete "refs/heads/$BRANCH"`, with the refspec quoted, at `:111` and `:190`. The permission allow row is the literal `git push origin --delete refs/heads/*` at `opencode.jsonc:115`, which contains no quote character, so a quoted refspec cannot match it and instead satisfies the `git push origin * ?*` deny row at `:106`. On the PR #148 cleanup the quoted form was refused with a `permission.rejected` refusal and the identical unquoted command deleted the branch on its first attempt. The coordinator compounded this by reporting the cause as a missing multi-segment grant, an inference from a configuration comment that was never tested; the user rejected that diagnosis. The defect is command text, not permission coverage.
+- **Direct evidence:** PR #148 merged as squash `53b1e6ea79a446388c2d70d9cfe097aaa39949eb`; cleanup preflight `verified_pr_cleanup.py 148 --base-remote origin --base-branch main` returned `SAFE_TO_CLEAN` with 35 of 35 checks; quoted attempt `git push origin --delete "refs/heads/docs/debt/cleanup-and-herald-push-grant"` returned `{"error":{"type":"permission.rejected","message":"Permission denied: shell"}}`; unquoted attempt `git push origin --delete refs/heads/docs/debt/cleanup-and-herald-push-grant` returned `- [deleted] docs/debt/cleanup-and-herald-push-grant`; `herald.md:111` and `:190`; `opencode.jsonc:106` and `:115`. Remote cleanups of multi-segment branches had succeeded earlier in the same session, which refutes the coverage theory.
+- **Resolution criteria:** The documented cleanup command and the permission rows agree on one form, either by removing the quoting from the two `herald.md` templates or by an equivalent change that a later merged pull request's cleanup exercises without a permission refusal; the next post-merge cleanup deletes its remote branch on the first attempt in the documented form; no force, refspec or extra-argument capability is added; and a coordinator claim of a permission defect is backed by an executed test rather than by inference from configuration text.
+- **Explicit deferral decision:** User instruction 2026-11-02, verbatim: "the problem is the documentation? add that as a debt". The user identified the documented command form as the defect and directed that it be registered as debt instead of fixed now.
 
-### DEBT-034 — Post-review local commits on a merged PR branch and a premature ready-to-merge declaration
-
-- **ID:** DEBT-034
-- **Date:** 2026-11-01
-- **Description:** After pushing the reviewed immutable head of PR #139, Cipher 🔓 (Lead Orchestrator) created two feature-document-only commits locally on the same branch (`5020a39` close record, `106b69b` round-D evidence), never pushed them, then declared the PR ready to merge using the compact readiness message. The PR contents that merged were exactly the reviewed head, so no unreviewed content landed and no data was lost; however the readiness message omitted that local commits remained outside the PR, and the leftover unmerged local tip later made the post-merge cleanup preflight return BLOCKED.
-- **Direct evidence:** PR #139 merged as squash `1cfa57dc190a2d833474e312b3d0a87663bc2148`; reviewed head `7e48028`; `git merge-base --is-ancestor 5020a39 origin/main` exit 1 and same for `106b69b`; cleanup preflight `verified_pr_cleanup.py 139 --base-remote origin --base-branch main` returned status BLOCKED with `head_refs_match` failing (local `106b69b` vs `7e48028`); coordinator's ready-to-merge message in the live conversation; local preservation branch `docs/local-pr-body-finalization-record` at `106b69b`.
-- **Resolution criteria:** no doc or bookkeeping commit is created on a PR branch after its reviewed head is pushed unless it is pushed and re-reviewed in the same PR; the ready state is declared only when every local commit on the branch is contained in the pushed head, and any deliberate local-only work is named explicitly in the readiness message; post-merge cleanup then completes without a preflight BLOCK. Demonstrate on the next PR and its cleanup.
-- **Explicit deferral decision:** User instruction 2026-11-01 (verbatim): "FUCK HOW U WERE ABLE TO TELL ME READY TO MERGE IF THE BRANCH WERE NOT READY". The user directed that this failure be recorded rather than only discussed.
-
-### DEBT-035 — Repeated authorization requests despite standing merged-branch cleanup authority
-
-- **ID:** DEBT-035
-- **Date:** 2026-11-01
-- **Description:** Cipher 🔓 (Lead Orchestrator) asked the user for a fresh confirmation before deleting an already-merged feature branch twice on the same day, even though the project standing-authorizes post-merge branch cleanup and the user had repeatedly signalled that redundant authorization questions are unwanted. On the second occurrence the user had already answered "merged" and still received a question instead of the cleanup action.
-- **Direct evidence:** User corrections verbatim "why are u requesting me authorization?? add that as an debt error" (recorded as DEBT-033) and later "WHY U ARE ASKING, WHY U AMKE THIS ERROR AGAIN"; merged-branch cleanup standing grant in `AGENTS.md` project section; PR #139 merged (squash `1cfa57dc190a2d833474e312b3d0a87663bc2148`) and PR #140 merged (squash `46c0cb2983e22d86595a4f2a5ab495e0614b068c`) with the branch `feat/git-pr/prepare-local-review` still undeleted at the time of the question.
-- **Resolution criteria:** When an applicable standing grant exists and the user has stated the triggering fact (e.g. "merged"), execute the authorized cleanup without a further confirmation; only genuinely missing authority, destructive actions outside the grant, or a real safety blocker justify a question, and that blocker must be named. Demonstrate on the next merged PR and record it here before retiring this debt.
-- **Explicit deferral decision:** User instruction 2026-11-01 (verbatim): "WHY U ARE ASKING, WHY U AMKE THIS ERROR AGAIN". Directed that this recurrence be recorded as debt.
-
-**ID to use for the next new debt:** `DEBT-036`. This is an allocation counter, not an open debt.
+**ID to use for the next new debt:** `DEBT-037`. This is an allocation counter, not an open debt.
 <!-- project:end -->
