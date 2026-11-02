@@ -48,7 +48,6 @@ Persona CVs live at `agents/<name>/profile.md`; runtime specs at `.opencode/agen
 AGENTS.md                     Lead runtime: mandatory core + source-project bindings/reuse guide
 opencode.jsonc                OpenCode V2 config: agent/model bindings, permission model, MCP servers
 opencode.v1.jsonc             Distinct OpenCode V1 compatibility config, not a byte-identical V2 copy
-magic-context.jsonc           magic-context disabled — native OpenCode compaction owns context
 .opencode/agents/             Specialist runtimes: authority, procedures, scope, gates and reporting
 .opencode/skills/             Skill-local SKILL.md, references/ and scripts/ (including nested tests)
 agents/<name>/profile.md      Persona CVs, including the lead; no duplicated runtime workflow
@@ -114,4 +113,4 @@ Clone AICore, then remove only source-local state so the fresh project starts cl
 - `output/` is gitignored — it holds temporal artifacts (audit reports, research briefs, design briefs/audits); agents create it on first write.
 - Skills `git-commit` and `git-pr` write `output/commit.txt` / `output/pr-draft.md` (covered by the `output/` ignore) and, with `git-branch-name`, assume git + pnpm and the GitHub CLI (`gh`) — the dev-team defaults.
 - Each destination's adopted content is bound by its own `.aicore/core.yaml`: it maps each source file to its destination paths and pins the `core_revision` the destination was enrolled at. The bindings are destination-owned state — AICore keeps no adopter registry.
-- This project uses the `memories` MCP server for cross-session agent memory and the `qmd` MCP server for **read-only** retrieval over `knowledge/`, `architecture/`, `docs/research/` and `odd/tasks/`. Both are conveniences, not storage of record: durable knowledge belongs in repo surfaces (`knowledge/`, skill Troubleshooting), never memory-only. QMD's index is a snapshot and needs `qmd update` to see new files. magic-context remains disabled; native OpenCode compaction owns session context.
+- This project uses the `memories` MCP server for cross-session agent memory and the `qmd` MCP server for **read-only** retrieval over `knowledge/`, `architecture/`, `docs/research/` and `odd/tasks/`. Both are conveniences, not storage of record: durable knowledge belongs in repo surfaces (`knowledge/`, skill Troubleshooting), never memory-only. QMD's index is a snapshot and needs `qmd update` to see new files.
