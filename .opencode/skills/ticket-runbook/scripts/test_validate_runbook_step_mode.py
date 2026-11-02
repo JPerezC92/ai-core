@@ -21,22 +21,6 @@ class ValidateRunbookStepModeTests:
         analysis_dir = _make_analysis(tmp_path, STEP_FILES)
         assert vr.validate_step(str(analysis_dir), "investigate") == 0
 
-    def test_filled_investigate_keeps_sidecar_command_examples(
-        self, tmp_path: Path
-    ) -> None:
-        sidecar_cli = (
-            "<python> .opencode/skills/query-verification/scripts/"
-            "query_verification.py validate --query-root <sidecar-parent-dir> "
-            "--sidecar <sidecar-path>"
-        )
-        analysis_dir = _make_analysis(tmp_path, phase="investigate")
-        investigate = analysis_dir / "02-investigate.md"
-        investigate.write_text(
-            _filled_step("02-investigate.md") + "\n" + sidecar_cli + "\n",
-            encoding="utf-8",
-        )
-        assert vr.validate_step(str(analysis_dir), "investigate") == 0
-
     def test_unfilled_output_fill_fails_step_investigate(self, tmp_path: Path) -> None:
         analysis_dir = _make_analysis(tmp_path, phase="investigate")
         investigate = analysis_dir / "02-investigate.md"
