@@ -1,8 +1,9 @@
 # Query verification removal and debt dispositions
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-02
+> **Closed:** 2026-11-02
 > **Objective:** Remove the query-verification skill and reconcile its live consumers, while completing the user-directed debt dispositions without misrepresenting evidence.
 > **Branch:** `chore/query-verification/remove-skill`, created from `main` at `d1b285b9e5d2a0e9a711a0f01ae0688c1fac25c4`.
 > **Delivery:** Reviewable slices: (A) user-directed debt dispositions and their governing register treatment, (B) skill removal and directly affected live consumers/distribution references, (C) validation, audit findings and acceptance. Forecast roughly 4,000–10,000 authored additions plus deletions including removal of the existing skill, excluding generated files; measure committed changes and apply sliced delivery before committing.
@@ -17,10 +18,10 @@
 
 ## Tasks
 
-- T1 | S2, S3 | delegated (debt register ownership and procedure require an independently reviewed honest cancellation route) — Scribe ✍️ (Docs & Problems Manager) | open | commit: pending
-- T2 | S1 | delegated (skill lifecycle, removal, live consumers and distribution metadata have distinct owners) — Vault 🔐 (Catalog Steward) | open | commit: pending
-- T3 | S1, S2, S3 | delegated (independent lifecycle, architecture, testing, supply-chain and semantic review) — Sentinel 🛡️ (Quality Guardian) | open | commit: pending
-- T4 | S1, S2, S3, S4 | delegated (Git execution belongs to the release owner) — Herald 📯 (Release Manager) | open | commit: pending
+- T1 | S2, S3 | delegated (debt register ownership and procedure require an independently reviewed honest cancellation route) — Scribe ✍️ (Docs & Problems Manager) | done | commit: d977d3adeaab7a40deb6ab3658dcae111c25ff1b
+- T2 | S1 | delegated (skill lifecycle, removal, live consumers and distribution metadata have distinct owners) — Vault 🔐 (Catalog Steward) | done | commit: d977d3adeaab7a40deb6ab3658dcae111c25ff1b
+- T3 | S1, S2, S3 | delegated (independent lifecycle, architecture, testing, supply-chain and semantic review) — Sentinel 🛡️ (Quality Guardian) | done | commit: d977d3adeaab7a40deb6ab3658dcae111c25ff1b
+- T4 | S1, S2, S3, S4 | delegated (Git execution belongs to the release owner) — Herald 📯 (Release Manager) | done | commit: d977d3adeaab7a40deb6ab3658dcae111c25ff1b
 
 ## Log
 
@@ -45,3 +46,4 @@
 - L19 — 2026-11-02 — Herald 📯 (Release Manager) created `chore/query-verification/remove-skill` at baseline `d1b285b9e5d2a0e9a711a0f01ae0688c1fac25c4`; nonignored modified and untracked path inventories were identical before and after checkout. No staging, commit, push or PR occurred. The in-session refactor under the target skill is authorized for removal by L16; unrelated work must remain untouched.
 - L20 — 2026-11-02 — Skill removal: Herald 📯 (Release Manager) deleted `.opencode/skills/query-verification/` (16 tracked files staged for deletion plus untracked refactor tree). Live consumers were reconciled: `knowledge/agents.md`, `knowledge/problems.md`, `knowledge/diagnostic-system-design.md`, `README.md`, `.opencode/agents/ledger.md` (version 2.0.0), `.opencode/skills/ticket-runbook/` (version 3.0.0), `distribution-clearance.json` and `distribution-clearance.definition.md` (eleven roots). Crucible 🔥 (Test Architect) `[PASS]` on the runbook test after removing the sidecar CLI case. Warden 🔒 (Dependency Warden) `[PASS]` on clearance. Root PyYAML retained. Remaining `query-verification` mentions are historical closed-feature or ADR evidence, plus this record and a labeled historical note in `knowledge/diagnostic-system-design.md`.
 - L21 — 2026-11-02 — DEBT-026 cancelled, not resolved: original criteria (split operations, typed returned errors, Bastion 🧱 (Backend & Scripts Architect) and Crucible 🔥 (Test Architect) `[PASS]`, suite pass on the refactor) were not met; the implementation was deleted with the skill. Register open count 5 to 4; remaining DEBT-022, DEBT-024, DEBT-029, DEBT-032; next ID `DEBT-037`. Authority: S1 and L16.
+- L22 — Close: 2026-11-02 — delivered: skill removed; live consumers reconciled; DEBT-025, DEBT-036 and DEBT-026 cancelled not resolved; core-sync unchanged; PyYAML retained. Verification: Sentinel 🛡️ (Quality Guardian) `[PASS]` zero findings; Vault 🔐 (Catalog Steward) `[PASS]` live catalog without query-verification; Warden 🔒 (Dependency Warden) `[PASS]` clearance; Crucible 🔥 (Test Architect) suite `uv run --frozen --group dev pytest -q` exit 0, `913 passed, 6 skipped`. Work commit `d977d3adeaab7a40deb6ab3658dcae111c25ff1b`. Not authorized: push, PR, merge, tag, release, archive. No deferred audit findings from this removal review.
