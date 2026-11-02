@@ -26,7 +26,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 4.**
+**Open debts: 3.**
 
 ### DEBT-022 — ODD step-status reporting and continuation
 
@@ -36,15 +36,6 @@ Each entry MUST include:
 - **Direct evidence:** Conversation record 2026-10-29; user instruction "add taht as a debt when u finish a step u should send a message of the status and continue"; `odd/tasks/domain-use-case-conventions.md` L1–L7; the step-status table delivered only after the user asked.
 - **Resolution criteria:** Every completed ODD step produces a concise status message with the step number, state, evidence pointer, and next step; work continues to the next step unless a required gate or blocker stops it; any skipped step is named with its reason. Demonstrate this across the remaining steps of the active feature and the next non-small feature.
 - **Explicit deferral decision:** User instruction 2026-10-29: "add taht as a debt when u finish a step u should send a message of the status and continue". The user accepted the process debt and directed continuation.
-
-### DEBT-024 — Unnecessary stop and self-created boundary
-
-- **ID:** DEBT-024
-- **Date:** 2026-10-29
-- **Description:** Cipher 🔓 (Lead Orchestrator) stopped after completing a task and justified it with "the task was finished," although finishing a task is the point at which the workflow continues. The stop was a choice, not a rule; Cipher 🔓 (Lead Orchestrator) also expanded the user's "add the debt" instruction into closing and committing the feature, then used that self-created boundary as the reason to stop.
-- **Direct evidence:** Conversation record 2026-10-29; user corrections "WHY U STOPPED AGAIN? WHY U ARE NTO CLEAR ABOUT WHAT U WANT", "IT DONT JUSTIFY WHY U STOPPED, DONT DODGE IT", and "add that error as a debt, then continue"; `odd/tasks/domain-use-case-conventions.md` L9–L11 and commits `f7b5417`, `f659dcb`, `b77f9b5`, `e1ea9af`.
-- **Resolution criteria:** After each completed task or step, Cipher 🔓 (Lead Orchestrator) reports status and continues to the next ready task without using task completion as a stop; scope expansion requires explicit user direction; any genuine stop names a concrete blocker or gate, not a self-created boundary. Demonstrate on the current rename and the next task.
-- **Explicit deferral decision:** User instruction 2026-10-29: "add that error as a debt, then continue". The user accepted the process debt and directed continuation.
 
 ### DEBT-029 — Stop without a user-action requirement
 
