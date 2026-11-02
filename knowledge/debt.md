@@ -25,7 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 9.**
+**Open debts: 10.**
 
 ### DEBT-022 — ODD step-status reporting and continuation
 
@@ -108,5 +108,14 @@ Each entry MUST include:
 - **Resolution criteria:** When an applicable standing grant exists and the user has stated the triggering fact (e.g. "merged"), execute the authorized cleanup without a further confirmation; only genuinely missing authority, destructive actions outside the grant, or a real safety blocker justify a question, and that blocker must be named. Demonstrate on the next merged PR and record it here before retiring this debt.
 - **Explicit deferral decision:** User instruction 2026-11-01 (verbatim): "WHY U ARE ASKING, WHY U AMKE THIS ERROR AGAIN". Directed that this recurrence be recorded as debt.
 
-**ID to use for the next new debt:** `DEBT-036`. This is an allocation counter, not an open debt.
+### DEBT-036 — Herald's cleanup command form does not match the permission grant it relies on
+
+- **ID:** DEBT-036
+- **Date:** 2026-11-02
+- **Description:** `herald.md` templates the post-merge remote deletion as `git push "$BASE_REMOTE" --delete "refs/heads/$BRANCH"`, with the refspec quoted, at `:111` and `:190`. The permission allow row is the literal `git push origin --delete refs/heads/*` at `opencode.jsonc:115`, which contains no quote character, so a quoted refspec cannot match it and instead satisfies the `git push origin * ?*` deny row at `:106`. On the PR #148 cleanup the quoted form was refused with a `permission.rejected` refusal and the identical unquoted command deleted the branch on its first attempt. The coordinator compounded this by reporting the cause as a missing multi-segment grant, an inference from a configuration comment that was never tested; the user rejected that diagnosis. The defect is command text, not permission coverage.
+- **Direct evidence:** PR #148 merged as squash `53b1e6ea79a446388c2d70d9cfe097aaa39949eb`; cleanup preflight `verified_pr_cleanup.py 148 --base-remote origin --base-branch main` returned `SAFE_TO_CLEAN` with 35 of 35 checks; quoted attempt `git push origin --delete "refs/heads/docs/debt/cleanup-and-herald-push-grant"` returned `{"error":{"type":"permission.rejected","message":"Permission denied: shell"}}`; unquoted attempt `git push origin --delete refs/heads/docs/debt/cleanup-and-herald-push-grant` returned `- [deleted] docs/debt/cleanup-and-herald-push-grant`; `herald.md:111` and `:190`; `opencode.jsonc:106` and `:115`. Remote cleanups of multi-segment branches had succeeded earlier in the same session, which refutes the coverage theory.
+- **Resolution criteria:** The documented cleanup command and the permission rows agree on one form, either by removing the quoting from the two `herald.md` templates or by an equivalent change that a later merged pull request's cleanup exercises without a permission refusal; the next post-merge cleanup deletes its remote branch on the first attempt in the documented form; no force, refspec or extra-argument capability is added; and a coordinator claim of a permission defect is backed by an executed test rather than by inference from configuration text.
+- **Explicit deferral decision:** User instruction 2026-11-02, verbatim: "the problem is the documentation? add that as a debt". The user identified the documented command form as the defect and directed that it be registered as debt instead of fixed now.
+
+**ID to use for the next new debt:** `DEBT-037`. This is an allocation counter, not an open debt.
 <!-- project:end -->
