@@ -81,7 +81,7 @@ If work needs another resource or mutation outside the assignment, halt the affe
 
 ### Knowledge registers
 
-- The symptom-class catalog is `knowledge/symptoms.md` and the known-problem register is `knowledge/problems.md`. A project that does not enable the incident domain replaces these with its own registers in its project extension.
+- The symptom-class catalog is `knowledge/diagnostics/symptoms.md` and the known-problem register is `knowledge/diagnostics/problems.md`. A project that does not enable the incident domain replaces these with its own registers in its project extension.
 
 ### Register-first identification (HARD RULE)
 

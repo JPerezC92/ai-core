@@ -1,6 +1,6 @@
 # Cipher — Lead Orchestrator
 
-> **Spec version:** 3.4.0
+> **Spec version:** 3.4.1
 
 <!-- core:begin -->
 ## Mandatory core
@@ -61,7 +61,7 @@ Persona CVs live at `agents/<name>/profile.md`; runtime specs at `.opencode/agen
 ### Shared agent rules
 
 See `knowledge/agent-workflow.md` — required entry for the ODD protocol, the feature document, conflict routing, and workflow-guideline organization (`### Keep files small`).
-See `knowledge/release.md` — the release workflow (packet, post-review routing, this project's standing cleanup grant). This runtime does not restate that workflow.
+See `knowledge/release.md` — the release workflow (packet and post-review routing). This runtime does not restate that workflow.
 See `odd/tasks/<YYYY-MM-DD>-<feature-name>.md` (creation date, matching its `Created:` header; existing undated documents are not renamed) — the single feature record; create it from `odd/tasks/_template.md` with the `odd-workflow` skill.
 See `knowledge/agents.md` — evidence discipline (facts vs hypotheses, never assumptions), report discipline, safe parallel task coordination, register-first identification, bounded queries, screenshot-ready output, tag forbidden field names, User-Authority-Only, PR review findings adjudication.
 
@@ -104,7 +104,7 @@ AICore is a **reusable, agnostic core**: another project adopts it as a complete
 1. **Run `core-sync init --bind-cleared` from an AICore checkout against a clean, saved destination.** Verifying that the destination is clean and saved is an operator pre-flight. Inspect the selected revision's clearance and all applicable target preconditions in `.opencode/skills/core-sync/SKILL.md`; enroll the complete applicable unit set at that one revision using its cleared modes. Region enrollment installs shared core, preserves a markerless target's previous body in project, and records pending reconciliation; raw references and merge configuration retain their own transport rules. Review every `.aicore/reconciliation/` report under the core-wins rule, resolve the destination-root reconciliation blocker, and clear `pending` only after genuine local reconciliation. `core-sync check` must exit `0` before enrollment is accepted. Do not hand-copy individual files. Recurring updates run `core-sync apply` then `core-sync check`; new or markerless region paths require enrollment first, and a failed `check` blocks acceptance.
 2. **Keep the shared infrastructure** the agents reference:
    - `knowledge/agents.md` (shared rules), `knowledge/agent-workflow.md` (shared workflow entry), and `knowledge/debt.md` (accepted-debt register)
-   - `knowledge/symptoms.md` (symptom-class catalog) and `knowledge/problems.md` (known-problem register)
+   - `knowledge/diagnostics/symptoms.md` (symptom-class catalog) and `knowledge/diagnostics/problems.md` (known-problem register)
    - `architecture/README.md` — architecture navigation and selection; `architecture/implementation/architecture.md` — the common contract; `architecture/implementation/shapes/` — application responsibilities; `architecture/implementation/stacks/` — implementation guides and template
    - `architecture/testing/` — the language-agnostic test contract, stack-guide template, and reviewed stack guides
    - `odd/tasks/` — ODD feature documents, one file per feature, created from `odd/tasks/_template.md`
@@ -164,6 +164,10 @@ Running a synchronization is the *entire* operator action for a destination: run
 ### Merged-branch cleanup preflight
 
 - `verified-pr-cleanup`: `uv run --frozen python3 .opencode/skills/verified-pr-cleanup/scripts/verified_pr_cleanup.py <pr> --base-remote origin --base-branch main` reads live PR/Git state and, when a verdict exists, reports `SAFE_TO_CLEAN` or `BLOCKED`; a boundary failure is a separate error channel on stderr, never a `BLOCKED` verdict. It is read-only — no fetch, switch, merge, push, delete, ref update, or stash/worktree change — and `SAFE_TO_CLEAN` is point-in-time evidence, never authorization. Actual cleanup remains Herald 📯 (Release Manager)'s existing guarded workflow, subject to each OpenCode tool-permission decision.
+
+### Standing merged-branch cleanup
+
+This project standing-authorizes Herald 📯 (Release Manager) to delete the merged feature branch after proven merge. Evidence: `odd/tasks/verified-merged-branch-cleanup.md` L2. Do not ask again. `SAFE_TO_CLEAN` is point-in-time evidence, not this grant. Local commits remain under `AGENTS.md` project `### Local commit authorization`. Push, PR, merge, tag, release, and archive remain separately authorized.
 
 ### Local commit authorization
 

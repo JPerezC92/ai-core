@@ -4,7 +4,7 @@
 
 > **Owner:** Investigator 🔍 (Incident Investigator)
 > **Pre:** `01-identify.md` exists with a non-`pending` `identification_verdict`; `Phase` is `identify`; the coordinator has accepted identification and its current input/output identities and gates, observed the prior user's resource-use cessation, and explicitly assigned this investigate instance.
-> **Reads:** `01-identify.md`; `state.md`; the ticket; `knowledge/problems.md` (the cited `P-NNN` row, if any)
+> **Reads:** `01-identify.md`; `state.md`; the ticket; `knowledge/diagnostics/problems.md` (the cited `P-NNN` row, if any)
 > **Writes:** `02-investigate.md` (filled); updates `state.md` (`Phase`, kill-switch counters, `Updated`)
 
 ## Coordination assignment and handoff

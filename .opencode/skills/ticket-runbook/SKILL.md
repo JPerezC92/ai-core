@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 3.0.0
+  version: 3.0.1
   dependencies: PyYAML==6.0.3
 ---
 <!-- core:begin -->
@@ -247,8 +247,8 @@ This project's ticket-runbook validator script is `<python> .opencode/skills/tic
 
 ### Register paths
 
-- Symptom register: `knowledge/symptoms.md` (rows `S-xx`).
-- Problem register: `knowledge/problems.md` (rows `P-NNN`; `Team: incident`; `case:` / `pack:` pointers).
+- Symptom register: `knowledge/diagnostics/symptoms.md` (rows `S-xx`).
+- Problem register: `knowledge/diagnostics/problems.md` (rows `P-NNN`; `Team: incident`; `case:` / `pack:` pointers).
 
 ### Screenshot naming convention
 

@@ -12,24 +12,24 @@
       "mode": "region"
     },
     "knowledge/agent-workflow.md": {
-      "mode": "region"
+      "mode": "raw"
     },
     "knowledge/release.md": {
-      "mode": "region"
+      "mode": "raw"
     },
     "knowledge/debt.md": {
       "mode": "region"
     },
-    "knowledge/problems.md": {
+    "knowledge/diagnostics/problems.md": {
       "mode": "region"
     },
-    "knowledge/symptoms.md": {
+    "knowledge/diagnostics/symptoms.md": {
       "mode": "region"
     },
-    "knowledge/diagnostic-system-design.md": {
+    "knowledge/diagnostics/diagnostic-guidance.md": {
       "mode": "region"
     },
-    "knowledge/decisions.md": {
+    "knowledge/architecture-decision-workflow.md": {
       "mode": "region"
     },
     "architecture/": {

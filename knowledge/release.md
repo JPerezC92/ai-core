@@ -1,8 +1,5 @@
 # Release
 
-<!-- core:begin -->
-## Mandatory core
-
 Release is a distinct workflow from ODD. This file is its home. Do not copy Herald 📯 (Release Manager), Inquisitor 🔎 (PR Reviewer), or `git-pr` procedures here. Those owners keep how; this file owns when.
 
 ### PR release readiness
@@ -22,14 +19,5 @@ After merge, verify and report the outcome; do not automatically edit tracked fi
 - Git (branch, push, PR, delete): Herald 📯 (Release Manager)
 - Review at an immutable head: Inquisitor 🔎 (PR Reviewer)
 - PR body format: `.opencode/skills/git-pr/SKILL.md` and `.opencode/skills/git-pr/references/_pr-evidence-format.md`
-- Cleanup proof command: `AGENTS.md` project `### Merged-branch cleanup preflight` and the `verified-pr-cleanup` skill
+- Cleanup proof command: the destination root-runtime project-extensions cleanup-preflight entry, and the `verified-pr-cleanup` skill
 - Finding presentation: `knowledge/agents.md` `### PR review findings (adjudication)`
-<!-- core:end -->
-
-<!-- project:begin -->
-## Project extensions
-
-### Standing merged-branch cleanup
-
-This project standing-authorizes Herald 📯 (Release Manager) to delete the merged feature branch after proven merge. Evidence: `odd/tasks/verified-merged-branch-cleanup.md` L2. Do not ask again. `SAFE_TO_CLEAN` is point-in-time evidence, not this grant. Local commits remain under `AGENTS.md` project `### Local commit authorization`. Push, PR, merge, tag, release, and archive remain separately authorized.
-<!-- project:end -->

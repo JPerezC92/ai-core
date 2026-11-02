@@ -13,7 +13,8 @@ This directory holds AICore's explanatory decisions, historical accounting and r
 
 ## Other canonical owners
 
-- **Operational rules and registers:** [knowledge/agents.md](../knowledge/agents.md), [knowledge/debt.md](../knowledge/debt.md), [knowledge/symptoms.md](../knowledge/symptoms.md), [knowledge/problems.md](../knowledge/problems.md) and [knowledge/diagnostic-system-design.md](../knowledge/diagnostic-system-design.md).
+- **Operational rules and registers:** [knowledge/agents.md](../knowledge/agents.md), [knowledge/debt.md](../knowledge/debt.md), [diagnostic symptoms](../knowledge/diagnostics/symptoms.md), [problem patterns](../knowledge/diagnostics/problems.md) and [diagnostic guidance](../knowledge/diagnostics/diagnostic-guidance.md).
+- **Architecture decision lifecycle:** [Architecture Decision Workflow](../knowledge/architecture-decision-workflow.md) owns propagation and acceptance; AICore's records remain in [architecture/decisions/](architecture/decisions/).
 - **Architecture and testing definitions:** [architecture/README.md](../architecture/README.md) selects common/shape/implementation guides and the separate testing contract/guides. Documentation review does not establish code conformance.
 - **Current feature scope and decisions:** `odd/tasks/<YYYY-MM-DD>-<feature-name>.md`.
 - **Research preparation/publication ownership:** [AGENTS.md → Saved-research bindings](../AGENTS.md#saved-research-bindings) selects this repository's storage and owner; `.opencode/agents/augur.md` owns research procedure. Cipher 🔓 (Lead Orchestrator) assigns exact repository-document writes to Scribe ✍️ (Docs & Problems Manager), subject to existing approvals and reviews. A catalog entry is not publication authorization.
