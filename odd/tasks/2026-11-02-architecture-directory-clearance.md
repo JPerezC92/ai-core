@@ -1,8 +1,9 @@
 # Architecture directory clearance
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-02
+> **Closed:** 2026-11-02
 > **Objective:** Verify generic nested directory-root clearance and configure architecture as a raw directory root.
 > **Branch:** feat/core-sync/clear-architecture-directory
 > **Delivery:** One coordinated policy, registry, and verification slice; forecast 150 authored additions and deletions, excluding generated files. Reassess before commit if the forecast or running count exceeds 400.
@@ -16,8 +17,8 @@
 
 ## Tasks
 
-- T1 | S1, S2 | delegated (shared clearance policy and registry changes require owner review) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T2 | S3 | delegated (generic nested real-filesystem verification requires test and script owner gates) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
+- T1 | S1, S2 | delegated (shared clearance policy and registry changes require owner review) — Cipher 🔓 (Lead Orchestrator) | done | commit: 9307e5e87ccc0c3dfc8ae729a8778125707fb8a9
+- T2 | S3 | delegated (generic nested real-filesystem verification requires test and script owner gates) — Cipher 🔓 (Lead Orchestrator) | done | commit: 9307e5e87ccc0c3dfc8ae729a8778125707fb8a9
 
 ## Log
 
@@ -34,5 +35,7 @@
 - L11 — After registry and guidance edits, Crucible 🔥 (Test Architect) executed `uv run --frozen --group dev pytest -q`, exit 0: `922 passed, 6 skipped in 10.06s`. This establishes suite result only, not independent acceptance or actual-registry outcome verification.
 - L12 — Actual-registry outcome inspection: read-only Explorer inventory using a hidden-inclusive recursive glob found 13 current files under `architecture/`; `distribution-clearance.json` declares only the raw `architecture/` root with no overrides. Inspection of `core_sync_pkg/domain/clearance.py:110–167,175–212,253–258` and `infrastructure/filesystem.py:96–116` establishes that safe directory roots assign default raw mode to enumerated non-cache files; this is static evidence, not a runtime expansion of the actual tree, and glob/link handling is not proven identical. The S3 isolated real-filesystem test was included in the L11 suite run. Original → current Git diff blob IDs from Herald 📯 (Release Manager)'s read-only `git diff HEAD -- distribution-clearance.definition.md README.md knowledge/agent-workflow.md .opencode/skills/core-sync/SKILL.md`: definition `77febc1` → `99ab876`, README `3a7afd2` → `56b1876`, workflow `e442853` → `f56a1bb`, skill `c7cbd74` → `2f3df80`; HEAD is a comparison baseline, not proof of feature-start state.
 - L13 — Independent combined semantic review remains BLOCKED: it did not receive complete original and candidate text identities and could not fully read two long skill lines; actual-registry runtime expansion evidence was not supplied. An attempted coordinator read-only `uv run --frozen python3 -c` verification failed with exit 1 and Python `SyntaxError: invalid syntax` because command-line quoting stripped string quotes; it produced no outcome evidence. No destination synchronization was run.
-- L14 — Sentinel 🛡️ (Quality Guardian) independently reviewed S1–S3, current candidate, L10 obligation accounting, literal pre-edit instruction content supplied from the initial pre-write reads and Herald's diff evidence, and L11–L12. Verdict PASS with no open semantic findings. Actual architecture coverage remains a static inspection rather than runtime expansion of that tree; the isolated generic test exercises actual filesystem enrollment. The suite result does not claim destination migration or implementation conformance.
+- L14 — Sentinel 🛡️ (Quality Guardian), independent review session `ses_e63388e5effe8ShutG8qLglXPk`, reviewed S1–S3 and the candidate paths in T1/T2, L10 obligation accounting, literal pre-edit instruction content supplied from the initial pre-write reads and Herald's L12 diff identities, and L11–L12. The final continuation received the literal original changed definition lines, resolving the input gap recorded at L13; unchanged truncated skill lines were outside the changed-line review. Verdict PASS with no open semantic findings. Actual architecture coverage remains a static inspection rather than runtime expansion of that tree; the isolated generic test exercises actual filesystem enrollment. The suite result does not claim destination migration or implementation conformance.
 - L15 — 2026-11-02 — @git-pr
+- L16 — Close: S1–S3 delivered in `9307e5e87ccc0c3dfc8ae729a8778125707fb8a9`; test/script architecture and scoped instruction reviews passed, the whole suite and independent semantic acceptance are recorded at L11 and L14, and actual-tree verification remains limited as stated at L12. No destination synchronization was performed.
+- L17 — Cipher 🔓 (Lead Orchestrator) ran `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feature.py odd/tasks`; exit 0, including `ok odd\tasks\2026-11-02-architecture-directory-clearance.md`. This is mechanical anatomy, not semantic review.
