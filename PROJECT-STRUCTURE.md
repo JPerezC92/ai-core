@@ -112,7 +112,7 @@ What an adopting project receives, per `distribution-clearance.json`:
 Two consequences are visible in the tree:
 
 - The diagnostic catalog, problem register and guidance live together under `knowledge/diagnostics/`, so the symptom → problem → guidance relationship sits in one place.
-- `knowledge/agent-workflow.md` and `knowledge/release.md` carry no ownership markers. The AICore-only merged-branch cleanup authorization that used to sit in `release.md` now lives in `AGENTS.md` project extensions, so it is never distributed as a shared grant.
+- `knowledge/agent-workflow.md` and `knowledge/release.md` carry no ownership markers. The local-commit and merged-branch-deletion authorizations sit in the `AGENTS.md` core region, so an adopting project inherits them as a deliberate shared grant on its next synchronization; the unused magic-context mechanism was removed rather than shipped.
 
 ## Where to start
 
