@@ -45,7 +45,7 @@ For each handoff, record the outgoing/incoming instance, accepted inputs/outputs
 | Same-query reruns | 2 | 0 | 2 |
 | SLA warn at | 75% | — | — |
 
-`Hypotheses-outstanding` starts `3/3` and decrements per resolved hypothesis; no concurrent competing hypotheses. `Query-budget` is used/current-authorized-limit, initially `0/6`; record actual query consumption once, including one slot per actual verifier adapter execution. Exhaustion is used = limit; raise the denominator only with user authorization before further execution and never write used > limit or `14/6`. `Same-query-reruns` starts `0/2`; increment per identical rerun and stop reruns at 2. Transfer all three unchanged except for evidenced consumption; keep this table consistent with the header. Queries remain sequential H1→H2→H3.
+`Hypotheses-outstanding` starts `3/3` and decrements per resolved hypothesis; no concurrent competing hypotheses. `Query-budget` is used/current-authorized-limit, initially `0/6`; record each actual query execution once, including inconclusive executions, and never invent consumption for unexecuted work. Exhaustion is used = limit; raise the denominator only with user authorization before further execution and never write used > limit or `14/6`. `Same-query-reruns` starts `0/2`; increment per identical rerun and stop reruns at 2. Transfer all three unchanged except for evidenced consumption; keep this table consistent with the header. Queries remain sequential H1→H2→H3.
 
 > **Warn-if-recent rule:** If `Updated` is within the last 10 minutes AND `Phase` matches the step an agent is about to execute — halt and report: "state.md was updated less than 10 minutes ago. Another session may be active. Verify before proceeding."
 

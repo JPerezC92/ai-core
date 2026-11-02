@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.6.3
+  version: 3.0.0
   dependencies: PyYAML==6.0.3
 ---
 <!-- core:begin -->
@@ -14,9 +14,7 @@ metadata:
 
 ### What I do
 
-Scaffold a per-ticket analysis working set (see **Working-set and record schema**) from the analysis template (see **Working-set and record templates**) and run **register-first identification**: normalize the ticket, match an `S-xx` symptom class, then match at most one `Team: incident` `P-NNN` from the project's problem register (see **Register paths**) and issue a verdict of `exact`, `structural`, or `no_match`. The working analysis is always scaffolded, whatever the verdict. When the root cause is confirmed, the runbook grows the symptom/problem registers immediately — before destructive collapse and never gated on it — preserving every executed query durably and, when the confirming query is reusable, a destination-relative verifier pair a later ticket can replay. At close, the working analysis and the project's response-draft file collapse to the durable ticket record plus the project's screenshots and validations directories (see **Working-set and record schema**), and the cited evidence.
-
-The identify-step artifact (see **Working-set and record templates**) also documents an optional, incident-only verifier route (the `query-verification` skill) on the investigate step that consumes one existing Query-budget slot; it never adds automatic query execution and never changes the state header schema.
+Scaffold a per-ticket analysis working set (see **Working-set and record schema**) from the analysis template (see **Working-set and record templates**) and run **register-first identification**: normalize the ticket, match an `S-xx` symptom class, then match at most one `Team: incident` `P-NNN` from the project's problem register (see **Register paths**) and issue a verdict of `exact`, `structural`, or `no_match`. The working analysis is always scaffolded, whatever the verdict. When the root cause is confirmed, the runbook grows the symptom/problem registers immediately — before destructive collapse and never gated on it — preserving every executed query durably. At close, the working analysis and the project's response-draft file collapse to the durable ticket record plus the project's screenshots and validations directories (see **Working-set and record schema**), and the cited evidence.
 
 ### When to use me
 
@@ -39,7 +37,7 @@ Apply `knowledge/agents.md` `### Safe parallel task coordination (HARD RULE)`. C
 
 - Keep one current authorized step instance as sole writer of `state.md`, its step artifact and recorded counters until a coordinator-controlled handoff. Supporting evidence instances return bounded, attributed results to allocated destinations; they never write state/counters, issue identification verdicts, frame competing hypotheses or execute incident queries. Independent ready evidence work may run concurrently only against stable accepted inputs and compatible resources within declared capacity.
 - Before dispatch, reject overlapping whole-file/directory/alias access unless isolation is verified. Allocate screenshot/report and session-validation destinations without overwrites; canonical fixed paths stay exclusively owned and serialized. Symptom/problem registers, durable records, response drafts, browser/auth sessions (including refresh), adapters and external capacity are separately declared resources, not implied grants. Unknown capacity or isolation blocks the affected operation.
-- Preserve one incident allowance across all instances: hypotheses start at `3/3` outstanding and decrement per resolved hypothesis (cap 3); Query-budget starts at `0/6` used/limit; Same-query-reruns starts at `0/2` and stops reruns at 2. Only the sole writer records actual consumption under coordinator accounting. No allowance cloning, resets on transfer or invented consumption; each actual verifier adapter execution consumes one existing query slot. Query exhaustion is used = current authorized limit; raise the denominator only with user authorization before further execution, never used > limit or `14/6`. Preserve the 75%-SLA warning.
+- Preserve one incident allowance across all instances: hypotheses start at `3/3` outstanding and decrement per resolved hypothesis (cap 3); Query-budget starts at `0/6` used/limit; Same-query-reruns starts at `0/2` and stops reruns at 2. Only the sole writer records actual consumption under coordinator accounting. No allowance cloning, resets on transfer or invented consumption. Query exhaustion is used = current authorized limit; raise the denominator only with user authorization before further execution, never used > limit or `14/6`. Preserve the 75%-SLA warning.
 - At handoff, return task/instance, consumed input and output identities, actual results/counter values, gate evidence and current resource-use state. Cipher 🔓 (Lead Orchestrator) accepts all relevant finished results, observes cessation of the previous user's resource use and explicitly assigns the successor before ownership transfers. A timestamp, stop request, timeout or completed return alone is not cessation evidence. Keep H1→H2→H3 order; the next hypothesis proceeds only after Cipher 🔓 (Lead Orchestrator) accepts the return and explicitly dispatches it. Role identity is not independence.
 - Hold reviewed outputs and dependencies stable; changed scope/inputs invalidate affected assignments/verdicts. Failed, incomplete, stale or still-mutating work cannot unblock a transition. Required edit checkpoints return `AWAITING_REVIEW`, not completion; only the parent accepts the existing owner gate and redispatches continuation. Missing inputs/resources return `BLOCKED` with exact evidence/need and bounded options; workers never expand scope or invoke the user-facing question tool.
 
@@ -134,7 +132,7 @@ Preparation starts as soon as the root cause is confirmed — it does not wait f
 3. Append the durable `case:` pointer for the current case to the existing `P-NNN` row's Evidence.
 4. Promote a `candidate` to `active` only after a second independent confirmed case.
 
-Register growth requires the durable case pointer but does not require a reusable diagnostic. When the confirming query is reusable, also persist it as parameterized SQL plus an adjacent `.verifier.yaml` sidecar at the destination project's declared query-storage path and record `diagnostic:<destination-relative-sidecar-path>` in the row's Evidence; if the destination has no declared path, ask for it — the `P-NNN` and case pointer are recorded first. When the proof path is a reusable identification pack rather than a one-row verifier, persist it at the destination-chosen path and record `pack:<destination-relative-pack-path>` in the row's Evidence; do not run the query-verification evaluator on a pack (see **Working-set and record templates**) — it is not a verifier and has no sidecar or result contract. A later `structural` ticket follows a recorded `pack:` pointer first — resolving the destination-relative path and replaying that correlation with current-ticket keys under destination-owned execution (the core never executes or parses the pack) — then follows `diagnostic:` through the verifier protocol when present (see **Working-set and record templates**), before framing a new query. The `case:` pointer is still recorded first, the destination chooses the pack layout, the core never names the directory, and the register row never receives SQL statements or result tables. This is symptom/problem register admission, not a patterns-catalog check.
+Register growth requires the durable case pointer. When the proof path is a reusable identification pack, persist it at the destination-chosen path and record `pack:<destination-relative-pack-path>` in the row's Evidence. A later `structural` ticket follows a recorded `pack:` pointer first — resolving the destination-relative path and replaying that correlation with current-ticket keys under destination-owned execution (the core never executes or parses the pack) — before framing a new query. The `case:` pointer is recorded first, the destination chooses the pack layout, the core never names the directory, and the register row never receives SQL statements or result tables. This is symptom/problem register admission, not a patterns-catalog check.
 
 This step is not destructive and never gates on file deletion.
 
@@ -144,22 +142,10 @@ Register-admission preparation starts at step 6; the approved mutation must be a
 
 1. Complete posted-response synchronization: the responses section (see **Working-set and record schema**) of the durable ticket record mirrors the latest response **posted by us — our own notes only** — identified from the ticket tool's author evidence and note id; never the draft and never a third-party or requester note. An edit to a selected note updates its matching response block rather than appending a duplicate. Missing authorship is reported, never inferred.
 2. Run the validator script (see **Validator script**) with `<ticket-folder> --pre-close`. This mode is read-only and requires: exactly one durable ticket record; the complete project analysis working set (state + step files; see **Working-set and record schema** — nothing missing, nothing unexpected); the project's response-draft file; the project's screenshots and validations directories (non-image evidence artifacts live under the ticket's session `validations/` directory, never the ticket root); a completed `synthesize` phase; every machine-addressable `path:` citation in the ticket record spelled ticket-folder-relative (the project's screenshot path spelling; see **Screenshot naming convention**) and resolving to an existing file inside the ticket folder; and valid identification/register consistency. Abort on any non-zero exit.
-3. Semantic confirmation — the validator never claims this ground: confirm the earlier register admission completed (the case pointer, plus an identification-pack pointer or a diagnostic-sidecar pointer when applicable); every executed query from the investigate-step artifact (see **Working-set and record templates**) is preserved verbatim in the durable ticket record or a cited validations artifact (see the retention rule in the investigate template — **Working-set and record templates**); every non-local-path evidence citation (prose/backtick references) resolves to real evidence; every artifact under the session `validations/` directory is accounted for as either durably cited in `ticket_<id>.md` or intentionally uncited with an evidenced reason (no evidence is deleted to satisfy readiness); and record content/completeness gates pass. Require coordinator-accepted finished producer/consumer results (investigation, synthesis, screenshots, drafting, posted-response synchronization, retention and register admission as applicable) and observed cessation of every active user's access to the working files before collapse. Allocate the collapse writer explicitly; directory deletion conflicts with descendant access. Any relevant change invalidates readiness and requires current validation/acceptance again.
+3. Semantic confirmation — the validator never claims this ground: confirm the earlier register admission completed (the case pointer, plus an identification-pack pointer when applicable); every executed query from the investigate-step artifact (see **Working-set and record templates**) is preserved verbatim in the durable ticket record or a cited validations artifact (see the retention rule in the investigate template — **Working-set and record templates**); every non-local-path evidence citation (prose/backtick references) resolves to real evidence; every artifact under the session `validations/` directory is accounted for as either durably cited in `ticket_<id>.md` or intentionally uncited with an evidenced reason (no evidence is deleted to satisfy readiness); and record content/completeness gates pass. Require coordinator-accepted finished producer/consumer results (investigation, synthesis, screenshots, drafting, posted-response synchronization, retention and register admission as applicable) and observed cessation of every active user's access to the working files before collapse. Allocate the collapse writer explicitly; directory deletion conflicts with descendant access. Any relevant change invalidates readiness and requires current validation/acceptance again.
 4. Obtain the exact close-out authorization phrase (see **Working-set and record schema**).
 5. Remove the analysis working-set state file, every analysis step file, and the project's response-draft file (see **Working-set and record schema**) — nothing else.
 6. Run the validator script (see **Validator script**) with `<ticket-folder> --close-out` and require exit 0. If it fails after collapse, halt without deleting anything further: the durable ticket record, the screenshots and validations directories, and every cited durable evidence file are never deleted to satisfy a validator.
-
-### Optional verifier route (investigate step)
-
-The investigate step documents an optional, incident-only verifier route. It is off by default; the manual per-hypothesis query path is unchanged and remains the default.
-
-- The `query-verification` skill validates an incident-owned, sidecar-defined SQL verifier against an invocation-time query root and evaluates the destination-owned adapter's normalized output offline. The core never executes the query, holds credentials, or invokes the adapter.
-- Exactly one adapter execution consumes exactly one existing Query-budget slot. The default Query-budget limit is 6 (exhausted when used equals limit); halt-and-ask at that point unless the user already raised the denominator. Never write used greater than limit; never write `14/6`. The `Same-query-reruns` cap of 2 and the normal per-hypothesis query path are unchanged; no new header field, counter, or budget is introduced.
-- The redacted case-evidence record is written under the ticket's existing session-specific validations folder (see **Working-set and record schema**) with the verifier ID as the filename stem.
-- The analysis and ticket evidence record only the verifier ID, the three-state verdict, the source/definition/evidence digests, and the redacted case-evidence path. Credentials, raw adapter output, rendered SQL, rendered parameter values, and unredacted configured identifiers are never retained.
-- A `verified` verdict is symptom evidence only; it never establishes root-cause equivalence or authorizes a fix.
-
-The normative contract lives in the `query-verification` skill and its protocol reference (see **Working-set and record templates**); the optional block and the synthesis restriction live in the investigate and synthesize templates (see **Working-set and record templates**).
 
 ### Post-write self-verification loop
 
@@ -202,7 +188,7 @@ The validator script is a helper, not the authority — it catches repetitive me
 **Example 4 — non-production coordination walkthrough (not execution proof)**
 
 - After an accepted `no_match`, two supporting evidence instances read distinct frozen documents and return separately attributed reports; neither writes working state, frames hypotheses or executes queries. The single investigate owner accepts no evidence until coordinator review and executes only the coordinator-chosen hypothesis; on rejection it returns without auto-pivoting to H2 or H3.
-- Given Query-budget `2/6`, one observed verifier adapter execution yields `3/6`; a transfer preserves `3/6`, hypothesis outstanding and rerun values unchanged. A second state writer is rejected, not given another six slots.
+- Given Query-budget `2/6`, one executed query yields `3/6`; a transfer preserves `3/6`, hypothesis outstanding and rerun values unchanged. A second state writer is rejected, not given another six slots.
 - A finished investigator return with a still-active browser session does not permit session transfer; missing cessation evidence blocks that access. A stale producer report or active working-file consumer blocks collapse despite a clean validator and must be resolved before `Close out now`.
 
 ### Troubleshooting
@@ -239,7 +225,6 @@ Ticket-runbook templates and references:
 - Ticket record template: `references/ticket-template.md`
 - Response-draft template: `references/response-draft-template.md`
 - Consistency checklist: `references/_consistency-checklist.md`
-- Verifier protocol: `.opencode/skills/query-verification/SKILL.md` and `.opencode/skills/query-verification/references/protocol-v1.md`
 
 ### Working-set and record schema
 
@@ -263,7 +248,7 @@ This project's ticket-runbook validator script is `<python> .opencode/skills/tic
 ### Register paths
 
 - Symptom register: `knowledge/symptoms.md` (rows `S-xx`).
-- Problem register: `knowledge/problems.md` (rows `P-NNN`; `Team: incident`; `case:` / `pack:` / `diagnostic:` pointers).
+- Problem register: `knowledge/problems.md` (rows `P-NNN`; `Team: incident`; `case:` / `pack:` pointers).
 
 ### Screenshot naming convention
 

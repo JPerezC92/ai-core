@@ -95,12 +95,6 @@
         "SKILL.md"
       ]
     },
-    ".opencode/skills/query-verification/": {
-      "mode": "raw",
-      "region_files": [
-        "SKILL.md"
-      ]
-    },
     ".opencode/skills/ticket-runbook/": {
       "mode": "raw",
       "region_files": [
