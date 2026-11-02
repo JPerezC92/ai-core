@@ -2,8 +2,9 @@
 
 - **Status:** Accepted
 - **Date:** 2026-10-25
-- **Amended:** 2026-10-30 — The per-file `region` clearance and protected-core-plus-project-extensions model for `architecture/` is retired in favour of whole-file `raw` distribution with no project region, per ADR 0006 and `odd/tasks/architecture-whole-file-distribution.md`. The decision body below is unchanged.
+- **Amended:** 2026-10-30 — The per-file `region` clearance and protected-core-plus-project-extensions model for `architecture/` is retired in favour of whole-file `raw` distribution with no project region, per `odd/tasks/architecture-whole-file-distribution.md`. The decision body below is unchanged.
 - **Amended:** 2026-11-01 — Implementation-family references in the body map to `architecture/implementation/` paths per `odd/tasks/architecture-content-model.md` T18; the body is unchanged.
+- **Amended:** 2026-11-01 — ADR 0006 was removed by explicit user decision, quoting a fragment of that request: "remove this ADR it was never used"; the decision content it recorded is folded here: every architecture document ships whole-file in `raw` mode with no ownership markers and no project region; no architecture file references a path outside `architecture/`; architecture states its rules completely instead of deferring them; distribution identity is byte equality and not a conformance claim; no agent or document owns a guideline; and source-local navigation lives in `docs/architecture/README.md`. The operative rules live in `architecture/README.md` §Contract boundaries, `architecture/testing/architecture.md`, the testing stack guides, `distribution-clearance.json`, and `knowledge/decisions.md` §Discoverability. The decision body below is unchanged.
 
 ## Context
 
