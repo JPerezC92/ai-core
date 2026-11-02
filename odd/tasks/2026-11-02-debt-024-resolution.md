@@ -4,7 +4,7 @@
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-02
 > **Objective:** Resolve DEBT-024 by demonstrating its recorded continuation criteria on this feature's tasks, without claiming that existing rules alone establish resolution.
-> **Branch:** N/A — no branch created yet; Herald 📯 (Release Manager) creates one only after execution-review approval
+> **Branch:** docs/debt/debt-024-resolution (from `main` at `1884091`)
 > **Delivery:** One bounded evidence slice, then register retirement only if every recorded criterion is evidenced; forecast 80 authored additions plus deletions, excluding generated files; slice A is criterion mapping and this-feature demonstration in this record; slice B deletes only DEBT-024 and updates the open count if criteria are met. Clearing-PR publication remains separately authorized.
 > **Runner:** `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feature.py odd/tasks/2026-11-02-debt-024-resolution.md`
 
@@ -16,7 +16,7 @@
 
 ## Tasks
 
-- T1 | S1, S2, S3 | inline (coordinator-owned criterion mapping and this-feature demonstration evidence; no Git) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
+- T1 | S1, S2, S3 | inline (coordinator-owned criterion mapping and this-feature demonstration evidence; no Git) — Cipher 🔓 (Lead Orchestrator) | done | commit: 22352c1
 - T2 | S3 | delegated (independent semantic acceptance of the mapped criteria and demonstration; reviewer did not author the evidence) — Sentinel 🛡️ (Quality Guardian) | open | commit: pending
 - T3 | S3 | delegated (register mutation belongs to documentation owner; delete DEBT-024 only after T2 acceptance that every clause is evidenced) — Scribe ✍️ (Docs & Problems Manager) | open | commit: pending
 - T4 | S3 | delegated (Git inventory and local work-unit commit belong to the Git owner; no publication authority inferred) — Herald 📯 (Release Manager) | open | commit: pending
@@ -34,3 +34,8 @@
 - L9 — 2026-11-02 — T2 Sentinel 🛡️ (Quality Guardian) `debt-024-resolution/T2/sentinel1` session `ses_e64b76032ffeE0BJ1Tssp51grN` returned `[FAIL]`, three findings. F1: L8(a) overclaims demonstration; Log lacked step-numbered status rows; T1 still `in progress`. F2: historical rename window unmet; L5/L7 substitution does not by itself satisfy “current rename and the next task.” F3: L8(b)(c) consistent with unchanged register (open count 4, next ID `DEBT-037`) but do not complete clause 1 or the demonstration sentence. Retirement: no. Coordinator accepts the fail. L8(a)’s demonstration claim is withdrawn; clauses (b)–(d) stand.
 - L10 — 2026-11-02 — Step reports recorded in this Log (not chat-only). Step 1 Authorize ✅ COMPLETE — “go with 024” / L7 “do it”. Step 2 Explore ✅ COMPLETE — L4. Step 3 Resolve uncertainty ✅ COMPLETE — L5. Step 4 Classify ✅ COMPLETE — L6 non-small. Step 5 Track ✅ COMPLETE — this document created; next was execution-review gate. Step 5→6 after L7: Step 6 Implement 🟡 IN PROGRESS. T1 mapping authored (L8); T1 remains `in progress` until commit; T2 ran and failed (L9). Next ready task: remediate F1/F2 in this record, self-check, redispatch T2. No user action: FAIL is in-scope evidence correction.
 - L11 — 2026-11-02 — Remediation of F1/F2, no retirement claim. Completed mapping slice: T1 produced L8 and this correction; work continued to T2 rather than stopping because T1 finished. After T2 `[FAIL]`, work continues to this remediation rather than stopping because the review task returned. Next task after this remediation: coordinator self-check, then T2 redispatch on the corrected candidate. Historical rename window remains unmet (L8(d), L9 F2). Substituted this-feature pair now cited: mapping slice → T2 dispatch; T2 FAIL → L11 remediation. Register unchanged.
+- L12 — 2026-11-02 — T1 done against local work-unit commit `22352c14a5dfbbedbdc5c40cafe31c47ad5fce6c` on `docs/debt/debt-024-resolution`, subject `docs(debt): map DEBT-024 resolution evidence`; Herald 📯 (Release Manager) `debt-024-resolution/T4/herald1` session `ses_e64b58991ffecbH5rSXgiZOx5L`: 1 file, 36 insertions, only this feature path; `knowledge/debt.md` not in the commit; post-commit status clean. Step 6: T1 ✅ done; continued to next ready task T2 (redispatch), not a stop because T1 finished. T4 remains open for later retirement commit if T2 accepts. Register unchanged.
+- L13 — 2026-11-02 — T2 round 3 Sentinel 🛡️ (Quality Guardian) same session `ses_e64b76032ffeE0BJ1Tssp51grN` `[PASS]`, zero open findings. Historical rename unmet; T1-done → T2-continue fills L5/L7 substitution. Coordinator accepted. Continued to T3; not a stop because T2 finished.
+- L14 — 2026-11-02 — T3 Scribe ✍️ (Docs & Problems Manager) `scribe1` session `ses_e64b3abefffexueRzy3sPpi2BA` AWAITING_REVIEW: `knowledge/debt.md` only — DEBT-024 entry deleted; open count 4→3; DEBT-022, DEBT-029, DEBT-032 and next ID `DEBT-037` preserved; core region untouched. Coordinator live-read: headings DEBT-022, DEBT-029, DEBT-032 only; count text `3`; counter `DEBT-037`. Combined feature+register review next; no publication.
+
+
