@@ -1,8 +1,9 @@
 # Debt cleanup and Herald command form
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-02
+> **Closed:** 2026-11-02
 > **Objective:** Align Herald 📯 (Release Manager)'s documented remote-delete command with the permission grant it relies on (DEBT-036) and retire only the open debts whose recorded criteria are fully evidenced, without further unauthorized release action.
 > **Branch:** docs/debt/herald-cleanup-quote-mismatch (created from `main` at `53b1e6e`; carries `6f1221b` and `2c10583`, local only)
 > **Delivery:** Single documentation slice: one agent-spec command-form correction plus register dispositions. Forecast about 40 authored additions plus about 20 deletions, excluding generated files. Slice boundaries: (A) command-form correction, committed as `2c10583` before this document existed and disclosed as such; (B) register dispositions after the execution review.
@@ -19,9 +20,9 @@
 ## Tasks
 
 - T1 | S3 | inline (one bounded agent-spec correction, no architecture or test surface) — Cipher 🔓 (Lead Orchestrator) | done | commit: 2c10583
-- T2 | S4 | delegated (register dispositions depend on per-entry criteria and on a conversation-only fact) — Scribe ✍️ (Docs & Problems Manager) | open | commit: pending
-- T3 | S1, S2 | delegated (independent semantic acceptance of the combined candidate) — Sentinel 🛡️ (Quality Guardian) | open | commit: pending
-- T4 | S5 | delegated (Git execution of the accepted local commit only; release stays separately authorized under S5) — Herald 📯 (Release Manager) | open | commit: pending
+- T2 | S4 | delegated (register dispositions depend on per-entry criteria and on a conversation-only fact) — Scribe ✍️ (Docs & Problems Manager) | done | commit: 3d40c83
+- T3 | S1, S2 | delegated (independent semantic acceptance of the combined candidate) — Sentinel 🛡️ (Quality Guardian) | done | commit: 3d40c83
+- T4 | S5 | delegated (Git execution of the accepted local commit only; release stays separately authorized under S5) — Herald 📯 (Release Manager) | done | commit: 3d40c83
 
 ## Log
 
@@ -36,3 +37,5 @@
 - L9 — 2026-11-02 — Effect of L8 on this record. L3 stands as history rather than as pending remediation; this document is the governing record for the remaining scope, not retroactive work in progress. Remaining scope: T2 register dispositions, T3 independent acceptance, T4 release only under separate authorization. No push, PR, merge, tag or archive authority exists for this branch. Gate state: execution review presented, T2 implementation not started.
 - L10 — 2026-11-02 — User answer to the PR #148 authorization question, verbatim: "No both".
 - L11 — 2026-11-02 — Interpretation and scope for L10. "No" records that no redundant push, PR, merge or cleanup permission request was made during the PR #148 flow, which is the chat-only fact the repository cannot carry; "both" names DEBT-033 and DEBT-035. DEBT-034 is retired on repository evidence recorded at L6, presented in the execution review and not contested. Register effect for T2: DEBT-033, DEBT-034 and DEBT-035 are deleted, the open count moves from 10 to 7, next ID `DEBT-037` is retained, and the remaining seven entries stay byte-unchanged — DEBT-036 included, because its criterion requires a merged PR cleanup to exercise the corrected command first. Release remains unauthorized under S5.
+- L12 — 2026-11-02 — Delivery evidence for T2, T3 and T4. Scribe ✍️ (Docs & Problems Manager) deleted DEBT-033, DEBT-034 and DEBT-035 and moved the count line from 10 to 7, returning `AWAITING_REVIEW`; coordinator checks then confirmed 7 entry headings, count line 7, next ID `DEBT-037` retained, and no occurrence of the retired IDs anywhere in the file. Sentinel 🛡️ (Quality Guardian) returned `[PASS]` with zero findings on the combined register and document candidate and named two corroboration-only boundaries: byte-immutability of `opencode.jsonc` and identity of the committed `herald.md` state. Both were closed by coordinator runs: `git diff 53b1e6e -- opencode.jsonc` printed nothing, and `git diff 2c10583 -- .opencode/agents/herald.md` printed nothing. Herald 📯 (Release Manager) committed both paths as `3d40c834352a5d9bf987290b42ab3d85d660fc89`, 39 insertions and 28 deletions, tree clean, nothing pushed.
+- L13 — Close: 2026-11-02 — delivered the documented command-form agreement, verified by Sentinel and by the recorded PR #148 evidence, and the three evidenced retirements with resolution evidence in the clearing commit. DEBT-036 stays open by its own criterion until a merged-PR cleanup exercises the corrected command, and the seven remaining entries are byte-unchanged. Not authorized or performed: push, PR, merge, tag, release, archive.
