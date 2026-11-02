@@ -1,4 +1,4 @@
-# Decisions
+# Architecture Decision Workflow
 
 <!-- core:begin -->
 ## Mandatory core
@@ -68,5 +68,5 @@ Link a source-local record from the project's own navigation — the `project` r
 
 ### Decision records
 
-This source project's decision records live in `docs/architecture/decisions/`, created from `_template.md`. They are source-local rationale, not distributed shared dependencies, and their links belong in `docs/architecture/README.md`.
+AICore's decision records live in [`docs/architecture/decisions/`](../docs/architecture/decisions/), created from `_template.md`. They are source-local rationale, not distributed shared dependencies, and their links belong in `docs/architecture/README.md`.
 <!-- project:end -->

@@ -1,7 +1,7 @@
 <!-- core:begin -->
 # Known Problem Pattern Register
 
-Chronological, evidence-backed recurring problem patterns shared by incident and dev work. Each row is a child instance of a symptom class in `knowledge/symptoms.md`; when a row references several classes, the primary symptom class comes first.
+Chronological, evidence-backed recurring problem patterns shared by incident and dev work. Each row is a child instance of a symptom class in `knowledge/diagnostics/symptoms.md`; when a row references several classes, the primary symptom class comes first.
 
 ## Entry format
 
@@ -10,7 +10,7 @@ One row per record; columns exactly `ID | Date | Team | Symptom | System | Modul
 - **ID** — `P-NNN` (durable — never renumbered or reused)
 - **Date** — when the problem was first confirmed
 - **Team** — `incident` | `dev` (mandatory discriminator)
-- **Symptom** — >=1 S-xx refs from `knowledge/symptoms.md`, comma-separated, primary first (e.g. `S-05, S-07`)
+- **Symptom** — >=1 S-xx refs from `knowledge/diagnostics/symptoms.md`, comma-separated, primary first (e.g. `S-05, S-07`)
 - **System** — system the problem belongs to
 - **Module** — module / component / package / tool the problem belongs to
 - **Problem** — one-liner
@@ -40,7 +40,7 @@ Only `Team: incident` rows participate in incident identification.
 
 ## Rules
 
-- Every row MUST reference >=1 existing S-xx from `knowledge/symptoms.md`.
+- Every row MUST reference >=1 existing S-xx from `knowledge/diagnostics/symptoms.md`.
 - Team MUST be `incident` or `dev`.
 - Evidence-backed only — no rows without cited evidence.
 - Duplicates merge into the existing row, never re-filed.

@@ -20,10 +20,10 @@ This catalog is the fixed, durable index of error-signature classes shared by in
 - IDs are durable and immutable: an `S-xx` is never deleted, renumbered, or reused. New classes are appended with approval.
 - A class matches only when every **Required signal** is present in the ticket text; any **Exclusion** present disqualifies the class even when the required signals are present.
 - Only this catalog matches a symptom class. Ticket archives, patterns registers, KBA/RCA catalogs, and knowledge search are evidence/backfill sources — they never match a class and never issue an identification verdict.
-- Every record in `knowledge/problems.md` MUST reference >=1 class here.
+- Every record in `knowledge/diagnostics/problems.md` MUST reference >=1 class here.
 - Routing is canonical — no workaround before the canonical diagnostic runs (version-first and stop-and-ask per `knowledge/agents.md`).
 
 ## Register
 
-Filed instances live in `knowledge/problems.md`.
+Filed instances live in `knowledge/diagnostics/problems.md`.
 <!-- core:end -->

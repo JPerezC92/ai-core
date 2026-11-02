@@ -142,8 +142,8 @@ def load_step_file_contents(analysis_dir: Path) -> dict[str, str]:
 
 
 def load_register_rows(repo_root: Path) -> list[Problem]:
-    """Load ``knowledge/problems.md`` incident rows at the IO boundary."""
-    register_path = repo_root / "knowledge" / "problems.md"
+    """Load ``knowledge/diagnostics/problems.md`` incident rows at the IO boundary."""
+    register_path = repo_root / "knowledge" / "diagnostics" / "problems.md"
     if not register_path.is_file():
         return []
     return parse_problem_register(load_text(register_path))

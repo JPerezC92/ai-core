@@ -20,7 +20,8 @@ The document carries `"schema": 1`. The version stays **v1** through every compa
 |---|---|---|---|
 | Root runtime | `AGENTS.md` | `{"mode": "region", "role": "root"}` | core region only; `role: root` is unique to this row |
 | Harness config | `opencode.jsonc` | `{"mode": "merge"}` | top-level JSON(C) key merge, destination-only keys preserved; the `mcp` key merges by server name, keeping destination-only MCP servers and making a same-named entry core-wins |
-| Knowledge documents | `knowledge/*.md` | `{"mode": "region"}` | core region only (core/project markers) |
+| Region knowledge documents | individually cleared `knowledge/` files, including `knowledge/diagnostics/` files | `{"mode": "region"}` | core region only (core/project markers); not a directory-root clearance |
+| Whole-file workflows | `knowledge/agent-workflow.md`, `knowledge/release.md` | `{"mode": "raw"}` | whole-file byte-for-byte transport, no ownership regions; source-local grants stay in root-runtime project extensions |
 | Architecture documents | `architecture/` directory root | `{"mode": "raw"}` | whole-file byte-for-byte transport with no ownership markers and no project region; no reconciliation report and no `pending` entry; common/shape contracts, implementation and testing templates/guides, and navigation; tools remain destination-owned |
 | Directory roots | e.g. `architecture/`, `.opencode/skills/<name>/`, `.opencode/agents/`, `agents/` | `{"mode": <default>, "region_files": [<paths>]?}` | root `mode` is the default mode of every file under the root; `region_files` overrides selected files; see below |
 
@@ -35,20 +36,21 @@ Agent specs are covered by the `.opencode/agents/` directory root and persona pr
 
 ## Knowledge distribution classes
 
-The eight cleared `knowledge/` sources are region rows whose core/project split expresses their distribution class:
+The cleared `knowledge/` sources use individually selected region or raw modes:
 
-| Class | Files | Core ships |
+| Class | Files | Payload ships |
 |---|---|---|
 | Shared rules | `knowledge/agents.md` | the shared rules; source-side extensions stay project |
-| Shared workflow | `knowledge/agent-workflow.md` | the reusable entry sequence; source-side extensions stay project |
-| Shared release workflow | `knowledge/release.md` | packet, post-review routing, and execution-owner pointers; source-side grants stay project |
-| Shared decision workflow | `knowledge/decisions.md` | the decision lifecycle and its propagation gate; the source-local ADR directory and its records stay project |
+| Shared workflow (raw) | `knowledge/agent-workflow.md` | the whole reusable entry sequence, without ownership regions |
+| Shared release workflow (raw) | `knowledge/release.md` | the whole packet, post-review routing, and execution-owner pointers; local grants belong in root-runtime project extensions, not this payload |
+| Shared decision workflow (region) | `knowledge/architecture-decision-workflow.md` | the decision lifecycle and its propagation gate; the source-local ADR location stays project, and its records do not ship |
 | Record-bearing register (frame-only core) | `knowledge/debt.md` | the frame alone — the register carries no table; filed records never ship |
-| Shared catalog (full core) | `knowledge/problems.md`, `knowledge/symptoms.md` | the full catalog |
-| Living design (contract core, local refinement state) | `knowledge/diagnostic-system-design.md` | the shared contract; refinement state stays project |
+| Shared catalog (full core) | `knowledge/diagnostics/problems.md`, `knowledge/diagnostics/symptoms.md` | the full catalog |
+| Diagnostic guidance (contract core, local historical context) | `knowledge/diagnostics/diagnostic-guidance.md` | the shared contract; historical context stays project |
 
 - The debt register's core is frame-only and carries no table: its records are the source's own filed history, and the frame is the retired template seed's payload.
-- Whatever the class, destination-owned records live in the destination's project region and are never substituted by a sync.
+- For region-mode classes, destination-owned records live in the destination's project region and are never substituted by a sync. Raw workflows have no project region: a write replaces all destination bytes, with no reconciliation report or `pending` entry. A pre-write `check` detects byte drift, but does not preserve it.
+- Existing destination bindings require destination-owned migration planning: renamed source keys become uncleared; enrollment alone does not resolve existing mappings. A region-to-raw workflow transition overwrites former project bytes, so preserve local grants at their appropriate owner before an authorized migration. This source update performs no destination migration and authorizes no manual binding edits.
 
 ## Architecture distribution
 
@@ -75,7 +77,7 @@ New required documents ship with their consumers at one selected revision. A des
 - Root entries are **directory roots**. A directory may be cleared as a root only when every file under it is intended for distribution; every other source stays an individually cleared file row. This is the explicit design change the earlier skill-root-only scope anticipated — it is compatible, so `schema` stays `1` and no version-migration path is introduced.
 - The tradeoff of that rule: clearing a directory clears everything that later lands in it. Files appearing under a cleared root join the sync set automatically, so a root is cleared only when every file under it — not merely the files present today — is meant for distribution.
 - The sync tool's own skill (`.opencode/skills/core-sync/`) is never a cleared key and reaches no destination.
-- Only region-mode rows use active core/project ownership markers — `SKILL.md` within a skill directory root, region file rows (the root runtime and knowledge documents), and the files expanded from the two `region` agent directory roots (`.opencode/agents/`, `agents/`); architecture rows are `raw`, so no file under `architecture/` carries a marker or a project region. Raw and merge transport does not interpret ownership markers; marker literals in a raw reference or fenced example remain ordinary copied bytes, not a separate region binding. Region mode remains for the root runtime, `knowledge/`, and the two agent directories because their project regions carry records, evidence, operational bindings, and history — non-normative content the shared core cannot carry — whereas a project region inside a rulebook would carry a competing rule.
+- Only region-mode rows use active core/project ownership markers — `SKILL.md` within a skill directory root, region file rows (the root runtime and individually selected knowledge documents), and the files expanded from the two `region` agent directory roots (`.opencode/agents/`, `agents/`); architecture and whole-file workflow rows are `raw`, without ownership regions. Raw and merge transport does not interpret ownership markers; marker literals in a raw reference or fenced example remain ordinary copied bytes, not a separate region binding. Region mode remains for the root runtime, selected knowledge documents, and the two agent directories because their project regions carry records, evidence, operational bindings, and history — non-normative content the shared core cannot carry — whereas a project region inside a rulebook would carry a competing rule.
 - Modes: `region` (delivers only the source core region; the destination owns its project region), `raw` (byte-for-byte copy), `merge` (top-level key merge — config only; the `mcp` key merges by server name, keeping destination-only MCP servers and making a same-named entry core-wins).
 
 ## Validation

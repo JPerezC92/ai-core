@@ -1,5 +1,5 @@
 <!-- core:begin -->
-# Diagnostic System Design
+# Diagnostic Guidance
 
 ## Purpose
 
@@ -7,9 +7,9 @@ Reusable diagnostic queries and identification packs belong in destination-owned
 
 ## Register interaction
 
-`knowledge/symptoms.md` catalogs symptom classes; `knowledge/problems.md` records evidence-backed problem patterns. A problem row retains a durable `case:` pointer and may reference a reusable identification pack with `pack:<destination-relative-pack-path>`. Register rows contain pointers, not SQL statements or result tables. A pack may contain a multi-statement or multi-result correlation. For a later `structural` ticket, follow the pack first and replay it with current-ticket keys under destination-owned execution, as directed by `knowledge/agents.md`.
+`knowledge/diagnostics/symptoms.md` catalogs symptom classes; `knowledge/diagnostics/problems.md` records evidence-backed problem patterns. A problem row retains a durable `case:` pointer and may reference a reusable identification pack with `pack:<destination-relative-pack-path>`. Register rows contain pointers, not SQL statements or result tables. A pack may contain a multi-statement or multi-result correlation. For a later `structural` ticket, follow the pack first and replay it with current-ticket keys under destination-owned execution, as directed by `knowledge/agents.md`.
 
-A symptom match does not by itself establish root cause. A new problem record requires confirmed evidence; duplicate patterns enrich or link to the existing record. Applying a fix requires user approval. Register-first identification, admission and close-out remain governed by `knowledge/agents.md` and `knowledge/problems.md`.
+A symptom match does not by itself establish root cause. A new problem record requires confirmed evidence; duplicate patterns enrich or link to the existing record. Applying a fix requires user approval. Register-first identification, admission and close-out remain governed by `knowledge/agents.md` and `knowledge/diagnostics/problems.md`.
 
 ## Query and evidence safeguards
 

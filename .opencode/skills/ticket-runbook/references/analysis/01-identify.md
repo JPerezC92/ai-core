@@ -2,7 +2,7 @@
 
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Pre:** Ticket ID available; ticket-read tool authenticated.
-> **Reads:** the ticket via the ticket-read tool; `knowledge/symptoms.md`; `knowledge/problems.md`
+> **Reads:** the ticket via the ticket-read tool; `knowledge/diagnostics/symptoms.md`; `knowledge/diagnostics/problems.md`
 > **Writes:** `01-identify.md` (filled); `state.md` header (`Phase`, `identification_verdict`, `Updated`)
 
 ## Coordination assignment and handoff
@@ -14,8 +14,8 @@ Supporting evidence instances may return bounded attributed results against comp
 ## Steps
 
 1. Normalize the ticket: system, module, country, campaign, and the raw symptom/error text.
-2. Match the error signature against `knowledge/symptoms.md`. A class matches only when every **Required signal** is present and no **Exclusion** is present. Record the matching `S-xx` (or "no class match").
-3. Filter `knowledge/problems.md` to `Team: incident` rows whose `Symptom` references the matched `S-xx` and whose `System` + `Module` align with the ticket. Exclude `Lifecycle: resolved` and `Lifecycle: retired` rows.
+2. Match the error signature against `knowledge/diagnostics/symptoms.md`. A class matches only when every **Required signal** is present and no **Exclusion** is present. Record the matching `S-xx` (or "no class match").
+3. Filter `knowledge/diagnostics/problems.md` to `Team: incident` rows whose `Symptom` references the matched `S-xx` and whose `System` + `Module` align with the ticket. Exclude `Lifecycle: resolved` and `Lifecycle: retired` rows.
 4. Evaluate every candidate row's `Discriminators` against the current ticket and disqualify a row when any `Exclusions` condition is present.
 5. Issue exactly one verdict — `exact`, `structural`, or `no_match` — and write it to `identification_verdict` in `state.md`:
    - `exact`: exactly one `active` incident `P-NNN` with `Allow_exact: yes` and every discriminator already evidenced in the ticket.

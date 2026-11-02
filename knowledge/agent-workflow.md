@@ -1,8 +1,5 @@
 # Agent workflow
 
-<!-- core:begin -->
-## Mandatory core
-
 Read this entry before acting. ODD is the governing workflow: read-only and small work create no durable feature artifact. For authorized non-small state-changing work, creating the governing feature document from its template is the sole authorized bootstrap write; no other mutation precedes it. Revise an existing document before affected work resumes and retain the execution-review pause. This entry routes work; it does not grant authority, replace an owner procedure, or prove delivery.
 
 ### ODD protocol
@@ -91,13 +88,8 @@ Put each concern in its owner. Before growing a file, remove duplication or extr
 
 A distinct workflow (for example release) belongs in `knowledge/<flow>.md`, not in this ODD protocol file and not in an agent runtime. Move the obligation, replace the old body with a pointer, and inject the new home through `instructions` only when it replaces law that was already injected — never as a second copy. Project grants for that flow live in that file's `project` region or in `AGENTS.md` project extensions, not in this core protocol.
 
-Extract skill support to `.opencode/skills/<skill>/references/<concern>.md`; executable tooling to `scripts/`; a new common policy to `knowledge/<concern>.md`. Architecture definitions belong in `architecture/`: select through `architecture/README.md`, read `architecture/implementation/architecture.md`, applicable `architecture/implementation/shapes/`, and the selected implementation guide in `architecture/implementation/stacks/`; testing definitions belong in `architecture/testing/architecture.md` and its selected stack guide. Agent runtimes retain authority, execution, scope, gates, dependency ownership, and reporting, not competing definition copies. Source-local ADRs explain decisions under `docs/architecture/decisions/` and are not required shared dependencies; their lifecycle and propagation gate are owned by `knowledge/decisions.md`. Move each obligation to one home, replace the old body with a pointer, update consumers, and verify links and clearance before deleting the old copy. Shared required extracts ship with clearance; source-local history is not a shared dependency.
+Extract skill support to `.opencode/skills/<skill>/references/<concern>.md`; executable tooling to `scripts/`; a new common policy to `knowledge/<concern>.md`. Architecture definitions belong in `architecture/`: select through `architecture/README.md`, read `architecture/implementation/architecture.md`, applicable `architecture/implementation/shapes/`, and the selected implementation guide in `architecture/implementation/stacks/`; testing definitions belong in `architecture/testing/architecture.md` and its selected stack guide. Agent runtimes retain authority, execution, scope, gates, dependency ownership, and reporting, not competing definition copies. Source-local ADRs explain decisions at the project's configured record location and are not required shared dependencies; their lifecycle and propagation gate are owned by `knowledge/architecture-decision-workflow.md`. Move each obligation to one home, replace the old body with a pointer, update consumers, and verify links and clearance before deleting the old copy. Shared required extracts ship with clearance; source-local history is not a shared dependency.
 
 New architecture paths and their consumers ship together through applicable clearance, including directory-root clearance where configured; destination-authorized `core-sync init --bind-cleared` enrollment is required for new or markerless paths, not `apply` alone. Destination reconciliation remains destination-owned; pending reconciliation blocks acceptance. Documentation review does not establish implementation conformance or authorize application remediation.
 
 Durable history lives at its owner: the feature document's `## Log`, the ADR, and `docs/architecture/history/`.
-<!-- core:end -->
-
-<!-- project:begin -->
-## Project extensions
-<!-- project:end -->
