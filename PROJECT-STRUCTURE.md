@@ -12,7 +12,6 @@ ai-core/
 ├── README.md                      Adoption guide, roster, repository map
 ├── opencode.jsonc                 V2 config: agents, models, permissions, MCP, instructions
 ├── opencode.v1.jsonc              Separate V1 compatibility config
-├── magic-context.jsonc            Disabled here; native compaction owns context
 ├── distribution-clearance.json    What ships, and how (raw / region / merge)
 ├── distribution-clearance.definition.md
 ├── pyproject.toml  uv.lock        Python toolchain + pytest config

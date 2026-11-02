@@ -19,5 +19,5 @@ After merge, verify and report the outcome; do not automatically edit tracked fi
 - Git (branch, push, PR, delete): Herald 📯 (Release Manager)
 - Review at an immutable head: Inquisitor 🔎 (PR Reviewer)
 - PR body format: `.opencode/skills/git-pr/SKILL.md` and `.opencode/skills/git-pr/references/_pr-evidence-format.md`
-- Cleanup proof command: the destination root-runtime project-extensions cleanup-preflight entry, and the `verified-pr-cleanup` skill
+- Cleanup proof command: the `verified-pr-cleanup` skill's invocation, bound in the root runtime's `#### Merged-branch cleanup preflight`, and reported as `SAFE_TO_CLEAN` or `BLOCKED`.
 - Finding presentation: `knowledge/agents.md` `### PR review findings (adjudication)`
