@@ -66,8 +66,10 @@
                 // tool bypasses this build's permission/policy layer.
                 { "action": "opencode_worktree_create", "resource": "*", "effect": "allow" },
                 // Herald-only ordinary feature pushes to origin; no base, force,
-                // destination-refspec or extra-argument grant. Cooperative scope,
-                // not a sandbox. Cleanup exceptions remain ordered afterward.
+                // destination-refspec or extra-argument grant. The upstream-tracking
+                // `-u` form is granted for the same branch families under the same
+                // suffix guards. Cooperative scope, not a sandbox. Cleanup
+                // exceptions remain ordered afterward.
                 { "action": "shell", "resource": "git push origin docs/*", "effect": "allow" },
                 // Multi-segment docs branches (docs/architecture/..., docs/workflow/...):
                 // the single-segment docs/* rule does not cross `/`.
@@ -82,11 +84,34 @@
                 { "action": "shell", "resource": "git push origin perf/*", "effect": "allow" },
                 { "action": "shell", "resource": "git push origin revert/*", "effect": "allow" },
                 { "action": "shell", "resource": "git push origin style/*", "effect": "allow" },
+                // Upstream-tracking form of the same grant: `git push -u origin <family>/<name>`.
+                // These 12 rows mirror the branch families above one-for-one, and the
+                // `-u` deny mirrors below keep an extra argument, a force flag and a
+                // refspec unreachable, so `-u` adds no scope beyond the ordinary push.
+                { "action": "shell", "resource": "git push -u origin docs/*", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin docs/**", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin feat/*", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin fix/*", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin chore/*", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin refactor/*", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin test/*", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin build/*", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin ci/*", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin perf/*", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin revert/*", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin style/*", "effect": "allow" },
                 { "action": "shell", "resource": "git push origin * -*", "effect": "deny" },
                 { "action": "shell", "resource": "git push origin *\t-*", "effect": "deny" },
                 { "action": "shell", "resource": "git push origin *:*", "effect": "deny" },
                 { "action": "shell", "resource": "git push origin * ?*", "effect": "deny" },
                 { "action": "shell", "resource": "git push origin *\t*", "effect": "deny" },
+                // Same suffix and refspec guards for the `-u` form, placed after its
+                // allow rows so last-match-wins keeps them effective.
+                { "action": "shell", "resource": "git push -u origin * -*", "effect": "deny" },
+                { "action": "shell", "resource": "git push -u origin *\t-*", "effect": "deny" },
+                { "action": "shell", "resource": "git push -u origin *:*", "effect": "deny" },
+                { "action": "shell", "resource": "git push -u origin * ?*", "effect": "deny" },
+                { "action": "shell", "resource": "git push -u origin *\t*", "effect": "deny" },
                 { "action": "shell", "resource": "git push origin --delete refs/heads/*", "effect": "allow" },
                 { "action": "shell", "resource": "git push origin --delete refs/heads/* -*", "effect": "deny" },
                 { "action": "shell", "resource": "git push origin --delete refs/heads/*\t-*", "effect": "deny" }

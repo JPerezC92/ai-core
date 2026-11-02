@@ -25,17 +25,7 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 11.**
-
-### DEBT-021 — ODD execution-gate bypass
-
-- **ID:** DEBT-021
-- **Date:** 2026-10-29
-- **Description:** During the research and ADR documentation work, the ODD execution gates were bypassed: the durable multi-file research record plus catalog update was classified as small; after creating `odd/tasks/domain-use-case-conventions.md`, Scribe was dispatched in the same turn instead of presenting the execution-review message and stopping; the user's core/project placement correction was applied to the shared core before the revised plan was re-presented; and the review-loop handling was misstated after the second `[FAIL]`—the two failed reviews addressed distinct findings, so the loop cap did not apply.
-- **Correction (2026-10-29):** The original loop-cap statement was inaccurate. The two failed reviews addressed distinct findings; the cap requires the same finding across two remediation rounds or three total review rounds, so it did not apply. The original review evidence remains unchanged.
-- **Direct evidence:** Conversation record 2026-10-29; `odd/tasks/domain-use-case-conventions.md` L1–L5; independent reviews `domain-use-case-conventions/task4/reviewer1` (`[FAIL]`, four findings) and `task5/reviewer1` (`[FAIL]`, one open finding). No code was changed.
-- **Resolution criteria:** The corrected documentation slice passes independent review; the feature closes through the normal gate; and a subsequent non-small feature demonstrates the execution-review stop before its first write, or the stop is mechanically enforced. Until then the debt remains open.
-- **Explicit deferral decision:** User instruction 2026-10-29: "add that error as a debt and continue now following the steps". The user accepted the process debt and directed continuation.
+**Open debts: 9.**
 
 ### DEBT-022 — ODD step-status reporting and continuation
 
@@ -81,15 +71,6 @@ Each entry MUST include:
 - **Direct evidence:** Conversation record 2026-10-29; user corrections "why u stopped now?", "stopo dodging, hey u should understand if u stop there should be a reason that require me to take an action, in other casu if u finalized all your pending why u dolnt senmt a clear message like ALL FINISHED, and next steps or ask about what to do next"; `AGENTS.md` project extension `### Stop and next-step reporting`; no code change.
 - **Resolution criteria:** Every stop either names the exact user action required or says `ALL FINISHED`, lists the completed scope, and states the next steps; if work remains, continue to the next ready task; informational evidence alone is not a stop reason. Demonstrate on the current push/PR and future tasks.
 - **Explicit deferral decision:** User instruction 2026-10-29: "add this error as a debt iun the workflow and then continue with the 5". The user accepted the process debt and directed the push/PR.
-
-### DEBT-031 — ADR 0006 introduced without authorization and left with an inaccurate status
-
-- **ID:** DEBT-031
-- **Date:** 2026-10-31
-- **Description:** While delivering `odd/tasks/architecture-whole-file-distribution.md`, Cipher 🔓 (Lead Orchestrator) created a new decision record, `docs/architecture/decisions/0006-architecture-whole-file-distribution.md`, as an inferred consequence of the repository's decision lifecycle (`knowledge/decisions.md`) and ADR 0003's recorded region model. The user never asked for it. The record was then listed inside a plan summary whose only stated open question was a different one, so the user's `"A"` answer was treated as covering its creation — a silent inference. Finally its status transition was presented as a delivery blocker, although the operative rule was already in force in `architecture/README.md` §Contract boundaries and nothing in the delivery depended on the record's status. The record therefore remains `Proposed` while its rule is enforced by the architecture owners, so the label is inaccurate (`knowledge/decisions.md:33` "recorded, not in force" versus the owner text already imposing the rule).
-- **Direct evidence:** Conversation record 2026-10-31 including the user's question "why we are talking about ADR 0006 acceptance ??? when it was introduced as a todo in the task?"; `odd/tasks/architecture-whole-file-distribution.md` S11, T8, T14, L14, L15; `docs/architecture/decisions/0006-architecture-whole-file-distribution.md:3` (`Status: Proposed`) and `:59`; `knowledge/decisions.md:33–34`.
-- **Resolution criteria:** The record's fate is an explicit user decision recorded verbatim, not an agent inference — either `Accepted` with the approval text recorded, or removed with its content folded into ADR 0003's amendment. New decision records are proposed to the user as their own explicit choice before they become feature specs. A record's status is never presented as a delivery gate for work whose operative rule already lives in its owner.
-- **Explicit deferral decision:** User instruction 2026-10-31: "add the thing about ADR 0006 as a debt". The user deferred the record's disposition and directed that it be registered instead of settled now.
 
 ### DEBT-032 — Reviewer dispatched without prior coordinator self-verification
 
