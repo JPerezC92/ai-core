@@ -87,6 +87,28 @@
                 { "action": "shell", "resource": "git push origin *:*", "effect": "deny" },
                 { "action": "shell", "resource": "git push origin * ?*", "effect": "deny" },
                 { "action": "shell", "resource": "git push origin *\t*", "effect": "deny" },
+                // `-u` (set-upstream) form of the same limited pushes. `-u` sits
+                // before `origin`, so none of the rules above match it; the same
+                // branch prefixes apply and the same force, refspec and
+                // extra-argument denials are mirrored below. This adds no base,
+                // force or destination-refspec grant.
+                { "action": "shell", "resource": "git push -u origin docs/*", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin docs/**", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin feat/*", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin fix/*", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin chore/*", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin refactor/*", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin test/*", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin build/*", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin ci/*", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin perf/*", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin revert/*", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin style/*", "effect": "allow" },
+                { "action": "shell", "resource": "git push -u origin * -*", "effect": "deny" },
+                { "action": "shell", "resource": "git push -u origin *\t-*", "effect": "deny" },
+                { "action": "shell", "resource": "git push -u origin *:*", "effect": "deny" },
+                { "action": "shell", "resource": "git push -u origin * ?*", "effect": "deny" },
+                { "action": "shell", "resource": "git push -u origin *\t*", "effect": "deny" },
                 { "action": "shell", "resource": "git push origin --delete refs/heads/*", "effect": "allow" },
                 { "action": "shell", "resource": "git push origin --delete refs/heads/* -*", "effect": "deny" },
                 { "action": "shell", "resource": "git push origin --delete refs/heads/*\t-*", "effect": "deny" }
