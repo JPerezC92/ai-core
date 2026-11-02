@@ -17,9 +17,9 @@
 
 ## Tasks
 
-- T1 | S1, S2, S3, S4 | delegated (skill contract, templates, checklist, and analysis destination text are ticket-runbook catalog surfaces) — Vault 🔐 (Catalog Steward) | in progress | commit: pending
-- T2 | S1, S2, S3, S4 | delegated (path/close snapshot, rules, fixtures, and path/pre-close/close-out tests are Forge 🔨 (Implementer)-owned skill scripts; Bastion 🧱 (Backend & Scripts Architect) and Crucible 🔥 (Test Architect) gates apply) — Forge 🔨 (Implementer) | in progress | commit: pending
-- T3 | S1, S2, S3, S4 | delegated (Quill 🪶 (Note Drafter) and Ledger 📒 (Record Keeper) image/path and close-out deletion rules live in those agent runtime specs) — Marshal 🎖️ (HR Director) | in progress | commit: pending
+- T1 | S1, S2, S3, S4 | delegated (skill contract, templates, checklist, and analysis destination text are ticket-runbook catalog surfaces) — Vault 🔐 (Catalog Steward) | done | commit: 1e36ff8d2723849b5995bc93da757568026e800b
+- T2 | S1, S2, S3, S4 | delegated (path/close snapshot, rules, fixtures, and path/pre-close/close-out tests are Forge 🔨 (Implementer)-owned skill scripts; Bastion 🧱 (Backend & Scripts Architect) and Crucible 🔥 (Test Architect) gates apply) — Forge 🔨 (Implementer) | done | commit: 1e36ff8d2723849b5995bc93da757568026e800b
+- T3 | S1, S2, S3, S4 | delegated (Quill 🪶 (Note Drafter) and Ledger 📒 (Record Keeper) image/path and close-out deletion rules live in those agent runtime specs) — Marshal 🎖️ (HR Director) | done | commit: 1e36ff8d2723849b5995bc93da757568026e800b
 
 ## Log
 
