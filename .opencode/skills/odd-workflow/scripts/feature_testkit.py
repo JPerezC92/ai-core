@@ -1,4 +1,4 @@
-"""Factory helpers for ODD feature-validator test documents."""
+"""Factory helpers for ODD feature-document test inputs."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ def make_feature(
     title: str = "Sample feature",
     owner: str = "Cipher (Lead Orchestrator)",
     created: str = "2026-10-23",
+    branch: str | None = None,
     include_status: bool = True,
     include_owner: bool = True,
     include_created: bool = True,
@@ -31,6 +32,8 @@ def make_feature(
         headers.append(f"> **Owner:** {owner}")
     if include_created:
         headers.append(f"> **Created:** {created}")
+    if branch is not None:
+        headers.append(f"> **Branch:** {branch}")
     if status == "closed" and include_closed_date:
         headers.append("> **Closed:** 2026-10-23")
 
