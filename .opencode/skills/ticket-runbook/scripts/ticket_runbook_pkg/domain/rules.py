@@ -143,6 +143,9 @@ _FILL_TOKEN_RE = re.compile(r"<[^>]+>")
 _HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
 _PROBLEM_ID_RE = re.compile(r"^P-\d+$")
 _CITED_PATH_RE = re.compile(r"\bpath:\s*\**\s*([^\n]+)")
+_CITED_RESPONSE_IMAGE_PATH_RE = re.compile(
+    r"^screenshots/response-\d+/[^/]+$"
+)
 
 
 # ── Parsing helpers ─────────────────────────────────────────────────────────
@@ -798,6 +801,14 @@ def _cited_image_paths(content: str) -> list[str]:
     return paths
 
 
+def _is_cited_response_image_path(value: str) -> bool:
+    """Return True when ``value`` is ``screenshots/response-<digits>/<filename>``.
+
+    Exactly three forward-slash segments; no other spelling is accepted.
+    """
+    return _CITED_RESPONSE_IMAGE_PATH_RE.fullmatch(value) is not None
+
+
 def evaluate_pre_close(
     snapshot: CloseOutSnapshot, register_rows: list[Problem]
 ) -> list[str]:
@@ -835,6 +846,13 @@ def evaluate_pre_close(
         violations.append(
             f"PRE-CLOSE-7: cited path is not an existing file: {value}"
         )
+    if snapshot["ticket_content"] is not None:
+        for value in _cited_image_paths(snapshot["ticket_content"]):
+            if not _is_cited_response_image_path(value):
+                violations.append(
+                    "PRE-CLOSE-11: cited path is not "
+                    f"screenshots/response-<digits>/<filename>: {value}"
+                )
 
     if len(ticket_names) == 1 and snapshot["ticket_content"] is not None:
         try:
@@ -897,6 +915,8 @@ def evaluate_close_out(snapshot: CloseOutSnapshot) -> list[str]:
         CLOSE-5: a cited image path is not an existing file inside the
                  ticket folder
         CLOSE-6: multiple ticket_<id>.md records exist
+        CLOSE-8: a cited path is not screenshots/response-<digits>/<filename>
+        CLOSE-9: a leftover file remains under downloads/
     """
     violations: list[str] = []
 
@@ -926,6 +946,19 @@ def evaluate_close_out(snapshot: CloseOutSnapshot) -> list[str]:
         violations.append(
             f"CLOSE-5: cited image path is not an existing file inside the "
             f"ticket folder: {value}"
+        )
+
+    if snapshot["ticket_content"] is not None:
+        for value in _cited_image_paths(snapshot["ticket_content"]):
+            if not _is_cited_response_image_path(value):
+                violations.append(
+                    "CLOSE-8: cited path is not "
+                    f"screenshots/response-<digits>/<filename>: {value}"
+                )
+
+    for value in snapshot["leftover_download_files"]:
+        violations.append(
+            f"CLOSE-9: unused download file remains after close: {value}"
         )
 
     return violations

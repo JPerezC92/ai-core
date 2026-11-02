@@ -173,6 +173,38 @@ def _register(*rows: str) -> str:
     return "\n".join(["## Register", "", REGISTER_HEADER, REGISTER_SEP, *rows])
 
 
+CITED_IMAGE_PATH = "screenshots/response-1/01_source_entity.png"
+FLAT_IMAGE_PATH = "screenshots/01_source_entity.png"
+DOWNLOADS_IMAGE_PATH = "downloads/01_source_entity.png"
+UNUSED_DOWNLOAD_PATH = "downloads/unused_inbound.png"
+DIRECTORY_CITATION_PATH = "screenshots/response-1/frames"
+MISSING_CITED_IMAGE_PATH = "screenshots/response-1/active_missing.png"
+REPO_RELATIVE_IMAGE = "tickets/999999/screenshots/response-1/01_source_entity.png"
+
+
+def _write_relative_file(ticket_dir: Path, relative: str) -> Path:
+    """Create one file at a ticket-folder-relative path under ``ticket_dir``."""
+    path = ticket_dir / relative
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("x", encoding="utf-8")
+    return path
+
+
+def _empty_downloads_dir(ticket_dir: Path) -> Path:
+    """Create an empty inbound ``downloads/`` directory in the ticket folder."""
+    downloads = ticket_dir / "downloads"
+    downloads.mkdir()
+    return downloads
+
+
+def _replace_cited_image(ticket_file: Path, new_path: str) -> None:
+    """Replace the default cited image spelling in an existing ticket record."""
+    content = ticket_file.read_text(encoding="utf-8")
+    updated = content.replace(CITED_IMAGE_PATH, new_path)
+    assert updated != content, "ticket record lacks the default cited image path"
+    ticket_file.write_text(updated, encoding="utf-8")
+
+
 def _ticket_dir(
     root: Path,
     with_working: bool = False,
@@ -181,6 +213,7 @@ def _ticket_dir(
     image_exists: bool = True,
     verdict: str = "no_match",
     known: str = "[]",
+    image_path: str = CITED_IMAGE_PATH,
 ) -> Path:
     """Build a durable ticket fixture entirely under the supplied temp root."""
     ticket_dir = root / "ticket"
@@ -195,9 +228,8 @@ def _ticket_dir(
         (analysis_dir / "01-identify.md").write_text("x", encoding="utf-8")
     if with_draft:
         (ticket_dir / "response-draft.md").write_text("x", encoding="utf-8")
-    image = "screenshots/01_source_entity.png"
     if image_exists and with_dirs:
-        (ticket_dir / image).write_text("x", encoding="utf-8")
+        _write_relative_file(ticket_dir, image_path)
     content = (
         "---\n"
         "symptom_ids: []\n"
@@ -205,7 +237,7 @@ def _ticket_dir(
         f"identification_verdict: {verdict}\n"
         "---\n\n"
         "#### Imagen1\n"
-        f"- **path:** {image}\n"
+        f"- **path:** {image_path}\n"
     )
     (ticket_dir / "ticket_999999.md").write_text(content, encoding="utf-8")
     return ticket_dir
@@ -215,14 +247,18 @@ def _pre_close_ticket_dir(
     root: Path,
     verdict: str = "no_match",
     known: str = "[]",
+    image_path: str = CITED_IMAGE_PATH,
 ) -> Path:
     """Build the complete pre-close durable ticket and analysis set."""
-    ticket_dir = _ticket_dir(root, with_draft=True, verdict=verdict, known=known)
+    ticket_dir = _ticket_dir(
+        root,
+        with_draft=True,
+        verdict=verdict,
+        known=known,
+        image_path=image_path,
+    )
     _make_analysis(ticket_dir, phase="synthesize", verdict="no_match")
     return ticket_dir
-
-
-REPO_RELATIVE_IMAGE = "tickets/999999/screenshots/01_source_entity.png"
 
 
 def _cite_repo_relative_spelling(root: Path, ticket_file: Path) -> None:
@@ -230,12 +266,7 @@ def _cite_repo_relative_spelling(root: Path, ticket_file: Path) -> None:
     repo_copy = root / REPO_RELATIVE_IMAGE
     repo_copy.parent.mkdir(parents=True, exist_ok=True)
     repo_copy.write_text("x", encoding="utf-8")
-    ticket_file.write_text(
-        ticket_file.read_text(encoding="utf-8").replace(
-            "screenshots/01_source_entity.png", REPO_RELATIVE_IMAGE
-        ),
-        encoding="utf-8",
-    )
+    _replace_cited_image(ticket_file, REPO_RELATIVE_IMAGE)
 
 
 def _filesystem_bytes(root: Path) -> tuple[dict[str, bytes], list[str]]:

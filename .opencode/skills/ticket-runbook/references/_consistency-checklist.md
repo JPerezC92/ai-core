@@ -26,7 +26,7 @@ Run every command from the project root. The validator enforces only the mechani
 
 - Each assignment declares workflow/ticket, task/instance, role/responsibility, accepted predecessors/input identities, exact writes/other access, allocated output destinations, gates, continuation/join owner and capacity/accounting owner. Cipher 🔓 (Lead Orchestrator) owns dispatch/acceptance and authoritative incident accounting. *(analysis)*
 - One current authorized step instance owns `state.md`, its artifact and recorded counters; supporting instances return bounded attributed evidence without state/counter writes, verdict authority, competing hypothesis framing or incident-query execution. Independent ready evidence reads require stable inputs, compatible resources and declared capacity. *(analysis)*
-- Check whole-file/directory/alias overlaps, generated/autofix outputs, canonical reports, screenshots, session-validation destinations, durable records, response drafts, registers, browser/auth refresh, adapters and external capacity. Fixed paths remain exclusively owned/serialized; unknown isolation/capacity blocks access. Supporting outputs add no analysis files. *(analysis)*
+- Check whole-file/directory/alias overlaps, generated/autofix outputs, canonical reports, inbound `downloads/` versus response `screenshots/response-N/` as distinct destinations, session-validation destinations, durable records, response drafts, registers, browser/auth refresh, adapters and external capacity. Fixed paths remain exclusively owned/serialized; unknown isolation/capacity blocks access. Supporting outputs add no analysis files. *(analysis)*
 - Preserve hypotheses `3/3` outstanding with decrement per resolved hypothesis (cap 3), Query-budget `0/6` initially used/limit, Same-query-reruns `0/2` with stop at 2 and the 75%-SLA warning. Record actual consumption once. Exhaustion is used = authorized limit; only user authorization raises the denominator before execution; never used > limit or `14/6`. Handoffs clone/reset no allowance. *(analysis)*
 - Handoffs carry task/instance, consumed input/output identities, actual counter snapshot, relevant finished producer/consumer results, current gates and resource-use status. The coordinator accepts the join and observes prior-user cessation before explicit successor assignment. Old timestamps, stop requests, timeouts and completed returns alone prove no cessation. The ten-minute warning remains an alert, not a lock/lease. *(analysis)*
 - Keep reviewed inputs/outputs stable; relevant changes invalidate affected assignments/verdicts. Incomplete, failed, stale or still-mutating results never unblock transitions. Required checkpoints return `AWAITING_REVIEW`; the parent accepts the existing owner gate and redispatches continuation. Missing boundaries return `BLOCKED` without expanded scope or a worker question call. *(analysis)*
@@ -52,15 +52,15 @@ Run every command from the project root. The validator enforces only the mechani
 
 ## Folder structure while open
 
-- Ticket folder contains `screenshots/`, `validations/`, the ticket record, and `response-draft.md`. *(analysis)*
-- Screenshots follow the `NN_<source>_<entity>[_<distinguisher>].png` convention; all referenced image paths exist on disk before the response phase. *(analysis)*
+- Ticket folder contains inbound `downloads/`, `screenshots/`, `validations/`, the ticket record, and `response-draft.md`. *(analysis)*
+- Screenshots follow the `NN_<source>_<entity>[_<distinguisher>].png` convention under `screenshots/response-N/`; files for the response being drafted exist on disk in that response folder before the response phase. A response `path:` never points at `downloads/`. *(analysis)*
 
 ## Pre-close readiness (before collapse)
 
 - Exactly one `ticket_<id>.md` record exists — zero or multiple is a halt. *(delegated)*
 - Working set complete and exact: `analysis/state.md`, `01-identify.md`, `02-investigate.md`, `03-synthesize.md` — nothing missing, nothing unexpected; `Phase: synthesize`. *(delegated)*
 - `response-draft.md` and the `screenshots/` and `validations/` directories are present. *(delegated)*
-- Every machine-addressable `path:` recorded in the ticket record is spelled ticket-folder-relative (`screenshots/<filename>`) and resolves inside the ticket folder to an existing file; repo-relative spellings fail. *(delegated)*
+- Every machine-addressable `path:` recorded in the ticket record is spelled ticket-folder-relative (`screenshots/response-N/<filename>`) and resolves inside the ticket folder to an existing file; repo-relative spellings and `downloads/` paths fail. *(delegated)*
 - Identification/register consistency holds for the cited `P-NNN`. *(delegated)*
 - The mode is read-only: no ticket file is created, edited, renamed, or deleted. *(delegated — non-mutation)*
 
@@ -77,12 +77,12 @@ Run every command from the project root. The validator enforces only the mechani
 
 ## Authorization and collapse
 
-- Only `analysis/state.md`, every `analysis/*.md`, and `response-draft.md` are deleted — only after pre-close passes plus exact authorization. *(analysis)*
+- Only `analysis/state.md`, every `analysis/*.md`, and `response-draft.md` are deleted, plus unused files in `downloads/` — only after pre-close passes plus exact authorization. *(analysis)*
 - `ticket_<id>.md`, `screenshots/`, `validations/`, and every other cited evidence file are never deleted at close. *(delegated)*
 
 ## Close-out postcondition (after collapse)
 
-- Durable set: `ticket_<id>.md` plus `screenshots/`, `validations/`, and every other cited evidence file; the working set (including `response-draft.md`) is gone. *(delegated)*
+- Durable set: `ticket_<id>.md` plus `screenshots/`, `validations/`, and every other cited evidence file; the working set (including `response-draft.md`) is gone; unused `downloads/` leftovers are gone. *(delegated)*
 - `--close-out` exits 0; exit 2 (no record) and exit 1 are both halts. *(delegated)*
 - Failure after collapse halts without deleting durable evidence to satisfy a validator. *(analysis)*
 

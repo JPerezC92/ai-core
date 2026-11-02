@@ -71,10 +71,10 @@ analyses:
 <!-- Imagen footer: when a response includes images, add one #### ImagenN sub-block
      per image at the end of the ### Response N block. Record the local file and,
      when the ticket system returned one, the remote location — both when both exist:
-       - **path:** screenshots/NN_source_entity.png                        (ticket-folder-relative local file)
+       - **path:** screenshots/response-N/NN_source_entity.png              (ticket-folder-relative local file)
        - **url:** <ticket-system image URL>                                (remote ticket-system location)
-     The path MUST be spelled ticket-folder-relative (screenshots/<filename>) and be a
-     real file inside this ticket's screenshots folder — never repo-relative; always
+     The path MUST be spelled ticket-folder-relative (screenshots/response-N/<filename>) and be a
+     real file under this ticket's screenshots/response-N/ — never repo-relative, never downloads/; always
      record url: when the ticket system returned one. Never fabricate either value. -->
 
 ## Responses
@@ -90,6 +90,6 @@ analyses:
 
 #### Imagen1
 
-- **path:** screenshots/01_source_entity.png
+- **path:** screenshots/response-1/01_source_entity.png
 - **url:** <ticket-system image URL, when the ticket system returned one>
 - **Notes:** <what the image shows, when the user takes the screenshot>

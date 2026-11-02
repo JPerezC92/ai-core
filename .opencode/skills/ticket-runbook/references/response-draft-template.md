@@ -20,8 +20,8 @@
 ## Internal-only metadata — never publish
 
 <!-- Keep one mapping per public image reference, in narrative order:
-     ImagenN: desc: caption | path: screenshots/NN_source_entity.png | url: verified remote image URL
-     Every local path must resolve inside the ticket folder. Never invent path or URL.
+     ImagenN: desc: caption | path: screenshots/response-N/NN_source_entity.png | url: verified remote image URL
+     Every local path must resolve inside the ticket folder under screenshots/response-N/. Never invent path or URL; never point path at downloads/.
      These mappings support audit/archive metadata and are not posted-response prose. -->
 
 ### Reproduction queries
