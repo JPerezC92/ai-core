@@ -1,10 +1,11 @@
 # Diagnostics directory clearance
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-02
+> **Closed:** 2026-11-03
 > **Objective:** Clear `knowledge/diagnostics/` as one region directory root instead of three per-file rows.
-> **Branch:** N/A — not created; suggested `feat/core-sync/clear-diagnostics-directory`
+> **Branch:** feat/core-sync/clear-diagnostics-directory
 > **Delivery:** single work-unit commit; forecast ≈40 authored additions + ≈15 deletions (definition + registry), far below the ~400-line strategy trigger. Slices: definition (T1) → registry (T2) → verification (T3).
 > **Runner:** `uv run --frozen --group dev pytest -q`
 
@@ -20,9 +21,9 @@ Load and read the `odd-workflow` skill (`.opencode/skills/odd-workflow/SKILL.md`
 
 ## Tasks
 
-- T1 | S3 | delegated (format-owner prose; the definition currently forbids a diagnostics directory root and must change first) — Scribe ✍️ (Docs & Problems Manager) | in progress | commit: pending
-- T2 | S1, S2 | inline (registry data edit validated mechanically; precedent `directory-root-distribution-clearance` T2) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T3 | S4, S5 | delegated (whole-suite execution belongs to the test-architecture owner; the focused registry-conformance test and the expansion equivalence probe stay coordinator-run) — Crucible 🔥 (Test Architect) | in progress | commit: pending
+- T1 | S3 | delegated (format-owner prose; the definition currently forbids a diagnostics directory root and must change first) — Scribe ✍️ (Docs & Problems Manager) | done | commit: 42c69cac07fd33cb15c7d6a89e017e0728ceb7e7
+- T2 | S1, S2 | inline (registry data edit validated mechanically; precedent `directory-root-distribution-clearance` T2) — Cipher 🔓 (Lead Orchestrator) | done | commit: 42c69cac07fd33cb15c7d6a89e017e0728ceb7e7
+- T3 | S4, S5 | delegated (whole-suite execution belongs to the test-architecture owner; the focused registry-conformance test and the expansion equivalence probe stay coordinator-run) — Crucible 🔥 (Test Architect) | done | commit: 42c69cac07fd33cb15c7d6a89e017e0728ceb7e7
 
 ## Log
 
@@ -40,3 +41,6 @@ Load and read the `odd-workflow` skill (`.opencode/skills/odd-workflow/SKILL.md`
 - L12 — T3 S4 expansion. Executor: Cipher 🔓 (Lead Orchestrator). Recipe: `parse_clearance` → `enumerate_files_under` → `expand_clearance` on the live tree. Convenience command: `uv run --frozen python3 C:\Users\dexm7\AppData\Local\Temp\opencode\expand_diagnostics.py` (exit 0). Observed: enumerated `['diagnostic-guidance.md', 'problems.md', 'symptoms.md']`; diag_map all `region`; `all_region True`; `knowledge_root False`.
 - L13 — T3 focused registry-conformance. Command: `uv run --frozen --group dev pytest .opencode/skills/core-sync/scripts/core_sync_pkg/domain/test_clearance_metadata.py -q`. Exit 0. Observed: `31 passed in 2.12s`.
 - L14 — T3 whole suite. Crucible 🔥 (Test Architect) session `ses_e603a1206ffehZOGyCNhTkEW08`. Command: `uv run --frozen --group dev pytest -q`. Exit 0. Observed: `925 passed, 6 skipped in 8.75s`. Execution result only; no test-file architecture review assigned.
+- L15 — 2026-11-03 — Work-unit commit. Herald 📯 (Release Manager) session `ses_e603915cdffeqnFzNsw5CNic8N`: branch `feat/core-sync/clear-diagnostics-directory`, HEAD `42c69cac07fd33cb15c7d6a89e017e0728ceb7e7`, subject `feat(core-sync): clear diagnostics as a region directory root`. Name-status: `M distribution-clearance.definition.md`, `M distribution-clearance.json`, `A odd/tasks/2026-11-02-diagnostics-directory-clearance.md`. S5: the two shipped clearance sources in that commit are the definition and the registry; the feature record is not a distributed source. T1–T3 done against that commit. Independent semantic review next.
+- L16 — Independent semantic review. Sentinel 🛡️ (Quality Guardian) session `ses_e60372fe9fferuOXL1qYbK80R8`, `[PASS]`, zero open findings. S1–S5 met at HEAD `42c69ca` with cited locations. Obligation accounting: retired only the individually-cleared diagnostics / "not a directory-root clearance" claim; payload classes, mixed-mode siblings, schema 1, and directory-root expansion retained. Mechanical anatomy: `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feature.py odd/tasks` exit 0, including this record — anatomy only, not semantic acceptance.
+- L17 — Close: 2026-11-03 — Delivered: `distribution-clearance.json` clears `knowledge/diagnostics/` as one region directory root instead of three per-file rows; the format definition lists that root among region directory roots; current files under it still expand as region; shipped clearance sources in `42c69ca` are the definition and the registry. Verified: Sentinel `[PASS]`; suite `925 passed, 6 skipped` exit 0; expansion `all_region True`; validator `ok`. Deferred: no destination migration, no push, no PR. Out of scope: collapsing `knowledge/` itself.
