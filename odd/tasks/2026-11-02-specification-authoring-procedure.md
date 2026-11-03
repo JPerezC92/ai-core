@@ -1,10 +1,11 @@
 # Specification authoring procedure
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-02
+> **Closed:** 2026-11-02
 > **Objective:** Give the ODD feature-record skill a concrete procedure for writing `S#` entries, so authors have rules for anatomy, splitting, symptom-to-requirement translation and verifiable acceptance checks instead of principles plus one example.
-> **Branch:** N/A — no branch created yet; creation is deferred to the commit owner after review.
+> **Branch:** docs/odd/specification-authoring-procedure
 > **Delivery:** One coordinated three-file prose slice (skill section, one checklist item, one template illustration). Forecast 60 authored additions plus deletions, generated files excluded. Single reviewed work-unit strategy; measure before commit and apply slicing only if the ~400-line trigger is exceeded.
 > **Runner:** uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feature.py odd/tasks
 
@@ -22,10 +23,10 @@
 
 ## Tasks
 
-- T1 | S1, S2, S3, S4, S5, S6, S7 | delegated (canonical skill instructions require the skill's authoring procedure and the catalog owner's revision gate) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T2 | S8, S9 | delegated (checklist and template are separate consumer files; one writer each, coordinated to avoid competing definitions) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T3 | S1, S2, S3, S4, S5, S6, S7, S8, S9 | delegated (independent semantic acceptance; reviewer must not author the changes or their evidence) — Sentinel 🛡️ (Quality Guardian) | open | commit: pending
-- T4 | S6, S9 | delegated (Git and staging belong exclusively to the release owner under standing local-commit authority) — Herald 📯 (Release Manager) | open | commit: pending
+- T1 | S1, S2, S3, S4, S5, S6, S7 | delegated (canonical skill instructions require the skill's authoring procedure and the catalog owner's revision gate) — Cipher 🔓 (Lead Orchestrator) | done | commit: 82c2ff004bf0d48c5fb310ec6dac29bbbb07472f
+- T2 | S8, S9 | delegated (checklist and template are separate consumer files; one writer each, coordinated to avoid competing definitions) — Cipher 🔓 (Lead Orchestrator) | done | commit: 82c2ff004bf0d48c5fb310ec6dac29bbbb07472f
+- T3 | S1, S2, S3, S4, S5, S6, S7, S8, S9 | delegated (independent semantic acceptance; reviewer must not author the changes or their evidence) — Sentinel 🛡️ (Quality Guardian) | done | commit: 82c2ff004bf0d48c5fb310ec6dac29bbbb07472f
+- T4 | S6, S9 | delegated (Git and staging belong exclusively to the release owner under standing local-commit authority) — Herald 📯 (Release Manager) | done | commit: 82c2ff004bf0d48c5fb310ec6dac29bbbb07472f
 
 ## Log
 
@@ -68,3 +69,6 @@
   - Consumer convergence case. Input: the same multi-part request. Expected: checklist and template manifest the rule without restating policy. Observed: `_checklist.md:11` checks one-outcome, split, and no generic `works correctly` while pointing at the skill; `_template.md:15–18` illustrates the same anatomy, declares the labels illustrative, and `_template.md:11` disclaims being a second policy definition. Outcome: as expected.
   These are manual instruction walkthroughs, not agent-execution evidence; they do not establish that future agents comply.
 - L17 — Post-remediation source measurements: `SKILL.md` re-read confirms 116 lines with core markers at 10 and 116, section at 27–61, metadata `1.10.0`; anatomy unchanged elsewhere. Findings F1–F3 are remediated; fresh skill-owner and independent semantic reviews are required over this combined candidate before any commit, and the prior Vault PASS is not carried forward to the edited line.
+- L18 — Re-review accepted on the remediated candidate: Vault 🔐 skill-owner gate re-obtained, `[PASS]` zero open findings with one non-gating INFO (`__pycache__` directory, not a QC item), session `ses_e60f3536effeytEm1ihtrclrOr`; independent whole-feature semantic acceptance round 2 `[PASS]` with F1/F2/F3 recorded FIXED and zero open findings, session `ses_e60f595c2ffeY1d3ik81KI9Ce1`. The latter re-verified each retained quote against the candidate, corroborated the O-set independently, re-checked the three walkthrough claims in source including that `SPEC_RE` really accepts `- S1 — approved`, and found no new contradiction, weakened rule or scope drift.
+- L19 — T1–T4 done transition: Herald 📯 committed `82c2ff004bf0d48c5fb310ec6dac29bbbb07472f` — `docs(odd): add specification authoring procedure` — on task branch `docs/odd/specification-authoring-procedure` (created from `main` @ `1c50f91`), staging exactly the three sources plus this record: `SKILL.md` +30/−6, `_checklist.md` +1/−0, `_template.md` +3/−3, this record +70/−0; measured total 104 additions / 9 deletions, well under the strategy trigger. `git diff --check` clean before and after staging, branch guards re-run immediately before staging and commit, commit-message preflight confirmed `output/commit.txt` ignored and untracked, and the unrelated in-flight record `odd/tasks/2026-11-02-diagnostics-directory-clearance.md` was confirmed still untracked and untouched. No fetch, push, PR, merge, amend or force. The release owner reported a deliberate type mismatch from the suggested name — prose-only change committed as `docs(odd)` rather than `fix(odd)` — which is correct.
+- L20 — Close: 2026-11-02 — S1–S9 delivered in `82c2ff004bf0d48c5fb310ec6dac29bbbb07472f`; T1–T4 done against that coherent commit. The skill section now states entry anatomy with labels declared illustrative, one outcome per entry with a split rule, symptom-is-not-a-requirement, and one action → one observable result with `works correctly` rejected, while retaining every prior fidelity and conversation-separation obligation; the checklist adds one converging check and the template illustrates the same shape. Not delivered and not claimed: any mechanical enforcement of specification quality, any change to the validator, and any evidence that future authors or agents comply — `feature_validation` remains anatomy-only by design. Out of scope and preserved untouched: the unrelated diagnostics directory-clearance record. Push, PR and merge remain separately unauthorized.
