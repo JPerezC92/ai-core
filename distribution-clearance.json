@@ -20,13 +20,7 @@
     "knowledge/debt.md": {
       "mode": "region"
     },
-    "knowledge/diagnostics/problems.md": {
-      "mode": "region"
-    },
-    "knowledge/diagnostics/symptoms.md": {
-      "mode": "region"
-    },
-    "knowledge/diagnostics/diagnostic-guidance.md": {
+    "knowledge/diagnostics/": {
       "mode": "region"
     },
     "knowledge/architecture-decision-workflow.md": {
