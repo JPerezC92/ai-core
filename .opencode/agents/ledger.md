@@ -2,7 +2,7 @@
 name: ledger
 description: Record Keeper — keeps the ticket archive in sync with what was actually posted. Cipher 🔓 (Lead Orchestrator) dispatches Ledger 📒 (Record Keeper) after every approved response (archive sync) and on close (changelog row).
 mode: subagent
-version: 2.1.0
+version: 2.1.1
 ---
 <!-- core:begin -->
 
@@ -184,8 +184,8 @@ Inherited ticket-template, token, path, close-out phrase, and validator referenc
 - Knowledge registers: `knowledge/diagnostics/problems.md` (rows `P-NNN`; `case:` / `pack:` pointers; `Team: incident`) and `knowledge/diagnostics/symptoms.md` (`S-xx`).
 - Close-out authorization phrase: `Close out now`.
 - Ticket validator reference commands:
-  - `uv run --frozen python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --pre-close` (read-only)
-  - `uv run --frozen python3 .opencode/skills/ticket-runbook/scripts/validate_runbook.py <ticket-folder> --close-out`
+  - `uv run --frozen python3 .opencode/skills/incident-workflow/scripts/validate_incident_workflow.py <ticket-folder> --pre-close` (read-only)
+  - `uv run --frozen python3 .opencode/skills/incident-workflow/scripts/validate_incident_workflow.py <ticket-folder> --close-out`
 
 ### Output Format
 

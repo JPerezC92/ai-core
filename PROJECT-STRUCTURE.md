@@ -25,7 +25,7 @@ ai-core/
 │   ├── skills/                    10 skills, each self-contained
 │   │   ├── core-sync/             Distribution engine (package + tests)
 │   │   ├── odd-workflow/          Feature-record lifecycle + validator
-│   │   ├── ticket-runbook/        Incident analysis + validator
+│   │   ├── incident-workflow/     Incident analysis + validator
 │   │   ├── git-branch-name/  git-commit/  git-pr/
 │   │   ├── op-agent-creator/  op-model/  op-skill-creator/
 │   │   └── verified-pr-cleanup/
@@ -119,6 +119,6 @@ Two consequences are visible in the tree:
 | Work on a feature | `odd/tasks/<YYYY-MM-DD>-<feature-name>.md` from `odd/tasks/_template.md` |
 | Select architecture rules | `architecture/README.md` |
 | Understand why a rule exists | `docs/architecture/decisions/` |
-| Investigate an incident | `knowledge/diagnostics/` and `.opencode/skills/ticket-runbook/SKILL.md` |
+| Investigate an incident | `knowledge/diagnostics/` and `.opencode/skills/incident-workflow/SKILL.md` |
 | Reuse research | `docs/research/README.md` |
 | Adopt or update this core | `README.md`, `AGENTS.md` reuse guide, `.opencode/skills/core-sync/SKILL.md` |

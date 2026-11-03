@@ -34,7 +34,7 @@ One row per record; columns exactly `ID | Date | Team | Symptom | System | Modul
 
 **Admission:** the first confirmed case admits a row as `candidate`; a `candidate` row is never an `exact` match. A second independent confirmed case may promote a `candidate` to `active`, which makes it eligible for `exact` when `Allow_exact: yes`.
 
-**Operational gate:** admission runs via the ticket-runbook register-admission step when the root cause is confirmed — before destructive collapse, never waiting for `Close out now`. Admission requires the durable `case:` pointer and never blocks on a reusable `pack:`. If the proof path is a reusable identification pack (a multi-statement or multi-result correlation) and the destination has not declared storage, ask for the destination-relative path and record `pack:` with it; the destination chooses the pack layout, the shared core never names the directory, and a register row never receives SQL statements or result tables.
+**Operational gate:** admission runs via the incident-workflow register-admission step when the root cause is confirmed — before destructive collapse, never waiting for `Close out now`. Admission requires the durable `case:` pointer and never blocks on a reusable `pack:`. If the proof path is a reusable identification pack (a multi-statement or multi-result correlation) and the destination has not declared storage, ask for the destination-relative path and record `pack:` with it; the destination chooses the pack layout, the shared core never names the directory, and a register row never receives SQL statements or result tables.
 
 Only `Team: incident` rows participate in incident identification.
 
