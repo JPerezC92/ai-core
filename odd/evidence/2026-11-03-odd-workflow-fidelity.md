@@ -123,3 +123,17 @@ Source entries are the record's `## Log` at its pre-compaction revision; `L57` i
 | `L55` | mixed (transfer findings plus authorization limit) | compacted | record `L55`; identity E3 |
 | `L56` | decisive (second work-unit scope) | kept | record |
 | `L57` | new (this compaction's own record entry) | added | record |
+| `L58`–`L61` | decisive (measurements, user acceptance, gate outcomes, commits) | kept | record |
+| `L62` | attestational (three-round adoption-status review history); exceeds the readable line length and is only partly verifiable | retained in place, flagged | record `L62` only |
+
+## E6 — adoption-status remediation review history (T11/T12)
+
+Round 1 found three factual defects, all accepted and corrected: the mirror row repeated an impossibility claim that record `L51` had already withdrawn; the document called the evidence-retention contract unexercised while its own rows recorded the extraction; and delivered coordinator-only scoping in `AGENTS.md` `### Identity & Role` was presented as still proposed.
+
+Round 2 closed all three and raised one new low finding: the mirror row asserted that a raw-readback surface had "run", when the research established only that an interface path is available. The wording was corrected on both surfaces to a research-identified path, with the disposable synthetic probe recorded as the only executed backend contact.
+
+Round 3 verified that correction and returned PASS with zero open findings, confirming the blocked/unverified conclusion was unchanged and that the changed row damaged no previously correct claim.
+
+Coordinator checks across the remediation: the 2026-10-26 historical snapshot was verified byte-identical across 74 lines against `HEAD`; no `odd/evidence` citation exists on the page, so the S14 boundary holds; the feature validator exited 0; the Markdown text-integrity checker exited 0 with no diagnostics.
+
+Limit carried forward: record `L62` exceeds the readable line length, so its final clause could not be read back in review. The remediation is nevertheless established independently by the status page and record `L55`, not by that entry. A complete read path is required before any extraction, consistent with the retention rule's treatment of unreadable entries.
