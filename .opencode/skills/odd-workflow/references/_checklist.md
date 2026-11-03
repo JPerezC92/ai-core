@@ -17,7 +17,8 @@
 
 - [ ] Apply `knowledge/agent-workflow.md` `### ODD protocol` before any write (authorize, uncertainty/outcome, classify, artifact-free or bootstrap, independent gates). Do not restate that protocol here.
 - [ ] Feature scope is expressed through Specs/Tasks, not treated as an exclusive file partition; shared-resource overlap names its canonical owner/dependency and follows serialized-writer coordination.
-- [ ] After creating the governing document or materially replanning, the execution-review pause is presented — Issue → Goal → How → Files, the gate, and the decision needed — before implementation; routine Log/evidence updates do not restart it, and creating the document is the sole bootstrap write. Owner: `AGENTS.md` → Conventions.
+- [ ] After creating the governing document or materially replanning, check execution-review presentation, actual authority/prerequisites and any genuine decision against `AGENTS.md` → Conventions → Decision-only stops. Already-authorized settled work has no automatic creation/replan approval pause; routine Log/evidence updates do not restart review, and creating the document remains the sole bootstrap write.
+- [ ] After bootstrap, the existing Log identifies the project/feature, locator, backend ID and exact fully verified record revision, or explicit pending recovery, under `knowledge/agent-workflow.md` → `### Full feature mirror and resume`; backend-write restrictions remain binding and no summary-only copy is counted as synchronized.
 
 ## Change
 
@@ -34,16 +35,20 @@
 - [ ] Check step reports, skipped reasons and checkpoint-not-completion distinctions against workflow `#### Step reporting and transitions`.
 - [ ] Check bounded continuation, blocker ownership/user-only stopping and exhausted-scope reporting against that heading and `knowledge/agents.md` `### Message presentation`.
 - [ ] Instruction-change evidence identifies original/candidate inputs and complete retained/translated/retired obligation accounting with authority/rationale in the existing Log; prose/examples have normal/adverse scenario walkthrough actions, expected/observed results and outcome evidence. Apply the skill's canonical Implement and verify safeguards, without another tracker or harness.
+- [ ] Verify applicable per-rule RED, command-regression and per-spec outcome evidence against workflow `### Behavioral verification and runner selection`; actual runner, execution owners, safety restrictions and justified exceptions remain explicit.
+- [ ] At material record changes, work-unit commits and resume, check the exact verified revision or pending recovery in the existing Log against workflow `### Full feature mirror and resume`; conflict/unavailability is never reported as successful synchronization.
 
 ## Close
 
 - [ ] Verify separate task-outcome evidence, honest missing/failed/pending-control reporting, next action and reported-failure reproduction against workflow `### ODD protocol` step 7.
+- [ ] Independent verification handoff covers the whole feature including Log and returns per-spec verdicts for authorized examples under workflow `### Behavioral verification and runner selection`; this does not substitute for whole-feature semantic acceptance.
 - [ ] Every task is `done` and has a commit reference.
 - [ ] A reviewer independent of delivered-change and evidence authorship compares the actual original request/corrections, Specs, delivered content, complete obligation accounting and evidence; valid obligations are retained, translated or retired with explicit authority and rationale.
 - [ ] Review checks unresolved requirements, durable evidence at its owner rather than temporary-output-only proof, shared/local ownership, source neutrality, precise invocation provenance, and current PR evidence under the canonical procedure when a PR exists.
 - [ ] The existing Log records review identity, scope and result; zero findings remain open before a clean completion claim. Anatomy, a green suite, inherited marks and the author's summary are not semantic completion evidence.
 - [ ] Remediation verification is separate from fresh whole-feature semantic acceptance of the current combined candidate; independence holds without demanding different new agents unnecessarily. Identified original/candidate inputs, complete obligation accounting, literal provenance, scenario and outcome evidence are in the existing Log before acceptance. Relevant changes invalidate affected verdicts/evidence; accumulated rounds and the existing review-loop cap survive reviewer changes. Apply the skill's canonical Close safeguards; no extra pause is introduced.
 - [ ] `Status` is `closed`, a `Closed:` date is present, and the Log has a `Close:` entry.
+- [ ] Closure mirror refresh/readback or explicit pending recovery is evidenced under workflow `### Full feature mirror and resume`; source-policy alignment is not runtime-adoption proof.
 - [ ] Completion is presented as `ALL FINISHED` (delivered scope, verification, deferred items, next options) or the eligible compact ready-to-merge message, with findings, blockers, checks, and decisions kept separate, no empty findings table, and no unrelated work selected. Owner: `knowledge/agents.md` → `### Message presentation`.
 - [ ] `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feature.py odd/tasks` exits 0. This is mechanical anatomy only; independent semantic review and acceptance by Cipher 🔓 (Lead Orchestrator) remain required.
 
@@ -56,5 +61,5 @@
 
 ## Forbidden
 
-- [ ] No second tracker, no Engram mirror, no per-request context injection.
+- [ ] No competing tracker or per-request context injection; a subordinate full feature mirror follows workflow `### Full feature mirror and resume`, never independent intent/status authority.
 - [ ] No execution transcript in the Log; decisions and evidence only.
