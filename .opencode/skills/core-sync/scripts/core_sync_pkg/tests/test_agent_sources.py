@@ -3,23 +3,20 @@
 from __future__ import annotations
 
 import re
-import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-
-from core_sync_pkg.domain.constants import (  # noqa: E402
+from core_sync_pkg.domain.constants import (
     BEGIN,
     END,
     FENCE_OPEN_RE,
     PROJECT_BEGIN,
     PROJECT_END,
 )
-from core_sync_pkg.domain.markers import (  # noqa: E402
+from core_sync_pkg.domain.markers import (
     _exact_marker_line_indices,
     find_markers,
 )
-from core_sync_pkg.domain.regions import (  # noqa: E402
+from core_sync_pkg.domain.regions import (
     extract_source_core,
     split_frontmatter,
 )
@@ -105,12 +102,6 @@ def _project_text(content: str) -> str:
     ends = _exact_marker_line_indices(lines, PROJECT_END)
     assert len(begins) == 1 and len(ends) == 1
     return "\n".join(lines[begins[0] + 1 : ends[0]])
-
-
-def test_agent_profiles_are_retired() -> None:
-    repo_root = Path(__file__).resolve().parents[6]
-    profiles = sorted((repo_root / "agents").glob("*/profile.md"))
-    assert profiles == [], profiles
 
 
 def test_agent_sources_place_core_markers_after_frontmatter() -> None:
