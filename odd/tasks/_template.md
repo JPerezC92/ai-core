@@ -12,10 +12,10 @@ Load and read the `odd-workflow` skill (`.opencode/skills/odd-workflow/SKILL.md`
 
 ## Specs
 
-- S1 — required observable behavior and acceptance check, retaining the exact requirement-defining wording alongside it
-- S2 — next required behavior, constraints and acceptance check
+- S1 — required observable behavior; the exact requirement-defining wording retained beside it; acceptance names one action and one observable result
+- S2 — next independently verifiable outcome, with its constraints and acceptance clause
 
-Illustration only: for the requirement “Show `Access denied` when access is refused”, specify the refused-access behavior, retain that exact quotation, and check that refusal displays exactly `Access denied`. The behavior clause accompanies, never replaces, the user's literal requirement. Conversational directions and approvals belong in Log, not as standalone capabilities; the skill covers mixed messages and uncertainty.
+Illustration only — these labels are illustrative, not required syntax, and each entry states one independently verifiable outcome: for the requirement `Show "Access denied" when access is refused.`, write `S1 — Refused access displays the requested message. Exact requirement: Show "Access denied" when access is refused. Acceptance: refuse access and verify the displayed text is exactly "Access denied".` The behavior clause accompanies, never replaces, the user's literal requirement. Approvals and directions belong in Log, not as standalone capabilities; the skill covers splitting, mixed messages and uncertainty.
 
 ## Tasks
 
