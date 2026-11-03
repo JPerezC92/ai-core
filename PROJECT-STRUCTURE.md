@@ -31,8 +31,6 @@ ai-core/
 │   │   └── verified-pr-cleanup/
 │   └── tooling/                   astgrep/ · semgrep/ (own locked envs)
 │
-├── agents/<name>/profile.md       17 persona CVs (includes cipher)
-│
 ├── knowledge/                     Shared operating rules
 │   ├── agent-workflow.md          ODD protocol + task router            [whole-file]
 │   ├── agents.md                  Evidence, coordination, safety rules   [region]
@@ -106,7 +104,6 @@ What an adopting project receives, per `distribution-clearance.json`:
 | `architecture/` (whole directory) | raw | — |
 | `.opencode/agents/` | region | runtime `project` regions |
 | `.opencode/skills/` (each skill) | raw | — |
-| `agents/` | region | persona `project` regions |
 | — | — | `docs/`, `odd/tasks/`, `output/`, this file |
 
 Two consequences are visible in the tree:

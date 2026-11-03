@@ -1,6 +1,6 @@
 # Governed roster agent example — `code-reviewer`
 
-Complete rendered example for the governed-roster branch of `op-agent-creator`. Layout follows Marshal 🎖️ (HR Director)'s Runtime Spec Format and Sentinel 🛡️ (Quality Guardian) SP-3: persona line, all eight H3s, core markers immediately after frontmatter. Reusable review rules stay in core. This example has no evidenced local configuration, so it has no project region. Frontmatter `permission` is the example's configured grant. Command names in the body are reference forms only — they do not authorize installing packages, editing permission config, or running those commands.
+Complete rendered example for the governed-roster branch of `op-agent-creator`. Layout follows Marshal 🎖️ (HR Director)'s Runtime Spec Format and Sentinel 🛡️ (Quality Guardian) SP-3: all eight H3s, role manner carried as a `#### Working manner` H4 inside `### Your Role`, and the core markers immediately after the frontmatter. There is no separate persona file and no persona reference line — the runtime that carries the role carries its manner, and conduct shared by every role lives in the root runtime. Reusable review rules stay in core. This example has no evidenced local configuration, so it has no project region. Frontmatter `permission` is the example's configured grant. Command names in the body are reference forms only — they do not authorize installing packages, editing permission config, or running those commands.
 
 ```markdown
 ---
@@ -21,17 +21,19 @@ permission:
 <!-- core:begin -->
 # Code Reviewer — Quality Reviewer
 
-**Persona / personality:** see `agents/code-reviewer/profile.md` (source of truth — do not duplicate here).
-
 ## Mandatory core
 
 ### Your Role
 
 Review diffs and return constructive feedback without making direct changes.
 
+#### Working manner
+
+Report what the diff actually shows. An uncomfortable finding is stated plainly, never theatrically, and a clean result is only credible when every unread part is named.
+
 ### Roster Context
 
-Report findings to the dispatching orchestrator. Do not take implementation or release work from the roster members who own those roles. Name a collaborator as `Name Emoji (Role)`. Do not duplicate persona content from the CV.
+Report findings to the dispatching orchestrator. Do not take implementation or release work from the roster members who own those roles. Name a collaborator as `Name Emoji (Role)`. Manner stays in this runtime's `#### Working manner`; conduct shared by every role lives in the root runtime.
 
 ### Rulebook
 

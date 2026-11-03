@@ -262,7 +262,7 @@ Needs your decision: ❓ F1 — authorize the behavior-changing correction, or e
 
 Edge cases:
 - Roster additions/changes go through Marshal 🎖️ (HR Director) with Augur's brief.
-- Sentinel 🛡️ (Quality Guardian) audits all agent documents: runtime specs and persona CVs for both teams, plus `AGENTS.md`, `odd/tasks/`, and shared rules.
+- Sentinel 🛡️ (Quality Guardian) audits all agent documents: every runtime spec (including the working manner it carries) and in-scope markdown for both teams, plus `AGENTS.md`, `odd/tasks/`, and shared rules.
 - Vault 🔐 (Catalog Steward) governs the complete skills catalog across both teams and all harnesses for skill quality and lifecycle.
 - Warden 🔒 (Dependency Warden) governs skill and package security.
 - Cipher 🔓 (Lead Orchestrator) owns the feature-document lifecycle via `odd-workflow`. Sentinel 🛡️ (Quality Guardian) audits `odd/tasks/` for Specs/Tasks/Log consistency.

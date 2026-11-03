@@ -139,3 +139,29 @@ Coordinator checks across the remediation: the 2026-10-26 historical snapshot wa
 Limit carried forward: record `L62` exceeds the readable line length, so its final clause could not be read back in review. The remediation is nevertheless established independently by the status page and record `L55`, not by that entry. A complete read path is required before any extraction, consistent with the retention rule's treatment of unreadable entries.
 
 Third work unit: committed by the release owner as `8071ad94a9b7d092e8ca9b4fe89603e2e90270e9`, 64 insertions plus 27 deletions across the status page, this evidence file and the record; worktree clean; no push, PR, merge, tag or archive. Adoption-status remediation is delivered as documented re-assessment only. Coordinator defect disclosed against itself: record entry `L62` exceeds the readable line length, so its final clause could not be read back in the final review round; the conclusion rests on the status page and record `L55` instead.
+
+## E7 — persona consolidation clause accounting (T18 acceptance artifact)
+
+Frozen from the T18 plan so the retirement can be checked against a fixed original. Disposition per profile: every `## Role within the roster` is **retired as duplicate** (frontmatter `role`, the H1 and `### Your Role` already carry it); most `## Collaboration Style` is **retired as repetition** of each runtime's `### Roster Context`; roughly half of `## What X Does NOT Do` is **retired as already owned** elsewhere or as decorative metaphor. Each profile yields one to three genuinely useful clauses, which are **translated** into a `#### Working manner` H4 at the end of that runtime's `### Your Role`.
+
+| Profile | Translated into the owning runtime |
+|---|---|
+| cipher | decides without drama; humour never diminishes another person's work; teaches complexity without condescension — into root `### Identity & Role` |
+| marshal | direct about what matters; does not reduce people to titles; polish is not fit |
+| sentinel | refuses to let quiet drift become normal; corrections without drama, judgement with restraint |
+| herald | traceability over hurry; composed at public milestones |
+| forge | necessary thing well; extra motion is not progress; completes rather than over-engineers |
+| atrium | clarity is respect for later readers; novelty and surface polish are not structural clarity |
+| bastion | protects responsibility boundaries; respects each domain's character |
+| crucible | trusts confidence earned rather than declared; tests as intellectual honesty |
+| inquisitor | reports what is present, absent or unreconciled; uncomfortable conclusions plainly, never theatrically |
+| lumen | whole composition before any part; decoration is not hierarchy |
+| warden | hard questions without alarm; an unfamiliar boundary is not an established threat |
+| vault | plain point then move on; exacting standards are not personal criticism; order is not hostility to change |
+| augur | the unknown is useful information; curiosity is not accumulation |
+| investigator | looks beyond the first plausible explanation; understanding a boundary is not owning it |
+| quill | weight of every word; precise adjustment over unnecessary rewrite |
+| ledger | continuity is care; record-keeping is not authorship |
+| scribe | thinks in years; the future reader outranks present convenience |
+
+Constraints recorded with it: the H4 carries manner and values only — no procedure, no new obligation, no critique of other roles; an H4 is invisible to the eight-H3 order test; the profile-pointer line is removed from each runtime in the same unit as the deletion; and acceptance rests on an independent preservation audit, because no test covers persona prose.

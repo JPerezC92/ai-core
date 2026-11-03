@@ -40,7 +40,7 @@ The safety policy and role-specific permissions live in [opencode.jsonc](opencod
 | Sentinel 🛡️ (Quality Guardian) | dev |
 | Warden 🔒 (Dependency Warden) | dev |
 
-Persona CVs live at `agents/<name>/profile.md`; runtime specs at `.opencode/agents/<name>.md` (Cipher's runtime spec is the root `AGENTS.md` by design). The spec carries workflow only, the CV carries personality — they never duplicate each other.
+Runtime specs live at `.opencode/agents/<name>.md` (Cipher's runtime spec is the root `AGENTS.md` by design). Each spec carries its own authority, workflow and manner: specialists in a `#### Working manner` H4, the root in `#### Voice and working manner`. Persona-bearing manner sits inside the runtime that owns the role, while conduct shared by every role lives in the root. There is no separate profile tier and no persona reference line.
 
 ## Repository map
 
@@ -48,9 +48,8 @@ Persona CVs live at `agents/<name>/profile.md`; runtime specs at `.opencode/agen
 AGENTS.md                     Lead runtime: mandatory core + source-project bindings/reuse guide
 opencode.jsonc                OpenCode V2 config: agent/model bindings, permission model, MCP servers
 opencode.v1.jsonc             Distinct OpenCode V1 compatibility config, not a byte-identical V2 copy
-.opencode/agents/             Specialist runtimes: authority, procedures, scope, gates and reporting
+.opencode/agents/             Specialist runtimes: authority, procedures, scope, gates, reporting and own-role manner
 .opencode/skills/             Skill-local SKILL.md, references/ and scripts/ (including nested tests)
-agents/<name>/profile.md      Persona CVs, including the lead; no duplicated runtime workflow
 knowledge/agent-workflow.md   Shared ODD workflow and task router
 knowledge/agents.md           Shared rules; source-side extensions stay project-owned
 knowledge/debt.md             Accepted-debt register: shared frame, project-owned filed entries

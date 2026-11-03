@@ -36,13 +36,6 @@ SPEC_H3 = (
     "Hard Rules",
 )
 
-PROFILE_H2 = (
-    "Personality",
-    "Traits",
-    "Role within the roster",
-    "Collaboration Style",
-)
-
 CORE_ANCHORS = {
     "atrium.md": "typescript/react.md",
     "forge.md": "Static Data Service Pattern",
@@ -76,12 +69,9 @@ LOCAL_ONLY = {
 _CORE_DELIMITERS = {BEGIN, END}
 
 
-def _surfaces() -> tuple[list[Path], list[Path]]:
+def _spec_surfaces() -> list[Path]:
     repo_root = Path(__file__).resolve().parents[6]
-    return (
-        sorted((repo_root / ".opencode/agents").glob("*.md")),
-        sorted((repo_root / "agents").glob("*/profile.md")),
-    )
+    return sorted((repo_root / ".opencode/agents").glob("*.md"))
 
 
 def _unfenced_lines(text: str) -> list[str]:
@@ -117,12 +107,17 @@ def _project_text(content: str) -> str:
     return "\n".join(lines[begins[0] + 1 : ends[0]])
 
 
-def test_agent_sources_place_core_markers_after_frontmatter() -> None:
-    spec_paths, profile_paths = _surfaces()
-    assert len(spec_paths) == 16
-    assert len(profile_paths) == 17
+def test_agent_profiles_are_retired() -> None:
+    repo_root = Path(__file__).resolve().parents[6]
+    profiles = sorted((repo_root / "agents").glob("*/profile.md"))
+    assert profiles == [], profiles
 
-    for path in [*spec_paths, *profile_paths]:
+
+def test_agent_sources_place_core_markers_after_frontmatter() -> None:
+    spec_paths = _spec_surfaces()
+    assert len(spec_paths) == 16
+
+    for path in spec_paths:
         content = path.read_text(encoding="utf-8")
         frontmatter, body = split_frontmatter(content)
         core_markers = find_markers(content)
@@ -141,7 +136,7 @@ def test_agent_sources_place_core_markers_after_frontmatter() -> None:
 
 
 def test_agent_spec_cores_keep_h3_order() -> None:
-    spec_paths, _profile_paths = _surfaces()
+    spec_paths = _spec_surfaces()
     for path in spec_paths:
         core = extract_source_core(path.read_text(encoding="utf-8"))
         headings = [
@@ -153,7 +148,7 @@ def test_agent_spec_cores_keep_h3_order() -> None:
 
 
 def test_agent_spec_cores_keep_positive_anchors() -> None:
-    spec_paths, _profile_paths = _surfaces()
+    spec_paths = _spec_surfaces()
     for path in spec_paths:
         anchor = CORE_ANCHORS.get(path.name)
         if anchor is None:
@@ -173,19 +168,9 @@ def test_agent_sources_keep_local_facts_out_of_core() -> None:
             assert fact in project, name
 
 
-def test_agent_profiles_keep_heading_order() -> None:
-    _spec_paths, profile_paths = _surfaces()
-    for path in profile_paths:
-        core = extract_source_core(path.read_text(encoding="utf-8"))
-        positions = [core.find(f"## {heading}") for heading in PROFILE_H2]
-        assert all(index >= 0 for index in positions), path
-        assert positions == sorted(positions), path
-        assert len(re.findall(r"^## What .+ Does NOT Do$", core, re.MULTILINE)) == 1, path
-
-
 def test_agent_sources_keep_optional_project_region_shape() -> None:
-    spec_paths, profile_paths = _surfaces()
-    for path in [*spec_paths, *profile_paths]:
+    spec_paths = _spec_surfaces()
+    for path in spec_paths:
         lines = path.read_text(encoding="utf-8").splitlines()
         begins = _exact_marker_line_indices(lines, PROJECT_BEGIN)
         ends = _exact_marker_line_indices(lines, PROJECT_END)
