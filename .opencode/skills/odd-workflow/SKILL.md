@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.9.0
+  version: 1.10.0
 ---
 <!-- core:begin -->
 
@@ -26,15 +26,39 @@ Create, read, update, and close the single feature document for a feature. I do 
 
 ### Write meaningful specifications
 
-Derive numbered `S#` behavioral clauses, constraints and acceptance checks from the request, corrections and approved proposal. Each entry states the required observable behavior and how it will be checked. Preserve the user's exact requirements, strings, errors, commands and examples verbatim alongside that meaning; do not paraphrase or normalize requirement-defining wording, replace it with a summary, or add unrequested scope. Record genuine uncertainty as evidence or a focused question, never an unsupported assumption.
+Derive numbered `S#` behavioral clauses, constraints and acceptance checks from the request, corrections and approved proposal. Each entry states the required observable behavior and how it will be checked.
+
+Every entry carries four parts: the `S#` identifier; an observable behavior or constraint statement; the requirement-defining wording preserved verbatim; and an acceptance clause. This shape illustrates one entry:
+
+- `S# — <observable behavior or constraint statement>. Exact requirement: <requirement-defining wording, verbatim>. Acceptance: <one action> and <one observable result>.`
+
+Those labels are illustrative, not required syntax: the mechanical validator accepts any `- S# — …` entry, so the shape proves anatomy only, never meaning.
+
+One `S#` per independently verifiable outcome. Split when no single check covers all parts — a request that reports a defect, adds a capability and constrains a platform is three entries, because each part needs its own check.
+
+A symptom report is not yet a requirement: state the behavior you are committing to, and keep the symptom verbatim. The quoted report says what was observed; the entry says what becomes true and how it is checked.
+
+Acceptance names one action and one observable result. `Works correctly` is not acceptable: it names neither.
+
+Preserve the user's exact requirements, strings, errors, commands and examples verbatim alongside that meaning; do not paraphrase or normalize requirement-defining wording, replace it with a summary, or add unrequested scope. Record genuine uncertainty as evidence or a focused question, never an unsupported assumption.
 
 Separate requirements from conversation: directions to analyze and words of approval are authorization/history in `## Log`, not feature capabilities. For a mixed requirement/approval message, retain the exact requirement in Specs with its behavioral clause and check, and preserve the full message and approval context in Log. Do not discard a requirement merely because the same message approves work.
 
-Illustrative authoring examples only, not execution evidence:
+Illustrative authoring examples only, not execution evidence. This invented multi-part request reports a symptom, asks for a capability, adds a constraint and approves work:
 
-- Request: `Show "Access denied" when access is refused.` Correct: `S1 — Refused access displays the requested message. Exact requirement: Show "Access denied" when access is refused. Acceptance: refuse access and verify the displayed text is exactly "Access denied".`
-- Bad: `S1 — approved` or `S2 — ok analyze how to achieve it please`. These are conversation-only entries, not meaningful specifications, even if anatomy validation passes.
-- Mixed message: `Show "Access denied" when access is refused. approved` retains the exact requirement and check above in Specs; the complete message and approval context go in Log.
+- `Checkout shows "Something broke" instead of the receipt when a card is declined. Also let me export the receipt as PDF from the order page, and it must work on Firefox. approved`
+
+Correct — one entry per independently verifiable outcome:
+
+- `S1 — A declined card shows the requested error text. Exact requirement: Checkout shows "Something broke" instead of the receipt when a card is declined. Acceptance: submit a declined card and read the checkout result; the displayed text is exactly "Something broke".`
+- `S2 — The order page exports a receipt as PDF. Exact requirement: let me export the receipt as PDF from the order page. Acceptance: open an order page and trigger the PDF export; one PDF receipt file downloads.`
+- `S3 — Receipt PDF export works on Firefox. Exact requirement: it must work on Firefox. Acceptance: run the S2 export in Firefox; the same PDF receipt downloads.`
+
+Bad: `S1 — approved` or `S2 — ok analyze how to achieve it please`. These are conversation-only entries, rejected because they state no observable behavior and carry no check, even if anatomy validation passes.
+
+Mixed message: the request above ends with `approved`. Its requirements live in S1–S3; the complete message and approval context go in Log. The approval neither removes a requirement nor becomes one.
+
+Whether an entry is meaningful is owned by the independent semantic review in `### Close`, not by the validator.
 
 ### Delivery forecast
 

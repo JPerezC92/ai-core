@@ -8,6 +8,7 @@
 - [ ] Verify all seven header fields, actual values or justified N/A, literal Runner, Delivery contents and closed-history exception against skill `### Create a feature document`.
 - [ ] Verify numbered behavioral Specs, exact requirement/literal fidelity, acceptance checks and evidenced uncertainty against skill `### Write meaningful specifications`; no invented scope.
 - [ ] Reject anatomically valid but conversation-only Specs such as `approved` or `ok analyze how to achieve it please`. For mixed requirement/approval messages, check the exact requirement plus behavior/check in Specs and the full message/approval context in Log.
+- [ ] Verify each entry states one independently verifiable outcome with one action→observable-result acceptance and no generic `works correctly`, and that a multi-part request is split into separate `S#` entries — skill `### Write meaningful specifications`.
 - [ ] Verify task IDs, spec links, route/trigger evidence, owner, allowed status, pending/hex commit rules and coherent multi-task/high-risk commit choices against skill `### Create a feature document`.
 - [ ] Verify forecast, running authored count, generated-file exclusion, strategy/slices and before-next-commit trigger against skill `### Delivery forecast`; keep the advisory task-size distinction intact.
 - [ ] `## Log` starts with `L1` = the original request verbatim; each later user correction is its own dated, verbatim entry, with evidence and rationale in separate entries rather than merged into the correction text.
