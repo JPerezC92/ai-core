@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.4.8
+  version: 1.5.0
 ---
 
 ## Project extensions
@@ -28,7 +28,7 @@ An existing Claude Code agent spec lives at `.claude/agents/{name}.md`. Migratin
 | `color` | `color` |
 | (no mode field) | `mode: subagent` (this skill's migration-intent selection for child agents, not the OpenCode omission default) |
 
-Source-harness cleanup is outside this skill's write scope: preserve `.claude/agents/{name}.md` and mark it read-only in the migration preview. Any later deletion or move is a separate owner-run operation. Persona-CV handling, preview, confirmation, execution, and prevalidation steps for this sub-flow are described in the Mandatory core migration workflow. The `op-agent-creator` does NOT modify `.claude/agents/*.md` (that is Marshal 🎖️ (HR Director) territory).
+Source-harness cleanup is outside this skill's write scope: preserve `.claude/agents/{name}.md` and mark it read-only in the migration preview. Any later deletion or move is a separate owner-run operation. Preview, confirmation, execution, and prevalidation steps for this sub-flow are described in the Mandatory core migration workflow. The `op-agent-creator` does NOT modify `.claude/agents/*.md` (that is Marshal 🎖️ (HR Director) territory).
 
 ### Example model identifiers
 
@@ -64,7 +64,7 @@ Classify the requested operation as exactly one of:
 | Trigger | File | Why |
 |---|---|---|
 | Scenario = `modify` | `.opencode/agents/<name>.md` | Surface current spec before rewriting; preserve tone/structure unless explicitly changing |
-| Scenario = `migrate` | The Claude Code agent's file (and `agents/<name>/profile.md`) | Source of truth for the conversion; persona CV preserved separately by Marshal 🎖️ |
+| Scenario = `migrate` | The Claude Code agent's file | Source of truth for the conversion; inspect its persona-bearing prose for the target runtime's manner H4 |
 | Agent will have specific permission keys | another existing agent as live reference (consulted at write-time) | Permission-key semantics reference |
 
 #### Step 0.4 — Acknowledge each loaded file
@@ -134,9 +134,9 @@ Create a new OpenCode-native agent under `.opencode/agents/{name}.md`. The agent
    - [ ] Total under 5,000 words; body under 500 lines; static blocks >30 lines extracted — QC-14 / QC-27 (adapted)
    - [ ] Contract: frontmatter has `name`, `description`, and explicit `mode` (`primary` | `subagent` | `all`); all passes the relevant checks for both capabilities without expanding permissions or role authority
    - [ ] Contract: frontmatter has repository-metadata `version` in SemVer MAJOR.MINOR.PATCH form (`local-version` only on destination-derived specs)
-    - [ ] Contract: technical framing present — H1 inside the core region and, for a governed roster spec, a persona reference line to agents/<name>/profile.md (no `> **Rule layout:**` marker)
+    - [ ] Contract: technical framing present — H1 inside the core region, no persona reference line, and a governed roster spec's manner carried as a `#### Working manner` H4 at the end of `### Your Role` (no `> **Rule layout:**` marker)
    - [ ] Contract: if the Rulebook states language-specific rules, it opens with a language-agnostic subsection before the first language section, and no language section suspends the clean-architecture contract (SP-11, SP-12)
-     - [ ] Contract: follow Marshal 🎖️ (HR Director)'s Runtime Spec Format and Sentinel 🛡️ (Quality Guardian) SP-3 — do not invent a competing layout. Exactly one `<!-- core:begin -->` … `<!-- core:end -->` pair immediately after the frontmatter closing `---`. Governed roster specs use all eight H3s in order under `## Mandatory core`: Your Role, Roster Context, Rulebook, Workflow, Tools and References, Output Format, Stop and Report, Hard Rules. Custom non-roster specs omit the persona line and `### Roster Context` explicitly and keep the other seven in core. Optional project markers only for evidenced local configuration, actual local grants, selected bindings, or local history. `### Hard Rules` is the last H3. A command named in the body is a reference form, not a grant; the frontmatter `permission` block is the configured grant.
+     - [ ] Contract: follow Marshal 🎖️ (HR Director)'s Runtime Spec Format and Sentinel 🛡️ (Quality Guardian) SP-3 — do not invent a competing layout. Exactly one `<!-- core:begin -->` … `<!-- core:end -->` pair immediately after the frontmatter closing `---`. Governed roster specs use all eight H3s in order under `## Mandatory core`: Your Role, Roster Context, Rulebook, Workflow, Tools and References, Output Format, Stop and Report, Hard Rules. Custom non-roster specs omit `### Roster Context` explicitly and keep the other seven in core. Persona-bearing manner lives in the runtime that owns the role — a `#### Working manner` H4 inside `### Your Role`, never a separate profile file or reference line; shared conduct belongs to the root runtime. Optional project markers only for evidenced local configuration, actual local grants, selected bindings, or local history. `### Hard Rules` is the last H3. A command named in the body is a reference form, not a grant; the frontmatter `permission` block is the configured grant.
    ```
 
    If any check FAILS, fix safe defects or report to Cipher 🔓 (Lead Orchestrator) before the write step (Step 10). Never invoke the user-facing `question` tool from a delegated run. Mandatory portable requirements, runtime validity, and shared/core agent-contract obligations cannot be waived by a generic override. A legitimate discretionary project-local exception must be explicitly permitted by its owning rule, approved by its authorized owner, and recorded with scope and rationale; it resolves that local choice, never a mandatory-check failure or a conflict with core. If the authority or applicability is unclear, stop and report rather than treating the check as optional.
@@ -259,11 +259,11 @@ This table names which keys gate which tools. It is a reference, not a grant. Ex
 
 Generated agent files follow the region-delimited eight-section contract in Marshal 🎖️ (HR Director)'s Runtime Spec Format (`.opencode/agents/marshal.md`) and Sentinel 🛡️ (Quality Guardian) SP-3. Cite those sources; do not treat this skill as a competing standard. No `> **Rule layout:**` marker is used.
 
-Exactly one `<!-- core:begin -->` … `<!-- core:end -->` pair sits immediately after the frontmatter closing `---`. Technical framing is inside that core: an H1, and — for a governed roster spec only — the persona reference line `**Persona / personality:** see \`agents/<name>/profile.md\``. Then `## Mandatory core`. `### Hard Rules` is the last H3. When there is no evidenced local content, omit the project pair and end the core at EOF.
+Exactly one `<!-- core:begin -->` … `<!-- core:end -->` pair sits immediately after the frontmatter closing `---`. Technical framing is inside that core: an H1, then `## Mandatory core`. `### Hard Rules` is the last H3. When there is no evidenced local content, omit the project pair and end the core at EOF.
 
-A **governed roster spec** (persona CV at `agents/<name>/profile.md`) uses the persona line and all eight H3s in order: `Your Role`, `Roster Context`, `Rulebook`, `Workflow`, `Tools and References`, `Output Format`, `Stop and Report`, `Hard Rules`. Persona content stays in the CV; the runtime spec does not duplicate it.
+A **governed roster spec** uses all eight H3s in order: `Your Role`, `Roster Context`, `Rulebook`, `Workflow`, `Tools and References`, `Output Format`, `Stop and Report`, `Hard Rules`. This is the single-runtime rule: persona-bearing manner lives in the same file that carries the role, as a `#### Working manner` H4 at the end of `### Your Role`, carrying manner and values only — no procedure, no new obligation, no critique of other roles. An H4 is invisible to the eight-H3 order test. Conduct shared by every role belongs in the root runtime, never repeated per specialist. A governed roster spec has no separate profile file and no persona reference line.
 
-A **custom non-roster agent** (no CV) omits the persona reference line and `### Roster Context` explicitly, and still keeps `Your Role`, `Rulebook`, `Workflow`, `Tools and References`, `Output Format`, `Stop and Report`, and `Hard Rules` inside the core markers.
+A **custom non-roster agent** omits `### Roster Context` explicitly, and still keeps `Your Role`, `Rulebook`, `Workflow`, `Tools and References`, `Output Format`, `Stop and Report`, and `Hard Rules` inside the core markers.
 
 Reusable review, documentation, and diagnostic rules belong in core. Add `<!-- project:begin -->` … `<!-- project:end -->` only when the spec actually contains evidenced local configuration, actual local grants, selected operational bindings, or local history. A command named in the body is a reference form. The frontmatter `permission` block is the configured grant. Writing a reference command does not authorize installing packages, editing permission config, or running that command.
 
@@ -283,13 +283,10 @@ Use this when the user has an existing Claude Code agent spec and wants an OpenC
 
 1. Read the existing Claude Code agent file (frontmatter + body).
 2. Map its fields to OpenCode fields (see Project extensions for the concrete Claude Code mapping).
-3. Keep the Claude Code agent file read-only. Report **Persona CV handling** to Cipher 🔓 (Lead Orchestrator) when `agents/{name}/profile.md` exists:
-   - A. Keep the CV; OpenCode agent body references it via a single persona reference line.
-   - B. Drop the CV; consolidate persona into the OpenCode agent body — **only for a custom (non-roster) agent**. When the target is a governed roster spec this option is unavailable: the CV/runtime split is mandatory — persona lives only in the persona CV and the runtime spec references it via the single line. Never duplicate persona content into a roster spec body.
-   - C. Stop — migration requires human review of persona content.
+3. Keep the Claude Code agent file read-only. **Manner handling** — there is no separate persona profile to maintain: translate useful persona-bearing prose from the source into a `#### Working manner` H4 at the end of the target runtime's `### Your Role`, carrying manner and values only. Never create a separate persona profile file and never add a persona reference line; if existing persona text duplicates shared conduct or resists translation, report the gap to Cipher 🔓 (Lead Orchestrator) instead of guessing.
 4. Build a migration preview: list every OpenCode file to create or edit, and show the Claude Code source file as read-only/unchanged.
 5. Report the preview to Cipher 🔓 (Lead Orchestrator) for confirmation. Never invoke the user-facing `question` tool from a delegated run.
-6. Execute the migration: write `.opencode/agents/{name}.md` and update its body to reference the CV (if option A above); never move, edit, or delete the Claude Code source file.
+6. Execute the migration: write `.opencode/agents/{name}.md` with its manner in that same runtime; never move, edit, or delete the Claude Code source file.
 7. Run a final prevalidation on the new agent and any edited reference files.
 8. If issues are found, stop and report to Cipher 🔓 (Lead Orchestrator) with recommendations.
 9. Apply the chosen fix and re-run prevalidation. Repeat until no issues remain or the user aborts.

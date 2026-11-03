@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.10.0
+  version: 2.1.0
 ---
 <!-- core:begin -->
 
@@ -13,7 +13,7 @@ metadata:
 
 ### What I do
 
-Create, read, update, and close the single feature document for a feature. I do not create a second tracker, an Engram mirror, or a context-injection mechanism.
+Create, read, update, and close the single authoritative feature document for a feature. Its subordinate full mirror follows `knowledge/agent-workflow.md` → `### Full feature mirror and resume`; it is not a second tracker or a context-injection mechanism. This skill owns record mechanics, not a duplicate mirror protocol.
 
 ### Create a feature document
 
@@ -23,6 +23,7 @@ Create, read, update, and close the single feature document for a feature. I do 
 - Fill `## Specs` using the specification procedure below.
 - Fill `## Tasks` with one line per task: stable ID, linked `S#`, route (`inline` or `delegated`) with the reason/trigger that decided it — responsible owner, status (`open`, `in progress`, `done`), and commit. Record the route and its trigger evidence, not the route label alone. Use `commit: pending` only while status is `open` or `in progress`; `done` requires a 7–64 character hexadecimal commit identifier. One authorized coherent work-unit commit may evidence several tasks; do not require one commit per task. High-risk units may use separate reviewable commits.
 - Fill `## Log` with `L1` = the original request verbatim; record each later user correction as its own entry dated and quoted verbatim, with evidence and rationale in separate entries rather than merged into the correction text.
+- After bootstrap, apply the workflow's `### Full feature mirror and resume`. Keep verified project/feature identity, document locator, backend ID, exact verified content revision and comparison evidence, or explicit pending recovery, compactly in the existing Log. Respect project/task backend-write restrictions; record preparation does not itself establish runtime synchronization.
 
 ### Write meaningful specifications
 
@@ -66,7 +67,7 @@ Forecast authored additions plus deletions, excluding generated files, and recor
 
 ### Before the first write
 
-Apply `knowledge/agent-workflow.md` `### ODD protocol`, including its every-task uncertainty and observable-outcome controls. Do not restate that protocol here. That protocol's `#### Step reporting and transitions` owns step reporting, the state/evidence/next-action fields, and scope-bounded continuation. The execution-review pause after creating the document or materially replanning is owned by `AGENTS.md` → Conventions.
+Apply `knowledge/agent-workflow.md` `### ODD protocol`, including its every-task uncertainty and observable-outcome controls. Do not restate that protocol here. That protocol's `#### Step reporting and transitions` owns step reporting, the state/evidence/next-action fields, and scope-bounded continuation. Execution review after creation or material replanning follows `AGENTS.md` → Conventions → Decision-only stops; check current authority and prerequisites, not an automatic document-creation approval pause.
 
 ### Change a requirement
 
@@ -76,9 +77,21 @@ Read and apply `knowledge/agent-workflow.md` `### Scope changes and readiness` b
 
 Read and apply `knowledge/agent-workflow.md` `### ODD protocol`, step 6, for dependency order, task acceptance checks, tests/documentation, conditional RED/GREEN/refactor, actual exceptions and existing owner/whole-suite gates; apply `knowledge/agents.md` `### Safe parallel task coordination (HARD RULE)` for accepted predecessors and concurrency. Carry the actual applicable runner and evidence to workers. Step reports and continuation follow the workflow's `#### Step reporting and transitions`.
 
-For feature work, record compact evidence in the existing `## Log`: task/spec, exact tested input/content or commit identity, relevant dependency and environment/configuration identities, responsible executor, literal command (including invocation and arguments) or manual action, expected result, observed result/verdict, and exit status when applicable. Preserve original execution provenance. If no executable check applies, record the actual static/manual verification or justified N/A; never invent a test. This is evidence, not an execution transcript, new heading, or second tracker. Read-only and small work do not acquire a mandatory feature document or evidence template.
+Apply the workflow's `### Behavioral verification and runner selection` for per-spec verification and command-regression evidence. After material record changes, work-unit commits, resume and closure, apply its `### Full feature mirror and resume`; retain the exact verified record revision or pending recovery in the existing Log, never a separate status tracker or a claim based only on a summary.
 
-For instruction changes, identify original and candidate inputs and preserve complete retained/translated/retired accounting of valid original obligations with authority and rationale in the existing Log before acceptance. For prose and examples, walk through applicable normal and adverse scenarios against their governing rules; record the manual action, inputs, expected outcome and observed outcome there. Literal execution provenance and separate observable-outcome evidence remain required; planned checks or an author's confidence are not results.
+For feature work, record compact evidence in the existing `## Log`: task/spec, exact tested input/content or commit identity, relevant dependency and environment/configuration identities, responsible executor, expected result, observed result/verdict, and exit status when applicable, all of which remain required. Attestational detail — the literal command including invocation and arguments, or the manual action — may live in `odd/evidence/<record-basename>.md` under `### Evidence retention`, while the record keeps the decision, the result and an `E#` pointer; preserve original execution provenance wherever it is recorded. If no executable check applies, record the actual static/manual verification or justified N/A; never invent a test. This is evidence, not an execution transcript, new heading, or second tracker. Read-only and small work do not acquire a mandatory feature document or evidence template.
+
+For instruction changes, identify original and candidate inputs and preserve complete retained/translated/retired accounting of valid original obligations with authority and rationale before acceptance; the accounting decision and its outcome stay in the existing Log, its itemized detail may live in `odd/evidence/<record-basename>.md` under `### Evidence retention` with an `E#` pointer, and acceptance still requires the complete accounting to exist. For prose and examples, walk through applicable normal and adverse scenarios against their governing rules; record the manual action, inputs, expected outcome and observed outcome there. Literal execution provenance and separate observable-outcome evidence remain required; planned checks or an author's confidence are not results.
+
+### Evidence retention
+
+Evidence for a feature falls into three classes. **Decisive** — requests, corrections, approvals and their labels, decisions, obligations, acceptance limits and commits — is permanent and always lives in the record. **Attestational** — obligation accounting, reviewer verdicts and identities, input and candidate identities, literal commands with observed results, and preservation mappings — lives while the feature is active in `odd/evidence/<record-basename>.md`, created from `odd/evidence/_template.md`. **Reproducible** — content a reader can regenerate or re-read from Git, a committed artifact or a gitignored `output/` artifact — is referenced by pointer only.
+
+When an entry moves, leave a decision plus the deciding fact and an `E#` pointer in the record. Never move, summarize, reformat or retype an entry that no available tool can read completely: keep it byte-identical in place, flag it, and state what a complete read requires.
+
+**Close-time reconciliation** is part of closure. Before `Status: closed`, fold every decisive conclusion from the evidence file into the record's Specs, Tasks or Log, then condense or delete the evidence file; a committed revision stays recoverable from Git history. Disposal is the expected end state, so Git history — not the evidence file — is the recovery archive.
+
+**No outside pointer.** Only paths inside `odd/` may cite a specific evidence instance, so disposal cannot leave a dangling reference. `knowledge/agent-workflow.md` → `### Feature document` owns the binding boundary against a durable surface citing a specific evidence file.
 
 ### Close
 
@@ -91,6 +104,8 @@ Read and apply `knowledge/agent-workflow.md` `### ODD protocol`, step 7, for sep
 ### Handoff
 
 Pass a reference to the feature document and its `S#`, never a paraphrase. The worker reads until `## Log` and reports which specs it covered.
+
+For the independent verification handoff, apply `knowledge/agent-workflow.md` → `### Behavioral verification and runner selection`: point the verifier to the whole feature including Log, its authorized examples and observed evidence; retain the returned per-spec verdicts and missing checks in the existing Log. This does not replace `### Close` semantic acceptance or grant execution authority.
 
 ### Feature scope
 
@@ -111,6 +126,7 @@ Run `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feat
 ### References
 
 - `odd/tasks/_template.md` — the only feature-document template.
+- `odd/evidence/_template.md` — the only evidence-file template; an evidence file is disposable working evidence under `### Evidence retention`, never a tracker or authority.
 - `.opencode/skills/odd-workflow/references/_checklist.md` — creation and close checks; read it in full before creating or closing a feature.
 - `.opencode/skills/odd-workflow/scripts/validate_feature.py` — mechanical validator.
 <!-- core:end -->

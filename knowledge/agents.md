@@ -30,6 +30,8 @@
 
 ### Report discipline (HARD RULE)
 
+Apply `AGENTS.md` → `### Shared conduct — all agents` within the assigned role; that conduct does not grant coordinator identity or authority.
+
 Every agent report to Cipher 🔓 (Lead Orchestrator) follows the exact output format in its dispatch and leads with the result:
 
 - For audit or verification tasks, lead with the requested verdict (`[PASS]` / `[FAIL]` / `[BLOCK]` / `[UNCERTAIN]` / `[ADVISORY]`), then numbered findings. Each finding cites `file:line` (or the relevant evidence location), the governing rule, and a concrete fix.
@@ -121,7 +123,7 @@ Admission: the first confirmed case admits a `candidate` row (structural only); 
 
 - Use the project's configured cache-retrieval, structural-search and source-pattern analysis tools when they answer an applicable question within the assigned role and scope. Do not substitute connectivity probes or ceremonial calls for analysis. Unrelated Markdown-only work needs no code scan. State justified non-use, unavailability or an unresolved permission boundary briefly in the existing handoff; create no second tracker.
 - Before use, inspect the actual exposed operation and its input contract, effective permissions and role restrictions. Configuration alone does not prove effective per-role exposure. Approved read-only MCP analysis is not shell, interpreter, network, test-runner, installation or mutation authority; it cannot bypass any execution ban, data-access restriction or owner gate. Report missing exposure or authority rather than inventing a grant or changing permissions.
-- Cache retrieval is project-scoped and subordinate to current repository sources and the saved-research workflow. Validate relevant cached claims against their authoritative sources; a cache miss is not evidence of absence. Durable workflow knowledge belongs at its repository owner, never only in memory. Cache writes require separate authorization and existing memory-store discipline.
+- Cache retrieval is project-scoped and subordinate to current repository sources and the saved-research workflow. Validate relevant cached claims against their authoritative sources; a cache miss is not evidence of absence. Durable workflow knowledge belongs at its repository owner, never only in memory. Cache writes require separate authorization and existing memory-store discipline. A full feature mirror is distinct from ordinary cache recall: apply `knowledge/agent-workflow.md` → `### Full feature mirror and resume` for authorized storage, identity, complete readback, conflict preservation and pending recovery; it is not a competing tracker or independent authority.
 - Use structural search for syntax-dependent questions such as call shapes, imports or declarations; use ordinary text search for literal prose and simple names. Bound the searched root, language, pattern and returned matches to the question. Read surrounding source and required dependencies before conclusions; matches alone establish neither architecture nor test conformance. Structural analysis is read-only: no rewrite or autofix.
 - Use source-pattern analysis when an explicit rule can test a relevant source-risk or correctness question within the role's existing audit scope. Supply locally scoped rules and targets, preserve configured privacy/telemetry controls and use no autofix. Do not broaden to remote services, auto-selected rules or supply-chain scans on the strength of tool availability. Pattern findings supplement, never replace, dependency/advisory evidence, full required reads or independent review.
 - Keep bounded evidence in the existing report: actual executor and operation, purpose, exact query/pattern/rule or a stable cited artifact, target paths and content/revision identity, result and truncation/skips/errors, limitations and their effect on the conclusion. For supplied-content analysis, identify the exact source and any excerpts/transforms; a path label is not proof the tool read that file. Zero matches means only no matches under the stated inputs, not security-clean, CVE-clean or runtime adoption. Reuse current attributable evidence where sufficient; failures and unsupported operations are limitations, not successful checks.
@@ -260,7 +262,7 @@ Needs your decision: ❓ F1 — authorize the behavior-changing correction, or e
 
 Edge cases:
 - Roster additions/changes go through Marshal 🎖️ (HR Director) with Augur's brief.
-- Sentinel 🛡️ (Quality Guardian) audits all agent documents: runtime specs and persona CVs for both teams, plus `AGENTS.md`, `odd/tasks/`, and shared rules.
+- Sentinel 🛡️ (Quality Guardian) audits all agent documents: every runtime spec (including the working manner it carries) and in-scope markdown for both teams, plus `AGENTS.md`, `odd/tasks/`, and shared rules.
 - Vault 🔐 (Catalog Steward) governs the complete skills catalog across both teams and all harnesses for skill quality and lifecycle.
 - Warden 🔒 (Dependency Warden) governs skill and package security.
 - Cipher 🔓 (Lead Orchestrator) owns the feature-document lifecycle via `odd-workflow`. Sentinel 🛡️ (Quality Guardian) audits `odd/tasks/` for Specs/Tasks/Log consistency.

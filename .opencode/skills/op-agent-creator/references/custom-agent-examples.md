@@ -4,7 +4,7 @@
 
 `.opencode/agents/docs-writer.md`:
 
-**Example notes.** This is a custom non-roster agent, so the spec omits the persona reference line and `### Roster Context`. Its reusable rules stay in core and it has no project region. The frontmatter `permission` block is the configured grant (`bash: deny`); a command named in prose is a reference form only and does not authorize running it or changing permission config.
+**Example notes.** This is a custom non-roster agent, so the spec omits `### Roster Context`. Its reusable rules stay in core and it has no project region. The frontmatter `permission` block is the configured grant (`bash: deny`); a command named in prose is a reference form only and does not authorize running it or changing permission config.
 
 ```markdown
 ---
@@ -60,7 +60,7 @@ If the source behavior is missing or contradicted, stop and report the gap. Do n
 
 `.opencode/agents/internal-helper.md`:
 
-**Example notes.** This is a custom non-roster agent (hidden via `hidden: true`), so the spec omits the persona reference line and `### Roster Context`. Its reusable rules stay in core and it has no project region. The frontmatter `permission` block is the configured grant (`edit: deny`, `bash: ask`); a command named in prose is a reference form only and does not authorize running it, installing packages, or changing permission config.
+**Example notes.** This is a custom non-roster agent (hidden via `hidden: true`), so the spec omits `### Roster Context`. Its reusable rules stay in core and it has no project region. The frontmatter `permission` block is the configured grant (`edit: deny`, `bash: ask`); a command named in prose is a reference form only and does not authorize running it, installing packages, or changing permission config.
 
 ```markdown
 ---

@@ -64,9 +64,6 @@
     },
     ".opencode/agents/": {
       "mode": "region"
-    },
-    "agents/": {
-      "mode": "region"
     }
   }
 }

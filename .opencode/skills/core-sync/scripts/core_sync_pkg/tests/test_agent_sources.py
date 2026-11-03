@@ -3,23 +3,20 @@
 from __future__ import annotations
 
 import re
-import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-
-from core_sync_pkg.domain.constants import (  # noqa: E402
+from core_sync_pkg.domain.constants import (
     BEGIN,
     END,
     FENCE_OPEN_RE,
     PROJECT_BEGIN,
     PROJECT_END,
 )
-from core_sync_pkg.domain.markers import (  # noqa: E402
+from core_sync_pkg.domain.markers import (
     _exact_marker_line_indices,
     find_markers,
 )
-from core_sync_pkg.domain.regions import (  # noqa: E402
+from core_sync_pkg.domain.regions import (
     extract_source_core,
     split_frontmatter,
 )
@@ -34,13 +31,6 @@ SPEC_H3 = (
     "Output Format",
     "Stop and Report",
     "Hard Rules",
-)
-
-PROFILE_H2 = (
-    "Personality",
-    "Traits",
-    "Role within the roster",
-    "Collaboration Style",
 )
 
 CORE_ANCHORS = {
@@ -76,12 +66,9 @@ LOCAL_ONLY = {
 _CORE_DELIMITERS = {BEGIN, END}
 
 
-def _surfaces() -> tuple[list[Path], list[Path]]:
+def _spec_surfaces() -> list[Path]:
     repo_root = Path(__file__).resolve().parents[6]
-    return (
-        sorted((repo_root / ".opencode/agents").glob("*.md")),
-        sorted((repo_root / "agents").glob("*/profile.md")),
-    )
+    return sorted((repo_root / ".opencode/agents").glob("*.md"))
 
 
 def _unfenced_lines(text: str) -> list[str]:
@@ -118,11 +105,10 @@ def _project_text(content: str) -> str:
 
 
 def test_agent_sources_place_core_markers_after_frontmatter() -> None:
-    spec_paths, profile_paths = _surfaces()
+    spec_paths = _spec_surfaces()
     assert len(spec_paths) == 16
-    assert len(profile_paths) == 17
 
-    for path in [*spec_paths, *profile_paths]:
+    for path in spec_paths:
         content = path.read_text(encoding="utf-8")
         frontmatter, body = split_frontmatter(content)
         core_markers = find_markers(content)
@@ -141,7 +127,7 @@ def test_agent_sources_place_core_markers_after_frontmatter() -> None:
 
 
 def test_agent_spec_cores_keep_h3_order() -> None:
-    spec_paths, _profile_paths = _surfaces()
+    spec_paths = _spec_surfaces()
     for path in spec_paths:
         core = extract_source_core(path.read_text(encoding="utf-8"))
         headings = [
@@ -153,7 +139,7 @@ def test_agent_spec_cores_keep_h3_order() -> None:
 
 
 def test_agent_spec_cores_keep_positive_anchors() -> None:
-    spec_paths, _profile_paths = _surfaces()
+    spec_paths = _spec_surfaces()
     for path in spec_paths:
         anchor = CORE_ANCHORS.get(path.name)
         if anchor is None:
@@ -173,19 +159,9 @@ def test_agent_sources_keep_local_facts_out_of_core() -> None:
             assert fact in project, name
 
 
-def test_agent_profiles_keep_heading_order() -> None:
-    _spec_paths, profile_paths = _surfaces()
-    for path in profile_paths:
-        core = extract_source_core(path.read_text(encoding="utf-8"))
-        positions = [core.find(f"## {heading}") for heading in PROFILE_H2]
-        assert all(index >= 0 for index in positions), path
-        assert positions == sorted(positions), path
-        assert len(re.findall(r"^## What .+ Does NOT Do$", core, re.MULTILINE)) == 1, path
-
-
 def test_agent_sources_keep_optional_project_region_shape() -> None:
-    spec_paths, profile_paths = _surfaces()
-    for path in [*spec_paths, *profile_paths]:
+    spec_paths = _spec_surfaces()
+    for path in spec_paths:
         lines = path.read_text(encoding="utf-8").splitlines()
         begins = _exact_marker_line_indices(lines, PROJECT_BEGIN)
         ends = _exact_marker_line_indices(lines, PROJECT_END)
