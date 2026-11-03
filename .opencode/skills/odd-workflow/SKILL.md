@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.0.0
+  version: 2.1.0
 ---
 <!-- core:begin -->
 
@@ -79,9 +79,19 @@ Read and apply `knowledge/agent-workflow.md` `### ODD protocol`, step 6, for dep
 
 Apply the workflow's `### Behavioral verification and runner selection` for per-spec verification and command-regression evidence. After material record changes, work-unit commits, resume and closure, apply its `### Full feature mirror and resume`; retain the exact verified record revision or pending recovery in the existing Log, never a separate status tracker or a claim based only on a summary.
 
-For feature work, record compact evidence in the existing `## Log`: task/spec, exact tested input/content or commit identity, relevant dependency and environment/configuration identities, responsible executor, literal command (including invocation and arguments) or manual action, expected result, observed result/verdict, and exit status when applicable. Preserve original execution provenance. If no executable check applies, record the actual static/manual verification or justified N/A; never invent a test. This is evidence, not an execution transcript, new heading, or second tracker. Read-only and small work do not acquire a mandatory feature document or evidence template.
+For feature work, record compact evidence in the existing `## Log`: task/spec, exact tested input/content or commit identity, relevant dependency and environment/configuration identities, responsible executor, expected result, observed result/verdict, and exit status when applicable, all of which remain required. Attestational detail — the literal command including invocation and arguments, or the manual action — may live in `odd/evidence/<record-basename>.md` under `### Evidence retention`, while the record keeps the decision, the result and an `E#` pointer; preserve original execution provenance wherever it is recorded. If no executable check applies, record the actual static/manual verification or justified N/A; never invent a test. This is evidence, not an execution transcript, new heading, or second tracker. Read-only and small work do not acquire a mandatory feature document or evidence template.
 
-For instruction changes, identify original and candidate inputs and preserve complete retained/translated/retired accounting of valid original obligations with authority and rationale in the existing Log before acceptance. For prose and examples, walk through applicable normal and adverse scenarios against their governing rules; record the manual action, inputs, expected outcome and observed outcome there. Literal execution provenance and separate observable-outcome evidence remain required; planned checks or an author's confidence are not results.
+For instruction changes, identify original and candidate inputs and preserve complete retained/translated/retired accounting of valid original obligations with authority and rationale before acceptance; the accounting decision and its outcome stay in the existing Log, its itemized detail may live in `odd/evidence/<record-basename>.md` under `### Evidence retention` with an `E#` pointer, and acceptance still requires the complete accounting to exist. For prose and examples, walk through applicable normal and adverse scenarios against their governing rules; record the manual action, inputs, expected outcome and observed outcome there. Literal execution provenance and separate observable-outcome evidence remain required; planned checks or an author's confidence are not results.
+
+### Evidence retention
+
+Evidence for a feature falls into three classes. **Decisive** — requests, corrections, approvals and their labels, decisions, obligations, acceptance limits and commits — is permanent and always lives in the record. **Attestational** — obligation accounting, reviewer verdicts and identities, input and candidate identities, literal commands with observed results, and preservation mappings — lives while the feature is active in `odd/evidence/<record-basename>.md`, created from `odd/evidence/_template.md`. **Reproducible** — content a reader can regenerate or re-read from Git, a committed artifact or a gitignored `output/` artifact — is referenced by pointer only.
+
+When an entry moves, leave a decision plus the deciding fact and an `E#` pointer in the record. Never move, summarize, reformat or retype an entry that no available tool can read completely: keep it byte-identical in place, flag it, and state what a complete read requires.
+
+**Close-time reconciliation** is part of closure. Before `Status: closed`, fold every decisive conclusion from the evidence file into the record's Specs, Tasks or Log, then condense or delete the evidence file; a committed revision stays recoverable from Git history. Disposal is the expected end state, so Git history — not the evidence file — is the recovery archive.
+
+**No outside pointer.** Only paths inside `odd/` may cite a specific evidence instance, so disposal cannot leave a dangling reference. `knowledge/agent-workflow.md` → `### Feature document` owns the binding boundary against a durable surface citing a specific evidence file.
 
 ### Close
 
@@ -116,6 +126,7 @@ Run `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feat
 ### References
 
 - `odd/tasks/_template.md` — the only feature-document template.
+- `odd/evidence/_template.md` — the only evidence-file template; an evidence file is disposable working evidence under `### Evidence retention`, never a tracker or authority.
 - `.opencode/skills/odd-workflow/references/_checklist.md` — creation and close checks; read it in full before creating or closing a feature.
 - `.opencode/skills/odd-workflow/scripts/validate_feature.py` — mechanical validator.
 <!-- core:end -->

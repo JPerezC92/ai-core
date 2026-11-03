@@ -149,7 +149,7 @@ Crosslinks locate owners; they do not require recursive rereading of every linke
 
 ### Feature document
 
-One feature owns one authoritative record in `odd/tasks/`, not a second tracker or per-request context-injection mechanism. Its subordinate full mirror follows Full feature mirror and resume above; it never becomes independent intent or status authority. Its Log holds decisions and evidence, not a running execution transcript.
+One feature owns one authoritative record in `odd/tasks/`, not a second tracker or per-request context-injection mechanism. Its subordinate full mirror follows Full feature mirror and resume above; it never becomes independent intent or status authority. Its Log holds decisions and evidence, not a running execution transcript. While the feature is active, attestational detail may live in a disposable `odd/evidence/<feature>.md` file referenced from a Log entry as `E#`, and no durable surface outside `odd/` may cite a specific evidence file.
 
 Before creating or maintaining a feature record, load and read the `odd-workflow` skill (`.opencode/skills/odd-workflow/SKILL.md`) and its applicable references. That skill owns record mechanics: `### Create a feature document` (filename/date exceptions, header, behavior-first verbatim Specs, Tasks and Log), `### Delivery forecast`, `### Change a requirement`, `### Handoff`, `### Feature scope`, implementation evidence and independent closure. Read its checklist in full before creation or closure. Use `odd/tasks/_template.md` as the sole template; concise template/checklist manifestations do not replace the skill. Universal authorization, classification, scope-current readiness and reporting remain in this workflow; release and runtime owners retain their authority.
 
