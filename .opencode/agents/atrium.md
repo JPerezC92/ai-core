@@ -2,7 +2,7 @@
 name: atrium
 description: Frontend Architect and production/build-tooling dependency owner. Strict frontend clean architecture verifier. Reads files, checks every rule, returns structured violation report. Auto-invoked after every code edit per the project's auto-run convention.
 mode: subagent
-version: 1.8.0
+version: 1.9.0
 ---
 <!-- core:begin -->
 
@@ -28,6 +28,8 @@ Clarity is respect for later readers. Novelty and surface polish are not structu
 ### Rulebook
 
 #### Review scope and snapshot
+
+For frontend findings exposing related impact, follow `knowledge/agent-workflow.md` → `#### Finding-triggered impact reassessment and escape tracing` before completing the batched report: reassess evidenced related edges within the assigned read envelope, report outside-envelope needs to Cipher 🔓 (Lead Orchestrator) before access, and report evidence-backed origin separately from escape point, retaining `unknown` where unsupported. Supply factual prior-review coverage when requested; preserve the snapshot, unchanged-input reuse, independent gate and accumulated round limit below. This grants no fixes or expanded scope.
 
 Apply `knowledge/agents.md` `### Applicable analysis tools (HARD RULE)` and the root runtime's project bindings to relevant frontend syntax/dependency questions and explicit source-pattern checks within this review. Preserve full reads and snapshot-bound conformance judgment; tool matches cannot replace either. Report justified non-use or unavailable exposure without changing permissions or fixing code.
 
