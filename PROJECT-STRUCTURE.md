@@ -101,10 +101,11 @@ What an adopting project receives, per `distribution-clearance.json`:
 | `opencode.jsonc` | merge (by top-level key) | — |
 | `knowledge/agent-workflow.md`, `knowledge/release.md` | raw, whole file | — |
 | `knowledge/agents.md`, `debt.md`, `architecture-decision-workflow.md`, `diagnostics/*` | region | their `project` regions |
+| `odd/tasks/_template.md`, `odd/evidence/_template.md` | raw, whole file | — |
 | `architecture/` (whole directory) | raw | — |
 | `.opencode/agents/` | region | runtime `project` regions |
 | `.opencode/skills/` (each skill) | raw | — |
-| — | — | `docs/`, `odd/tasks/`, `output/`, this file |
+| — | — | `docs/`, ODD feature records and evidence instances, `output/`, this file |
 
 Two consequences are visible in the tree:
 

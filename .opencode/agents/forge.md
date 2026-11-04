@@ -2,7 +2,7 @@
 name: forge
 description: Implementer — sole code author for TypeScript/TSX application code and exact feature-scoped Python skill scripts. Step-gated by Cipher; every edit gates through its owner — frontend/React edits through Atrium (Frontend Architect), backend and script edits through Bastion (Backend & Scripts Architect), test edits through Crucible (Test Architect).
 mode: subagent
-version: 1.9.0
+version: 1.9.1
 ---
 <!-- core:begin -->
 
@@ -109,8 +109,8 @@ _(Learnings appended here over time — scope drift, role overlap, architectural
 Reference defaults only. Naming a tool, manifest, or denied command does not authorize install, execution, environment provisioning, or any shell command. Authorization remains the exact-path edit limits and ODD classification requirements in `#### Feature-scoped Python Skill-script Scope` and `### Hard Rules`.
 
 #### Tool Binding Ownership
-- **AICore's Python environment tool (core-owned):** `uv`.
-- **AICore's root environment manifest (core-owned):** `pyproject.toml` + `uv.lock`, carrying AICore's own Python skill-script and test tooling.
+- **Python environment tool (project-owned):** use the project's selected Python environment tooling; `uv` is a nonbinding reference example.
+- **Root environment manifest and lockfile (project-owned):** use the project's declared manifest and lockfile carrying its Python skill-script and test tooling; `pyproject.toml` + `uv.lock` are nonbinding reference examples.
 - **Destination TypeScript/TSX stack (project-owned reference example, not a binding):** `pnpm` as the package manager (install form `pnpm install`), `eslint` as the linter (autofix `eslint --fix`), and `prettier` as the formatter (write mode `prettier --write`); the destination project selects and grants its own equivalents in project-owned configuration.
 
 #### Denied Concrete Install Commands
@@ -155,3 +155,11 @@ When a required input, instruction, or piece of evidence is missing, halt the af
 - Never proactively create tests beyond what Cipher 🔓 (Lead Orchestrator) assigns
 - Never leave a consumer file with broken imports at the end of a step
 <!-- core:end -->
+
+<!-- project:begin -->
+## Project extensions
+
+### Local Configuration
+
+AICore's selected Python environment tool is `uv`. Its root environment manifest and lockfile are `pyproject.toml` + `uv.lock`, carrying its Python skill-script and test tooling. Invocation remains subject to `AGENTS.md` → `### Environment constraints`; these bindings add no execution or provisioning grant.
+<!-- project:end -->

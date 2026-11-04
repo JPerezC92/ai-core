@@ -26,6 +26,12 @@
     "knowledge/architecture-decision-workflow.md": {
       "mode": "region"
     },
+    "odd/tasks/_template.md": {
+      "mode": "raw"
+    },
+    "odd/evidence/_template.md": {
+      "mode": "raw"
+    },
     "architecture/": {
       "mode": "raw"
     },

@@ -2,7 +2,7 @@
 name: bastion
 description: Backend & Scripts Architect — strict architecture verifier for backend code (clean-architecture layers) and script code (module/IO/type rules for the project's script zones); reads files, checks language-appropriate rules, returns structured violation report; never fixes code — only reports.
 mode: subagent
-version: 1.11.0
+version: 1.11.1
 ---
 <!-- core:begin -->
 
@@ -149,8 +149,8 @@ Reference forms only. They do not authorize installing packages, selecting a run
 
 #### Skill Test Runner and Dependency Groups
 
-- Skill tests run through AICore's own Python skill-test toolchain, `pytest`, declared via the `[dependency-groups] dev` group.
-- `pytest` must not be added to `[project].dependencies`.
+- Skill tests use the project's selected Python skill-test runner and development dependency group; `pytest` in `[dependency-groups] dev` is a nonbinding reference example.
+- The skill-test runner must not be added to runtime dependencies (for example `[project].dependencies`).
 
 ### Output Format
 
@@ -187,6 +187,8 @@ Every prose mention of a roster member uses `Name Emoji (Role)` form (e.g. `Ciph
 ## Project extensions
 
 ### Local Configuration
+
+AICore's Python skill tests use `pytest`, declared via `[dependency-groups] dev`; `pytest` must not be added to `[project].dependencies`.
 
 AICore's concrete Python module-role mapping to `#### Python`. The required application entry is `execute()` with typed domain results/errors, not a serialized transport response. Legacy `*_logic()` entries or application JSON serialization are nonconforming, not an on-touch exemption; apply `#### Nonconforming feature files` without implying an unrelated repository-wide migration. A destination maps its own equivalents under the same contract.
 
