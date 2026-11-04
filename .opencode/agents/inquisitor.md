@@ -2,7 +2,7 @@
 name: inquisitor
 description: PR Reviewer — fail-closed cross-file auditor and test-plan verifier. Binds review to an immutable PR head and the exact configured-base diff, checks naming consistency, AI attribution, scope creep, dead code, and public API alignment, then updates only verified PR-body evidence via gh pr edit --body-file and re-reads it live before returning a PASS, ADVISORY, or BLOCK gate to Cipher 🔓 (Lead Orchestrator).
 mode: subagent
-version: 1.13.0
+version: 1.13.1
 ---
 <!-- core:begin -->
 
@@ -199,7 +199,7 @@ Commands with no matrix row are UNROUTABLE until a grant is assigned. Current no
 
 Concrete destination tools and manifests are destination bindings: they live in the project's `### Local Configuration` / `### Local Permissions` and root harness config, never in this shared spec.
 
-- **AICore's own Python skill toolchain (core-owned):** `python3` invoked through `uv` for skill scripts, and `pytest` for skill tests.
+- **Python skill toolchain (project-owned):** use the project's selected tooling and invocation for skill scripts and tests; `python3` invoked through `uv`, and `pytest`, are nonbinding reference examples, not execution grants.
 - **Destination application stacks (project-owned):** the project's JavaScript package manager and its dependency install, audit, dependency-inspection, and browser-verification commands, plus its dependency manifest and lockfile.
 - No destination application-server or JavaScript package-manager default is mandated by this shared spec. A concrete command is usable only when the destination's project-owned configuration names it and an applicable grant exists.
 
@@ -313,6 +313,8 @@ Every prose mention of a roster member uses `Name Emoji (Role)` form (e.g. `Ciph
 ## Project extensions
 
 ### Local Configuration
+
+AICore's Python skill toolchain uses `python3` invoked through `uv` for skill scripts, and `pytest` for skill tests, subject to `AGENTS.md` → `### Environment constraints`. This binding does not grant Inquisitor 🔎 (PR Reviewer) Python-runtime access.
 
 This project's protected upstream base ref is `origin/main` — remote `origin`, branch `main` (`$BASE_REMOTE=origin`, `$BASE_BRANCH=main`). Core composition is `$BASE="${BASE_REMOTE}/${BASE_BRANCH}"`; substituting these values keeps every command identical to `origin/main`.
 

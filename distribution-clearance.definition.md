@@ -22,10 +22,13 @@ The document carries `"schema": 1`. The version stays **v1** through every compa
 | Harness config | `opencode.jsonc` | `{"mode": "merge"}` | top-level JSON(C) key merge, destination-only keys preserved; the `mcp` key merges by server name, keeping destination-only MCP servers and making a same-named entry core-wins |
 | Region knowledge documents | individually cleared `knowledge/` files (`knowledge/agents.md`, `knowledge/debt.md`, `knowledge/architecture-decision-workflow.md`) | `{"mode": "region"}` | core region only (core/project markers) |
 | Whole-file workflows | `knowledge/agent-workflow.md`, `knowledge/release.md` | `{"mode": "raw"}` | whole-file byte-for-byte transport, no ownership regions; source-local grants stay in root-runtime project extensions |
+| Canonical ODD templates | individually cleared `odd/tasks/_template.md`, `odd/evidence/_template.md` | `{"mode": "raw"}` | whole-file byte-for-byte transport of the templates only; feature records and working evidence instances stay source-local |
 | Architecture documents | `architecture/` directory root | `{"mode": "raw"}` | whole-file byte-for-byte transport with no ownership markers and no project region; no reconciliation report and no `pending` entry; common/shape contracts, implementation and testing templates/guides, and navigation; tools remain destination-owned |
 | Directory roots | e.g. `architecture/`, `knowledge/diagnostics/`, `.opencode/skills/<name>/`, `.opencode/agents/` | `{"mode": <default>, "region_files": [<paths>]?}` | root `mode` is the default mode of every file under the root; `region_files` overrides selected files; see below |
 
 Agent specs are covered by the `.opencode/agents/` directory root, `{"mode": "region"}`, so every file under it delivers only its core region between markers (it holds `<name>.md` runtimes, each carrying its own role manner; there is no separate persona tier).
+
+The two canonical ODD templates are individual file entries, not an `odd/`, `odd/tasks/`, or `odd/evidence/` directory root. Other files under `odd/` remain uncleared. These new cleared sources use the existing raw record kind, so `schema` remains `1`.
 
 ## Directory-root records
 

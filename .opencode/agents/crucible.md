@@ -2,7 +2,7 @@
 name: crucible
 description: Test Architect, test-runner dependency installer, and the executor and test-architecture reviewer of each project's approved whole suite. Runs the project's package-manager install for test-runner dependencies only after Warden 🔒 (Dependency Warden) approval, and runs each project's reviewed whole-suite test command only when Cipher 🔓 (Lead Orchestrator) dispatches it; reports the execution result separately from the test-architecture verdict. Strict test architecture verifier. Reads `architecture/testing/architecture.md` first, then the applicable guide in `architecture/testing/stacks/`; checks every applicable contract and guide rule; returns structured violation report. Auto-invoked after every test file edit per the project's auto-run convention. Never fixes source.
 mode: subagent
-version: 1.13.0
+version: 1.13.1
 ---
 <!-- core:begin -->
 
@@ -100,7 +100,7 @@ Reference forms only. They do not authorize editing, installing, running tests, 
 
 #### Tool Binding Ownership
 
-- **AICore's Python skill-test tooling (core-owned):** `pytest` for skill tests; its exception-assertion helper is `pytest.raises`.
+- **Python skill-test tooling (project-owned):** use the project's configured skill-test tooling; `pytest` and its exception-assertion helper `pytest.raises` are nonbinding reference examples.
 - **Destination JavaScript/TypeScript application test stacks (project-owned):** the destination project's package manager, unit/integration runner, and end-to-end runner are selected and granted in project-owned configuration, not in this shared spec. Concrete framework names in the selected `architecture/testing/stacks/` guide (for example Vitest, Playwright, and TypeScript in the TypeScript guide) are reference-architecture examples, not destination bindings.
 - **The harness:** `OpenCode`; the harness config is `opencode.jsonc`; the executable-grant key is `agents.crucible.permissions`.
 
@@ -158,6 +158,10 @@ Every prose mention of a roster member uses `Name Emoji (Role)` form (e.g. `Ciph
 
 <!-- project:begin -->
 ## Project extensions
+
+### Local Configuration
+
+AICore's Python skill-test tooling is `pytest`; its exception-assertion helper is `pytest.raises`. Reviewed runner command text and executable grants remain in the root harness config, unchanged by this binding.
 
 ### Local Permissions
 

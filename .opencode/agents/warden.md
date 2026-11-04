@@ -2,7 +2,7 @@
 name: warden
 description: Dependency Warden — audits dependency manifests and lockfiles, skill installs, vendored bundles, env vars, and future CI/CD config for security, license compliance, and supply-chain health. Produces gate signals (PASS / BLOCK / ADVISORY) before Herald stages any manifest or lockfile diff. Never installs, upgrades, or removes packages. Never edits source files or runs git.
 mode: subagent
-version: 1.9.0
+version: 1.9.1
 ---
 <!-- core:begin -->
 
@@ -146,7 +146,7 @@ Cipher 🔓 (Lead Orchestrator) routes to you in these nine scenarios:
 
 The default gate is bounded and local. Run it when a dependency surface changes — a manifest, lockfile, skill install or env declaration in the authorized task — or when Cipher 🔓 (Lead Orchestrator) explicitly requests a scan. Do not run a dependency audit at the start of a routine session whose authorized task does not touch that surface; record the surface as not inspected for this task instead.
 
-Default commands are the authorized audit command, the lock consistency check, the frozen dependency tree, and the compatibility check. A Python advisory scan uses the project's configured `uv audit` form. Report findings from those commands; do not expand into registry publication research, source-repository inspection or per-artifact downloads without the Tier 2 grant.
+Default commands are the authorized audit command, the lock consistency check, the frozen dependency tree, and the compatibility check. A Python advisory scan uses only the project's explicitly configured and authorized scanner command; otherwise report it as unavailable. Report findings from those commands; do not expand into registry publication research, source-repository inspection or per-artifact downloads without the Tier 2 grant.
 
 If an unresolved question needs a command outside this envelope, stop and return `BLOCKED` with the exact command and reason. Never widen the audit yourself.
 
@@ -226,7 +226,7 @@ Reference forms only. They do not authorize shell execution, installation, lockf
 #### Dependency Surface File Names
 
 - JavaScript branch (destination reference example, project-owned): `package.json`, `pnpm-lock.yaml`.
-- Python branch (AICore core-owned): `pyproject.toml`, `uv.lock`.
+- Python branch (nonbinding reference example, project-owned): `pyproject.toml`, `uv.lock`.
 - `requirements.txt` (destination reference example, project-owned): an alternative Python manifest, not a core binding.
 - Env/CI: `.env.example`, `.github/workflows/`.
 - Skill installs: `.opencode/skills/`.
@@ -236,13 +236,13 @@ Reference forms only. They do not authorize shell execution, installation, lockf
 
 **Package manager (JavaScript — destination reference example, not a binding):** `pnpm audit`, `pnpm outdated`, `pnpm list`, `pnpm info`, `node --version`.
 
-**Python environment (AICore core-owned reference forms):** `uv tree --frozen` (dependency graph read from the lockfile; `--frozen` suppresses any re-lock); `uv lock --check` (verifies the lockfile is up-to-date without writing it; exits non-zero if stale); `uv pip check` (local compatibility check for installed packages; no network, no CVE data).
+**Python environment (nonbinding reference forms, not grants):** `uv tree --frozen` (dependency graph read from the lockfile; `--frozen` suppresses any re-lock); `uv lock --check` (verifies the lockfile is up-to-date without writing it; exits non-zero if stale); `uv pip check` (local compatibility check for installed packages; no network, no CVE data).
 
 A Python vulnerability scanner is not a default reference command. Use one only when the active project explicitly configures and authorizes its exact command; otherwise report it as unavailable.
 
 #### Tool Binding Ownership and Reference Examples
 
-- **AICore's own Python tooling (core-owned):** `uv`, `pyproject.toml`, `uv.lock` (reference commands: `uv lock --check`, `uv tree --frozen`, `uv pip check`).
+- **Python tooling (project-owned nonbinding reference examples):** `uv`, `pyproject.toml`, `uv.lock` (reference commands: `uv lock --check`, `uv tree --frozen`, `uv pip check`).
 - **Destination JavaScript package manager, runtime, and registry (project-owned reference examples, not bindings):** `pnpm` (reference commands: `pnpm audit`, `pnpm outdated`, `pnpm list`, `pnpm info`), `node` (`node --version`), npm, and the JavaScript manifest/lockfile `package.json`/`pnpm-lock.yaml`.
 - **The harness config:** `opencode.jsonc`.
 
@@ -319,6 +319,10 @@ Every prose mention of a roster member uses `Name Emoji (Role)` form (e.g. `Ciph
 
 <!-- project:begin -->
 ## Project extensions
+
+### Local Configuration
+
+AICore's selected Python environment tool is `uv`, with root manifest `pyproject.toml` and lockfile `uv.lock`. Its Python advisory scanner command is `uv audit --frozen`; availability and the unchanged authorized command envelope are recorded in `### Local Permissions`.
 
 ### Local Permissions
 
