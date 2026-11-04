@@ -29,3 +29,14 @@ Retention and close-time reconciliation are owned by `.opencode/skills/odd-workf
 ## E4 — literal commands and observed results
 
 ## E5 — preservation mapping
+
+## E6 — optional finding-triggered impact and escape trace
+
+Illustrative fields only; omit this section when inapplicable. Procedure: `knowledge/agent-workflow.md` → `#### Finding-triggered impact reassessment and escape tracing`. Storage: skill `### Evidence retention` above. This section grants no scope or writer authority and is not a new tracker.
+
+- Finding identity and available baseline/implementation/remediation candidate identities:
+- Inspected paths, exclusions, unknown edges and coverage limitations:
+- Responsible owners' inspected/assigned/changed/check evidence and input identities:
+- Defect origin and evidence, separately from escape point and evidence; unknown where unsupported:
+- Coordinator-validated conclusions and unresolved evidence gaps:
+- Assigned writer and feature Log entry retaining decisive classifications, limitations and lessons before disposal:

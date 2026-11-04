@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.1.0
+  version: 2.2.0
 ---
 <!-- core:begin -->
 
@@ -77,6 +77,8 @@ Read and apply `knowledge/agent-workflow.md` `### Scope changes and readiness` b
 
 Read and apply `knowledge/agent-workflow.md` `### ODD protocol`, step 6, for dependency order, task acceptance checks, tests/documentation, conditional RED/GREEN/refactor, actual exceptions and existing owner/whole-suite gates; apply `knowledge/agents.md` `### Safe parallel task coordination (HARD RULE)` for accepted predecessors and concurrency. Carry the actual applicable runner and evidence to workers. Step reports and continuation follow the workflow's `#### Step reporting and transitions`.
 
+For findings exposing related impact or escaped coverage, read and apply the workflow's `#### Finding-triggered impact reassessment and escape tracing`. Record the trace through the existing Log and optional `E#` evidence mechanism below, not a separate tracker. This pointer grants no additional read or write scope.
+
 Apply the workflow's `### Behavioral verification and runner selection` for per-spec verification and command-regression evidence. After material record changes, work-unit commits, resume and closure, apply its `### Full feature mirror and resume`; retain the exact verified record revision or pending recovery in the existing Log, never a separate status tracker or a claim based only on a summary.
 
 For feature work, record compact evidence in the existing `## Log`: task/spec, exact tested input/content or commit identity, relevant dependency and environment/configuration identities, responsible executor, expected result, observed result/verdict, and exit status when applicable, all of which remain required. Attestational detail — the literal command including invocation and arguments, or the manual action — may live in `odd/evidence/<record-basename>.md` under `### Evidence retention`, while the record keeps the decision, the result and an `E#` pointer; preserve original execution provenance wherever it is recorded. If no executable check applies, record the actual static/manual verification or justified N/A; never invent a test. This is evidence, not an execution transcript, new heading, or second tracker. Read-only and small work do not acquire a mandatory feature document or evidence template.
@@ -88,6 +90,8 @@ For instruction changes, identify original and candidate inputs and preserve com
 Evidence for a feature falls into three classes. **Decisive** — requests, corrections, approvals and their labels, decisions, obligations, acceptance limits and commits — is permanent and always lives in the record. **Attestational** — obligation accounting, reviewer verdicts and identities, input and candidate identities, literal commands with observed results, and preservation mappings — lives while the feature is active in `odd/evidence/<record-basename>.md`, created from `odd/evidence/_template.md`. **Reproducible** — content a reader can regenerate or re-read from Git, a committed artifact or a gitignored `output/` artifact — is referenced by pointer only.
 
 When an entry moves, leave a decision plus the deciding fact and an `E#` pointer in the record. Never move, summarize, reformat or retype an entry that no available tool can read completely: keep it byte-identical in place, flag it, and state what a complete read requires.
+
+When retaining a finding-triggered trace, identify the finding and available baseline, implementation and remediation candidates; retain inspected/assigned/changed evidence and coverage limitations, with defect origin separate from escape point and `unknown` valid where evidence is missing. Keep the coordinator-validated conclusions in the existing Log; supporting detail may use an optional `E#` section created from the evidence template. One assigned writer incorporates owner responses and reviewer evidence; the trace grants no independent auditor writing authority. Before disposing of supporting detail, retain decisive classifications, limitations and lessons in the Log. Small/read-only work keeps its trace in the existing conversation, diff or report without mandatory feature or evidence artifacts. The shared workflow heading above owns the procedure, not this storage guidance.
 
 **Close-time reconciliation** is part of closure. Before `Status: closed`, fold every decisive conclusion from the evidence file into the record's Specs, Tasks or Log, then condense or delete the evidence file; a committed revision stays recoverable from Git history. Disposal is the expected end state, so Git history — not the evidence file — is the recovery archive.
 
