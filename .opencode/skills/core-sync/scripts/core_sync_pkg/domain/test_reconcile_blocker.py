@@ -96,6 +96,16 @@ class ReconcileBlockerContentTests:
         assert "verify" in guidance
         assert "retrieval" in guidance
 
+        # An empty own-name index is a never-built index, not a sync defect:
+        # the stated next step is to populate it, so that outcome is named.
+        assert "an empty result under this project's own index" in guidance
+        assert "never built that index" in guidance
+        assert "populate it" in guidance
+        assert (
+            "before treating the empty result as a synchronization defect"
+            in guidance
+        )
+
         # No placeholder index value ships, so the note must not claim one.
         # Checked on the constant itself, never on a derived view, because two
         # independent derivations defeat a view-based check: the
@@ -110,5 +120,7 @@ class ReconcileBlockerContentTests:
 
         assert "project region" in body
         assert "never touch the core region" in body.lower()
-        if "core region" in guidance:
-            assert "never" in guidance or "do not" in guidance
+        # Bind the guard to the exact obligation fragment, not to the bare word
+        # "never", which the empty-result clause also contains: deleting
+        # "Never edit the core region to change the index." must fail here.
+        assert "never edit the core region to change the index" in guidance
