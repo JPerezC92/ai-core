@@ -44,6 +44,7 @@ from core_sync_pkg.domain.regions import (
     outside_bytes,
     render_init_file,
     render_with_region,
+    split_frontmatter,
     split_regions,
 )
 
@@ -320,7 +321,12 @@ class EnrollDestinations:
                 )
                 if destination_content is None:
                     if destination in bulk_new_region:
-                        init_content = render_init_file("", source_core)
+                        source_frontmatter = self._source_frontmatter(
+                            source_path
+                        )
+                        init_content = render_init_file(
+                            "", source_core, source_frontmatter
+                        )
                         self._paths.ensure_dir(destination_path.parent)
                         writes.append((destination_path, init_content))
                         entries.append(
@@ -395,3 +401,16 @@ class EnrollDestinations:
             bindings["pending"],
         )
         return UseCaseResult("initialized")
+
+    def _source_frontmatter(self, source_path: Path) -> str:
+        """Return a source document's leading YAML frontmatter, or nothing.
+
+        A created region target takes its frontmatter from the source document
+        because the destination text does not exist yet. The core read already
+        proved the source readable, so an unreadable source here keeps the empty
+        frontmatter of a markerless document rather than inventing one.
+        """
+        content = self._source_reader.read_text(source_path)
+        if content is None:
+            return ""
+        return split_frontmatter(content)[0]

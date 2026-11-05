@@ -20,6 +20,7 @@ from core_sync_pkg.domain.constants import (  # noqa: E402
     MODE_MERGE,
     MODE_RAW,
     MODE_REGION,
+    ROLE_ROOT,
     SCHEMA_VERSION,
     BindingMode,
 )
@@ -239,6 +240,24 @@ MERGE_MCP_DESTINATION_STALE_SHARED = (
 
 ROOT_TEXT = "# Root runtime\n\nIntro paragraph.\n\nLast line.\n"
 
+AGENT_SOURCE = ".opencode/agents/atrium.md"
+ROOT_SOURCE = "AGENTS.md"
+
+AGENT_MARKED = (
+    "---\nname: atrium\nversion: 1.0.0\n---\n"
+    "<!-- core:begin -->\nAgent core\n<!-- core:end -->\n"
+)
+
+ROOT_MARKED = (
+    "---\nname: agents\n---\n"
+    "<!-- core:begin -->\nRoot core\n<!-- core:end -->\n"
+)
+
+CLEARED_AGENT_AND_ROOT: dict[str, dict[str, str]] = {
+    AGENT_SOURCE: {"mode": MODE_REGION},
+    ROOT_SOURCE: {"mode": MODE_REGION, "role": ROLE_ROOT},
+}
+
 
 class _FixtureClearance(TypedDict):
     """Valid schema-1 clearance metadata maintained by source fixtures."""
@@ -309,6 +328,24 @@ EXPECTED_RECONCILE_BODY = (
 )
 
 
+def _destination_root() -> str:
+    """Build one destination instruction-root file body."""
+    return "---\nname: dest\n---\n# Dest\n"
+
+
+def _write_clearance(
+    source: Path, cleared: dict[str, dict[str, str]]
+) -> Path:
+    """Write one fixture source's version-1 clearance document verbatim."""
+    path = source / CLEARANCE_REL
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps({"schema": CLEARANCE_SCHEMA, "cleared": cleared}) + "\n",
+        encoding="utf-8",
+    )
+    return path
+
+
 def _ensure_fixture_clearance(
     source_dir: Path, relative_path: str, mode: str = "region"
 ) -> None:
@@ -365,6 +402,27 @@ def _write_bytes_file(
     if base.name == "source":
         _ensure_fixture_clearance(base, relative, mode=mode)
     return path
+
+
+def _cleared_source(
+    tmp_path: Path,
+    *,
+    raw_payloads: dict[str, bytes] | None = None,
+) -> Path:
+    """Build a cleared source tree: agent and root regions plus a clearance record.
+
+    `raw_payloads` are written as byte copies and cleared `raw`, which is what the
+    bulk-enrollment fixtures need beyond the two region sources.
+    """
+    source = tmp_path / "source"
+    _write_file(source, AGENT_SOURCE, AGENT_MARKED)
+    _write_file(source, ROOT_SOURCE, ROOT_MARKED)
+    records = dict(CLEARED_AGENT_AND_ROOT)
+    for relative, content in (raw_payloads or {}).items():
+        _write_bytes_file(source, relative, content)
+        records[relative] = {"mode": MODE_RAW}
+    _write_clearance(source, records)
+    return source
 
 
 def _binding_entry(

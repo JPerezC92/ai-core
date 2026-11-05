@@ -1,7 +1,7 @@
 """Behavior tests for valid region decomposition and outside-byte extraction.
 
 Run: uv run --frozen --group dev pytest \
-    .opencode/skills/core-sync/scripts/test_core_sync_regions.py
+    .opencode/skills/core-sync/scripts/core_sync_pkg/domain/test_regions.py
 """
 
 from __future__ import annotations
@@ -114,6 +114,44 @@ class RenderInitFileTests:
         assert render_init_file("---\nname: x\n---", "CORE") == render_init_file(
             "---\nname: x\n---\n", "CORE"
         )
+
+    def test_created_file_without_source_frontmatter_starts_at_the_core_marker(
+        self,
+    ) -> None:
+        # A source document with no frontmatter is reachable (enrollment reads an
+        # empty frontmatter for one), so the created file begins at the core
+        # marker and keeps the blank line that separates the two regions.
+        assert render_init_file("", "CORE\n") == (
+            "<!-- core:begin -->\n"
+            "CORE\n"
+            "<!-- core:end -->\n"
+            "\n"
+            "<!-- project:begin -->\n"
+            "<!-- project:end -->\n"
+        )
+
+    def test_created_file_takes_the_source_frontmatter(self) -> None:
+        # A created region target has no destination text, so its frontmatter is
+        # the source document's and leads the core begin marker.
+        rendered = render_init_file(
+            "", "CORE\n", source_frontmatter="---\nname: source\n---\n"
+        )
+
+        assert rendered.startswith("---\nname: source\n---\n<!-- core:begin -->\n")
+        split = split_regions(rendered)
+        assert split is not None
+        assert split["region"] == "CORE\n"
+
+    def test_destination_frontmatter_wins_over_the_source_frontmatter(self) -> None:
+        # An existing markerless destination keeps its own frontmatter, so a
+        # supplied source frontmatter never replaces it.
+        rendered = render_init_file(
+            "---\nname: dest\n---\nBody\n",
+            "CORE\n",
+            source_frontmatter="---\nname: source\n---\n",
+        )
+
+        assert rendered == render_init_file("---\nname: dest\n---\nBody\n", "CORE\n")
 
 
 class RegionDecompositionTests:

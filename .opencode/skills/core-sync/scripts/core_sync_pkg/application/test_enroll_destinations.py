@@ -59,6 +59,10 @@ REFRESHED_DEST = (
     "---\nname: dest\n---\n"
     "<!-- core:begin -->\nCORE\n<!-- core:end -->\n\nProject\n"
 )
+SOURCE_FRONTMATTER = "---\nname: source\n---\n"
+SOURCE_DOCUMENT = SOURCE_FRONTMATTER + (
+    "<!-- core:begin -->\nCORE\n<!-- core:end -->\n"
+)
 
 
 class FakeBindingsStore:
@@ -327,6 +331,8 @@ class EnrollDestinationsTests:
         fixture = _enroll(
             _bindings(None, []),
             cores={SOURCE_DIR / "agent.md": "CORE\n"},
+            # The source carries frontmatter; an existing destination keeps its own.
+            texts={SOURCE_DIR / "agent.md": SOURCE_DOCUMENT},
             text={DEST_DIR / "agent.md": PLAIN_DEST},
             cleared={"agent.md"},
         )
@@ -554,6 +560,7 @@ class EnrollDestinationsTests:
         fixture = _enroll(
             None,
             cores={SOURCE_DIR / (ROOT + "SKILL.md"): "CORE\n"},
+            texts={SOURCE_DIR / (ROOT + "SKILL.md"): SOURCE_DOCUMENT},
             raws={
                 SOURCE_DIR / (ROOT + "README.md"): b"# Readme\n",
                 SOURCE_DIR / (ROOT + "data.json"): b"{}\n",
@@ -577,8 +584,18 @@ class EnrollDestinationsTests:
             (ROOT + "data.json", "raw"),
         ]
         assert fixture.writer.text_writes == [
-            (DEST_DIR / (ROOT + "SKILL.md"), render_init_file("", "CORE\n"))
+            (
+                DEST_DIR / (ROOT + "SKILL.md"),
+                render_init_file(
+                    "", "CORE\n", source_frontmatter=SOURCE_FRONTMATTER
+                ),
+            )
         ]
+        # A created region target leads with the source frontmatter; the previous
+        # assertion pinned the created file starting at the core marker.
+        assert fixture.writer.text_writes[0][1].startswith(
+            SOURCE_FRONTMATTER + "<!-- core:begin -->\n"
+        )
         assert fixture.writer.byte_writes == [
             (DEST_DIR / (ROOT + "README.md"), b"# Readme\n"),
             (DEST_DIR / (ROOT + "data.json"), b"{}\n"),
