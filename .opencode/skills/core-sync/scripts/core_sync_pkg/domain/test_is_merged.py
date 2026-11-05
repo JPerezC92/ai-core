@@ -13,8 +13,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import pytest  # noqa: E402
 
+from _core_sync_testkit import (  # noqa: E402
+    QMD_DESTINATION,
+    QMD_DESTINATION_FOLDER,
+    QMD_SOURCE,
+)
 from core_sync_pkg.domain.errors import MalformedJsonc  # noqa: E402
-from core_sync_pkg.domain.merge import is_merged  # noqa: E402
+from core_sync_pkg.domain.merge import is_merged, merge_top_level  # noqa: E402
 
 
 class IsMergedTests:
@@ -84,3 +89,36 @@ class IsMergedTests:
     def test_malformed_destination_rejected(self) -> None:
         with pytest.raises(MalformedJsonc):
             is_merged('{"a": 1}', "{")
+
+
+class IsMergedQmdIndexTests:
+    """Compare the qmd index the way `merge_top_level` writes it."""
+
+    def test_true_after_the_server_path_merge_retargeted_the_index(self) -> None:
+        merged = merge_top_level(
+            QMD_SOURCE, QMD_DESTINATION, project_name=QMD_DESTINATION_FOLDER
+        )
+        assert (
+            is_merged(QMD_SOURCE, merged, project_name=QMD_DESTINATION_FOLDER)
+            is True
+        )
+
+    def test_true_after_the_wholesale_write_path_retargeted_the_index(self) -> None:
+        merged = merge_top_level(
+            QMD_SOURCE,
+            '{\n  "mcp": {\n    "servers": []\n  }\n}\n',
+            project_name=QMD_DESTINATION_FOLDER,
+        )
+        assert (
+            is_merged(QMD_SOURCE, merged, project_name=QMD_DESTINATION_FOLDER)
+            is True
+        )
+
+    def test_false_when_the_destination_still_carries_the_core_index(self) -> None:
+        assert (
+            is_merged(QMD_SOURCE, QMD_SOURCE, project_name=QMD_DESTINATION_FOLDER)
+            is False
+        )
+
+    def test_true_without_a_project_name_when_the_index_is_unchanged(self) -> None:
+        assert is_merged(QMD_SOURCE, QMD_SOURCE) is True

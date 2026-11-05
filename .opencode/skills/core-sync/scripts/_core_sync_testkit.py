@@ -24,6 +24,7 @@ from core_sync_pkg.domain.constants import (  # noqa: E402
     SCHEMA_VERSION,
     BindingMode,
 )
+from core_sync_pkg.domain.jsonc import parse_object  # noqa: E402
 from core_sync_pkg.domain.reconciliation import (  # noqa: E402
     sync_reconciliation_blocker,
 )
@@ -238,6 +239,60 @@ MERGE_MCP_DESTINATION_STALE_SHARED = (
     "}\n"
 )
 
+# The QMD fixtures are built by `_qmd_document` before the constants that use
+# it, so the source and any retargeted destination differ only in the index.
+QMD_CORE_INDEX = "ai-core"
+QMD_DESTINATION_FOLDER = "tismart-support"
+
+
+def _qmd_document(index_name: str) -> str:
+    """Build a one-server JSONC document whose qmd command carries `index_name`."""
+    return (
+        "{\n"
+        '  "mcp": {\n'
+        '    "servers": {\n'
+        '      "qmd": {\n'
+        '        "type": "local",\n'
+        '        "command": [\n'
+        '          "npx", "-y", "@tobilu/qmd@2.8.3",\n'
+        f'          "--index", "{index_name}", "mcp"\n'
+        "        ],\n"
+        '        "codemode": false\n'
+        "      }\n"
+        "    }\n"
+        "  }\n"
+        "}\n"
+    )
+
+
+QMD_SOURCE = _qmd_document(QMD_CORE_INDEX)
+
+QMD_DESTINATION = (
+    "{\n"
+    '  "mcp": {\n'
+    '    "servers": {\n'
+    '      "memories": {\n'
+    '        "command": ["npx", "-y", "@memories.sh/cli@0.7.9", "serve"]\n'
+    "      }\n"
+    "    }\n"
+    "  }\n"
+    "}\n"
+)
+
+
+def _qmd_index(document_text: str) -> object:
+    """Return the argument following `--index` in a document's qmd command."""
+    mcp = parse_object(document_text)["mcp"]
+    assert isinstance(mcp, dict), "document has no mcp object"
+    servers = mcp["servers"]
+    assert isinstance(servers, dict), "document has no mcp.servers object"
+    qmd = servers["qmd"]
+    assert isinstance(qmd, dict), "document has no mcp.servers.qmd object"
+    command = qmd["command"]
+    assert isinstance(command, list), "qmd server has no command array"
+    return command[command.index("--index") + 1]
+
+
 ROOT_TEXT = "# Root runtime\n\nIntro paragraph.\n\nLast line.\n"
 
 AGENT_SOURCE = ".opencode/agents/atrium.md"
@@ -314,13 +369,13 @@ EXPECTED_RECONCILE_BODY = (
     "MCP servers alongside the core-registered ones, with a same-named MCP "
     "server entry core-wins; every other key is still replaced wholesale.\n"
     ">\n"
-    "> **QMD index (`mcp.servers.qmd`).** The merged configuration launches QMD "
-    "with an index name that may belong to the upstream core project. Replace "
-    "it in THIS project's own `.opencode/opencode.jsonc`, which overrides the "
-    "shipped server entry; the shipped `opencode.jsonc` is merged core and a "
+    "> **QMD index (`mcp.servers.qmd`).** The merge registers THIS project's "
+    "own folder name as the QMD index, so no manual edit is needed after a "
+    "synchronization. To use a different index name, declare that QMD server "
+    "in this project's own `.opencode/opencode.jsonc`, which overrides the "
+    "shipped entry; the shipped `opencode.jsonc` is merged core, so a "
     "same-named edit there is restored on the next synchronization. Then "
-    "verify retrieval works. Never keep another project's index name, never "
-    "guess one, and never edit the core region to change it.\n"
+    "verify retrieval works. Never edit the core region to change the index.\n"
     ">\n"
     "> **To finish.** When `pending:` is empty, **delete this entire blocker "
     "block** (from `<!-- core:reconcile:begin -->` to "
@@ -575,6 +630,7 @@ def _merge_setup(
     *,
     source_content: str = MERGE_SOURCE,
     destination_content: str | None = MERGE_DESTINATION,
+    destination_name: str = "destination",
     pinned: str = REV_A,
     pending: list[str] | None = None,
 ) -> tuple[Path, Path, Path]:
@@ -582,9 +638,11 @@ def _merge_setup(
 
     The source is cleared with mode `merge`; both documents are written verbatim
     so merge behavior is exercised without production parsing in the fixture.
+    `destination_name` sets the destination directory's folder name, which merge
+    mode reads as the destination project name.
     """
     source = tmp_path / "source"
-    destination = tmp_path / "destination"
+    destination = tmp_path / destination_name
     _write_bytes_file(
         source, "opencode.jsonc", source_content.encode("utf-8"), mode=MODE_MERGE
     )

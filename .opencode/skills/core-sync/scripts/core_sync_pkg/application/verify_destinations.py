@@ -198,7 +198,11 @@ class VerifyDestinations:
                             f"missing destination: {destination_path}",
                         )
                     try:
-                        merged = is_merged(source_text, destination_text)
+                        merged = is_merged(
+                            source_text,
+                            destination_text,
+                            project_name=destination_dir.resolve().name,
+                        )
                     except MalformedJsonc:
                         return DomainError(
                             CODE_INVALID, f"invalid JSONC: {destination_path}"

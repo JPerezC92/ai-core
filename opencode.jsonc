@@ -314,10 +314,13 @@
             },
             "qmd": {
                 "type": "local",
-                // Destination projects: declare your own QMD server in
-                // .opencode/opencode.jsonc, which overrides this entry, then verify
-                // retrieval. This file is merged core, so a same-named edit here is
-                // restored on the next synchronization.
+                // `--index ai-core` is this repository's own index: merge mode
+                // retargets it to each destination's folder name, so a destination
+                // needs no QMD declaration of its own. To use a different index,
+                // declare that server in the project's own .opencode/opencode.jsonc,
+                // which overrides this entry, then verify retrieval. This file is
+                // merged core, so a same-named edit here is restored on the next
+                // synchronization.
                 "command": ["npx", "-y", "@tobilu/qmd@2.8.3", "--index", "ai-core", "mcp"],
                 "codemode": false,
                 "environment": {

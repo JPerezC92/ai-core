@@ -157,7 +157,11 @@ class ApplyCoreRevision:
                             f"missing destination: {destination_path}",
                         )
                     try:
-                        merged_text = merge_top_level(source_text, destination_text)
+                        merged_text = merge_top_level(
+                            source_text,
+                            destination_text,
+                            project_name=destination_dir.resolve().name,
+                        )
                     except MalformedJsonc:
                         return DomainError(
                             CODE_INVALID, f"invalid JSONC: {destination_path}"

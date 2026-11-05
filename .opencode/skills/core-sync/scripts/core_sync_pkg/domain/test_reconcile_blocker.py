@@ -57,9 +57,7 @@ class ReconcileBlockerContentTests:
         assert "restore any MCP server" not in body
         assert "replaces the source-owned `mcp` key wholesale" not in body
 
-    def test_block_body_requires_replacing_the_inherited_qmd_index_name(
-        self,
-    ) -> None:
+    def test_block_body_documents_the_registered_qmd_index(self) -> None:
         body = RECONCILE_BODY
 
         # Keep the RAW paragraph: the placeholder token checked below ends in
@@ -85,10 +83,16 @@ class ReconcileBlockerContentTests:
         ]
         guidance = paragraphs[0]
 
-        assert "replace" in guidance
-        assert "own" in guidance or "your" in guidance or "this project" in guidance
-        assert "index" in guidance
-        assert "config" in guidance or "opencode.jsonc" in guidance
+        # The merge writes the destination's own folder name, so the retired
+        # hand-override instruction and its stale premise must both be gone.
+        assert "merge" in guidance
+        assert "this project's own folder name" in guidance
+        assert "no manual edit is needed" in guidance
+        assert "may belong to the upstream core project" not in body.lower()
+
+        # A project that wants a different index sets it in its own config.
+        assert "different index name" in guidance
+        assert "`.opencode/opencode.jsonc`" in guidance
         assert "verify" in guidance
         assert "retrieval" in guidance
 
