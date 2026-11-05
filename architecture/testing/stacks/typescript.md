@@ -2,7 +2,7 @@
 
 > **Status:** reference
 > **Stack:** TypeScript/TSX; NestJS-style backend and React frontend reference architecture
-> **Reviewed:** 2026-10-25 — `testing-architecture-layering`; entity-construction clause 2026-10-30
+> **Reviewed:** 2026-10-25 — `testing-architecture-layering`; entity-construction clause 2026-10-30; stale `domain/entities/` factory-import spelling retired in favour of the concept's own domain module (`<concept>.entity.ts`), no `T` ID added, removed or moved 2026-11-05
 > **Contract:** `architecture/testing/architecture.md`
 
 ## Applicability and ownership
@@ -161,7 +161,7 @@ test.afterEach(async () => {
 
 - Each module has `__tests__/helpers/{feature}.factory.ts` (`T15`).
 - The factory uses `faker` for data generation; no hardcoded values.
-- The factory imports entity types from the shared package when one exists, otherwise from `domain/entities/`.
+- The factory imports entity types from the shared package when one exists, otherwise from the concept's own domain module (`<concept>.entity.ts`).
 - The factory provides at least `create(overrides?)` and `createMany(count, overrides?)`.
 - When the test needs an entity rather than a data-only record, the factory builds it through the entity factory/`create()`; never assign entity fields directly to construct test data.
 - Use the same mocking library across backend and frontend: `vitest-mock-extended` (`T16`).

@@ -58,7 +58,7 @@ ai-core/
 │   ├── tooling.md
 │   ├── architecture/
 │   │   ├── README.md              Selections, ADR index, history routes
-│   │   ├── decisions/            ADR 0001–0005, Proposed 0007 + _template
+│   │   ├── decisions/            ADR 0001–0005, Accepted 0007 + _template
 │   │   ├── history/               Extraction accounting
 │   │   └── odd-adoption-status.md
 │   └── research/
