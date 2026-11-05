@@ -1,6 +1,6 @@
 # Project structure
 
-Explanatory map of this repository's tracked layout. Generated from `git ls-files` at merged head `e70b3870796bfde92e2e1b31864e88e339585b7a`.
+Explanatory map of this repository's tracked layout. Tree baseline generated from `git ls-files` at merged head `e70b3870796bfde92e2e1b31864e88e339585b7a`; the documentation entries noted below were manually updated on 2026-11-05, not regenerated from Git.
 
 This file is navigation only. It is source-local, it ships to no destination, and it never overrides `AGENTS.md`, `knowledge/agent-workflow.md`, `architecture/`, or any runtime spec. When the tree changes, this map is stale until regenerated — treat the files themselves as truth.
 
@@ -46,7 +46,7 @@ ai-core/
 ├── architecture/                  Shared current rules (ships byte-identical)
 │   ├── README.md                  Selection + content model
 │   ├── implementation/
-│   │   ├── architecture.md        Common contract C1–C7
+│   │   ├── architecture.md        Common contract C1–C10 (documentation candidate)
 │   │   ├── shapes/                frontend.md · backend.md · scripts.md
 │   │   └── stacks/                _template · python · typescript/{react,nestjs}
 │   └── testing/
@@ -58,7 +58,7 @@ ai-core/
 │   ├── tooling.md
 │   ├── architecture/
 │   │   ├── README.md              Selections, ADR index, history routes
-│   │   ├── decisions/            ADR 0001–0005 + _template
+│   │   ├── decisions/            ADR 0001–0005, Proposed 0007 + _template
 │   │   ├── history/               Extraction accounting
 │   │   └── odd-adoption-status.md
 │   └── research/
@@ -66,7 +66,8 @@ ai-core/
 │       ├── agent-workflows/       ai-repository-navigation,
 │       │                          odd-foundation-plan-fit,
 │       │                          odd-gentleman-programming
-│       └── architecture/          anemic-domain-model-and-use-case-naming
+│       └── architecture/          anemic-domain-model-and-use-case-naming,
+│                                  domain-model-repositories-and-naming
 │
 ├── odd/tasks/                     _template.md + 58 feature records
 └── tests/test_pytest_temp_root.py

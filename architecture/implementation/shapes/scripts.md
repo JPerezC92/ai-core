@@ -16,6 +16,12 @@ Infrastructure loaders/builders/clients implement ports, perform IO, and map ext
 
 Independent backend tooling packages, standalone ticket scripts, and feature-scoped skill scripts remain separate implementation zones. Their concrete package/import/startup conventions belong in the stack guide; runtime authorization for exact scripts and after-edit gates remains in agent specs.
 
+## P4 — Business-owned domain organization
+
+Within each deployment zone, group domain modules by business concept. Keep an aggregate's root, children, owned values, events and repository port together when that model is used (C8, C9); a root-only model needs no child scaffolding. One entity per file including children, and one rule-bearing type per module; no generic multi-concept entity/model/value-object buckets.
+
+At the second same-role module within an ownership level, introduce the role folder there, retaining aggregate-owned parts inside their aggregate folder. Pure transformation modules and intentional records keep their own C8/C10 roles, not artificial classes. Constants remain data-only under P1. Infrastructure owns rows/models, delivery owns request/response records; domain read projections remain framework-free. The language guide spells this layout without crossing P3 deployment boundaries.
+
 ## Testing selection
 
 Use the current `architecture/testing/architecture.md` and applicable stack guide. Importable CLI code is not automatically a unit boundary; test-design authority stays there.

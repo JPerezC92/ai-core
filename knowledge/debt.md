@@ -26,7 +26,13 @@ Each entry MUST include:
 <!-- core:end -->
 
 <!-- project:begin -->
-**Open debts: 0.**
+## DEBT-037 — Incident-workflow domain record naming
 
-**ID to use for the next new debt:** `DEBT-037`. This is an allocation counter, not an open debt.
+- **Date:** 2026-11-05
+- **Description:** Deferred naming/layout migration of `.opencode/skills/incident-workflow/scripts/incident_workflow_pkg/domain/value_objects.py`. Its intentional data records occupy a generic value-object bucket rather than concept-specific record modules under the authored C8/C10/P4 definitions. This is naming/classification drift, not evidence of an anemic entity or broken invariant enforcement.
+- **Direct evidence:** Current source read on 2026-11-05: line 1 calls these value-object domain records; line 5 imports `TypedDict`; `AnalysisHeader` (lines 8–17) carries frontmatter fields, `TicketIdentification` (20–25) parsed identification fields, `CloseOutSnapshot` (28–41) filesystem snapshot fields including mutable lists/dictionaries, and `ModeFindings` (44–48) violation/warning lists. These are TypedDict records, not value-equality immutable value objects. Compare `architecture/implementation/architecture.md` C8's Value object/Data-only record rows and C10's record role, `architecture/implementation/shapes/scripts.md` P4's prohibition on generic multi-concept value-object buckets, and `architecture/implementation/stacks/python.md` Concept-role filenames (`<concept>_record.py`). Coverage is this source file only; no repository-wide inventory or runtime defect is asserted.
+- **Resolution criteria:** In separately authorized implementation work, classify these record roles, replace the generic bucket with concept-specific modules using the applicable final guide, update all affected consumers, and obtain the applicable architecture and test verification. Retire this entry in that clearing PR with direct resolution evidence; no implementation is changed by the documentation feature.
+- **Explicit deferral decision:** User selection recorded in `odd/tasks/2026-11-05-domain-architecture-definitions.md` L5: `Docs only, naming drift recorded as debt (Recommended)`; L10/L11 restrict work to architecture definitions and related documentation. This accepts the verified naming drift for this docs-only delivery, not a permanent waiver, global debt admission, or future on-touch exemption.
+
+**ID to use for the next new debt:** `DEBT-038`. This is an allocation counter, not an open debt.
 <!-- project:end -->
