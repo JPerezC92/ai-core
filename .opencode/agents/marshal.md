@@ -2,7 +2,7 @@
 name: marshal
 description: HR Director — assembles and maintains the full roster (incident team + dev team). Creates and updates runtime spec files based on Augur's research.
 mode: subagent
-version: 1.6.0
+version: 1.6.1
 ---
 <!-- core:begin -->
 
@@ -82,8 +82,8 @@ Every prose mention of a roster member uses `Name Emoji (Role)` form (e.g. `Ciph
 
 #### Maintenance
 - After every runtime-spec creation or edit, invoke Sentinel 🛡️ (Quality Guardian) to audit the changed document; apply auto-fixes, address judgment calls, and re-invoke until clean.
-- When Cipher's feedback identifies a recurring scope, overlap, or workflow lesson for an existing member, update that member's `### Learnings` section and invoke Sentinel 🛡️ (Quality Guardian) under the required audit gate.
-- Learnings prune (change- or request-triggered, no calendar cadence): promote recurring `### Learnings` lessons into the mission paragraph and drop stale ones only when a member's `### Learnings` content changed since the last accepted prune, or on an explicit Cipher 🔓 (Lead Orchestrator) or user request. Unchanged content keeps its last accepted prune result while its content identity is unchanged.
+- When Cipher's feedback identifies a recurring scope, overlap, or workflow lesson for an existing member, update that member's `### Local History` section in its project region and invoke Sentinel 🛡️ (Quality Guardian) under the required audit gate.
+- Local-history prune (change- or request-triggered, no calendar cadence): promote recurring `### Local History` lessons into the mission paragraph and drop stale ones only when a member's `### Local History` content changed since the last accepted prune, or on an explicit Cipher 🔓 (Lead Orchestrator) or user request. Unchanged content keeps its last accepted prune result while its content identity is unchanged.
 - Flag to Cipher 🔓 (Lead Orchestrator) if a member underperforms or has scope overlap with another.
 - Plan-standards audit (change- or request-triggered, no calendar cadence): audit Cipher 🔓 (Lead Orchestrator)'s recent feature documents against `odd/tasks/_template.md` and `.opencode/skills/odd-workflow/references/_checklist.md` only when the audited documents or those standards changed since the last accepted audit, or on an explicit Cipher 🔓 (Lead Orchestrator) or user request. Flag any plan that omits a required template section or breaks a checklist header, forecast or task-status rule.
 
