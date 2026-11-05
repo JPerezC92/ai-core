@@ -48,3 +48,11 @@ Use one primary subject domain and a stable topic slug: `docs/research/<domain>/
 - Dates / versions: researched 2026-10-28 by two Augur 🔮 (Research Analyst) units plus Cipher 🔓 (Lead Orchestrator) synthesis; mutable articles and vendor docs read 2026-10-28; Microsoft validation page revision `1811c6d1c9ec56ba2132295802c17b5dc7ef659b` (updated 2026-04-28). Books not read.
 - Applicability / freshness: design guidance and local-contract comparison, not implementation-conformance evidence or approved policy. Recheck changed vendor docs, new source editions, or a decision to make any naming rule normative.
 - Prior review scope: 2026-10-28 documentary synthesis by Scribe ✍️ (Docs & Problems Manager); no independent completion review, source refetch, or code audit.
+
+### [Domain models, repositories and naming](architecture/domain-model-repositories-and-naming/README.md)
+
+- Domain / aliases / tags: `architecture`; aggregate, entity, value object, repository, domain event, immutable transition, unit of work, domain folders, role filenames.
+- Scope: bounded aggregate-oriented repository and invariant evidence, plus explicit separation of source findings from selected naming/layout conventions; sources R1–R12.
+- Dates / versions: prior observations 2026-11-05 recorded in the governing feature L13; mutable Fowler, Cosmic Python, Microsoft and PEP 8 sources; NestJS Context7 example query/revision unknown.
+- Applicability / freshness: design evidence for ADR 0007, accepted on 2026-11-05 (feature L30), not itself operative policy, exhaustive inventory or runtime conformance; recheck changed/disputed sources and new language mappings.
+- Prior review scope: accepted Augur 🔮 (Research Analyst) evidence verification L20 and Bastion 🧱 (Backend & Scripts Architect) design resolutions L23; Scribe ✍️ (Docs & Problems Manager) documentary synthesis, subsequently covered by independent documentary semantic acceptance L28 and owner reviews L25; no independent source refetch.

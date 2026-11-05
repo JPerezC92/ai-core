@@ -23,7 +23,7 @@ Concrete libraries and aliases preserve reference-architecture choices, not dest
 
 Layer duties are defined under `## Content model` in this file. Runtime specs retain authority, scope, warmup/execution procedures, edit checkpoints, review gates, dependency ownership, reporting, and uncertainty handling. A document pointer does not grant execution permission.
 
-Copy `architecture/implementation/stacks/_template.md` before writing another implementation guide. Keep its heading order and map every C1–C7 obligation and selected shape obligation; explain applicability and language/runtime differences. Unsupported choices remain explicit open decisions, not invented equivalents or unexplained N/A. Proposed guides are not claims of reviewed documentation or implementation conformance.
+Copy `architecture/implementation/stacks/_template.md` before writing another implementation guide. Keep its heading order and map every C1–C10 obligation and selected shape obligation; explain applicability and language/runtime differences. Unsupported choices remain explicit open decisions, not invented equivalents or unexplained N/A. Proposed guides are not claims of reviewed documentation or implementation conformance.
 
 Never edit a distributed architecture file. A destination that needs a different stack adds its own guide, copied from `architecture/implementation/stacks/_template.md` or `architecture/testing/stacks/_template.md`; an unbound path survives every sync.
 
@@ -31,7 +31,7 @@ Never edit a distributed architecture file. A destination that needs a different
 
 Every architecture rule and obligation lives in exactly one of those three layers; `## Contract boundaries` states constraints on the documents themselves and the templates state authoring duties, so both are cited by section rather than by rule identifier.
 
-1. **Agnostic contract** — `architecture/implementation/architecture.md` (`C1`–`C7`) and `architecture/testing/architecture.md` (`T` rules). Each normative rule in a `C`, `B`, `F`, `P`, or `T` owner carries a stable identifier. A rule is stated here once, completely, and is never restated below.
+1. **Agnostic contract** — `architecture/implementation/architecture.md` (`C1`–`C10`) and `architecture/testing/architecture.md` (`T` rules). Each normative rule in a `C`, `B`, `F`, `P`, or `T` owner carries a stable identifier. A rule is stated here once, completely, and is never restated below.
 2. **Shape** — `architecture/implementation/shapes/frontend.md`, `backend.md`, and `scripts.md` (`F`, `B`, and `P` obligations). A shape obligation carries an identifier and specializes the common contract for one application shape. A shape may add responsibility, layout, and boundary detail; it does not restate a `C` rule.
 3. **Language guide** — `architecture/implementation/stacks/` and `architecture/testing/stacks/`. A guide states only how its language achieves a cited obligation, and cites that identifier in the body and in its mapping or parity table. A guide never restates a contract requirement as prose.
 
@@ -40,7 +40,7 @@ Two contract families are peers, each with its own contract, optional shapes, an
     architecture/
       README.md                 navigation and this model
       implementation/           implementation family
-        architecture.md         common contract (C1-C7)
+        architecture.md         common contract (C1-C10)
         shapes/                 application-shape obligations (F, B, P)
         stacks/                 implementation guides
       testing/                  testing family
