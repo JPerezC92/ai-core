@@ -47,7 +47,7 @@ MERGE_DEST_TEXT = (
 )
 PLAIN_DEST = "---\nname: dest\n---\n\nOld body\n"
 INIT_DEST = (
-    "---\nname: dest\n---\n"
+    "---\nname: source\n---\n"
     "<!-- core:begin -->\nCORE\n<!-- core:end -->\n\n"
     "<!-- project:begin -->\n\nOld body\n<!-- project:end -->\n"
 )
@@ -62,6 +62,36 @@ REFRESHED_DEST = (
 SOURCE_FRONTMATTER = "---\nname: source\n---\n"
 SOURCE_DOCUMENT = SOURCE_FRONTMATTER + (
     "<!-- core:begin -->\nCORE\n<!-- core:end -->\n"
+)
+
+# A source document carrying both identity keys, so a refresh is observable on
+# `name` and `description` rather than on `name` alone.
+SOURCE_IDENTITY = (
+    "---\n"
+    "name: source\n"
+    "description: Current description.\n"
+    "---\n"
+    "<!-- core:begin -->\nCORE\n<!-- core:end -->\n"
+)
+
+LOCAL_VERSION_LINE = "local-version: 1.0.1\n"
+
+STALE_MARKED_DEST = (
+    "---\n"
+    "name: stale-name\n"
+    "description: Stale description.\n"
+    + LOCAL_VERSION_LINE
+    + "---\n"
+    "<!-- core:begin -->\nOLD\n<!-- core:end -->\n\nProject\n"
+)
+
+REFRESHED_IDENTITY_DEST = (
+    "---\n"
+    "name: source\n"
+    "description: Current description.\n"
+    + LOCAL_VERSION_LINE
+    + "---\n"
+    "<!-- core:begin -->\nCORE\n<!-- core:end -->\n\nProject\n"
 )
 
 
@@ -331,7 +361,8 @@ class EnrollDestinationsTests:
         fixture = _enroll(
             _bindings(None, []),
             cores={SOURCE_DIR / "agent.md": "CORE\n"},
-            # The source carries frontmatter; an existing destination keeps its own.
+            # The source carries frontmatter; an existing destination merges it
+            # into its own rather than keeping a stale identity key.
             texts={SOURCE_DIR / "agent.md": SOURCE_DOCUMENT},
             text={DEST_DIR / "agent.md": PLAIN_DEST},
             cleared={"agent.md"},
@@ -368,6 +399,61 @@ class EnrollDestinationsTests:
         ]
         assert fixture.store.saves[-1][1]["pending"] == ["agent.md"]
         assert fixture.store.saves[-1][1]["core_revision"] == REV_B
+
+    def test_refreshes_marked_destination_identity_keys_from_the_source(
+        self,
+    ) -> None:
+        # A marked destination carries two stale identity keys and a
+        # destination-only key. Dropping the source frontmatter at the refresh
+        # call site leaves `name: stale-name` in place, so the exact-content
+        # assertion below is what catches that regression.
+        fixture = _enroll(
+            _bindings(REV_A, [_entry("agent.md", ["agent.md"])]),
+            cores={SOURCE_DIR / "agent.md": "CORE\n"},
+            texts={SOURCE_DIR / "agent.md": SOURCE_IDENTITY},
+            text={DEST_DIR / "agent.md": STALE_MARKED_DEST},
+            cleared={"agent.md"},
+        )
+        result = fixture.use_case.execute(
+            SOURCE_DIR, DEST_DIR, BINDINGS_PATH, REV_B, [], []
+        )
+        assert isinstance(result, UseCaseResult)
+        assert result.message == "initialized"
+        assert fixture.writer.text_writes == [
+            (DEST_DIR / "agent.md", REFRESHED_IDENTITY_DEST)
+        ]
+        written = fixture.writer.text_writes[0][1]
+        assert LOCAL_VERSION_LINE in written.splitlines(keepends=True)
+
+    def test_reports_a_frontmatter_it_could_not_refresh(self) -> None:
+        # Duplicate top-level keys cannot be mapped to their lines, so the file
+        # keeps its bytes and the success message names the skipped refresh.
+        stale = (
+            "---\n"
+            "name: dest\n"
+            "name: dest-again\n"
+            "---\n"
+            "<!-- core:begin -->\nOLD\n<!-- core:end -->\n\nProject\n"
+        )
+        fixture = _enroll(
+            _bindings(REV_A, [_entry("agent.md", ["agent.md"])]),
+            cores={SOURCE_DIR / "agent.md": "CORE\n"},
+            texts={SOURCE_DIR / "agent.md": SOURCE_IDENTITY},
+            text={DEST_DIR / "agent.md": stale},
+            cleared={"agent.md"},
+        )
+        result = fixture.use_case.execute(
+            SOURCE_DIR, DEST_DIR, BINDINGS_PATH, REV_B, [], []
+        )
+        assert isinstance(result, UseCaseResult)
+        destination_path = DEST_DIR / "agent.md"
+        assert result.message == (
+            f"initialized; frontmatter not refreshed: {destination_path} "
+            "(frontmatter keys cannot be mapped to their lines)"
+        )
+        written_path, written = fixture.writer.text_writes[0]
+        assert written_path == destination_path
+        assert written.startswith("---\nname: dest\nname: dest-again\n---\n")
 
     def test_reports_conflict_when_destination_bound_to_other_source(self) -> None:
         fixture = _enroll(
@@ -588,7 +674,7 @@ class EnrollDestinationsTests:
                 DEST_DIR / (ROOT + "SKILL.md"),
                 render_init_file(
                     "", "CORE\n", source_frontmatter=SOURCE_FRONTMATTER
-                ),
+                )["text"],
             )
         ]
         # A created region target leads with the source frontmatter; the previous

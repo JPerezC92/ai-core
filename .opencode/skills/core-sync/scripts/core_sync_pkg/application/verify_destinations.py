@@ -1,4 +1,9 @@
-"""Use case: verify every destination core region against the pinned source core."""
+"""Use case: verify every destination against the pinned source.
+
+A region destination is current when its core region byte-matches the source
+core and its frontmatter is what a refresh would write, so `check` never reports
+`current` on a file the next `apply` is about to change.
+"""
 
 from __future__ import annotations
 
@@ -30,7 +35,8 @@ from core_sync_pkg.domain.errors import (
 )
 from core_sync_pkg.domain.jsonc import parse_object
 from core_sync_pkg.domain.merge import is_merged
-from core_sync_pkg.domain.regions import split_regions
+from core_sync_pkg.domain.refresh_frontmatter import refresh_frontmatter
+from core_sync_pkg.domain.regions import split_frontmatter, split_regions
 
 
 class VerifyDestinations:
@@ -107,6 +113,7 @@ class VerifyDestinations:
             )
 
         source_cores: dict[str, str] = {}
+        source_frontmatters: dict[str, str] = {}
         for entry in bindings["bindings"]:
             if mode_of.get(entry["source"]) in (MODE_RAW, MODE_MERGE):
                 continue
@@ -120,6 +127,10 @@ class VerifyDestinations:
             if source_core is None:
                 return DomainError(CODE_DRIFT, f"missing source: {source_path}")
             source_cores[entry["source"]] = source_core
+            source_text = self._source_reader.read_text(source_path)
+            source_frontmatters[entry["source"]] = (
+                split_frontmatter(source_text)[0] if source_text else ""
+            )
 
         non_region_destinations = non_region_destination_paths(bindings, mode_of)
         stale_non_region_pending = [
@@ -213,6 +224,7 @@ class VerifyDestinations:
                         )
                 continue
             source_core = source_cores[entry["source"]]
+            source_frontmatter = source_frontmatters[entry["source"]]
             for destination in entry["destinations"]:
                 destination_path = destination_dir / destination
                 if not self._paths.is_file(destination_path):
@@ -235,6 +247,18 @@ class VerifyDestinations:
                 if destination_split["region"] != source_core:
                     return DomainError(
                         CODE_DRIFT, f"region drift: {destination_path}"
+                    )
+                destination_frontmatter, _ = split_frontmatter(
+                    destination_split["before"]
+                )
+                if (
+                    refresh_frontmatter(
+                        destination_frontmatter, source_frontmatter
+                    )["text"]
+                    != destination_frontmatter
+                ):
+                    return DomainError(
+                        CODE_DRIFT, f"frontmatter drift: {destination_path}"
                     )
 
         if bindings["pending"]:

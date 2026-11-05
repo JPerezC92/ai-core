@@ -3,19 +3,21 @@
 In `region` mode (the default), `check` verifies that each destination file's
 `core` region byte-matches the pinned source core; `apply` splices the source
 core into each destination between its markers; `init` enrolls markerless
-destinations (frontmatter kept verbatim, source core pasted between the core
-markers, the previous body moved into a new project region) and refreshes
-already-marked destinations. In `raw` mode, the binding has no markers: `init`
-and `apply` write the source file to the destination byte-for-byte, and `check`
-verifies byte-equality. In `merge` mode, the binding has no markers either:
-`init` and `apply` merge the top-level keys of a JSON/JSONC object source into
-the destination (source keys win; destination-only keys, comments, and
-formatting outside replaced or inserted keys are preserved), and `check`
-verifies that every source top-level key is present in the destination with the
-source value. Raw and merge destinations carry no project region, no `pending`
-entry, and no reconciliation report; a raw target is created only for a newly
-registered mapping (via `--bind-raw` or `--bind-cleared`) when its parent
-directory exists; a merge target is never created.
+destinations (source frontmatter merged into the destination's, source keys
+winning while a destination-only key keeps its bytes, and the source core
+pasted between the core markers, the previous body moved into a new project
+region) and refreshes already-marked destinations. In `raw` mode, the binding
+has no markers: `init` and `apply` write the source file to the destination
+byte-for-byte, and `check` verifies byte-equality. In `merge` mode, the binding
+has no markers either: `init` and `apply` merge the top-level keys of a
+JSON/JSONC object source into the destination (source keys win; destination-only
+keys, comments, and formatting outside replaced or inserted keys are preserved),
+and `check` verifies that every source top-level key is present in the
+destination with the source value. Raw and merge destinations carry no project
+region, no `pending` entry, and no reconciliation report; a raw target is
+created only for a newly registered mapping (via `--bind-raw` or
+`--bind-cleared`) when its parent directory exists; a merge target is never
+created.
 
 The source tree is read-only; the only writes are the destination files, a
 reconciliation report, the bindings file, and the destination root runtime

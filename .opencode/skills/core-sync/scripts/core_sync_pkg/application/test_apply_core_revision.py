@@ -321,6 +321,37 @@ class ApplyCoreRevisionTests:
         ]
         assert fixture.store.saves[-1][1]["core_revision"] == REV_B
 
+    def test_reports_a_frontmatter_it_could_not_refresh(self) -> None:
+        # Duplicate top-level keys cannot be mapped to their lines, so the file
+        # keeps its frontmatter bytes and the success message names the skip.
+        stale = (
+            "---\n"
+            "name: dest\n"
+            "name: dest-again\n"
+            "---\n"
+            "<!-- core:begin -->\nOLD\n<!-- core:end -->\nTAIL\n"
+        )
+        fixture = _apply(
+            _bindings(REV_A, [_entry("agent.md", ["agent.md"])]),
+            cores={SOURCE_DIR / "agent.md": "CORE\n"},
+            texts={SOURCE_DIR / "agent.md": "---\nname: source\n---\nCORE\n"},
+            text={DEST_DIR / "agent.md": stale},
+            cleared={"agent.md"},
+            files={DEST_DIR / "agent.md"},
+        )
+        result = fixture.use_case.execute(
+            SOURCE_DIR, DEST_DIR, BINDINGS_PATH, REV_B
+        )
+        assert isinstance(result, UseCaseResult)
+        destination_path = DEST_DIR / "agent.md"
+        assert result.message == (
+            f"applied; frontmatter not refreshed: {destination_path} "
+            "(frontmatter keys cannot be mapped to their lines)"
+        )
+        written_path, written = fixture.writer.text_writes[0]
+        assert written_path == destination_path
+        assert written.startswith("---\nname: dest\nname: dest-again\n---\n")
+
     def test_copies_raw_bytes_exact_and_pins_revision(self) -> None:
         fixture = _apply(
             _bindings(

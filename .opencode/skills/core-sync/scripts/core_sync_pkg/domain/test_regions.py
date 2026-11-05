@@ -11,6 +11,7 @@ from core_sync_pkg.domain.regions import (
     extract_source_core,
     outside_bytes,
     render_init_file,
+    render_with_region,
     split_frontmatter,
     split_regions,
 )
@@ -90,7 +91,7 @@ class FencedFrontmatterDelimiterTests:
 
 class RenderInitFileTests:
     def test_frontmatter_without_trailing_newline_stays_parseable(self) -> None:
-        rendered = render_init_file("---\nname: x\n---", "CORE")
+        rendered = render_init_file("---\nname: x\n---", "CORE")["text"]
 
         split = split_regions(rendered)
 
@@ -101,7 +102,7 @@ class RenderInitFileTests:
     def test_frontmatter_with_trailing_newline_is_unchanged(self) -> None:
         # S2 claim 2: the destination frontmatter is never concatenated directly
         # with the begin marker, and is otherwise byte-identical to before.
-        assert render_init_file("---\nname: x\n---\n", "CORE") == (
+        assert render_init_file("---\nname: x\n---\n", "CORE")["text"] == (
             "---\nname: x\n---\n"
             "<!-- core:begin -->\n"
             "CORE\n"
@@ -111,8 +112,8 @@ class RenderInitFileTests:
             "<!-- project:end -->\n"
         )
         # S2 claim 1: a destination without a trailing newline renders identically.
-        assert render_init_file("---\nname: x\n---", "CORE") == render_init_file(
-            "---\nname: x\n---\n", "CORE"
+        assert render_init_file("---\nname: x\n---", "CORE")["text"] == (
+            render_init_file("---\nname: x\n---\n", "CORE")["text"]
         )
 
     def test_created_file_without_source_frontmatter_starts_at_the_core_marker(
@@ -121,7 +122,7 @@ class RenderInitFileTests:
         # A source document with no frontmatter is reachable (enrollment reads an
         # empty frontmatter for one), so the created file begins at the core
         # marker and keeps the blank line that separates the two regions.
-        assert render_init_file("", "CORE\n") == (
+        assert render_init_file("", "CORE\n")["text"] == (
             "<!-- core:begin -->\n"
             "CORE\n"
             "<!-- core:end -->\n"
@@ -137,21 +138,66 @@ class RenderInitFileTests:
             "", "CORE\n", source_frontmatter="---\nname: source\n---\n"
         )
 
-        assert rendered.startswith("---\nname: source\n---\n<!-- core:begin -->\n")
-        split = split_regions(rendered)
+        assert rendered["text"].startswith(
+            "---\nname: source\n---\n<!-- core:begin -->\n"
+        )
+        split = split_regions(rendered["text"])
         assert split is not None
         assert split["region"] == "CORE\n"
 
-    def test_destination_frontmatter_wins_over_the_source_frontmatter(self) -> None:
-        # An existing markerless destination keeps its own frontmatter, so a
-        # supplied source frontmatter never replaces it.
+    def test_markerless_destination_merges_the_source_frontmatter(self) -> None:
+        # An existing markerless destination keeps a destination-only key and
+        # takes the source value for a key both files define.
         rendered = render_init_file(
-            "---\nname: dest\n---\nBody\n",
+            "---\nname: dest\nlocal-version: 1.0.0\n---\nBody\n",
             "CORE\n",
             source_frontmatter="---\nname: source\n---\n",
         )
 
-        assert rendered == render_init_file("---\nname: dest\n---\nBody\n", "CORE\n")
+        assert rendered["text"].startswith(
+            "---\nname: source\nlocal-version: 1.0.0\n---\n"
+        )
+        assert rendered["text"].endswith(
+            "<!-- project:begin -->\nBody\n<!-- project:end -->\n"
+        )
+        assert rendered["skipped"] == ""
+
+
+class RefreshedRegionRenderTests:
+    def test_frontmatter_refreshes_and_every_other_byte_is_preserved(
+        self,
+    ) -> None:
+        destination_split = split_regions(
+            "---\n"
+            "name: dest\n"
+            "kept: yes\n"
+            "---\n"
+            "Pre-marker paragraph.\n"
+            "\n"
+            "<!-- core:begin -->\n"
+            "OLD\n"
+            "<!-- core:end -->\n"
+            "TAIL\n"
+        )
+        assert destination_split is not None
+
+        rendered = render_with_region(
+            destination_split, "CORE\n", "---\nname: source\n---"
+        )
+
+        assert rendered["text"] == (
+            "---\n"
+            "name: source\n"
+            "kept: yes\n"
+            "---\n"
+            "Pre-marker paragraph.\n"
+            "\n"
+            "<!-- core:begin -->\n"
+            "CORE\n"
+            "<!-- core:end -->\n"
+            "TAIL\n"
+        )
+        assert rendered["skipped"] == ""
 
 
 class RegionDecompositionTests:

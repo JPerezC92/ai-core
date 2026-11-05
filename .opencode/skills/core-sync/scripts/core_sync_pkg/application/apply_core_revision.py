@@ -1,4 +1,8 @@
-"""Use case: splice each source core into its destinations, then pin the revision."""
+"""Use case: splice each source core and refreshed frontmatter into its destinations.
+
+Each region destination's core region is replaced and its frontmatter identity
+keys are refreshed from the source; the revision is pinned afterwards.
+"""
 
 from __future__ import annotations
 
@@ -31,8 +35,9 @@ from core_sync_pkg.domain.errors import (
 from core_sync_pkg.domain.jsonc import parse_object
 from core_sync_pkg.domain.merge import merge_top_level
 from core_sync_pkg.domain.regions import (
-    outside_bytes,
+    protected_bytes,
     render_with_region,
+    split_frontmatter,
     split_regions,
 )
 
@@ -112,6 +117,7 @@ class ApplyCoreRevision:
 
         writes: list[tuple[Path, str]] = []
         raw_writes: list[tuple[Path, bytes]] = []
+        notes: list[str] = []
         for entry in bindings["bindings"]:
             source_path = source_dir / entry["source"]
             if mode_of.get(entry["source"]) == MODE_RAW:
@@ -177,6 +183,10 @@ class ApplyCoreRevision:
                 )
             if source_core is None:
                 return DomainError(CODE_DRIFT, f"missing source: {source_path}")
+            source_text = self._source_reader.read_text(source_path)
+            source_frontmatter = (
+                split_frontmatter(source_text)[0] if source_text else ""
+            )
             for destination in entry["destinations"]:
                 destination_path = destination_dir / destination
                 if not self._paths.is_file(destination_path):
@@ -196,11 +206,19 @@ class ApplyCoreRevision:
                         CODE_INVALID,
                         f"invalid destination markers: {destination_path}",
                     )
-                new_content = render_with_region(destination_split, source_core)
+                rendered = render_with_region(
+                    destination_split, source_core, source_frontmatter
+                )
+                new_content = rendered["text"]
+                if rendered["skipped"]:
+                    notes.append(
+                        f"frontmatter not refreshed: {destination_path} "
+                        f"({rendered['skipped']})"
+                    )
                 new_split = split_regions(new_content)
-                if new_split is None or outside_bytes(new_split) != outside_bytes(
-                    destination_split
-                ):
+                if new_split is None or protected_bytes(
+                    new_split
+                ) != protected_bytes(destination_split):
                     return DomainError(
                         CODE_INVALID,
                         f"outside-marker mismatch: {destination_path}",
@@ -221,4 +239,4 @@ class ApplyCoreRevision:
             self._root_runtime.resolve(destination_dir, bindings),
             bindings["pending"],
         )
-        return UseCaseResult("applied")
+        return UseCaseResult("; ".join(["applied", *notes]))
