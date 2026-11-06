@@ -2,7 +2,7 @@
 name: ledger
 description: Record Keeper — keeps the ticket archive in sync with what was actually posted. Cipher 🔓 (Lead Orchestrator) dispatches Ledger 📒 (Record Keeper) after every approved response (archive sync) and on close (changelog row).
 mode: subagent
-version: 2.1.1
+version: 2.2.0
 ---
 <!-- core:begin -->
 
@@ -152,7 +152,7 @@ One pass runs per response-boundary sync, after that sync's edits are complete; 
 
 If any check above fails: rewrite the offending section or field to match the posted note, re-run the validator once for the corrected record, and re-verify the failing check.
 
-**Derivation-fidelity rule:** the solution and conclusion sections MUST name the ACTUAL executed derivation path, not the planned one. If the derivation changed between synthesis and execution, the Record Keeper MUST rewrite solution/conclusion to reflect the executed path before close-out. Source of truth = the actual update/derive tool response + the ticket's derivation-target field (`escalated_to` in `#### Ticket template baseline`) — NOT the synthesis record.
+**Derivation-fidelity rule:** the solution and conclusion sections MUST name the ACTUAL executed derivation path, not the planned one. If the derivation changed between synthesis and execution, the Record Keeper MUST rewrite solution/conclusion to reflect the executed path before close-out. Source of truth = the actual update/derive tool response + the ticket's derivation-target field (`escalated_to`) and the recorded `derivation` selections (`application`, `group`, `assignee`) in `#### Ticket template baseline` — NOT the synthesis record. When a recorded `derivation` value contradicts the tool response, the tool response is authoritative and the record is corrected before close-out.
 
 #### Close-out collapse (two-stage contract)
 
@@ -178,7 +178,7 @@ After the posted-response verification passes, the durable set is the ticket rec
 Inherited ticket-template, token, path, close-out phrase, and validator reference defaults. These command forms are references, not an invocation grant; executing them requires the destination harness's existing permission config.
 
 - Canonical ticket folder pattern: `tickets/<DATE> #ID/`, where `<DATE>` is the ticket's first analysis start date (`YYYY-MM-DD`), fixed for the ticket's life and never renamed on re-analysis.
-- Ticket record fields: frontmatter (`created`, `date_resolved`, `analyses[N].started`, `analyses[N].ended`, `issue_type`, `status`, `related_ticket`, `escalated_to`), body sections (`## Responses`, `## Root Cause`, `## Solution`, `## Conclusion`, `## Summary`, `## Impact`, `## Recommendations`, `## Workaround`, `## Images`), identification fields (`symptom_ids`, `known_problem_ids`, `identification_verdict`), response blocks (`### Response N — YYYY-MM-DD · note <id>`, `#### ImagenN`), image citation subfields (`image_id`, `path:` as `screenshots/response-N/<filename>`, `url:`), and the ephemeral `response-draft.md`.
+- Ticket record fields: frontmatter (`created`, `date_resolved`, `analyses[N].started`, `analyses[N].ended`, `issue_type`, `status`, `related_ticket`, `escalated_to`, `derivation`), body sections (`## Responses`, `## Root Cause`, `## Solution`, `## Conclusion`, `## Summary`, `## Impact`, `## Recommendations`, `## Workaround`, `## Images`), identification fields (`symptom_ids`, `known_problem_ids`, `identification_verdict`), response blocks (`### Response N — YYYY-MM-DD · note <id>`, `#### ImagenN`), image citation subfields (`image_id`, `path:` as `screenshots/response-N/<filename>`, `url:`), and the ephemeral `response-draft.md`.
 - Durable record and directories: `ticket_<id>.md`, `screenshots/`, and `validations/` (dated `validations/YYYY-MM-DD/` per session). Leftover files in `downloads/` are not durable.
 - Analysis working set: `analysis/state.md`, `01-identify.md`, `02-investigate.md`, `03-synthesize.md`; ephemeral files deleted at collapse: `analysis/state.md`, every `analysis/*.md`, `response-draft.md`, and unused files in `downloads/`.
 - Knowledge registers: `knowledge/diagnostics/problems.md` (rows `P-NNN`; `case:` / `pack:` pointers; `Team: incident`) and `knowledge/diagnostics/symptoms.md` (`S-xx`).

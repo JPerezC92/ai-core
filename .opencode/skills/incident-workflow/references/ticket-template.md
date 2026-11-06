@@ -15,6 +15,10 @@ connections: []
 # Ticket's own tool-reported author, as returned by the ticket tool. Never fabricate or infer a value; report a missing value instead.
 author: <author>
 escalated_to: null
+derivation:
+  application: null
+  group: null
+  assignee: null
 related_ticket: null
 problem_ticket: null
 symptom_ids: []
