@@ -1,9 +1,10 @@
-"""Use case: verify every destination core region against the pinned source core."""
+"""Use case: verify every destination core region and frontmatter against the source."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
+from core_sync_pkg.application.region_creation import read_source_frontmatter
 from core_sync_pkg.domain.ports import (
     BindingsStore,
     ClearanceStore,
@@ -30,7 +31,8 @@ from core_sync_pkg.domain.errors import (
 )
 from core_sync_pkg.domain.jsonc import parse_object
 from core_sync_pkg.domain.merge import is_merged
-from core_sync_pkg.domain.regions import split_regions
+from core_sync_pkg.domain.refresh_frontmatter import frontmatter_is_current
+from core_sync_pkg.domain.regions import split_frontmatter, split_regions
 
 
 class VerifyDestinations:
@@ -107,6 +109,7 @@ class VerifyDestinations:
             )
 
         source_cores: dict[str, str] = {}
+        source_frontmatters: dict[str, str] = {}
         for entry in bindings["bindings"]:
             if mode_of.get(entry["source"]) in (MODE_RAW, MODE_MERGE):
                 continue
@@ -120,6 +123,9 @@ class VerifyDestinations:
             if source_core is None:
                 return DomainError(CODE_DRIFT, f"missing source: {source_path}")
             source_cores[entry["source"]] = source_core
+            source_frontmatters[entry["source"]] = read_source_frontmatter(
+                self._source_reader, source_path
+            )
 
         non_region_destinations = non_region_destination_paths(bindings, mode_of)
         stale_non_region_pending = [
@@ -213,6 +219,7 @@ class VerifyDestinations:
                         )
                 continue
             source_core = source_cores[entry["source"]]
+            source_frontmatter = source_frontmatters[entry["source"]]
             for destination in entry["destinations"]:
                 destination_path = destination_dir / destination
                 if not self._paths.is_file(destination_path):
@@ -235,6 +242,17 @@ class VerifyDestinations:
                 if destination_split["region"] != source_core:
                     return DomainError(
                         CODE_DRIFT, f"region drift: {destination_path}"
+                    )
+                # The same refresh rule the write paths apply, so `check` and a
+                # write cannot disagree about the frontmatter a sync would emit.
+                destination_frontmatter, _ = split_frontmatter(
+                    destination_split["before"]
+                )
+                if not frontmatter_is_current(
+                    destination_frontmatter, source_frontmatter
+                ):
+                    return DomainError(
+                        CODE_DRIFT, f"frontmatter drift: {destination_path}"
                     )
 
         if bindings["pending"]:

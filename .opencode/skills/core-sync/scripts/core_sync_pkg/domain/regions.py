@@ -20,6 +20,10 @@ from core_sync_pkg.domain.markers import (
     line_without_terminator,
     unfenced_line_indices,
 )
+from core_sync_pkg.domain.refresh_frontmatter import (
+    RefreshedText,
+    refresh_frontmatter,
+)
 
 
 class RegionSplit(TypedDict):
@@ -52,6 +56,23 @@ def outside_bytes(region_split: RegionSplit) -> str:
     """Return the bytes that are not the core region, the markers included."""
     return (
         region_split["before"]
+        + region_split["begin_line"]
+        + region_split["end_line"]
+        + region_split["after"]
+    )
+
+
+def protected_bytes(region_split: RegionSplit) -> str:
+    """Return the bytes a region splice must never change.
+
+    The core markers, the text after the end marker, and the pre-marker text
+    that follows the frontmatter. The core region is excluded because a splice
+    replaces it, and the frontmatter is excluded because a refresh rewrites its
+    identity keys.
+    """
+    _, before_body = split_frontmatter(region_split["before"])
+    return (
+        before_body
         + region_split["begin_line"]
         + region_split["end_line"]
         + region_split["after"]
@@ -104,46 +125,73 @@ def ensure_trailing_newline(text: str) -> str:
     return text + "\n"
 
 
-def render_with_region(destination: RegionSplit, source_region: str) -> str:
-    """Rebuild a destination file with the source core region spliced in."""
-    return (
-        destination["before"]
-        + destination["begin_line"]
-        + source_region
-        + destination["end_line"]
-        + destination["after"]
-    )
+def render_with_region(
+    destination: RegionSplit,
+    source_region: str,
+    source_frontmatter: str = "",
+) -> RefreshedText:
+    """Rebuild a destination file with the source core region spliced in.
+
+    The destination's pre-marker frontmatter is refreshed from
+    `source_frontmatter`: a key the source defines takes the source value and a
+    destination-only key survives. The non-frontmatter pre-marker text, the
+    marker lines, and the text after the end marker keep their bytes. Returns
+    the rebuilt file and the reason a frontmatter refresh was skipped, if any.
+    """
+    before_frontmatter, before_body = split_frontmatter(destination["before"])
+    refresh = refresh_frontmatter(before_frontmatter, source_frontmatter)
+    return {
+        "text": (
+            refresh["text"]
+            + before_body
+            + destination["begin_line"]
+            + source_region
+            + destination["end_line"]
+            + destination["after"]
+        ),
+        "skipped": refresh["skipped"],
+    }
 
 
 def render_init_file(
     destination_content: str,
     source_core: str,
     source_frontmatter: str = "",
-) -> str:
+) -> RefreshedText:
     """Rebuild a markerless destination as a core region plus a project region.
 
-    The destination frontmatter content is kept verbatim but always ends on its
-    own line so the core begin marker stays an exact line; it wins over
-    `source_frontmatter`, which a caller supplies only when enrollment creates a
-    file that did not exist, so the created file leads with the source document's
-    frontmatter instead of starting at the core marker; the source core fills the
-    new core region; everything after the frontmatter is moved verbatim into the
-    new project region.
+    An existing destination keeps its own frontmatter keys with the source's
+    values merged in, so a stale identity key is refreshed; a destination
+    without frontmatter (a file that did not exist) leads with
+    `source_frontmatter` instead, which needs no merge because nothing of the
+    destination's is there to keep. The frontmatter always ends on its own line
+    so the core begin marker stays an exact line; the source core fills the new
+    core region; everything after the frontmatter is moved verbatim into the new
+    project region. Returns the rebuilt file and the reason a frontmatter
+    refresh was skipped, if any.
     """
     destination_frontmatter, body = split_frontmatter(destination_content)
-    return (
-        ensure_trailing_newline(destination_frontmatter or source_frontmatter)
-        + BEGIN
-        + "\n"
-        + ensure_trailing_newline(source_core)
-        + END
-        + "\n\n"
-        + PROJECT_BEGIN
-        + "\n"
-        + ensure_trailing_newline(body)
-        + PROJECT_END
-        + "\n"
-    )
+    refresh: RefreshedText
+    if destination_frontmatter:
+        refresh = refresh_frontmatter(destination_frontmatter, source_frontmatter)
+    else:
+        refresh = {"text": source_frontmatter, "skipped": ""}
+    return {
+        "text": (
+            ensure_trailing_newline(refresh["text"])
+            + BEGIN
+            + "\n"
+            + ensure_trailing_newline(source_core)
+            + END
+            + "\n\n"
+            + PROJECT_BEGIN
+            + "\n"
+            + ensure_trailing_newline(body)
+            + PROJECT_END
+            + "\n"
+        ),
+        "skipped": refresh["skipped"],
+    }
 
 
 def path_is_within(path: Path, root: Path) -> bool:

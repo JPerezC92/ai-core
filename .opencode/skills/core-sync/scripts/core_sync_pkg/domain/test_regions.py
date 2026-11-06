@@ -90,7 +90,7 @@ class FencedFrontmatterDelimiterTests:
 
 class RenderInitFileTests:
     def test_frontmatter_without_trailing_newline_stays_parseable(self) -> None:
-        rendered = render_init_file("---\nname: x\n---", "CORE")
+        rendered = render_init_file("---\nname: x\n---", "CORE")["text"]
 
         split = split_regions(rendered)
 
@@ -101,7 +101,7 @@ class RenderInitFileTests:
     def test_frontmatter_with_trailing_newline_is_unchanged(self) -> None:
         # S2 claim 2: the destination frontmatter is never concatenated directly
         # with the begin marker, and is otherwise byte-identical to before.
-        assert render_init_file("---\nname: x\n---\n", "CORE") == (
+        assert render_init_file("---\nname: x\n---\n", "CORE")["text"] == (
             "---\nname: x\n---\n"
             "<!-- core:begin -->\n"
             "CORE\n"
@@ -111,8 +111,8 @@ class RenderInitFileTests:
             "<!-- project:end -->\n"
         )
         # S2 claim 1: a destination without a trailing newline renders identically.
-        assert render_init_file("---\nname: x\n---", "CORE") == render_init_file(
-            "---\nname: x\n---\n", "CORE"
+        assert render_init_file("---\nname: x\n---", "CORE")["text"] == (
+            render_init_file("---\nname: x\n---\n", "CORE")["text"]
         )
 
     def test_created_file_without_source_frontmatter_starts_at_the_core_marker(
@@ -121,7 +121,7 @@ class RenderInitFileTests:
         # A source document with no frontmatter is reachable (enrollment reads an
         # empty frontmatter for one), so the created file begins at the core
         # marker and keeps the blank line that separates the two regions.
-        assert render_init_file("", "CORE\n") == (
+        assert render_init_file("", "CORE\n")["text"] == (
             "<!-- core:begin -->\n"
             "CORE\n"
             "<!-- core:end -->\n"
@@ -135,23 +135,30 @@ class RenderInitFileTests:
         # the source document's and leads the core begin marker.
         rendered = render_init_file(
             "", "CORE\n", source_frontmatter="---\nname: source\n---\n"
-        )
+        )["text"]
 
         assert rendered.startswith("---\nname: source\n---\n<!-- core:begin -->\n")
         split = split_regions(rendered)
         assert split is not None
         assert split["region"] == "CORE\n"
 
-    def test_destination_frontmatter_wins_over_the_source_frontmatter(self) -> None:
-        # An existing markerless destination keeps its own frontmatter, so a
-        # supplied source frontmatter never replaces it.
+    def test_an_enrolled_destination_refreshes_identity_keys_and_keeps_its_own(
+        self,
+    ) -> None:
+        # An existing markerless destination becomes a core-distributed file, so
+        # its source-defined identity keys refresh while a destination-only key
+        # survives byte-identically.
         rendered = render_init_file(
-            "---\nname: dest\n---\nBody\n",
+            "---\nname: dest\nlocal-version: 1.0.1\n---\nBody\n",
             "CORE\n",
             source_frontmatter="---\nname: source\n---\n",
-        )
+        )["text"]
 
-        assert rendered == render_init_file("---\nname: dest\n---\nBody\n", "CORE\n")
+        assert rendered.startswith(
+            "---\nname: source\nlocal-version: 1.0.1\n---\n<!-- core:begin -->\n"
+        )
+        assert "name: dest\n" not in rendered
+        assert "Body\n" in rendered
 
 
 class RegionDecompositionTests:

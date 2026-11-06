@@ -47,7 +47,7 @@ MERGE_DEST_TEXT = (
 )
 PLAIN_DEST = "---\nname: dest\n---\n\nOld body\n"
 INIT_DEST = (
-    "---\nname: dest\n---\n"
+    "---\nname: source\n---\n"
     "<!-- core:begin -->\nCORE\n<!-- core:end -->\n\n"
     "<!-- project:begin -->\n\nOld body\n<!-- project:end -->\n"
 )
@@ -332,7 +332,8 @@ class EnrollDestinationsTests:
         fixture = _enroll(
             _bindings(None, []),
             cores={SOURCE_DIR / "agent.md": "CORE\n"},
-            # The source carries frontmatter; an existing destination keeps its own.
+            # The source carries frontmatter; an enrolled destination refreshes
+            # the keys the source defines and keeps the rest.
             texts={SOURCE_DIR / "agent.md": SOURCE_DOCUMENT},
             text={DEST_DIR / "agent.md": PLAIN_DEST},
             cleared={"agent.md"},

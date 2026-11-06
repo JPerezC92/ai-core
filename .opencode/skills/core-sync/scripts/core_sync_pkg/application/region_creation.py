@@ -21,6 +21,23 @@ def destination_is_absent(
     return not paths.exists(destination_path)
 
 
+def read_source_frontmatter(
+    source_reader: SourceCoreReader, source_path: Path
+) -> str:
+    """Return a source document's leading YAML frontmatter, or nothing.
+
+    One definition for both write commands: a created region target takes its
+    frontmatter from the source document because the destination text does not
+    exist yet, and an existing destination is refreshed from it. The core read
+    already proved the source readable, so an unreadable source here keeps the
+    empty frontmatter of a markerless document rather than inventing one.
+    """
+    source_content = source_reader.read_text(source_path)
+    if source_content is None:
+        return ""
+    return split_frontmatter(source_content)[0]
+
+
 def created_region_document(
     source_reader: SourceCoreReader, source_path: Path, source_core: str
 ) -> str:
@@ -30,9 +47,11 @@ def created_region_document(
     frontmatter, the core region, and an empty project region — cannot be changed
     in one path and missed in the other. An unreadable source keeps empty
     frontmatter rather than inventing one.
+
+    A created target needs no frontmatter refresh: it is written with the source
+    document's own frontmatter, so no destination key can be stale and no key the
+    source does not define exists to preserve.
     """
-    source_content = source_reader.read_text(source_path)
-    source_frontmatter = (
-        "" if source_content is None else split_frontmatter(source_content)[0]
-    )
-    return render_init_file("", source_core, source_frontmatter)
+    return render_init_file(
+        "", source_core, read_source_frontmatter(source_reader, source_path)
+    )["text"]
