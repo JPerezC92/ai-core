@@ -94,7 +94,7 @@ Reviewed 2026-11-06 by the backend, frontend and test architecture owners plus t
 9. Cross-stack parity
 10. Open decisions
 
-**T29** — A section is complete or explicitly marked `N/A` with a language or runtime reason. A missing section, a thinner rule, or an inherited generic-only section is a defect. Differences are allowed only for language semantics and must be declared in the guide's parity table.
+**T29** — A section is complete or explicitly marked `N/A` with a language, runtime, or scope reason stating why the obligation cannot be achieved by guide content. A missing section, a thinner rule, or an inherited generic-only section is a defect. Differences are allowed only for language semantics and must be declared in the guide's parity table.
 
 ## Adding a stack guide
 

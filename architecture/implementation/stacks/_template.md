@@ -55,7 +55,7 @@ Point to the current testing contract and applicable testing guide, without dupl
 | C10 Naming | <section> | <native spelling of all shared roles and boundary mapping> |
 | Selected shape | <all shape obligations> | <differences> |
 
-Follow `architecture/README.md` → `## Content model`. Every common obligation and applicable shape obligation needs a mapping, and every row must cite its identifier. The mapping cell names the guide section that carries the achievement; the last cell states only the language-specific achievement or a language/runtime reason for N/A. Equal rigor does not mean identical libraries. Keep this heading order in all implementation guides. This is the non-testing template; testing guides retain their own template.
+Follow `architecture/README.md` → `## Content model`. Every common obligation and applicable shape obligation needs a mapping, and every row must cite its identifier. The mapping cell names the guide section that carries the achievement; the last cell states only the language-specific achievement or a language, runtime, or scope reason for N/A stating why the obligation cannot be achieved by guide content. Equal rigor does not mean identical libraries. Keep this heading order in all implementation guides. This is the non-testing template; testing guides retain their own template.
 
 ## Open decisions
 

@@ -1,8 +1,9 @@
 # ADR 0002 — Testing architecture layering
 
-- **Status:** Accepted
+- **Status:** Amended
 - **Date:** 2026-10-25
 - **Amended:** 2026-10-30 — path references relocated to `architecture/testing/` by ADR 0003; the `testing-architecture/` tree no longer exists. Decision text below is unchanged.
+- **Amended:** 2026-11-06 — the clause below that has the reviewer "emit `[UNCERTAIN]` when no guide applies" is superseded by the agnostic fallback delivered in PR #170. Missing guide coverage no longer produces `[UNCERTAIN]`: it routes to the testing contract `architecture/testing/architecture.md` → T25, with T14 reserving `[UNCERTAIN]` for a substantive unresolved decision, plus the applicable implementation contract and shapes, and guide selection is stated at `architecture/README.md` → `## Purpose and selection`. Those owners carry the operative rule; the Decision text below is unchanged.
 
 ## Context
 
