@@ -58,7 +58,7 @@ class InitContractTests:
         assert main(_init_args(source, destination, bindings_path, REV_A)) == 0
 
         content = (destination / "agent.md").read_text(encoding="utf-8")
-        assert content.startswith("---\nname: dest\n---\n<!-- core:begin -->\n")
+        assert content.startswith("---\nname: src\n---\n<!-- core:begin -->\n")
         split = split_regions(content)
         assert split is not None
         assert split["region"] == "\nCore body one\nCore body two\n"
@@ -109,7 +109,7 @@ class InitContractTests:
         assert b"\r" not in written
         assert written == (
             b"---\n"
-            b"name: dest\n"
+            b"name: src\n"
             b"---\n"
             b"<!-- core:begin -->\n"
             b"\n"

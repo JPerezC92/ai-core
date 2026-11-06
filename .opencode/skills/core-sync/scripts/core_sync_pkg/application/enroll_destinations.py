@@ -1,4 +1,9 @@
-"""Use case: enroll markerless destinations and refresh already-marked destinations."""
+"""Use case: enroll markerless destinations and refresh already-marked destinations.
+
+A region destination's core region is replaced and its frontmatter identity keys
+are refreshed from the source; an unrefreshable frontmatter is left as it is and
+named in the result message.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +12,7 @@ from pathlib import Path
 from core_sync_pkg.application.region_creation import (
     created_region_document,
     destination_is_absent,
+    read_source_frontmatter,
 )
 from core_sync_pkg.domain.ports import (
     BindingsStore,
@@ -45,7 +51,7 @@ from core_sync_pkg.domain.markers import has_exact_core_marker_lines
 from core_sync_pkg.domain.merge import merge_top_level
 from core_sync_pkg.domain.reconciliation import ReconciliationEntry
 from core_sync_pkg.domain.regions import (
-    outside_bytes,
+    protected_bytes,
     render_init_file,
     render_with_region,
     split_regions,
@@ -220,6 +226,7 @@ class EnrollDestinations:
         writes: list[tuple[Path, str]] = []
         raw_writes: list[tuple[Path, bytes]] = []
         entries: list[ReconciliationEntry] = []
+        notes: list[str] = []
         pending = normalize_pending(
             bindings["pending"], non_region_destination_paths(bindings, mode_of)
         )
@@ -323,6 +330,9 @@ class EnrollDestinations:
                 )
             if source_core is None:
                 return DomainError(CODE_DRIFT, f"missing source: {source_path}")
+            source_frontmatter = read_source_frontmatter(
+                self._source_reader, source_path
+            )
             for destination in entry["destinations"]:
                 destination_path = destination_dir / destination
                 destination_content = self._destination_writer.read_text(
@@ -359,8 +369,15 @@ class EnrollDestinations:
                             CODE_INVALID,
                             f"invalid destination markers: {destination_path}",
                         )
-                    new_content = render_init_file(destination_content, source_core)
-                    writes.append((destination_path, new_content))
+                    rendered = render_init_file(
+                        destination_content, source_core, source_frontmatter
+                    )
+                    if rendered["skipped"]:
+                        notes.append(
+                            f"frontmatter not refreshed: {destination_path} "
+                            f"({rendered['skipped']})"
+                        )
+                    writes.append((destination_path, rendered["text"]))
                     entries.append(
                         {
                             "destination": destination,
@@ -371,18 +388,31 @@ class EnrollDestinations:
                     if destination not in pending:
                         pending.append(destination)
                     continue
-                new_content = render_with_region(destination_split, source_core)
+                rendered = render_with_region(
+                    destination_split, source_core, source_frontmatter
+                )
+                new_content = rendered["text"]
+                if rendered["skipped"]:
+                    notes.append(
+                        f"frontmatter not refreshed: {destination_path} "
+                        f"({rendered['skipped']})"
+                    )
                 new_split = split_regions(new_content)
-                if new_split is None or outside_bytes(new_split) != outside_bytes(
-                    destination_split
-                ):
+                if new_split is None or protected_bytes(
+                    new_split
+                ) != protected_bytes(destination_split):
                     return DomainError(
                         CODE_INVALID,
                         f"outside-marker mismatch: {destination_path}",
                     )
-                if new_split["region"] == destination_split["region"]:
+                if new_content == destination_content:
                     continue
                 writes.append((destination_path, new_content))
+                # A refreshed frontmatter is core-owned metadata, not displaced
+                # project content, so a write that replaced no core region byte
+                # records no reconciliation entry and adds no pending path.
+                if new_split["region"] == destination_split["region"]:
+                    continue
                 entries.append(
                     {
                         "destination": destination,
@@ -415,4 +445,4 @@ class EnrollDestinations:
             self._root_runtime.resolve(destination_dir, bindings),
             bindings["pending"],
         )
-        return UseCaseResult("initialized")
+        return UseCaseResult("; ".join(["initialized", *notes]))
