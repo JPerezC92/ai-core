@@ -17,6 +17,9 @@
     "knowledge/release.md": {
       "mode": "raw"
     },
+    "knowledge/escalation.md": {
+      "mode": "region"
+    },
     "knowledge/debt.md": {
       "mode": "region"
     },

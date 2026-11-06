@@ -1,11 +1,11 @@
 ---
 name: incident-workflow
-description: Scaffold a per-ticket working analysis (analysis/state.md + identify/investigate/synthesize) for an incident ticket, identify it register-first via S-xx → incident P-NNN, and collapse to one ticket_ID.md record at close. Use when starting analysis on a new incident ticket.
+description: Scaffold a per-ticket working analysis (analysis/state.md + identify/investigate/synthesize) for an incident ticket, identify it register-first via S-xx → incident P-NNN, consume the escalation contract during synthesis without authorizing execution, and collapse to one ticket_ID.md record at close. Use when starting analysis on a new incident ticket.
 license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 4.0.1
+  version: 4.1.0
   dependencies: PyYAML==6.0.3
 ---
 <!-- core:begin -->
@@ -225,6 +225,8 @@ Incident-workflow templates and references:
 - Ticket record template: `references/ticket-template.md`
 - Response-draft template: `references/response-draft-template.md`
 - Consistency checklist: `references/_consistency-checklist.md`
+
+For synthesis only, explicitly read the external dependency `knowledge/escalation.md`: it owns the escalation contract and sole five-column matrix template; this project's routing rows and field/value/ID, team and tool mappings belong in its project content. Follow that owner when filling `references/analysis/03-synthesize.md`; do not copy its matrix into this skill or use escalation to issue an identification verdict. A route recommendation is not execution authorization. If the owner, applicable row, target, required mapping or evidence is missing or ambiguous, report the gap and block the affected execution rather than guess; required approval may remain pending while recommending an evidenced route.
 
 ### Working-set and record schema
 

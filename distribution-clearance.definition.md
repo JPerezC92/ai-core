@@ -20,7 +20,7 @@ The document carries `"schema": 1`. The version stays **v1** through every compa
 |---|---|---|---|
 | Root runtime | `AGENTS.md` | `{"mode": "region", "role": "root"}` | core region only; `role: root` is unique to this row |
 | Harness config | `opencode.jsonc` | `{"mode": "merge"}` | top-level JSON(C) key merge, destination-only keys preserved; the `mcp` key merges by server name, keeping destination-only MCP servers and making a same-named entry core-wins |
-| Region knowledge documents | individually cleared `knowledge/` files (`knowledge/agents.md`, `knowledge/debt.md`, `knowledge/architecture-decision-workflow.md`) | `{"mode": "region"}` | core region only (core/project markers) |
+| Region knowledge documents | individually cleared `knowledge/` files (`knowledge/agents.md`, `knowledge/debt.md`, `knowledge/architecture-decision-workflow.md`, `knowledge/escalation.md`) | `{"mode": "region"}` | core region only (core/project markers) |
 | Whole-file workflows | `knowledge/agent-workflow.md`, `knowledge/release.md` | `{"mode": "raw"}` | whole-file byte-for-byte transport, no ownership regions; source-local grants stay in root-runtime project extensions |
 | Canonical ODD templates | individually cleared `odd/tasks/_template.md`, `odd/evidence/_template.md` | `{"mode": "raw"}` | whole-file byte-for-byte transport of the templates only; feature records and working evidence instances stay source-local |
 | Architecture documents | `architecture/` directory root | `{"mode": "raw"}` | whole-file byte-for-byte transport with no ownership markers and no project region; no reconciliation report and no `pending` entry; common/shape contracts, implementation and testing templates/guides, and navigation; tools remain destination-owned |
@@ -47,6 +47,7 @@ The remaining `knowledge/` files stay individually selected region or raw; `know
 | Shared workflow (raw) | `knowledge/agent-workflow.md` | the whole reusable entry sequence, without ownership regions |
 | Shared release workflow (raw) | `knowledge/release.md` | the whole packet, post-review routing, and execution-owner pointers; local grants belong in root-runtime project extensions, not this payload |
 | Shared decision workflow (region) | `knowledge/architecture-decision-workflow.md` | the decision lifecycle and its propagation gate; the source-local ADR location stays project, and its records do not ship |
+| Escalation guidance (contract and sole template core, local routing bindings) | `knowledge/escalation.md` | the generic routing contract and embedded matrix template; organizational routes, fields, IDs, teams, tools, and execution history stay project |
 | Record-bearing register (frame-only core) | `knowledge/debt.md` | the frame alone — the register carries no table; filed records never ship |
 | Shared catalog (full core) | `knowledge/diagnostics/problems.md`, `knowledge/diagnostics/symptoms.md` | the full catalog |
 | Diagnostic guidance (contract core, local historical context) | `knowledge/diagnostics/diagnostic-guidance.md` | the shared contract; historical context stays project |
