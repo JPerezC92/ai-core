@@ -42,5 +42,5 @@ Each entry MUST include:
 - **Resolution criteria:** In separately authorized work, choose and implement one distribution treatment for skill frontmatter — either a cleared mechanism that keeps catalog identity current across destinations, or a core-sync check that reports destination `SKILL.md` files missing frontmatter or carrying a stale version against the pinned revision. Then verify in an adopting destination that every core-shipped skill appears in the harness skill catalog with a current description. Retire this entry in that clearing PR with direct resolution evidence.
 - **Explicit deferral decision:** User instruction 2026-11-05, verbatim: "there is an issue on the sync can u add it as a debt". Deferral recorded at the user's direction from a destination-project observation; it is not an agent-accepted waiver.
 
-**ID to use for the next new debt:** `DEBT-039`. This is an allocation counter, not an open debt.
+**ID to use for the next new debt:** `DEBT-040`. This is an allocation counter, not an open debt.
 <!-- project:end -->
