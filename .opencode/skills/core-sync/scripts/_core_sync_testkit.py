@@ -28,6 +28,7 @@ from core_sync_pkg.domain.jsonc import parse_object  # noqa: E402
 from core_sync_pkg.domain.reconciliation import (  # noqa: E402
     sync_reconciliation_blocker,
 )
+from core_sync_pkg.domain.regions import ensure_trailing_newline  # noqa: E402
 from core_sync_pkg.infrastructure.stores import save_bindings  # noqa: E402
 
 REV_A = "a" * 40
@@ -239,10 +240,30 @@ MERGE_MCP_DESTINATION_STALE_SHARED = (
     "}\n"
 )
 
+
+def created_region(frontmatter: str, core_body: str) -> str:
+    """Return the exact document a freshly created region target contains.
+
+    The markers are spelled literally here, and the empty project region holds no
+    blank line, so an expectation built from this helper cannot drift with the
+    production renderer it exists to check. Both parts receive the same
+    trailing-newline rule the renderer applies.
+    """
+    return (
+        ensure_trailing_newline(frontmatter)
+        + "<!-- core:begin -->\n"
+        + ensure_trailing_newline(core_body)
+        + "<!-- core:end -->\n"
+        + "\n"
+        + "<!-- project:begin -->\n"
+        + "<!-- project:end -->\n"
+    )
+
+
 # The QMD fixtures are built by `_qmd_document` before the constants that use
 # it, so the source and any retargeted destination differ only in the index.
 QMD_CORE_INDEX = "ai-core"
-QMD_DESTINATION_FOLDER = "tismart-support"
+QMD_DESTINATION_FOLDER = "example-destination"
 
 
 def _qmd_document(index_name: str) -> str:

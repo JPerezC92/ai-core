@@ -15,6 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from _core_sync_testkit import created_region  # noqa: E402
 from core_sync_pkg.application.apply_core_revision import (  # noqa: E402
     ApplyCoreRevision,
 )
@@ -51,6 +52,11 @@ MERGE_DEST_TEXT = (
 MERGE_DEST_ALREADY = (
     '{\n  "shared": "source",\n  "extra": 1,\n  "theme": "dark"\n}\n'
 )
+SOURCE_FRONTMATTER = "---\nname: source\n---\n"
+SOURCE_DOCUMENT = SOURCE_FRONTMATTER + (
+    "<!-- core:begin -->\nCORE\n<!-- core:end -->\n"
+)
+CREATED_REGION = created_region(SOURCE_FRONTMATTER, "CORE\n")
 
 
 class FakeBindingsStore:
@@ -203,6 +209,9 @@ class FakeFilesystemPaths:
     def is_symlink(self, path: Path) -> bool:
         return path in self.symlinks
 
+    def ensure_dir(self, path: Path) -> None:
+        self.dirs.add(path)
+
     def enumerate_files_under(self, root: Path) -> list[str]:
         return list(self.enumeration.get(root, []))
 
@@ -273,6 +282,7 @@ def _apply(
     roots: dict[str, SkillRootEntry] | None = None,
     clearance_exists: bool = True,
     files: set[Path] | None = None,
+    dirs: set[Path] | None = None,
     preflight_error: str | None = None,
     enumeration: dict[Path, list[str]] | None = None,
 ) -> _Fixture:
@@ -293,6 +303,7 @@ def _apply(
         FakeRootRuntimeFile(),
         FakeFilesystemPaths(
             files=files,
+            dirs=dirs,
             preflight_error=preflight_error,
             enumeration=enumeration,
         ),
@@ -341,11 +352,30 @@ class ApplyCoreRevisionTests:
         ]
         assert fixture.store.saves[-1][1]["core_revision"] == REV_B
 
-    def test_reports_missing_destination_when_region_target_absent(self) -> None:
+    def test_recreates_absent_region_target_with_source_frontmatter(self) -> None:
         fixture = _apply(
             _bindings(REV_A, [_entry("agent.md", ["agent.md"])]),
             cores={SOURCE_DIR / "agent.md": "CORE\n"},
+            texts={SOURCE_DIR / "agent.md": SOURCE_DOCUMENT},
             cleared={"agent.md"},
+        )
+        result = fixture.use_case.execute(
+            SOURCE_DIR, DEST_DIR, BINDINGS_PATH, REV_B
+        )
+        assert isinstance(result, UseCaseResult)
+        assert result.message == "applied; created: agent.md"
+        assert fixture.writer.text_writes == [
+            (DEST_DIR / "agent.md", CREATED_REGION)
+        ]
+        assert fixture.store.saves[-1][1]["core_revision"] == REV_B
+
+    def test_rejects_a_destination_that_exists_as_a_directory(self) -> None:
+        fixture = _apply(
+            _bindings(REV_A, [_entry("agent.md", ["agent.md"])]),
+            cores={SOURCE_DIR / "agent.md": "CORE\n"},
+            texts={SOURCE_DIR / "agent.md": SOURCE_DOCUMENT},
+            cleared={"agent.md"},
+            dirs={DEST_DIR / "agent.md"},
         )
         result = fixture.use_case.execute(
             SOURCE_DIR, DEST_DIR, BINDINGS_PATH, REV_B
@@ -353,6 +383,9 @@ class ApplyCoreRevisionTests:
         assert isinstance(result, DomainError)
         assert result.code == CODE_DRIFT
         assert "missing destination" in result.message
+        assert fixture.writer.text_writes == []
+        assert fixture.writer.byte_writes == []
+        assert fixture.store.saves == []
 
     def test_reports_invalid_markers_when_destination_unmarked(self) -> None:
         fixture = _apply(
@@ -466,6 +499,7 @@ class ApplyCoreRevisionTests:
         assert isinstance(result, DomainError)
         assert result.code == CODE_DRIFT
         assert "missing destination" in result.message
+        assert "merge mode cannot create it" in result.message
 
     def test_merge_reports_missing_source(self) -> None:
         fixture = _apply(
