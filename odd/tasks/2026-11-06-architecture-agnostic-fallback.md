@@ -1,8 +1,9 @@
 # Architecture agnostic fallback
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-06
+> **Closed:** 2026-11-06
 > **Objective:** Follow applicable documented specifics and apply agnostic obligations wherever specific coverage is absent, without documentation-only implementation blockers.
 > **Branch:** main — baseline c58255bc47d097b9ade409c7672722606b7e32db
 > **Delivery:** One coordinated policy work unit; forecast approximately 300 authored additions plus deletions, excluding generated files. Reassess before commit if scope exceeds approximately 400; separate additional work into reviewable slices.
@@ -17,10 +18,10 @@
 
 ## Tasks
 
-- T1 | S1, S2, S3, S4 | delegated (canonical documentation ownership) — Scribe ✍️ (Docs & Problems Manager): update architecture selection, testing contract, affected testing guides/templates and shared pointer; preserve obligation accounting and scenario evidence | open | commit: pending
-- T2 | S1, S2, S3, S4 | delegated (runtime maintenance requires research brief and owning role) — Augur 🔮 (Research Analyst), then Marshal 🎖️ (HR Director): align implementation and review runtime consumers | open | commit: pending
-- T3 | S1, S2, S3, S4 | delegated (independent architecture and semantic acceptance) — Bastion 🧱 (Backend & Scripts Architect), Atrium 🏛️ (Frontend Architect), Crucible 🔥 (Test Architect), Sentinel 🛡️ (Quality Guardian): review stable combined candidate and verify scenarios | open | commit: pending
-- T4 | S1, S2, S3, S4 | delegated (Git execution ownership) — Herald 📯 (Release Manager): inspect Git state, commit the reviewed authorized unit; Cipher 🔓 (Lead Orchestrator) validates and closes the feature | open | commit: pending
+- T1 | S1, S2, S3, S4 | delegated (canonical documentation ownership) — Scribe ✍️ (Docs & Problems Manager): update architecture selection, testing contract, affected testing guides/templates and shared pointer; preserve obligation accounting and scenario evidence | done | commit: f4fba84786546d16af9174e8ced0b4ab3d7127fc
+- T2 | S1, S2, S3, S4 | delegated (runtime maintenance requires research brief and owning role) — Augur 🔮 (Research Analyst), then Marshal 🎖️ (HR Director): align implementation and review runtime consumers | done | commit: f4fba84786546d16af9174e8ced0b4ab3d7127fc
+- T3 | S1, S2, S3, S4 | delegated (independent architecture and semantic acceptance) — Bastion 🧱 (Backend & Scripts Architect), Atrium 🏛️ (Frontend Architect), Crucible 🔥 (Test Architect), Sentinel 🛡️ (Quality Guardian): review stable combined candidate and verify scenarios | done | commit: f4fba84786546d16af9174e8ced0b4ab3d7127fc
+- T4 | S1, S2, S3, S4 | delegated (Git execution ownership) — Herald 📯 (Release Manager): inspect Git state, commit the reviewed authorized unit; Cipher 🔓 (Lead Orchestrator) validates and closes the feature | done | commit: f4fba84786546d16af9174e8ced0b4ab3d7127fc
 
 ## Log
 
@@ -35,4 +36,6 @@
 - L9 — 2026-11-06 — Gate history (detail `E3`): Bastion B1 and B2 [PASS]; Atrium A2 [PASS]; Crucible C1 [BLOCK] on unavailable original → [PASS] after Herald captured the baseline, C2 [PASS], C3 and C4 [FAIL] on low-severity review-record wording, settled unit C5 [PASS]; Sentinel runtime gate [ADVISORY] F1 → fixed → [PASS]; Sentinel whole-feature [PASS] round 1 and round 2, zero open findings. Atrium disclosed one out-of-envelope read-only directory listing; no mutation or external fetch, retained with the deviation recorded.
 - L10 — 2026-11-06 — Adjudications: J1 minor bump adopted because the edit adds an enforceable duty, not only a correction, so runtimes are forge 3.1.0, bastion 1.16.0, atrium 1.12.0, crucible 1.16.0; J2 N/A declarations narrowed or added to match actual T24–T25 routing in both guides; J3 stale source-local navigation wording corrected. The review-record surface failed twice, so the loop cap was applied as one coherent edit of the three-line unit and a single confirmation rather than another clause patch. Parent decision of record: architecture states who reviewed, while verdict detail stays in this feature record, because `architecture/` may not cite paths outside it.
 - L11 — 2026-11-06 — Deferred INFO, not ignored: testing guides' N/A reason is role-scoped wording and both-guide parity rows differ on T9/T27 citations; both are pre-existing, weaken no rule, and are recorded for a future guide edit. Historical closed records that assert the retired missing-mapping rule (`testing-architecture-layering.md:14`, `2026-11-04-general-implementer-scope.md:35`) are preserved as history and not rewritten; origin and escape point remain `unknown` because no baseline blame comparison was authorized.
-- L12 — 2026-11-06 — Evidence: attestational detail in `odd/evidence/2026-11-06-architecture-agnostic-fallback.md` as `E1`–`E5`; author artifacts stay as pointers into gitignored `output/research/`. Verification is scenario walkthrough on normal and adverse cases; no executable RED/GREEN applies to instruction semantics and no execution PASS is claimed. Mechanical validation is recorded in the close entry.
+- L12 — 2026-11-06 — Evidence: attestational detail was held in `odd/evidence/2026-11-06-architecture-agnostic-fallback.md` as `E1`–`E5` and is recoverable from Git history at commit `f4fba84`; decisive conclusions are folded into L8–L11 and the close entry, and the disposable evidence file is removed per close-time reconciliation. Author artifacts remain pointers into gitignored `output/research/`. Verification is scenario walkthrough on normal and adverse cases; no executable RED/GREEN applies to instruction semantics and no execution PASS is claimed.
+- L13 — Close: 2026-11-06 — Independent semantic acceptance was Sentinel 🛡️ (Quality Guardian) whole-feature round 2 over the combined candidate, `[PASS]` with zero open findings, after owner gates Bastion B2, Atrium A2, Crucible C5 and its own round 1. Each `S#` was verified by normal and adverse walkthrough: covered specifics remain binding, uncovered and partially covered concerns route to the agnostic contract and shapes, no absent-guide uncertainty survives, and shared obligations keep equal rigor with only language mechanisms differing. Limits: no destination was inspected or migrated, no mirror is verified, defect origin and escape point remain `unknown`, and the deferred INFO items in L11 stay open as recorded rather than fixed.
+- L14 — 2026-11-06 — Mechanical validation: `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feature.py odd/tasks` exit 0 on the final record bytes; that validates anatomy only, not the semantic acceptance above.
