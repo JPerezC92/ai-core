@@ -57,6 +57,38 @@ class ReconcileBlockerContentTests:
         assert "restore any MCP server" not in body
         assert "replaces the source-owned `mcp` key wholesale" not in body
 
+    def test_block_body_conditionally_guides_legacy_incident_reconciliation(
+        self,
+    ) -> None:
+        # These are independent output expectations, not fixture inputs or a
+        # second full-body snapshot. Keep them together in the migration note
+        # so unrelated preservation/configuration paragraphs cannot satisfy it.
+        guidance_paragraphs = [
+            " ".join(paragraph.split()).lower()
+            for paragraph in RECONCILE_BODY.split(">\n")
+            if "patterns.md" in paragraph and "escalation.md" in paragraph
+        ]
+        assert len(guidance_paragraphs) == 1
+        guidance = guidance_paragraphs[0]
+
+        assert "if this project" in guidance
+        assert "legacy" in guidance
+        assert "diagnostics" in guidance
+        assert "preserve" in guidance
+        assert "case" in guidance
+        assert "queries" in guidance
+        assert "diagnostic" in guidance
+        assert "skill references" in guidance
+        assert "genuine" in guidance
+        assert "organization" in guidance
+        assert "mappings" in guidance
+        assert "update live consumers before" in guidance
+        assert "separately authorized" in guidance
+        assert "retirement" in guidance
+        assert "never edit the core region" in guidance
+        assert "never invent" in guidance
+        assert "values" in guidance
+
     def test_block_body_documents_the_registered_qmd_index(self) -> None:
         body = RECONCILE_BODY
 

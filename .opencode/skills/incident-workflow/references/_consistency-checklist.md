@@ -50,6 +50,14 @@ Run every command from the project root. The validator enforces only the mechani
 - `01-identify.md` `Pre` is populated with THIS ticket's context; `Step`/`Gate`/`Abort` remain template-intact. *(analysis)*
 - Every result value is verbatim (no paraphrase, no rounding). *(analysis)*
 
+## Synthesis routing semantics
+
+- For synthesis, read `knowledge/escalation.md`, the canonical escalation contract and sole matrix-template owner; verify the decision against this project's routing row and ticket-system mappings, not a second matrix maintained here. Record selected row locator/input identity and current ticket evidence/gaps. *(analysis)*
+- Escalation references diagnostics' existing identification result without issuing, upgrading or echoing a verdict. Generic conditions can route without a problem ID; no invented `P-NNN` is required. *(analysis)*
+- Check required ticket fields and local values/IDs, target/team and tool mappings against current evidence, or record justified N/A where the contract requires none. Missing/ambiguous owner, row, target, evidence or required mapping is reported and blocks affected execution, never guessed or silently filled. *(analysis)*
+- Distinguish proposed action/tool/authorized owner/required approval from actual execution status supported by the authorized executor's tool result. Pending approval may accompany an evidenced recommendation, never the affected action; routing and field selection do not authorize execution. Apply the canonical owner's read-first verification and approval requirements before action. *(analysis)*
+- Existing root-cause labels and ≤3-bullet limit, named-target gate, ≤15-line response surface, conserved counters, screenshot readiness and approval/collapse safeguards remain applicable. Routing adds no analysis file, YAML field, query allowance, migration or retirement authority. *(analysis)*
+
 ## Folder structure while open
 
 - Ticket folder contains inbound `downloads/`, `screenshots/`, `validations/`, the ticket record, and `response-draft.md`. *(analysis)*

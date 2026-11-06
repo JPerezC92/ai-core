@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.9.0
+  version: 2.9.1
 ---
 
 ## What I do
@@ -138,7 +138,7 @@ While region-mode paths remain in `pending`, `check`, `apply`, and `init` ensure
 <!-- core:reconcile:end -->
 ```
 
-The block is self-contained; the destination assistant needs no other context. It directs the destination to adopt the two-region rule permanently in its root instructions (`CLAUDE.md` / `AGENTS.md`) if absent. It explains that the upstream-owned `core` region is never edited, moved, or deleted, while the destination-owned `project` region keeps genuine project-specific content and may contain the old core copy that is now superseded. It also carries destination-facing config guidance covering the OpenCode V1-to-V2 migration, core-wins for same-named MCP server entries, and the QMD index, which the merge already sets from the destination's folder name so no manual edit is needed, with any different index declared in the project's own `.opencode/opencode.jsonc` before retrieval is verified. An empty result under this project's own index name may mean this project has never built that index, so populate it with the project's own retrieval tooling before treating the empty result as a synchronization defect. The shipped block, not this description, is the operative text.
+The block is self-contained; the destination assistant needs no other context. It directs the destination to adopt the two-region rule permanently in its root instructions (`CLAUDE.md` / `AGENTS.md`) if absent. It explains that the upstream-owned `core` region is never edited, moved, or deleted, while the destination-owned `project` region keeps genuine project-specific content and may contain the old core copy that is now superseded. It also carries destination-facing config guidance covering the OpenCode V1-to-V2 migration, core-wins for same-named MCP server entries, and the QMD index, which the merge already sets from the destination's folder name so no manual edit is needed, with any different index declared in the project's own `.opencode/opencode.jsonc` before retrieval is verified. An empty result under this project's own index name may mean this project has never built that index, so populate it with the project's own retrieval tooling before treating the empty result as a synchronization defect. Conditional legacy incident-knowledge guidance preserves diagnostic evidence, skill references and genuine organization mappings, requiring live-consumer updates and replacement verification before separately authorized retirement without expanding the operator boundary. The shipped block, not this description, is the operative text.
 
 For each path in `pending:`:
 1. Open the file.
