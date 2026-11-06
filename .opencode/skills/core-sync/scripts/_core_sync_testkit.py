@@ -20,12 +20,15 @@ from core_sync_pkg.domain.constants import (  # noqa: E402
     MODE_MERGE,
     MODE_RAW,
     MODE_REGION,
+    ROLE_ROOT,
     SCHEMA_VERSION,
     BindingMode,
 )
+from core_sync_pkg.domain.jsonc import parse_object  # noqa: E402
 from core_sync_pkg.domain.reconciliation import (  # noqa: E402
     sync_reconciliation_blocker,
 )
+from core_sync_pkg.domain.regions import ensure_trailing_newline  # noqa: E402
 from core_sync_pkg.infrastructure.stores import save_bindings  # noqa: E402
 
 REV_A = "a" * 40
@@ -237,7 +240,99 @@ MERGE_MCP_DESTINATION_STALE_SHARED = (
     "}\n"
 )
 
+
+def created_region(frontmatter: str, core_body: str) -> str:
+    """Return the exact document a freshly created region target contains.
+
+    The markers are spelled literally here, and the empty project region holds no
+    blank line, so an expectation built from this helper cannot drift with the
+    production renderer it exists to check. Both parts receive the same
+    trailing-newline rule the renderer applies.
+    """
+    return (
+        ensure_trailing_newline(frontmatter)
+        + "<!-- core:begin -->\n"
+        + ensure_trailing_newline(core_body)
+        + "<!-- core:end -->\n"
+        + "\n"
+        + "<!-- project:begin -->\n"
+        + "<!-- project:end -->\n"
+    )
+
+
+# The QMD fixtures are built by `_qmd_document` before the constants that use
+# it, so the source and any retargeted destination differ only in the index.
+QMD_CORE_INDEX = "ai-core"
+QMD_DESTINATION_FOLDER = "example-destination"
+
+
+def _qmd_document(index_name: str) -> str:
+    """Build a one-server JSONC document whose qmd command carries `index_name`."""
+    return (
+        "{\n"
+        '  "mcp": {\n'
+        '    "servers": {\n'
+        '      "qmd": {\n'
+        '        "type": "local",\n'
+        '        "command": [\n'
+        '          "npx", "-y", "@tobilu/qmd@2.8.3",\n'
+        f'          "--index", "{index_name}", "mcp"\n'
+        "        ],\n"
+        '        "codemode": false\n'
+        "      }\n"
+        "    }\n"
+        "  }\n"
+        "}\n"
+    )
+
+
+QMD_SOURCE = _qmd_document(QMD_CORE_INDEX)
+
+QMD_DESTINATION = (
+    "{\n"
+    '  "mcp": {\n'
+    '    "servers": {\n'
+    '      "memories": {\n'
+    '        "command": ["npx", "-y", "@memories.sh/cli@0.7.9", "serve"]\n'
+    "      }\n"
+    "    }\n"
+    "  }\n"
+    "}\n"
+)
+
+
+def _qmd_index(document_text: str) -> object:
+    """Return the argument following `--index` in a document's qmd command."""
+    mcp = parse_object(document_text)["mcp"]
+    assert isinstance(mcp, dict), "document has no mcp object"
+    servers = mcp["servers"]
+    assert isinstance(servers, dict), "document has no mcp.servers object"
+    qmd = servers["qmd"]
+    assert isinstance(qmd, dict), "document has no mcp.servers.qmd object"
+    command = qmd["command"]
+    assert isinstance(command, list), "qmd server has no command array"
+    return command[command.index("--index") + 1]
+
+
 ROOT_TEXT = "# Root runtime\n\nIntro paragraph.\n\nLast line.\n"
+
+AGENT_SOURCE = ".opencode/agents/atrium.md"
+ROOT_SOURCE = "AGENTS.md"
+
+AGENT_MARKED = (
+    "---\nname: atrium\nversion: 1.0.0\n---\n"
+    "<!-- core:begin -->\nAgent core\n<!-- core:end -->\n"
+)
+
+ROOT_MARKED = (
+    "---\nname: agents\n---\n"
+    "<!-- core:begin -->\nRoot core\n<!-- core:end -->\n"
+)
+
+CLEARED_AGENT_AND_ROOT: dict[str, dict[str, str]] = {
+    AGENT_SOURCE: {"mode": MODE_REGION},
+    ROOT_SOURCE: {"mode": MODE_REGION, "role": ROLE_ROOT},
+}
 
 
 class _FixtureClearance(TypedDict):
@@ -295,18 +390,40 @@ EXPECTED_RECONCILE_BODY = (
     "MCP servers alongside the core-registered ones, with a same-named MCP "
     "server entry core-wins; every other key is still replaced wholesale.\n"
     ">\n"
-    "> **QMD index (`mcp.servers.qmd`).** The merged configuration launches QMD "
-    "with an index name that may belong to the upstream core project. Replace "
-    "it in THIS project's own `.opencode/opencode.jsonc`, which overrides the "
-    "shipped server entry; the shipped `opencode.jsonc` is merged core and a "
+    "> **QMD index (`mcp.servers.qmd`).** The merge registers THIS project's "
+    "own folder name as the QMD index, so no manual edit is needed after a "
+    "synchronization. To use a different index name, declare that QMD server "
+    "in this project's own `.opencode/opencode.jsonc`, which overrides the "
+    "shipped entry; the shipped `opencode.jsonc` is merged core, so a "
     "same-named edit there is restored on the next synchronization. Then "
-    "verify retrieval works. Never keep another project's index name, never "
-    "guess one, and never edit the core region to change it.\n"
+    "verify retrieval works. An empty result under this project's own index "
+    "name may mean this project has never built that index, so populate it "
+    "with this project's own retrieval tooling before treating the empty "
+    "result as a synchronization defect. Never edit the core region to "
+    "change the index.\n"
     ">\n"
     "> **To finish.** When `pending:` is empty, **delete this entire blocker "
     "block** (from `<!-- core:reconcile:begin -->` to "
     "`<!-- core:reconcile:end -->`). Change nothing outside the project regions."
 )
+
+
+def _destination_root() -> str:
+    """Build one destination instruction-root file body."""
+    return "---\nname: dest\n---\n# Dest\n"
+
+
+def _write_clearance(
+    source: Path, cleared: dict[str, dict[str, str]]
+) -> Path:
+    """Write one fixture source's version-1 clearance document verbatim."""
+    path = source / CLEARANCE_REL
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps({"schema": CLEARANCE_SCHEMA, "cleared": cleared}) + "\n",
+        encoding="utf-8",
+    )
+    return path
 
 
 def _ensure_fixture_clearance(
@@ -365,6 +482,27 @@ def _write_bytes_file(
     if base.name == "source":
         _ensure_fixture_clearance(base, relative, mode=mode)
     return path
+
+
+def _cleared_source(
+    tmp_path: Path,
+    *,
+    raw_payloads: dict[str, bytes] | None = None,
+) -> Path:
+    """Build a cleared source tree: agent and root regions plus a clearance record.
+
+    `raw_payloads` are written as byte copies and cleared `raw`, which is what the
+    bulk-enrollment fixtures need beyond the two region sources.
+    """
+    source = tmp_path / "source"
+    _write_file(source, AGENT_SOURCE, AGENT_MARKED)
+    _write_file(source, ROOT_SOURCE, ROOT_MARKED)
+    records = dict(CLEARED_AGENT_AND_ROOT)
+    for relative, content in (raw_payloads or {}).items():
+        _write_bytes_file(source, relative, content)
+        records[relative] = {"mode": MODE_RAW}
+    _write_clearance(source, records)
+    return source
 
 
 def _binding_entry(
@@ -517,6 +655,7 @@ def _merge_setup(
     *,
     source_content: str = MERGE_SOURCE,
     destination_content: str | None = MERGE_DESTINATION,
+    destination_name: str = "destination",
     pinned: str = REV_A,
     pending: list[str] | None = None,
 ) -> tuple[Path, Path, Path]:
@@ -524,9 +663,11 @@ def _merge_setup(
 
     The source is cleared with mode `merge`; both documents are written verbatim
     so merge behavior is exercised without production parsing in the fixture.
+    `destination_name` sets the destination directory's folder name, which merge
+    mode reads as the destination project name.
     """
     source = tmp_path / "source"
-    destination = tmp_path / "destination"
+    destination = tmp_path / destination_name
     _write_bytes_file(
         source, "opencode.jsonc", source_content.encode("utf-8"), mode=MODE_MERGE
     )

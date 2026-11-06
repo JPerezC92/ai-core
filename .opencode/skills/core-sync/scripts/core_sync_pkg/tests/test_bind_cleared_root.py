@@ -15,7 +15,12 @@ from typing import NotRequired, TypedDict
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from _core_sync_testkit import REV_A, _write_file  # noqa: E402
+from _core_sync_testkit import (  # noqa: E402
+    REV_A,
+    ROOT_MARKED,
+    _destination_root,
+    _write_file,
+)
 from core_sync_pkg.domain.constants import CLEARANCE_SCHEMA  # noqa: E402
 from core_sync_pkg.infrastructure.composition import main  # noqa: E402
 from core_sync_pkg.infrastructure.stores import load_bindings  # noqa: E402
@@ -25,10 +30,6 @@ SKILL_ROOT = ".opencode/skills/foo/"
 SKILL_MARKED = (
     "---\nname: foo\n---\n"
     "<!-- core:begin -->\nSkill core\n<!-- core:end -->\n"
-)
-ROOT_MARKED = (
-    "---\nname: agents\n---\n"
-    "<!-- core:begin -->\nRoot core\n<!-- core:end -->\n"
 )
 NOTE_BYTES = b"note payload\n"
 CACHE_BYTES = b"cache junk\n"
@@ -64,11 +65,6 @@ def _clearance_document(skill_root: bool) -> ClearanceDocument:
     if skill_root:
         cleared[SKILL_ROOT] = {"mode": "raw", "region_files": ["SKILL.md"]}
     return {"schema": CLEARANCE_SCHEMA, "cleared": cleared}
-
-
-def _destination_root() -> str:
-    """Build one destination instruction-root file body."""
-    return "---\nname: dest\n---\n# Dest\n"
 
 
 def _write_payload(source: Path, relative: str, content: bytes) -> Path:
@@ -193,6 +189,9 @@ class BindClearedSkillRootTests:
         skill_path = destination / (SKILL_ROOT + "SKILL.md")
         note_path = destination / (SKILL_ROOT + "note.md")
         skill_text = skill_path.read_text(encoding="utf-8")
+        # S1 entry point: the created file leads with the source document's
+        # frontmatter, ahead of the core begin marker.
+        assert skill_text.startswith("---\nname: foo\n---\n<!-- core:begin -->\n")
         assert "<!-- core:begin -->\nSkill core\n<!-- core:end -->" in skill_text
         assert "<!-- project:begin -->" in skill_text
         assert note_path.read_bytes() == NOTE_BYTES

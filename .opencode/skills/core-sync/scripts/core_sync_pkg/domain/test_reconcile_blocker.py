@@ -57,9 +57,7 @@ class ReconcileBlockerContentTests:
         assert "restore any MCP server" not in body
         assert "replaces the source-owned `mcp` key wholesale" not in body
 
-    def test_block_body_requires_replacing_the_inherited_qmd_index_name(
-        self,
-    ) -> None:
+    def test_block_body_documents_the_registered_qmd_index(self) -> None:
         body = RECONCILE_BODY
 
         # Keep the RAW paragraph: the placeholder token checked below ends in
@@ -85,12 +83,28 @@ class ReconcileBlockerContentTests:
         ]
         guidance = paragraphs[0]
 
-        assert "replace" in guidance
-        assert "own" in guidance or "your" in guidance or "this project" in guidance
-        assert "index" in guidance
-        assert "config" in guidance or "opencode.jsonc" in guidance
+        # The merge writes the destination's own folder name, so the retired
+        # hand-override instruction and its stale premise must both be gone.
+        assert "merge" in guidance
+        assert "this project's own folder name" in guidance
+        assert "no manual edit is needed" in guidance
+        assert "may belong to the upstream core project" not in body.lower()
+
+        # A project that wants a different index sets it in its own config.
+        assert "different index name" in guidance
+        assert "`.opencode/opencode.jsonc`" in guidance
         assert "verify" in guidance
         assert "retrieval" in guidance
+
+        # An empty own-name index is a never-built index, not a sync defect:
+        # the stated next step is to populate it, so that outcome is named.
+        assert "an empty result under this project's own index" in guidance
+        assert "never built that index" in guidance
+        assert "populate it" in guidance
+        assert (
+            "before treating the empty result as a synchronization defect"
+            in guidance
+        )
 
         # No placeholder index value ships, so the note must not claim one.
         # Checked on the constant itself, never on a derived view, because two
@@ -106,5 +120,7 @@ class ReconcileBlockerContentTests:
 
         assert "project region" in body
         assert "never touch the core region" in body.lower()
-        if "core region" in guidance:
-            assert "never" in guidance or "do not" in guidance
+        # Bind the guard to the exact obligation fragment, not to the bare word
+        # "never", which the empty-result clause also contains: deleting
+        # "Never edit the core region to change the index." must fail here.
+        assert "never edit the core region to change the index" in guidance

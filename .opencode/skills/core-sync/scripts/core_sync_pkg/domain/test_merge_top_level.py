@@ -17,6 +17,12 @@ from _core_sync_testkit import (  # noqa: E402
     MERGE_MCP_DESTINATION,
     MERGE_MCP_RESULT,
     MERGE_MCP_SOURCE,
+    QMD_CORE_INDEX,
+    QMD_DESTINATION,
+    QMD_DESTINATION_FOLDER,
+    QMD_SOURCE,
+    _qmd_document,
+    _qmd_index,
 )
 from core_sync_pkg.domain.errors import MalformedJsonc  # noqa: E402
 from core_sync_pkg.domain.jsonc import parse_object  # noqa: E402
@@ -142,3 +148,82 @@ class MergeTopLevelTests:
     def test_malformed_destination_rejected(self) -> None:
         with pytest.raises(MalformedJsonc):
             merge_top_level('{"a": 1}', '{"a": }')
+
+
+class MergeQmdIndexTests:
+    """Retarget the qmd `--index` argument to the destination project name."""
+
+    def test_server_insertion_carries_the_destination_index(self) -> None:
+        merged = merge_top_level(
+            QMD_SOURCE, QMD_DESTINATION, project_name=QMD_DESTINATION_FOLDER
+        )
+        assert _qmd_index(merged) == QMD_DESTINATION_FOLDER
+        assert '"memories"' in merged
+
+    def test_server_replacement_carries_the_destination_index(self) -> None:
+        merged = merge_top_level(
+            QMD_SOURCE,
+            _qmd_document(QMD_CORE_INDEX),
+            project_name=QMD_DESTINATION_FOLDER,
+        )
+        assert _qmd_index(merged) == QMD_DESTINATION_FOLDER
+
+    def test_wholesale_mcp_replacement_carries_the_destination_index(self) -> None:
+        merged = merge_top_level(
+            QMD_SOURCE,
+            '{\n  "mcp": {\n    "servers": []\n  }\n}\n',
+            project_name=QMD_DESTINATION_FOLDER,
+        )
+        assert _qmd_index(merged) == QMD_DESTINATION_FOLDER
+
+    def test_source_only_mcp_insertion_carries_the_destination_index(self) -> None:
+        merged = merge_top_level(
+            QMD_SOURCE,
+            '{\n  "theme": "dark"\n}\n',
+            project_name=QMD_DESTINATION_FOLDER,
+        )
+        assert _qmd_index(merged) == QMD_DESTINATION_FOLDER
+
+    def test_empty_project_name_keeps_the_core_index(self) -> None:
+        merged = merge_top_level(QMD_SOURCE, QMD_DESTINATION)
+        assert _qmd_index(merged) == QMD_CORE_INDEX
+
+    def test_retargeting_leaves_the_destination_servers_untouched(self) -> None:
+        merged = merge_top_level(
+            QMD_SOURCE, QMD_DESTINATION, project_name=QMD_DESTINATION_FOLDER
+        )
+        assert parse_object(merged)["mcp"] == {
+            "servers": {
+                "qmd": {
+                    "type": "local",
+                    "command": [
+                        "npx",
+                        "-y",
+                        "@tobilu/qmd@2.8.3",
+                        "--index",
+                        QMD_DESTINATION_FOLDER,
+                        "mcp",
+                    ],
+                    "codemode": False,
+                },
+                "memories": {
+                    "command": [
+                        "npx",
+                        "-y",
+                        "@memories.sh/cli@0.7.9",
+                        "serve",
+                    ]
+                },
+            }
+        }
+
+    def test_retargeted_merge_is_byte_idempotent(self) -> None:
+        once = merge_top_level(
+            QMD_SOURCE, QMD_DESTINATION, project_name=QMD_DESTINATION_FOLDER
+        )
+        assert (
+            merge_top_level(
+                QMD_SOURCE, once, project_name=QMD_DESTINATION_FOLDER
+            )
+            == once
+        )

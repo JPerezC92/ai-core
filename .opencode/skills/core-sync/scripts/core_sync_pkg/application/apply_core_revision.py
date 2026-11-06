@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from core_sync_pkg.application.region_creation import (
+    created_region_document,
+    destination_is_absent,
+)
 from core_sync_pkg.domain.ports import (
     BindingsStore,
     ClearanceStore,
@@ -112,6 +116,7 @@ class ApplyCoreRevision:
 
         writes: list[tuple[Path, str]] = []
         raw_writes: list[tuple[Path, bytes]] = []
+        created: list[str] = []
         for entry in bindings["bindings"]:
             source_path = source_dir / entry["source"]
             if mode_of.get(entry["source"]) == MODE_RAW:
@@ -123,10 +128,17 @@ class ApplyCoreRevision:
                 for destination in entry["destinations"]:
                     destination_path = destination_dir / destination
                     if not self._paths.is_file(destination_path):
-                        return DomainError(
-                            CODE_DRIFT,
-                            f"missing destination: {destination_path}",
-                        )
+                        if not destination_is_absent(
+                            self._paths, destination_path
+                        ):
+                            return DomainError(
+                                CODE_DRIFT,
+                                f"missing destination: {destination_path}",
+                            )
+                        # A destination recorded in the bindings file but absent
+                        # from disk is recreated with its parent directory, made
+                        # immediately before the write.
+                        created.append(destination)
                     raw_writes.append((destination_path, source_bytes))
                 continue
             if mode_of.get(entry["source"]) == MODE_MERGE:
@@ -146,7 +158,9 @@ class ApplyCoreRevision:
                     if not self._paths.is_file(destination_path):
                         return DomainError(
                             CODE_DRIFT,
-                            f"missing destination: {destination_path}",
+                            f"missing destination: {destination_path} "
+                            "(merge mode cannot create it; the destination must "
+                            "exist)",
                         )
                     destination_text = self._destination_writer.read_text(
                         destination_path
@@ -157,7 +171,11 @@ class ApplyCoreRevision:
                             f"missing destination: {destination_path}",
                         )
                     try:
-                        merged_text = merge_top_level(source_text, destination_text)
+                        merged_text = merge_top_level(
+                            source_text,
+                            destination_text,
+                            project_name=destination_dir.resolve().name,
+                        )
                     except MalformedJsonc:
                         return DomainError(
                             CODE_INVALID, f"invalid JSONC: {destination_path}"
@@ -176,9 +194,25 @@ class ApplyCoreRevision:
             for destination in entry["destinations"]:
                 destination_path = destination_dir / destination
                 if not self._paths.is_file(destination_path):
-                    return DomainError(
-                        CODE_DRIFT, f"missing destination: {destination_path}"
+                    if not destination_is_absent(self._paths, destination_path):
+                        return DomainError(
+                            CODE_DRIFT,
+                            f"missing destination: {destination_path}",
+                        )
+                    # A destination recorded in the bindings file but absent from
+                    # disk is recreated, not drift: it gets exactly the content a
+                    # fresh enrollment creates, so a declaration does not depend
+                    # on when it was recorded.
+                    writes.append(
+                        (
+                            destination_path,
+                            created_region_document(
+                                self._source_reader, source_path, source_core
+                            ),
+                        )
                     )
+                    created.append(destination)
+                    continue
                 destination_content = self._destination_writer.read_text(
                     destination_path
                 )
@@ -203,9 +237,13 @@ class ApplyCoreRevision:
                     )
                 writes.append((destination_path, new_content))
 
+        # Parent directories and writes happen only once every destination has
+        # been classified, so a later refusal cannot leave a directory behind.
         for destination_path, new_content in writes:
+            self._paths.ensure_dir(destination_path.parent)
             self._destination_writer.write_text(destination_path, new_content)
         for destination_path, raw_content in raw_writes:
+            self._paths.ensure_dir(destination_path.parent)
             self._destination_writer.write_bytes(destination_path, raw_content)
 
         bindings["core_revision"] = source_revision
@@ -217,4 +255,7 @@ class ApplyCoreRevision:
             self._root_runtime.resolve(destination_dir, bindings),
             bindings["pending"],
         )
-        return UseCaseResult("applied")
+        message = "applied"
+        if created:
+            message = f"{message}; created: {', '.join(created)}"
+        return UseCaseResult(message)

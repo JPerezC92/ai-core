@@ -115,17 +115,24 @@ def render_with_region(destination: RegionSplit, source_region: str) -> str:
     )
 
 
-def render_init_file(destination_content: str, source_core: str) -> str:
+def render_init_file(
+    destination_content: str,
+    source_core: str,
+    source_frontmatter: str = "",
+) -> str:
     """Rebuild a markerless destination as a core region plus a project region.
 
     The destination frontmatter content is kept verbatim but always ends on its
-    own line so the core begin marker stays an exact line; the source core fills
-    the new core region; everything after the destination frontmatter is moved
-    verbatim into the new project region.
+    own line so the core begin marker stays an exact line; it wins over
+    `source_frontmatter`, which a caller supplies only when enrollment creates a
+    file that did not exist, so the created file leads with the source document's
+    frontmatter instead of starting at the core marker; the source core fills the
+    new core region; everything after the frontmatter is moved verbatim into the
+    new project region.
     """
-    frontmatter, body = split_frontmatter(destination_content)
+    destination_frontmatter, body = split_frontmatter(destination_content)
     return (
-        ensure_trailing_newline(frontmatter)
+        ensure_trailing_newline(destination_frontmatter or source_frontmatter)
         + BEGIN
         + "\n"
         + ensure_trailing_newline(source_core)

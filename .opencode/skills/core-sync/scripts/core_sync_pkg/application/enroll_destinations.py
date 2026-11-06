@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from core_sync_pkg.application.region_creation import (
+    created_region_document,
+    destination_is_absent,
+)
 from core_sync_pkg.domain.ports import (
     BindingsStore,
     ClearanceStore,
@@ -108,8 +112,12 @@ class EnrollDestinations:
             }
             mode_of = expand_clearance(entries, enumerated)
 
-        bulk_new_region: set[str] = set()
         bulk_new_raw: set[str] = set()
+        # Merge targets absent at discovery are created by this first enrollment;
+        # a merge target already recorded in the bindings file, or declared
+        # explicitly, keeps its refusal. Creation belongs to enrollment, not to an
+        # update, so `apply` never creates one.
+        bulk_new_merge: set[str] = set()
         if bind_cleared and entries is not None:
             bound = {entry["source"] for entry in bindings["bindings"]}
             root_destination: str | None = bindings.get("root")
@@ -152,8 +160,8 @@ class EnrollDestinations:
                 if not self._paths.exists(destination_dir / destination):
                     if mode == MODE_RAW:
                         bulk_new_raw.add(destination)
-                    elif mode == MODE_REGION:
-                        bulk_new_region.add(destination)
+                    elif mode == MODE_MERGE:
+                        bulk_new_merge.add(destination)
             if root_destination is not None:
                 bindings["root"] = root_destination
 
@@ -209,27 +217,6 @@ class EnrollDestinations:
                 f"source not cleared for distribution: {', '.join(names)}",
             )
 
-        # Pre-write validation: a non-bulk raw target whose parent directory is
-        # absent is drift, and must fail before any directory is created. Only
-        # bulk-cleared raw targets may create their parent (mirroring the region
-        # branch); explicit and persisted raw targets keep the precondition.
-        for entry in bindings["bindings"]:
-            if mode_of.get(entry["source"]) != MODE_RAW:
-                continue
-            for destination in entry["destinations"]:
-                if destination in bulk_new_raw:
-                    continue
-                destination_path = destination_dir / destination
-                if self._paths.exists(destination_path) or self._paths.is_symlink(
-                    destination_path
-                ):
-                    continue
-                if not self._paths.is_dir(destination_path.parent):
-                    return DomainError(
-                        CODE_DRIFT,
-                        f"missing destination parent: {destination_path.parent}",
-                    )
-
         writes: list[tuple[Path, str]] = []
         raw_writes: list[tuple[Path, bytes]] = []
         entries: list[ReconciliationEntry] = []
@@ -251,25 +238,18 @@ class EnrollDestinations:
                         destination_path
                     )
                     if destination_bytes is None:
-                        if (
-                            destination in new_raw_destinations
-                            and not self._paths.exists(destination_path)
-                            and not self._paths.is_symlink(destination_path)
-                        ):
-                            if destination in bulk_new_raw:
-                                self._paths.ensure_dir(destination_path.parent)
-                            elif not self._paths.is_dir(destination_path.parent):
-                                return DomainError(
-                                    CODE_DRIFT,
-                                    "missing destination parent: "
-                                    f"{destination_path.parent}",
-                                )
-                            raw_writes.append((destination_path, source_bytes))
-                            continue
-                        return DomainError(
-                            CODE_DRIFT,
-                            f"missing destination: {destination_path}",
-                        )
+                        if not destination_is_absent(self._paths, destination_path):
+                            return DomainError(
+                                CODE_DRIFT,
+                                f"missing destination: {destination_path}",
+                            )
+                        # A destination recorded in the bindings file but absent
+                        # from disk is recreated from the source bytes: an
+                        # explicit declaration and a persisted binding behave
+                        # identically, regardless of when each was recorded. Its
+                        # parent is made immediately before the write.
+                        raw_writes.append((destination_path, source_bytes))
+                        continue
                     if destination_bytes == source_bytes:
                         continue
                     raw_writes.append((destination_path, source_bytes))
@@ -286,18 +266,48 @@ class EnrollDestinations:
                     return DomainError(
                         CODE_INVALID, f"invalid JSONC: {source_path}"
                     )
+                project_name = destination_dir.resolve().name
                 for destination in entry["destinations"]:
                     destination_path = destination_dir / destination
                     destination_text = self._destination_writer.read_text(
                         destination_path
                     )
                     if destination_text is None:
-                        return DomainError(
-                            CODE_DRIFT,
-                            f"missing destination: {destination_path}",
+                        if destination not in bulk_new_merge:
+                            return DomainError(
+                                CODE_DRIFT,
+                                f"missing destination: {destination_path} "
+                                "(merge mode cannot create it; the destination must "
+                                "exist)",
+                            )
+                        if not destination_is_absent(self._paths, destination_path):
+                            return DomainError(
+                                CODE_DRIFT,
+                                f"missing destination: {destination_path}",
+                            )
+                        # A merge target this enrollment discovered absent is
+                        # created from the source document merged into an empty
+                        # object: it carries every source top-level key with the
+                        # same `qmd` index retargeting a later merge applies, so
+                        # the created file is already merged and a refresh writes
+                        # nothing. Merge destinations are non-region, so no
+                        # reconciliation entry or pending path is recorded — the
+                        # same as a created raw copy.
+                        writes.append(
+                            (
+                                destination_path,
+                                merge_top_level(
+                                    source_text, "{}", project_name=project_name
+                                ),
+                            )
                         )
+                        continue
                     try:
-                        merged_text = merge_top_level(source_text, destination_text)
+                        merged_text = merge_top_level(
+                            source_text,
+                            destination_text,
+                            project_name=project_name,
+                        )
                     except MalformedJsonc:
                         return DomainError(
                             CODE_INVALID, f"invalid JSONC: {destination_path}"
@@ -319,23 +329,29 @@ class EnrollDestinations:
                     destination_path
                 )
                 if destination_content is None:
-                    if destination in bulk_new_region:
-                        init_content = render_init_file("", source_core)
-                        self._paths.ensure_dir(destination_path.parent)
-                        writes.append((destination_path, init_content))
-                        entries.append(
-                            {
-                                "destination": destination,
-                                "source": entry["source"],
-                                "action": "initialized",
-                            }
+                    if not destination_is_absent(self._paths, destination_path):
+                        return DomainError(
+                            CODE_DRIFT,
+                            f"missing destination: {destination_path}",
                         )
-                        if destination not in pending:
-                            pending.append(destination)
-                        continue
-                    return DomainError(
-                        CODE_DRIFT, f"missing destination: {destination_path}"
+                    # A destination recorded in the bindings file but absent from
+                    # disk is recreated, not drift: it gets exactly the content a
+                    # fresh enrollment creates, so a declaration does not depend
+                    # on when it was recorded. Its parent is made before the write.
+                    init_content = created_region_document(
+                        self._source_reader, source_path, source_core
                     )
+                    writes.append((destination_path, init_content))
+                    entries.append(
+                        {
+                            "destination": destination,
+                            "source": entry["source"],
+                            "action": "initialized",
+                        }
+                    )
+                    if destination not in pending:
+                        pending.append(destination)
+                    continue
                 destination_split = split_regions(destination_content)
                 if destination_split is None:
                     if has_exact_core_marker_lines(destination_content):
@@ -377,9 +393,14 @@ class EnrollDestinations:
                 if destination not in pending:
                     pending.append(destination)
 
+        # Parent directories and writes happen only once every destination has
+        # been classified, so a later refusal cannot leave a directory behind;
+        # this mirrors `apply`, so both commands create parents at the same point.
         for destination_path, new_content in writes:
+            self._paths.ensure_dir(destination_path.parent)
             self._destination_writer.write_text(destination_path, new_content)
         for destination_path, raw_content in raw_writes:
+            self._paths.ensure_dir(destination_path.parent)
             self._destination_writer.write_bytes(destination_path, raw_content)
 
         if entries:

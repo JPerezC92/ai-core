@@ -71,17 +71,15 @@ class RawInitEnrollmentTests:
         assert root_path.read_bytes() == b"# Root remains unchanged\n"
         assert not report_path.exists()
 
-    def test_new_raw_destination_parent_missing_returns_one_without_writes(
+    def test_explicit_raw_declaration_creates_missing_target_and_parent(
         self, tmp_path: Path
     ) -> None:
         source = tmp_path / "source"
         destination = tmp_path / "destination"
-        source_region = _write_file(source, "agent.md", SOURCE_NO_MARKERS)
-        source_raw = _write_bytes_file(source, "payload.bin", b"\x00raw\xff\r\n")
-        destination_region = _write_file(destination, "agent.md", DEST_PLAIN)
-        root_path = _write_file(
-            destination, "CLAUDE.md", "# Root remains unchanged\n"
-        )
+        _write_file(source, "agent.md", SOURCE_NO_MARKERS)
+        _write_bytes_file(source, "payload.bin", b"\x00raw\xff\r\n")
+        _write_file(destination, "agent.md", DEST_PLAIN)
+        _write_file(destination, "CLAUDE.md", "# Root remains unchanged\n")
         bindings_path = tmp_path / "bindings.yaml"
         save_bindings(
             bindings_path,
@@ -91,26 +89,20 @@ class RawInitEnrollmentTests:
                 root="CLAUDE.md",
             ),
         )
-        report_path = reconciliation_report_path(bindings_path)
         missing_parent = destination / "new-stories"
         destination_path = missing_parent / "payload.bin"
-        unchanged = {
-            source_region: source_region.read_bytes(),
-            source_raw: source_raw.read_bytes(),
-            destination_region: destination_region.read_bytes(),
-            root_path: root_path.read_bytes(),
-            bindings_path: bindings_path.read_bytes(),
-        }
         args = _init_args(source, destination, bindings_path, REV_A)
         args.extend(["--bind-raw", "payload.bin=new-stories/payload.bin"])
 
         assert not missing_parent.exists()
-        assert not report_path.exists()
-        assert main(args) == 1
-        assert {path: path.read_bytes() for path in unchanged} == unchanged
-        assert not missing_parent.exists()
-        assert not destination_path.exists()
-        assert not report_path.exists()
+        assert main(args) == 0
+        assert missing_parent.is_dir()
+        assert destination_path.read_bytes() == b"\x00raw\xff\r\n"
+        updated = load_bindings(bindings_path)
+        assert updated is not None
+        assert _binding_entry(
+            "payload.bin", ["new-stories/payload.bin"]
+        ) in updated["bindings"]
 
     def test_bind_cleared_raw_target_creates_missing_parent(
         self, tmp_path: Path

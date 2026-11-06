@@ -9,9 +9,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from _core_sync_testkit import (  # noqa: E402
     DEST_PLAIN,
+    RAW_SOURCE_BYTES,
     REV_A,
     REV_B,
     SOURCE_NO_MARKERS,
+    created_region,
     _binding_entry,
     _bindings_document,
     _bindings_with_entries,
@@ -31,7 +33,11 @@ from core_sync_pkg.infrastructure.stores import (  # noqa: E402
 
 
 class InitMissingInputsTests:
-    """Verify `init` leaves targets unchanged when region or raw inputs are missing."""
+    """Verify `init` recreates declared destinations absent from disk.
+
+    The repair is scoped to the bindings file: a mapping whose source is not
+    distributable is refused and nothing is created.
+    """
 
     def _setup(self, tmp_path: Path) -> tuple[Path, Path, Path]:
         source = tmp_path / "source"
@@ -70,16 +76,14 @@ class InitMissingInputsTests:
         assert {path: path.read_bytes() for path in unchanged} == unchanged
         assert not report_path.exists()
 
-    def test_init_missing_region_destination_returns_one_without_writing_targets(
+    def test_init_recreates_an_absent_region_destination(
         self, tmp_path: Path
     ) -> None:
         source = tmp_path / "source"
         destination = tmp_path / "destination"
         _write_file(source, "agent.md", SOURCE_NO_MARKERS)
-        present_path = _write_file(destination, "present.md", DEST_PLAIN)
-        root_path = _write_file(
-            destination, "CLAUDE.md", "# Root remains unchanged\n"
-        )
+        _write_file(destination, "present.md", DEST_PLAIN)
+        _write_file(destination, "CLAUDE.md", "# Root remains unchanged\n")
         bindings_path = tmp_path / "bindings.yaml"
         save_bindings(
             bindings_path,
@@ -90,63 +94,45 @@ class InitMissingInputsTests:
                 root="CLAUDE.md",
             ),
         )
-        report_path = _write_file(
-            tmp_path,
-            "reconciliation/init.yaml",
-            "Existing report remains unchanged\n",
+
+        assert main(_init_args(source, destination, bindings_path, REV_A)) == 0
+        assert (destination / "missing.md").read_text(encoding="utf-8") == (
+            created_region(
+                "---\nname: src\n---\n",
+                "\nCore body one\nCore body two\n",
+            )
         )
-        unchanged = {
-            present_path: present_path.read_bytes(),
-            bindings_path: bindings_path.read_bytes(),
-            root_path: root_path.read_bytes(),
-            report_path: report_path.read_bytes(),
-        }
+        updated = load_bindings(bindings_path)
+        assert updated is not None
+        assert updated["pending"] == ["present.md", "missing.md"]
 
-        assert main(_init_args(source, destination, bindings_path, REV_A)) == 1
-        assert {path: path.read_bytes() for path in unchanged} == unchanged
-        assert not (destination / "missing.md").exists()
-
-    def test_init_missing_stored_raw_target_returns_one_without_writes(
+    def test_init_recreates_an_absent_stored_raw_target(
         self, tmp_path: Path
     ) -> None:
         source, destination, bindings_path = _raw_setup(
             tmp_path, destination_content=None
         )
-        root_path = _write_file(
-            destination, "CLAUDE.md", "# Root remains unchanged\n"
-        )
+        _write_file(destination, "CLAUDE.md", "# Root remains unchanged\n")
         bindings = load_bindings(bindings_path)
         assert bindings is not None
         bindings["root"] = "CLAUDE.md"
         save_bindings(bindings_path, bindings)
-        source_path = source / "opencode.jsonc"
         destination_path = destination / "opencode.jsonc"
-        report_path = reconciliation_report_path(bindings_path)
-        unchanged = {
-            source_path: source_path.read_bytes(),
-            bindings_path: bindings_path.read_bytes(),
-            root_path: root_path.read_bytes(),
-        }
         args = _init_args(source, destination, bindings_path, REV_A)
         args.extend(["--bind-raw", "opencode.jsonc=opencode.jsonc"])
 
         assert not destination_path.exists()
-        assert not report_path.exists()
-        assert main(args) == 1
-        assert {path: path.read_bytes() for path in unchanged} == unchanged
-        assert not destination_path.exists()
-        assert not report_path.exists()
+        assert main(args) == 0
+        assert destination_path.read_bytes() == RAW_SOURCE_BYTES
 
-    def test_init_missing_raw_destination_parent_returns_one_without_creating_tree(
+    def test_init_creates_a_missing_parent_for_an_absent_raw_target(
         self, tmp_path: Path
     ) -> None:
         source = tmp_path / "source"
         destination = tmp_path / "destination"
         _write_bytes_file(source, "payload.bin", b"\x00raw\xff\r\n")
         destination.mkdir()
-        root_path = _write_file(
-            destination, "CLAUDE.md", "# Root remains unchanged\n"
-        )
+        _write_file(destination, "CLAUDE.md", "# Root remains unchanged\n")
         bindings_path = tmp_path / "bindings.yaml"
         save_bindings(
             bindings_path,
@@ -156,22 +142,29 @@ class InitMissingInputsTests:
                 root="CLAUDE.md",
             ),
         )
-        missing_parent = destination / "nested"
-        destination_path = missing_parent / "payload.bin"
-        report_path = reconciliation_report_path(bindings_path)
-        unchanged = {
-            root_path: root_path.read_bytes(),
-            bindings_path: bindings_path.read_bytes(),
-        }
+        destination_path = destination / "nested" / "payload.bin"
 
-        assert not missing_parent.exists()
-        assert not report_path.exists()
-        assert main(_init_args(source, destination, bindings_path, REV_A)) == 1
-        assert {path: path.read_bytes() for path in unchanged} == unchanged
-        assert sorted(path.name for path in destination.iterdir()) == ["CLAUDE.md"]
-        assert not missing_parent.exists()
-        assert not destination_path.exists()
-        assert not report_path.exists()
+        assert not (destination / "nested").exists()
+        assert main(_init_args(source, destination, bindings_path, REV_A)) == 0
+        assert destination_path.read_bytes() == b"\x00raw\xff\r\n"
+
+    def test_init_refuses_an_absent_destination_without_a_cleared_source(
+        self, tmp_path: Path
+    ) -> None:
+        source = tmp_path / "source"
+        destination = tmp_path / "destination"
+        _write_bytes_file(source, "payload.bin", b"\x00raw\xff\r\n")
+        destination.mkdir()
+        bindings_path = tmp_path / "bindings.yaml"
+        save_bindings(bindings_path, _bindings_with_entries(REV_B, []))
+        args = _init_args(source, destination, bindings_path, REV_A)
+        args.extend(["--bind", "other.md=other.md"])
+
+        assert main(args) == 1
+        assert not (destination / "other.md").exists()
+        updated = load_bindings(bindings_path)
+        assert updated is not None
+        assert updated["bindings"] == []
 
     def test_init_missing_raw_source_returns_one_without_writing_targets(
         self, tmp_path: Path

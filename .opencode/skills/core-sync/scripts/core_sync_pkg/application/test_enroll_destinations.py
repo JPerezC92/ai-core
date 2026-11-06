@@ -15,6 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from _core_sync_testkit import created_region  # noqa: E402
 from core_sync_pkg.application.enroll_destinations import (  # noqa: E402
     EnrollDestinations,
 )
@@ -33,7 +34,6 @@ from core_sync_pkg.domain.errors import (  # noqa: E402
 from core_sync_pkg.domain.jsonc import parse_object  # noqa: E402
 from core_sync_pkg.domain.ports import UseCaseResult  # noqa: E402
 from core_sync_pkg.domain.reconciliation import ReconciliationEntry  # noqa: E402
-from core_sync_pkg.domain.regions import render_init_file  # noqa: E402
 
 REV_A = "a" * 40
 REV_B = "b" * 40
@@ -59,6 +59,11 @@ REFRESHED_DEST = (
     "---\nname: dest\n---\n"
     "<!-- core:begin -->\nCORE\n<!-- core:end -->\n\nProject\n"
 )
+SOURCE_FRONTMATTER = "---\nname: source\n---\n"
+SOURCE_DOCUMENT = SOURCE_FRONTMATTER + (
+    "<!-- core:begin -->\nCORE\n<!-- core:end -->\n"
+)
+CREATED_REGION = created_region(SOURCE_FRONTMATTER, "CORE\n")
 
 
 class FakeBindingsStore:
@@ -327,6 +332,8 @@ class EnrollDestinationsTests:
         fixture = _enroll(
             _bindings(None, []),
             cores={SOURCE_DIR / "agent.md": "CORE\n"},
+            # The source carries frontmatter; an existing destination keeps its own.
+            texts={SOURCE_DIR / "agent.md": SOURCE_DOCUMENT},
             text={DEST_DIR / "agent.md": PLAIN_DEST},
             cleared={"agent.md"},
         )
@@ -414,11 +421,36 @@ class EnrollDestinationsTests:
         assert result.code == CODE_DRIFT
         assert "missing source" in result.message
 
-    def test_reports_missing_destination_when_region_target_absent(self) -> None:
+    def test_recreates_absent_region_target_with_source_frontmatter(self) -> None:
         fixture = _enroll(
             _bindings(REV_A, [_entry("agent.md", ["agent.md"])]),
             cores={SOURCE_DIR / "agent.md": "CORE\n"},
+            texts={SOURCE_DIR / "agent.md": SOURCE_DOCUMENT},
             cleared={"agent.md"},
+        )
+        result = fixture.use_case.execute(
+            SOURCE_DIR, DEST_DIR, BINDINGS_PATH, REV_B, [], []
+        )
+        assert isinstance(result, UseCaseResult)
+        assert result.message == "initialized"
+        assert fixture.writer.text_writes == [
+            (DEST_DIR / "agent.md", CREATED_REGION)
+        ]
+        assert fixture.store.reports[-1][1] == [
+            {"destination": "agent.md", "source": "agent.md", "action": "initialized"}
+        ]
+        # Pending is unchanged: a recreated target has an empty project region,
+        # so it is recorded exactly like a newly created one.
+        assert fixture.store.saves[-1][1]["pending"] == ["agent.md"]
+        assert fixture.store.saves[-1][1]["core_revision"] == REV_B
+
+    def test_rejects_a_destination_that_exists_as_a_directory(self) -> None:
+        fixture = _enroll(
+            _bindings(REV_A, [_entry("agent.md", ["agent.md"])]),
+            cores={SOURCE_DIR / "agent.md": "CORE\n"},
+            texts={SOURCE_DIR / "agent.md": SOURCE_DOCUMENT},
+            cleared={"agent.md"},
+            dirs={DEST_DIR / "agent.md"},
         )
         result = fixture.use_case.execute(
             SOURCE_DIR, DEST_DIR, BINDINGS_PATH, REV_B, [], []
@@ -426,6 +458,9 @@ class EnrollDestinationsTests:
         assert isinstance(result, DomainError)
         assert result.code == CODE_DRIFT
         assert "missing destination" in result.message
+        assert fixture.writer.text_writes == []
+        assert fixture.writer.byte_writes == []
+        assert fixture.store.saves == []
 
     def test_reports_missing_clearance_when_clearance_file_absent(self) -> None:
         fixture = _enroll(
@@ -496,6 +531,7 @@ class EnrollDestinationsTests:
         assert isinstance(result, DomainError)
         assert result.code == CODE_DRIFT
         assert "missing destination" in result.message
+        assert "merge mode cannot create it" in result.message
         assert fixture.writer.text_writes == []
 
     def test_merge_reports_invalid_when_destination_malformed(self) -> None:
@@ -554,6 +590,7 @@ class EnrollDestinationsTests:
         fixture = _enroll(
             None,
             cores={SOURCE_DIR / (ROOT + "SKILL.md"): "CORE\n"},
+            texts={SOURCE_DIR / (ROOT + "SKILL.md"): SOURCE_DOCUMENT},
             raws={
                 SOURCE_DIR / (ROOT + "README.md"): b"# Readme\n",
                 SOURCE_DIR / (ROOT + "data.json"): b"{}\n",
@@ -577,8 +614,10 @@ class EnrollDestinationsTests:
             (ROOT + "data.json", "raw"),
         ]
         assert fixture.writer.text_writes == [
-            (DEST_DIR / (ROOT + "SKILL.md"), render_init_file("", "CORE\n"))
+            (DEST_DIR / (ROOT + "SKILL.md"), CREATED_REGION)
         ]
+        # The created document is pinned literally: it leads with the source
+        # frontmatter, then the core region and an empty project region.
         assert fixture.writer.byte_writes == [
             (DEST_DIR / (ROOT + "README.md"), b"# Readme\n"),
             (DEST_DIR / (ROOT + "data.json"), b"{}\n"),

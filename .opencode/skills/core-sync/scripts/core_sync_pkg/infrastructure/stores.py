@@ -30,7 +30,13 @@ def load_bindings(path: Path) -> Bindings | None:
 
 
 def save_bindings(path: Path, bindings: Bindings) -> None:
-    """Serialize and write the bindings file at the IO boundary."""
+    """Serialize and write the bindings file at the IO boundary.
+
+    The parent directory is created when absent, so enrollment reaches a
+    destination that has no bindings directory yet instead of failing on the
+    missing `.aicore/` parent.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
     write_text(path, serialize_bindings(bindings))
 
 
