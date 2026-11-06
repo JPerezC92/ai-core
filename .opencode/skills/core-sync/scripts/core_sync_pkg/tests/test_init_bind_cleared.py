@@ -99,6 +99,9 @@ class BindClearedBulkEnrollmentTests:
 
         assert code == 0
         written = (destination / "opencode.jsonc").read_text(encoding="utf-8")
+        # The existing destination is merged, never overwritten: its own comment
+        # and its destination-only key survive while the source keys win.
+        assert "// destination-only comment" in written
         assert parse_object(written) == {
             "theme": "dark",
             "shared": "source",

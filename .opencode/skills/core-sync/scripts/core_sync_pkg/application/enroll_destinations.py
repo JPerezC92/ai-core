@@ -113,6 +113,11 @@ class EnrollDestinations:
             mode_of = expand_clearance(entries, enumerated)
 
         bulk_new_raw: set[str] = set()
+        # Merge targets absent at discovery are created by this first enrollment;
+        # a merge target already recorded in the bindings file, or declared
+        # explicitly, keeps its refusal. Creation belongs to enrollment, not to an
+        # update, so `apply` never creates one.
+        bulk_new_merge: set[str] = set()
         if bind_cleared and entries is not None:
             bound = {entry["source"] for entry in bindings["bindings"]}
             root_destination: str | None = bindings.get("root")
@@ -155,6 +160,8 @@ class EnrollDestinations:
                 if not self._paths.exists(destination_dir / destination):
                     if mode == MODE_RAW:
                         bulk_new_raw.add(destination)
+                    elif mode == MODE_MERGE:
+                        bulk_new_merge.add(destination)
             if root_destination is not None:
                 bindings["root"] = root_destination
 
@@ -259,23 +266,47 @@ class EnrollDestinations:
                     return DomainError(
                         CODE_INVALID, f"invalid JSONC: {source_path}"
                     )
+                project_name = destination_dir.resolve().name
                 for destination in entry["destinations"]:
                     destination_path = destination_dir / destination
                     destination_text = self._destination_writer.read_text(
                         destination_path
                     )
                     if destination_text is None:
-                        return DomainError(
-                            CODE_DRIFT,
-                            f"missing destination: {destination_path} "
-                            "(merge mode cannot create it; the destination must "
-                            "exist)",
+                        if destination not in bulk_new_merge:
+                            return DomainError(
+                                CODE_DRIFT,
+                                f"missing destination: {destination_path} "
+                                "(merge mode cannot create it; the destination must "
+                                "exist)",
+                            )
+                        if not destination_is_absent(self._paths, destination_path):
+                            return DomainError(
+                                CODE_DRIFT,
+                                f"missing destination: {destination_path}",
+                            )
+                        # A merge target this enrollment discovered absent is
+                        # created from the source document merged into an empty
+                        # object: it carries every source top-level key with the
+                        # same `qmd` index retargeting a later merge applies, so
+                        # the created file is already merged and a refresh writes
+                        # nothing. Merge destinations are non-region, so no
+                        # reconciliation entry or pending path is recorded — the
+                        # same as a created raw copy.
+                        writes.append(
+                            (
+                                destination_path,
+                                merge_top_level(
+                                    source_text, "{}", project_name=project_name
+                                ),
+                            )
                         )
+                        continue
                     try:
                         merged_text = merge_top_level(
                             source_text,
                             destination_text,
-                            project_name=destination_dir.resolve().name,
+                            project_name=project_name,
                         )
                     except MalformedJsonc:
                         return DomainError(
