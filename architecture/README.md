@@ -17,7 +17,7 @@ Read in order:
 | `architecture/implementation/stacks/typescript/nestjs.md` | Backend | reference |
 | `architecture/implementation/stacks/python.md` | Scripts; backend where applicable | reference; framework selections remain unselected |
 
-Concrete libraries and aliases preserve reference-architecture choices, not destination tool bindings. The destination selects its tooling in project-owned configuration without weakening the common contract. If the stack has no mapping, or a contradiction prevents a decision, use the agent runtime's uncertainty route; do not infer approval from another language or current code patterns.
+Concrete libraries and aliases preserve reference-architecture choices, not destination tool bindings. The destination selects its tooling in project-owned configuration without weakening the common contract. Follow applicable documented specifics for the concerns they cover; for uncovered concerns, including partial guide coverage or a stack with no applicable guide, apply the agnostic contract and applicable shapes directly. Missing guide coverage alone never blocks implementation or review and never requires creating a guide. Do not import unrelated language/framework rules or infer approval from current code patterns. Execution choices require evidenced project-owned bindings, not an invented runner or convention. A real contradiction, missing authority, or missing evidence needed for a decision still uses the agent runtime's uncertainty route.
 
 ## Ownership and extension
 
@@ -25,7 +25,7 @@ Layer duties are defined under `## Content model` in this file. Runtime specs re
 
 Copy `architecture/implementation/stacks/_template.md` before writing another implementation guide. Keep its heading order and map every C1–C10 obligation and selected shape obligation; explain applicability and language/runtime differences. Unsupported choices remain explicit open decisions, not invented equivalents or unexplained N/A. Proposed guides are not claims of reviewed documentation or implementation conformance.
 
-Never edit a distributed architecture file. A destination that needs a different stack adds its own guide, copied from `architecture/implementation/stacks/_template.md` or `architecture/testing/stacks/_template.md`; an unbound path survives every sync.
+Never edit a distributed architecture file. A destination may document a different stack in its own guide, copied from `architecture/implementation/stacks/_template.md` or `architecture/testing/stacks/_template.md`; an unbound path survives every sync. Guide authoring is an optional documentation extension, not a prerequisite for applying the agnostic fallback.
 
 ## Content model
 

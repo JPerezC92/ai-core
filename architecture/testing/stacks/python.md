@@ -2,16 +2,16 @@
 
 > **Status:** reference
 > **Stack:** Python application, script, and CLI code; pytest reference implementation
-> **Reviewed:** 2026-10-25 — `testing-architecture-layering`; entity-construction clause 2026-10-30
+> **Reviewed:** 2026-10-25 — `testing-architecture-layering`; entity-construction clause 2026-10-30; `architecture-agnostic-fallback` applicability and `T14`/`T24`–`T25` selection wording aligned to the agnostic fallback; the `T22`–`T23` and `T30`–`T36` `N/A` declaration was added and `T24`–`T25` cited as achieved; no `T` ID added, removed, moved or renumbered 2026-11-06
 > **Contract:** `architecture/testing/architecture.md`
 
 ## Applicability and ownership
 
 This guide applies to Python application, script, and CLI code that follows the clean-architecture layers. The reference case is a skill suite: application operations, domain responsibilities, and infrastructure adapters live in importable packages, and an end-to-end test exercises the assembled entry point.
 
-pytest is the reference runner. A destination owns its reviewed Python runner and configuration; a different runner requires its own destination-owned guide, not an assumption that these rules still apply unchanged (T20). This guide does not cover a browser frontend, a JavaScript/TypeScript frontend, or a framework-specific adapter that has no selected guide (T25).
+pytest is the reference runner. A destination owns its reviewed Python runner and configuration; a different runner uses its evidenced project-owned binding, retaining applicable mappings and using the agnostic contract for uncovered mechanisms rather than requiring a new guide (T20, T25). This guide does not cover a browser frontend, a JavaScript/TypeScript frontend, or a framework-specific adapter that has no selected guide. Uncovered concerns follow T24–T25; covered Python concerns retain their applicable mappings, without importing unrelated framework rules.
 
-A destination may select a different Python runner, add a framework-specific adapter, or bind an isolated test database. It must preserve the contract rules this guide cites: the three levels (T2–T5), returned-business-failure classification (T6), one behavior per module and class (T11), factory-sourced test data (T15), hermeticity (T18), and the separation of execution evidence from the verdict (T19, T21).
+A destination may select a different Python runner, add a framework-specific adapter, or bind an isolated test database. It must preserve the contract rules this guide cites: the three levels (T2–T5), returned-business-failure classification (T6), one behavior per module and class (T11), factory-sourced test data (T15), hermeticity (T18), and the separation of execution evidence from the verdict (T19, T21). It must also keep T24–T25 routing an uncovered concern to the contract instead of inheriting this guide's mechanisms. T22–T23 and T30–T36 are declared N/A in the parity table below because they govern selection by a reviewer and the authoring of a new guide rather than this guide's content; T24–T25 are not N/A, because the applicability paragraph above and `Execution and evidence` route them.
 
 ## Test pyramid mapping
 
@@ -89,23 +89,23 @@ assert isinstance(result, TaskNotFoundError)
 - Discovery is project-wide: a new `test_*.py` file joins the approved suite without a per-file grant or a subdirectory allowlist.
 - Verdicts are issued from the reviewed test files; the reviewed command's `pytest` output is separate execution evidence and never the verdict itself (T21).
 - Every feature-spec happy case and rejection case must trace to a test at the appropriate level.
-- Report `[FAIL]` for a declared-scope file with no scoped test evidence, and reserve `[UNCERTAIN]` for a file this guide does not cover (T14).
+- Report `[FAIL]` for a declared-review-scope file lacking required scoped test evidence. A concern outside this guide's coverage uses the contract's agnostic selection route, not an automatic `[UNCERTAIN]` verdict (T14, T25).
 - The reviewed runner's configuration is the execution authority; the file locations above are reference layout, not a narrower execution grant.
 
 ## Cross-stack parity
 
 | Contract section | Cited rule IDs | Language-specific achievement or N/A reason |
 |---|---|---|
-| Applicability and ownership | T20, T25, T26 | Application, script, and CLI packages follow the layers; pytest is the reference runner and a destination selecting another runner adds its own guide instead of assuming these rules still apply. Python has no browser frontend, so the frontend scope has no equivalent here, and an unselected adapter has no inferred runner or file convention; the `reference` status records its review. |
+| Applicability and ownership | T20, T24, T25, T26 | Application, script, and CLI packages follow the layers; pytest is the reference runner and a destination selecting another runner uses its evidenced binding and retains applicable mappings, with uncovered mechanisms following the agnostic contract. Python has no browser frontend, so the frontend scope has no equivalent here, and an unselected adapter has no inferred runner or file convention — T24–T25 route it to the contract and the applicable implementation contract/shapes, so uncovered coverage alone never becomes an uncertainty verdict; the `reference` status records its review. |
 | Test pyramid mapping | T1, T2, T3, T4, T5 | The three levels are instantiated with Python targets and no fourth level is added: an operation's `execute()` or a pure domain responsibility, one adapter, and the assembled CLI or service entry point. The UI-specific frontend row has no Python equivalent. |
 | File organization | T10, T11, T12, T13 | Tests sit beside the module they exercise as `test_*.py` modules with project-wide discovery and no per-subdirectory allowlist; one behavior per module and per class, and a cohesive module is never split by size. |
 | Unit tests | T2, T3, T6, T7, T16, T17 | `execute()` or the domain function is instantiated directly; each port is replaced with `unittest.mock` or a small fake, and `pytest.raises` covers only a boundary exception or a CLI `SystemExit`, never a returned domain error. |
 | Integration tests | T4, T8, T17, T18 | One adapter runs against a real isolated dependency — `tmp_path`, an isolated test database, or a controlled local service — with `monkeypatch` at the transport when isolation is impossible. The residue classes are declared in the body: files under `tmp_path`, database rows, environment variables, transport stubs, and module-level state. |
 | End-to-end tests | T5, T7, T8 | The assembled `main()` or service entry point runs with real adapters and isolated data, asserting exit code, `capsys` output, or the service result; unit and integration cases are not duplicated here. |
 | Test data and doubles | T15, T16, T18 | A shared `_test_support.py` factory provides `create(**overrides)` and `create_many(...)` and builds entities through the entity factory; `unittest.mock` is the single mocking library, with `monkeypatch` reserved for process-wide boundaries such as environment variables, time, and transport. |
-| Execution and evidence | T14, T19, T21 | The project owns the reviewed whole-project command and project-wide discovery; `[FAIL]` and `[UNCERTAIN]` follow the declared scope, and the run's output stays separate from the verdict. |
+| Execution and evidence | T14, T19, T21, T25 | The project owns the reviewed whole-project command and project-wide discovery; missing required evidence for a file in review scope is `[FAIL]`, uncovered mechanisms follow the contract's T25 agnostic selection route rather than an uncertainty verdict, and the run's output stays separate from the verdict. |
 | Cross-stack parity | T28, T29 | The guide keeps the contract's ten sections in order and declares every semantic difference in this table; a section with no Python mechanism would be marked `N/A` with its reason rather than thinned. |
-| Open decisions | T20 | No open decision is used to hide a missing rule; a Python web framework or database adapter belongs in a destination-owned guide that adds no level and weakens no cited rule. |
+| Open decisions | T20, T22, T23, T30–T36 | No open decision is used to hide a missing rule; a Python web framework or database adapter may be documented in a destination-owned guide that adds no level and weakens no cited rule. T22–T23 and T30–T36 are N/A — they govern selection by a reviewer and new-guide authoring, not this guide's body; T24–T25 are achieved above, not N/A. |
 
 ## Open decisions
 
