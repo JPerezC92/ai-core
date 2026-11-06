@@ -9,21 +9,9 @@ This contract owns routing conditions, evidence references, required ticket sele
 
 Incident identification remains symptom → incident problem → verdict under those rules. A routing row references that result; it never issues an independent verdict, upgrades a match, or bypasses register-first identification. Generic conditions, such as missing requester information, need no invented problem ID. A receiving team's routing responsibility is not evidence that it caused a defect or owns its remediation.
 
-### Project routing matrix
-
-Maintain this project's actual routing rows and organizational bindings in the project region: teams, ticket fields, allowed values and IDs, tools, execution owners, and approval requirements. Use the sole matrix template below. Do not copy full diagnoses into routing rows; reference the diagnostic owner and current-ticket evidence needed to establish the condition.
-
-Copy the following template for this project's routing rows. Angle-bracket placeholders are illustrative instructions, not live routes, field mappings, or execution evidence.
-
-```markdown
-| Problem / condition | Route to | Required evidence | Required ticket fields | Action / approval |
-|---|---|---|---|---|
-| <diagnostic reference or generic condition; no invented problem ID> | <verified receiving group and responsibility> | <current-ticket evidence references establishing the condition> | <verified field, current allowed value and ID where required; optional field: N/A with reason> | <recommended action; verified tool and execution owner; approval requirement and approval owner> |
-```
-
 ### Application assignment matrix
 
-When the assignee depends on the affected application rather than on the failure mode, keep that mapping in the project region as a second table. Its use is optional; a project that never assigns by application omits the table and its rows.
+When the assignee depends on the affected application rather than on the failure mode, keep that mapping in the project region as its own table. Its use is optional; a project that never assigns by application omits the table and its rows.
 
 ```markdown
 | Application | Group | Assignee | Precedence / note |
@@ -38,6 +26,18 @@ When the assignee depends on the affected application rather than on the failure
 - Application and group values come from this project's current catalog. A remembered value or identifier is not proof of a current valid option.
 - Resolve the person through this project's directory at execution time, and record the resolved group and the resolved person as required ticket selections.
 - The matrix selects a group and an assignee only. It does not by itself authorize the assignment, the status change, or any other ticket mutation.
+
+### Project routing matrix
+
+Maintain this project's actual routing rows and organizational bindings in the project region: teams, ticket fields, allowed values and IDs, tools, execution owners, and approval requirements. Use the sole matrix template below. Do not copy full diagnoses into routing rows; reference the diagnostic owner and current-ticket evidence needed to establish the condition.
+
+Copy the following template for this project's routing rows. Angle-bracket placeholders are illustrative instructions, not live routes, field mappings, or execution evidence.
+
+```markdown
+| Problem / condition | Route to | Required evidence | Required ticket fields | Action / approval |
+|---|---|---|---|---|
+| <diagnostic reference or generic condition; no invented problem ID> | <verified receiving group and responsibility> | <current-ticket evidence references establishing the condition> | <verified field, current allowed value and ID where required; optional field: N/A with reason> | <recommended action; verified tool and execution owner; approval requirement and approval owner> |
+```
 
 ### Synthesis and execution preflight
 
