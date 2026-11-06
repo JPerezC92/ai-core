@@ -5,7 +5,7 @@
 > **Created:** 2026-11-06
 > **Closed:** 2026-11-06
 > **Objective:** Follow applicable documented specifics and apply agnostic obligations wherever specific coverage is absent, without documentation-only implementation blockers.
-> **Branch:** main — baseline c58255bc47d097b9ade409c7672722606b7e32db
+> **Branch:** feat/architecture/agnostic-fallback — from main at c58255bc47d097b9ade409c7672722606b7e32db
 > **Delivery:** One coordinated policy work unit; forecast approximately 300 authored additions plus deletions, excluding generated files. Reassess before commit if scope exceeds approximately 400; separate additional work into reviewable slices.
 > **Runner:** uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feature.py odd/tasks
 
