@@ -2,7 +2,7 @@
 
 > **Status:** reference
 > **Stack:** Python application, script, and CLI code; pytest reference implementation
-> **Reviewed:** 2026-10-25 — `testing-architecture-layering`; entity-construction clause 2026-10-30; `architecture-agnostic-fallback` applicability and `T14`/`T24`–`T25` selection wording aligned to the agnostic fallback; the `T22`–`T23` and `T30`–`T36` `N/A` declaration was added and `T24`–`T25` cited as achieved; no `T` ID added, removed, moved or renumbered 2026-11-06
+> **Reviewed:** 2026-10-25 — `testing-architecture-layering`; entity-construction clause 2026-10-30; `architecture-agnostic-fallback` applicability and `T14`/`T24`–`T25` selection wording aligned to the agnostic fallback; the `T22`–`T23` and `T30`–`T36` `N/A` declaration was added and `T24`–`T25` cited as achieved; no `T` ID added, removed, moved or renumbered 2026-11-06; the parity table gained the `T9` and `T27` citations so both guides cite the same obligation set, reviewed 2026-11-06
 > **Contract:** `architecture/testing/architecture.md`
 
 ## Applicability and ownership
