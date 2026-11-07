@@ -53,7 +53,7 @@ Four duties follow:
 
 - **Cite, do not copy.** If a guide sentence can be deleted without losing any rule the cited owner does not already state, that sentence was a restatement and does not belong in the guide.
 - **One edit home.** Changing a rule edits its agnostic contract only. Guides citing the identifier stay correct unless their language-specific achievement stops satisfying it.
-- **Verifiable coverage.** A mapping or parity cell that claims coverage without citing an identifier is a defect. `N/A` requires a language or runtime reason.
+- **Verifiable coverage.** A mapping or parity cell that claims coverage without citing an identifier is a defect. `N/A` requires a language, runtime, or scope reason stating why the obligation cannot be achieved by guide content.
 - **New rules.** Add the rule with a new identifier in its owning contract, then map it in every applicable guide. Never introduce a rule directly in a guide.
 
 ## Contract boundaries

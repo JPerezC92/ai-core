@@ -5,7 +5,7 @@
 > **Reviewed:** pending
 > **Contract:** `architecture/testing/architecture.md`
 
-> **Template use:** Copy this file to `architecture/testing/stacks/<stack>.md` and fill every section. Keep the heading order. A section is complete or explicitly `N/A` with a language or runtime reason. Do not remove a section because the stack appears simpler. Delete these template-use instructions and the placeholders after review.
+> **Template use:** Copy this file to `architecture/testing/stacks/<stack>.md` and fill every section. Keep the heading order. A section is complete or explicitly `N/A` with a language, runtime, or scope reason stating why the obligation cannot be achieved by guide content. Do not remove a section because the stack appears simpler. Delete these template-use instructions and the placeholders after review.
 
 ## Applicability and ownership
 
@@ -111,7 +111,7 @@ Complete this table for every contract section. Every row cites the contract rul
 | Cross-stack parity | <T-IDs> | <how this stack achieves them, or the N/A reason> |
 | Open decisions | <T-IDs> | <how this stack achieves them, or the N/A reason> |
 
-A difference is allowed only for language or runtime semantics. A thinner section is not a difference. State only how this stack achieves a cited rule; never restate the rule, here or in the body.
+A difference is allowed only for language semantics and must be declared in the parity table above. `N/A` is allowed for a language, runtime, or scope reason; a scope-based `N/A` states why the obligation cannot be achieved by guide content under this guide's scope. A thinner section is not a difference. State only how this stack achieves a cited rule; never restate the rule, here or in the body.
 
 ## Open decisions
 
