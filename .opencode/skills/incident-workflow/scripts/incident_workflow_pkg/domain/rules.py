@@ -8,6 +8,8 @@ from typing import Optional
 
 import yaml
 
+from .analysis_header_record import AnalysisHeader
+from .close_out_snapshot_record import CloseOutSnapshot
 from .entities import (
     AllowExact,
     IdentificationVerdict,
@@ -24,11 +26,7 @@ from .errors import (
     CODE_MISSING_SYMPTOM,
     DomainError,
 )
-from .value_objects import (
-    AnalysisHeader,
-    CloseOutSnapshot,
-    TicketIdentification,
-)
+from .ticket_identification_record import TicketIdentification
 
 # ---------------------------------------------------------------------------
 # Kill-switch pilot values (tunable per project)

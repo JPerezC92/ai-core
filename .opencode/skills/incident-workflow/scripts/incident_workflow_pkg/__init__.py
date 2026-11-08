@@ -6,7 +6,10 @@ from incident_workflow_pkg.application import (
     ValidateCloseOut,
     ValidatePreClose,
 )
+from incident_workflow_pkg.domain.analysis_header_record import AnalysisHeader
+from incident_workflow_pkg.domain.close_out_snapshot_record import CloseOutSnapshot
 from incident_workflow_pkg.domain.entities import Problem
+from incident_workflow_pkg.domain.mode_findings_record import ModeFindings
 from incident_workflow_pkg.domain.ports import RegisterRowsPort
 from incident_workflow_pkg.domain.rules import (
     ALLOWED_ALLOW_EXACT,
@@ -43,10 +46,7 @@ from incident_workflow_pkg.domain.rules import (
     parse_state_header,
     parse_ticket_record,
 )
-from incident_workflow_pkg.domain.value_objects import (
-    AnalysisHeader,
-    CloseOutSnapshot,
-    ModeFindings,
+from incident_workflow_pkg.domain.ticket_identification_record import (
     TicketIdentification,
 )
 # No-argument public compatibility surface; the use cases live in ``application``.

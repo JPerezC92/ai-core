@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from .analysis_header_record import AnalysisHeader
+from .close_out_snapshot_record import CloseOutSnapshot
 from .entities import Problem
+from .mode_findings_record import ModeFindings
 from .rules import (
     ALLOWED_ALLOW_EXACT,
     ALLOWED_IDENTIFICATION_VERDICTS,
@@ -40,12 +43,7 @@ from .rules import (
     parse_state_header,
     parse_ticket_record,
 )
-from .value_objects import (
-    AnalysisHeader,
-    CloseOutSnapshot,
-    ModeFindings,
-    TicketIdentification,
-)
+from .ticket_identification_record import TicketIdentification
 
 __all__ = [
     "ALLOWED_ALLOW_EXACT",
