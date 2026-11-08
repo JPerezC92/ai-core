@@ -15,7 +15,7 @@ from _incident_workflow_testkit import (  # noqa: E402
     _patch_header,
     _short_window_scenario,
 )
-from incident_workflow_pkg.domain.value_objects import ModeFindings  # noqa: E402
+from incident_workflow_pkg.domain.mode_findings_record import ModeFindings  # noqa: E402
 
 
 class _FakeClock:

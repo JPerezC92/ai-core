@@ -16,7 +16,7 @@ from _incident_workflow_testkit import (  # noqa: E402
     _make_analysis,
     _patch_header,
 )
-from incident_workflow_pkg.domain.value_objects import AnalysisHeader  # noqa: E402
+from incident_workflow_pkg.domain.analysis_header_record import AnalysisHeader  # noqa: E402
 
 
 def _header(analysis_dir: Path) -> AnalysisHeader:

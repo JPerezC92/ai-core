@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from incident_workflow_pkg.domain.analysis_header_record import AnalysisHeader
+from incident_workflow_pkg.domain.mode_findings_record import ModeFindings
 from incident_workflow_pkg.domain.ports import ClockPort
 from incident_workflow_pkg.domain.rules import (
     STEP_FILE_BY_NAME,
@@ -12,10 +14,6 @@ from incident_workflow_pkg.domain.rules import (
     check_single_step_file_exists,
     check_single_step_sections,
     check_sla_clock,
-)
-from incident_workflow_pkg.domain.value_objects import (
-    AnalysisHeader,
-    ModeFindings,
 )
 
 __all__ = ["ValidateStep"]
