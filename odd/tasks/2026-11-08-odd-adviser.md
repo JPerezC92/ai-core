@@ -62,7 +62,7 @@ Delivered advice is **V1 at most**. Agent-reported reasoning, observed action an
 - T11 | S12, S11 (R1/R2) | delegated (labeled evaluation set and runner; exact-path code belongs to Forge 🔨 (Implementer)) — Forge 🔨 (Implementer) | done | commit: pending — 19 cases, 56 labels, `--runs 5`, deterministic; 54/56 then 56/56 after the derived visual field; harness gates `[PASS]`.
 - T12 | S11 (stale-constant cleanup) | delegated — Forge 🔨 (Implementer) | done | commit: pending — `unknown` state removed from contract fixtures and tests; plugin suite split to one unit per module; PATH case now protects the carry. 33 tests, Crucible 🔥 `[PASS]`.
 - T13 | S3, S5, S6 | delegated (plugin failure-path coverage and behavior-preserving adapter separation) — Forge 🔨 (Implementer) | done | commit: 3bffc0d49bb9a62effe12f6f13fd98f36a30f624 — failure-path tests plus adapter split; plugin suite 37 passed; Crucible 🔥 `[PASS]`; Bastion 🧱 `[PASS]` after host mapping moved out of application.
-- T14 | S7, S14, S15 | delegated (plugin block + tests to Forge 🔨 (Implementer); AGENTS.md and ADVISER-RULES.md to Cipher 🔓 (Lead Orchestrator)) — Forge 🔨 (Implementer) | in progress | commit: pending
+- T14 | S7, S14, S15 | delegated (plugin block + tests to Forge 🔨 (Implementer); AGENTS.md and ADVISER-RULES.md to Cipher 🔓 (Lead Orchestrator)) — Forge 🔨 (Implementer) | done | commit: f0a5f98cbf04c1b8b8e71c5151e1fbc33b48fcd0
 
 ## Log
 
