@@ -4,7 +4,7 @@ The rules the System 1 adviser must satisfy to be worth reading. Every rule is c
 rule that cannot be checked is a preference, not a rule. Governs the adviser only.
 
 - **Feature record:** `odd/tasks/2026-11-08-odd-adviser.md`
-- **Profile:** `mcp-servers/system-one/profiles/odd-evidence-v1.json`
+- **Profile:** `mcp-servers/system-one/profiles/odd-evidence-v4.json` — the profile the server loads today. v1–v3 are retained as history and are not loaded; a reader who opens v1 will see the `unknown` states R9 and R10 forbid, which is why v1 is not the reference here.
 - **Adapter:** `.opencode/plugins/odd-adviser/src/index.ts`
 - **Owner:** Cipher 🔓 (Lead Orchestrator)
 
@@ -69,13 +69,16 @@ Bounded by a stated timeout, degrading to that timeout's status. *Check:* set th
 **R17 — Exactly one evaluation per message; continuations reuse it.**
 Tool continuations re-inject the cached result. *Check:* one `evaluate_started` and one MCP record per user message, regardless of model calls in that turn.
 
-## Current state (2026-11-08)
+## Current state (2026-11-08, after the v3/v4 profile work and the classification eval)
 
 | Rule | State | Evidence |
 |---|---|---|
-| R1, R2 | ❌ violated | `index.ts:439` injects one fixed sentence; choices never reach the block |
-| R9, R10, R11 | ❌ violated | every question offers `unknown`; it won 0.68–0.83 on the last four messages |
-| R14 | ⚠️ unproven | pushed `SystemPart` observed in logs, sentinel never observed in model context |
-| R15 | ❌ violated | `output/system1/events.jsonl` stores `request.state` — the raw message — verbatim |
-| R4, R16, R17 | ✅ holding | boundary sentence present; bounded timeout; one `evaluate_started` per message |
+| R1, R2 | ✅ holding | the block carries one `question → choice (confidence)` line per answered question, with a weak-signal marker below 0.60 (`plugin.test.ts` block assertions) |
+| R9, R10, R11 | ✅ holding | every question has exactly `present`/`absent`; no general escape state exists in v4; uncertainty is reported as a probability and a weak marker, never as a third state |
+| R3 | ✅ holding | one line per question, no restated question text |
+| R12 | ⚠️ caveat | `visual_evidence` is now computed from the request, so the block prints a `1.00` figure for a fact no model judged; the payload does not distinguish judged from computed |
+| R14 | ⚠️ unproven | a pushed `SystemPart` is observed in logs; no sentinel has been observed in the model's own context |
+| R15 | ❌ violated | `output/system1/events.jsonl` still stores `request.state` — the raw message — verbatim |
+| R4, R16, R17 | ✅ holding | boundary sentence present; bounded timeout; one `evaluate_started` per message with continuation reuse |
 | R5, R6, R7, R13 | ✅ holding | ODD-phrased; no second tracker; tracked; bounded codes |
+| R1–R13 (measured) | ✅ 37/37 | the live-model eval scored 37 model-judged labels with zero disagreements, 5 runs each, every probability map identical across runs; `visual_evidence` labels are excluded from that count because they are computed, not judged |
