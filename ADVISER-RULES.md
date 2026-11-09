@@ -73,7 +73,7 @@ Tool continuations re-inject the cached result. *Check:* one `evaluate_started` 
 
 | Rule | State | Evidence |
 |---|---|---|
-| R1, R2 | ✅ holding | the block carries one `question → choice (confidence)` line per answered question, with a weak-signal marker below 0.60 (`plugin.test.ts` block assertions) |
+| R1, R2 | ✅ holding | the block carries one `question → choice (confidence)` line per answered question, with a weak-signal marker below 0.60 (`advisory-block.test.ts` block assertions) |
 | R9, R10, R11 | ✅ holding | every question has exactly `present`/`absent`; no general escape state exists in v4; uncertainty is reported as a probability and a weak marker, never as a third state |
 | R3 | ✅ holding | one line per question, no restated question text |
 | R12 | ⚠️ caveat | `visual_evidence` is now computed from the request, so the block prints a `1.00` figure for a fact no model judged; the payload does not distinguish judged from computed |
