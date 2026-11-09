@@ -4,20 +4,16 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { captureMessage } from './index.ts';
+import { captureMessage } from './capture-message.ts';
 import {
   createAdmittedParts,
-  createEvidenceText,
-  createInlineImage,
-} from './test/helpers/plugin.factory.ts';
+  createCapturedMessage,
+} from '../test/helpers/plugin.factory.ts';
 
 describe('captureMessage', () => {
   test('captures the text and only the inline base64 image of the admitted parts', () => {
     const captured = captureMessage(createAdmittedParts());
 
-    expect(captured).toStrictEqual({
-      text: createEvidenceText(),
-      images: [createInlineImage()],
-    });
+    expect(captured).toStrictEqual(createCapturedMessage());
   });
 });

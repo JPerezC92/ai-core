@@ -10,19 +10,17 @@ import {
   ADVISORY_BLOCK_END,
   ADVISORY_BLOCK_START,
   formatAdvisoryBlock,
-} from './index.ts';
+} from './advisory-block.ts';
 import {
-  createAnswerWithoutConfidence,
   createDerivedConfidenceEvaluation,
   createEvaluatedAdvisory,
-  createEvaluation,
-  createEvaluationWithAnswers,
+  createNonMaximumChoiceEvaluation,
   createFigurelessEvaluation,
   createStatedZeroConfidenceEvaluation,
   createUnavailableAdvisory,
   createWeakSignalEvaluation,
   createWeakSignalThresholdEvaluation,
-} from './test/helpers/plugin.factory.ts';
+} from '../test/helpers/plugin.factory.ts';
 
 // The one authority sentence every block carries, read from a block the adapter itself emits, so
 // a case pins its position and its constancy without a second copy of production text (S7).
@@ -34,38 +32,6 @@ function authoritySentence(): string {
   }
   return sentence;
 }
-
-describe('formatAdvisoryBlock', () => {
-  test('wraps every advisory in the block markers around one fixed authority sentence', () => {
-    const evaluated = createEvaluatedAdvisory();
-    const unavailable = createUnavailableAdvisory();
-
-    const evaluatedLines = formatAdvisoryBlock(evaluated).split('\n');
-    const unavailableLines = formatAdvisoryBlock(unavailable).split('\n');
-
-    // The frame is the same for both branches: the markers enclose the block, the advisory's own
-    // sentence follows the start marker and the one authority sentence sits before the end one.
-    expect(unavailableLines[0]).toBe(ADVISORY_BLOCK_START);
-    expect(unavailableLines[1]).toBe(unavailable.advisory);
-    expect(unavailableLines[2]?.length).toBeGreaterThan(0);
-    expect(unavailableLines[3]).toBe(ADVISORY_BLOCK_END);
-
-    expect(evaluatedLines[0]).toBe(ADVISORY_BLOCK_START);
-    expect(evaluatedLines[1]).toBe(evaluated.advisory);
-    expect(evaluatedLines[evaluatedLines.length - 2]).toBe(unavailableLines[2]);
-    expect(evaluatedLines[evaluatedLines.length - 1]).toBe(ADVISORY_BLOCK_END);
-
-    // An evaluated block adds exactly one line per answered question between its own sentence and
-    // the authority line, and nothing else.
-    const answerCount = Object.keys(createEvaluation().answers).length;
-    expect(evaluatedLines).toHaveLength(unavailableLines.length + answerCount);
-
-    // The authority sentence is identical for every advisory: it is never derived from the
-    // delivered text and never varies with it (S7).
-    expect(unavailableLines[2]).not.toBe(evaluated.advisory);
-    expect(evaluatedLines[evaluatedLines.length - 2]).not.toBe(evaluated.advisory);
-  });
-});
 
 // R1, R2, R11: a block that only reports that an answer arrived is a receipt. These cases pin the
 // lines that carry the question, the option the payload chose, the figure that choice was made
@@ -120,12 +86,7 @@ describe('advisory question lines', () => {
   // most probable one, and its own probability would print `0.44` instead of the stated `0.56`.
   test('reports the largest stated probability on an answered question whose chosen option is not the most probable', () => {
     const advisory = createEvaluatedAdvisory(
-      createEvaluationWithAnswers({
-        user_only_decision: createAnswerWithoutConfidence('absent', {
-          present: 0.56,
-          absent: 0.44,
-        }),
-      }),
+      createNonMaximumChoiceEvaluation(),
     );
 
     expect(formatAdvisoryBlock(advisory).split('\n')).toStrictEqual([

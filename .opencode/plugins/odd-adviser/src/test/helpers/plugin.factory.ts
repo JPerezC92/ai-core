@@ -58,6 +58,31 @@ export const TRANSPORT_FAILURE_MESSAGE = 'mcp channel closed';
 // milliseconds rather than in a runner default.
 const EVIDENCE_TIMEOUT_MS = 25;
 
+// A manually triggered deadline: no clock or ambient timer is used by operation tests.
+export function createControlledDeadline() {
+  let pending: (() => void) | undefined;
+  let requestedMs: number | undefined;
+  let cancellations = 0;
+  return {
+    schedule(timeoutMs: number, onElapsed: () => void): () => void {
+      requestedMs = timeoutMs;
+      pending = onElapsed;
+      return () => {
+        pending = undefined;
+        cancellations += 1;
+      };
+    },
+    trigger(): void {
+      const callback = pending;
+      pending = undefined;
+      callback?.();
+    },
+    get requestedMs() { return requestedMs; },
+    get cancellations() { return cancellations; },
+    get isPending() { return pending !== undefined; },
+  };
+}
+
 const evidenceText = 'The latest user request repeats the accepted implementation scope.';
 const expectedModel = 'odd-evidence-test-model';
 const evaluatedAdvisoryText = 'The supplied evidence does not justify a scope change.';
@@ -143,6 +168,35 @@ export function createCapturedMessage(
   image: CapturedImage = createInlineImage(),
 ): CapturedMessage {
   return { text: evidenceText, images: [image] };
+}
+
+export function createNonMaximumChoiceAnswer(): OddEvidenceAnswer {
+  return createAnswerWithoutConfidence('absent', { present: 0.56, absent: 0.44 });
+}
+
+export function createNonMaximumChoiceEvaluation(): OddEvidenceEvaluation {
+  return createEvaluationWithAnswers({ user_only_decision: createNonMaximumChoiceAnswer() });
+}
+
+export function createExpectedEvidenceInput(
+  message: CapturedMessage,
+  options: EvaluateEvidenceOptions,
+): OddEvidenceInput {
+  return { text: message.text, images: message.images, expectedModel: options.expectedModel } as OddEvidenceInput;
+}
+
+export function createExpectedEvaluatedAdvisory(
+  evaluation: OddEvidenceEvaluation,
+  advisory: string,
+): OddEvidenceAdvisory {
+  return { status: 'evaluated', evaluation, advisory };
+}
+
+export function createExpectedUnavailableAdvisory(
+  code: OddEvidenceUnavailableCode,
+  advisory: string,
+): OddEvidenceAdvisory {
+  return { status: 'unavailable', code, advisory };
 }
 
 // A value the advisory port may report as its evaluated outcome: the profile identity plus
@@ -614,6 +668,24 @@ export function createRecordingEventSink(): RecordingEventSink {
       return events.slice();
     },
   };
+}
+
+// A host that rejects hook registration, with a content-free sink and no external effects.
+export async function createFailedSetup(): Promise<{
+  readonly cleanup: OddAdviserCleanup;
+  readonly events: ReadonlyArray<PluginEvent>;
+  readonly registrations: ReadonlyArray<string>;
+}> {
+  const events = createRecordingEventSink();
+  const registrations: string[] = [];
+  const session: OddAdviserHostSession = {
+    hook: async (name: string): Promise<never> => {
+      registrations.push(name);
+      throw new Error(TRANSPORT_FAILURE_MESSAGE);
+    },
+  };
+  const cleanup = await plugin.setup({ session, events });
+  return { cleanup, events: events.events, registrations };
 }
 
 export type AdviserHarnessOptions = {
