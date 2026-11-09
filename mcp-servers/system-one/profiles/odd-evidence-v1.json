@@ -1,0 +1,34 @@
+{
+  "profileId": "odd-evidence-v1",
+  "version": 1,
+  "questions": {
+    "scope_changed": {
+      "type": "choice",
+      "instructions": "Decide whether the latest user request adds or changes an implementation requirement relative to the accepted scope supplied with it. Compare the request against that scope.",
+      "criteria": {
+        "present": "The latest user request states an implementation requirement that the supplied accepted scope does not contain.",
+        "absent": "The supplied accepted scope and latest user request are sufficiently established to determine that every implementation requirement in the request is already contained in that scope, or that the request only discusses, questions, or reports on already-accepted work.",
+        "unknown": "The supplied evidence does not establish either state, for example because the accepted scope was not supplied, or the request refers to requirements that are not readable in the supplied evidence."
+      }
+    },
+    "user_only_decision": {
+      "type": "choice",
+      "instructions": "Decide whether a necessary decision remains that only the user can make, based on the supplied evidence.",
+      "criteria": {
+        "present": "The supplied evidence establishes a necessary decision that is currently unresolved and reserved to the user, such as authorization, approval, a scope choice, a destructive or irreversible action, an installation, or a release.",
+        "absent": "The supplied evidence is adequate to establish that no necessary user-reserved decision remains unresolved; any remaining choices can be settled by the main agent within its accepted scope.",
+        "unknown": "The supplied evidence is insufficient to establish whether a necessary, currently unresolved user-reserved decision remains."
+      }
+    },
+    "visual_evidence": {
+      "type": "choice",
+      "instructions": "Decide whether an inline image is supplied and whether it is readable and covers any visual detail the remaining questions need.",
+      "criteria": {
+        "present": "At least one inline image is supplied, and either every visual detail the remaining questions need is readable and covered by the supplied images, or the evidence establishes that no visual detail is relevant to those questions.",
+        "absent": "The supplied evidence establishes that no inline image is supplied with the message.",
+        "unknown": "Whether an inline image is supplied is not established, or an image is supplied but the evidence does not establish whether relevant visual detail is needed or whether all needed detail is readable and covered, for example because a needed region is cropped, blurred, or too small to read."
+      }
+    }
+  },
+  "notes": "Advisory: each answer classifies supplied evidence. Provenance is recorded by the caller and does not establish which input the model used. Nothing in this profile authorizes action or waives a gate."
+}

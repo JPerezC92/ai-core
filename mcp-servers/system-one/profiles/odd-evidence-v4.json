@@ -1,0 +1,23 @@
+{
+  "profileId": "odd-evidence-v4",
+  "version": 4,
+  "questions": {
+    "scope_changed": {
+      "type": "choice",
+      "instructions": "Decide whether this message by itself asks for a change to the repository: a new file, an edit to an existing file, or a new requirement. Judge whether the message requests the change, not which verb it uses: the same request is present when it is phrased as an instruction, as a standing rule for future work, or as a complaint that also directs a change. Judge only the text and inline images supplied with the message. Do not compare against an earlier conversation, an accepted plan or a scope, because none is supplied.",
+      "criteria": {
+        "present": "The message asks for a repository change: it requests a new file, an edit, a modification of previously produced work, or a new requirement. A message that states a rule the work must follow from now on (\"from now on every X must Y\") is a new requirement, even when it uses no creation verb. A message that complains or challenges and also carries a directive to change something (\"u should create ...\", \"u should not omit ...\") is a request for that change.",
+        "absent": "The message does not ask for a repository change: it asks only for information, an explanation, a recommendation or a review, or it reports on and discusses existing work, or it only suggests something for the future with no request to act on it now (\"we should probably add X someday\"), even though that contains a creation verb such as \"add\"."
+      }
+    },
+    "user_only_decision": {
+      "type": "choice",
+      "instructions": "Decide whether this message asks for something only the user can authorize: a destructive or irreversible action, an installation or dependency change, a release or deployment, or an expansion beyond the work the message itself requests. Judge only the supplied text and inline images.",
+      "criteria": {
+        "present": "The message asks for at least one of: a destructive or irreversible action, an installation or dependency change, a release or deployment, or a scope expansion beyond the work it already requests.",
+        "absent": "The message asks for none of those: it requests reversible work inside the change it describes, or asks for information, an explanation, a review or discussion only."
+      }
+    }
+  },
+  "notes": "Advisory only: each answer classifies the supplied text and inline images and nothing else. No accepted scope, earlier conversation or external state is supplied, so none is assumed. Provenance is recorded by the caller and does not establish which input the model used. These are the only two questions asked of the model: the visual_evidence answer is not asked, because whether an image is attached is envelope metadata the server already holds, so the evaluation derives that answer from the supplied images instead. Nothing in this profile authorizes action or waives a gate."
+}
