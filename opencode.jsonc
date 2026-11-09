@@ -26,6 +26,8 @@
                 { "action": "shell", "resource": "*", "effect": "deny" },
                 { "action": "shell", "resource": "pnpm install", "effect": "allow" },
                 { "action": "shell", "resource": "uv run --frozen --group dev pytest -q", "effect": "allow" },
+                { "action": "shell", "resource": "pnpm --dir .opencode/plugins/odd-adviser exec vitest run", "effect": "allow" },
+                { "action": "shell", "resource": "pnpm --dir mcp-servers/system-one exec vitest run", "effect": "allow" },
                 // Read-only discovery so the test architect can inspect the tree
                 // with `rg`/`ls`. Use Glob/Grep for filesystem discovery. Editing,
                 // network, and interpreter access stay denied. TUI restart required.
@@ -293,6 +295,15 @@
     },
     "mcp": {
         "servers": {
+            "system-one": {
+                "type": "local",
+                "command": ["node", "mcp-servers/system-one/src/mcp/stdio.ts"],
+                "environment": {
+                    "SYSTEM_ONE_ENDPOINT": "http://127.0.0.1:1234",
+                    "SYSTEM_ONE_MODEL": "d1-2b@q8_0",
+                    "SYSTEM_ONE_TIMEOUT_MS": "15000"
+                }
+            },
             "chrome-devtools": {
                 "type": "local",
                 "command": [
