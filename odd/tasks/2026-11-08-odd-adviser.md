@@ -59,7 +59,7 @@ Delivered advice is **V1 at most**. Agent-reported reasoning, observed action an
 - T10 | S12 (C2 port currency; pre-existing, not introduced by T8) | delegated — Forge 🔨 (Implementer) | open | commit: pending
 - T11 | S12, S11 (R1/R2) | delegated (labeled evaluation set and runner; exact-path code belongs to Forge 🔨 (Implementer)) — Forge 🔨 (Implementer) | done | commit: pending — 19 cases, 56 labels, `--runs 5`, deterministic; 54/56 then 56/56 after the derived visual field; harness gates `[PASS]`.
 - T12 | S11 (stale-constant cleanup) | delegated — Forge 🔨 (Implementer) | done | commit: pending — `unknown` state removed from contract fixtures and tests; plugin suite split to one unit per module; PATH case now protects the carry. 33 tests, Crucible 🔥 `[PASS]`.
-- T13 | S3, S5, S6 | delegated (plugin failure-path coverage and behavior-preserving adapter separation) — Forge 🔨 (Implementer) | in progress | commit: pending
+- T13 | S3, S5, S6 | delegated (plugin failure-path coverage and behavior-preserving adapter separation) — Forge 🔨 (Implementer) | done | commit: 3bffc0d49bb9a62effe12f6f13fd98f36a30f624 — failure-path tests plus adapter split; plugin suite 37 passed; Crucible 🔥 `[PASS]`; Bastion 🧱 `[PASS]` after host mapping moved out of application.
 
 ## Log
 
