@@ -2,10 +2,12 @@
 import { describe, expect, test } from 'vitest';
 
 import {
+  createAllBelowBarEvaluation,
   createAdviserHarness,
   createContextWithoutUserMessage,
   createMessageIdentity,
   createOutgoingContext,
+  createRecordingEvaluator,
 } from './test/helpers/plugin.factory.ts';
 
 describe('plugin lifecycle stages', () => {
@@ -35,6 +37,23 @@ describe('plugin lifecycle stages', () => {
     expect(harness.events.map((event) => event.stage)).toStrictEqual([
       'hook_registered',
       'candidate_none',
+    ]);
+  });
+
+  test('does not push an empty advisory or record advisory_injected when nothing qualifies', async () => {
+    const harness = await createAdviserHarness({
+      evaluator: createRecordingEvaluator(createAllBelowBarEvaluation()),
+    });
+    const context = createOutgoingContext(createMessageIdentity());
+
+    await harness.build(context);
+
+    expect(context.system).toHaveLength(0);
+    expect(harness.events.map((event) => event.stage)).toStrictEqual([
+      'hook_registered',
+      'candidate_found',
+      'evaluate_started',
+      'evaluate_finished',
     ]);
   });
 });

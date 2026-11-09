@@ -73,6 +73,7 @@ export { captureMessage } from './domain/capture-message.ts';
 export {
   ADVISORY_BLOCK_END,
   ADVISORY_BLOCK_START,
+  ADVISORY_UNAVAILABLE_BLOCK_START,
   formatAdvisoryBlock,
 } from './domain/advisory-block.ts';
 

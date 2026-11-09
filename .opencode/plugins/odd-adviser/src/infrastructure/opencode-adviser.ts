@@ -386,7 +386,9 @@ async function registerAdviserHooks(
       }
 
       if (disposed) return;
-      event.system.push({ type: 'text', text: formatAdvisoryBlock(advisory) });
+      const block = formatAdvisoryBlock(advisory);
+      if (block === '') return;
+      event.system.push({ type: 'text', text: block });
       await emitPluginEvent(events, 'advisory_injected', {
         sessionId: current.identity.sessionID,
         messageId: current.identity.messageID,

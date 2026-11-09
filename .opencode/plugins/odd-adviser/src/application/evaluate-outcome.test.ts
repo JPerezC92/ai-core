@@ -16,6 +16,7 @@ describe('evaluateEvidence outcome mapping', () => {
     const block = formatAdvisoryBlock(outcome);
     expect(block.split('\n')).toHaveLength(4);
     expect(block).not.toContain('→');
+    expect(block).not.toContain('EXECUTION DIRECTIVES');
   });
 
   test('maps a bounded tool error value to the matching unavailable status', async () => {

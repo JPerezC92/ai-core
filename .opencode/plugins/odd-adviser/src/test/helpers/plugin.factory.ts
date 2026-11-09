@@ -324,6 +324,143 @@ export function createStatedZeroConfidenceEvaluation(): OddEvidenceEvaluation {
   });
 }
 
+export function createScopeChangedPresentEvaluation(): OddEvidenceEvaluation {
+  return createEvaluationWithAnswers({
+    scope_changed: createAnswerWithConfidence('present', 0.82, {
+      present: 0.82,
+      absent: 0.18,
+    }),
+  });
+}
+
+export function createScopeChangedAbsentEvaluation(): OddEvidenceEvaluation {
+  return createEvaluationWithAnswers({
+    scope_changed: createAnswerWithConfidence('absent', 0.98, {
+      present: 0.02,
+      absent: 0.98,
+    }),
+  });
+}
+
+export function createUserOnlyPresentEvaluation(): OddEvidenceEvaluation {
+  return createEvaluationWithAnswers({
+    user_only_decision: createAnswerWithConfidence('present', 0.94, {
+      present: 0.94,
+      absent: 0.06,
+    }),
+  });
+}
+
+export function createUserOnlyAbsentEvaluation(): OddEvidenceEvaluation {
+  return createEvaluationWithAnswers({
+    user_only_decision: createAnswerWithConfidence('absent', 0.94, {
+      present: 0.06,
+      absent: 0.94,
+    }),
+  });
+}
+
+export function createVisualPresentEvaluation(): OddEvidenceEvaluation {
+  return createEvaluationWithAnswers({
+    visual_evidence: createAnswerWithConfidence('present', 0.6, {
+      present: 0.6,
+      absent: 0.4,
+    }),
+  });
+}
+
+export function createGuidanceWithSubBarVisualEvaluation(): OddEvidenceEvaluation {
+  return createEvaluationWithAnswers({
+    scope_changed: createAnswerWithConfidence('absent', 0.98, {
+      present: 0.02,
+      absent: 0.98,
+    }),
+    user_only_decision: createAnswerWithConfidence('absent', 0.94, {
+      present: 0.06,
+      absent: 0.94,
+    }),
+    visual_evidence: createAnswerWithConfidence('present', 0.48, {
+      present: 0.48,
+      absent: 0.52,
+    }),
+  });
+}
+
+export function createAbsentScopeWithPresentUserOnlyEvaluation(): OddEvidenceEvaluation {
+  return createEvaluationWithAnswers({
+    scope_changed: createAnswerWithConfidence('absent', 0.98, {
+      present: 0.02,
+      absent: 0.98,
+    }),
+    user_only_decision: createAnswerWithConfidence('present', 0.8, {
+      present: 0.8,
+      absent: 0.2,
+    }),
+  });
+}
+
+export function createInterruptPresentBelowBarEvaluation(): OddEvidenceEvaluation {
+  return createEvaluationWithAnswers({
+    scope_changed: createAnswerWithConfidence('present', 0.79, {
+      present: 0.79,
+      absent: 0.21,
+    }),
+  });
+}
+
+export function createGuidanceAbsentBelowBarEvaluation(): OddEvidenceEvaluation {
+  return createEvaluationWithAnswers({
+    user_only_decision: createAnswerWithConfidence('absent', 0.59, {
+      present: 0.41,
+      absent: 0.59,
+    }),
+  });
+}
+
+export function createInterruptPresentAtBarEvaluation(): OddEvidenceEvaluation {
+  return createEvaluationWithAnswers({
+    scope_changed: createAnswerWithConfidence('present', 0.8, {
+      present: 0.8,
+      absent: 0.2,
+    }),
+  });
+}
+
+export function createGuidanceAbsentAtBarEvaluation(): OddEvidenceEvaluation {
+  return createEvaluationWithAnswers({
+    user_only_decision: createAnswerWithConfidence('absent', 0.6, {
+      present: 0.4,
+      absent: 0.6,
+    }),
+  });
+}
+
+export function createVisualEvidenceAbsentAtCertaintyEvaluation(): OddEvidenceEvaluation {
+  return createEvaluationWithAnswers({
+    visual_evidence: createAnswerWithConfidence('absent', 1, {
+      present: 0,
+      absent: 1,
+    }),
+  });
+}
+
+export function createAllBelowBarEvaluation(): OddEvidenceEvaluation {
+  return createEvaluationWithAnswers({
+    scope_changed: createAnswerWithConfidence('present', 0.79, {
+      present: 0.79,
+      absent: 0.21,
+    }),
+    user_only_decision: createAnswerWithConfidence('absent', 0.59, {
+      present: 0.41,
+      absent: 0.59,
+    }),
+    visual_evidence: createAnswerWithConfidence('present', 0.48, {
+      present: 0.48,
+      absent: 0.52,
+    }),
+  });
+}
+
 // An evaluation that answers no question at all: the payload the edge must not deliver, because
 // its block would carry no question line and would only report that an answer arrived (R2).
 export function createUnansweredEvaluation(): OddEvidenceEvaluation {

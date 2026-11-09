@@ -196,4 +196,19 @@ Running a synchronization is the *entire* operator action for a destination: run
 - Project memory scope derives from the checkout's git remote. This repository's SSH alias yields `github.com-personal/JPerezC92/ai-core`, which is not the `github.com` form, so pass `project_id` explicitly whenever a call must be unambiguous.
 - Retrieval collections are `tasks`, `knowledge`, `architecture` and `research`.
 - Keep `SEMGREP_SEND_METRICS=off` and `OTEL_SDK_DISABLED=true`. The auto-config scan failed with metrics off; do not enable metrics to make it work, and do not invoke platform findings or supply-chain scanning under this binding.
+
+### System 1 execution contract
+
+This contract does not copy the per-finding action map. The plugin injects that map when findings qualify. This section and that per-turn block may occupy the same system-message priority; persistence does not establish higher priority.
+
+When this turn's assembled context contains a `=== SYSTEM 1 | EXECUTION DIRECTIVES ===` block:
+
+1. **Execute.** Apply each applicable System 1 directive in that block to planning and execution as default workflow guidance — not as optional commentary, and not only as something to report. Stronger evidence, actual user intent, and governing constraints take precedence. An `absent` finding never bypasses authorization or a user-only decision. No new permissions are granted. The diagnostic line in (2) does not satisfy this duty.
+
+2. **Observe.** End the user-facing reply with exactly one diagnostic line describing the behavioral effect, for example:
+   - `S1 applied: Scope preserved · Authorized work continued`
+   - `S1 overridden: scope_changed · Existing context contradicts finding`
+   - `S1 applied: Scope preserved · S1 overridden: user_only_decision · Already authorized`
+
+Never claim a directive was applied if its effect cannot be established. Never emit that line when no valid EXECUTION DIRECTIVES block was injected for this turn. The line is an observable clue, not proof of compliance, and it must not replace the task reply.
 <!-- project:end -->

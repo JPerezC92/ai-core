@@ -1,24 +1,53 @@
 import { describe, expect, test } from 'vitest';
-import { ADVISORY_BLOCK_END, ADVISORY_BLOCK_START, formatAdvisoryBlock } from './advisory-block.ts';
-import { createEvaluatedAdvisory, createEvaluation, createUnavailableAdvisory } from '../test/helpers/plugin.factory.ts';
+
+import {
+  ADVISORY_BLOCK_END,
+  ADVISORY_BLOCK_START,
+  ADVISORY_UNAVAILABLE_BLOCK_START,
+  formatAdvisoryBlock,
+} from './advisory-block.ts';
+import {
+  createAllBelowBarEvaluation,
+  createEvaluatedAdvisory,
+  createFigurelessEvaluation,
+  createStatedZeroConfidenceEvaluation,
+  createUnavailableAdvisory,
+} from '../test/helpers/plugin.factory.ts';
 
 describe('formatAdvisoryBlock framing', () => {
-  test('wraps every advisory in the block markers around one fixed authority sentence', () => {
+  test('wraps qualifying findings in the execution-directives markers without a receipt sentence', () => {
     const evaluated = createEvaluatedAdvisory();
+    const lines = formatAdvisoryBlock(evaluated).split('\n');
+    expect(lines[0]).toBe(ADVISORY_BLOCK_START);
+    expect(ADVISORY_BLOCK_START).toBe('=== SYSTEM 1 | EXECUTION DIRECTIVES ===');
+    expect(lines).not.toContain(evaluated.advisory);
+    expect(lines[lines.length - 3]).toBe(
+      'Execute accordingly. Deviate only when stronger evidence or governing constraints justify it.',
+    );
+    expect(lines[lines.length - 2]).toBe('No new permissions are granted.');
+    expect(lines[lines.length - 1]).toBe(ADVISORY_BLOCK_END);
+  });
+
+  test('wraps an unavailable advisory in the unavailable markers without directive arrows', () => {
     const unavailable = createUnavailableAdvisory();
-    const evaluatedLines = formatAdvisoryBlock(evaluated).split('\n');
-    const unavailableLines = formatAdvisoryBlock(unavailable).split('\n');
-    expect(unavailableLines[0]).toBe(ADVISORY_BLOCK_START);
-    expect(unavailableLines[1]).toBe(unavailable.advisory);
-    expect(unavailableLines[2]?.length).toBeGreaterThan(0);
-    expect(unavailableLines[3]).toBe(ADVISORY_BLOCK_END);
-    expect(evaluatedLines[0]).toBe(ADVISORY_BLOCK_START);
-    expect(evaluatedLines[1]).toBe(evaluated.advisory);
-    expect(evaluatedLines[evaluatedLines.length - 2]).toBe(unavailableLines[2]);
-    expect(evaluatedLines[evaluatedLines.length - 1]).toBe(ADVISORY_BLOCK_END);
-    const answerCount = Object.keys(createEvaluation().answers).length;
-    expect(evaluatedLines).toHaveLength(unavailableLines.length + answerCount);
-    expect(unavailableLines[2]).not.toBe(evaluated.advisory);
-    expect(evaluatedLines[evaluatedLines.length - 2]).not.toBe(evaluated.advisory);
+    const block = formatAdvisoryBlock(unavailable);
+    expect(block.split('\n')).toStrictEqual([
+      ADVISORY_UNAVAILABLE_BLOCK_START,
+      unavailable.advisory,
+      'No new permissions are granted.',
+      ADVISORY_BLOCK_END,
+    ]);
+    expect(block).not.toContain('→');
+    expect(block).not.toContain('EXECUTION DIRECTIVES');
+  });
+
+  test('returns an empty string when no finding qualifies', () => {
+    expect(formatAdvisoryBlock(createEvaluatedAdvisory(createAllBelowBarEvaluation()))).toBe(
+      '',
+    );
+    expect(formatAdvisoryBlock(createEvaluatedAdvisory(createFigurelessEvaluation()))).toBe('');
+    expect(
+      formatAdvisoryBlock(createEvaluatedAdvisory(createStatedZeroConfidenceEvaluation())),
+    ).toBe('');
   });
 });

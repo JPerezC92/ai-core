@@ -19,10 +19,10 @@ A receipt is not advice. *Check:* read the injected block; can a reader act diff
 The block carries choices, not only "an answer arrived". *Check:* the block shows at least one `question → choice (confidence)` triple.
 
 **R3 — Advice is readable in under five seconds.**
-One line per question, no prose padding, no restated question text. *Check:* the block is shorter than the message it comments on.
+One finding line plus one frozen action line per qualifying question, no prose padding, no restated question text. *Check:* the block is shorter than the message it comments on.
 
-**R4 — Advice is input to a decision, never the decision.**
-It never authorizes, waives a gate, blocks an action, or mutates state. *Check:* the block contains an explicit authority-boundary sentence and no imperative to act.
+**R4 — Findings are default execution guidance, not new authority.**
+Qualifying findings must be applied as default workflow guidance. They never grant permissions, waive a gate, override mandatory constraints, or treat `absent` as a skip of a user-only decision. Deviate only when stronger evidence, actual user intent, or governing constraints justify it. *Check:* the injected block and the AGENTS.md contract both state the apply duty and the no-new-permissions bound.
 
 ## 2. Workflow — it obeys ODD
 
@@ -30,7 +30,7 @@ It never authorizes, waives a gate, blocks an action, or mutates state. *Check:*
 "Scope changed" is meaningless without the accepted scope. *Check:* the block names the step and the scope it compared.
 
 **R6 — It creates no plan, status field, tracker or second record.**
-The ODD feature document stays the sole task record. *Check:* no new file or status surface appears as a consequence of advising.
+The ODD feature document stays the sole task record. Exception, user-authorized: one trailing `S1 applied` / `S1 overridden` chat line when EXECUTION DIRECTIVES were injected; that line is not a tracker. *Check:* no new file or status surface appears as a consequence of advising, other than that optional chat line.
 
 **R7 — Its own changes are tracked like any other work.**
 Tracked before the first write; specs and tasks updated before affected code; the profile version is bumped, never edited in place. *Check:* the feature `## Log` cites the change, and an old evaluation record still resolves to the profile it ran against.
@@ -49,14 +49,14 @@ An all-purpose escape state dominates the distribution and hides the answer. *Ch
 **R11 — Uncertainty is a number, not a verdict.**
 The profile returns a choice plus probabilities; a low maximum is reported as weak signal, never as a non-answer and never as a third state. *Check:* inspect a weak case; a choice is still returned.
 
-**R12 — No claim exceeds what the model returned.**
-No citations, no "verified", no "secure to follow", no implied review. *Check:* every noun in the block is traceable to the response payload.
+**R12 — No claim exceeds what the model returned plus the frozen map.**
+Choice and confidence come from the payload. Action lines come only from the plugin's frozen present/absent map. No citations, no "verified", no implied review, no improvised recommendation. *Check:* every action sentence in a block matches the frozen map for that finding and choice.
 
 **R13 — Failure is explicit and bounded.**
 A timeout, transport error, rejection or malformed payload produces a named status in the block — never silence, never a plausible substitute. *Check:* kill the MCP mid-session; the next message carries a bounded code.
 
 **R14 — Delivery to the model is verified, not assumed.**
-"Pushed onto the request" is not "read by the model". *Check:* a sentinel carried in the block is observed in the following model turn.
+"Pushed onto the request" is not "read by the model". The `S1 applied` / `S1 overridden` line is a diagnostic clue, not proof of delivery or compliance. *Check:* plugin logs show a push; do not treat a self-reported S1 line as verification.
 
 **R15 — Records are content-free by default.**
 No raw prompt, image bytes, file contents or error text; coverage is reported as counts. *Check:* open the trace record for a known message and search for its text.
@@ -73,12 +73,13 @@ Tool continuations re-inject the cached result. *Check:* one `evaluate_started` 
 
 | Rule | State | Evidence |
 |---|---|---|
-| R1, R2 | ✅ holding | the block carries one `question → choice (confidence)` line per answered question, with a weak-signal marker below 0.60 (`advisory-block.test.ts` block assertions) |
-| R9, R10, R11 | ✅ holding | every question has exactly `present`/`absent`; no general escape state exists in v4; uncertainty is reported as a probability and a weak marker, never as a third state |
-| R3 | ✅ holding | one line per question, no restated question text |
-| R12 | ⚠️ caveat | `visual_evidence` is now computed from the request, so the block prints a `1.00` figure for a fact no model judged; the payload does not distinguish judged from computed |
-| R14 | ⚠️ unproven | a pushed `SystemPart` is observed in logs; no sentinel has been observed in the model's own context |
+| R1, R2 | ✅ holding | qualifying findings emit `id → choice (confidence)` plus a frozen action (`advisory-question-lines.test.ts`) |
+| R9, R10, R11 | ✅ holding | every question has exactly `present`/`absent`; no general escape state exists in v4; uncertainty is a number |
+| R3 | ✅ holding | one finding line plus one action line per qualifying question; weak findings omitted |
+| R12 | ✅ holding | action lines from frozen map only; `visual_evidence` remains envelope-derived |
+| R14 | ⚠️ unproven | push is logged; S1 chat line is a clue, not proof |
 | R15 | ❌ violated | `output/system1/events.jsonl` still stores `request.state` — the raw message — verbatim |
-| R4, R16, R17 | ✅ holding | boundary sentence present; bounded timeout; one `evaluate_started` per message with continuation reuse |
-| R5, R6, R7, R13 | ✅ holding | ODD-phrased; no second tracker; tracked; bounded codes |
+| R4 | ✅ holding | default execution guidance; no new permissions; AGENTS.md apply duty |
+| R16, R17 | ✅ holding | bounded timeout; one `evaluate_started` per message with continuation reuse |
+| R5, R6, R7, R13 | ✅ holding | R6 exception: one authorized S1 chat line is not a second tracker; profile still does not see feature-doc scope |
 | R1–R13 (measured) | ✅ 37/37 | the live-model eval scored 37 model-judged labels with zero disagreements, 5 runs each, every probability map identical across runs; `visual_evidence` labels are excluded from that count because they are computed, not judged |

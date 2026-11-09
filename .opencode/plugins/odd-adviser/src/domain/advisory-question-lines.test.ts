@@ -1,8 +1,7 @@
-// Behaviour tests of the portable System 1 advisory edge's block: the markers that frame every
-// delivered advisory, the one fixed authority sentence a block carries, and the question lines
-// that report each answered choice with the figure it was made with. The delivery-path check that
-// a block built from a real evaluation repeats no supplied text lives in `evaluate-evidence.test.ts`,
-// where that evaluation is made. No case spawns a process or reaches a model endpoint.
+// Behaviour tests of the portable System 1 advisory edge's frozen execution-directive lines:
+// each injectable present/absent cell, the inclusion bars, and combinations that must not
+// drop a continuation or print a below-bar visual line. Framing of the block markers lives
+// in `advisory-framing.test.ts`. No case spawns a process or reaches a model endpoint.
 
 import { describe, expect, test } from 'vitest';
 
@@ -12,129 +11,171 @@ import {
   formatAdvisoryBlock,
 } from './advisory-block.ts';
 import {
-  createDerivedConfidenceEvaluation,
+  createAbsentScopeWithPresentUserOnlyEvaluation,
   createEvaluatedAdvisory,
-  createNonMaximumChoiceEvaluation,
-  createFigurelessEvaluation,
-  createStatedZeroConfidenceEvaluation,
-  createUnavailableAdvisory,
-  createWeakSignalEvaluation,
-  createWeakSignalThresholdEvaluation,
+  createGuidanceAbsentAtBarEvaluation,
+  createGuidanceAbsentBelowBarEvaluation,
+  createGuidanceWithSubBarVisualEvaluation,
+  createInterruptPresentAtBarEvaluation,
+  createInterruptPresentBelowBarEvaluation,
+  createScopeChangedAbsentEvaluation,
+  createScopeChangedPresentEvaluation,
+  createUserOnlyAbsentEvaluation,
+  createUserOnlyPresentEvaluation,
+  createVisualEvidenceAbsentAtCertaintyEvaluation,
+  createVisualPresentEvaluation,
 } from '../test/helpers/plugin.factory.ts';
 
-// The one authority sentence every block carries, read from a block the adapter itself emits, so
-// a case pins its position and its constancy without a second copy of production text (S7).
-function authoritySentence(): string {
-  const lines = formatAdvisoryBlock(createUnavailableAdvisory()).split('\n');
-  const sentence = lines[lines.length - 2];
-  if (sentence === undefined) {
-    throw new Error('the unavailable block carries no authority sentence');
-  }
-  return sentence;
+const EXECUTE_ACCORDINGLY =
+  'Execute accordingly. Deviate only when stronger evidence or governing constraints justify it.';
+const NO_NEW_PERMISSIONS = 'No new permissions are granted.';
+const ACTION_SCOPE_CHANGED_PRESENT =
+  'Potential new requirement in this message. Check existing context and authorization before expanding. Pause only work that still needs extra authorization.';
+const ACTION_SCOPE_CHANGED_ABSENT =
+  'No new requirement in this message. Continue the established task without unnecessary renegotiation, respecting actual context and authorization.';
+const ACTION_USER_ONLY_DECISION_PRESENT =
+  'A reserved decision is in this message. Ask that specific question. Continue independent authorized work; do not freeze the whole turn.';
+const ACTION_USER_ONLY_DECISION_ABSENT =
+  'No reserved decision in this message. Continue already-authorized work. Do not ask for redundant approval. Not new permission.';
+const ACTION_VISUAL_EVIDENCE_PRESENT = 'Image attached. Inspect it before answering.';
+
+function expectedDirectives(lines: ReadonlyArray<string>): ReadonlyArray<string> {
+  return [
+    ADVISORY_BLOCK_START,
+    ...lines,
+    EXECUTE_ACCORDINGLY,
+    NO_NEW_PERMISSIONS,
+    ADVISORY_BLOCK_END,
+  ];
 }
 
-// R1, R2, R11: a block that only reports that an answer arrived is a receipt. These cases pin the
-// lines that carry the question, the option the payload chose, the figure that choice was made
-// with and the mark of a weak signal, so the model reading the block sees what was chosen.
 describe('advisory question lines', () => {
-  test('reports one line per answered question with the option and its two-decimal confidence', () => {
-    const advisory = createEvaluatedAdvisory(createWeakSignalEvaluation());
-
-    const block = formatAdvisoryBlock(advisory);
-
-    expect(block.split('\n')).toStrictEqual([
-      ADVISORY_BLOCK_START,
-      advisory.advisory,
-      'scope_changed → present (0.82)',
-      'user_only_decision → absent (0.41) ⚠ weak signal',
-      authoritySentence(),
-      ADVISORY_BLOCK_END,
-    ]);
+  test('emits the frozen action for scope_changed present', () => {
+    expect(
+      formatAdvisoryBlock(createEvaluatedAdvisory(createScopeChangedPresentEvaluation())).split(
+        '\n',
+      ),
+    ).toStrictEqual(
+      expectedDirectives([
+        'scope_changed → present (0.82)',
+        `→ ${ACTION_SCOPE_CHANGED_PRESENT}`,
+      ]),
+    );
   });
 
-  test('marks a figure below the weak-signal bound and leaves the bound itself unmarked', () => {
-    const advisory = createEvaluatedAdvisory(createWeakSignalThresholdEvaluation());
-
-    expect(formatAdvisoryBlock(advisory).split('\n')).toStrictEqual([
-      ADVISORY_BLOCK_START,
-      advisory.advisory,
-      'scope_changed → present (0.60)',
-      'user_only_decision → absent (0.59) ⚠ weak signal',
-      authoritySentence(),
-      ADVISORY_BLOCK_END,
-    ]);
+  test('emits the frozen action for scope_changed absent', () => {
+    expect(
+      formatAdvisoryBlock(createEvaluatedAdvisory(createScopeChangedAbsentEvaluation())).split(
+        '\n',
+      ),
+    ).toStrictEqual(
+      expectedDirectives([
+        'scope_changed → absent (0.98)',
+        `→ ${ACTION_SCOPE_CHANGED_ABSENT}`,
+      ]),
+    );
   });
 
-  test('derives the figure from the largest stated probability when no confidence is stated', () => {
-    const advisory = createEvaluatedAdvisory(createDerivedConfidenceEvaluation());
-
-    expect(formatAdvisoryBlock(advisory).split('\n')).toStrictEqual([
-      ADVISORY_BLOCK_START,
-      advisory.advisory,
-      'scope_changed → present (0.74)',
-      'user_only_decision → absent (0.58) ⚠ weak signal',
-      // The chosen option here is not the most probable one, so this line reports the largest
-      // stated probability rather than the probability of the option the payload chose (R11).
-      'visual_evidence → present (0.55) ⚠ weak signal',
-      authoritySentence(),
-      ADVISORY_BLOCK_END,
-    ]);
+  test('emits the frozen action for user_only_decision present', () => {
+    expect(
+      formatAdvisoryBlock(createEvaluatedAdvisory(createUserOnlyPresentEvaluation())).split('\n'),
+    ).toStrictEqual(
+      expectedDirectives([
+        'user_only_decision → present (0.94)',
+        `→ ${ACTION_USER_ONLY_DECISION_PRESENT}`,
+      ]),
+    );
   });
 
-  // `visual_evidence` above is not a question profile v4 asks the model, so the same derivation is
-  // demonstrated once on a question the model actually answers: the chosen option is again not the
-  // most probable one, and its own probability would print `0.44` instead of the stated `0.56`.
-  test('reports the largest stated probability on an answered question whose chosen option is not the most probable', () => {
-    const advisory = createEvaluatedAdvisory(
-      createNonMaximumChoiceEvaluation(),
+  test('emits the frozen action for user_only_decision absent', () => {
+    expect(
+      formatAdvisoryBlock(createEvaluatedAdvisory(createUserOnlyAbsentEvaluation())).split('\n'),
+    ).toStrictEqual(
+      expectedDirectives([
+        'user_only_decision → absent (0.94)',
+        `→ ${ACTION_USER_ONLY_DECISION_ABSENT}`,
+      ]),
+    );
+  });
+
+  test('emits the frozen action for visual_evidence present', () => {
+    expect(
+      formatAdvisoryBlock(createEvaluatedAdvisory(createVisualPresentEvaluation())).split('\n'),
+    ).toStrictEqual(
+      expectedDirectives([
+        'visual_evidence → present (0.60)',
+        `→ ${ACTION_VISUAL_EVIDENCE_PRESENT}`,
+      ]),
+    );
+  });
+
+  test('omits a below-bar visual present while keeping the two guidance absents', () => {
+    const block = formatAdvisoryBlock(
+      createEvaluatedAdvisory(createGuidanceWithSubBarVisualEvaluation()),
     );
 
-    expect(formatAdvisoryBlock(advisory).split('\n')).toStrictEqual([
-      ADVISORY_BLOCK_START,
-      advisory.advisory,
-      'user_only_decision → absent (0.56) ⚠ weak signal',
-      authoritySentence(),
-      ADVISORY_BLOCK_END,
-    ]);
+    expect(block.split('\n')).toStrictEqual(
+      expectedDirectives([
+        'scope_changed → absent (0.98)',
+        `→ ${ACTION_SCOPE_CHANGED_ABSENT}`,
+        'user_only_decision → absent (0.94)',
+        `→ ${ACTION_USER_ONLY_DECISION_ABSENT}`,
+      ]),
+    );
+    expect(block).not.toContain('visual_evidence');
   });
 
-  test('prints the choice without a figure when the answer states neither', () => {
-    const advisory = createEvaluatedAdvisory(createFigurelessEvaluation());
-
-    expect(formatAdvisoryBlock(advisory).split('\n')).toStrictEqual([
-      ADVISORY_BLOCK_START,
-      advisory.advisory,
-      'visual_evidence → absent (n/a)',
-      authoritySentence(),
-      ADVISORY_BLOCK_END,
-    ]);
+  test('emits both a guidance absent and an interrupt present rather than cancelling the ask', () => {
+    expect(
+      formatAdvisoryBlock(
+        createEvaluatedAdvisory(createAbsentScopeWithPresentUserOnlyEvaluation()),
+      ).split('\n'),
+    ).toStrictEqual(
+      expectedDirectives([
+        'scope_changed → absent (0.98)',
+        `→ ${ACTION_SCOPE_CHANGED_ABSENT}`,
+        'user_only_decision → present (0.80)',
+        `→ ${ACTION_USER_ONLY_DECISION_PRESENT}`,
+      ]),
+    );
   });
 
-  test('prints a stated zero confidence as its own figure rather than as an absence', () => {
-    const advisory = createEvaluatedAdvisory(createStatedZeroConfidenceEvaluation());
-
-    // A stated `0` is a figure the payload gave, not a missing one: a falsy test would print the
-    // same `n/a` the absent case prints and hide the difference (R11, R12).
-    expect(formatAdvisoryBlock(advisory).split('\n')).toStrictEqual([
-      ADVISORY_BLOCK_START,
-      advisory.advisory,
-      'visual_evidence → present (0.00) ⚠ weak signal',
-      authoritySentence(),
-      ADVISORY_BLOCK_END,
-    ]);
+  test('omits interrupt present and guidance absent below their bars and includes them on the bars', () => {
+    expect(
+      formatAdvisoryBlock(
+        createEvaluatedAdvisory(createInterruptPresentBelowBarEvaluation()),
+      ),
+    ).toBe('');
+    expect(
+      formatAdvisoryBlock(createEvaluatedAdvisory(createGuidanceAbsentBelowBarEvaluation())),
+    ).toBe('');
+    expect(
+      formatAdvisoryBlock(createEvaluatedAdvisory(createInterruptPresentAtBarEvaluation())).split(
+        '\n',
+      ),
+    ).toStrictEqual(
+      expectedDirectives([
+        'scope_changed → present (0.80)',
+        `→ ${ACTION_SCOPE_CHANGED_PRESENT}`,
+      ]),
+    );
+    expect(
+      formatAdvisoryBlock(createEvaluatedAdvisory(createGuidanceAbsentAtBarEvaluation())).split(
+        '\n',
+      ),
+    ).toStrictEqual(
+      expectedDirectives([
+        'user_only_decision → absent (0.60)',
+        `→ ${ACTION_USER_ONLY_DECISION_ABSENT}`,
+      ]),
+    );
   });
 
-  test('emits no question line for an unavailable evaluation', () => {
-    const advisory = createUnavailableAdvisory();
-
-    expect(advisory.status).toBe('unavailable');
-    expect(formatAdvisoryBlock(advisory).split('\n')).toStrictEqual([
-      ADVISORY_BLOCK_START,
-      advisory.advisory,
-      authoritySentence(),
-      ADVISORY_BLOCK_END,
-    ]);
-    // Nothing in an unavailable block can be mistaken for an answered question.
-    expect(formatAdvisoryBlock(advisory)).not.toContain('→');
+  test('omits visual_evidence absent even at certainty', () => {
+    expect(
+      formatAdvisoryBlock(
+        createEvaluatedAdvisory(createVisualEvidenceAbsentAtCertaintyEvaluation()),
+      ),
+    ).toBe('');
   });
 });
