@@ -68,12 +68,14 @@ const decisionAnswerSchema = z.object({
 const oddEvidenceEvaluationSchema = z.union([
   z.object({
     ok: z.literal(true),
+    evaluationId: z.string().min(1).describe('Correlation identifier for this evaluation'),
     profileId: z.string().describe('Question profile identity that was evaluated'),
     profileVersion: z.number().int().positive().describe('Question profile version'),
     answers: z.record(z.string(), decisionAnswerSchema).describe('Validated answer per question'),
   }),
   z.object({
     ok: z.literal(false),
+    evaluationId: z.string().min(1).describe('Correlation identifier for this evaluation'),
     code: z.string().describe('Stable rejection code owned by the evidence evaluation'),
     reason: z.string().describe('Rejection reason'),
   }),
@@ -146,17 +148,24 @@ const BOUNDED_REJECTION_REASON =
   'Rejected before delivery; the rejection code identifies the failure class';
 
 // One projection step onto the advertised output union: the success branch keeps exactly
-// the profile identity and the validated answers, the rejection branch keeps only its
-// code. No supplied text, image bytes or data URL can reach the payload.
+// the profile identity, the evaluation identifier and the validated answers; the
+// rejection branch keeps its code and the same identifier. No supplied text, image bytes
+// or data URL can reach the payload.
 function toWireEvaluation(result: OddEvidenceEvaluation): OddEvidenceEvaluation {
   return result.ok
     ? {
         ok: true,
+        evaluationId: result.evaluationId,
         profileId: result.profileId,
         profileVersion: result.profileVersion,
         answers: result.answers,
       }
-    : { ok: false, code: result.code, reason: BOUNDED_REJECTION_REASON };
+    : {
+        ok: false,
+        evaluationId: result.evaluationId,
+        code: result.code,
+        reason: BOUNDED_REJECTION_REASON,
+      };
 }
 
 // Composition at the edge: an already evaluated-operation collaborator is used as

@@ -18,7 +18,10 @@ import type {
   ValidatedDecisionAnswer,
   ValidatedEvidenceAnswers,
 } from '../domain/decision-response.ts';
-import { createEvaluationTraceEntry } from '../domain/evaluation-trace.ts';
+import {
+  createEvaluationTraceEntry,
+  handlingForOutcome,
+} from '../domain/evaluation-trace.ts';
 import type {
   EvaluationTrace,
   EvaluationTraceContext,
@@ -42,12 +45,14 @@ import { derivedQuestionId } from '../domain/question-profile.ts';
 export type OddEvidenceEvaluation =
   | {
       readonly ok: true;
+      readonly evaluationId: string;
       readonly profileId: string;
       readonly profileVersion: number;
       readonly answers: ValidatedEvidenceAnswers;
     }
   | {
       readonly ok: false;
+      readonly evaluationId: string;
       readonly code: OddEvidenceRejectionCode;
       readonly reason: string;
     };
@@ -153,7 +158,10 @@ export class EvaluateOddEvidence {
     // supplied one. It is correlation metadata, never supplied evidence.
     sessionId?: string,
   ): Promise<OddEvidenceEvaluation> {
-    const trace = this.#startTracing();
+    // Minted once per call so the delivered result and the optional v4 trace line share
+    // the same correlation identifier whether the evaluation succeeds or is rejected.
+    const evaluationId = globalThis.crypto.randomUUID();
+    const trace = this.#startTracing(evaluationId);
     const traceSessionId = sessionId ?? null;
 
     // The port already mapped the outside document to domain data, so this is a typed
@@ -161,7 +169,12 @@ export class EvaluateOddEvidence {
     // unchanged, which is the same bounded code and text a caller saw before.
     const loadedProfile = await this.#questionProfileSource.load();
     if (!loadedProfile.ok) {
-      return { ok: false, code: 'invalid_profile', reason: loadedProfile.reason };
+      return {
+        ok: false,
+        evaluationId,
+        code: 'invalid_profile',
+        reason: loadedProfile.reason,
+      };
     }
     const profile = loadedProfile.profile;
 
@@ -181,7 +194,12 @@ export class EvaluateOddEvidence {
 
     const validatedInput = validateOddEvidenceInput(text, images, questions);
     if (!validatedInput.ok) {
-      return { ok: false, code: validatedInput.code, reason: validatedInput.reason };
+      return {
+        ok: false,
+        evaluationId,
+        code: validatedInput.code,
+        reason: validatedInput.reason,
+      };
     }
     const identity: TraceIdentity = {
       profileId: profile.profileId,
@@ -232,7 +250,12 @@ export class EvaluateOddEvidence {
         { status: 'unavailable', code: validatedResponse.code },
         elapsedMs,
       );
-      return { ok: false, code: validatedResponse.code, reason: validatedResponse.reason };
+      return {
+        ok: false,
+        evaluationId,
+        code: validatedResponse.code,
+        reason: validatedResponse.reason,
+      };
     }
 
     await this.#record(
@@ -254,20 +277,21 @@ export class EvaluateOddEvidence {
 
     return {
       ok: true,
+      evaluationId,
       profileId: profile.profileId,
       profileVersion: profile.version,
       answers,
     };
   }
 
-  #startTracing(): ActiveTracing | undefined {
+  #startTracing(evaluationId: string): ActiveTracing | undefined {
     const tracing = this.#tracing;
     if (tracing === undefined) return undefined;
     return {
       trace: tracing.evaluationTrace,
       imageStore: tracing.imageStore,
       decisionModel: tracing.decisionModel,
-      evaluationId: globalThis.crypto.randomUUID(),
+      evaluationId,
       at: new Date().toISOString(),
     };
   }
@@ -312,6 +336,7 @@ export class EvaluateOddEvidence {
       profileVersion: identity.profileVersion,
       model: identity.model,
       outcome,
+      handling: handlingForOutcome(outcome),
       elapsedMs,
     };
     const input: EvaluationTraceEntryInput = 'response' in result

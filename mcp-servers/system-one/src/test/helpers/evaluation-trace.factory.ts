@@ -13,12 +13,16 @@ import type {
   EvaluationTraceContext,
   EvaluationTraceEntry,
   EvaluationTraceError,
+  EvaluationTraceHandling,
   EvaluationTraceImageDescriptor,
   EvaluationTraceImageStore,
   EvaluationTraceOutcome,
   EvaluationTraceRequest,
 } from '../../domain/evaluation-trace.ts';
-import { createEvaluationTraceEntry as createDomainEvaluationTraceEntry } from '../../domain/evaluation-trace.ts';
+import {
+  createEvaluationTraceEntry as createDomainEvaluationTraceEntry,
+  handlingForOutcome,
+} from '../../domain/evaluation-trace.ts';
 import type { OddEvidenceImage } from '../../domain/odd-evidence.ts';
 import {
   createDecisionResponse,
@@ -105,6 +109,17 @@ export function createEvaluationTraceError(
   };
 }
 
+export function createEvaluationTraceHandling(
+  overrides: Partial<EvaluationTraceHandling> = {},
+): EvaluationTraceHandling {
+  return {
+    disposition: overrides.disposition ?? 'unknown',
+    reportedFooter: overrides.reportedFooter ?? 'not_observed',
+    observedActions: overrides.observedActions ?? 'not_observed',
+    assessment: overrides.assessment ?? 'not_observed',
+  };
+}
+
 // The successful exchange: the request the gateway received and the parsed body it
 // returned. A response override preserves an explicit null rather than replacing it.
 export function createEvaluationTraceExchange(
@@ -175,6 +190,9 @@ function buildEvaluationTraceEntry(
       : overrides.profileVersion,
     model: overrides.model ?? defaultModel,
     outcome: overrides.outcome ?? defaultOutcome,
+    handling: toRecordedHandling(
+      overrides.handling ?? handlingForOutcome(overrides.outcome ?? defaultOutcome),
+    ),
     elapsedMs: overrides.elapsedMs ?? defaultElapsedMs,
   };
   return 'response' in exchange
@@ -188,6 +206,15 @@ function buildEvaluationTraceEntry(
         request: exchange.request,
         error: exchange.error,
       });
+}
+
+function toRecordedHandling(handling: EvaluationTraceHandling): EvaluationTraceHandling {
+  return {
+    disposition: handling.disposition,
+    reportedFooter: handling.reportedFooter,
+    observedActions: handling.observedActions,
+    assessment: handling.assessment,
+  };
 }
 
 // The recording double keeps every entry it receives; the `entries` getter returns a

@@ -3,6 +3,8 @@
 // bounds, a validated evaluation result, and a recording evaluator double that returns
 // it. Every creator returns fresh values; no module-level mutable state is shared.
 
+import { randomUUID } from 'node:crypto';
+
 import type { OddEvidenceEvaluation } from '../../application/evaluate-odd-evidence.ts';
 import type { DecisionChoice, ValidatedDecisionAnswer } from '../../domain/decision-response.ts';
 import type { OddEvidenceImage } from '../../domain/odd-evidence.ts';
@@ -56,6 +58,7 @@ export function createOverLengthBase64ToolInput(): EvaluateToolInput {
 export function createEvaluationResult(): OddEvidenceEvaluation {
   return {
     ok: true,
+    evaluationId: randomUUID(),
     profileId: 'odd-evidence-v1',
     profileVersion: 1,
     answers: {
@@ -63,6 +66,15 @@ export function createEvaluationResult(): OddEvidenceEvaluation {
       user_only_decision: createValidatedAnswer('absent'),
       visual_evidence: createValidatedAnswer('absent'),
     },
+  };
+}
+
+export function createRejectedEvaluationResult(): OddEvidenceEvaluation {
+  return {
+    ok: false,
+    evaluationId: randomUUID(),
+    code: 'invalid_answers',
+    reason: 'The decision response did not answer every asked question',
   };
 }
 

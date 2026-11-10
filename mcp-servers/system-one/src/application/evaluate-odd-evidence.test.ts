@@ -9,6 +9,7 @@ import { expect, test } from 'vitest';
 import { EvaluateOddEvidence } from './evaluate-odd-evidence.ts';
 import { answerIds } from '../domain/question-profile.ts';
 import {
+  createEvaluationTraceHandling,
   createEvaluationTraceRecorder,
   createSessionId,
   createTraceImageStore,
@@ -31,6 +32,9 @@ import {
   createQuestionProfileSourceWithInvalidProfile,
 } from '../test/helpers/odd-evidence.factory.ts';
 
+const EVALUATION_ID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 test('returns the validated answers plus the derived visual evidence answer', async () => {
   const profile = createOddEvidenceProfile();
   const response = createDecisionResponse();
@@ -45,8 +49,10 @@ test('returns the validated answers plus the derived visual evidence answer', as
 
   // The model's two validated answers are delivered unchanged, and the answer the model is
   // not asked is appended from the supplied image count: one image is `present`.
+  expect(result.evaluationId).toMatch(EVALUATION_ID_PATTERN);
   expect(result).toStrictEqual({
     ok: true,
+    evaluationId: result.evaluationId,
     profileId: profile.profileId,
     profileVersion: profile.version,
     answers: {
@@ -114,6 +120,7 @@ test('returns no derived answer when the model answers the derived question', as
   // rejected evaluation carries no answers at all, so nothing fabricates visual_evidence.
   expect(result.ok).toBe(false);
   if (result.ok) return;
+  expect(result.evaluationId).toMatch(EVALUATION_ID_PATTERN);
   expect(result.code).toBe('invalid_answers');
   expect(result).not.toHaveProperty('answers');
 });
@@ -132,8 +139,10 @@ test('returns invalid_profile when the question profile is rejected', async () =
   // not depend on which layer performed the validation. This replaces the previous
   // `ok === false` plus `code === 'invalid_profile'` pair with one exact-shape assertion that
   // also pins the reason text and refuses any extra field.
+  expect(result.evaluationId).toMatch(EVALUATION_ID_PATTERN);
   expect(result).toStrictEqual({
     ok: false,
+    evaluationId: result.evaluationId,
     code: 'invalid_profile',
     reason: 'Invalid question profile metadata or question IDs',
   });
@@ -151,7 +160,10 @@ test('returns invalid_evidence when the evidence payload is rejected', async () 
   const result = await operation.execute(evidence.text, evidence.images, createExpectedModel());
 
   expect(result.ok).toBe(false);
-  if (!result.ok) expect(result.code).toBe('invalid_evidence');
+  if (!result.ok) {
+    expect(result.evaluationId).toMatch(EVALUATION_ID_PATTERN);
+    expect(result.code).toBe('invalid_evidence');
+  }
   expect(gateway.calls.length).toBe(0);
 });
 
@@ -165,7 +177,10 @@ test('returns invalid_answers when the decision response is rejected', async () 
   const result = await operation.execute(evidence.text, evidence.images, createExpectedModel());
 
   expect(result.ok).toBe(false);
-  if (!result.ok) expect(result.code).toBe('invalid_answers');
+  if (!result.ok) {
+    expect(result.evaluationId).toMatch(EVALUATION_ID_PATTERN);
+    expect(result.code).toBe('invalid_answers');
+  }
 });
 
 test('propagates a decision gateway rejection as a boundary exception', async () => {
@@ -210,6 +225,7 @@ test('records the exact request and response bodies for a validated evaluation',
   expect(recorder.entries).toHaveLength(1);
   const [entry] = recorder.entries;
   if (entry === undefined) throw new Error('a traced evaluation must record one entry');
+  expect(result.evaluationId).toBe(entry.evaluationId);
   const [call] = gateway.calls;
   if (call === undefined) throw new Error('a traced evaluation must call the gateway once');
 
@@ -238,6 +254,9 @@ test('records the exact request and response bodies for a validated evaluation',
   expect(entry.profileId).toBe(profile.profileId);
   expect(entry.profileVersion).toBe(profile.version);
   expect(entry.outcome).toStrictEqual({ status: 'evaluated' });
+  expect(entry.handling).toStrictEqual(
+    createEvaluationTraceHandling({ disposition: 'unknown' }),
+  );
   expect(entry.elapsedMs).toBeGreaterThanOrEqual(0);
 });
 
@@ -272,6 +291,9 @@ test('records the request and the transport failure when the gateway rejects', a
     detail: boundaryError.message,
   });
   expect(entry.outcome).toStrictEqual({ status: 'unavailable', code: 'gateway_error' });
+  expect(entry.handling).toStrictEqual(
+    createEvaluationTraceHandling({ disposition: 'unavailable' }),
+  );
 });
 
 test('records the exact response body when the decision response is rejected', async () => {
@@ -298,10 +320,14 @@ test('records the exact response body when the decision response is rejected', a
   if (entry === undefined || !('response' in entry)) {
     throw new Error('a rejected decision response must record the body it received');
   }
+  expect(result.evaluationId).toBe(entry.evaluationId);
   // The endpoint answered, so the line shows exactly what it answered even though the
   // operation refused to deliver it.
   expect(entry.response).toBe(invalidResponse);
   expect(entry.outcome).toStrictEqual({ status: 'unavailable', code: 'invalid_answers' });
+  expect(entry.handling).toStrictEqual(
+    createEvaluationTraceHandling({ disposition: 'unavailable' }),
+  );
 });
 
 test('leaves the result unchanged and records nothing when the trace ports are omitted', async () => {
@@ -335,8 +361,13 @@ test('leaves the result unchanged and records nothing when the trace ports are o
     createExpectedModel(),
   );
 
-  // Omitting the ports leaves the evaluation result unchanged and records no additional
-  // entry: the log the test supplies still holds only the traced evaluation.
-  expect(untracedResult).toStrictEqual(tracedResult);
+  // Omitting the ports leaves the delivered answers unchanged and records no additional
+  // entry: each call still mints its own evaluationId, and the log still holds only the
+  // traced evaluation.
+  expect(untracedResult.evaluationId).toMatch(EVALUATION_ID_PATTERN);
+  expect(tracedResult.evaluationId).toBe(recorder.entries[0]?.evaluationId);
+  expect({ ...untracedResult, evaluationId: tracedResult.evaluationId }).toStrictEqual(
+    tracedResult,
+  );
   expect(recorder.entries).toHaveLength(1);
 });

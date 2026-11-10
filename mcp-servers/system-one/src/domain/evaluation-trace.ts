@@ -31,6 +31,33 @@ export type EvaluationTraceOutcome =
   | { readonly status: 'evaluated' }
   | { readonly status: 'unavailable'; readonly code: EvaluationTraceOutcomeCode };
 
+// Handling is recorded separately from the decision exchange. This slice cannot observe
+// an S1 footer, tool actions or an independent evaluator, so those three fields stay
+// `not_observed`. Disposition follows the outcome only: an unavailable evaluation is
+// recorded as `unavailable`; an evaluated one is `unknown` because applied/overridden
+// cannot be established here. `applied` and `overridden` are not representable.
+export type EvaluationTraceHandlingDisposition = 'unavailable' | 'unknown';
+
+export type EvaluationTraceObservation = 'not_observed';
+
+export type EvaluationTraceHandling = {
+  readonly disposition: EvaluationTraceHandlingDisposition;
+  readonly reportedFooter: EvaluationTraceObservation;
+  readonly observedActions: EvaluationTraceObservation;
+  readonly assessment: EvaluationTraceObservation;
+};
+
+export function handlingForOutcome(
+  outcome: EvaluationTraceOutcome,
+): EvaluationTraceHandling {
+  return {
+    disposition: outcome.status === 'unavailable' ? 'unavailable' : 'unknown',
+    reportedFooter: 'not_observed',
+    observedActions: 'not_observed',
+    assessment: 'not_observed',
+  };
+}
+
 // One image as the recorded request identifies it. The bytes are content addressed, so
 // equal payloads share one stored file; `path` is null when the store could not write
 // them, and the descriptor still identifies the bytes by digest and byte count.
@@ -78,7 +105,8 @@ export type DecisionExchange =
 // read from the call metadata; `model` is the model the evaluation expected and validated
 // against (the request record carries the model the gateway addressed); a profile that
 // failed validation has no validated identity, so its identifier and version are null
-// rather than copied.
+// rather than copied. `handling` is the S6 disposition record, never inferred from an
+// S1 footer.
 export type EvaluationTraceContext = {
   readonly evaluationId: string;
   readonly at: string;
@@ -87,6 +115,7 @@ export type EvaluationTraceContext = {
   readonly profileVersion: number | null;
   readonly model: string;
   readonly outcome: EvaluationTraceOutcome;
+  readonly handling: EvaluationTraceHandling;
   readonly elapsedMs: number;
 };
 
@@ -139,6 +168,7 @@ export function createEvaluationTraceEntry(
     model: input.model,
     request: toRecordedRequest(input.request),
     outcome: input.outcome,
+    handling: toRecordedHandling(input.handling),
     elapsedMs: input.elapsedMs,
   };
   const entry: EvaluationTraceEntry = 'response' in input
@@ -168,6 +198,15 @@ function toRecordedError(error: EvaluationTraceError): EvaluationTraceError {
   return error.status === undefined
     ? { code: error.code, detail: error.detail }
     : { status: error.status, code: error.code, detail: error.detail };
+}
+
+function toRecordedHandling(handling: EvaluationTraceHandling): EvaluationTraceHandling {
+  return {
+    disposition: handling.disposition,
+    reportedFooter: handling.reportedFooter,
+    observedActions: handling.observedActions,
+    assessment: handling.assessment,
+  };
 }
 
 // The storage capability the application operation records into. The method returns a

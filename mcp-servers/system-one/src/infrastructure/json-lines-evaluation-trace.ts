@@ -16,6 +16,7 @@ import { dirname } from 'node:path';
 import type {
   EvaluationTrace,
   EvaluationTraceEntry,
+  EvaluationTraceHandling,
   EvaluationTraceRequest,
 } from '../domain/evaluation-trace.ts';
 
@@ -60,6 +61,7 @@ function toTraceLine(entry: EvaluationTraceEntry): string {
     request: toRequestLine(entry.request),
     ...toResultLine(entry),
     outcome: entry.outcome,
+    handling: toHandlingLine(entry.handling),
     elapsedMs: entry.elapsedMs,
   });
 }
@@ -84,4 +86,13 @@ function toResultLine(entry: EvaluationTraceEntry) {
   return 'response' in entry
     ? { response: entry.response }
     : { error: entry.error };
+}
+
+function toHandlingLine(handling: EvaluationTraceHandling) {
+  return {
+    disposition: handling.disposition,
+    reportedFooter: handling.reportedFooter,
+    observedActions: handling.observedActions,
+    assessment: handling.assessment,
+  };
 }

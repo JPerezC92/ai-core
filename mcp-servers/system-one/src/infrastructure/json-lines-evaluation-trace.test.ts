@@ -19,6 +19,7 @@ import {
   createEvaluationTraceEntry,
   createEvaluationTraceError,
   createEvaluationTraceExchange,
+  createEvaluationTraceHandling,
   createEvaluationTraceQuestions,
   createEvaluationTraceRequest,
   createFailedEvaluationTraceEntry,
@@ -103,6 +104,9 @@ test('stores the exact request and response exchange with a resolvable image ref
     expect(storedEvaluated['at']).toBe('2026-11-08T10:00:00.000Z');
     expect(storedEvaluated['sessionId']).toBe('ses_trace_test');
     expect(storedEvaluated['outcome']).toStrictEqual({ status: 'evaluated' });
+    expect(storedEvaluated['handling']).toStrictEqual(
+      createEvaluationTraceHandling({ disposition: 'unknown' }),
+    );
 
     const storedRequest = readRecord(
       storedEvaluated['request'],
@@ -152,6 +156,9 @@ test('stores the exact request and response exchange with a resolvable image ref
       status: 'unavailable',
       code: 'gateway_error',
     });
+    expect(storedFailed['handling']).toStrictEqual(
+      createEvaluationTraceHandling({ disposition: 'unavailable' }),
+    );
 
     // The exact content is recorded; the inline payload itself is not, because the bytes
     // live in their content-addressed file.
