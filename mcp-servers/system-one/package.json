@@ -1,0 +1,29 @@
+{
+  "name": "aicore-system-one-tooling",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Portable MCP server hosting System 1 typed decisions over a local model. Workflow-specific questions live in profiles/, not in this server.",
+  "bin": {
+    "system-one-mcp": "./src/mcp/stdio.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p .",
+    "eval:classification": "node --experimental-strip-types evals/run-classification-eval.ts"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.4.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.4.0",
+    "@types/node": "24.19.2",
+    "typescript": "6.0.3",
+    "vite": "8.3.6",
+    "vitest": "5.1.0"
+  }
+}

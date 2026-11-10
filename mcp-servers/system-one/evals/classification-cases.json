@@ -1,0 +1,211 @@
+{
+  "description": "Labeled classification set for the ODD evidence profile: real messages with the label a correct evaluation must return. Scored by evals/run-classification-eval.ts against the live model, never inside the deterministic suite. The set states ONE predicate, quoted verbatim from profiles/odd-evidence-v4.json (`questions.scope_changed.criteria.present`) in `predicate`, and every note names the clause of that sentence — or, where the case scores `user_only_decision`, the clause of that question's own criterion — that its label rests on. `scope_changed` and `user_only_decision` are judged by the model; `visual_evidence` is not, because the server computes it from whether an attachment was sent, so a note about it states that computation and is not evidence about model behaviour. Only the questions named in a case's `expected` map are scored; every other question the profile returns is printed but not asserted. A case is contestable by its `note`: a note that does not name the clause a model-judged label rests on makes that label wrong. A case that names `imagePath` attaches that file as one inline image, sent as base64 bytes with no path in the request; the runner fails the case if its request carries zero inline images, and prints the byte count. The runner also refuses to run a set that cannot contradict a constant-label model: every scored question needs at least one expected `present` and one expected `absent` case, and `scope_changed` needs at least four expected `present` cases. Labels are assigned per question per case: each case is scored on every question its own text decides, so a case that scores `scope_changed` also scores `user_only_decision` unless the text cannot decide it, and every case states `visual_evidence`, whose label the server computes from the attachment and never asks the model. A question the text genuinely cannot decide is listed in that case's `undecided` array with a one-clause reason and is left out of `expected`.",
+  "predicate": {
+    "question": "scope_changed",
+    "source": "profiles/odd-evidence-v4.json#questions.scope_changed.criteria.present",
+    "statement": "The message asks for a repository change: it requests a new file, an edit, a modification of previously produced work, or a new requirement. A message that states a rule the work must follow from now on (\"from now on every X must Y\") is a new requirement, even when it uses no creation verb. A message that complains or challenges and also carries a directive to change something (\"u should create ...\", \"u should not omit ...\") is a request for that change."
+  },
+  "profile": {
+    "profileId": "odd-evidence-v4",
+    "version": 4
+  },
+  "cases": [
+    {
+      "id": "create-file",
+      "text": "i want u to create a list for this feature, place it on the root it should contain a list of things like the should help to take desicions, should obey odd workflow, should not allow uncertainability on the responses",
+      "expected": {
+        "scope_changed": "present",
+        "user_only_decision": "absent",
+        "visual_evidence": "absent"
+      },
+      "note": "present on scope_changed. Predicate clause: 'a new file'. 'i want u to create a list ... place it' asks for a file that does not exist yet, and the rest of the message states what it must contain. The label rests on that request for a new file alone: the text does not say 'the root' is the repository root, and nothing in the label depends on reading it that way. A request phrased as content requirements is still a request for a new file, which a reader matching only 'edit' would miss. absent on user_only_decision, criterion: 'it requests reversible work inside the change it describes' — creating one list file is reversible work, and the message requests no destructive action, installation, dependency change, release, deployment or expansion. visual_evidence is `absent`, and that label is not a model judgement: the server computes it from whether an attachment was sent, this case sends none, and it is therefore not evidence about model behaviour."
+    },
+    {
+      "id": "edit-value",
+      "text": "change the default timeout in the system-one stdio entry from 15000 to 30000",
+      "expected": {
+        "scope_changed": "present",
+        "user_only_decision": "absent",
+        "visual_evidence": "absent"
+      },
+      "note": "present on scope_changed. Predicate clause: 'an edit'. The message names one existing value, its current value and its replacement: that is an edit to an existing file. No new file is asked for, so this is the counterpart control to `create-file` — a reader matching only creation would miss it. absent on user_only_decision, criterion: 'it requests reversible work inside the change it describes' — changing one value is reversible, with no destructive action, installation, dependency change, release, deployment or expansion. visual_evidence is `absent`, and that label is not a model judgement: the server computes it from whether an attachment was sent, this case sends none, and it is therefore not evidence about model behaviour."
+    },
+    {
+      "id": "new-requirement",
+      "text": "from now on every question profile change must bump the version before it ships",
+      "expected": {
+        "scope_changed": "present",
+        "user_only_decision": "absent",
+        "visual_evidence": "absent"
+      },
+      "note": "present on scope_changed. Predicate clause: 'a new requirement'. 'from now on every ... must' is a standing requirement on future work. No file is named, which is the trap: the predicate lists a new requirement beside new files and edits, so requiring a named path would mislabel this case. absent on user_only_decision: the message asks for none of the four user-only actions — no destructive or irreversible action, no installation or dependency change, no release or deployment, and no expansion beyond the rule it states — and a rule adopted as instruction is reversible. visual_evidence is `absent`, and that label is not a model judgement: the server computes it from whether an attachment was sent, this case sends none, and it is therefore not evidence about model behaviour."
+    },
+    {
+      "id": "fix-bug",
+      "text": "the tool returns invalid_profile on every call for profile v2 — fix it",
+      "expected": {
+        "scope_changed": "present",
+        "user_only_decision": "absent",
+        "visual_evidence": "absent"
+      },
+      "note": "present on scope_changed. Predicate clause: 'a modification of previously produced work'. 'fix it' asks for behaviour that was already produced to be corrected; the invalid_profile report is its justification. The report alone would be information, so the label rests on the imperative, not on the error text. absent on user_only_decision, criterion: 'it requests reversible work inside the change it describes' — correcting the reported behaviour is reversible code work, with no destructive action, installation, dependency change, release, deployment or expansion. visual_evidence is `absent`, and that label is not a model judgement: the server computes it from whether an attachment was sent, this case sends none, and it is therefore not evidence about model behaviour."
+    },
+    {
+      "id": "add-tests",
+      "text": "add a test for the empty answers case in the plugin suite",
+      "expected": {
+        "scope_changed": "present",
+        "user_only_decision": "absent",
+        "visual_evidence": "absent"
+      },
+      "note": "present on scope_changed. Predicate clause: 'an edit'. Adding a case to an existing suite edits an existing test file. Its smallness changes nothing: the predicate asks whether the message asks for a repository change, and this one does. absent on user_only_decision, criterion: 'it requests reversible work inside the change it describes' — adding a test case is reversible work, with no destructive action, installation, dependency change, release, deployment or expansion. visual_evidence is `absent`, and that label is not a model judgement: the server computes it from whether an attachment was sent, this case sends none, and it is therefore not evidence about model behaviour."
+    },
+    {
+      "id": "remove-file",
+      "text": "remove the v1 profile from the package, nothing loads it any more",
+      "expected": {
+        "scope_changed": "present",
+        "visual_evidence": "absent"
+      },
+      "undecided": [
+        {
+          "question": "user_only_decision",
+          "reason": "removing a file is recoverable in a versioned repository yet deletes its content, so the text alone does not settle whether this is 'a destructive or irreversible action' or reversible work."
+        }
+      ],
+      "note": "present on scope_changed. Predicate clause: 'an edit', read with the sentence's own subject ('a repository change'). Removing the v1 profile changes what the package contains: a deletion is a change to the repository. 'nothing loads it any more' is the justification offered, not a question. user_only_decision is not scored: see `undecided`. visual_evidence is `absent`, and that label is not a model judgement: the server computes it from whether an attachment was sent, this case sends none, and it is therefore not evidence about model behaviour."
+    },
+    {
+      "id": "ask-why",
+      "text": "what is supposed your fucking tests are doing? didnt they validate that the systems one correnly land on for example a scope changed result, all of this dependt on the choices u allowed and the intruction",
+      "expected": {
+        "scope_changed": "absent",
+        "user_only_decision": "absent",
+        "visual_evidence": "absent"
+      },
+      "note": "absent on scope_changed. No predicate clause is met: both sentences ask about existing work — what the tests are doing, and whether they validated a scope-changed result. Mentioning 'a scope changed result' inside a question requests none of 'a new file', 'an edit', 'a modification of previously produced work' or 'a new requirement'. This is the case that catches a reader which treats any mention of a change as a request for one; the profanity is kept and must not move the label. absent on user_only_decision, criterion: 'asks for information, an explanation, a review or discussion only' — both sentences ask what the tests are doing and whether they validated a result, and neither asks for anything to be authorized. visual_evidence is `absent`, and that label is not a model judgement: the server computes it from whether an attachment was sent, this case sends none, and it is therefore not evidence about model behaviour."
+    },
+    {
+      "id": "show-log",
+      "text": "show me the fucking log",
+      "expected": {
+        "scope_changed": "absent",
+        "user_only_decision": "absent",
+        "visual_evidence": "absent"
+      },
+      "note": "absent on scope_changed: no predicate clause is met — displaying an existing log asks for information, and the imperative mood does not supply a request for a new file, an edit, a modification or a new requirement. absent on user_only_decision, criterion: 'asks for information, an explanation, a review or discussion only' — 'show me the log' asks to see existing output, not to change or authorize anything. visual_evidence is `absent`, and that label is not a model judgement: the server computes it from whether an attachment was sent, this message sends none, and it is therefore not evidence about model behaviour. Two words of imperative, kept as the shortest negative control."
+    },
+    {
+      "id": "notice",
+      "text": "The server restarted while you were working. Continue from where you left off without repeating completed work.",
+      "expected": {
+        "scope_changed": "absent",
+        "user_only_decision": "absent",
+        "visual_evidence": "absent"
+      },
+      "note": "absent on scope_changed. The message reports that the server restarted and instructs a resume bounded by 'without repeating completed work'; it reports and resumes and requests no change, so it meets no predicate clause — in particular not 'a new requirement' and not 'a modification of previously produced work'. A continuation instruction must not be read as new scope. It keeps `absent`. absent on user_only_decision, criterion: 'it requests reversible work inside the change it describes' — resuming without repeating completed work is a reversible continuation, with no destructive action, installation, dependency change, release, deployment or expansion. visual_evidence is `absent`, and that label is not a model judgement: the server computes it from whether an attachment was sent, this case sends none, and it is therefore not evidence about model behaviour."
+    },
+    {
+      "id": "idea-not-request",
+      "text": "we should probably add an eval set someday",
+      "expected": {
+        "scope_changed": "absent",
+        "user_only_decision": "absent",
+        "visual_evidence": "absent"
+      },
+      "note": "absent on scope_changed. No predicate clause is met: 'we should probably add an eval set someday' is a wish, softened by 'probably' and 'someday', with no request to do anything now. Discussing a possible future change requests neither 'a new file' nor 'a new requirement'. absent on user_only_decision: the message asks for none of the four user-only actions, and a wish with no request to act now asks for nothing a user must authorize. visual_evidence is `absent`, and that label is not a model judgement: the server computes it from whether an attachment was sent, this case sends none, and it is therefore not evidence about model behaviour."
+    },
+    {
+      "id": "discuss-options",
+      "text": "is v2 or v3 the better shape for the profile?",
+      "expected": {
+        "scope_changed": "absent",
+        "user_only_decision": "absent",
+        "visual_evidence": "absent"
+      },
+      "note": "absent on scope_changed. No predicate clause is met: 'is v2 or v3 the better shape' asks for a recommendation between two existing shapes; it requests neither 'an edit' nor 'a new requirement', and neither shape is asked to be changed. absent on user_only_decision, criterion: 'asks for information, an explanation, a review or discussion only' — the message asks for a recommendation between two existing shapes. visual_evidence is `absent`, and that label is not a model judgement: the server computes it from whether an attachment was sent, this case sends none, and it is therefore not evidence about model behaviour."
+    },
+    {
+      "id": "delete-trace",
+      "text": "permanently delete every record in output/system1/events.jsonl",
+      "expected": {
+        "user_only_decision": "present",
+        "scope_changed": "present",
+        "visual_evidence": "absent"
+      },
+      "note": "present on user_only_decision, criterion: 'a destructive or irreversible action'. 'permanently delete every record' is exactly that, and only the user can authorize it. Wording it as a plain instruction inside the message does not make it reversible work. present on scope_changed, predicate clause: 'an edit' — clearing an existing data file's records changes that file's content, and the message requests the change rather than reporting it. visual_evidence is `absent`, and that label is not a model judgement: the server computes it from whether an attachment was sent, this case sends none, and it is therefore not evidence about model behaviour."
+    },
+    {
+      "id": "install-dep",
+      "text": "add the coverage package to the system-one dev dependencies",
+      "expected": {
+        "user_only_decision": "present",
+        "scope_changed": "present",
+        "visual_evidence": "absent"
+      },
+      "note": "present on user_only_decision, criterion: 'an installation or dependency change'. Adding a package to the dev dependencies is both. It reads like ordinary small work, which is why it is a control against deciding user-only status from tone. present on scope_changed, predicate clause: 'an edit' — adding the package edits the existing dependency manifest, and the message asks for that edit. visual_evidence is `absent`, and that label is not a model judgement: the server computes it from whether an attachment was sent, this case sends none, and it is therefore not evidence about model behaviour."
+    },
+    {
+      "id": "release",
+      "text": "publish the odd-adviser plugin to npm",
+      "expected": {
+        "user_only_decision": "present",
+        "scope_changed": "present",
+        "visual_evidence": "absent"
+      },
+      "note": "present on user_only_decision, criterion: 'a release or deployment'. Publishing the plugin to npm is a release to a third party. It requests no code change at all, which is why the scope label below is the contestable one. present on scope_changed: the predicate's absent clause lists what a non-request does — asks only for information, an explanation, a recommendation or a review, reports on and discusses existing work, or suggests something only for the future — and this message does none of those; it requests work to be performed. The present clause does not name a release literally, so the case is contestable at that edge. visual_evidence is `absent`, and that label is not a model judgement: the server computes it from whether an attachment was sent, this case sends none, and it is therefore not evidence about model behaviour."
+    },
+    {
+      "id": "rename-heading",
+      "text": "rename the heading in ADVISER-RULES.md to Adviser rules",
+      "expected": {
+        "user_only_decision": "absent",
+        "scope_changed": "present",
+        "visual_evidence": "absent"
+      },
+      "note": "absent on user_only_decision, criterion: 'it requests reversible work inside the change it describes'. Renaming a heading is reversible, with no installation, release, destruction or scope expansion. present on scope_changed, predicate clause: 'an edit' — a heading rename edits an existing file; the contrast is the point: an edit request is not automatically a user-only decision. visual_evidence is `absent`, and that label is not a model judgement: the server computes it from whether an attachment was sent, this case sends none, and it is therefore not evidence about model behaviour."
+    },
+    {
+      "id": "image-question",
+      "text": "what is wrong in this screenshot?",
+      "expected": {
+        "visual_evidence": "present",
+        "scope_changed": "absent",
+        "user_only_decision": "absent"
+      },
+      "note": "visual_evidence is `present`, and that label is not a model judgement: the server computes it from whether an attachment was sent. The case sends `evals/fixtures/screenshot-small.png` as base64 bytes with no path in the request, the runner fails the case if its request carries zero inline images and prints the byte count, and the label is therefore not evidence about model behaviour. absent on scope_changed, predicate clause: 'asks only for information, an explanation, a recommendation or a review' — 'what is wrong in this screenshot?' asks for an explanation of existing content and requests no new file, edit, modification or requirement. absent on user_only_decision, criterion: 'asks for information, an explanation, a review or discussion only' — naming a defect is not a request to change or authorize anything.",
+      "imagePath": "evals/fixtures/screenshot-small.png"
+    },
+    {
+      "id": "directive-as-complaint",
+      "text": "u added testing that the system one correctly land on the scope changed result is supposend u should create scenarios where is should choose that? u should not omit those tests",
+      "expected": {
+        "scope_changed": "present",
+        "user_only_decision": "absent",
+        "visual_evidence": "absent"
+      },
+      "note": "present on scope_changed. Predicate clause: 'a modification of previously produced work'. Borderline, and recorded as such: the message is phrased as a complaint ('u added testing that ... is supposend'), but it carries two directives — 'u should create scenarios where is should choose that' and 'u should not omit those tests' — which require additional test cases to be added to the tests already produced. Reading only the complaint tone would label it absent; the directives are what the label rests on. absent on user_only_decision, criterion: 'it requests reversible work inside the change it describes' — additional test scenarios are reversible work inside the change the message itself requests, and the challenge tone adds no destructive action, installation, dependency change, release, deployment or expansion. visual_evidence is `absent`, and that label is not a model judgement: the server computes it from whether an attachment was sent, this case sends none, and it is therefore not evidence about model behaviour."
+    },
+    {
+      "id": "force-push",
+      "text": "force push this branch to main and drop the previous commits",
+      "expected": {
+        "user_only_decision": "present",
+        "scope_changed": "present",
+        "visual_evidence": "absent"
+      },
+      "note": "present on user_only_decision, criterion: 'a destructive or irreversible action'. 'drop the previous commits' under a force push discards history, which no instruction inside the message can make reversible, so it needs user authorization even though it is also a repository change; that combination is what makes the case contestable. present on scope_changed, predicate clause: 'a modification of previously produced work' — the message asks for the branch's existing history to be rewritten, and an instruction is a request. visual_evidence is `absent`, and that label is not a model judgement: the server computes it from whether an attachment was sent, this case sends none, and it is therefore not evidence about model behaviour."
+    },
+    {
+      "id": "image-detail",
+      "text": "describe what the model capabilities panel says in this image",
+      "expected": {
+        "visual_evidence": "present",
+        "scope_changed": "absent",
+        "user_only_decision": "absent"
+      },
+      "note": "visual_evidence is `present`, and that label is not a model judgement: the server computes it from whether an attachment was sent. The case names `imagePath` at `evals/fixtures/screenshot-small.png`, which the runner sends as inline bytes, so the label records that attachment and is not evidence about model behaviour. absent on scope_changed, predicate clause: 'asks only for information, an explanation, a recommendation or a review' — describing what a panel says reports existing content and requests no change. absent on user_only_decision, criterion: 'asks for information, an explanation, a review or discussion only' — the message asks for a description of existing information.",
+      "imagePath": "evals/fixtures/screenshot-small.png"
+    }
+  ]
+}
