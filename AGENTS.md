@@ -205,10 +205,14 @@ When this turn's assembled context contains a `=== SYSTEM 1 | EXECUTION DIRECTIV
 
 1. **Execute.** Apply each applicable System 1 directive in that block to planning and execution as default workflow guidance — not as optional commentary, and not only as something to report. Stronger evidence, actual user intent, and governing constraints take precedence. An `absent` finding never bypasses authorization or a user-only decision. No new permissions are granted. The diagnostic line in (2) does not satisfy this duty.
 
-2. **Observe.** End the user-facing reply with exactly one diagnostic line describing the behavioral effect, for example:
+2. **Observe.** End the user-facing reply with exactly one diagnostic line describing how the applicable findings were actually handled. This is a **required final element** of every user-facing reply while the block is present — ordinary answers, Progress, Findings or blocked, Completion, and the compact ready-to-merge message. Existing completion formats must not omit it. Place it after that format's last required field; it does not replace the task reply or those formats.
+
+   Examples:
    - `S1 applied: Scope preserved · Authorized work continued`
-   - `S1 overridden: scope_changed · Existing context contradicts finding`
+   - `S1 overridden: scope_changed · Contradicted by established context`
    - `S1 applied: Scope preserved · S1 overridden: user_only_decision · Already authorized`
 
-Never claim a directive was applied if its effect cannot be established. Never emit that line when no valid EXECUTION DIRECTIVES block was injected for this turn. The line is an observable clue, not proof of compliance, and it must not replace the task reply.
+   An override is only a genuine contradiction with stronger evidence, user intent, or a governing constraint — not an ordinary authorized action (for example agreed diagnostic cleanup).
+
+Never claim a directive was applied if its effect cannot be established. Never emit that line when no valid EXECUTION DIRECTIVES block was injected for this turn. The line is an observable clue, not proof of compliance. See `knowledge/agents.md` project region `### Message presentation — System 1 footer`.
 <!-- project:end -->

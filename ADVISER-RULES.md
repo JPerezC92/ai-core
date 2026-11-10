@@ -58,8 +58,8 @@ A timeout, transport error, rejection or malformed payload produces a named stat
 **R14 — Delivery to the model is verified, not assumed.**
 "Pushed onto the request" is not "read by the model". The `S1 applied` / `S1 overridden` line is a diagnostic clue, not proof of delivery or compliance. *Check:* plugin logs show a push; do not treat a self-reported S1 line as verification.
 
-**R15 — Records are content-free by default.**
-No raw prompt, image bytes, file contents or error text; coverage is reported as counts. *Check:* open the trace record for a known message and search for its text.
+**R15 — Evaluation traces store submitted input and output; plugin events stay content-free.**
+`events.jsonl` records `request.state` (the text submitted to System 1) and the evaluation response on the same `evaluationId` line. That text is capture output: trimmed, newline-joined text parts; images are not in `state`. It is not independently proven to be the unmodified host message bytes. `plugin.jsonl` records only operational metadata (stages, counts, codes). Image bytes live as hashed files, not inline in JSONL. `.gitignore` of `output/` is not access control and is not a verified security guarantee. *Check:* for a known evaluation, `request.state` equals the submitted `input.text`, the same line carries `response` or `error`, and `plugin.jsonl` does not contain that text.
 
 ## 4. Cost and failure boundaries
 
@@ -78,7 +78,7 @@ Tool continuations re-inject the cached result. *Check:* one `evaluate_started` 
 | R3 | ✅ holding | one finding line plus one action line per qualifying question; weak findings omitted |
 | R12 | ✅ holding | action lines from frozen map only; `visual_evidence` remains envelope-derived |
 | R14 | ⚠️ unproven | push is logged; S1 chat line is a clue, not proof |
-| R15 | ❌ violated | `output/system1/events.jsonl` still stores `request.state` — the raw message — verbatim |
+| R15 | ⚠️ holding on rewritten check | v4 `request.state` matches submitted `input.text`; `plugin.jsonl` has no that text; capture ≠ proven host-byte identity; `.gitignore` ≠ access control; `sessionId` often null is **not** scored here (separate limitation) |
 | R4 | ✅ holding | default execution guidance; no new permissions; AGENTS.md apply duty |
 | R16, R17 | ✅ holding | bounded timeout; one `evaluate_started` per message with continuation reuse |
 | R5, R6, R7, R13 | ✅ holding | R6 exception: one authorized S1 chat line is not a second tracker; profile still does not see feature-doc scope |

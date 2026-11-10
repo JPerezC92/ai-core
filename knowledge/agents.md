@@ -271,4 +271,10 @@ Edge cases:
 
 <!-- project:begin -->
 ## Project extensions
+
+### Message presentation — System 1 footer
+
+When this turn's assembled context contains a `=== SYSTEM 1 | EXECUTION DIRECTIVES ===` block, every user-facing reply **ends with** exactly one `S1 applied` / `S1 overridden` line after the last required field of the Progress, Findings or blocked, or Completion format in `### Message presentation` (including the compact ready-to-merge message and ordinary answers). That line does not replace those formats and must not be dropped because a Completion or Progress body is long.
+
+The line describes how applicable findings were actually handled. An override is only a genuine contradiction, not an ordinary authorized action. Never claim applied if the effect cannot be established. Never emit the line when that block is absent. It is a diagnostic clue, not proof of compliance. The apply duty lives in `AGENTS.md` `### System 1 execution contract`; this heading only stops presentation formats from suppressing the footer.
 <!-- project:end -->
