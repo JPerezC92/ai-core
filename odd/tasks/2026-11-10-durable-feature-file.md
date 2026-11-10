@@ -1,8 +1,9 @@
 # Durable feature file
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-10
+> **Closed:** 2026-11-10
 > **Objective:** Every non-small feature owns one durable file in `odd/features/`, named for the feature, stating what it is and which requirements it must satisfy to count as complete.
 > **Branch:** N/A — the work starts on the current branch; Herald 📯 (Release Manager) creates the feature branch before the first commit.
 > **Delivery:** Two reviewable slices. Slice 1 is the feature-file format, its template and the workflow procedure, about 150 authored lines. Slice 2 is the feature-file validation and its tests, about 230 authored lines. Forecast approximately 380 authored additions plus deletions, excluding generated files; reassess before commit if the running count exceeds approximately 400.
@@ -20,14 +21,14 @@
 
 ## Tasks
 
-- T1 | S1, S2 | inline (this feature's own durable file, created by hand) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T2 | S1, S4 | inline (the template is the format owner's surface) — Cipher 🔓 (Lead Orchestrator): `odd/features/_template.md` carries the shape, the mark rule and the filling guidance | in progress | commit: pending
-- T3 | S7 | delegated (the workflow entry is a shared owner surface) — Scribe ✍️ (Docs & Problems Manager): replace the completion-sheet procedure with the durable feature file procedure in `knowledge/agent-workflow.md` and the skill | in progress | commit: pending
-- T4 | S3, S6 | delegated (implementation ownership) — Forge 🔨 (Implementer): retarget the sheet validation at the durable feature file — requirement lines, ticks, derived status, no stored status, no placeholders | in progress | commit: pending
-- T5 | S3, S6 | delegated (test ownership) — Forge 🔨 (Implementer) with the Crucible 🔥 (Test Architect) gate | in progress | commit: pending
-- T6 | S3 | delegated (architecture gate for the script) — Bastion 🧱 (Backend & Scripts Architect) | in progress | commit: pending
-- T7 | S1, S2, S3, S4, S5, S6, S7 | delegated (independent completion acceptance) — Sentinel 🛡️ (Quality Guardian) | open | commit: pending
-- T8 | S1, S2, S3, S4, S5, S6, S7 | delegated (Git execution ownership) — Herald 📯 (Release Manager) | open | commit: pending
+- T1 | S1, S2 | inline (this feature's own durable file, created by hand) — Cipher 🔓 (Lead Orchestrator) | done | commit: 4596cf9
+- T2 | S1, S4 | inline (the template is the format owner's surface) — Cipher 🔓 (Lead Orchestrator): `odd/features/_template.md` carries the shape, the mark rule and the filling guidance | done | commit: 4596cf9
+- T3 | S7 | delegated (the workflow entry is a shared owner surface) — Scribe ✍️ (Docs & Problems Manager): replace the completion-sheet procedure with the durable feature file procedure in `knowledge/agent-workflow.md` and the skill | done | commit: 4596cf9
+- T4 | S3, S6 | delegated (implementation ownership) — Forge 🔨 (Implementer): retarget the sheet validation at the durable feature file — requirement lines, ticks, derived status, no stored status, no placeholders | done | commit: 4596cf9
+- T5 | S3, S6 | delegated (test ownership) — Forge 🔨 (Implementer) with the Crucible 🔥 (Test Architect) gate | done | commit: 4596cf9
+- T6 | S3 | delegated (architecture gate for the script) — Bastion 🧱 (Backend & Scripts Architect) | done | commit: 4596cf9
+- T7 | S1, S2, S3, S4, S5, S6, S7 | delegated (independent completion acceptance) — Sentinel 🛡️ (Quality Guardian) | done | commit: 4596cf9
+- T8 | S1, S2, S3, S4, S5, S6, S7 | delegated (Git execution ownership) — Herald 📯 (Release Manager) | done | commit: 4596cf9
 
 ## Log
 
@@ -64,3 +65,4 @@
 - L31 — 2026-11-10 — Rule change superseding the R7 wording, on the user's instruction after the fidelity-source contradiction was explained. R7 of `durable-feature-file.md` and the same clause in four consumers now read: the file lists no change records and holds no work-in-progress state, while a requirement may name the single change that delivered it as its evidence. Five sites: `odd/features/durable-feature-file.md` — the clause sat at line 15 when this entry was written and at line 14 after L32's renumbering, where it is R6 — `knowledge/agent-workflow.md` → `### Durable feature file` → Shape, `.opencode/skills/odd-workflow/SKILL.md:31`, `odd/features/_template.md:19`, and `.opencode/skills/odd-workflow/references/_checklist.md:9`. L26's "none reworded" describes the obligations-to-requirements reword and is superseded by this entry for R7; L28's description of the ODD file's pointers as "a real deviation under the rule as written" no longer holds, because the rule was corrected rather than the file.
 - L32 — 2026-11-10 — R5 retired on the user's answer "Retire R5". It forbade what R3 requires: R3 derives the status from the ticks, while R5 said the status moves only when a change concludes the feature or alters a requirement, so ticking R1 moved it without either event. R3 and the four-outcome duty already cover what R5 intended, so the line was removed and the remaining requirements renumbered: old R6 is now R5, old R7 is R6, old R8 is R7. The file holds seven requirements with R1 ticked, so its derived status stays `partial`. References to R5, R7 and R8 earlier in this Log describe the numbering in force at the time of writing.
 - L33 — 2026-11-10 — Requirement revision, disclosed because it is a change to this record's own spec. S7 still said the feature file "names no change records" and its acceptance said the file "names no record", which contradicted the rule corrected in L31 and would have failed the two files that carry a per-requirement delivery pointer. S7 now reads: the file lists no change records and holds no work-in-progress state, while a requirement may name the single change that delivered it as its evidence; its acceptance matches. The revision reopens no task of its own, because T3 and T7 already cover the surfaces it describes, and the verbatim requirement is unchanged.
+- L34 — Close: 2026-11-10 — Independent acceptance was Sentinel 🛡️ (Quality Guardian) at round five: `[PASS]`, zero open findings, S1–S7 all MET, after four rounds in which thirteen findings were raised and closed — including eight in round one, three in round two, three in round three and two in round four, one of which was the record's own S7 contradicting the rule it cited. Delivered in commit `4596cf9` on `feat/odd/durable-feature-file`: 34 files, 1640 insertions, 11 deletions; the delivery forecast was about 380 authored lines and the running count is 1640, above the approximately 400 trigger, so the two slices the forecast named were delivered as one work unit rather than two — recorded here as a deviation from the forecast, not as a claim that the forecast held. The durable file for this feature now derives `achieved`: seven requirements ticked. Validation: `validate_feature.py odd/tasks` → 77 records ok; `validate_feature_file.py odd/features` → `achieved` and `partial`. Suite: 1047 passed, 6 skipped. One orphan edit, a `section_body` wrapper in the record validator's `rules.py` that nothing imported, was reverted rather than committed, leaving the working tree clean. Not claimed: push, PR, merge and release, which remain separately authorized.
