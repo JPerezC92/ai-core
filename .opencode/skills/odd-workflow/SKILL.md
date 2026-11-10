@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.2.0
+  version: 2.4.0
 ---
 <!-- core:begin -->
 
@@ -13,7 +13,7 @@ metadata:
 
 ### What I do
 
-Create, read, update, and close the single authoritative feature document for a feature. Its subordinate full mirror follows `knowledge/agent-workflow.md` → `### Full feature mirror and resume`; it is not a second tracker or a context-injection mechanism. This skill owns record mechanics, not a duplicate mirror protocol.
+Create, read, update, and close the single authoritative feature document for a feature, and create or update the feature's durable file in `odd/features/` that states what the feature is and the requirements it must satisfy. Its subordinate full mirror follows `knowledge/agent-workflow.md` → `### Full feature mirror and resume`; it is not a second tracker or a context-injection mechanism. The durable file derives its status from its own ticks; it is never a second task record. This skill owns record mechanics, not a duplicate mirror protocol.
 
 ### Create a feature document
 
@@ -24,6 +24,18 @@ Create, read, update, and close the single authoritative feature document for a 
 - Fill `## Tasks` with one line per task: stable ID, linked `S#`, route (`inline` or `delegated`) with the reason/trigger that decided it — responsible owner, status (`open`, `in progress`, `done`), and commit. Record the route and its trigger evidence, not the route label alone. Use `commit: pending` only while status is `open` or `in progress`; `done` requires a 7–64 character hexadecimal commit identifier. One authorized coherent work-unit commit may evidence several tasks; do not require one commit per task. High-risk units may use separate reviewable commits.
 - Fill `## Log` with `L1` = the original request verbatim; record each later user correction as its own entry dated and quoted verbatim, with evidence and rationale in separate entries rather than merged into the correction text.
 - After bootstrap, apply the workflow's `### Full feature mirror and resume`. Keep verified project/feature identity, document locator, backend ID, exact verified content revision and comparison evidence, or explicit pending recovery, compactly in the existing Log. Respect project/task backend-write restrictions; record preparation does not itself establish runtime synchronization.
+
+### Create or update the feature file
+
+- Every non-small feature owns one durable file at `odd/features/<feature>.md`, named for the feature and never dated, created from `odd/features/_template.md`; the template is the only feature-file template and the format is never reconstructed by research. Create the file the first time the feature is worked, and read and update it on every later change.
+- The file is not a second tracker. The record in `odd/tasks/` stays the single authoritative intent, task and status record for one change; the file states what the feature is and lists the requirements it must satisfy. It lists no change records and holds no work-in-progress state; a requirement may name the single change that delivered it, as its evidence.
+- The shape is fixed: a title for the feature, one paragraph saying what it is, one status line, and the requirement list, where each requirement is one `R#` line in the form `- [ ] R# — <what must be true for this feature to count as complete>`.
+- The status line follows the ticks rather than an independent claim: every requirement ticked is `achieved`, some ticked is `partial`, none ticked is `not started`. The validator computes and reports that derived status.
+- A tick asserts the requirement holds, and only the change that delivered it may set that tick.
+- A requirement carries a mark only when the feature adopts a standard that already exists, recording where this repository departs from it: `upstream` unchanged, `upstream · local detail` sharpened here, `upstream · narrowed` relaxed here, `local` added here, `local · conflicts` contradicting the standard. A feature explicit from this repository carries no mark.
+- Every change reads the file and records, for each requirement, whether it added one, reworded one, retired one or left it alone. A change that finds a ticked requirement no longer satisfied flags that requirement and records the failure and its cause in its own record.
+- Validate the file with the skill's validator, pointed at the file or the directory that holds the feature's files: `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feature_file.py <feature-file-or-directory>`. It reports the derived status. The script is **mechanical anatomy only**; exit 0 proves the shape, the requirement lines, the ticks and the placeholders. It does not prove that a requirement holds or that the feature is complete — the independent semantic review in `### Close` owns that. The record's own validation stays in `### Validate`.
+- The mark vocabulary and the filling rules live in the template's `## Guidance` section, and each requirement's upstream source and local owner live where that requirement cites them. This skill owns the mechanics, not that analysis.
 
 ### Write meaningful specifications
 
@@ -130,7 +142,9 @@ Run `uv run --frozen python3 .opencode/skills/odd-workflow/scripts/validate_feat
 ### References
 
 - `odd/tasks/_template.md` — the only feature-document template.
+- `odd/features/_template.md` — the only durable-feature-file template.
 - `odd/evidence/_template.md` — the only evidence-file template; an evidence file is disposable working evidence under `### Evidence retention`, never a tracker or authority.
 - `.opencode/skills/odd-workflow/references/_checklist.md` — creation and close checks; read it in full before creating or closing a feature.
 - `.opencode/skills/odd-workflow/scripts/validate_feature.py` — mechanical validator.
+- `.opencode/skills/odd-workflow/scripts/validate_feature_file.py` — mechanical validator for the durable feature file; it reports the derived status.
 <!-- core:end -->
