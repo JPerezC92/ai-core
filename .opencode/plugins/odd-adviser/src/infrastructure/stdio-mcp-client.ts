@@ -103,16 +103,32 @@ function toUnavailableOutcome(code: OddEvidenceUnavailableCode): OddEvidenceOutc
   return { status: 'unavailable', code };
 }
 
-function toOutcome(result: McpToolResult): OddEvidenceOutcome {
+function toEvaluationId(value: unknown): string | undefined {
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+function withEvaluationId(
+  outcome: OddEvidenceOutcome,
+  evaluationId: string | undefined,
+): OddEvidenceOutcome {
+  return evaluationId === undefined ? outcome : { ...outcome, evaluationId };
+}
+
+export function mapMcpToolResultToOutcome(result: McpToolResult): OddEvidenceOutcome {
   if (result.isError === true) return toUnavailableOutcome('tool_error');
   const payload = result.structuredContent;
   if (!isRecord(payload)) return toUnavailableOutcome('malformed_payload');
-  if (payload.ok === false) return toUnavailableOutcome('rejected');
-  if (payload.ok !== true) return toUnavailableOutcome('malformed_payload');
+  const evaluationId = toEvaluationId(payload.evaluationId);
+  if (payload.ok === false) {
+    return withEvaluationId(toUnavailableOutcome('rejected'), evaluationId);
+  }
+  if (payload.ok !== true) {
+    return withEvaluationId(toUnavailableOutcome('malformed_payload'), evaluationId);
+  }
   const evaluation = toEvaluation(payload.profileId, payload.profileVersion, payload.answers);
   return evaluation === null
-    ? toUnavailableOutcome('malformed_payload')
-    : { status: 'evaluated', evaluation };
+    ? withEvaluationId(toUnavailableOutcome('malformed_payload'), evaluationId)
+    : withEvaluationId({ status: 'evaluated', evaluation }, evaluationId);
 }
 
 type BoundedAttempt<T> =
@@ -170,7 +186,7 @@ export function createStdioMcpClient(
         );
       }, evaluationOptions.timeoutMs);
 
-      if (attempt.kind === 'answered') return toOutcome(attempt.result);
+      if (attempt.kind === 'answered') return mapMcpToolResultToOutcome(attempt.result);
       if (attempt.kind === 'failed') return toUnavailableOutcome('transport_error');
       return toUnavailableOutcome('timeout');
     },

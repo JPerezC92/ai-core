@@ -25,6 +25,19 @@ import type {
   OddEvidenceEvaluatorConnection,
 } from '../domain/plugin-contract.ts';
 import type { OddEvidenceEvaluator } from '../domain/advisory.ts';
+import {
+  appendRollingText,
+  classifyAssistantCompletion,
+  classifyReportedFooter,
+  createObservation,
+  extractReceivedText,
+  extractResponseId,
+} from '../domain/observation.ts';
+import type {
+  ObservationRecord,
+  ObservationReportedFooter,
+  ObservationSink,
+} from '../domain/observation.ts';
 import { createDeferredConnection } from './stdio-mcp-client.ts';
 
 export type PromptDraft = {
@@ -81,10 +94,45 @@ export type ContextInlinedMedia = {
 export type PromptAdmissionListener = (event: PromptAdmissionEvent) => void;
 export type ContextBuildListener = (event: ContextBuildEvent) => Promise<void>;
 
+export type HttpResponseEvent = {
+  readonly sessionID?: string | undefined;
+  readonly response: {
+    clone(): { text(): Promise<string> };
+  };
+};
+
+export type WebSocketReceiveEvent = {
+  readonly sessionID?: string | undefined;
+  readonly frame: unknown;
+};
+
+export type ToolExecuteAfterEvent = {
+  readonly sessionID?: string | undefined;
+  readonly id?: string | undefined;
+  readonly tool?: { readonly id?: string | undefined } | undefined;
+  readonly error?: unknown;
+};
+
+export type HttpResponseListener = (event: HttpResponseEvent) => Promise<void> | void;
+export type WebSocketReceiveListener = (
+  event: WebSocketReceiveEvent,
+) => Promise<void> | void;
+export type ToolExecuteAfterListener = (
+  event: ToolExecuteAfterEvent,
+) => Promise<void> | void;
+
 export type OddAdviserHostSession = {
   readonly hook: {
     (name: 'prompt', listener: PromptAdmissionListener): Promise<unknown>;
     (name: 'context', listener: ContextBuildListener): Promise<unknown>;
+    (name: 'http.response', listener: HttpResponseListener): Promise<unknown>;
+    (name: 'experimental.ws.receive', listener: WebSocketReceiveListener): Promise<unknown>;
+  };
+};
+
+export type OddAdviserHostTool = {
+  readonly hook: {
+    (name: 'execute.after', listener: ToolExecuteAfterListener): Promise<unknown>;
   };
 };
 
@@ -97,6 +145,8 @@ export type OddAdviserSetupContext = {
   readonly expectedModel?: string;
   readonly createConnection?: () => OddEvidenceEvaluatorConnection;
   readonly events?: PluginEventSink;
+  readonly observations?: ObservationSink;
+  readonly tool?: OddAdviserHostTool;
 };
 
 export type OddAdviserPlugin = {
@@ -198,7 +248,24 @@ type AdmissionSource = 'prompt' | 'context';
 export type OddAdviserDefaults = {
   readonly createDefaultConnection: () => OddEvidenceEvaluatorConnection;
   readonly createDefaultEventSink: () => PluginEventSink;
+  readonly createDefaultObservationSink: () => ObservationSink;
 };
+
+type ObservationIdentity = {
+  readonly evaluationId: string;
+  readonly sessionID: string;
+  readonly messageID: string;
+};
+
+function observationKey(identity: ObservationIdentity): string {
+  return `${identity.evaluationId}\u0000${identity.sessionID}\u0000${identity.messageID}`;
+}
+
+function toolIdFromEvent(event: ToolExecuteAfterEvent): string | undefined {
+  if (typeof event.id === 'string' && event.id.length > 0) return event.id;
+  const nested = event.tool?.id;
+  return typeof nested === 'string' && nested.length > 0 ? nested : undefined;
+}
 
 function createTimerDeadline(): Deadline {
   return {
@@ -297,6 +364,7 @@ async function registerAdviserHooks(
   context: OddAdviserSetupContext,
   session: OddAdviserHostSession,
   events: PluginEventSink,
+  observations: ObservationSink,
   defaults: OddAdviserDefaults,
 ): Promise<OddAdviserCleanup> {
   const configuration = resolveConfiguration(context, defaults);
@@ -304,7 +372,74 @@ async function registerAdviserHooks(
   let admission: AdmittedMessage | null = null;
   let admissionSource: AdmissionSource | null = null;
   let evaluations = new Map<string, Promise<OddEvidenceAdvisory>>();
+  let observationIdentities = new Map<string, ObservationIdentity>();
+  let rollingText = new Map<string, string>();
   let disposed = false;
+
+  async function flushIncompleteObservations(): Promise<void> {
+    const pending: ObservationIdentity[] = [];
+    for (const identity of observationIdentities.values()) {
+      const buffer = rollingText.get(observationKey(identity)) ?? '';
+      if (buffer.length > 0) pending.push(identity);
+    }
+    observationIdentities = new Map();
+    rollingText = new Map();
+    for (const identity of pending) {
+      await recordObservation(identity, { reportedFooter: 'uninspectable' });
+    }
+  }
+
+  function appendObservedText(identity: ObservationIdentity, chunk: string): void {
+    const key = observationKey(identity);
+    rollingText.set(key, appendRollingText(rollingText.get(key) ?? '', chunk));
+  }
+
+  function takeObservedText(identity: ObservationIdentity): string {
+    const key = observationKey(identity);
+    const reconstructed = rollingText.get(key) ?? '';
+    rollingText.delete(key);
+    return reconstructed;
+  }
+
+  function rememberEvaluation(
+    identity: MessageIdentity,
+    evaluationId: string | undefined,
+  ): void {
+    if (evaluationId === undefined || evaluationId.length === 0) return;
+    observationIdentities.set(identityKey(identity), {
+      evaluationId,
+      sessionID: identity.sessionID,
+      messageID: identity.messageID,
+    });
+  }
+
+  function lookupObservationIdentity(sessionID?: string): ObservationIdentity | undefined {
+    const current = admission;
+    if (current === null) return undefined;
+    if (sessionID !== undefined && current.identity.sessionID !== sessionID) {
+      return undefined;
+    }
+    return observationIdentities.get(identityKey(current.identity));
+  }
+
+  async function recordObservation(
+    identity: ObservationIdentity,
+    details: Pick<ObservationRecord, 'reportedFooter' | 'tools' | 'responseId'>,
+  ): Promise<void> {
+    try {
+      await observations.record(
+        createObservation({
+          evaluationId: identity.evaluationId,
+          sessionId: identity.sessionID,
+          messageId: identity.messageID,
+          at: new Date().toISOString(),
+          ...details,
+        }),
+      );
+    } catch {
+      // Observation is operational evidence, never a delivery step (S7).
+    }
+  }
 
   await session.hook('prompt', (event) => {
     if (disposed) return;
@@ -324,6 +459,7 @@ async function registerAdviserHooks(
     };
     admissionSource = 'prompt';
     evaluations = new Map();
+    void flushIncompleteObservations();
   });
 
   await session.hook('context', async (event) => {
@@ -354,6 +490,7 @@ async function registerAdviserHooks(
           admission = candidate;
           admissionSource = 'context';
           evaluations = new Map();
+          await flushIncompleteObservations();
         }
       }
 
@@ -376,6 +513,7 @@ async function registerAdviserHooks(
         configuration,
         evaluations,
       );
+      rememberEvaluation(current.identity, advisory.evaluationId);
 
       if (started) {
         await emitPluginEvent(events, 'evaluate_finished', {
@@ -400,6 +538,100 @@ async function registerAdviserHooks(
     }
   });
 
+  const registerOptionalHook = async (
+    register: () => Promise<unknown>,
+  ): Promise<void> => {
+    try {
+      await register();
+    } catch {
+      // Unsupported host hooks stay unobserved; they must not fail setup (S7).
+    }
+  };
+
+  await registerOptionalHook(() =>
+    session.hook('http.response', async (event) => {
+      try {
+        if (disposed) return;
+        const identity = lookupObservationIdentity(event.sessionID);
+        if (identity === undefined) return;
+
+        let reportedFooter: ObservationReportedFooter = 'uninspectable';
+        try {
+          const cloned = event.response.clone();
+          const text = await cloned.text();
+          reportedFooter = classifyReportedFooter(text);
+        } catch {
+          reportedFooter = 'uninspectable';
+        }
+        await recordObservation(identity, { reportedFooter });
+      } catch {
+        // Observation hooks fail open (S7).
+      }
+    }),
+  );
+
+  await registerOptionalHook(() =>
+    session.hook('experimental.ws.receive', async (event) => {
+      try {
+        if (disposed) return;
+        const identity = lookupObservationIdentity(event.sessionID);
+        if (identity === undefined) return;
+        const kind = classifyAssistantCompletion(event.frame);
+        const text = extractReceivedText(event.frame);
+        if (text !== null && kind === 'incomplete') {
+          appendObservedText(identity, text);
+          return;
+        }
+        if (text !== null) {
+          const trimmed = text.trim();
+          if (trimmed !== '[DONE]' && trimmed !== 'data: [DONE]') {
+            appendObservedText(identity, text);
+          }
+        }
+        if (kind === 'incomplete' || kind === 'text_part') return;
+        if (kind === 'tool_step') {
+          takeObservedText(identity);
+          return;
+        }
+        const reconstructed = takeObservedText(identity);
+        if (reconstructed.length === 0) return;
+        const responseId = extractResponseId(event.frame);
+        if (kind === 'user_facing') {
+          await recordObservation(identity, {
+            reportedFooter: classifyReportedFooter(reconstructed),
+            ...(responseId === undefined ? {} : { responseId }),
+          });
+          return;
+        }
+        await recordObservation(identity, {
+          reportedFooter: 'uninspectable',
+          ...(responseId === undefined ? {} : { responseId }),
+        });
+      } catch {
+        // Observation hooks fail open (S7).
+      }
+    }),
+  );
+
+  await registerOptionalHook(async () => {
+    const toolHook = context.tool?.hook;
+    if (typeof toolHook !== 'function') return;
+    await toolHook('execute.after', async (event) => {
+      try {
+        if (disposed) return;
+        const identity = lookupObservationIdentity(event.sessionID);
+        if (identity === undefined) return;
+        const id = toolIdFromEvent(event);
+        if (id === undefined) return;
+        await recordObservation(identity, {
+          tools: [{ id, status: event.error === undefined ? 'completed' : 'error' }],
+        });
+      } catch {
+        // Observation hooks fail open (S7).
+      }
+    });
+  });
+
   await emitPluginEvent(events, 'hook_registered');
 
   return async () => {
@@ -408,6 +640,7 @@ async function registerAdviserHooks(
     admission = null;
     admissionSource = null;
     evaluations.clear();
+    await flushIncompleteObservations();
 
     const evaluator = configuration?.evaluator ?? context.evaluator;
     if (!isCloseableEvaluator(evaluator)) return;
@@ -433,7 +666,8 @@ export function createOddAdviserPlugin(defaults: OddAdviserDefaults): OddAdviser
           return NOOP_CLEANUP;
         }
 
-        return await registerAdviserHooks(context, session, events, defaults);
+        const observations = context.observations ?? defaults.createDefaultObservationSink();
+        return await registerAdviserHooks(context, session, events, observations, defaults);
       } catch {
         if (events !== null) await emitPluginEvent(events, 'setup_failed');
         return NOOP_CLEANUP;

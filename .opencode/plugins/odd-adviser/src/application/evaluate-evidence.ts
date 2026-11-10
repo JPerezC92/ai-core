@@ -30,8 +30,16 @@ const unavailableAdvisories: Readonly<Record<OddEvidenceUnavailableCode, string>
 const evaluatedAdvisory =
   'The System 1 evidence evaluation returned a contract-valid answer for this message.';
 
-export function toUnavailableAdvisory(code: OddEvidenceUnavailableCode): OddEvidenceAdvisory {
-  return { status: 'unavailable', code, advisory: unavailableAdvisories[code] };
+export function toUnavailableAdvisory(
+  code: OddEvidenceUnavailableCode,
+  evaluationId?: string,
+): OddEvidenceAdvisory {
+  return {
+    status: 'unavailable',
+    code,
+    advisory: unavailableAdvisories[code],
+    ...(evaluationId === undefined || evaluationId.length === 0 ? {} : { evaluationId }),
+  };
 }
 
 export function answersNoQuestion(
@@ -76,14 +84,19 @@ export async function evaluateEvidence(
 
     if (attempt.kind === 'answered') {
       const outcome = attempt.result;
-      if (outcome.status !== 'evaluated') return toUnavailableAdvisory(outcome.code);
+      if (outcome.status !== 'evaluated') {
+        return toUnavailableAdvisory(outcome.code, outcome.evaluationId);
+      }
       if (answersNoQuestion(outcome.evaluation.answers)) {
-        return toUnavailableAdvisory('malformed_payload');
+        return toUnavailableAdvisory('malformed_payload', outcome.evaluationId);
       }
       return {
         status: 'evaluated',
         evaluation: outcome.evaluation,
         advisory: evaluatedAdvisory,
+        ...(outcome.evaluationId === undefined || outcome.evaluationId.length === 0
+          ? {}
+          : { evaluationId: outcome.evaluationId }),
       };
     }
 

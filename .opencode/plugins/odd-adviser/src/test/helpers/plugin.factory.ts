@@ -23,6 +23,8 @@ import type {
   ContextMessage,
   ContextMessagePart,
   EvaluateEvidenceOptions,
+  HttpResponseEvent,
+  HttpResponseListener,
   MessageIdentity,
   OddAdviserCleanup,
   OddAdviserHostSession,
@@ -39,7 +41,20 @@ import type {
   PromptAdmissionListener,
   PromptDraft,
   StdioMcpClientOptions,
+  ToolExecuteAfterEvent,
+  ToolExecuteAfterListener,
+  WebSocketReceiveEvent,
+  WebSocketReceiveListener,
 } from '../../index.ts';
+import {
+  OBSERVATION_TEXT_WINDOW_CHARS,
+  createObservation,
+} from '../../domain/observation.ts';
+import type {
+  ObservationInput,
+  ObservationRecord,
+  ObservationSink,
+} from '../../domain/observation.ts';
 import type {
   PluginEvent,
   PluginEventSink,
@@ -98,6 +113,12 @@ const leakCanaryPrefixLength = 24;
 const firstEventAt = '2026-11-08T10:00:00.000Z';
 const secondEventAt = '2026-11-08T10:00:01.000Z';
 const contentBearingEventAt = '2026-11-08T10:00:02.000Z';
+const observationAt = '2026-11-09T12:00:00.000Z';
+const evaluationId = 'eval_odd_adviser_unit';
+const appliedFooterLine = 'S1 applied: Scope preserved · Authorized work continued';
+const overriddenFooterLine = 'S1 overridden: user_only_decision · Already authorized';
+const footerPrefix = 'S1 appl';
+const footerSuffix = 'ied: Scope preserved';
 
 export type RecordedEvaluation = {
   readonly input: OddEvidenceInput;
@@ -478,6 +499,7 @@ export function createEvaluateEvidenceOptions(): EvaluateEvidenceOptions {
 // earlier assertion's input.
 export function createRecordingEvaluator(
   evaluation: OddEvidenceEvaluation = createEvaluation(),
+  assignedEvaluationId?: string,
 ): RecordingEvaluator {
   const calls: RecordedEvaluation[] = [];
   return {
@@ -486,7 +508,11 @@ export function createRecordingEvaluator(
       options: OddEvidenceEvaluatorOptions,
     ): Promise<OddEvidenceOutcome> => {
       calls.push({ input, options });
-      return { status: 'evaluated', evaluation };
+      return {
+        status: 'evaluated',
+        evaluation,
+        ...(assignedEvaluationId === undefined ? {} : { evaluationId: assignedEvaluationId }),
+      };
     },
     get calls() {
       return calls.slice();
@@ -587,9 +613,14 @@ export function createDefaultConnectionExpectation(): DefaultConnectionExpectati
 // record whose tool-level flag could be read together with a missing payload.
 export function createUnavailableEvaluator(
   code: OddEvidenceUnavailableCode = 'tool_error',
+  assignedEvaluationId?: string,
 ): OddEvidenceEvaluator {
   return {
-    evaluate: async (): Promise<OddEvidenceOutcome> => ({ status: 'unavailable', code }),
+    evaluate: async (): Promise<OddEvidenceOutcome> => ({
+      status: 'unavailable',
+      code,
+      ...(assignedEvaluationId === undefined ? {} : { evaluationId: assignedEvaluationId }),
+    }),
   };
 }
 
@@ -653,6 +684,228 @@ export function createUnavailableAdvisory(
 
 export function createMessageIdentity(sequence = 1): MessageIdentity {
   return { sessionID: 'ses_odd_adviser_unit', messageID: `msg_${sequence}` };
+}
+
+export function createEvaluationId(): string {
+  return evaluationId;
+}
+
+export function createAppliedFooterLine(): string {
+  return appliedFooterLine;
+}
+
+export function createOverriddenFooterLine(): string {
+  return overriddenFooterLine;
+}
+
+export function createSplitFooterPrefix(): string {
+  return footerPrefix;
+}
+
+export function createSplitFooterSuffix(): string {
+  return footerSuffix;
+}
+
+export function createObservationAt(): string {
+  return observationAt;
+}
+
+export function createEvaluatedMcpPayload(
+  extra: Record<string, unknown> = { unusedKey: 'ignored' },
+): Record<string, unknown> {
+  const evaluation = createEvaluation();
+  return {
+    ok: true,
+    evaluationId,
+    profileId: evaluation.profileId,
+    profileVersion: evaluation.profileVersion,
+    answers: evaluation.answers,
+    ...extra,
+  };
+}
+
+export function createRejectedMcpPayload(
+  extra: Record<string, unknown> = { unusedKey: 'ignored' },
+): Record<string, unknown> {
+  return {
+    ok: false,
+    evaluationId,
+    code: 'rejected',
+    reason: 'Rejected before delivery; the rejection code identifies the failure class',
+    ...extra,
+  };
+}
+
+export function createNumericEvaluationIdPayload(): Record<string, unknown> {
+  const evaluation = createEvaluation();
+  return {
+    ok: true,
+    evaluationId: 12,
+    profileId: evaluation.profileId,
+    profileVersion: evaluation.profileVersion,
+    answers: evaluation.answers,
+  };
+}
+
+export function createObservationRecord(
+  overrides: Partial<ObservationInput> = {},
+): ObservationRecord {
+  const identity = createMessageIdentity();
+  return createObservation({
+    evaluationId,
+    sessionId: identity.sessionID,
+    messageId: identity.messageID,
+    at: observationAt,
+    reportedFooter: 'none',
+    ...overrides,
+  });
+}
+
+export type ContentBearingObservation = {
+  readonly observation: ObservationRecord;
+  readonly forbiddenFragments: ReadonlyArray<string>;
+};
+
+export function createContentBearingObservation(): ContentBearingObservation {
+  const canary = createLeakCanary();
+  const identity = createMessageIdentity();
+  const contentBearing = {
+    evaluationId,
+    sessionId: identity.sessionID,
+    messageId: identity.messageID,
+    at: observationAt,
+    reportedFooter: 'applied_line' as const,
+    request: { state: canary.message.text },
+    args: { command: canary.message.text },
+    providerBody: canary.message.text,
+    handling: { disposition: 'applied' },
+  };
+  return {
+    observation: createObservation(contentBearing),
+    forbiddenFragments: canary.forbiddenFragments,
+  };
+}
+
+export function createHttpResponseEvent(text: string): {
+  readonly event: HttpResponseEvent;
+  readonly response: HttpResponseEvent['response'];
+} {
+  const body = { text: async (): Promise<string> => text };
+  const response = {
+    clone: (): { text(): Promise<string> } => body,
+    text: async (): Promise<string> => {
+      throw new Error('the adapter must clone the response body');
+    },
+  };
+  return { event: { response }, response };
+}
+
+export function createWebSocketReceiveEvent(frame: unknown): {
+  readonly event: WebSocketReceiveEvent;
+  readonly frame: unknown;
+} {
+  return { event: { frame }, frame };
+}
+
+export function createChoicesDeltaFrame(content: string): Record<string, unknown> {
+  return { choices: [{ delta: { content } }] };
+}
+
+export function createDeltaFrame(text: string): Record<string, unknown> {
+  return { delta: text };
+}
+
+export function createTextFrame(text: string): Record<string, unknown> {
+  return { text };
+}
+
+export function createBinaryFrame(): Uint8Array {
+  return new Uint8Array([0, 1, 2, 3]);
+}
+
+export function createDoneFrame(): string {
+  return '[DONE]';
+}
+
+export function createFinishReasonFrame(content = ''): Record<string, unknown> {
+  return content.length === 0
+    ? { choices: [{ delta: {}, finish_reason: 'stop' }] }
+    : { choices: [{ delta: { content }, finish_reason: 'stop' }] };
+}
+
+export function createCompletedTypeFrame(): Record<string, unknown> {
+  return { type: 'response.completed' };
+}
+
+export function createToolCallsFinishFrame(): Record<string, unknown> {
+  return { choices: [{ delta: {}, finish_reason: 'tool_calls' }] };
+}
+
+export function createLengthFinishFrame(): Record<string, unknown> {
+  return { choices: [{ delta: {}, finish_reason: 'length' }] };
+}
+
+export function createOutputTextDoneFrame(): Record<string, unknown> {
+  return { type: 'response.output_text.done' };
+}
+
+export function createResponseCompletedFunctionCallFrame(): Record<string, unknown> {
+  return {
+    type: 'response.completed',
+    response: {
+      id: 'resp_function_call',
+      output: [{ type: 'function_call', name: 'write' }],
+    },
+  };
+}
+
+export function createResponseCompletedMessageId(): string {
+  return 'resp_assistant_message';
+}
+
+export function createResponseCompletedMessageFrame(): Record<string, unknown> {
+  return {
+    type: 'response.completed',
+    response: {
+      id: createResponseCompletedMessageId(),
+      output: [{ type: 'message', role: 'assistant' }],
+    },
+  };
+}
+
+export function createToolExecuteAfterEvent(
+  id: string,
+  error?: unknown,
+): ToolExecuteAfterEvent {
+  return error === undefined ? { id, tool: { id } } : { id, tool: { id }, error };
+}
+
+export function createToolId(): string {
+  return 'bash';
+}
+
+export function createUnmarkedAssistantText(): string {
+  return 'the reply has no diagnostic line';
+}
+
+export function createIncompleteTextChunks(): ReadonlyArray<string> {
+  return ['one ', 'two '];
+}
+
+export function createContinuationTextChunk(): string {
+  return ' more';
+}
+
+export function createBareDoneObject(): Record<string, unknown> {
+  return { done: true };
+}
+
+export function createOverflowWindowBuffer(): string {
+  return 'a'.repeat(OBSERVATION_TEXT_WINDOW_CHARS);
+}
+
+export function createOverflowWindowChunk(): string {
+  return 'z';
 }
 
 export function createAdmittedMessage(
@@ -814,6 +1067,7 @@ export async function createFailedSetup(): Promise<{
   readonly registrations: ReadonlyArray<string>;
 }> {
   const events = createRecordingEventSink();
+  const observations = createRecordingObservationSink();
   const registrations: string[] = [];
   const session: OddAdviserHostSession = {
     hook: async (name: string): Promise<never> => {
@@ -821,7 +1075,7 @@ export async function createFailedSetup(): Promise<{
       throw new Error(TRANSPORT_FAILURE_MESSAGE);
     },
   };
-  const cleanup = await plugin.setup({ session, events });
+  const cleanup = await plugin.setup({ session, events, observations });
   return { cleanup, events: events.events, registrations };
 }
 
@@ -833,6 +1087,8 @@ export type AdviserHarnessOptions = {
   // The stated time limit. `null` states that composition states none, so the documented default
   // must stand. Omitted keeps the short bound the timer-sensitive cases rely on.
   readonly timeoutMs?: number | null;
+  // When true, composition supplies `tool.hook`. Omitted leaves the host without that hook.
+  readonly includeToolHook?: boolean;
 };
 
 export type AdviserHarness = {
@@ -843,9 +1099,13 @@ export type AdviserHarness = {
   // a supplied port was used, one entry per setup otherwise.
   readonly connections: ReadonlyArray<RecordedConnection>;
   readonly events: ReadonlyArray<PluginEvent>;
+  readonly observations: ReadonlyArray<ObservationRecord>;
   readonly cleanup: OddAdviserCleanup;
   admit(message: PromptAdmissionEvent): void;
   build(context: ContextBuildEvent): Promise<void>;
+  receiveHttp(event: HttpResponseEvent): Promise<void>;
+  receiveWs(event: WebSocketReceiveEvent): Promise<void>;
+  afterTool(event: ToolExecuteAfterEvent): Promise<void>;
 };
 
 // Registers the adapter's hook listeners through a host session double and drives them the way
@@ -855,11 +1115,30 @@ export type AdviserHarness = {
 // the recording double, so the plugin's own default path never reaches a real process (T18).
 // Registration is awaited because `session.hook` is promise-based; the returned cleanup is the
 // adapter's own.
+export type RecordingObservationSink = ObservationSink & {
+  readonly observations: ReadonlyArray<ObservationRecord>;
+};
+
+export function createRecordingObservationSink(): RecordingObservationSink {
+  const observations: ObservationRecord[] = [];
+  return {
+    record: async (observation: ObservationRecord): Promise<void> => {
+      observations.push(observation);
+    },
+    get observations() {
+      return observations.slice();
+    },
+  };
+}
+
 export async function createAdviserHarness(
   options: AdviserHarnessOptions = {},
 ): Promise<AdviserHarness> {
   let promptListener: PromptAdmissionListener | undefined;
   let contextListener: ContextBuildListener | undefined;
+  let httpListener: HttpResponseListener | undefined;
+  let wsListener: WebSocketReceiveListener | undefined;
+  let toolAfterListener: ToolExecuteAfterListener | undefined;
 
   // The host-session double: it records the listeners the adapter registers and nothing more.
   // Registration is promise-based, so the harness awaits setup before driving either hook.
@@ -867,6 +1146,10 @@ export async function createAdviserHarness(
     hook: async (name: string, listener: unknown): Promise<unknown> => {
       if (name === 'prompt') promptListener = listener as PromptAdmissionListener;
       else if (name === 'context') contextListener = listener as ContextBuildListener;
+      else if (name === 'http.response') httpListener = listener as HttpResponseListener;
+      else if (name === 'experimental.ws.receive') {
+        wsListener = listener as WebSocketReceiveListener;
+      }
       return undefined;
     },
   };
@@ -876,6 +1159,7 @@ export async function createAdviserHarness(
     options.timeoutMs === undefined ? EVIDENCE_TIMEOUT_MS : options.timeoutMs;
   const connectionFactory = createRecordingConnectionFactory();
   const eventSink = createRecordingEventSink();
+  const observationSink = createRecordingObservationSink();
 
   const cleanup = await plugin.setup({
     session,
@@ -884,6 +1168,19 @@ export async function createAdviserHarness(
     expectedModel,
     createConnection: connectionFactory.createConnection,
     events: eventSink,
+    observations: observationSink,
+    ...(options.includeToolHook === true
+      ? {
+          tool: {
+            hook: async (name: string, listener: unknown): Promise<unknown> => {
+              if (name === 'execute.after') {
+                toolAfterListener = listener as ToolExecuteAfterListener;
+              }
+              return undefined;
+            },
+          },
+        }
+      : {}),
   });
 
   return {
@@ -894,12 +1191,24 @@ export async function createAdviserHarness(
     get events() {
       return eventSink.events;
     },
+    get observations() {
+      return observationSink.observations;
+    },
     cleanup,
     admit(message) {
       promptListener?.(message);
     },
     async build(context) {
       await contextListener?.(context);
+    },
+    async receiveHttp(event) {
+      await httpListener?.(event);
+    },
+    async receiveWs(event) {
+      await wsListener?.(event);
+    },
+    async afterTool(event) {
+      await toolAfterListener?.(event);
     },
   };
 }

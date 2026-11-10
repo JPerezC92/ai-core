@@ -16,6 +16,7 @@ import type {
   EvaluateEvidenceOptions,
   OddEvidenceAdvisory,
 } from './domain/plugin-contract.ts';
+import { JsonLinesObservations } from './infrastructure/json-lines-observations.ts';
 import { JsonLinesPluginEvents } from './infrastructure/json-lines-plugin-events.ts';
 import { createOddAdviserPlugin } from './infrastructure/opencode-adviser.ts';
 import {
@@ -33,6 +34,16 @@ export type {
   OddEvidenceOutcome,
   OddEvidenceUnavailableCode,
 } from './domain/advisory.ts';
+
+export type {
+  ObservationAssessment,
+  ObservationInput,
+  ObservationRecord,
+  ObservationReportedFooter,
+  ObservationSink,
+  ObservationTool,
+  ObservationToolStatus,
+} from './domain/observation.ts';
 
 export type {
   PluginEvent,
@@ -57,14 +68,21 @@ export type {
   ContextMessageMedia,
   ContextMessagePart,
   ContextSystemPart,
+  HttpResponseEvent,
+  HttpResponseListener,
   OddAdviserCleanup,
   OddAdviserHostSession,
+  OddAdviserHostTool,
   OddAdviserPlugin,
   OddAdviserSetupContext,
   PromptAdmissionEvent,
   PromptAdmissionListener,
   PromptDraft,
   PromptFile,
+  ToolExecuteAfterEvent,
+  ToolExecuteAfterListener,
+  WebSocketReceiveEvent,
+  WebSocketReceiveListener,
 } from './infrastructure/opencode-adviser.ts';
 
 export type { AdmittedPart, CapturedImage, CapturedMessage } from './domain/capture-message.ts';
@@ -81,6 +99,7 @@ export type { StdioMcpClientOptions } from './infrastructure/stdio-mcp-client.ts
 export {
   ODD_EVIDENCE_TOOL_NAME,
   createStdioMcpClient,
+  mapMcpToolResultToOutcome,
 } from './infrastructure/stdio-mcp-client.ts';
 
 const DEFAULT_CONNECTION_ENTRY_PATH =
@@ -91,6 +110,8 @@ const SYSTEM_ONE_ENVIRONMENT_PREFIX = 'SYSTEM_ONE_';
 const EXECUTABLE_RESOLUTION_ENVIRONMENT_NAME = 'PATH';
 const PLUGIN_EVENT_PATH_VARIABLE = 'ODD_ADVISER_EVENT_PATH';
 const DEFAULT_PLUGIN_EVENT_RELATIVE_PATH = '../../../../output/system1/plugin.jsonl';
+const TRACE_PATH_VARIABLE = 'SYSTEM_ONE_TRACE_PATH';
+const DEFAULT_TRACE_RELATIVE_PATH = '../../../../output/system1/events.jsonl';
 
 function readSystemOneEnvironment(): Readonly<Record<string, string>> {
   const environment: Record<string, string> = {};
@@ -126,6 +147,13 @@ function resolvePluginEventPath(): string {
     : configured;
 }
 
+function resolveObservationPath(): string {
+  const configured = process.env[TRACE_PATH_VARIABLE]?.trim();
+  return configured === undefined || configured.length === 0
+    ? fileURLToPath(new URL(DEFAULT_TRACE_RELATIVE_PATH, import.meta.url))
+    : configured;
+}
+
 function createTimerDeadline(): Deadline {
   return {
     schedule(timeoutMs, onElapsed) {
@@ -150,10 +178,22 @@ export async function evaluateEvidence(
   );
 }
 
-const plugin = createOddAdviserPlugin({
+const composed = createOddAdviserPlugin({
   createDefaultConnection: () => createStdioMcpClient(createDefaultConnectionOptions()),
   createDefaultEventSink: () =>
     new JsonLinesPluginEvents({ eventPath: resolvePluginEventPath() }),
+  createDefaultObservationSink: () =>
+    new JsonLinesObservations({ eventPath: resolveObservationPath() }),
 });
+
+const plugin = {
+  id: composed.id,
+  setup(context: Parameters<typeof composed.setup>[0]) {
+    return composed.setup({
+      ...context,
+      ...(context.tool === undefined ? {} : { tool: { hook: context.tool.hook } }),
+    });
+  },
+};
 
 export default plugin;

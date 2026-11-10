@@ -18,11 +18,13 @@ export type OddEvidenceAdvisory =
       readonly status: 'evaluated';
       readonly evaluation: OddEvidenceEvaluation;
       readonly advisory: string;
+      readonly evaluationId?: string;
     }
   | {
       readonly status: 'unavailable';
       readonly code: OddEvidenceUnavailableCode;
       readonly advisory: string;
+      readonly evaluationId?: string;
     };
 
 export type MessageIdentity = {

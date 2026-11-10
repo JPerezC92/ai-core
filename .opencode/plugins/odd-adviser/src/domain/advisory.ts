@@ -52,8 +52,16 @@ export type OddEvidenceUnavailableCode =
 // Every way one evaluation can end: a contract-valid evaluation, or the bounded code that
 // names the failure class. An expected failure is a returned value, never a throw (C5).
 export type OddEvidenceOutcome =
-  | { readonly status: 'evaluated'; readonly evaluation: OddEvidenceEvaluation }
-  | { readonly status: 'unavailable'; readonly code: OddEvidenceUnavailableCode };
+  | {
+      readonly status: 'evaluated';
+      readonly evaluation: OddEvidenceEvaluation;
+      readonly evaluationId?: string;
+    }
+  | {
+      readonly status: 'unavailable';
+      readonly code: OddEvidenceUnavailableCode;
+      readonly evaluationId?: string;
+    };
 
 // Bound supplied by the caller per evaluation; no silent default, so composition states the
 // time limit.
