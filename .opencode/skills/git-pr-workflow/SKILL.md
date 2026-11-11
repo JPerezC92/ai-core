@@ -58,4 +58,5 @@ metadata:
 - It never introduces an authorization system of its own.
 - It adds no new validator, state machine or wrapper.
 - The canonical body format stays in `.opencode/skills/git-pr/references/_pr-evidence-format.md`.
+- This contract never merges a pull request, by any mechanism including the GitHub API and browser automation; the merge belongs to the user alone and no step in this sequence performs it.
 <!-- core:end -->

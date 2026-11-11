@@ -157,7 +157,20 @@
                 { "action": "shell", "resource": "git push -u origin *\t*", "effect": "deny" },
                 { "action": "shell", "resource": "git push origin --delete refs/heads/*", "effect": "allow" },
                 { "action": "shell", "resource": "git push origin --delete refs/heads/* -*", "effect": "deny" },
-                { "action": "shell", "resource": "git push origin --delete refs/heads/*\t-*", "effect": "deny" }
+                { "action": "shell", "resource": "git push origin --delete refs/heads/*\t-*", "effect": "deny" },
+                // A pull-request merge is the user's alone, so the base branch is
+                // never a push or delete target and the merges endpoint stays
+                // closed. These come last so last-match-wins keeps them
+                // effective against every allow above. The base-branch row names
+                // no flag position on purpose: a literal `git push origin
+                // --delete refs/heads/main` proved bypassable by interposing a
+                // flag, so any push command naming the base is denied instead.
+                // Cooperative instruction plus pattern matching, not isolation:
+                // a wrapper, alias, encoded URL or nested subprocess is not
+                // covered, and no shell pattern can be exhaustive.
+                { "action": "shell", "resource": "gh api *merge*", "effect": "deny" },
+                { "action": "shell", "resource": "git push * main", "effect": "deny" },
+                { "action": "shell", "resource": "git push *main*", "effect": "deny" }
             ]
         },
         // Warden audit envelope: deny-all first, then the explicit audit

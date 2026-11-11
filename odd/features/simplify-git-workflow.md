@@ -21,3 +21,4 @@ AICore's Git and GitHub workflow, reduced to a small set of agent instructions, 
 - [x] R13 — the two skills' Python packages are self-contained: no cross-skill import, no duplicated schema, and the seven-field capture schema declared exactly once. — delivered: this change
 - [x] R14 — the persisted-body verification is not weakened: the persisted capture must match the intended publication exactly, including its field set. — delivered: this change
 - [x] R15 — every command keeps its name, arguments and exit-code contract, and the malformed-draft rejection has one authoritative point that every workflow path depends on. — delivered: this change
+- [x] R16 — a pull-request merge is never an agent operation: only the user merges, by any mechanism, even under an explicit user instruction, and Herald 📯 (Release Manager)'s executor authority explicitly excludes it. — delivered: this change
