@@ -9,9 +9,9 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from pr_review.application.validate_final_body import execute
-from pr_review.domain.records import ReviewPreparationError
-from pr_review.test_support import RemoteField, create_body, create_divergence, create_metadata
+from pr_content.application.validate_final_body import execute
+from pr_content.domain.records import ReviewPreparationError
+from pr_content.test_support import RemoteField, create_body, create_divergence, create_metadata
 
 
 @pytest.mark.parametrize("field", ["number", "headRefOid", "body"])

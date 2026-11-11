@@ -6,8 +6,6 @@ import re
 from dataclasses import dataclass
 from typing import TypedDict, cast
 
-from attribution_scan.domain.records import Artifact, ChangedFile
-
 
 class ReviewMetadata(TypedDict):
     """Describe externally authenticated PR metadata supplied by its owner."""
@@ -22,17 +20,6 @@ class ReviewMetadata(TypedDict):
 
 
 METADATA_FIELDS = ("number", "headRefOid", "baseRefName", "headRefName", "state", "title", "body")
-
-
-class LocalInventory(TypedDict):
-    """Carry validated immutable content independently of locally authored prose."""
-
-    schema: int
-    pr_number: int
-    head_sha: str
-    base: str
-    commit_messages: list[Artifact]
-    changed_files: list[ChangedFile]
 
 
 @dataclass(frozen=True)

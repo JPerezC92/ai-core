@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from prepare_pr_review import main
+from prepare_pr_evidence import main
 from pr_review.test_support import (
     create_body, create_local_draft, create_local_inventory, create_local_snapshot, create_paths,
 )

@@ -65,6 +65,12 @@
         "SKILL.md"
       ]
     },
+    ".opencode/skills/git-pr-workflow/": {
+      "mode": "raw",
+      "region_files": [
+        "SKILL.md"
+      ]
+    },
     ".opencode/skills/odd-workflow/": {
       "mode": "raw",
       "region_files": [

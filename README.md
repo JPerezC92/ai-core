@@ -13,7 +13,7 @@ A reusable, agnostic **agentic orchestration core** for [OpenCode](https://openc
 | Reuse research or read explanatory documentation | [docs/README.md](docs/README.md) → [research catalog](docs/research/README.md). Research and history are evidence, not execution authority. |
 | Investigate an incident | `knowledge/diagnostics/symptoms.md`, `knowledge/diagnostics/problems.md`, and the register-first procedure in `knowledge/agents.md`; the incident skill is `.opencode/skills/incident-workflow/SKILL.md`. |
 | Author skills/agents or change models | `.opencode/skills/op-skill-creator/SKILL.md`, `.opencode/skills/op-agent-creator/SKILL.md`, `.opencode/skills/op-model/SKILL.md`. |
-| Prepare Git/release artifacts | `.opencode/skills/{git-branch-name,git-commit,git-pr}/SKILL.md`; Git execution belongs to Herald 📯 (Release Manager), under the runtime gates. |
+| Prepare Git/release artifacts | `.opencode/skills/{git-branch-name,git-commit,git-pr,git-pr-workflow}/SKILL.md`; Git execution belongs to Herald 📯 (Release Manager), under the runtime gates. |
 | Adopt or update the core | [Adoption guide below](#using-it-in-another-project), [AGENTS.md → Reuse guide](AGENTS.md#reuse-guide-adopting-this-core), and `.opencode/skills/core-sync/SKILL.md`. |
 
 The safety policy and role-specific permissions live in [opencode.jsonc](opencode.jsonc): force-push, PR merge, `sudo`, system-path `rm -rf` and env-file reads are denied; the `plan` agent cannot edit. Irreversible actions remain User-Authority-Only. This map locates owners rather than replacing their instructions.

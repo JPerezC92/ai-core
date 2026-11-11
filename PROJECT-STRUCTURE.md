@@ -21,11 +21,12 @@ ai-core/
 │   │   atrium  augur  bastion  crucible  forge  herald  inquisitor
 │   │   investigator  ledger  lumen  marshal  quill  scribe
 │   │   sentinel  vault  warden
-│   ├── skills/                    9 skills, each self-contained
+│   ├── skills/                    10 skills, each self-contained
 │   │   ├── core-sync/             Distribution engine (package + tests)
 │   │   ├── odd-workflow/          Feature-record lifecycle + validator
 │   │   ├── incident-workflow/     Incident analysis + validator
 │   │   ├── git-branch-name/  git-commit/  git-pr/
+│   │   ├── git-pr-workflow/       PR publication workflow, evidence and identity
 │   │   └── op-agent-creator/  op-model/  op-skill-creator/
 │   └── tooling/                   astgrep/ · semgrep/ (own locked envs)
 │

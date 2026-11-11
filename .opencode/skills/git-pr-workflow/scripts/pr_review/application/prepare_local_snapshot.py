@@ -2,22 +2,21 @@
 
 from attribution_scan.domain.records import Snapshot
 
-from pr_review.domain.body_validation import extract_body
 from pr_review.domain.records import ReviewPreparationError
 from pr_review.domain.snapshot_assembly import assemble_snapshot, validate_local_inventory
 
 
 def execute(*, draft: str, body: str, inventory: object, exact_paths: object) -> Snapshot | ReviewPreparationError:
     """Assemble local artifacts without fetching remote prose or collecting Git state."""
-    initial_body = extract_body(draft)
-    if isinstance(initial_body, ReviewPreparationError):
-        return initial_body
+    lines = draft.splitlines()
+    if not lines or not lines[0].startswith("Title: "):
+        return ReviewPreparationError("DRAFT_INVALID", "creation draft must begin with a Title: line")
     validated = validate_local_inventory(inventory)
     if isinstance(validated, ReviewPreparationError):
         return validated
     if not isinstance(body, str):
         return ReviewPreparationError("SNAPSHOT_INVALID", "local working body must be text")
-    title = draft.splitlines()[0][len("Title: "):]
+    title = lines[0][len("Title: "):]
     candidate: Snapshot = {
         "schema": validated["schema"], "pr_number": validated["pr_number"],
         "head_sha": validated["head_sha"], "base": validated["base"],

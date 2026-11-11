@@ -7,9 +7,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from pr_review.domain.body_validation import validate_body
-from pr_review.domain.records import ReviewPreparationError
-from pr_review.test_support import create_metadata, create_truncated_evidence_body
+from pr_content.domain.body_validation import validate_body
+from pr_content.domain.records import ReviewPreparationError
+from pr_content.test_support import create_metadata, create_truncated_evidence_body
 
 
 def test_heading_without_section_content_returns_error_instead_of_index_error() -> None:

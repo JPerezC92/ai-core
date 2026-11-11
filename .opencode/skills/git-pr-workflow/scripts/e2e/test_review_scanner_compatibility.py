@@ -10,7 +10,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from prepare_pr_review import main
+from prepare_pr_evidence import main
 from scan_attribution import main as scan_main
 from pr_review.test_support import (
     create_clean_scan_result, create_paths, create_policy, create_snapshot,

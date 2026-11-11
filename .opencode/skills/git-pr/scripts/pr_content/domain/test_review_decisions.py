@@ -9,10 +9,10 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from pr_review.domain.review_decisions import parse_decisions
-from pr_review.domain.records import ReviewPreparationError
-from pr_review.test_support import DecisionDefect, create_invalid_decisions, create_metadata, create_review_decisions
-from pr_review.test_support import create_followup_decisions, create_invalid_followup_decisions
+from pr_content.domain.review_decisions import parse_decisions
+from pr_content.domain.records import ReviewPreparationError
+from pr_content.test_support import DecisionDefect, create_invalid_decisions, create_metadata, create_review_decisions
+from pr_content.test_support import create_followup_decisions, create_invalid_followup_decisions
 
 
 def test_explicit_bound_decision_provenance_is_structurally_accepted() -> None:

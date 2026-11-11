@@ -12,7 +12,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from attribution_scan.domain.records import Snapshot
-from prepare_pr_review import main
+from prepare_pr_evidence import main
 from pr_review.test_support import (
     GIT_BINARY_CONTENT, GIT_SOURCE_PATH, GitDivergentFixture, commit_fixture_tree,
     create_body, create_committed_repository, create_divergent_repository,

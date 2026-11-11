@@ -9,9 +9,9 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from pr_review.application.validate_final_body import execute
-from pr_review.domain.records import ReviewPreparationError
-from pr_review.test_support import (
+from pr_content.application.validate_final_body import execute
+from pr_content.domain.records import ReviewPreparationError
+from pr_content.test_support import (
     HistoryChange, ProtectedChange, create_body, create_changed_history,
     create_findings_body, create_initial_review_body, create_metadata,
     create_protected_content_change,

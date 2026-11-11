@@ -1,9 +1,9 @@
 """Validate supplied remote freshness and a conservative completed review body."""
 
-from pr_review.domain.body_validation import validate_body
-from pr_review.domain.review_content_preservation import validate_preservation
-from pr_review.domain.records import PreparedBody, ReviewPreparationError, parse_metadata
-from pr_review.domain.review_decisions import parse_decisions
+from pr_content.domain.body_validation import validate_body
+from pr_content.domain.review_content_preservation import validate_preservation
+from pr_content.domain.records import PreparedBody, ReviewPreparationError, parse_metadata
+from pr_content.domain.review_decisions import parse_decisions
 
 
 def execute(*, baseline: object, current: object, body: str, decisions: object = None) -> PreparedBody | ReviewPreparationError:

@@ -1,11 +1,11 @@
 ---
 name: git-pr
-description: Draft a pull request title/body from branch commits and the base diff, then prepare one local review body and scanner snapshot for a single final publication by its existing owner. Use when opening a PR, drafting its description, preparing review evidence, or getting a branch ready to merge.
+description: Draft a pull request title and body from branch commits and the base diff, then initialize and validate the local body-only review document. Use when opening a PR, drafting its description, or getting a branch ready to merge.
 license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.11.0
+  version: 1.12.1
   domain: git
 ---
 <!-- core:begin -->
@@ -76,37 +76,18 @@ Title: <title>
 <body>
 ```
 
-### Post-PR evidence contract
+## Publication and review
 
-Read `references/_pr-evidence-format.md` in full before writing post-review evidence. It is canonical for the findings, test-evidence, open-debt, and verdict sections.
+This skill owns the pull-request content only: the title, the body, the format and the content-specific validation. The publication, evidence, attribution and persistence procedure — the immutable-head identity, the evidence preparation, the single publication write, the attribution scan and the persisted-body consistency — is `.opencode/skills/git-pr-workflow/SKILL.md`; read it before handing a draft off.
 
-After the PR exists, `output/pr-working-body.md` is the sole local body-only review document; the published PR body remains the sole published evidence surface — never comments, reviews, or parallel review documents. Local authored title/body stay authoritative; GitHub is the publication destination, not a source for repeatedly reconstructing prose. Before any checkbox changes from `- [ ]` to `- [x]`, the current-head evidence block and one row for that item must exist. The block records the PR number, immutable head SHA, base, and literal scope command once; the table maps every checked test-plan item to exactly one row with the exact item text, literal action/input, verdict-only observed result, and actual executor.
+The two commands that belong to this skill are `prepare_pr_review.py initialize` and `prepare_pr_review.py validate`, with their arguments unchanged; their input schemas and exit codes are in `.opencode/skills/git-pr-workflow/references/_pr-workflow-inputs.md`.
 
-**Verdict-only observed output.** Record the human-readable verdict — for a test run, the pass/fail summary line and exit code where relevant. Never paste progress bars, per-test dots, stack traces, or raw dumps unless the requester explicitly asks.
-
-**Manual actions.** A genuinely performed manual check records its literal action or input, observed result and actual executor. Include a command only when one actually ran; never invent one, and never let a bare tick directive or a manual/optional label stand in for a performed check.
-
-**Atomic join.** The single designated evidence writer accumulates findings, evidence, open debt, verdict and matching ticks together locally, validates the complete current-head block, then publishes the completed review body in ONE final body update, with no intermediate review-body uploads. The same join owns every post-review findings, evidence, open-debt, and verdict write; no other post-review body writer updates them. Authenticate PR identity/head and check unexpected remote divergence immediately before publication, then live-reread the saved head and body. A changed head, divergent body, failed upload or failed reread blocks acceptance; missing or partial evidence leaves the item unchecked. Never blindly overwrite or retry publication. Fresh attribution scanning of the actual persisted body remains mandatory before a gate.
-
-**Execution ownership.** An execution owner that runs an item but does not own the PR body never reports the PR complete. Only the designated writer joins its row and tick locally; publication completion requires their verified persistence at the final review join.
-
-**Separate prose corrections.** A later authorized factual prose correction belongs to its own serialized writer, only after observed release of the evidence writer, and must preserve every findings/evidence/open-debt/verdict row, every tick, and unrelated prose.
-
-## Offline review preparation
-
-Read `references/_pr-evidence-format.md` in full, including its input schemas. Read `scripts/prepare_pr_review.py` and the relevant `scripts/pr_review/` production operations before invoking them. Commands below use the project's defined `<python>` binding; a missing binding or missing owner-supplied input stops preparation. These are usage shapes, not execution grants. This tool performs local file IO only, plus read-only Git reads for `prepare-local`; it makes no GitHub call and performs no remote collection, authentication, publication or evidence-truth verification. The `prepare-local` route is the only one that reads Git, so Herald 📯 (Release Manager) — the sole Git and GitHub executor — runs it; every other command reads supplied files only and stays with its owner.
-
-1. After the working path's ignore preflight, initialize once: `<python> .opencode/skills/git-pr/scripts/prepare_pr_review.py initialize --draft output/pr-draft.md --working-body output/pr-working-body.md`. This removes only the creation wrapper and preserves body bytes. Never initialize over an existing working body. Resume that same file for the same review; a conflicting/stale file requires coordinator disposition, not a renamed competing body or silent deletion.
-2. The existing authorized owners supply immutable commit/file inventory and exact diff paths from their existing reads; no broad remote collector or per-PR helper script is required — the reusable `prepare-local` route builds that inventory from read-only Git data and is executed by Herald 📯 (Release Manager). Keep the local title in the creation draft and review prose in the working body. Assemble scanner input from the local draft, the local working body and read-only Git reads with `<python> .opencode/skills/git-pr/scripts/prepare_pr_review.py prepare-local --pr <number> --base $BASE --draft output/pr-draft.md --working-body output/pr-working-body.md --output SNAPSHOT`; that route resolves HEAD and the base ref, computes their merge base, enumerates commit messages, reads changed paths with deletions retained and reads file bodies at the resolved head, and performs no GitHub call and fetches no persisted body. Where an owner supplies the inventory separately, `<python> .opencode/skills/git-pr/scripts/prepare_pr_review.py prepare-snapshot --draft output/pr-draft.md --working-body output/pr-working-body.md --input INVENTORY --paths PATHS --output SNAPSHOT` remains available; uppercase arguments are explicit supplied UTF-8 JSON file paths, not defaults, and that form reconciles paths and assembles local prose without collecting the inventory automatically. Reuse `scripts/scan_attribution.py` through its existing authorized route and policy, not a replacement matcher.
-3. The designated writer accumulates the canonical review sections locally, preserving findings history and exact checked-item keys. Before final publication, run `<python> .opencode/skills/git-pr/scripts/prepare_pr_review.py validate --baseline BASELINE --current CURRENT --working-body output/pr-working-body.md` with `--decisions DECISIONS` when exclusions, acceptance or debt require it. Owner-authenticated baseline/current JSON captures publication context and divergence, not prose authority. The supplied metadata must match exactly; successful structural validation is not authenticated truth or a reviewer verdict. Completed PASS and accepted ADVISORY are supported, including explicit debt records for independently authorized follow-ups without artificial findings; BLOCK remains a canonical non-ready outcome, not a publishable success from this validator.
-4. Hand off the unchanged validated working path to the existing designated publication owner; this skill never uploads it. The designated writer authorizes the single publication; Herald 📯 (Release Manager) executes it against the exact validated body file and returns the persisted result, which the writer then verifies independently. After that owner's single final update, compare its authenticated persisted capture with `<python> .opencode/skills/git-pr/scripts/prepare_pr_review.py verify --baseline BASELINE --current PERSISTED --working-body output/pr-working-body.md`. Both JSON inputs require the full metadata schema in the reference: `number`, `headRefOid`, `baseRefName`, `headRefName`, `state`, `title`, `body`; a head/body-only capture is insufficient. Verify compares every baseline field except body, including identity/title/state, and requires persisted body to match the intended working-body bytes; it neither fetches nor repairs. The designated writer — not the executor — must additionally scan the actual persisted body and complete the final live readback before any gate. Local pre-write scan/validation cannot replace either control.
-
-`initialize`, snapshot and `prepare-local` outputs are exclusive-create; existing files produce IO failure without overwrite. Allocate distinct machine-evidence snapshot paths for actual input revisions through the coordinator; these are not extra Markdown bodies. Keep the single working body, do not silently delete/reuse an occupied output. Other commands do not write files. Exit 0 emits `status: prepared`; exit 1 reports a business rejection, including a Git-derived one; exit 2 reports IO/JSON failure or a Git boundary failure — git absent from `PATH`, a failing `rev-list`/`diff`/`show`/`log` read, a timeout, or non-UTF-8 Git output. None authorizes publication or acceptance.
+The creation draft is written only to `output/pr-draft.md` and the sole working body to `output/pr-working-body.md`. This skill never publishes or mutates a pull request and never runs a Git or GitHub command.
 
 ## Rules
 
-- Never run a Git or GitHub command: the `prepare-local` route is executed by Herald 📯 (Release Manager), and every other command reads supplied files only.
+- Never run a Git or GitHub command: the workflow commands that read Git are executed by Herald 📯 (Release Manager) through `.opencode/skills/git-pr-workflow/SKILL.md`, and this skill's own commands read supplied files only.
 - Authoring writes are limited to `output/pr-draft.md`, the one `output/pr-working-body.md`, and their `output/` parent directory when absent. Explicit assigned machine-evidence outputs may be created by the preparation tool through the existing authorized owner; this is not permission to invent further PR-description files. Do not write the repository root or edit `.gitignore`. Never publish or mutate a PR — creation, title, body, merge, comments and reviews included — and never run a state-mutating Git command.
-- Do not tick a checkbox, claim executed evidence, or record a result in the initial creation draft. The designated writer's local review body instead follows the evidence contract above; no fabricated results.
+- Do not tick a checkbox, claim executed evidence, or record a result in the initial creation draft. The designated writer's local review body instead follows `.opencode/skills/git-pr-workflow/SKILL.md` and `references/_pr-evidence-format.md`; no fabricated results.
 - Do not force the title to match the branch; report the mismatch and keep the diff-derived title.
 <!-- core:end -->

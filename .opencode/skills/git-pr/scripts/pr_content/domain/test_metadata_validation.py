@@ -9,8 +9,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from pr_review.domain.records import METADATA_FIELDS, ReviewPreparationError, parse_metadata
-from pr_review.test_support import MetadataDefect, create_invalid_metadata, create_metadata
+from pr_content.domain.records import METADATA_FIELDS, ReviewPreparationError, parse_metadata
+from pr_content.test_support import MetadataDefect, create_invalid_metadata, create_metadata
 
 
 def test_documented_seven_field_metadata_parses_successfully() -> None:

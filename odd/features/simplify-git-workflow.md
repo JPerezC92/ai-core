@@ -17,3 +17,7 @@ AICore's Git and GitHub workflow, reduced to a small set of agent instructions, 
 - [x] R9 — the PR-body verification machinery and its contracts are unchanged and its tests remain collected and passing. — delivered: this change
 - [x] R10 — the distribution registry and its definition no longer clear the retired skill, and historical records are unchanged. — delivered: this change
 - [x] R11 — branch creation uses an explicitly verified base rather than inheriting the current checkout. — delivered: this change
+- [x] R12 — `git-pr` owns PR content only — title and body generation, formatting, and content-specific validation — while the publication, evidence, identity and persistence procedure lives in `git-pr-workflow`. — delivered: this change
+- [x] R13 — the two skills' Python packages are self-contained: no cross-skill import, no duplicated schema, and the seven-field capture schema declared exactly once. — delivered: this change
+- [x] R14 — the persisted-body verification is not weakened: the persisted capture must match the intended publication exactly, including its field set. — delivered: this change
+- [x] R15 — every command keeps its name, arguments and exit-code contract, and the malformed-draft rejection has one authoritative point that every workflow path depends on. — delivered: this change
