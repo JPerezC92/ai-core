@@ -65,14 +65,17 @@
         "SKILL.md"
       ]
     },
-    ".opencode/skills/odd-workflow/": {
+    ".opencode/skills/git-pr-workflow/": {
       "mode": "raw",
       "region_files": [
         "SKILL.md"
       ]
     },
-    ".opencode/skills/verified-pr-cleanup/": {
-      "mode": "raw"
+    ".opencode/skills/odd-workflow/": {
+      "mode": "raw",
+      "region_files": [
+        "SKILL.md"
+      ]
     },
     ".opencode/agents/": {
       "mode": "region"

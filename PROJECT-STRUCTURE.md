@@ -11,7 +11,6 @@ ai-core/
 ├── AGENTS.md                      Cipher's runtime spec (lead orchestrator)
 ├── README.md                      Adoption guide, roster, repository map
 ├── opencode.jsonc                 V2 config: agents, models, permissions, MCP, instructions
-├── opencode.v1.jsonc              Separate V1 compatibility config
 ├── distribution-clearance.json    What ships, and how (raw / region / merge)
 ├── distribution-clearance.definition.md
 ├── pyproject.toml  uv.lock        Python toolchain + pytest config
@@ -27,8 +26,8 @@ ai-core/
 │   │   ├── odd-workflow/          Feature-record lifecycle + validator
 │   │   ├── incident-workflow/     Incident analysis + validator
 │   │   ├── git-branch-name/  git-commit/  git-pr/
-│   │   ├── op-agent-creator/  op-model/  op-skill-creator/
-│   │   └── verified-pr-cleanup/
+│   │   ├── git-pr-workflow/       PR publication workflow, evidence and identity
+│   │   └── op-agent-creator/  op-model/  op-skill-creator/
 │   └── tooling/                   astgrep/ · semgrep/ (own locked envs)
 │
 ├── knowledge/                     Shared operating rules
@@ -102,7 +101,7 @@ What an adopting project receives, per `distribution-clearance.json`:
 | `opencode.jsonc` | merge (by top-level key) | — |
 | `knowledge/agent-workflow.md`, `knowledge/release.md` | raw, whole file | — |
 | `knowledge/agents.md`, `debt.md`, `architecture-decision-workflow.md`, `diagnostics/*` | region | their `project` regions |
-| `odd/tasks/_template.md`, `odd/evidence/_template.md` | raw, whole file | — |
+| `odd/tasks/_template.md`, `odd/features/_template.md`, `odd/evidence/_template.md` | raw, whole file | — |
 | `architecture/` (whole directory) | raw | — |
 | `.opencode/agents/` | region | runtime `project` regions |
 | `.opencode/skills/` (each skill) | raw | — |

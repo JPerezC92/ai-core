@@ -8,7 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from prepare_pr_review import main
-from pr_review.test_support import create_body, create_draft
+from pr_content.test_support import create_body, create_draft
 
 
 def test_initialize_preserves_creation_draft_and_writes_one_working_body(tmp_path: Path) -> None:

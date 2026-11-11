@@ -49,6 +49,7 @@ Every agent report to Cipher 🔓 (Lead Orchestrator) follows the exact output f
 - If multiple operations are required, issue separate invocations or use a dedicated skill/script; never hide a restricted segment inside a compound command.
 - A wrapper-induced permission prompt is a command defect. Fix the command; do not widen permissions to accommodate it.
 - Report the exact failed command and literal permission/error output; never bypass a deny.
+- **Git and GitHub execution belongs to Herald 📯 (Release Manager).** No other agent runs a `git` or `gh` command, read-only or mutating, and no agent obtains Git- or GitHub-derived evidence except through Herald 📯 (Release Manager) via Cipher 🔓 (Lead Orchestrator). Agents analyze the supplied evidence; they never execute the command. The project's OpenCode command permissions deny `git` and `gh` to every agent except Herald 📯 (Release Manager); where the permission layer cannot reach a wrapped or nested invocation, the instruction is the control and the limitation is documented rather than patched with a new enforcement framework.
 
 ### Finding disposition (HARD RULE)
 
@@ -114,7 +115,7 @@ Admission: the first confirmed case admits a `candidate` row (structural only); 
 - SELECT columns must include the filter columns when the result is used for screenshots.
 - Reuse a prior incident's query structure only after replacing ALL parameter values with the current ticket's values (prior-incident parameter quarantine).
 - Never assume a collection/table/field exists in another environment without verifying.
-- **Inventory preflight:** before issuing a lifecycle Git-inventory read (e.g. status, stash, or ref listings, or ancestry checks), check its exact invocation against the effective available permission rules; never execute a known-disallowed variant, and never weaken or renegotiate permissions to accommodate one. Matching follows the effective permission rules' own matching precedence; never infer precedence from rule specificity alone.
+- **Inventory preflight:** before requesting a lifecycle Git-inventory read (e.g. status, stash, or ref listings, or ancestry checks) from Herald 📯 (Release Manager), check the exact invocation against the effective available permission rules; never execute a known-disallowed variant, and never weaken or renegotiate permissions to accommodate one. Matching follows the effective permission rules' own matching precedence; never infer precedence from rule specificity alone.
 
 ### Instrument discipline
 

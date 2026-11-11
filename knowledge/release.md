@@ -16,8 +16,9 @@ After merge, verify and report the outcome; do not automatically edit tracked fi
 
 ### Execution owners
 
-- Git (branch, push, PR, delete): Herald 📯 (Release Manager)
+- Git and GitHub operations of every kind — repository inspection, branch, worktree, staging, commit, push, PR creation, PR-body publication, delete — are executed by Herald 📯 (Release Manager) alone. Every other agent obtains Git- and GitHub-derived evidence from Herald 📯 (Release Manager) through Cipher 🔓 (Lead Orchestrator) and never runs the command.
+- PR publication procedure: `.opencode/skills/git-pr-workflow/SKILL.md` (content preparation stays in `.opencode/skills/git-pr/SKILL.md`)
 - Review at an immutable head: Inquisitor 🔎 (PR Reviewer)
-- PR body format: `.opencode/skills/git-pr/SKILL.md` and `.opencode/skills/git-pr/references/_pr-evidence-format.md`
-- Cleanup proof command: the `verified-pr-cleanup` skill's invocation, bound in the root runtime's `#### Merged-branch cleanup preflight`, and reported as `SAFE_TO_CLEAN` or `BLOCKED`.
+- PR body format: `.opencode/skills/git-pr/SKILL.md` and `.opencode/skills/git-pr/references/_pr-evidence-format.md`; the presentation standard is `git-pr`'s reference
+- Cleanup proof: the native merge-proof procedure in `.opencode/agents/herald.md` step 8 — the PR's recorded merge commit reachable from the verified base, together with the verified PR identity and the pinned local and remote branch tips. It is evidence only, never authorization, and no separate validator runs.
 - Finding presentation: `knowledge/agents.md` `### PR review findings (adjudication)`
