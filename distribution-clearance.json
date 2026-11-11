@@ -71,9 +71,6 @@
         "SKILL.md"
       ]
     },
-    ".opencode/skills/verified-pr-cleanup/": {
-      "mode": "raw"
-    },
     ".opencode/agents/": {
       "mode": "region"
     }
