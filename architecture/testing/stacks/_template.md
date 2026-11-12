@@ -17,21 +17,22 @@ A destination may add its selected runner, framework adapter, or local tool bind
 
 | Level | Target | Collaborators and doubles | Observable assertion |
 |---|---|---|---|
-| Unit | <smallest unit> | <what is doubled> | <what is asserted> |
-| Integration | <one adapter or boundary> | <real dependency or transport stub> | <mapping assertion> |
+| Unit | <one application use-case class, one parser/loader whose responsibility is converting an external representation into domain data, or one component with its real hook> | <what is doubled> | <what is asserted> |
+| Integration | <one adapter or boundary> | <real isolated dependency; transport stub only for a capability whose dependency cannot be isolated> | <mapping assertion> |
 | End to end | <assembled entry point> | <real composition and adapters> | <observable result> |
 
 Explain any stack-specific meaning of a level. Do not rename a level or move a boundary.
 
 ## File organization
 
+- Test root and level directories:
 - Unit:
 - Integration:
 - End to end:
 - Discovery and naming:
 - One behavior per module or class:
 
-Name exact paths or path patterns. State the project-wide discovery rule and whether a per-directory allowlist exists.
+Name exact paths or path patterns. Every test lives under the project's root-level `tests/` directory in its `unit/`, `integration/` and `e2e/` level directories; no test lives inside a production directory, and nested folders group tests by behavioural target rather than by production file. State the project-wide discovery rule and whether a per-directory allowlist exists.
 
 ## Unit tests
 

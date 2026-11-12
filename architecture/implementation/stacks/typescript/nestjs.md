@@ -52,7 +52,7 @@ Every source/test layer follows this import rule: same-directory `./sibling` imp
 
 ### Concept-role filenames
 
-The C10 vocabulary maps to kebab-case concepts plus dot-separated roles. This syntax table also supplies the JavaScript filename equivalent; it does not establish a reviewed JavaScript framework stack. React uses this same syntax table. Class `Order` is not renamed `OrderEntity`.
+The C10 vocabulary maps to kebab-case concepts plus dot-separated roles. This syntax table also supplies the JavaScript filename equivalent; it does not establish a reviewed JavaScript framework stack. React uses this same syntax table. Class `Order` is not renamed `OrderEntity`. The use-case row is this guide's own spelling of the C3 operation class, not a C10 vocabulary role.
 
 | C10 role | TypeScript | JavaScript filename equivalent |
 |---|---|---|
@@ -61,6 +61,7 @@ The C10 vocabulary maps to kebab-case concepts plus dot-separated roles. This sy
 | event | `order-placed.event.ts` | `order-placed.event.js` |
 | repository | `order.repository.ts` | `order.repository.js` |
 | port | `clock.port.ts` | `clock.port.js` |
+| use case | `close-order.use-case.ts` | `close-order.use-case.js` |
 | domain service | `pricing.domain-service.ts` | `pricing.domain-service.js` |
 | policy | `pricing.policy.ts` | `pricing.policy.js` |
 | error | `order-closed.error.ts` | `order-closed.error.js` |
@@ -85,14 +86,14 @@ Read `architecture/testing/architecture.md` and `architecture/testing/stacks/typ
 | C1 Layers/dependencies | Structure | Framework code only in infrastructure. |
 | C2 Domain/ports | Domain and ports | Entities with behavior and immutable identity, Symbol ports, centralized errors. |
 | C3 Operation | Application operations | Undecorated class with interface injection. |
-| C4 Mapping/composition | Adapters; Composition | Static mapping plus factory providers. |
+| C4 Mapping/composition | Domain and ports; Adapters; Composition | Rule ownership: a business rule lives in a domain module or entity and a use case applies it (C3), while an adapter maps outside data to domain data without business rules. Static mapping plus factory providers. |
 | C5 Failures | Application operations; Controllers | Null → returned error → delivery throw. |
 | C6 Serialization | Controllers | JSend DTO/response edge. |
-| C7 Helpers | Common contract | No artificial class wrapper for a pure helper. |
+| C7 Helpers | Concept-role filenames | Pure-function modules use predicate or calculation names (C7). |
 | C8 Domain model | Domain and ports | Private construction, replacement unions, nested protection, value classes, records and pending events. |
 | C9 Repositories/transactions | Domain and ports; Application operations; Adapters | Symbol interfaces, null lookup, projection return types, explicit replacement save and injected transaction capability. |
 | C10 Naming | Concept-role filenames; Adapters; Controllers | Shared roles in TS/JS syntax with boundary-specific modules. |
-| B1 Layout/domain | Structure; Domain and ports | Readonly fields, getters, null lookup; behavior, identity and the valid-instance factory are mapped by C2. |
+| B1 Layout/domain | Structure; Domain and ports; Adapters and delivery | Readonly fields, getters, null lookup; behavior, identity and the valid-instance factory are mapped by C2; canonical `infrastructure/adapters/` and `infrastructure/repositories/` placement (B1). |
 | B2 Operation | Application operations | Null policy in operation. |
 | B3 Infrastructure | Adapters and delivery | Repository port, static mapper, edge factories. |
 | B4 Organization | Structure and dependency mapping; Domain and ports | Aggregate-local modules, internal role growth and protected child construction. |
