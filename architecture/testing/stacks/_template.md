@@ -32,7 +32,7 @@ Explain any stack-specific meaning of a level. Do not rename a level or move a b
 - Discovery and naming:
 - One behavior per module or class:
 
-Name exact paths or path patterns. Every test lives under the project's root-level `tests/` directory in its `unit/`, `integration/` and `e2e/` level directories; no test lives inside a production directory, and nested folders group tests by behavioural target rather than by production file. State the project-wide discovery rule and whether a per-directory allowlist exists.
+Name exact paths or path patterns. Every test lives under its test-owning unit's `tests/` directory — the repository root for repository-wide tests, or the package root for an independently deployable application — in its `unit/`, `integration/` and `e2e/` level directories; no test lives inside a production directory, and nested folders group tests by behavioural target rather than by production file. State the project-wide discovery rule and whether a per-directory allowlist exists.
 
 ## Unit tests
 
