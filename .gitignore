@@ -5,3 +5,4 @@ node_modules/
 __pycache__/
 output/
 .secrets/
+.aicore/local.json
