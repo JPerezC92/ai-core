@@ -13,6 +13,8 @@ TASK_RE = re.compile(
 )
 COMMIT_RE = re.compile(r"^[0-9a-fA-F]{7,64}$")
 LOG_RE = re.compile(r"^- L1 — .+$")
+LOG_ENTRY_RE = re.compile(r"^- L(\d+)")
+MAX_LOG_IDENTIFIER_DIGITS = 9
 HEADER_RE = re.compile(r"^> \*\*(Status|Owner|Created):\*\* .+$")
 STATUS_RE = re.compile(r"^> \*\*Status:\*\* (active|closed)$")
 STATUS_CLOSED_RE = re.compile(r"^> \*\*Status:\*\* closed$")
@@ -148,8 +150,39 @@ def validate_feature(text: str) -> list[str]:
     if not any(LOG_RE.match(line) for line in log):
         findings.append("Log needs an L1 entry")
 
-    unfenced = FENCED_BLOCK_RE.sub("", text)
-    for line in unfenced.splitlines():
+    unfenced_lines = FENCED_BLOCK_RE.sub("", text).splitlines()
+    unfenced_log = _section(unfenced_lines, "## Log")
+
+    log_identifiers: list[int] = []
+    for line in unfenced_log:
+        match = LOG_ENTRY_RE.match(line)
+        if not match:
+            continue
+        digits = match.group(1)
+        if len(digits) > MAX_LOG_IDENTIFIER_DIGITS:
+            findings.append(
+                f"Log entry identifier is not a valid L number: {line.strip()}"
+            )
+            continue
+        log_identifiers.append(int(digits))
+
+    for previous, current in zip(log_identifiers, log_identifiers[1:]):
+        if current <= previous:
+            findings.append(
+                f"Log entry identifiers must ascend strictly: L{current} follows L{previous}"
+            )
+            break
+
+    for identifier in sorted(set(log_identifiers)):
+        if log_identifiers.count(identifier) > 1:
+            findings.append(
+                f"Log entry identifier must be unique: L{identifier} appears more than once"
+            )
+
+    if log_identifiers and log_identifiers[0] != 1:
+        findings.append(f"first Log entry must be L1: L{log_identifiers[0]}")
+
+    for line in unfenced_lines:
         if PLACEHOLDER_RE.search(_strip_code(line)):
             findings.append(f"unfilled placeholder: {line.strip()}")
 
