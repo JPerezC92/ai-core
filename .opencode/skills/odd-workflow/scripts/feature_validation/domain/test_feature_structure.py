@@ -43,6 +43,72 @@ def test_missing_l1_is_rejected() -> None:
     assert any("L1" in finding for finding in findings)
 
 
+def test_ascending_log_identifiers_are_accepted() -> None:
+    document = make_feature(log_entries=("- L1 — original request", "- L2 — later request"))
+    assert validate_feature(document) == []
+
+
+def test_descending_log_identifiers_are_rejected() -> None:
+    findings = validate_feature(
+        make_feature(
+            log_entries=("- L1 — original request", "- L3 — third", "- L2 — second")
+        )
+    )
+    assert findings == ["Log entry identifiers must ascend strictly: L2 follows L3"]
+
+
+def test_multiple_descending_log_identifiers_report_only_the_first_inversion() -> None:
+    findings = validate_feature(
+        make_feature(
+            log_entries=("- L1 — a", "- L4 — b", "- L3 — c", "- L2 — d")
+        )
+    )
+    assert findings == ["Log entry identifiers must ascend strictly: L3 follows L4"]
+
+
+def test_repeated_log_identifier_is_rejected() -> None:
+    findings = validate_feature(
+        make_feature(
+            log_entries=("- L1 — original request", "- L2 — later", "- L2 — repeated")
+        )
+    )
+    assert findings == [
+        "Log entry identifiers must ascend strictly: L2 follows L2",
+        "Log entry identifier must be unique: L2 appears more than once",
+    ]
+
+
+def test_malformed_log_identifier_is_reported_not_raised() -> None:
+    findings = validate_feature(
+        make_feature(log_entries=("- L1 — a", "- L" + "9" * 5000 + " — huge"))
+    )
+    assert findings == [
+        f"Log entry identifier is not a valid L number: - L{'9' * 5000} — huge"
+    ]
+
+
+def test_fenced_log_block_is_not_parsed_as_log_entries() -> None:
+    document = make_feature(
+        log_entries=(
+            "- L1 — original request",
+            "```markdown",
+            "- L0 — sample line",
+            "```",
+        )
+    )
+    assert validate_feature(document) == []
+
+
+def test_first_log_identifier_must_be_l1() -> None:
+    findings = validate_feature(make_feature(log_entries=("- L2 — later",)))
+    assert any("first Log entry must be L1" in finding for finding in findings)
+
+
+def test_empty_log_section_reports_only_the_missing_l1_finding() -> None:
+    findings = validate_feature(make_feature(log_entries=()))
+    assert findings == ["Log needs an L1 entry"]
+
+
 def test_missing_spec_entry_is_rejected() -> None:
     findings = validate_feature(make_feature(spec_entries=("- a requirement",)))
     assert any("S#" in finding for finding in findings)
