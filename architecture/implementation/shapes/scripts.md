@@ -6,11 +6,11 @@ Scripts, CLIs, and tooling operations, including independently deployed tooling 
 
 ## P1 — Responsibilities
 
-Domain contains data-only constants and pure transformations. Transformations receive typed input data, never perform filesystem/network IO. When a script domain has identity and invariants, it may use the stack entity representation; data-only constants, pure transformations, and TypedDict records remain valid, and not every script type must become a class. A script type that claims identity and invariants but leaves its rules to callers is not a record; it is a nonconforming entity. Application operations take typed parameters and injected domain IO ports and expose `execute()` returning typed domain results/errors. Pure helpers retain the common helper exemption.
+Domain contains data-only constants and pure transformations. Transformations receive typed input data, never perform filesystem/network IO. When a script domain has identity and invariants, it may use the stack entity representation; data-only constants, pure transformations, and TypedDict records remain valid, and not every script type must become a class. A script type that claims identity and invariants but leaves its rules to callers is not a record; it is a nonconforming entity. Application operations take typed parameters and injected domain IO ports and expose `execute()` returning typed domain results/errors (C3). Pure helpers retain the common helper exemption.
 
 ## P2 — IO and delivery
 
-Infrastructure loaders/builders/clients implement ports, perform IO, and map external data to domain objects without business rules. The script/server entry point constructs adapters; its delivery handler calls the operation and serializes domain results/errors outside it. File, subprocess, and network effects stay at the entry point or a clearly named infrastructure IO helper.
+Infrastructure loaders/builders/clients implement ports, perform IO, and map external data to domain objects without business rules; the outside-data mapping modules live in `infrastructure/adapters/`, a repository adapter, where an aggregate model is used, lives in `infrastructure/repositories/`, and each directory is created only where its responsibility exists. The script/server entry point constructs adapters; its delivery handler calls the operation and serializes domain results/errors outside it. File, subprocess, and network effects stay at the entry point or a clearly named infrastructure IO helper.
 
 ## P3 — Deployment boundaries
 

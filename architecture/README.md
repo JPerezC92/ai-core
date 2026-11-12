@@ -55,6 +55,7 @@ Four duties follow:
 - **One edit home.** Changing a rule edits its agnostic contract only. Guides citing the identifier stay correct unless their language-specific achievement stops satisfying it.
 - **Verifiable coverage.** A mapping or parity cell that claims coverage without citing an identifier is a defect. `N/A` requires a language, runtime, or scope reason stating why the obligation cannot be achieved by guide content.
 - **New rules.** Add the rule with a new identifier in its owning contract, then map it in every applicable guide. Never introduce a rule directly in a guide.
+- **Canonical layout is shape-scoped.** The shapes own each application shape's canonical directory organization — which responsibilities exist and where they live — and every language applies that same layout for the shape. A language guide spells the native folder and file names of that layout and never substitutes a different organization for an equivalent responsibility. A responsibility that does not exist in a shape or project creates no directory, and no shape introduces a mandatory `presentation/` directory.
 
 ## Contract boundaries
 

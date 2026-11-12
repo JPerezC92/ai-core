@@ -16,11 +16,17 @@ Entity representation and state changes follow C8; data-only records and functio
 
 ## C3 — Application operation
 
-Each use case is one named business operation exposing a single `execute()`. It depends on injected domain ports, not concrete IO. One operation per module or file; its name states a business outcome, and `Service`, `Manager`, `Helper`, `Processor`, and `Util` are not use-case names. Choose one operation shape per stack and apply it to every use case; a mixed vocabulary is a review finding. A composition root or CLI router may wire several operations but must not re-declare a use-case class. Policy belongs here or in domain, never in adapters or presentation. Data-only boundary/result records and functional domain modules are valid representations; enduring invariants and legal transitions belong in the domain, application-specific orchestration may stay in the use case, and adapters hold no business policy. A data-only record is anemic only when it claims to be the domain model while allowing public mutation and its rules are enforced elsewhere.
+Each use case is one named business operation exposing a single `execute()`. It depends on injected domain ports, not concrete IO.
+
+Every use case is a class in every language: a standalone function never stands in for a use-case class, however small the operation is. The class exposes one `execute()` and receives its required collaborators through constructor injection. Class-first does not license abstraction for its own sake: add no base class, interface, inheritance hierarchy, forwarding service layer or pass-through wrapper without a real polymorphic or behavioural need, and a helper, utility or other module-level function that is not an application operation stays a function. Presentation-layer components, hooks and general-purpose utilities are not use cases and are not made classes by this rule.
+
+One operation per module or file; its name states a business outcome, and `Service`, `Manager`, `Helper`, `Processor`, and `Util` are not use-case names. A composition root or CLI router may wire several operations but must not re-declare a use-case class. Policy belongs here or in domain, never in adapters or presentation. Data-only boundary/result records and functional domain modules are valid representations; enduring invariants and legal transitions belong in the domain, application-specific orchestration may stay in the use case, and adapters hold no business policy. A data-only record is anemic only when it claims to be the domain model while allowing public mutation and its rules are enforced elsewhere.
 
 ## C4 — Mapping and composition
 
 Adapters map outside data to domain data through a single mapping/parsing step and contain no business rules. Composition supplies concrete adapters to use cases only at the edge.
+
+The split between domain and infrastructure is decided by who owns the rule, not by the fact that data changes shape. A transformation that is itself a business rule — the rule that decides the outcome — belongs in the domain; application-specific orchestration that applies such a rule stays in the use case (C3). A transformation between an external representation and domain data — a persistence record, a transport payload, a third-party response — belongs at the infrastructure boundary that owns that representation. Neither side hosts the other's rule, and infrastructure-specific mapping never enters a domain entity.
 
 ## C5 — Failures
 

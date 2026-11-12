@@ -6,7 +6,7 @@ Backend business applications. Read `architecture/implementation/architecture.md
 
 ## B1 — Layout and domain
 
-Use `domain/` (C8 model kinds and ports), `application/` (one file per use case), and `infrastructure/` (adapters, repositories, composition). A stack names the concrete operation location. Entities have a read accessor per field, preserving C8 alias protection. Port results follow C9: aggregate objects for repositories, domain projections for read ports, and appropriate domain types for other capabilities.
+Use `domain/` (C8 model kinds and ports), `application/` (one file per use case), and `infrastructure/` (adapters, repositories, composition). `infrastructure/adapters/` holds the adapter and outside-record-to-domain mapping modules and `infrastructure/repositories/` holds repository adapters; a directory is created only where its responsibility exists. A stack names the concrete operation location. Entities have a read accessor per field, preserving C8 alias protection. Port results follow C9: aggregate objects for repositories, domain projections for read ports, and appropriate domain types for other capabilities.
 
 ## B2 — Operation
 
@@ -14,7 +14,7 @@ The use case checks an empty port result and decides which domain error to retur
 
 ## B3 — Infrastructure and delivery
 
-A repository implements its domain port (C9). Adapters use one explicit outside-record-to-domain mapping function (C4, C6), selecting reconstitution for persisted entities (C8). Persistence rows/models live in infrastructure; request/response records at its delivery edge (C10).
+A repository implements its domain port (C9) in `infrastructure/repositories/`. Adapters use one explicit outside-record-to-domain mapping function in `infrastructure/adapters/` (C4, C6), selecting reconstitution for persisted entities (C8). Persistence rows/models live in infrastructure; request/response records at its delivery edge (C10).
 
 ## B4 — Business-owned domain organization
 

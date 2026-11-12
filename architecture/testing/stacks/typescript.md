@@ -2,7 +2,7 @@
 
 > **Status:** reference
 > **Stack:** TypeScript/TSX; NestJS-style backend and React frontend reference architecture
-> **Reviewed:** 2026-10-25 — `testing-architecture-layering`; entity-construction clause 2026-10-30; stale `domain/entities/` factory-import spelling retired in favour of the concept's own domain module (`<concept>.entity.ts`), no `T` ID added, removed or moved 2026-11-05; `architecture-agnostic-fallback` applicability and `T14`/`T24`–`T25` selection wording aligned to the agnostic fallback and the `T22`–`T23` `N/A` set narrowed, no `T` ID added, removed, moved or renumbered 2026-11-06
+> **Reviewed:** 2026-10-25 — `testing-architecture-layering`; entity-construction clause 2026-10-30; stale `domain/entities/` factory-import spelling retired in favour of the concept's own domain module (`<concept>.entity.ts`), no `T` ID added, removed or moved 2026-11-05; `architecture-agnostic-fallback` applicability and `T14`/`T24`–`T25` selection wording aligned to the agnostic fallback and the `T22`–`T23` `N/A` set narrowed, no `T` ID added, removed, moved or renumbered 2026-11-06; 2026-11-12 — `T2`/`T4`/`T5`/`T10` applied to the file-organization, unit-test, integration-test and end-to-end sections: centralized root-level `tests/` placement, the approved unit targets, the component-with-its-real-hook boundary, the repository adapter against a real isolated database and the three-phase browser end to end; the three levels, the reference bindings and the observable assertions are unchanged, and no `T` ID was added, removed, moved or renumbered
 > **Contract:** `architecture/testing/architecture.md`
 
 ## Applicability and ownership
@@ -13,7 +13,7 @@ It covers the backend use-case, parser, repository, and HTTP entry-point boundar
 
 Apply this guide's mechanisms only to the concerns they cover. Uncovered concerns follow the contract's T24–T25 selection route; they do not inherit React, NestJS, Vitest, or Playwright mechanisms merely because the source is TypeScript. Covered concerns remain bound by their applicable mappings.
 
-A destination may replace the reference tool names, paths, or framework adapters with its own stack. It must preserve the rules this guide cites: `T1`–`T21` and `T26`–`T29`, and it must keep `T24`–`T25` routing an uncovered concern to the contract instead of inheriting this stack's mechanisms. `T22`–`T23` and `T30`–`T36` are declared `N/A` in the parity table below because they govern selection by a reviewer and the authoring of a new guide rather than this guide's content.
+A destination may replace the reference tool names, paths, or framework adapters with its own stack. It must preserve the rules this guide cites: `T1`–`T21` and `T24`–`T29`, and it must keep `T24`–`T25` routing an uncovered concern to the contract instead of inheriting this stack's mechanisms. `T22`–`T23` and `T30`–`T36` are declared `N/A` in the parity table below because they govern selection by a reviewer and the authoring of a new guide rather than this guide's content.
 
 ## Test pyramid mapping
 
@@ -25,8 +25,11 @@ BACKEND                              FRONTEND
 Unit: mock IRepository               Unit: mock Service
   test use case execute()              render <Component /> (hook inside)
 
-Integration: real in-memory DB       Service integration: mock fetch
-  test repository directly             test service methods directly
+Unit: mock parser library            Service integration: mock fetch
+  test one parser mapping              test service methods directly
+
+Integration: real isolated database
+  test repository directly
 
 E2E: supertest + TestDatabaseModule  E2E: Playwright, 3 phases
 ```
@@ -45,13 +48,15 @@ E2E: supertest + TestDatabaseModule  E2E: Playwright, 3 phases
 
 ## File organization
 
-- Backend unit tests: `test/{module}/application/use-cases/*.spec.ts`.
-- Backend integration tests: `test/{module}/infrastructure/*.repository.integration.spec.ts`.
-- Backend parser tests: `test/{module}/infrastructure/*.parser.spec.ts`.
-- Backend end-to-end tests: `test/{module}/*.e2e-spec.ts`.
-- Frontend unit tests: `modules/{module}/__tests__/components/*.spec.tsx`.
-- Frontend service integration tests: `modules/{module}/__tests__/services/*.service.integration.spec.ts`.
-- Frontend end-to-end tests: `e2e/__tests__/*.spec.ts`.
+- Every test lives under the project's single root-level `tests/` directory, in `tests/unit/`, `tests/integration/` or `tests/e2e/` (`T10`). No test file sits beside an implementation file, no `__tests__` directory lives inside a production module, and no test file lives under a source tree.
+- Nested folders inside a level directory group tests by behavioural target and are chosen per project; this guide mandates none, and a role-named folder such as `parsers/`, `entities/`, `value_objects/` or `hooks/` is neither required nor approved as a level (`T10`).
+- Backend use-case unit specs: `*.use-case.spec.ts`, one application use-case class with its ports doubled.
+- Backend parser unit specs: `*.parser.spec.ts`, one parser with the external parser library doubled.
+- Backend repository integration specs: `*.repository.integration.spec.ts`, one repository adapter against a real isolated database.
+- Frontend component unit specs: `*.spec.tsx`, one component with its real hook and the service module doubled.
+- Frontend service integration specs: `*.service.integration.spec.ts`, one service module with `fetch` stubbed at the transport.
+- Backend end-to-end specs: `*.e2e-spec.ts` under `tests/e2e/`.
+- Frontend browser specs: phase files under `tests/e2e/` — `smoke.spec.ts` for the smoke phase and `{module}.spec.ts` for the seeded-data and data-mutation phases.
 - One behavior per `.spec.ts`, `.spec.tsx`, `.integration.spec.ts`, or `.e2e-spec.ts` file, and one per `describe` group inside it; a file or group holding several behaviors is a violation and is split by behavior (`T11`).
 - File length never triggers that split, and a cohesive single-behavior file stays whole however long it grows (`T12`).
 
@@ -101,6 +106,7 @@ expect(result).toBeInstanceOf(TaskNotFoundError);
 
 ### Frontend service
 
+- The service's real dependency is a remote HTTP service that cannot be isolated in an integration test, so its transport is stubbed at that boundary (T4); this level proves the raw JSON to typed output mapping and the returned domain errors, not a live server.
 - Stub `fetch` with `vi.stubGlobal('fetch', mockFetch)`; do not mock API-client internals.
 - Call `vi.unstubAllGlobals()` and `vi.clearAllMocks()` in `afterEach`.
 - Call the service methods directly, for example `const result = await featureService.getAll()`.
@@ -146,6 +152,7 @@ expect(response.body).toMatchObject({
   - `smoke.spec.ts` — page load only, no data assertions.
   - `{module}.spec.ts` in the seeded-data phase — interactions with seeded database data.
   - `{module}.spec.ts` in the data-mutation phase — upload and delete operations.
+- Browser specs live under `tests/e2e/`; the phase separation is carried by the reviewed Playwright configuration, and a project that separates the phases by folder may group them under `tests/e2e/smoke/`, `tests/e2e/seeded/` and `tests/e2e/mutation/` because the three phases are approved behavioural targets (`T10`).
 - Every seeded-data and data-mutation spec includes a `pageerror` listener. The smoke phase is exempt because it only loads the page.
 
 ```typescript
@@ -161,7 +168,7 @@ test.afterEach(async () => {
 
 ## Test data and doubles
 
-- Each module has `__tests__/helpers/{feature}.factory.ts` (`T15`).
+- Shared factories live under the test root, for example `tests/support/{feature}.factory.ts`, and never inside a production module (`T10`, `T15`).
 - The factory uses `faker` for data generation; no hardcoded values.
 - The factory imports entity types from the shared package when one exists, otherwise from the concept's own domain module (`<concept>.entity.ts`).
 - The factory provides at least `create(overrides?)` and `createMany(count, overrides?)`.
@@ -185,12 +192,12 @@ test.afterEach(async () => {
 | Contract section | Cited rule IDs | Language-specific achievement or N/A reason |
 |---|---|---|
 | Applicability and ownership | `T1`, `T20`, `T24`, `T25`, `T26` | Scope is TypeScript/TSX backend and frontend: the use-case, parser, repository, and HTTP entry-point boundaries plus the component/hook and service boundaries. Vitest, supertest, React, and Playwright are reference choices; a destination rebinds its package manager, runner, and framework adapters in project-owned files. Status `reference`. A non-TypeScript file, a non-React UI, or an adapter with no selected guide is out of scope: `T24`–`T25` route it to the contract and the applicable implementation contract/shapes, so uncovered coverage alone never becomes an uncertainty verdict. |
-| Test pyramid mapping | `T2`, `T3`, `T4`, `T5` | Three levels per side: mocked-port use case and mocked-service component units, in-memory-DB repository and stubbed-`fetch` service integration, `supertest` plus `TestDatabaseModule` HTTP and three-phase Playwright browser end to end. Assertions are returned values, screen queries, mapped domain entities, JSend bodies, and page-error counts. |
-| File organization | `T10`, `T11`, `T12`, `T13` | Paths are `test/{module}/…` on the backend and `modules/{module}/__tests__/…` on the frontend; the `.spec.ts`, `.integration.spec.ts`, `.e2e-spec.ts`, and `.spec.tsx` suffixes carry level and discovery, with browser specs under `e2e/__tests__/`. One behavior per file and per `describe` group; length never splits a cohesive file. |
-| Unit tests | `T2`, `T3`, `T17` | Direct construction and direct `execute()`, never through HTTP or a Nest application; `MockProxy<IRepository>` from `vitest-mock-extended` instead of `vi.fn()` or a manual mock; components rendered with `renderWithQueryClient` and asserted through `screen.findByText`/`getByRole`; returned domain errors matched with `DomainError.isDomainError` and `toBeInstanceOf`, never `toThrow()`; the service module doubled, the hook never. |
-| Integration tests | `T4`, `T6`, `T7` | `createTestDatabase()`/`migrateTestDatabase()` with a directly constructed repository and no `Test.createTestingModule()`; `vi.stubGlobal('fetch', …)` for the service level; a documented failure body maps to a returned typed domain error while a rejected transport stays a rejection, asserted with `.rejects.toBe(boundaryError)`. |
+| Test pyramid mapping | `T2`, `T3`, `T4`, `T5` | Three levels per side: mocked-port use case, mocked-external-library parser and mocked-service component units, real-isolated-database repository and stubbed-`fetch` service integration, `supertest` plus `TestDatabaseModule` HTTP and three-phase Playwright browser end to end. Assertions are returned values, screen queries, mapped domain entities, JSend bodies, and page-error counts. |
+| File organization | `T10`, `T11`, `T12`, `T13` | Every test lives under the single root-level `tests/` directory in `tests/unit/`, `tests/integration/` or `tests/e2e/`; no test file sits beside an implementation file and no `__tests__` directory lives inside a production module. Nested folders group tests by behavioural target and are chosen per project, with no role-named folder mandated. The `.spec.ts`, `.integration.spec.ts`, `.e2e-spec.ts`, and `.spec.tsx` suffixes carry level and discovery, with browser specs under `tests/e2e/`. One behavior per file and per `describe` group; length never splits a cohesive file. |
+| Unit tests | `T2`, `T3`, `T17` | Direct construction and direct `execute()`, never through HTTP or a Nest application; `MockProxy<IRepository>` from `vitest-mock-extended` instead of `vi.fn()` or a manual mock; a backend parser unit with the external parser library mocked at its boundary, asserting field mapping, type coercion, extraction and the documented failure result; components rendered with `renderWithQueryClient` and asserted through `screen.findByText`/`getByRole`; returned domain errors matched with `DomainError.isDomainError` and `toBeInstanceOf`, never `toThrow()`; the service module doubled, the hook never. |
+| Integration tests | `T4`, `T6`, `T7` | `createTestDatabase()`/`migrateTestDatabase()` with a directly constructed repository and no `Test.createTestingModule()`; `vi.stubGlobal('fetch', …)` for the service level, whose real dependency is a remote HTTP service that cannot be isolated, so its transport is stubbed at that boundary (T4); a documented failure body maps to a returned typed domain error while a rejected transport stays a rejection, asserted with `.rejects.toBe(boundaryError)`. |
 | End-to-end tests | `T5`, `T7`, `T8` | `DatabaseModule` overridden by `TestDatabaseModule`, `DomainErrorFilter` registered globally, JSend `fail` and `success` bodies asserted. Declared difference: a Nest controller only binds transport to the use case, so its HTTP contract is asserted here and no `*.controller.spec.ts` exists. Browser specs split across smoke, seeded-data, and data-mutation phases, with a `pageerror` listener outside smoke. |
-| Test data and doubles | `T15`, `T16`, `T18` | `__tests__/helpers/{feature}.factory.ts` per module, built on `faker` with `create()`/`createMany()` and entity construction through the entity factory; `vitest-mock-extended` is the single mocking facility, so `vi.mocked()` or a manual cast is a violation; Vitest is the single runner. Per-test isolation is `vi.clearAllMocks()` in `beforeEach`/`afterEach`, `vi.unstubAllGlobals()` in `afterEach`, `deleteAll()` where a repository module needs a clean slate, and a `pageErrors` array re-created in `test.beforeEach`. |
+| Test data and doubles | `T15`, `T16`, `T18` | `tests/support/{feature}.factory.ts` shared factories, outside any production module, built on `faker` with `create()`/`createMany()` and entity construction through the entity factory; `vitest-mock-extended` is the single mocking facility, so `vi.mocked()` or a manual cast is a violation; Vitest is the single runner. Per-test isolation is `vi.clearAllMocks()` in `beforeEach`/`afterEach`, `vi.unstubAllGlobals()` in `afterEach`, `deleteAll()` where a repository module needs a clean slate, and a `pageErrors` array re-created in `test.beforeEach`. |
 | Execution and evidence | `T9`, `T14`, `T19`, `T21`, `T25` | The reviewed whole-suite command for the TypeScript workspace is the only execution path, and discovery follows the reviewed Vitest and Playwright configuration rather than the reference paths. A verdict is reported per spec file; a Vitest coverage report or a green Playwright phase is execution evidence beside it. `T14` is cited here rather than under File organization because the verdict scope belongs with the evidence rules: a covered module's spec file lacking its level's evidence is `[FAIL]`; an uncovered concern uses the contract's `T25` selection route, not an automatic uncertainty verdict. |
 | Cross-stack parity | `T27`, `T28`, `T29` | The ten sections keep the template order and rule granularity, every row here cites the identifiers it achieves, and the reference-path and reference-tool differences are declared rather than inherited generic-only. Parity evidence for this guide is the contract's `## Stack guides` row plus this table. |
 | Open decisions | `T22`, `T23`, `T30`–`T36` | N/A — these govern stack-guide selection by a reviewer and the authoring of a new guide; none constrains this guide's body. `T24`–`T25` are not N/A: they are achieved above, in `Applicability and ownership` and in the `Execution and evidence` row. No open decisions remain: destination runner and framework bindings are project-owned, not unresolved here. |

@@ -9,7 +9,7 @@ Applies to TypeScript/TSX React feature code and its imports in source/tests (F1
 
 ## Structure and dependency mapping
 
-Keep the frontend shape's feature folders. Runtime flow: Component → Hook (driving adapter) → ordinary `execute()` → injected domain port → Service (driven adapter) → HTTP/local data (F1, F2, C3). The operation lives in `modules/{feature}/hooks/use-{feature}.ts`, co-located with its Hook. Co-location permits framework/composition imports for the Hook, never framework/concrete-service dependencies inside the operation.
+Keep the frontend shape's feature folders. Runtime flow: Component → Hook (driving adapter) → operation class `execute()` → injected domain port → Service (driven adapter) → HTTP/local data (F1, F2, C3). Each operation class lives in its own module under `modules/{feature}/hooks/`, one operation per module, named `<verb>-<object>.use-case.ts` after the shared concept-role table, in a module separate from the Hook's module. The operation module imports only domain types and its injected port; the Hook's module carries the framework and composition imports and constructs the operation with the concrete adapter.
 
 For F4, intentional data modules use paths such as `domain/order/order-summary.projection.ts` or `order-snapshot.record.ts`. Actual aggregates use `domain/order/order.entity.ts` beside `order.repository.ts`; a second entity moves root/child modules into `domain/order/entities/`, and a second owned value uses `domain/order/value-objects/`. Other role folders grow inside the same business owner. No child scaffolding is needed for a root-only model.
 
@@ -23,7 +23,7 @@ For F4, intentional data modules use paths such as `domain/order/order-summary.p
 
 ## Application operations
 
-`execute()` is an ordinary plain function or object method, not a Hook. It calls the injected domain service port and returns domain data or the module's typed error (C3, C1). It never calls React Query, `useState`, `useEffect`, any Hook, `fetch`, or `apiClient`. The Hook's composition supplies the concrete adapter and calls the operation from `queryFn`/`mutationFn`.
+The operation is an undecorated plain class with an `execute()` method — never a Hook and never a standalone function — whose `execute()` calls the injected domain service port and returns domain data or the module's typed error (C3, C1, C5). It receives the service port through a constructor parameter, never a setter or a module-level global, and the Hook's composition constructs it with the concrete adapter before calling `operation.execute()` from `queryFn`/`mutationFn`. It never calls React Query, `useState`, `useEffect`, any Hook, `fetch`, or `apiClient`, and it extends no base class and defines no interface, hierarchy or forwarding wrapper. A React component, a Hook and a general-purpose utility are not application use cases and are not turned into classes by this rule (C3).
 
 Where local aggregate persistence is actually used, C9 maps to injected repository/transaction interfaces: narrow a transition's result union and save the returned replacement, not the unchanged original. A backend-owned transaction is not spread across unrelated HTTP calls or claimed atomic by a Hook. Query/service-only features need no invented repository or UoW. Any local event publication flow stays outside domain and specifies delivery failure handling where required.
 
@@ -35,6 +35,7 @@ Where local aggregate persistence is actually used, C9 maps to injected reposito
 - With HTTP: request unknown (`apiClient.get<unknown>(...)`), then unwrap/validate once with `parseJsendData(zodSchema, raw)`. No type casts or `as T`. Return `Promise<T | {Feature}ServiceError>`, never a raw `Error` value. Implement `architecture/implementation/shapes/frontend.md` → `F2 — Operation and adapter` by mapping documented business-failure responses to returned `{Feature}ServiceError` values, not thrown/rejected business failures. Do not blanket-catch unrelated exceptions into domain errors; preserve their exception identity.
 - Without backend/HTTP: remain synchronous, returning `T | {Feature}ServiceError`, not `Promise<T>` (F2). No `async`, `await`, `fetch`, or HTTP. A typed data service may be `export const featureService = { getAll: (): OrderSummary[] | TasksServiceError => localDataArray };` with typed domain projection imports. Do not invent a failure just to fill the union.
 - C10 delivery types such as `CreateOrderRequest`/`OrderResponse` map in the service edge to/from domain parameters and records. If an adapter accesses local persistence, `OrderRow`/`OrderModel` stay there and entity mapping calls `reconstitute()` (C4, C8, C9). None is an alias for the domain entity.
+- Transport payload handling — request and response bodies, their JSON shape and their validation — stays at this edge; the operation consumes and returns domain types only (C6).
 
 ### Hook
 
@@ -56,7 +57,7 @@ Import rules apply to every layer and tests: same-directory `./sibling` imports 
 
 For same-language backend/frontend, retain the same validation library (e.g. Zod). Mocking-library, runner-consistency, and test-cast rules are owned by `architecture/testing/stacks/typescript.md` → `Test data and doubles`; read that section rather than treating this implementation guide as a second testing authority.
 
-C10's language syntax is the shared table at `architecture/implementation/stacks/typescript/nestjs.md` → `Concept-role filenames`: kebab-case concept plus dot role and `.ts` (or the explicitly shown `.js` equivalent). That table supplies filenames only, not NestJS dependencies or JavaScript framework approval. F4 domain records use `.record.ts` or the more precise `.projection.ts`, actual entities `.entity.ts`; class names remain business names. Pure predicates/calculations keep their business-function names (C7).
+C10's language syntax is the shared table at `architecture/implementation/stacks/typescript/nestjs.md` → `Concept-role filenames`: kebab-case concept plus dot role and `.ts` (or the explicitly shown `.js` equivalent). The operation class uses that table's use-case row. That table supplies filenames only, not NestJS dependencies or JavaScript framework approval. F4 domain records use `.record.ts` or the more precise `.projection.ts`, actual entities `.entity.ts`; class names remain business names. Pure predicates/calculations keep their business-function names (C7).
 
 ## Testing and runtime boundaries
 
@@ -68,11 +69,11 @@ Read `architecture/testing/architecture.md` and `architecture/testing/stacks/typ
 |---|---|---|
 | C1 Layers/dependencies | Structure and dependency mapping | Co-location does not permit operation framework imports. |
 | C2 Domain/ports | Domain and ports | Feature-specific error, shared/local records and conditional framework-free models. |
-| C3 Operation | Application operations | Ordinary function/object method, not a Hook. |
-| C4 Mapping/composition | Service and Hook | Unknown HTTP input, one parse; synchronous local-data branch. |
-| C5 Failures | Domain and ports; Service and Hook | Frontend F2 maps documented service failures to returned typed errors, never business-failure throws; unrelated exceptions retain identity. Query-state conversion is presentation-only. |
-| C6 Serialization | Component | Delivery edge, not operation. |
-| C7 Helpers | Common contract | Pure helpers are not forced into React Hooks/use cases. |
+| C3 Operation | Application operations | Undecorated class with `execute()` and a constructor-injected port, not a Hook and not a standalone function; no base class, interface, hierarchy or forwarding wrapper. |
+| C4 Mapping/composition | Domain and ports; Service and Hook | Rule ownership: a rule-bearing domain model owns the rule (C8) and the service owns none; unknown HTTP input parsed once; synchronous local-data branch. |
+| C5 Failures | Domain and ports; Application operations; Service and Hook | Frontend F2 maps documented service failures to returned typed errors, never business-failure throws; unrelated exceptions retain identity. Query-state conversion is presentation-only. |
+| C6 Serialization | Service | Transport payload handling stays at the service edge, not in the operation. |
+| C7 Helpers | Application operations; Imports and language conventions | Pure helpers keep their business-function names and are not forced into React Hooks or use cases. |
 | C8 Domain model | Domain and ports | Interfaces for records; conditional private entity factories, immutable replacements/nested values and pending facts. |
 | C9 Repositories/transactions | Domain and ports; Application operations; Service | Applicable service/query ports; conditional local aggregate persistence, no invented client-side transaction over HTTP. |
 | C10 Naming | Imports and language conventions; Service | Shared TS/JS syntax table, precise record/projection and boundary roles. |
