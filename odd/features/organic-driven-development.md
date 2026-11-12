@@ -16,7 +16,7 @@ Organic Driven Development governs every request. Read-only and small work leave
 - [ ] R8 `upstream` — the failure that existed first is recorded, or the reason an executable failure cannot apply is stated.
 - [x] R9 `upstream` — what was not verified is named.
 - [x] R10 `local` — every requirement the change affects is accounted as met, restated or retired, and requirements the change did not affect are left alone.
-- [ ] R11 `local` — evidence invalidated by a change is voided, never carried forward.
+- [x] R11 `local` — evidence invalidated by a change is voided, never carried forward: a reviewer re-invoked for a related change reuses reference material only while that material and its dependencies are unchanged, always produces a new verdict for changed inputs, and states the reused material, the re-read inputs and the content identity its verdict binds to.
 - [ ] R12 `local` — an independent reviewer's verdict is recorded per requirement before close.
 - [x] R13 `local` — the feature validation passes before close.
 - [x] R14 `upstream · narrowed` — closing the record is not delivery; push, PR and merge stay separately authorized.
@@ -25,3 +25,5 @@ Organic Driven Development governs every request. Read-only and small work leave
 - [x] R17 `local` — a closed task record becomes eligible for retirement only after seven complete calendar days from its recorded closure date, and only when it is delivered, unreferenced by a durable surface, free of any open obligation, and already carrying its decisive content in a durable home; removal is user-authorized and never automatic.
 - [x] R18 `local` — a durable feature file is named for the capability it describes, the name survives a change of implementation, and a change updates an existing contract before creating a new one.
 - [x] R19 `upstream · local detail` — the Log's entry identifiers ascend with `L1` first, and a deviation is reported rather than passing silently.
+- [x] R20 `local` — a further correction review is dispatched only after every finding from the previous round is confirmed addressed on the candidate under review; an exception identifies the remaining findings, their formal disposition and the governing authorization, and a generic reason never bypasses an unresolved finding.
+- [x] R21 `local` — every document-audit dispatch declares its audit mode and its in-scope set, and an edit-triggered audit is scoped to the changed paths unless a broader scope is required by a dependency, by applicable policy or by the explicit audit purpose, and that broader scope is named.
