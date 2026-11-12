@@ -49,7 +49,7 @@ Two contract families are peers, each with its own contract, optional shapes, an
 
 A new family takes the same shape: a peer directory holding its contract, its shapes where the family needs them, and its stacks. Never add a family as a loose file at the `architecture/` root.
 
-Four duties follow:
+Five duties follow:
 
 - **Cite, do not copy.** If a guide sentence can be deleted without losing any rule the cited owner does not already state, that sentence was a restatement and does not belong in the guide.
 - **One edit home.** Changing a rule edits its agnostic contract only. Guides citing the identifier stay correct unless their language-specific achievement stops satisfying it.
