@@ -28,6 +28,15 @@
                 { "action": "shell", "resource": "uv run --frozen --group dev pytest -q", "effect": "allow" },
                 { "action": "shell", "resource": "pnpm --dir .opencode/plugins/odd-adviser exec vitest run", "effect": "allow" },
                 { "action": "shell", "resource": "pnpm --dir mcp-servers/system-one exec vitest run", "effect": "allow" },
+                // Package-local CLI test suites, granted as exact commands only so the
+                // test architect can observe the committed suite directly instead of
+                // relying on coordinator-supplied results. The root `test:cli` and
+                // `test:cli:e2e` scripts delegate to exactly these two commands.
+                // Nothing wider is granted: no `pnpm *`, no `node *`, no unrestricted
+                // shell. Both scripts run `node --test` over committed test files and
+                // spawn no Git or GitHub command. TUI restart required.
+                { "action": "shell", "resource": "pnpm --dir cli/aicore test", "effect": "allow" },
+                { "action": "shell", "resource": "pnpm --dir cli/aicore test:e2e", "effect": "allow" },
                 // Read-only discovery so the test architect can inspect the tree
                 // with `rg`/`ls`. Use Glob/Grep for filesystem discovery. Editing,
                 // network, and interpreter access stay denied. TUI restart required.

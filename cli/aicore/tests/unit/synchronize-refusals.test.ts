@@ -53,6 +53,20 @@ describe("pre-write refusals", () => {
     assert.equal(engine.calls.length, 0);
   });
 
+  test("an unknown editor is refused by name and runs no engine command", async () => {
+    const engine = new RecordingEngine();
+    const result = await operation({ engine }).execute({
+      target: DESTINATION_PATH,
+      editor: "vim",
+      revision: undefined,
+    });
+
+    assert.ok(!result.ok);
+    assert.equal(result.ok ? "" : result.failure.code, "unsupported-editor");
+    assert.match(result.ok ? "" : result.failure.message, /unknown editor "vim"/);
+    assert.equal(engine.calls.length, 0);
+  });
+
   test("a missing revision runs no engine command", async () => {
     const engine = new RecordingEngine();
     const result = await operation({ engine, sourceRevision: null }).execute({

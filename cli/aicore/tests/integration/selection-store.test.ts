@@ -7,8 +7,7 @@
  */
 
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, test } from "node:test";
 
@@ -17,15 +16,26 @@ import {
   LocalJsonSelectionStore,
 } from "#infrastructure/selection-store.ts";
 import { makeSavedSelection } from "#support/aicore-cli.factory.ts";
+import {
+  createTemporaryRoot,
+  disposeTemporaryRoot,
+} from "#support/disposable-root.ts";
+
+/** Prefix that identifies a root this suite owns. */
+const ROOT_PREFIX = "aicore-cli-store-";
 
 let root: string;
+let rootPrefix: string;
 
 beforeEach(async () => {
-  root = await mkdtemp(join(tmpdir(), "aicore-cli-store-"));
+  const created = await createTemporaryRoot(ROOT_PREFIX);
+  root = created.root;
+  rootPrefix = created.prefix;
 });
 
 afterEach(async () => {
-  await rm(root, { recursive: true, force: true });
+  // Ownership is re-validated here, immediately before deletion.
+  await disposeTemporaryRoot(root, rootPrefix);
 });
 
 async function writeConfig(body: string): Promise<void> {

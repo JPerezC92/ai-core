@@ -1,19 +1,15 @@
 /**
  * Unit: the invocation parser.
  *
- * One behavioral concern — turning an argument vector into a typed invocation,
- * plus the two closed-value resolutions that share the parser's module.
+ * One behavioral concern — turning an argument vector into a typed invocation
+ * (contract T2: the approved parser/loader unit target).
  */
 
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 
-import {
-  parseInvocation,
-  resolveEditor,
-  resolveRevision,
-} from "#domain/rules/invocation.ts";
-import { OTHER_REVISION, REVISION } from "#support/aicore-cli.factory.ts";
+import { parseInvocation } from "#domain/rules/invocation.ts";
+import { REVISION } from "#support/aicore-cli.factory.ts";
 
 describe("parseInvocation", () => {
   test("no arguments asks for help", () => {
@@ -91,53 +87,5 @@ describe("parseInvocation", () => {
     const message = parsed.ok ? "" : parsed.failure.message;
     assert.match(message, /unknown command "deploy"/);
     assert.match(message, /check, apply, init/);
-  });
-});
-
-describe("resolveEditor", () => {
-  test("accepts the implemented editor", () => {
-    assert.deepEqual(resolveEditor("opencode"), { ok: true, value: "opencode" });
-  });
-
-  test("refuses the planned editor by name without substituting another", () => {
-    const resolved = resolveEditor("cursor");
-    assert.ok(!resolved.ok);
-    const message = resolved.ok ? "" : resolved.failure.message;
-    assert.match(message, /not implemented/);
-    assert.match(message, /Nothing was written/);
-  });
-
-  test("refuses an unknown editor", () => {
-    const resolved = resolveEditor("vim");
-    assert.ok(!resolved.ok);
-    assert.match(resolved.ok ? "" : resolved.failure.message, /unknown editor "vim"/);
-  });
-});
-
-describe("resolveRevision", () => {
-  test("uses the explicit value when supplied", () => {
-    assert.deepEqual(resolveRevision(REVISION, undefined), { ok: true, value: REVISION });
-  });
-
-  test("falls back to the operator setting", () => {
-    assert.deepEqual(resolveRevision(undefined, REVISION), { ok: true, value: REVISION });
-  });
-
-  test("the explicit value wins over the setting", () => {
-    assert.deepEqual(resolveRevision(REVISION, OTHER_REVISION), { ok: true, value: REVISION });
-  });
-
-  test("reports the missing revision without running Git", () => {
-    const resolved = resolveRevision(undefined, undefined);
-    assert.ok(!resolved.ok);
-    const message = resolved.ok ? "" : resolved.failure.message;
-    assert.match(message, /never runs Git/);
-    assert.match(message, /Herald/);
-  });
-
-  test("rejects a revision that is not 40 lowercase hex characters", () => {
-    for (const candidate of ["abc", "A".repeat(40), "g".repeat(40), `${REVISION}0`]) {
-      assert.ok(!resolveRevision(candidate, undefined).ok, candidate);
-    }
   });
 });

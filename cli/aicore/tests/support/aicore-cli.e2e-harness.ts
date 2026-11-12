@@ -8,13 +8,18 @@
  */
 
 import { execFile } from "node:child_process";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
+import { createTemporaryRoot, disposeTemporaryRoot } from "./disposable-root.ts";
+
 const run = promisify(execFile);
+
+/** Prefix that identifies a root this harness owns. */
+const FIXTURE_PREFIX = "aicore-e2e-";
 
 export const CHECKOUT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
 export const CLI_ENTRY = join(CHECKOUT, "cli", "aicore", "src", "main.ts");
@@ -31,7 +36,7 @@ export type Fixture = {
 };
 
 export async function createFixture(agentsBody?: string): Promise<Fixture> {
-  const root = await mkdtemp(join(tmpdir(), "aicore-e2e-"));
+  const { root, prefix } = await createTemporaryRoot(FIXTURE_PREFIX);
   const destination = join(root, "destination");
   await mkdir(destination, { recursive: true });
   await writeFile(
@@ -45,7 +50,8 @@ export async function createFixture(agentsBody?: string): Promise<Fixture> {
     configPath: join(root, "local.json"),
     root,
     async dispose(): Promise<void> {
-      await rm(root, { recursive: true, force: true });
+      // Ownership is re-validated here, immediately before deletion.
+      await disposeTemporaryRoot(root, prefix);
     },
   };
 }

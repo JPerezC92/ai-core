@@ -16,6 +16,7 @@ import {
   CHECKOUT_ROOT,
   DESTINATION_PATH,
   MemorySelections,
+  OTHER_REVISION,
   REVISION,
   RecordingEngine,
   StubFiles,
@@ -65,6 +66,27 @@ describe("enrollment decision", () => {
     ]);
     assert.equal(result.ok && result.value.enrolled, true);
     assert.equal(result.ok && result.value.current, true);
+  });
+
+  test("the explicitly supplied revision wins over the operator setting", async () => {
+    const engine = new RecordingEngine([0, 0]);
+
+    const result = await operation({ engine, sourceRevision: OTHER_REVISION }).execute({
+      target: DESTINATION_PATH,
+      editor: "opencode",
+      revision: REVISION,
+    });
+
+    assert.ok(result.ok);
+    // The engine is told the explicit revision, and never falls back to the setting.
+    const arguments_ = engine.calls[0]?.arguments_ ?? [];
+    const revisionPosition = arguments_.indexOf("--source-revision");
+    assert.notEqual(revisionPosition, -1, "the engine must receive --source-revision");
+    assert.equal(arguments_[revisionPosition + 1], REVISION);
+    assert.ok(
+      !arguments_.includes(OTHER_REVISION),
+      "the operator setting must not reach the engine when a revision was supplied",
+    );
   });
 
   test("the engine's verification result decides currency, not the write", async () => {
