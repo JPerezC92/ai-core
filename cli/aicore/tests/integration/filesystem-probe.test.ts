@@ -9,10 +9,9 @@
  * ever resolve to a real project directory.
  */
 
-import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, test } from "node:test";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 import { LocalFilesystemProbe } from "#infrastructure/filesystem-probe.ts";
 import {
@@ -39,34 +38,34 @@ afterEach(async () => {
 
 describe("containment rule", () => {
   test("a directory inside the given root is reported as inside", () => {
-    assert.equal(probe.isInside(root, join(root, "nested")), true);
-    assert.equal(probe.isInside(root, join(root, "nested", "deeper")), true);
+    expect(probe.isInside(root, join(root, "nested"))).toBe(true);
+    expect(probe.isInside(root, join(root, "nested", "deeper"))).toBe(true);
   });
 
   test("the root itself counts as inside", () => {
-    assert.equal(probe.isInside(root, root), true);
+    expect(probe.isInside(root, root)).toBe(true);
   });
 
   test("a sibling or parent path is not inside", () => {
-    assert.equal(probe.isInside(join(root, "checkout"), join(root, "other")), false);
-    assert.equal(probe.isInside(join(root, "checkout"), root), false);
+    expect(probe.isInside(join(root, "checkout"), join(root, "other"))).toBe(false);
+    expect(probe.isInside(join(root, "checkout"), root)).toBe(false);
   });
 
   test("a path that merely shares a name prefix is not inside", () => {
     // Guards against a naive `startsWith` without a separator.
-    assert.equal(probe.isInside(join(root, "core"), join(root, "core-two")), false);
+    expect(probe.isInside(join(root, "core"), join(root, "core-two"))).toBe(false);
   });
 
   test("a traversal segment cannot escape the root", () => {
-    assert.equal(probe.isInside(join(root, "core"), join(root, "core", "..", "outside")), false);
+    expect(probe.isInside(join(root, "core"), join(root, "core", "..", "outside"))).toBe(false);
   });
 });
 
 describe("existence probes distinguish absence from presence", () => {
   test("an absent path is neither a directory nor a file", async () => {
     const absent = join(root, "absent");
-    assert.equal(await probe.isDirectory(absent), false);
-    assert.equal(await probe.isFile(absent), false);
+    expect(await probe.isDirectory(absent)).toBe(false);
+    expect(await probe.isFile(absent)).toBe(false);
   });
 
   test("a real directory and a real file are reported correctly", async () => {
@@ -75,9 +74,9 @@ describe("existence probes distinguish absence from presence", () => {
     const file = join(root, "present.txt");
     await writeFile(file, "content", "utf8");
 
-    assert.equal(await probe.isDirectory(directory), true);
-    assert.equal(await probe.isFile(directory), false);
-    assert.equal(await probe.isFile(file), true);
-    assert.equal(await probe.isDirectory(file), false);
+    expect(await probe.isDirectory(directory)).toBe(true);
+    expect(await probe.isFile(directory)).toBe(false);
+    expect(await probe.isFile(file)).toBe(true);
+    expect(await probe.isDirectory(file)).toBe(false);
   });
 });

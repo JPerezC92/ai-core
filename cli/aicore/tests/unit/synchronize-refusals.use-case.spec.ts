@@ -5,26 +5,29 @@
  * and runs no engine command (contract T2, T3; refusal is a returned value).
  */
 
-import assert from "node:assert/strict";
-import { describe, test } from "node:test";
+import { beforeEach, describe, expect, test, vi } from "vitest";
+import type { MockProxy } from "vitest-mock-extended";
 
 import { SynchronizeDestination } from "#application/synchronize-destination.ts";
+import type { EngineRunner } from "#domain/ports/engine-runner.ts";
+import type { FilesystemProbe } from "#domain/ports/filesystem-probe.ts";
+import type { SelectionStore } from "#domain/ports/selection-store.ts";
 import {
   BINDINGS_PATH,
   CHECKOUT_ROOT,
   DESTINATION_PATH,
-  MemorySelections,
   REVISION,
-  RecordingEngine,
-  StubFiles,
+  makeEngine,
+  makeFilesystem,
   makeSavedSelection,
+  makeSelections,
   makeSettings,
 } from "#support/aicore-cli.factory.ts";
 
 function operation(options: {
-  engine: RecordingEngine;
-  files?: StubFiles;
-  selections?: MemorySelections;
+  engine: MockProxy<EngineRunner>;
+  files?: MockProxy<FilesystemProbe>;
+  selections?: MockProxy<SelectionStore>;
   /** Omitted means "use the valid default revision"; pass `null` to omit it. */
   sourceRevision?: string | null;
 }) {
@@ -34,70 +37,74 @@ function operation(options: {
     checkoutRoot: CHECKOUT_ROOT,
     settings: makeSettings({ sourceRevision }),
     engine: options.engine,
-    files: options.files ?? new StubFiles({ directories: [DESTINATION_PATH] }),
-    selections: options.selections ?? new MemorySelections(),
+    files: options.files ?? makeFilesystem({ directories: [DESTINATION_PATH] }),
+    selections: options.selections ?? makeSelections(),
   });
 }
 
 describe("pre-write refusals", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   test("an unimplemented editor runs no engine command", async () => {
-    const engine = new RecordingEngine();
+    const engine = makeEngine();
     const result = await operation({ engine }).execute({
       target: DESTINATION_PATH,
       editor: "cursor",
       revision: undefined,
     });
 
-    assert.ok(!result.ok);
-    assert.equal(result.ok ? "" : result.failure.code, "unsupported-editor");
-    assert.equal(engine.calls.length, 0);
+    expect(!result.ok).toBeTruthy();
+    expect(result.ok ? "" : result.failure.code).toBe("unsupported-editor");
+    expect(engine.run).not.toHaveBeenCalled();
   });
 
   test("an unknown editor is refused by name and runs no engine command", async () => {
-    const engine = new RecordingEngine();
+    const engine = makeEngine();
     const result = await operation({ engine }).execute({
       target: DESTINATION_PATH,
       editor: "vim",
       revision: undefined,
     });
 
-    assert.ok(!result.ok);
-    assert.equal(result.ok ? "" : result.failure.code, "unsupported-editor");
-    assert.match(result.ok ? "" : result.failure.message, /unknown editor "vim"/);
-    assert.equal(engine.calls.length, 0);
+    expect(!result.ok).toBeTruthy();
+    expect(result.ok ? "" : result.failure.code).toBe("unsupported-editor");
+    expect(result.ok ? "" : result.failure.message).toMatch(/unknown editor "vim"/);
+    expect(engine.run).not.toHaveBeenCalled();
   });
 
   test("a missing revision runs no engine command", async () => {
-    const engine = new RecordingEngine();
+    const engine = makeEngine();
     const result = await operation({ engine, sourceRevision: null }).execute({
       target: DESTINATION_PATH,
       editor: "opencode",
       revision: undefined,
     });
 
-    assert.ok(!result.ok);
-    assert.equal(result.ok ? "" : result.failure.code, "invalid-revision");
-    assert.equal(engine.calls.length, 0);
+    expect(!result.ok).toBeTruthy();
+    expect(result.ok ? "" : result.failure.code).toBe("invalid-revision");
+    expect(engine.run).not.toHaveBeenCalled();
   });
 
   test("a destination that is not a directory is refused", async () => {
-    const engine = new RecordingEngine();
-    const result = await operation({ engine, files: new StubFiles() }).execute({
+    const engine = makeEngine();
+    const result = await operation({ engine, files: makeFilesystem() }).execute({
       target: DESTINATION_PATH,
       editor: "opencode",
       revision: undefined,
     });
 
-    assert.ok(!result.ok);
-    assert.equal(result.ok ? "" : result.failure.code, "invalid-destination");
-    assert.equal(engine.calls.length, 0);
+    expect(!result.ok).toBeTruthy();
+    expect(result.ok ? "" : result.failure.code).toBe("invalid-destination");
+    expect(engine.run).not.toHaveBeenCalled();
   });
 
   test("a destination inside the checkout is refused", async () => {
-    const engine = new RecordingEngine();
+    const engine = makeEngine();
     const result = await operation({
       engine,
-      files: new StubFiles({
+      files: makeFilesystem({
         directories: [DESTINATION_PATH],
         insideCheckout: [DESTINATION_PATH],
       }),
@@ -107,48 +114,48 @@ describe("pre-write refusals", () => {
       revision: undefined,
     });
 
-    assert.ok(!result.ok);
-    assert.equal(result.ok ? "" : result.failure.code, "invalid-destination");
-    assert.equal(engine.calls.length, 0);
+    expect(!result.ok).toBeTruthy();
+    expect(result.ok ? "" : result.failure.code).toBe("invalid-destination");
+    expect(engine.run).not.toHaveBeenCalled();
   });
 
   test("a bound destination without a recorded editor is never inferred", async () => {
-    const engine = new RecordingEngine();
+    const engine = makeEngine();
     const result = await operation({
       engine,
-      files: new StubFiles({
+      files: makeFilesystem({
         directories: [DESTINATION_PATH],
         files: [BINDINGS_PATH],
       }),
     }).execute({ target: DESTINATION_PATH, editor: undefined, revision: undefined });
 
-    assert.ok(!result.ok);
-    assert.equal(result.ok ? "" : result.failure.code, "unknown-editor");
-    assert.equal(engine.calls.length, 0);
+    expect(!result.ok).toBeTruthy();
+    expect(result.ok ? "" : result.failure.code).toBe("unknown-editor");
+    expect(engine.run).not.toHaveBeenCalled();
   });
 
   test("switching destination without an editor is refused", async () => {
-    const engine = new RecordingEngine();
+    const engine = makeEngine();
     const result = await operation({
       engine,
-      selections: new MemorySelections(makeSavedSelection({ target: "G:/projects/old" })),
+      selections: makeSelections(makeSavedSelection({ target: "G:/projects/old" })),
     }).execute({ target: DESTINATION_PATH, editor: undefined, revision: undefined });
 
-    assert.ok(!result.ok);
-    assert.equal(result.ok ? "" : result.failure.code, "unknown-editor");
-    assert.equal(engine.calls.length, 0);
+    expect(!result.ok).toBeTruthy();
+    expect(result.ok ? "" : result.failure.code).toBe("unknown-editor");
+    expect(engine.run).not.toHaveBeenCalled();
   });
 
   test("no target and no saved selection is refused", async () => {
-    const engine = new RecordingEngine();
+    const engine = makeEngine();
     const result = await operation({
       engine,
-      selections: new MemorySelections(),
+      selections: makeSelections(),
     }).execute({ target: undefined, editor: "opencode", revision: undefined });
 
-    assert.ok(!result.ok);
-    assert.equal(result.ok ? "" : result.failure.code, "unavailable-configuration");
-    assert.match(result.ok ? "" : result.failure.message, /no destination selected/);
-    assert.equal(engine.calls.length, 0);
+    expect(!result.ok).toBeTruthy();
+    expect(result.ok ? "" : result.failure.code).toBe("unavailable-configuration");
+    expect(result.ok ? "" : result.failure.message).toMatch(/no destination selected/);
+    expect(engine.run).not.toHaveBeenCalled();
   });
 });

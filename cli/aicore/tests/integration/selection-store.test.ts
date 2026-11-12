@@ -6,10 +6,9 @@
  * state (C8, C9).
  */
 
-import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, test } from "node:test";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 import {
   CorruptSelectionError,
@@ -45,28 +44,28 @@ async function writeConfig(body: string): Promise<void> {
 
 describe("LocalJsonSelectionStore", () => {
   test("an absent file is an empty lookup result, not an error", async () => {
-    assert.equal(await new LocalJsonSelectionStore(root).read(), undefined);
+    expect(await new LocalJsonSelectionStore(root).read()).toBe(undefined);
   });
 
   test("a written selection reads back identically", async () => {
     const store = new LocalJsonSelectionStore(root);
     const selection = makeSavedSelection();
     await store.write(selection);
-    assert.deepEqual(await store.read(), selection);
+    expect(await store.read()).toEqual(selection);
   });
 
   test("a later write replaces the earlier selection", async () => {
     const store = new LocalJsonSelectionStore(root);
     await store.write(makeSavedSelection({ target: "G:/first" }));
     await store.write(makeSavedSelection({ target: "G:/second" }));
-    assert.equal((await store.read())?.target, "G:/second");
+    expect((await store.read())?.target).toBe("G:/second");
   });
 
   test("the persisted document carries a version and the selection only", async () => {
     const store = new LocalJsonSelectionStore(root);
     const selection = makeSavedSelection();
     await store.write(selection);
-    assert.deepEqual(JSON.parse(await readFile(join(root, ".aicore", "local.json"), "utf8")), {
+    expect(JSON.parse(await readFile(join(root, ".aicore", "local.json"), "utf8"))).toEqual({
       version: 1,
       target: selection.target,
       editor: selection.editor,
@@ -78,7 +77,7 @@ describe("LocalJsonSelectionStore", () => {
     const store = new LocalJsonSelectionStore(root, override);
     const selection = makeSavedSelection();
     await store.write(selection);
-    assert.deepEqual(JSON.parse(await readFile(override, "utf8")), {
+    expect(JSON.parse(await readFile(override, "utf8"))).toEqual({
       version: 1,
       target: selection.target,
       editor: selection.editor,
@@ -89,40 +88,35 @@ describe("LocalJsonSelectionStore", () => {
 describe("corrupt persisted state", () => {
   test("malformed JSON is reported, not coerced into absence", async () => {
     await writeConfig("{ not json");
-    await assert.rejects(
-      new LocalJsonSelectionStore(root).read(),
+    await expect(new LocalJsonSelectionStore(root).read()).rejects.toThrow(
       CorruptSelectionError,
     );
   });
 
   test("a non-object document is reported", async () => {
     await writeConfig("[]");
-    await assert.rejects(
-      new LocalJsonSelectionStore(root).read(),
+    await expect(new LocalJsonSelectionStore(root).read()).rejects.toThrow(
       CorruptSelectionError,
     );
   });
 
   test("an unknown document version is reported", async () => {
     await writeConfig(JSON.stringify({ version: 99, target: "G:/x", editor: "opencode" }));
-    await assert.rejects(
-      new LocalJsonSelectionStore(root).read(),
+    await expect(new LocalJsonSelectionStore(root).read()).rejects.toThrow(
       CorruptSelectionError,
     );
   });
 
   test("an unsupported editor is reported rather than ignored", async () => {
     await writeConfig(JSON.stringify({ version: 1, target: "G:/x", editor: "cursor" }));
-    await assert.rejects(
-      new LocalJsonSelectionStore(root).read(),
+    await expect(new LocalJsonSelectionStore(root).read()).rejects.toThrow(
       CorruptSelectionError,
     );
   });
 
   test("a missing destination is reported", async () => {
     await writeConfig(JSON.stringify({ version: 1, target: "", editor: "opencode" }));
-    await assert.rejects(
-      new LocalJsonSelectionStore(root).read(),
+    await expect(new LocalJsonSelectionStore(root).read()).rejects.toThrow(
       CorruptSelectionError,
     );
   });

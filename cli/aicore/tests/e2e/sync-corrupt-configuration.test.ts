@@ -6,10 +6,9 @@
  * silently ignored.
  */
 
-import assert from "node:assert/strict";
 import { stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { afterEach, describe, test } from "node:test";
+import { afterEach, describe, expect, test } from "vitest";
 
 import {
   createFixture,
@@ -32,10 +31,10 @@ describe("corrupt operator configuration", () => {
 
     const result = await invokeWithRevision(["sync"], created);
 
-    assert.equal(result.status, 2);
-    assert.match(result.stderr, /not valid JSON/);
+    expect(result.status).toBe(2);
+    expect(result.stderr).toMatch(/not valid JSON/);
     // A reported failure, not an unhandled crash.
-    assert.doesNotMatch(result.stderr, /at file:|Error \[|node:internal/);
-    await assert.rejects(stat(join(created.destination, ".aicore")));
+    expect(result.stderr).not.toMatch(/at file:|Error \[|node:internal/);
+    await expect(stat(join(created.destination, ".aicore"))).rejects.toThrow();
   });
 });

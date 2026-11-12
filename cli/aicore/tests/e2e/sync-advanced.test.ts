@@ -8,8 +8,7 @@
  * vocabulary fails this module instead of passing it.
  */
 
-import assert from "node:assert/strict";
-import { afterEach, describe, test } from "node:test";
+import { afterEach, describe, expect, test } from "vitest";
 
 import {
   CHECKOUT,
@@ -50,12 +49,12 @@ describe("advanced command forwarding", () => {
         created,
       );
 
-      assert.equal(result.status, 2);
+      expect(result.status).toBe(2);
       // Engine-originated text.
-      assert.match(result.stderr, /invalid bindings/i);
+      expect(result.stderr).toMatch(/invalid bindings/i);
       // Not a wrapper-side rejection.
-      assert.doesNotMatch(result.stderr, /unknown command/i);
-      assert.doesNotMatch(result.stdout, /^Usage:/m);
+      expect(result.stderr).not.toMatch(/unknown command/i);
+      expect(result.stdout).not.toMatch(/^Usage:/m);
 
       await created.dispose();
       fixture = undefined;

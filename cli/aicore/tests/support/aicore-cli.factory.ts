@@ -3,7 +3,14 @@
  *
  * Contract T15: test data comes from a factory, never from inline literals
  * scattered across modules.
+ *
+ * Contract T16: a doubled use-case port is a typed `MockProxy` built with
+ * `vitest-mock-extended`, never a hand-written mock. Every double is
+ * constructed by the test that owns it, so no mock is shared across cases and
+ * no queued one-shot implementation survives into another case.
  */
+
+import { mock, type MockProxy } from "vitest-mock-extended";
 
 import type { EngineRun, SynchronizeOutcome } from "#domain/outcomes.ts";
 import type { EngineRunner } from "#domain/ports/engine-runner.ts";
@@ -48,71 +55,54 @@ export function makeSavedSelection(overrides: Partial<SavedSelection> = {}): Sav
   return { target: DESTINATION_PATH, editor: "opencode", ...overrides };
 }
 
-/** An engine double that records calls and replays a scripted status sequence. */
-export class RecordingEngine implements EngineRunner {
-  readonly calls: { command: string; arguments_: readonly string[] }[] = [];
-  #statuses: number[];
-
-  constructor(statuses: readonly number[] = []) {
-    this.#statuses = [...statuses];
+/**
+ * An engine double that replays a scripted status sequence.
+ *
+ * The sequence is consumed in call order; once it is exhausted the engine
+ * reports success, exactly as a run with no further commands does.
+ */
+export function makeEngine(statuses: readonly number[] = []): MockProxy<EngineRunner> {
+  const engine = mock<EngineRunner>();
+  engine.run.mockResolvedValue(makeEngineRun());
+  for (const status of statuses) {
+    engine.run.mockResolvedValueOnce(makeEngineRun({ status }));
   }
-
-  async run(command: string, arguments_: readonly string[]): Promise<EngineRun> {
-    this.calls.push({ command, arguments_ });
-    return makeEngineRun({ status: this.#statuses.shift() ?? 0 });
-  }
+  return engine;
 }
 
 /** A filesystem double describing an imaginary destination. */
-export class StubFiles implements FilesystemProbe {
-  readonly directories: readonly string[];
-  readonly files: readonly string[];
-  readonly insideCheckout: readonly string[];
+export function makeFilesystem(
+  options: {
+    readonly directories?: readonly string[];
+    readonly files?: readonly string[];
+    readonly insideCheckout?: readonly string[];
+  } = {},
+): MockProxy<FilesystemProbe> {
+  const directories = options.directories ?? [];
+  const files = options.files ?? [];
+  const insideCheckout = options.insideCheckout ?? [];
 
-  constructor(
-    options: {
-      directories?: readonly string[];
-      files?: readonly string[];
-      insideCheckout?: readonly string[];
-    } = {},
-  ) {
-    this.directories = options.directories ?? [];
-    this.files = options.files ?? [];
-    this.insideCheckout = options.insideCheckout ?? [];
-  }
-
-  resolve(path: string): string {
-    return path;
-  }
-
-  async isDirectory(path: string): Promise<boolean> {
-    return this.directories.includes(path);
-  }
-
-  async isFile(path: string): Promise<boolean> {
-    return this.files.includes(path);
-  }
-
-  isInside(_root: string, path: string): boolean {
-    return this.insideCheckout.includes(path);
-  }
+  const probe = mock<FilesystemProbe>();
+  probe.resolve.mockImplementation((path) => path);
+  probe.isDirectory.mockImplementation(async (path) => directories.includes(path));
+  probe.isFile.mockImplementation(async (path) => files.includes(path));
+  probe.isInside.mockImplementation((_root, path) => insideCheckout.includes(path));
+  return probe;
 }
 
-/** A selection store double. */
-export class MemorySelections implements SelectionStore {
-  saved: SavedSelection | undefined;
-  written: SavedSelection | undefined;
+/**
+ * A selection store double.
+ *
+ * A write replaces the stored selection, so a later read observes it; the write
+ * itself is asserted on the port mock.
+ */
+export function makeSelections(saved?: SavedSelection): MockProxy<SelectionStore> {
+  let stored = saved;
 
-  constructor(saved?: SavedSelection) {
-    this.saved = saved;
-  }
-
-  async read(): Promise<SavedSelection | undefined> {
-    return this.saved;
-  }
-
-  async write(selection: SavedSelection): Promise<void> {
-    this.written = selection;
-    this.saved = selection;
-  }
+  const selections = mock<SelectionStore>();
+  selections.read.mockImplementation(async () => stored);
+  selections.write.mockImplementation(async (selection) => {
+    stored = selection;
+  });
+  return selections;
 }

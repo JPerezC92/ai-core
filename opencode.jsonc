@@ -33,8 +33,9 @@
                 // relying on coordinator-supplied results. The root `test:cli` and
                 // `test:cli:e2e` scripts delegate to exactly these two commands.
                 // Nothing wider is granted: no `pnpm *`, no `node *`, no unrestricted
-                // shell. Both scripts run `node --test` over committed test files and
-                // spawn no Git or GitHub command. TUI restart required.
+                // shell. Both scripts run the package's committed test files
+                // through Vitest and spawn no Git or GitHub command. TUI restart
+                // required.
                 { "action": "shell", "resource": "pnpm --dir cli/aicore test", "effect": "allow" },
                 { "action": "shell", "resource": "pnpm --dir cli/aicore test:e2e", "effect": "allow" },
                 // Read-only discovery so the test architect can inspect the tree

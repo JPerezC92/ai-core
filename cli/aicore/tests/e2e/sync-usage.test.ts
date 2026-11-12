@@ -4,8 +4,7 @@
  * One behavioral concern — the wrapper's own argument handling and help text.
  */
 
-import assert from "node:assert/strict";
-import { afterEach, describe, test } from "node:test";
+import { afterEach, describe, expect, test } from "vitest";
 
 import {
   createFixture,
@@ -29,8 +28,8 @@ describe("usage surface", () => {
       fixture: created,
     });
 
-    assert.equal(result.status, 2);
-    assert.match(result.stderr, /unrecognized option "--dest"/);
+    expect(result.status).toBe(2);
+    expect(result.stderr).toMatch(/unrecognized option "--dest"/);
   });
 
   test("help is available without configuration", async () => {
@@ -39,9 +38,9 @@ describe("usage surface", () => {
 
     const result = await invoke(["--help"], { fixture: created, revision: undefined });
 
-    assert.equal(result.status, 0);
-    assert.match(result.stdout, /pnpm aicore sync/);
-    assert.match(result.stdout, /never runs Git/);
-    assert.match(result.stdout, /AICORE_SOURCE_REVISION/);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toMatch(/pnpm aicore sync/);
+    expect(result.stdout).toMatch(/never runs Git/);
+    expect(result.stdout).toMatch(/AICORE_SOURCE_REVISION/);
   });
 });

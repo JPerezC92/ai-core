@@ -5,10 +5,9 @@
  * refused by name and writes nothing.
  */
 
-import assert from "node:assert/strict";
 import { stat } from "node:fs/promises";
 import { join } from "node:path";
-import { afterEach, describe, test } from "node:test";
+import { afterEach, describe, expect, test } from "vitest";
 
 import {
   createFixture,
@@ -33,9 +32,9 @@ describe("editor refusal", () => {
       created,
     );
 
-    assert.equal(result.status, 2);
-    assert.match(result.stderr, /not implemented/);
-    assert.match(result.stderr, /Nothing was written/);
-    await assert.rejects(stat(join(created.destination, ".aicore")));
+    expect(result.status).toBe(2);
+    expect(result.stderr).toMatch(/not implemented/);
+    expect(result.stderr).toMatch(/Nothing was written/);
+    await expect(stat(join(created.destination, ".aicore"))).rejects.toThrow();
   });
 });

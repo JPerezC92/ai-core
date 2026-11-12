@@ -12,9 +12,8 @@
  * tested one. Cleanup here can only ever name a directory this fixture created.
  */
 
-import assert from "node:assert/strict";
 import { join } from "node:path";
-import { afterEach, describe, test } from "node:test";
+import { afterEach, describe, expect, test } from "vitest";
 
 import {
   createFixture,
@@ -39,8 +38,8 @@ describe("destination validation", () => {
       created,
     );
 
-    assert.equal(result.status, 2);
-    assert.match(result.stderr, /not a directory/);
+    expect(result.status).toBe(2);
+    expect(result.stderr).toMatch(/not a directory/);
   });
 
   test("a file is refused as a destination", async () => {
@@ -52,7 +51,7 @@ describe("destination validation", () => {
       created,
     );
 
-    assert.equal(result.status, 2);
-    assert.match(result.stderr, /not a directory/);
+    expect(result.status).toBe(2);
+    expect(result.stderr).toMatch(/not a directory/);
   });
 });

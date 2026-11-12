@@ -17,11 +17,13 @@
   "scripts": {
     "aicore": "node src/main.ts",
     "typecheck": "tsc --noEmit",
-    "test": "node --test \"tests/unit/*.test.ts\" \"tests/integration/*.test.ts\"",
-    "test:e2e": "node --test \"tests/e2e/*.test.ts\""
+    "test": "vitest run --config vitest.config.ts",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts"
   },
   "devDependencies": {
     "@types/node": "24.19.2",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "5.1.0",
+    "vitest-mock-extended": "6.0.0"
   }
 }

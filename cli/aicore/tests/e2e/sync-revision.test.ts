@@ -5,10 +5,9 @@
  * and the tool never reaches for Git.
  */
 
-import assert from "node:assert/strict";
 import { stat } from "node:fs/promises";
 import { join } from "node:path";
-import { afterEach, describe, test } from "node:test";
+import { afterEach, describe, expect, test } from "vitest";
 
 import { createFixture, invoke, type Fixture } from "#support/aicore-cli.e2e-harness.ts";
 
@@ -29,11 +28,11 @@ describe("revision availability", () => {
       { fixture: created, revision: undefined },
     );
 
-    assert.equal(result.status, 2);
-    assert.match(result.stderr, /no source revision available/);
-    assert.match(result.stderr, /never runs Git/);
-    assert.match(result.stderr, /Herald/);
-    await assert.rejects(stat(join(created.destination, ".aicore")));
+    expect(result.status).toBe(2);
+    expect(result.stderr).toMatch(/no source revision available/);
+    expect(result.stderr).toMatch(/never runs Git/);
+    expect(result.stderr).toMatch(/Herald/);
+    await expect(stat(join(created.destination, ".aicore"))).rejects.toThrow();
   });
 
   test("a malformed revision is rejected", async () => {
@@ -45,8 +44,8 @@ describe("revision availability", () => {
       { fixture: created, revision: "not-a-revision" },
     );
 
-    assert.equal(result.status, 2);
-    assert.match(result.stderr, /40-character lowercase hex/);
-    await assert.rejects(stat(join(created.destination, ".aicore")));
+    expect(result.status).toBe(2);
+    expect(result.stderr).toMatch(/40-character lowercase hex/);
+    await expect(stat(join(created.destination, ".aicore"))).rejects.toThrow();
   });
 });
