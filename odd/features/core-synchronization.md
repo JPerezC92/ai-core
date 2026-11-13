@@ -2,7 +2,7 @@
 
 Synchronization keeps an adopting project's AICore-owned resources current from a pinned source revision: it initializes a destination that is not yet enrolled, updates one that is, preserves what the destination itself owns, and reports what still requires destination-owner reconciliation.
 
-**Status:** achieved
+**Status:** partial
 
 ## Requirements
 
@@ -18,3 +18,9 @@ Synchronization keeps an adopting project's AICore-owned resources current from 
 - [x] R10 — Synchronization never modifies its source resources and keeps operator-local configuration separate from distributed content and destination-owned synchronization records.
 - [x] R11 — Unsafe filesystem targets are rejected before any write, including symlinked, hard-linked, inode-sharing and overlapping source/destination paths.
 - [x] R12 — A refusal is distinguished from an applied change: a refused operation writes nothing, an applied operation reports what it changed and what still requires destination-owner reconciliation, and any outcome that leaves a destination not current exits non-zero rather than reporting success.
+- [x] R13 — The shared skills live under `.agents/skills/`, which every supported distribution target discovers natively, and no skill is duplicated into a target-specific directory.
+- [ ] R14 — The shared documentation is consolidated under `.aicore/core/` in the source and in the destination, while destination-owned synchronization state stays separate from it.
+- [ ] R15 — OpenCode and Cursor are both supported distribution targets: each receives the same content, editor-specific agents are delivered to each editor's own agent directory, and what an editor cannot be given is stated rather than implied.
+- [ ] R16 — The synchronization engine is TypeScript, and no Python engine or interpreter dependency remains in the synchronization path.
+- [ ] R17 — The utilities distributed to destinations are TypeScript, execute standalone without a destination-side installation, and state their runtime prerequisite.
+- [ ] R18 — A destination's reconciliation is proposed and inspectable before any destination file changes, and a file whose ownership cannot be established is preserved and reported rather than deleted.
