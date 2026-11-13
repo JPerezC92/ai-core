@@ -1,0 +1,13 @@
+{
+  "extends": "../../../cli/aicore/tsconfig.json",
+  "compilerOptions": {
+    "typeRoots": ["../../../cli/aicore/node_modules/@types"],
+    "paths": {
+      "vitest": [
+        "../../../cli/aicore/node_modules/vitest/dist/index.d.ts",
+        "../../../cli/aicore/node_modules/vitest"
+      ]
+    }
+  },
+  "include": ["scripts/**/*.ts", "tests/**/*.ts"]
+}
