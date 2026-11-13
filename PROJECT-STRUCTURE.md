@@ -25,9 +25,9 @@ ai-core/
 │       └── op-agent-creator/  op-model/  op-skill-creator/
 │
 ├── .opencode/
-│   ├── agents/                    16 specialist runtimes
-│   │   atrium  augur  bastion  crucible  forge  herald  inquisitor
-│   │   investigator  ledger  lumen  marshal  quill  scribe
+│   ├── agents/                    14 specialist runtimes
+│   │   atrium  bastion  crucible  forge  herald  inquisitor
+│   │   investigator  ledger  lumen  quill  scribe
 │   │   sentinel  vault  warden
 │   ├── skills/                    Source-local synchronization skill
 │   │   └── core-sync/             Contract; the engine lives in cli/aicore/src/
