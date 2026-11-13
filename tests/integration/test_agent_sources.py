@@ -2,23 +2,22 @@
 
 from __future__ import annotations
 
-import re
+import sys
 from pathlib import Path
 
-from core_sync_pkg.domain.constants import (
-    BEGIN,
-    END,
-    FENCE_OPEN_RE,
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from support.agent_spec_documents import (  # noqa: E402
+    AGENT_SPECS_DIR,
+    CORE_BEGIN,
+    CORE_END,
     PROJECT_BEGIN,
     PROJECT_END,
-)
-from core_sync_pkg.domain.markers import (
-    _exact_marker_line_indices,
-    find_markers,
-)
-from core_sync_pkg.domain.regions import (
+    exact_marker_line_indices,
     extract_source_core,
+    find_core_markers,
     split_frontmatter,
+    unfenced_lines,
 )
 
 
@@ -63,43 +62,17 @@ LOCAL_ONLY = {
     ),
 }
 
-_CORE_DELIMITERS = {BEGIN, END}
+_CORE_DELIMITERS = {CORE_BEGIN, CORE_END}
 
 
 def _spec_surfaces() -> list[Path]:
-    repo_root = Path(__file__).resolve().parents[6]
-    return sorted((repo_root / ".opencode/agents").glob("*.md"))
-
-
-def _unfenced_lines(text: str) -> list[str]:
-    """Return lines outside fenced examples so example headings are not required."""
-    active_fence: tuple[str, int] | None = None
-    kept: list[str] = []
-    for line in text.splitlines():
-        raw = line.rstrip("\r\n")
-        if active_fence is not None:
-            fence_char, fence_length = active_fence
-            if re.fullmatch(
-                rf" {{0,3}}{re.escape(fence_char)}{{{fence_length},}}[ \t]*",
-                raw,
-            ):
-                active_fence = None
-            continue
-        opening = FENCE_OPEN_RE.match(line)
-        if opening is not None:
-            fence = opening.group(1)
-            info = opening.group(2)
-            if fence[0] != "`" or "`" not in info:
-                active_fence = (fence[0], len(fence))
-                continue
-        kept.append(line)
-    return kept
+    return sorted(AGENT_SPECS_DIR.glob("*.md"))
 
 
 def _project_text(content: str) -> str:
     lines = content.splitlines()
-    begins = _exact_marker_line_indices(lines, PROJECT_BEGIN)
-    ends = _exact_marker_line_indices(lines, PROJECT_END)
+    begins = exact_marker_line_indices(lines, PROJECT_BEGIN)
+    ends = exact_marker_line_indices(lines, PROJECT_END)
     assert len(begins) == 1 and len(ends) == 1
     return "\n".join(lines[begins[0] + 1 : ends[0]])
 
@@ -111,18 +84,18 @@ def test_agent_sources_place_core_markers_after_frontmatter() -> None:
     for path in spec_paths:
         content = path.read_text(encoding="utf-8")
         frontmatter, body = split_frontmatter(content)
-        core_markers = find_markers(content)
+        core_markers = find_core_markers(content)
         assert frontmatter, path
         frontmatter_lines = frontmatter.splitlines()
         assert frontmatter_lines[0].strip() == "---", path
         assert frontmatter_lines[-1].strip() == "---", path
         assert core_markers is not None, path
-        assert body.startswith(f"{BEGIN}\n"), path
+        assert body.startswith(f"{CORE_BEGIN}\n"), path
         assert core_markers[0] == len(frontmatter.splitlines()), path
         core = extract_source_core(content)
         assert core.strip(), path
         assert not any(
-            line.strip() in _CORE_DELIMITERS for line in _unfenced_lines(core)
+            line.strip() in _CORE_DELIMITERS for line in unfenced_lines(core)
         ), path
 
 
@@ -132,7 +105,7 @@ def test_agent_spec_cores_keep_h3_order() -> None:
         core = extract_source_core(path.read_text(encoding="utf-8"))
         headings = [
             line.strip()[4:]
-            for line in _unfenced_lines(core)
+            for line in unfenced_lines(core)
             if line.strip() in {f"### {heading}" for heading in SPEC_H3}
         ]
         assert headings == list(SPEC_H3), path
@@ -149,9 +122,8 @@ def test_agent_spec_cores_keep_positive_anchors() -> None:
 
 
 def test_agent_sources_keep_local_facts_out_of_core() -> None:
-    repo_root = Path(__file__).resolve().parents[6]
     for name, facts in LOCAL_ONLY.items():
-        content = (repo_root / ".opencode/agents" / name).read_text(encoding="utf-8")
+        content = (AGENT_SPECS_DIR / name).read_text(encoding="utf-8")
         core = extract_source_core(content)
         project = _project_text(content)
         for fact in facts:
@@ -163,11 +135,11 @@ def test_agent_sources_keep_optional_project_region_shape() -> None:
     spec_paths = _spec_surfaces()
     for path in spec_paths:
         lines = path.read_text(encoding="utf-8").splitlines()
-        begins = _exact_marker_line_indices(lines, PROJECT_BEGIN)
-        ends = _exact_marker_line_indices(lines, PROJECT_END)
+        begins = exact_marker_line_indices(lines, PROJECT_BEGIN)
+        ends = exact_marker_line_indices(lines, PROJECT_END)
         assert len(begins) == len(ends) <= 1, path
         if begins:
             assert begins[0] > 0 and lines[begins[0] - 1].strip() == "", path
             assert lines[-1].strip() == PROJECT_END, path
         else:
-            assert lines[-1].strip() == END, path
+            assert lines[-1].strip() == CORE_END, path

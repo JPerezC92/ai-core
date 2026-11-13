@@ -1,6 +1,6 @@
 # `distribution-clearance.json` — format definition
 
-**Source of truth** for the distribution-clearance registry format. The sync tool implementation (`core_sync_pkg`), its tests, and the registry file conform to this document; a format change updates this file first.
+**Source of truth** for the distribution-clearance registry format. The sync tool implementation (`cli/aicore/src/`), its tests, and the registry file conform to this document; a format change updates this file first.
 
 ## Version policy
 
@@ -86,4 +86,4 @@ New required documents ship with their consumers at one selected revision. A des
 
 ## Validation
 
-A document is valid when `core_sync_pkg.domain.clearance.parse_clearance` accepts it: schema exactly `1`; keys unique and repo-relative; directory-root keys end with `/`; `region_files` members are root-relative, stay inside the root, and contain no `..` or absolute paths; `role` appears at most once and only on a `region` record (this registry uses `role: root` on `AGENTS.md` only). Any other version label is rejected (exit 2) — there is no version migration.
+A document is valid when `parseClearanceDocument` in `cli/aicore/src/domain/synchronization/clearance.ts` accepts it: schema exactly `1`; keys unique and repo-relative; directory-root keys end with `/`; `region_files` members are root-relative, stay inside the root, and contain no `..` or absolute paths; `role` appears at most once and only on a `region` record (this registry uses `role: root` on `AGENTS.md` only). Any other version label is rejected (exit 2) — there is no version migration.

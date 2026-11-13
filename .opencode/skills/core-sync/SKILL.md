@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.9.1
+  version: 2.9.2
 ---
 
 ## What I do
@@ -29,23 +29,25 @@ The sync operator only **runs this tool and reads its report**. The operator MUS
 
 ```bash
 # Verify every destination core region against the source revision and sync the blocker.
-uv run --frozen python3 .opencode/skills/core-sync/scripts/core_sync.py check \
+pnpm aicore check \
   --source <source-dir> --destination <destination-dir> \
   --bindings <bindings-file> --source-revision <40-hex>
 
 # Write: splice each source core region into its destinations and pin the revision.
-uv run --frozen python3 .opencode/skills/core-sync/scripts/core_sync.py apply \
+pnpm aicore apply \
   --source <source-dir> --destination <destination-dir> \
   --bindings <bindings-file> --source-revision <40-hex>
 
 # Enroll region-mode destinations, raw-copy whole-file bindings, merge
 # top-level keys, and refresh existing bindings.
-uv run --frozen python3 .opencode/skills/core-sync/scripts/core_sync.py init \
+pnpm aicore init \
   --source <source-dir> --destination <destination-dir> \
   --bindings <bindings-file> --source-revision <40-hex>
   [--bind <source>=<destination>]... [--bind-raw <source>=<destination>]...
   [--bind-cleared] [--root <destination-root-path>]
 ```
+
+The command runs from the AICore checkout root, where the workspace exposes the `aicore` CLI. Each command takes its arguments straight to the synchronization engine and keeps the engine's exit status.
 
 - `--source` — directory holding the source files named by the bindings.
 - `--destination` — directory holding the destination files named by the bindings.
@@ -56,7 +58,7 @@ uv run --frozen python3 .opencode/skills/core-sync/scripts/core_sync.py init \
 - `init --bind-cleared` — enroll every source `distribution-clearance.json` resolves to that is not already bound, using its resolved `mode`. A directory root resolves to every file under it (its `region_files` members use `region`, the rest use the root's default mode; exclusions are in *Bindings schema*); a file row resolves to itself. Ordinary sources map to the same relative path; the `role: root` source maps to the destination instruction root. Absent bindings are initialized; existing mappings are preserved.
 - `init --root PATH` — set the destination path for the root-role source when it is not already mapped and detection must be overridden.
 - Binding conflict detection is metadata-only: different existing destination bytes never block synchronization. Region `init` preserves old destination content in the `project` region and sets `pending`; raw mode overwrites the target byte-for-byte as explicitly selected.
-- These flags let the script update binding metadata and synchronized content together; do not hand-edit destination payload files or copy files manually. Without `--bind-cleared` the bindings file must already exist; with it, an absent file is initialized from an empty routing document. `apply` and `init` create any region or raw target a binding declares, stored or newly declared, creating missing parent directories; `init --bind-cleared` also seeds an absent merge target it newly binds in that run (source keys merged into an empty object), while merge otherwise requires an existing destination.
+- These flags let the tool update binding metadata and synchronized content together; do not hand-edit destination payload files or copy files manually. Without `--bind-cleared` the bindings file must already exist; with it, an absent file is initialized from an empty routing document. `apply` and `init` create any region or raw target a binding declares, stored or newly declared, creating missing parent directories; `init --bind-cleared` also seeds an absent merge target it newly binds in that run (source keys merged into an empty object), while merge otherwise requires an existing destination.
 
 For a region binding, `init` rebuilds a markerless destination as frontmatter + a `core` region holding the source core + a `project` region holding the destination's previous body, then records that region path in `pending`. CLI binding flags are merged into the existing bindings file before this enrollment. `apply` re-splices region cores, copies raw sources as bytes, and writes merged documents; *Binding modes* below owns each mode's creation and stale-`pending` clearing, and *Reconciliation blocker* owns blocker sync.
 
@@ -66,9 +68,9 @@ Argument origins: `--source .` is the source checkout; `--destination` is the de
 
 | Operator state | Command | Expected result |
 |---|---|---|
-| Unenrolled destination (no `<destination-dir>/.aicore/core.yaml`) | `uv run --frozen python3 .opencode/skills/core-sync/scripts/core_sync.py init --source . --destination <destination-dir> --bindings <destination-dir>/.aicore/core.yaml --source-revision <40-hex> --bind-cleared [--root <destination-root-path>]` | `initialized` |
-| Enrolled destination receiving an update | `uv run --frozen python3 .opencode/skills/core-sync/scripts/core_sync.py apply --source . --destination <destination-dir> --bindings <destination-dir>/.aicore/core.yaml --source-revision <40-hex>`, then `check` below | `applied`, then `current` (or a drift report) |
-| Drift check | `uv run --frozen python3 .opencode/skills/core-sync/scripts/core_sync.py check --source . --destination <destination-dir> --bindings <destination-dir>/.aicore/core.yaml --source-revision <40-hex>` | `current`, or the exit-1/exit-2 report under *Exit contract* |
+| Unenrolled destination (no `<destination-dir>/.aicore/core.yaml`) | `pnpm aicore init --source . --destination <destination-dir> --bindings <destination-dir>/.aicore/core.yaml --source-revision <40-hex> --bind-cleared [--root <destination-root-path>]` | `initialized` |
+| Enrolled destination receiving an update | `pnpm aicore apply --source . --destination <destination-dir> --bindings <destination-dir>/.aicore/core.yaml --source-revision <40-hex>`, then `check` below | `applied`, then `current` (or a drift report) |
+| Drift check | `pnpm aicore check --source . --destination <destination-dir> --bindings <destination-dir>/.aicore/core.yaml --source-revision <40-hex>` | `current`, or the exit-1/exit-2 report under *Exit contract* |
 
 ## Binding modes
 
@@ -175,7 +177,7 @@ requires the source's other applicable preconditions too, and an empty destinati
 the seeded project:
 
 ```bash
-uv run --frozen python3 .opencode/skills/core-sync/scripts/core_sync.py init \
+pnpm aicore init \
   --source . --destination ../destination \
   --bindings ../destination/.aicore/core.yaml --source-revision "$(git rev-parse HEAD)" \
   --bind-cleared --root AGENTS.md

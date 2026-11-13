@@ -65,7 +65,7 @@ export function isMissing(error: unknown): boolean {
 
 /**
  * The codes the platform raises when the filesystem itself refuses an
- * operation — the failure class the reference engine handles as an I/O result.
+ * operation — the failure class the engine handles as an I/O result.
  */
 const FILE_SYSTEM_ERROR_CODES: ReadonlySet<string> = new Set([
   "EACCES",

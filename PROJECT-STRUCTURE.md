@@ -29,8 +29,8 @@ ai-core/
 │   │   atrium  augur  bastion  crucible  forge  herald  inquisitor
 │   │   investigator  ledger  lumen  marshal  quill  scribe
 │   │   sentinel  vault  warden
-│   ├── skills/                    Source-local distribution engine
-│   │   └── core-sync/             Distribution engine (package + tests)
+│   ├── skills/                    Source-local synchronization skill
+│   │   └── core-sync/             Contract; the engine lives in cli/aicore/src/
 │   └── tooling/                   astgrep/ · semgrep/ (own locked envs)
 │
 ├── .aicore/core/knowledge/                     Shared operating rules

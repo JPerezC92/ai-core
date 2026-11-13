@@ -52,8 +52,8 @@ export class LocalWriteTargetGuard implements WriteTargetGuard {
   /**
    * Observe the targets and return the preflight refusal, if any.
    *
-   * A target the filesystem refuses to resolve is unsafe, so the reference
-   * engine reports it as malformed input (exit 2). Any other exception is a
+   * A target the filesystem refuses to resolve is unsafe, so the engine
+   * reports it as malformed input (exit 2). Any other exception is a
    * programming fault and propagates unchanged.
    */
   async refuse(request: WriteTargetRequest): Promise<SynchronizationFailure | null> {

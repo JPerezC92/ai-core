@@ -42,9 +42,8 @@ export type EngineUnderTest = {
 ```
 
 The TypeScript engine must live at `cli/aicore/src/infrastructure/core-sync-engine.ts`
-and export `createCoreSyncEngine(): EngineUnderTest`. The seam picks it up
-automatically as soon as that module exists; no case changes. `AICORE_PARITY_ENGINE=typescript`
-forces it, `AICORE_PARITY_ENGINE=python-reference` forces the reference engine.
+and export `createCoreSyncEngine(): EngineUnderTest`. The seam binds that module;
+no case changes.
 
 An engine is free to implement the commands however it likes. It must only
 accept the request, perform the command over the given roots, and report the
@@ -89,7 +88,7 @@ tests/support/core-sync-parity/
     clearance-integrity.ts   the duplicate-key clearance cases
   blocker.ts             the shipped blocker block (reference behaviour)
   fixtures.ts            the synthetic fixture builders
-  engine.ts              the engine seam and its two bindings
+  engine.ts              the engine seam and its binding
   mini-yaml.ts           a reader for the two documents' YAML subset
   document.ts            the bindings and report projections
   tree.ts                the filesystem snapshot and comparison
@@ -127,10 +126,9 @@ change the corpus by an explicit decision, never silently.
 
 ## Reading the corpus
 
-`pnpm --dir cli/aicore test` runs it. While the TypeScript engine is absent the
-seam binds the Python reference engine, which is the corpus's provenance
-oracle: it answers "what does the reference do with this fixture", never "what
-should this fixture expect".
+`pnpm --dir cli/aicore test` runs it. The seam binds the TypeScript engine, which
+is the engine the corpus judges: it answers "what does the engine do with this
+fixture", never "what should this fixture expect".
 
 Three cases need a symbolic link. Windows refuses to create one without an
 elevated privilege, so on such a machine those three are reported as skipped
