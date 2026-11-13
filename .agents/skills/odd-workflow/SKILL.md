@@ -1,6 +1,6 @@
 ---
 name: odd-workflow
-description: Create and maintain the single ODD feature document in odd/tasks/. Use when starting a feature, adding a spec or task, recording a decision, changing a requirement, or closing a feature.
+description: Create and maintain the single ODD feature document in .aicore/core/odd/tasks/. Use when starting a feature, adding a spec or task, recording a decision, changing a requirement, or closing a feature.
 license: MIT
 compatibility: opencode
 metadata:
@@ -13,12 +13,12 @@ metadata:
 
 ### What I do
 
-Create, read, update, and close the single authoritative feature document for a feature, and create or update the feature's durable file in `odd/features/` that states what the feature is and the requirements it must satisfy. Its subordinate full mirror follows `knowledge/agent-workflow.md` → `### Full feature mirror and resume`; it is not a second tracker or a context-injection mechanism. The durable file derives its status from its own ticks; it is never a second task record. This skill owns record mechanics, not a duplicate mirror protocol.
+Create, read, update, and close the single authoritative feature document for a feature, and create or update the feature's durable file in `.aicore/core/odd/features/` that states what the feature is and the requirements it must satisfy. Its subordinate full mirror follows `.aicore/core/knowledge/agent-workflow.md` → `### Full feature mirror and resume`; it is not a second tracker or a context-injection mechanism. The durable file derives its status from its own ticks; it is never a second task record. This skill owns record mechanics, not a duplicate mirror protocol.
 
 ### Create a feature document
 
-- Copy `odd/tasks/_template.md` to `odd/tasks/<YYYY-MM-DD>-<feature-name>.md`, using the document's creation date, which must equal its `Created:` header value; never reconstruct the format by research.
-- Keep that creation-date prefix unchanged afterwards. Existing undated feature documents keep their names; `odd/tasks/_template.md` stays undated. The date prefix provides chronological filename sorting without changing other folders' ordering.
+- Copy `.aicore/core/odd/tasks/_template.md` to `.aicore/core/odd/tasks/<YYYY-MM-DD>-<feature-name>.md`, using the document's creation date, which must equal its `Created:` header value; never reconstruct the format by research.
+- Keep that creation-date prefix unchanged afterwards. Existing undated feature documents keep their names; `.aicore/core/odd/tasks/_template.md` stays undated. The date prefix provides chronological filename sorting without changing other folders' ordering.
 - Fill the short header with `Status`, `Owner`, and `Created` and always show all four context fields: `Objective`, `Branch`, `Delivery`, and `Runner`. Fill each field with the actual value or `N/A — reason`; do not silently omit a field, and never invent a branch or runner. Existing closed feature documents are not retrofitted. `Delivery` carries the chosen strategy, authored-line forecast, and slice boundaries; `Runner` is the literal applicable command.
 - Fill `## Specs` using the specification procedure below.
 - Fill `## Tasks` with one line per task: stable ID, linked `S#`, route (`inline` or `delegated`) with the reason/trigger that decided it — responsible owner, status (`open`, `in progress`, `done`), and commit. Record the route and its trigger evidence, not the route label alone. Use `commit: pending` only while status is `open` or `in progress`; `done` requires a 7–64 character hexadecimal commit identifier. One authorized coherent work-unit commit may evidence several tasks; do not require one commit per task. High-risk units may use separate reviewable commits.
@@ -27,10 +27,10 @@ Create, read, update, and close the single authoritative feature document for a 
 
 ### Create or update the feature file
 
-- Every non-small feature owns one durable file at `odd/features/<feature>.md`, named for the capability it describes and never dated, created from `odd/features/_template.md`; the template is the only feature-file template and the format is never reconstructed by research. Create the file the first time the feature is worked, and read and update it on every later change.
+- Every non-small feature owns one durable file at `.aicore/core/odd/features/<feature>.md`, named for the capability it describes and never dated, created from `.aicore/core/odd/features/_template.md`; the template is the only feature-file template and the format is never reconstructed by research. Create the file the first time the feature is worked, and read and update it on every later change.
 - **Name it for the capability, not the change.** The file name states what the system provides, in the words a reader would use to find it. The name survives a change of implementation: if replacing the mechanism would leave the name wrong, the name describes the mechanism rather than the capability. A name that must change whenever the implementation changes describes a change record, not a contract.
-- **Update before creating.** Before creating a durable file, read `odd/features/` and decide whether the capability already belongs to an existing file. When it does, update that file; a new file is created only for a genuinely distinct, enduring capability with its own observable rules. One change may affect several durable files, and each affected file records the requirements that change touched.
-- The file is not a second tracker. The record in `odd/tasks/` stays the single authoritative intent, task and status record for one change; the file states what the feature is and lists the requirements it must satisfy. The file lists no change records and holds no work-in-progress state. A requirement states only what must remain true and appends no pointer to implementation or history: no file path, heading reference, line number, command, or record of when or how it was checked is added to it, and no change record, its Log, or a line in one is cited. Where a specific path, component or artifact is itself part of the required behavior, the requirement names it as the behavior it guarantees rather than as evidence that the behavior exists. The evidence that a requirement was checked belongs in the change record that affected it.
+- **Update before creating.** Before creating a durable file, read `.aicore/core/odd/features/` and decide whether the capability already belongs to an existing file. When it does, update that file; a new file is created only for a genuinely distinct, enduring capability with its own observable rules. One change may affect several durable files, and each affected file records the requirements that change touched.
+- The file is not a second tracker. The record in `.aicore/core/odd/tasks/` stays the single authoritative intent, task and status record for one change; the file states what the feature is and lists the requirements it must satisfy. The file lists no change records and holds no work-in-progress state. A requirement states only what must remain true and appends no pointer to implementation or history: no file path, heading reference, line number, command, or record of when or how it was checked is added to it, and no change record, its Log, or a line in one is cited. Where a specific path, component or artifact is itself part of the required behavior, the requirement names it as the behavior it guarantees rather than as evidence that the behavior exists. The evidence that a requirement was checked belongs in the change record that affected it.
 - The shape is fixed: a title for the feature, one paragraph saying what it is, one status line, and the requirement list, where each requirement is one `R#` line in the form `- [ ] R# — <what must be true for this feature to count as complete>`.
 - The status line follows the ticks rather than an independent claim: every requirement ticked is `achieved`, some ticked is `partial`, none ticked is `not started`. The validator computes and reports that derived status.
 - A tick asserts that the requirement currently holds. A change re-verifies only the requirements it affects: when verification confirms the requirement, the tick stands; when a regression is established, the tick is removed and the failure and its cause are recorded in the change's own record; when verification could not be completed and the change demonstrably could have affected the requirement, the tick is removed and the uncertainty and its reason are recorded in the change's own record. Only the change that delivers or re-verifies a requirement may set its tick.
@@ -81,15 +81,15 @@ Forecast authored additions plus deletions, excluding generated files, and recor
 
 ### Before the first write
 
-Apply `knowledge/agent-workflow.md` `### ODD protocol`, including its every-task uncertainty and observable-outcome controls. Do not restate that protocol here. That protocol's `#### Step reporting and transitions` owns step reporting, the state/evidence/next-action fields, and scope-bounded continuation. Execution review after creation or material replanning follows `AGENTS.md` → Conventions → Decision-only stops; check current authority and prerequisites, not an automatic document-creation approval pause.
+Apply `.aicore/core/knowledge/agent-workflow.md` `### ODD protocol`, including its every-task uncertainty and observable-outcome controls. Do not restate that protocol here. That protocol's `#### Step reporting and transitions` owns step reporting, the state/evidence/next-action fields, and scope-bounded continuation. Execution review after creation or material replanning follows `AGENTS.md` → Conventions → Decision-only stops; check current authority and prerequisites, not an automatic document-creation approval pause.
 
 ### Change a requirement
 
-Read and apply `knowledge/agent-workflow.md` `### Scope changes and readiness` before resuming affected work. In the feature record, rewrite only the affected spec and reopen only its task; do not append a new promise over a contradictory old one. Use the specification procedure above for changed requirements. Scope reassessment, stale-evidence handling and the artifact-free route remain defined by that workflow owner, not by this record procedure.
+Read and apply `.aicore/core/knowledge/agent-workflow.md` `### Scope changes and readiness` before resuming affected work. In the feature record, rewrite only the affected spec and reopen only its task; do not append a new promise over a contradictory old one. Use the specification procedure above for changed requirements. Scope reassessment, stale-evidence handling and the artifact-free route remain defined by that workflow owner, not by this record procedure.
 
 ### Implement and verify
 
-Read and apply `knowledge/agent-workflow.md` `### ODD protocol`, step 6, for dependency order, task acceptance checks, tests/documentation, conditional RED/GREEN/refactor, actual exceptions and existing owner/whole-suite gates; apply `knowledge/agents.md` `### Safe parallel task coordination (HARD RULE)` for accepted predecessors and concurrency. Carry the actual applicable runner and evidence to workers. Step reports and continuation follow the workflow's `#### Step reporting and transitions`.
+Read and apply `.aicore/core/knowledge/agent-workflow.md` `### ODD protocol`, step 6, for dependency order, task acceptance checks, tests/documentation, conditional RED/GREEN/refactor, actual exceptions and existing owner/whole-suite gates; apply `.aicore/core/knowledge/agents.md` `### Safe parallel task coordination (HARD RULE)` for accepted predecessors and concurrency. Carry the actual applicable runner and evidence to workers. Step reports and continuation follow the workflow's `#### Step reporting and transitions`.
 
 For findings exposing related impact or escaped coverage, read and apply the workflow's `#### Finding-triggered impact reassessment and escape tracing`. Record the trace through the existing Log and the durable source that carries its detail, not a separate tracker. This pointer grants no additional read or write scope.
 
@@ -113,18 +113,18 @@ When a finding-triggered trace is retained, identify the finding and available b
 
 Before completion, Cipher 🔓 (Lead Orchestrator) obtains an independent semantic review by a reviewer who did not author the delivered changes or their evidence. Compare the actual original request and corrections, Specs, delivered content, obligation accounting and evidence; account for every valid original obligation as retained, translated, or explicitly retired with authority and rationale. Check unresolved requirements, durable evidence at its proper owner (not essential evidence available only in temporary output), shared/local ownership, source neutrality, and precise execution provenance. When a PR exists, verify current PR evidence under its canonical evidence procedure. An author's summary, inherited marks, anatomy validation or a green suite cannot substitute. Require zero open findings before a clean feature completion claim; record the review identity, scope and result in the existing Log.
 
-Separately verify remediation of reported findings and obtain fresh whole-feature semantic acceptance over the current combined candidate; remediation-only verification does not establish feature acceptance. Existing reviewer independence must hold, but this does not demand different new agents where it already holds. Identify the reviewed original/candidate inputs, full obligation accounting, literal provenance, scenario walkthroughs and outcome evidence in the existing Log before acceptance. Relevant changes invalidate affected verdicts and evidence. Preserve the existing `knowledge/agents.md` review-loop cap and accumulated rounds; changing reviewer does not reset it. These checks use existing gates and the single feature record, not a duplicate tracker, harness or additional pause.
+Separately verify remediation of reported findings and obtain fresh whole-feature semantic acceptance over the current combined candidate; remediation-only verification does not establish feature acceptance. Existing reviewer independence must hold, but this does not demand different new agents where it already holds. Identify the reviewed original/candidate inputs, full obligation accounting, literal provenance, scenario walkthroughs and outcome evidence in the existing Log before acceptance. Relevant changes invalidate affected verdicts and evidence. Preserve the existing `.aicore/core/knowledge/agents.md` review-loop cap and accumulated rounds; changing reviewer does not reset it. These checks use existing gates and the single feature record, not a duplicate tracker, harness or additional pause.
 
-Read and apply `knowledge/agent-workflow.md` `### ODD protocol`, step 7, for separate observable-outcome verification, failure reproduction and honest reporting of missing evidence/pending controls before task completion. Reporting and scope-bounded continuation follow its `#### Step reporting and transitions` and `knowledge/agents.md` `### Message presentation`. On close, every task is `done` and has a commit reference. Set `Status: closed`, add `> **Closed:** date`, and record a final `L# — Close:` entry.
+Read and apply `.aicore/core/knowledge/agent-workflow.md` `### ODD protocol`, step 7, for separate observable-outcome verification, failure reproduction and honest reporting of missing evidence/pending controls before task completion. Reporting and scope-bounded continuation follow its `#### Step reporting and transitions` and `.aicore/core/knowledge/agents.md` `### Message presentation`. On close, every task is `done` and has a commit reference. Set `Status: closed`, add `> **Closed:** date`, and record a final `L# — Close:` entry.
 
 ### Retire a task record
 
-A closed task record stays in `odd/tasks/` until every condition below holds. Retirement is a user-authorized deletion: it is never automatic, never a background service, and never an agent's own initiative.
+A closed task record stays in `.aicore/core/odd/tasks/` until every condition below holds. Retirement is a user-authorized deletion: it is never automatic, never a background service, and never an agent's own initiative.
 
 1. **Closed.** The record carries `Status: closed`, a `> **Closed:**` date, a `Close:` Log entry, and every task row `done` with its commit reference.
 2. **Age.** Seven complete calendar days have passed since the recorded `> **Closed:**` date. That date field is the only source; no timestamp is recorded and none is required.
-3. **Delivered.** Closure is not delivery. Delivery is proven by the existing merge-proof rule in `knowledge/release.md` — the pull request's recorded merge commit reachable from the verified base, with the verified pull-request identity and the pinned branch tips — applied to the pull request that delivered the record. Herald 📯 (Release Manager) executes it. A squash or rebase merge is judged by that rule and never by ordinary commit ancestry; the record's own task commit is not the test.
-4. **Unreferenced.** No durable tracked surface outside `odd/tasks/` cites the record: not a durable feature file, not an architecture decision record, not the debt register, not a research or architecture document, and not an owner instruction file.
+3. **Delivered.** Closure is not delivery. Delivery is proven by the existing merge-proof rule in `.aicore/core/knowledge/release.md` — the pull request's recorded merge commit reachable from the verified base, with the verified pull-request identity and the pinned branch tips — applied to the pull request that delivered the record. Herald 📯 (Release Manager) executes it. A squash or rebase merge is judged by that rule and never by ordinary commit ancestry; the record's own task commit is not the test.
+4. **Unreferenced.** No durable tracked surface outside `.aicore/core/odd/tasks/` cites the record: not a durable feature file, not an architecture decision record, not the debt register, not a research or architecture document, and not an owner instruction file.
 5. **Durable home.** Every decisive conclusion the record holds — user approvals and authorization boundaries, accepted architectural decisions, open risks and known limitations, and unresolved obligations — already lives in a durable owner, named by the record.
 6. **No open obligation.** No unresolved pull request, review round, approval, delivery dependency or user decision depends on the record.
 7. **Authorized.** The user approved the deletion of that exact record. Herald 📯 (Release Manager) executes it; no agent deletes a record on its own initiative.
@@ -137,11 +137,11 @@ A closed task record stays in `odd/tasks/` until every condition below holds. Re
 
 Pass a reference to the feature document and its `S#`, never a paraphrase. The worker reads until `## Log` and reports which specs it covered.
 
-For the independent verification handoff, apply `knowledge/agent-workflow.md` → `### Behavioral verification and runner selection`: point the verifier to the whole feature including Log, its authorized examples and observed evidence; retain the returned per-spec verdicts and missing checks in the existing Log. This does not replace `### Close` semantic acceptance or grant execution authority.
+For the independent verification handoff, apply `.aicore/core/knowledge/agent-workflow.md` → `### Behavioral verification and runner selection`: point the verifier to the whole feature including Log, its authorized examples and observed evidence; retain the returned per-spec verdicts and missing checks in the existing Log. This does not replace `### Close` semantic acceptance or grant execution authority.
 
 ### Feature scope
 
-The feature's `Specs` and `Tasks` bound its requirements and work; they do not reserve an exclusive set of files. A feature may touch a shared rule or file when its canonical owner and authority are clear. Record relevant dependencies in the feature record and coordinate overlapping writes under `knowledge/agents.md` `### Safe parallel task coordination (HARD RULE)`; never invent a file-level isolation rule.
+The feature's `Specs` and `Tasks` bound its requirements and work; they do not reserve an exclusive set of files. A feature may touch a shared rule or file when its canonical owner and authority are clear. Record relevant dependencies in the feature record and coordinate overlapping writes under `.aicore/core/knowledge/agents.md` `### Safe parallel task coordination (HARD RULE)`; never invent a file-level isolation rule.
 
 ### Delivery boundary
 
@@ -149,16 +149,16 @@ Closing the feature document is not delivery. Explicit authorization may be supp
 
 ### Release readiness and review findings
 
-Apply `knowledge/release.md` before opening any PR and after every review round. Do not restate that workflow here. Feature `### Delivery boundary` authorization remains separately required.
+Apply `.aicore/core/knowledge/release.md` before opening any PR and after every review round. Do not restate that workflow here. Feature `### Delivery boundary` authorization remains separately required.
 
 ### Validate
 
-Run `uv run --frozen python3 .agents/skills/odd-workflow/scripts/validate_feature.py odd/tasks` before closing. The script is **mechanical anatomy only**; exit 0 proves the headings, `S#`/`T#`/`L1`, the Log's `L#` identifiers ascend with `L1` first, task status, 7–64 character hexadecimal commit references, and placeholders are correct. It does not prove verbatim fidelity, that a spec is meaningful, that a runner applies or ran, that a task is complete, or that the evidence is true — the independent semantic review above owns that, with acceptance by Cipher 🔓 (Lead Orchestrator).
+Run `uv run --frozen python3 .agents/skills/odd-workflow/scripts/validate_feature.py .aicore/core/odd/tasks` before closing. The script is **mechanical anatomy only**; exit 0 proves the headings, `S#`/`T#`/`L1`, the Log's `L#` identifiers ascend with `L1` first, task status, 7–64 character hexadecimal commit references, and placeholders are correct. It does not prove verbatim fidelity, that a spec is meaningful, that a runner applies or ran, that a task is complete, or that the evidence is true — the independent semantic review above owns that, with acceptance by Cipher 🔓 (Lead Orchestrator).
 
 ### References
 
-- `odd/tasks/_template.md` — the only feature-document template.
-- `odd/features/_template.md` — the only durable-feature-file template.
+- `.aicore/core/odd/tasks/_template.md` — the only feature-document template.
+- `.aicore/core/odd/features/_template.md` — the only durable-feature-file template.
 - `.agents/skills/odd-workflow/references/_checklist.md` — creation and close checks; read it in full before creating or closing a feature.
 - `.agents/skills/odd-workflow/scripts/validate_feature.py` — mechanical validator.
 - `.agents/skills/odd-workflow/scripts/validate_feature_file.py` — mechanical validator for the durable feature file; it reports the derived status.

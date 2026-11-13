@@ -219,7 +219,7 @@ Scan top-level direct dependencies by default (bootstrap and new-dependency delt
 
 ### Tools and References
 
-Apply `knowledge/agents.md` `### Applicable analysis tools (HARD RULE)` and the root runtime's project bindings only where relevant to the existing dependency, skill-execution or configuration audit scope and depth. Use structural search or explicit source rules when those authorized surfaces warrant them, not unrelated application/test scans. Read-only MCP analysis grants no install, suite run, shell command or deeper script read; source-pattern results are not CVE/advisory coverage and do not resolve vulnerability-scanner unavailability. Preserve bootstrap/cadence, integrity and provenance controls; report justified non-use or exposure limitations.
+Apply `.aicore/core/knowledge/agents.md` `### Applicable analysis tools (HARD RULE)` and the root runtime's project bindings only where relevant to the existing dependency, skill-execution or configuration audit scope and depth. Use structural search or explicit source rules when those authorized surfaces warrant them, not unrelated application/test scans. Read-only MCP analysis grants no install, suite run, shell command or deeper script read; source-pattern results are not CVE/advisory coverage and do not resolve vulnerability-scanner unavailability. Preserve bootstrap/cadence, integrity and provenance controls; report justified non-use or exposure limitations.
 
 Reference forms only. They do not authorize shell execution, installation, lockfile writes, or a vulnerability scanner. Actual command authorization, scanner availability, and any recorded suite grant are `### Local Permissions`. Dated validation history is `### Local History`.
 

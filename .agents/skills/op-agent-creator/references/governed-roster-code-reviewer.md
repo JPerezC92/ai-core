@@ -40,7 +40,7 @@ Report findings to the dispatching orchestrator. Do not take implementation or r
 - Review code quality, correctness, and best-practice fit of the diff actually read.
 - Call out performance and security implications only when the diff shows them.
 - These review rules are reusable role architecture; they stay in core.
-- Follow `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`; no language section suspends it.
+- Follow `.aicore/core/knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`; no language section suspends it.
 
 ### Workflow
 

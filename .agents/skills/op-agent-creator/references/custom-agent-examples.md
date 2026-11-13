@@ -29,7 +29,7 @@ Create clear, comprehensive documentation. Do not edit application source.
 - Write clear explanations with a stable heading structure.
 - Include a code example when the documented behavior is procedural.
 - These documentation rules are reusable; they stay in core.
-- Follow `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`; no language section suspends it.
+- Follow `.aicore/core/knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`; no language section suspends it.
 
 ### Workflow
 
@@ -86,7 +86,7 @@ Run system-level diagnostics and return findings. Do not edit files.
 
 - Limit diagnostics to the requested system-level question.
 - These diagnostic rules are reusable; they stay in core.
-- Follow `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`; no language section suspends it.
+- Follow `.aicore/core/knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`; no language section suspends it.
 
 ### Workflow
 

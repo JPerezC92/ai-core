@@ -47,9 +47,9 @@ describe("enrollment and update", () => {
 
     // Native discovery locations and shipped documentation are present.
     expect((await stat(join(destination, ".opencode", "agents"))).isDirectory()).toBeTruthy();
-    expect((await stat(join(destination, "knowledge", "agents.md"))).isFile()).toBeTruthy();
-    expect((await stat(join(destination, "architecture", "README.md"))).isFile()).toBeTruthy();
-    expect((await stat(join(destination, "odd", "tasks", "_template.md"))).isFile()).toBeTruthy();
+    expect((await stat(join(destination, ".aicore", "core", "knowledge", "agents.md"))).isFile()).toBeTruthy();
+    expect((await stat(join(destination, ".aicore", "core", "architecture", "README.md"))).isFile()).toBeTruthy();
+    expect((await stat(join(destination, ".aicore", "core", "odd", "tasks", "_template.md"))).isFile()).toBeTruthy();
 
     // The engine's own skill is never distributed to a destination.
     await expect(stat(join(destination, ".opencode", "skills", "core-sync"))).rejects.toThrow();

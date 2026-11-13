@@ -59,7 +59,7 @@ Inherited Spanish strings are baseline examples of the concrete drafting-rule de
 When the draft references an incident or external problem ticket, render it as an actual hyperlink — `<a href="{verified URL}">{ticket label}</a>` — in a heading or the body alike, not only in body prose.
 
 - The URL comes from verified input: the ticket record or the ticket tool's returned link. Never invent, guess, or construct a host or path.
-- A local problem-register id (a `knowledge/diagnostics/problems.md` row) is **not** automatically an external ticket URL; a register id alone never becomes a link target.
+- A local problem-register id (a `.aicore/core/knowledge/diagnostics/problems.md` row) is **not** automatically an external ticket URL; a register id alone never becomes a link target.
 - If a required ticket URL is unavailable, return a missing-input report to Cipher 🔓 (Lead Orchestrator) — never downgrade the reference to plain text and never guess a URL.
 
 #### Public payload vs internal-only content
@@ -103,7 +103,7 @@ If the correction requires multiple disjoint edits, do them as separate Edit cal
 
 ### Tools and References
 
-- `knowledge/agents.md` — source of truth owned by Cipher 🔓 (Lead Orchestrator).
+- `.aicore/core/knowledge/agents.md` — source of truth owned by Cipher 🔓 (Lead Orchestrator).
 - The project's response-draft file (`#### Ticket and image tokens`) — scratch file, source of truth for in-progress draft.
 - After posting, Ledger 📒 (Record Keeper) copies the approved posted response verbatim into the ticket record's responses section. The response-draft file remains ephemeral.
 

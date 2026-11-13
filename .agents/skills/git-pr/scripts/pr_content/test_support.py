@@ -129,7 +129,7 @@ def create_findings_body(status: FindingStatus = "FIXED") -> str:
     elif status in ("OPEN", "IN PROGRESS"):
         resolution = "Implementer — correct parser and request verification"
     elif status == "DEFERRED":
-        resolution = "knowledge/debt.md#fixture — user authorized deferral on 2026-10-31"
+        resolution = ".aicore/core/knowledge/debt.md#fixture — user authorized deferral on 2026-10-31"
     findings = (
         "| ID | Severity | Status | Evidence | Owner / resolution |\n"
         "|---|---|---|---|---|\n"
@@ -138,7 +138,7 @@ def create_findings_body(status: FindingStatus = "FIXED") -> str:
     body = create_body().replace("No findings.", findings)
     if status == "DEFERRED":
         body = body.replace(
-            "[PASS] —", "## Open debt\n- F1 — knowledge/debt.md#fixture, authorized by user on 2026-10-31\n\n[PASS] —",
+            "[PASS] —", "## Open debt\n- F1 — .aicore/core/knowledge/debt.md#fixture, authorized by user on 2026-10-31\n\n[PASS] —",
         )
     return body
 
@@ -206,7 +206,7 @@ def create_review_decisions(kind: Literal["none", "na", "advisory", "debt"] = "n
     if kind in ("advisory", "debt"):
         value["acceptance"] = [create_decision("F1")]
     if kind == "debt":
-        value["debt"] = [create_decision("F1", destination="knowledge/debt.md#fixture")]
+        value["debt"] = [create_decision("F1", destination=".aicore/core/knowledge/debt.md#fixture")]
     return value
 
 
@@ -245,7 +245,7 @@ def create_pipe_item_body(*, mismatched: bool = False) -> str:
 def create_followup_decisions(*, advisory: bool = False) -> ReviewDecisions:
     """Authorize a separate follow-up without manufacturing a deferred finding."""
     decisions = create_review_decisions("advisory" if advisory else "none")
-    decisions["debt"] = [create_decision("Follow-up: improve diagnostics", destination="knowledge/debt.md#diagnostics")]
+    decisions["debt"] = [create_decision("Follow-up: improve diagnostics", destination=".aicore/core/knowledge/debt.md#diagnostics")]
     return decisions
 
 
@@ -254,7 +254,7 @@ def create_followup_body(*, advisory: bool = False) -> str:
     body = create_outcome_body("advisory") if advisory else create_body()
     marker = "[ADVISORY] —" if advisory else "[PASS] —"
     debt = ("## Open debt\n"
-            "- Follow-up: improve diagnostics — knowledge/debt.md#diagnostics, authorized by user on 2026-10-31\n\n")
+            "- Follow-up: improve diagnostics — .aicore/core/knowledge/debt.md#diagnostics, authorized by user on 2026-10-31\n\n")
     return body.replace(marker, debt + marker)
 
 
@@ -266,7 +266,7 @@ def create_invalid_followup_decisions(defect: FollowupDefect) -> ReviewDecisions
     elif defect == "target":
         decisions["debt"][0]["target"] = "Follow-up: different work"
     elif defect == "destination":
-        decisions["debt"][0]["destination"] = "knowledge/debt.md#different"
+        decisions["debt"][0]["destination"] = ".aicore/core/knowledge/debt.md#different"
     else:
         decisions["debt"][0]["evidence"] = ""
     return decisions

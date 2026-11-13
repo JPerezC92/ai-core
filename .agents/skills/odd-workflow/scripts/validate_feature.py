@@ -5,7 +5,7 @@ The entry wires filesystem access and prints the operation's typed outcomes.
 The pure validate_feature helper remains importable for existing consumers.
 
 Usage:
-    uv run --frozen python3 .agents/skills/odd-workflow/scripts/validate_feature.py odd/tasks
+    uv run --frozen python3 .agents/skills/odd-workflow/scripts/validate_feature.py .aicore/core/odd/tasks
 """
 
 import sys

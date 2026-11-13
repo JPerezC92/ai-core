@@ -33,7 +33,7 @@ From the user's request, extract:
 
 #### Coordination preflight (every assignment and handoff)
 
-Apply `knowledge/agents.md` `### Safe parallel task coordination (HARD RULE)`. Cipher 🔓 (Lead Orchestrator) owns dispatch, acceptance, capacity and authoritative incident-budget accounting. Record the workflow/ticket, task/instance, responsible role, accepted predecessor results and input identities, exact permitted writes and other resource access, allocated output destination, required gates, continuation/join owner and capacity/accounting owner in existing state/step Markdown or the dispatch. Add neither YAML fields nor analysis files. Owning a working file grants no shell command: Cipher 🔓 (Lead Orchestrator) runs analysis-directory validation, and Ledger 📒 (Record Keeper) retains ticket-record validation after record edits.
+Apply `.aicore/core/knowledge/agents.md` `### Safe parallel task coordination (HARD RULE)`. Cipher 🔓 (Lead Orchestrator) owns dispatch, acceptance, capacity and authoritative incident-budget accounting. Record the workflow/ticket, task/instance, responsible role, accepted predecessor results and input identities, exact permitted writes and other resource access, allocated output destination, required gates, continuation/join owner and capacity/accounting owner in existing state/step Markdown or the dispatch. Add neither YAML fields nor analysis files. Owning a working file grants no shell command: Cipher 🔓 (Lead Orchestrator) runs analysis-directory validation, and Ledger 📒 (Record Keeper) retains ticket-record validation after record edits.
 
 - Keep one current authorized step instance as sole writer of `state.md`, its step artifact and recorded counters until a coordinator-controlled handoff. Supporting evidence instances return bounded, attributed results to allocated destinations; they never write state/counters, issue identification verdicts, frame competing hypotheses or execute incident queries. Independent ready evidence work may run concurrently only against stable accepted inputs and compatible resources within declared capacity.
 - Before dispatch, reject overlapping whole-file/directory/alias access unless isolation is verified. Allocate inbound `downloads/` and response screenshot destinations as distinct paths, plus report and session-validation destinations, without overwrites; canonical fixed paths stay exclusively owned and serialized. Symptom/problem registers, durable records, response drafts, browser/auth sessions (including refresh), adapters and external capacity are separately declared resources, not implied grants. Unknown capacity or isolation blocks the affected operation.
@@ -227,7 +227,7 @@ Incident-workflow templates and references:
 - Response-draft template: `references/response-draft-template.md`
 - Consistency checklist: `references/_consistency-checklist.md`
 
-For synthesis only, explicitly read the external dependency `knowledge/escalation.md`: it owns the escalation contract and sole five-column matrix template; this project's routing rows and field/value/ID, team and tool mappings belong in its project content. Follow that owner when filling `references/analysis/03-synthesize.md`; do not copy its matrix into this skill or use escalation to issue an identification verdict. A route recommendation is not execution authorization. If the owner, applicable row, target, required mapping or evidence is missing or ambiguous, report the gap and block the affected execution rather than guess; required approval may remain pending while recommending an evidenced route.
+For synthesis only, explicitly read the external dependency `.aicore/core/knowledge/escalation.md`: it owns the escalation contract and sole five-column matrix template; this project's routing rows and field/value/ID, team and tool mappings belong in its project content. Follow that owner when filling `references/analysis/03-synthesize.md`; do not copy its matrix into this skill or use escalation to issue an identification verdict. A route recommendation is not execution authorization. If the owner, applicable row, target, required mapping or evidence is missing or ambiguous, report the gap and block the affected execution rather than guess; required approval may remain pending while recommending an evidenced route.
 
 ### Working-set and record schema
 
@@ -250,8 +250,8 @@ This project's incident-workflow validator script is `<python> .agents/skills/in
 
 ### Register paths
 
-- Symptom register: `knowledge/diagnostics/symptoms.md` (rows `S-xx`).
-- Problem register: `knowledge/diagnostics/problems.md` (rows `P-NNN`; `Team: incident`; `case:` / `pack:` pointers).
+- Symptom register: `.aicore/core/knowledge/diagnostics/symptoms.md` (rows `S-xx`).
+- Problem register: `.aicore/core/knowledge/diagnostics/problems.md` (rows `P-NNN`; `Team: incident`; `case:` / `pack:` pointers).
 
 ### Screenshot naming convention
 

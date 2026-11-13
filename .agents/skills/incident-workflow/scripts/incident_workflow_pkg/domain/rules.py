@@ -82,7 +82,7 @@ ALLOWED_IDENTIFICATION_VERDICTS: frozenset[str] = frozenset(
     member.value for member in IdentificationVerdict
 )
 
-# Problem-register schema (knowledge/diagnostics/problems.md).
+# Problem-register schema (.aicore/core/knowledge/diagnostics/problems.md).
 REGISTER_COLUMNS: tuple[str, ...] = (
     "id",
     "date",
@@ -623,7 +623,7 @@ def _format_register_error(error: DomainError, problem_id: str) -> str:
 
 
 def parse_problem_register(content: str) -> list[Problem]:
-    """Parse the data rows of a ``knowledge/diagnostics/problems.md`` register.
+    """Parse the data rows of a ``.aicore/core/knowledge/diagnostics/problems.md`` register.
 
     Returns one ``Problem`` per well-formed valid ``P-NNN`` row.  An empty
     register (or a register with only header/separator/no-entry rows) returns

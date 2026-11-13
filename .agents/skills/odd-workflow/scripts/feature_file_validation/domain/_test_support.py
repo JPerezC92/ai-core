@@ -82,7 +82,7 @@ def make_completion_section(
 
 
 def make_guidance_section(
-    entry: str = "- Copy this template to `odd/features/<feature-name>.md`.",
+    entry: str = "- Copy this template to `.aicore/core/odd/features/<feature-name>.md`.",
 ) -> str:
     """Build the template-only guidance section a real feature file must not carry."""
     return f"## Guidance\n\n{entry}"

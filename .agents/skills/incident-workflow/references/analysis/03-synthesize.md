@@ -2,7 +2,7 @@
 
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Pre:** `02-investigate.md` exists; ≥1 hypothesis has `Confirmed: yes` or all are `inconclusive`; `Phase` is `investigate`; the coordinator has accepted investigation's current outputs/gates and counter snapshot, observed prior resource-use cessation, and explicitly assigned this synthesis instance.
-> **Reads:** `01-identify.md`; `02-investigate.md`; `knowledge/escalation.md` (contract and this project's routing matrix/mappings)
+> **Reads:** `01-identify.md`; `02-investigate.md`; `.aicore/core/knowledge/escalation.md` (contract and this project's routing matrix/mappings)
 > **Writes:** `03-synthesize.md` (filled); updates `state.md` (`Phase`, `Updated`)
 
 ## Coordination assignment and accepted join
@@ -15,7 +15,7 @@ Hold outputs and dependencies stable through review; relevant changes invalidate
 
 1. Read the `02-investigate.md` verbatim results. Identify the confirmed hypothesis (or the most-supported inconclusive if no confirmation).
 2. State the root cause in ≤3 bullet lines, each labeled `Fact` (direct evidence) or `Hypothesis` (partial evidence + refutation criteria cited).
-3. Read `knowledge/escalation.md` before selecting the derivation path. Use system + root-cause type or an evidenced generic condition (such as missing information) to select a project routing matrix row; cite its row locator and current evidence/gaps. Reference any already-identified problem without issuing or changing diagnostics' verdict; a generic route requires no invented `P-NNN`. Verify required ticket fields and their local values/IDs, target/team and tool mapping against current ticket-system evidence, or justify N/A where not required. Record proposed action, tool, authorized owner and approval status separately from actual execution. Required approval can remain pending while recommending an evidenced route, but the affected action must not execute before its evidence, mappings and approval are verified under the canonical contract.
+3. Read `.aicore/core/knowledge/escalation.md` before selecting the derivation path. Use system + root-cause type or an evidenced generic condition (such as missing information) to select a project routing matrix row; cite its row locator and current evidence/gaps. Reference any already-identified problem without issuing or changing diagnostics' verdict; a generic route requires no invented `P-NNN`. Verify required ticket fields and their local values/IDs, target/team and tool mapping against current ticket-system evidence, or justify N/A where not required. Record proposed action, tool, authorized owner and approval status separately from actual execution. Required approval can remain pending while recommending an evidenced route, but the affected action must not execute before its evidence, mappings and approval are verified under the canonical contract.
 4. Identify the response surface: what the visible note must convey — symptom confirmed, root cause (labeled), recommended action, derivation target. ≤15 lines total including the derivation call.
 5. Write `03-synthesize.md`: root-cause block (Fact/Hypothesis labeled), derivation decision, response surface.
 6. Run completed-step validation and obtain coordinator acceptance of current relevant results/gates; only then update `state.md`: `Phase: synthesize`, `Updated: <now>`, and run full validation. Preserve the accepted incident counter snapshot.
@@ -54,7 +54,7 @@ Hold outputs and dependencies stable through review; relevant changes invalidate
 
 - ⬜ Root-cause bullets present and labeled Fact or Hypothesis
 - ⬜ Derivation target named (not "TBD")
-- ⬜ Selected row/source and current evidence/gaps recorded under `knowledge/escalation.md`; diagnostic verdict unchanged and generic conditions require no invented problem ID
+- ⬜ Selected row/source and current evidence/gaps recorded under `.aicore/core/knowledge/escalation.md`; diagnostic verdict unchanged and generic conditions require no invented problem ID
 - ⬜ Required fields/values/IDs, target/team and tool mappings verified or justified N/A; proposed action/authorized owner/approval distinct from actual execution evidence; unmet requirements block the affected execution
 - ⬜ Response surface ≤15 lines
 - ⬜ Symptom evidence alone is not represented as root-cause proof or fix authorization; root-cause claims meet the evidence bar and fixes require user approval

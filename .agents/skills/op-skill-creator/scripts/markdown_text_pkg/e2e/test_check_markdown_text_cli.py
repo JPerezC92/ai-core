@@ -10,7 +10,7 @@ from pathlib import Path
 
 ENTRY = Path(__file__).resolve().parents[2] / "check_markdown_text.py"
 REPO_ROOT = Path(__file__).resolve().parents[6]
-CANONICAL_POLICY = REPO_ROOT / "knowledge" / "unicode-policy.json"
+CANONICAL_POLICY = REPO_ROOT / ".aicore" / "core" / "knowledge" / "unicode-policy.json"
 CANONICAL_SETTINGS = REPO_ROOT / ".vscode" / "settings.json"
 
 EN_DASH = "\u2013"

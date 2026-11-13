@@ -28,7 +28,7 @@ def test_unfilled_placeholder_outside_code_is_rejected() -> None:
 
 
 def test_placeholder_inside_code_is_ignored() -> None:
-    document = make_feature(spec_entries=("- S1 — Use `odd/tasks/<feature-name>.md`.",))
+    document = make_feature(spec_entries=("- S1 — Use `.aicore/core/odd/tasks/<feature-name>.md`.",))
     assert validate_feature(document) == []
 
 

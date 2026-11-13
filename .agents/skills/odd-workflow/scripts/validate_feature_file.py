@@ -8,7 +8,7 @@ assess_feature_file returns those findings together with the status derived
 from the ticks — the same status this CLI prints.
 
 Usage:
-    uv run --frozen python3 .agents/skills/odd-workflow/scripts/validate_feature_file.py odd/features
+    uv run --frozen python3 .agents/skills/odd-workflow/scripts/validate_feature_file.py .aicore/core/odd/features
 """
 
 import sys

@@ -12,7 +12,7 @@ metadata:
 
 ### Knowledge hooks
 
-This project's pre-flight knowledge hooks are the files `knowledge/agents.md`, `knowledge/agent-workflow.md`, `knowledge/skill-migration-reference.md`, `knowledge/skills.md`, and `.opencode/agents/vault.md` (Quality Checklist section). `knowledge/agents.md` and `knowledge/agent-workflow.md` are shared infrastructure; skip the workflow entry only when it is not present yet. `knowledge/skill-migration-reference.md` and `knowledge/skills.md` are destination-specific hooks and may be absent; the skill degrades gracefully when they are.
+This project's pre-flight knowledge hooks are the files `.aicore/core/knowledge/agents.md`, `.aicore/core/knowledge/agent-workflow.md`, `knowledge/skill-migration-reference.md`, `knowledge/skills.md`, and `.opencode/agents/vault.md` (Quality Checklist section). `.aicore/core/knowledge/agents.md` and `.aicore/core/knowledge/agent-workflow.md` are shared infrastructure; skip the workflow entry only when it is not present yet. `knowledge/skill-migration-reference.md` and `knowledge/skills.md` are destination-specific hooks and may be absent; the skill degrades gracefully when they are.
 
 ### Claude Code migration
 
@@ -122,7 +122,7 @@ Create a new OpenCode-native agent under `.opencode/agents/{name}.md`. The agent
      - **A.** Auto-update the description with a recommended addition
      - **B.** Let the user edit manually
       - **C.** Abort agent creation
-6. **Step 6 — Pre-validation (agent-contract subset).** Generated specs must cite `knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)` and must not tell a language section to suspend it. Before writing, run these checks against the fully built agent definition. The agent runtime-spec contract (Marshal 🎖️ (HR Director)'s Runtime Spec Format; Sentinel 🛡️ (Quality Guardian) rule SP-3) is authoritative; reference it for full text:
+6. **Step 6 — Pre-validation (agent-contract subset).** Generated specs must cite `.aicore/core/knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)` and must not tell a language section to suspend it. Before writing, run these checks against the fully built agent definition. The agent runtime-spec contract (Marshal 🎖️ (HR Director)'s Runtime Spec Format; Sentinel 🛡️ (Quality Guardian) rule SP-3) is authoritative; reference it for full text:
 
    ```
    - [ ] File is `.opencode/agents/<name>.md` — a single markdown file, not a folder — QC-1 (adapted)

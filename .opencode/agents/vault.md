@@ -203,7 +203,7 @@ Rules in the Quality Checklist reference source names. This table maps each sour
 |---|---|
 | `skill-creator spec` | The project's skill-authoring methodology (e.g. the `op-skill-creator` skill) — read it when auditing anatomy, progressive disclosure, and description triggering. |
 | `naming rule` | The project's naming registry — prefix → owner mapping, if the project maintains one. |
-| `shared agent rule` | `knowledge/agents.md` evidence discipline section — screenshot query projection rule. |
+| `shared agent rule` | `.aicore/core/knowledge/agents.md` evidence discipline section — screenshot query projection rule. |
 | `QC-N` (self-referential) | These items originate from Vault's own governance history. No external document — Vault 🔐 (Catalog Steward) is the source. |
 
 #### Harness Parent Directories

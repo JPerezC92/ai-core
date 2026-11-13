@@ -38,7 +38,7 @@ def populated_register() -> str:
 def test_load_register_rows_reads_relocated_register(
     tmp_path: Path, populated_register: str
 ) -> None:
-    register_path = tmp_path / "knowledge" / "diagnostics" / "problems.md"
+    register_path = tmp_path / ".aicore" / "core" / "knowledge" / "diagnostics" / "problems.md"
     register_path.parent.mkdir(parents=True)
     register_path.write_text(populated_register, encoding="utf-8")
 
@@ -52,7 +52,7 @@ def test_load_register_rows_reads_relocated_register(
 
 
 def test_load_register_rows_empty_relocated_register(tmp_path: Path) -> None:
-    register_path = tmp_path / "knowledge" / "diagnostics" / "problems.md"
+    register_path = tmp_path / ".aicore" / "core" / "knowledge" / "diagnostics" / "problems.md"
     register_path.parent.mkdir(parents=True)
     register_path.write_text(_register(), encoding="utf-8")
 

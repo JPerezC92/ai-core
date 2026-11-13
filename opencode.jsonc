@@ -198,10 +198,10 @@
         }
     },
     "instructions": [
-        "knowledge/agent-workflow.md",
-        "knowledge/agents.md",
-        "knowledge/release.md",
-        "knowledge/architecture-decision-workflow.md"
+        ".aicore/core/knowledge/agent-workflow.md",
+        ".aicore/core/knowledge/agents.md",
+        ".aicore/core/knowledge/release.md",
+        ".aicore/core/knowledge/architecture-decision-workflow.md"
     ],
     "permissions": [
         { "action": "read", "resource": "*", "effect": "allow" },

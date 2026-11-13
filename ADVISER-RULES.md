@@ -3,7 +3,7 @@
 The rules the System 1 adviser must satisfy to be worth reading. Every rule is checkable; a
 rule that cannot be checked is a preference, not a rule. Governs the adviser only.
 
-- **Feature record:** `odd/tasks/2026-11-08-odd-adviser.md`
+- **Feature record:** `.aicore/core/odd/tasks/2026-11-08-odd-adviser.md`
 - **Profile:** `mcp-servers/system-one/profiles/odd-evidence-v4.json` — the profile the server loads today. v1–v3 are retained as history and are not loaded; a reader who opens v1 will see the `unknown` states R9 and R10 forbid, which is why v1 is not the reference here.
 - **Adapter:** `.opencode/plugins/odd-adviser/src/index.ts`
 - **Owner:** Cipher 🔓 (Lead Orchestrator)

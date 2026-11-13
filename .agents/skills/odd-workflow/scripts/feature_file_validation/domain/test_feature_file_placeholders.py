@@ -31,7 +31,7 @@ def test_unfilled_placeholder_is_reported() -> None:
 def test_placeholder_inside_a_code_span_is_ignored() -> None:
     document = make_feature_file(
         extra_sections=(
-            make_bullet_line("The file lives at `odd/features/<feature-name>.md`."),
+            make_bullet_line("The file lives at `.aicore/core/odd/features/<feature-name>.md`."),
         )
     )
 

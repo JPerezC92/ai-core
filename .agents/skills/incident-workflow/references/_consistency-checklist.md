@@ -32,9 +32,9 @@ Run every command from the project root. The validator enforces only the mechani
 - Keep reviewed inputs/outputs stable; relevant changes invalidate affected assignments/verdicts. Incomplete, failed, stale or still-mutating results never unblock transitions. Required checkpoints return `AWAITING_REVIEW`; the parent accepts the existing owner gate and redispatches continuation. Missing boundaries return `BLOCKED` without expanded scope or a worker question call. *(analysis)*
 - Completed-step validation plus current semantic gates and coordinator acceptance precede header advance. Preserve sequential H1→H2→H3 and stored pack precedence; non-production examples are guidance, not execution evidence. *(analysis)*
 
-## Register-first identification (`knowledge/diagnostics/problems.md` → verdict)
+## Register-first identification (`.aicore/core/knowledge/diagnostics/problems.md` → verdict)
 
-- A class matches only when every `Required signals` entry in `knowledge/diagnostics/symptoms.md` is present and no `Exclusions` entry is present. *(analysis)*
+- A class matches only when every `Required signals` entry in `.aicore/core/knowledge/diagnostics/symptoms.md` is present and no `Exclusions` entry is present. *(analysis)*
 - Only `S-xx` → `Team: incident` `P-NNN` can produce `exact` or `structural`. Resolved-ticket archives, patterns registers, KBA/RCA catalogs, and knowledge search MUST NOT issue a verdict. *(analysis)*
 - **An empty register is valid and yields `no_match`; never halt on an empty register.** *(delegated when `identification_verdict`/cited IDs are parsed)*
 - `exact`: exactly one cited `P-NNN`, `Lifecycle: active`, `Allow_exact: yes`, and every discriminator already evidenced in the current ticket. *(cited-ID/lifecycle delegated; discriminator evidence is analysis)*
@@ -52,7 +52,7 @@ Run every command from the project root. The validator enforces only the mechani
 
 ## Synthesis routing semantics
 
-- For synthesis, read `knowledge/escalation.md`, the canonical escalation contract and sole matrix-template owner; verify the decision against this project's routing row and ticket-system mappings, not a second matrix maintained here. Record selected row locator/input identity and current ticket evidence/gaps. *(analysis)*
+- For synthesis, read `.aicore/core/knowledge/escalation.md`, the canonical escalation contract and sole matrix-template owner; verify the decision against this project's routing row and ticket-system mappings, not a second matrix maintained here. Record selected row locator/input identity and current ticket evidence/gaps. *(analysis)*
 - Escalation references diagnostics' existing identification result without issuing, upgrading or echoing a verdict. Generic conditions can route without a problem ID; no invented `P-NNN` is required. *(analysis)*
 - Check required ticket fields and local values/IDs, target/team and tool mappings against current evidence, or record justified N/A where the contract requires none. Missing/ambiguous owner, row, target, evidence or required mapping is reported and blocks affected execution, never guessed or silently filled. *(analysis)*
 - Distinguish proposed action/tool/authorized owner/required approval from actual execution status supported by the authorized executor's tool result. Pending approval may accompany an evidenced recommendation, never the affected action; routing and field selection do not authorize execution. Apply the canonical owner's read-first verification and approval requirements before action. *(analysis)*

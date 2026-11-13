@@ -8,34 +8,34 @@
     "opencode.jsonc": {
       "mode": "merge"
     },
-    "knowledge/agents.md": {
+    ".aicore/core/knowledge/agents.md": {
       "mode": "region"
     },
-    "knowledge/agent-workflow.md": {
+    ".aicore/core/knowledge/agent-workflow.md": {
       "mode": "raw"
     },
-    "knowledge/release.md": {
+    ".aicore/core/knowledge/release.md": {
       "mode": "raw"
     },
-    "knowledge/escalation.md": {
+    ".aicore/core/knowledge/escalation.md": {
       "mode": "region"
     },
-    "knowledge/debt.md": {
+    ".aicore/core/knowledge/debt.md": {
       "mode": "region"
     },
-    "knowledge/diagnostics/": {
+    ".aicore/core/knowledge/diagnostics/": {
       "mode": "region"
     },
-    "knowledge/architecture-decision-workflow.md": {
+    ".aicore/core/knowledge/architecture-decision-workflow.md": {
       "mode": "region"
     },
-    "odd/tasks/_template.md": {
+    ".aicore/core/odd/tasks/_template.md": {
       "mode": "raw"
     },
-    "odd/features/_template.md": {
+    ".aicore/core/odd/features/_template.md": {
       "mode": "raw"
     },
-    "architecture/": {
+    ".aicore/core/architecture/": {
       "mode": "raw"
     },
     ".agents/skills/git-branch-name/": {

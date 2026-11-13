@@ -26,7 +26,7 @@ from markdown_text_pkg.infrastructure.filesystem import (  # noqa: E402
 )
 
 CANONICAL_POLICY = (
-    Path(__file__).resolve().parents[6] / "knowledge" / "unicode-policy.json"
+    Path(__file__).resolve().parents[6] / ".aicore" / "core" / "knowledge" / "unicode-policy.json"
 )
 CANONICAL_SETTINGS = (
     Path(__file__).resolve().parents[6] / ".vscode" / "settings.json"
