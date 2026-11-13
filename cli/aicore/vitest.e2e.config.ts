@@ -1,10 +1,10 @@
 /**
  * Vitest configuration for the end-to-end suite.
  *
- * The end-to-end suite spawns the CLI, which runs the Python synchronization
- * engine over the whole cleared set. A single run takes tens of seconds, so
- * the per-test and the per-hook budgets are set explicitly instead of relying
- * on the runner's default of a few seconds.
+ * The end-to-end suite spawns the CLI, which runs the TypeScript synchronization
+ * engine in process over the whole cleared set. A single run takes tens of
+ * seconds, so the per-test and the per-hook budgets are set explicitly instead
+ * of relying on the runner's default of a few seconds.
  *
  * Concurrency is kept at or below the previous runner's baseline, never above
  * it, for the same reason as in the unit and integration configuration: the

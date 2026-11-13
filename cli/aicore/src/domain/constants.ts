@@ -14,10 +14,6 @@ export const PLANNED_EDITORS = ["cursor"] as const;
 
 export type SupportedEditor = (typeof SUPPORTED_EDITORS)[number];
 
-/** The synchronization tool's own directory, never distributed. */
-export const ENGINE_RELATIVE_PATH =
-  ".opencode/skills/core-sync/scripts/core_sync.py";
-
 /** Canonical bindings file, relative to the destination project root. */
 export const BINDINGS_RELATIVE_PATH = ".aicore/core.yaml";
 
@@ -37,6 +33,3 @@ export const REVISION_PATTERN = /^[0-9a-f]{40}$/;
 export const ADVANCED_COMMANDS = ["check", "apply", "init"] as const;
 
 export type AdvancedCommand = (typeof ADVANCED_COMMANDS)[number];
-
-/** Python interpreter invocation used for the engine, matching project policy. */
-export const UV_ARGUMENTS = ["run", "--frozen", "python3"] as const;

@@ -27,7 +27,8 @@ import {
   renderSync,
 } from "#delivery/reporting.ts";
 import { ConsoleStreamWriter } from "#delivery/stream-writer.ts";
-import { EngineUnavailableError, UvEngineRunner } from "#infrastructure/engine-runner.ts";
+import { createCoreSyncEngine } from "#infrastructure/core-sync-engine.ts";
+import { CoreSyncEngineRunner, EngineUnavailableError } from "#infrastructure/engine-runner.ts";
 import { LocalFilesystemProbe } from "#infrastructure/filesystem-probe.ts";
 import {
   CorruptSelectionError,
@@ -98,10 +99,11 @@ export async function main(
 
   const root = checkoutRoot();
   const settings = operatorSettings(environment);
+  const engine = new CoreSyncEngineRunner(createCoreSyncEngine());
 
   try {
     if (invocation.kind === "advanced") {
-      const outcome = await new RunAdvancedCommand(new UvEngineRunner(root)).execute({
+      const outcome = await new RunAdvancedCommand(engine).execute({
         command: invocation.command,
         passthrough: invocation.passthrough,
       });
@@ -115,7 +117,7 @@ export async function main(
     const result = await new SynchronizeDestination({
       checkoutRoot: root,
       settings,
-      engine: new UvEngineRunner(root),
+      engine,
       files: new LocalFilesystemProbe(),
       selections: new LocalJsonSelectionStore(root, settings.localConfigPath),
     }).execute({

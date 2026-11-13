@@ -1,9 +1,9 @@
 /**
  * End to end: enrollment and the subsequent update.
  *
- * Runs the real CLI against the real Python engine. A full synchronization takes
- * tens of seconds because the engine walks the whole cleared set, so this module
- * holds the single test that performs two writes.
+ * Runs the real CLI against the real TypeScript engine, in process. A full
+ * synchronization takes tens of seconds because the engine walks the whole
+ * cleared set, so this module holds the single test that performs two writes.
  */
 
 import { readFile, stat } from "node:fs/promises";
@@ -42,7 +42,11 @@ describe("enrollment and update", () => {
 
     const bindings = await readFile(join(destination, ".aicore", "core.yaml"), "utf8");
     expect(bindings).toMatch(/^schema: 1$/m);
-    expect(bindings).toMatch(new RegExp(`^core_revision: ${REVISION}$`, "m"));
+    // The bindings record the pinned revision; the contract fixes that value,
+    // not the YAML dialect, so the revision may be written quoted or plain.
+    expect(bindings).toMatch(
+      new RegExp(`^core_revision: (?:"${REVISION}"|'${REVISION}'|${REVISION})$`, "m"),
+    );
     expect(bindings).toMatch(/^pending:$/m);
 
     // Native discovery locations and shipped documentation are present.

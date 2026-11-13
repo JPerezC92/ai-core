@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "Operator CLI for the AICore checkout. Orchestrates the synchronization engine; the engine itself is not yet part of this package.",
+  "description": "Operator CLI for the AICore checkout. Orchestrates the synchronization engine, which runs in process and is part of this package.",
   "engines": {
     "node": ">=24"
   },
