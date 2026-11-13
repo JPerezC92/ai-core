@@ -181,11 +181,11 @@ Inherited ticket-template, token, path, close-out phrase, and validator referenc
 - Ticket record fields: frontmatter (`created`, `date_resolved`, `analyses[N].started`, `analyses[N].ended`, `issue_type`, `status`, `related_ticket`, `escalated_to`, `derivation`), body sections (`## Responses`, `## Root Cause`, `## Solution`, `## Conclusion`, `## Summary`, `## Impact`, `## Recommendations`, `## Workaround`, `## Images`), identification fields (`symptom_ids`, `known_problem_ids`, `identification_verdict`), response blocks (`### Response N — YYYY-MM-DD · note <id>`, `#### ImagenN`), image citation subfields (`image_id`, `path:` as `screenshots/response-N/<filename>`, `url:`), and the ephemeral `response-draft.md`.
 - Durable record and directories: `ticket_<id>.md`, `screenshots/`, and `validations/` (dated `validations/YYYY-MM-DD/` per session). Leftover files in `downloads/` are not durable.
 - Analysis working set: `analysis/state.md`, `01-identify.md`, `02-investigate.md`, `03-synthesize.md`; ephemeral files deleted at collapse: `analysis/state.md`, every `analysis/*.md`, `response-draft.md`, and unused files in `downloads/`.
-- Knowledge registers: `knowledge/diagnostics/problems.md` (rows `P-NNN`; `case:` / `pack:` pointers; `Team: incident`) and `knowledge/diagnostics/symptoms.md` (`S-xx`).
+- Knowledge registers: `.aicore/core/knowledge/diagnostics/problems.md` (rows `P-NNN`; `case:` / `pack:` pointers; `Team: incident`) and `.aicore/core/knowledge/diagnostics/symptoms.md` (`S-xx`).
 - Close-out authorization phrase: `Close out now`.
 - Ticket validator reference commands:
-  - `uv run --frozen python3 .opencode/skills/incident-workflow/scripts/validate_incident_workflow.py <ticket-folder> --pre-close` (read-only)
-  - `uv run --frozen python3 .opencode/skills/incident-workflow/scripts/validate_incident_workflow.py <ticket-folder> --close-out`
+  - `uv run --frozen python3 .agents/skills/incident-workflow/scripts/validate_incident_workflow.py <ticket-folder> --pre-close` (read-only)
+  - `uv run --frozen python3 .agents/skills/incident-workflow/scripts/validate_incident_workflow.py <ticket-folder> --close-out`
 
 ### Output Format
 

@@ -1,6 +1,6 @@
 # Architecture extraction accounting
 
-Source-local historical evidence extracted from `architecture/README.md`, original lines 39–126, for `odd/tasks/project-structure-and-research.md` S5/S10. The original below is retained intact; its line references, versions, approval wording and candidate descriptions refer to that earlier extraction, not this navigation change. This record is neither a shared dependency nor proof of current code conformance, destination reconciliation or new execution approval. Current selection remains at [architecture/README.md](../../../architecture/README.md).
+Source-local historical evidence extracted from `architecture/README.md`, original lines 39–126, for `odd/tasks/project-structure-and-research.md` S5/S10. The original below is retained intact; its line references, versions, approval wording and candidate descriptions refer to that earlier extraction, not this navigation change. This record is neither a shared dependency nor proof of current code conformance, destination reconciliation or new execution approval. Current selection remains at [architecture/README.md](../../../.aicore/core/architecture/README.md).
 
 Provenance: baseline `5087ecf406b65849d18324b45dd342fd5b71f427`; the coordinator's original snapshot manifest records `architecture/README.md` SHA-256 `dc4df3c3ce283387b021544a50f852a2af1f201924f1331b6cf491e07485c5dc` (snapshot captured 2026-10-27). Original runtime versions and testing identities are specified in the preserved accounting itself. No new conformance review is implied by this extraction.
 

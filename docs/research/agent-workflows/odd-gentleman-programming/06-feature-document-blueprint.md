@@ -2,7 +2,7 @@
 
 > Additive source review dated 2026-10-27. This chapter uses S30–S38 in [sources.md](sources.md). The earlier workflow chapter remains a historical account of v4.2.0 usage prose (S4); this chapter does not retroactively update it or establish full v4.3.1 runtime behavior.
 
-> Forward-reference — 2026-10-28: [chapter 07](07-upstream-local-alignment.md) adds the pinned October 28 upstream/local comparison, historical format transition, unresolved source discrepancies and nonbinding alignment proposal. This chapter's October 27 findings remain unchanged; review/input scope is recorded in [the governing feature](../../../../odd/tasks/gentle-ai-odd-blueprint-research.md), L9/L10 and T6.
+> Forward-reference — 2026-10-28: [chapter 07](07-upstream-local-alignment.md) adds the pinned October 28 upstream/local comparison, historical format transition, unresolved source discrepancies and nonbinding alignment proposal. This chapter's October 27 findings remain unchanged; review/input scope is recorded in [the governing feature](../../../../.aicore/core/odd/tasks/gentle-ai-odd-blueprint-research.md), L9/L10 and T6.
 
 ## Scope and evidence boundaries
 
@@ -52,4 +52,4 @@ The transcript's discussion of “400 lines” at 29:21–30:47 is a demonstrati
 
 ## Local AICore boundary
 
-This chapter describes external evidence; it does not recommend adopting it or change AICore policy. AICore's governing feature template and workflow remain [`odd/tasks/_template.md`](../../../../odd/tasks/_template.md) and [`knowledge/agent-workflow.md`](../../../../knowledge/agent-workflow.md): no Engram mirror and no execution transcript in the feature `## Log`. The external transcript is a research source here, not local feature-log content or a new runtime requirement.
+This chapter describes external evidence; it does not recommend adopting it or change AICore policy. AICore's governing feature template and workflow remain [`odd/tasks/_template.md`](../../../../.aicore/core/odd/tasks/_template.md) and [`knowledge/agent-workflow.md`](../../../../.aicore/core/knowledge/agent-workflow.md): no Engram mirror and no execution transcript in the feature `## Log`. The external transcript is a research source here, not local feature-log content or a new runtime requirement.

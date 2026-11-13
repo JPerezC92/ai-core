@@ -1,0 +1,29 @@
+{
+  "name": "aicore-cli",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Operator CLI for the AICore checkout. Orchestrates the synchronization engine, which runs in process and is part of this package.",
+  "engines": {
+    "node": ">=24"
+  },
+  "imports": {
+    "#domain/*": "./src/domain/*",
+    "#application/*": "./src/application/*",
+    "#delivery/*": "./src/delivery/*",
+    "#infrastructure/*": "./src/infrastructure/*",
+    "#support/*": "./tests/support/*"
+  },
+  "scripts": {
+    "aicore": "node src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --config vitest.config.ts",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "6.0.3",
+    "vitest": "5.1.0",
+    "vitest-mock-extended": "6.0.0"
+  }
+}
