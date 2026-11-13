@@ -16,7 +16,7 @@ Synchronization keeps an adopting project's AICore-owned resources current from 
 - [x] R8 — Distribution clearance is enforced: only resources cleared for distribution are delivered to a destination.
 - [x] R9 — Synchronization preserves destination-owned content and ownership regions, and reports every conflict that requires destination-owner reconciliation.
 - [x] R10 — Synchronization never modifies its source resources and keeps operator-local configuration separate from distributed content and destination-owned synchronization records.
-- [x] R11 — Unsafe filesystem targets are rejected before any write, including symlinked, hard-linked, inode-sharing and overlapping source/destination paths.
+- [ ] R11 — Unsafe filesystem targets are rejected before any write, including symlinked, hard-linked, inode-sharing and overlapping source/destination paths.
 - [x] R12 — A refusal is distinguished from an applied change: a refused operation writes nothing, an applied operation reports what it changed and what still requires destination-owner reconciliation, and any outcome that leaves a destination not current exits non-zero rather than reporting success.
 - [x] R13 — The shared skills live under `.agents/skills/`, which every supported distribution target discovers natively, and no skill is duplicated into a target-specific directory.
 - [x] R14 — The shared documentation is consolidated under `.aicore/core/` in the source and in the destination, while destination-owned synchronization state stays separate from it.
@@ -24,3 +24,4 @@ Synchronization keeps an adopting project's AICore-owned resources current from 
 - [ ] R16 — The synchronization engine is TypeScript, and no Python engine or interpreter dependency remains in the synchronization path.
 - [ ] R17 — The utilities distributed to destinations are TypeScript, execute standalone without a destination-side installation, and state their runtime prerequisite.
 - [ ] R18 — A destination's reconciliation is proposed and inspectable before any destination file changes, and a file whose ownership cannot be established is preserved and reported rather than deleted.
+- [ ] R19 — Synchronization distributes ordinary files and directories: it never creates, preserves, follows or manages a symbolic link as a synchronization artifact, and it refuses a managed write path that contains one before the destination is modified.
