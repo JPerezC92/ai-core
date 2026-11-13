@@ -24,6 +24,11 @@ export type ParsedInvocation =
       readonly help: boolean;
     }
   | {
+      readonly kind: "reconcile";
+      readonly target: string;
+      readonly help: boolean;
+    }
+  | {
       readonly kind: "advanced";
       readonly command: AdvancedCommand;
       readonly passthrough: readonly string[];
@@ -34,6 +39,9 @@ export type ParsedInvocation =
 const SYNC_FLAGS = ["--target", "--editor", "--source-revision"] as const;
 
 type SyncFlag = (typeof SYNC_FLAGS)[number];
+
+/** The options `reconcile` accepts. */
+const RECONCILE_FLAGS = ["--target"] as const;
 
 function isAdvancedCommand(value: string): value is AdvancedCommand {
   return (ADVANCED_COMMANDS as readonly string[]).includes(value);
@@ -61,10 +69,14 @@ export function parseInvocation(argv: readonly string[]): Result<ParsedInvocatio
     });
   }
 
+  if (command === "reconcile") {
+    return parseReconcile(rest);
+  }
+
   if (command !== "sync") {
     return fail(
       "unavailable-configuration",
-      `unknown command "${command}". Use "sync", or one of: ${ADVANCED_COMMANDS.join(", ")}.`,
+      `unknown command "${command}". Use "sync" or "reconcile", or one of: ${ADVANCED_COMMANDS.join(", ")}.`,
     );
   }
 
@@ -111,6 +123,56 @@ export function parseInvocation(argv: readonly string[]): Result<ParsedInvocatio
       : { revision: collected["--source-revision"] }),
     help,
   });
+}
+
+/**
+ * Parse `reconcile`'s arguments.
+ *
+ * The destination is required rather than remembered: a proposal is an
+ * inspection the operator asks about a named project, so it never falls back to
+ * a previously selected destination and never touches the operator's saved
+ * selection.
+ */
+function parseReconcile(rest: readonly string[]): Result<ParsedInvocation> {
+  let target: string | undefined;
+  let help = false;
+
+  for (let index = 0; index < rest.length; index += 1) {
+    const argument = rest[index];
+    if (argument === undefined) {
+      continue;
+    }
+    if (argument === "--help" || argument === "-h") {
+      help = true;
+      continue;
+    }
+    if (!(RECONCILE_FLAGS as readonly string[]).includes(argument)) {
+      return fail(
+        "unavailable-configuration",
+        `unrecognized option "${argument}" for "reconcile". Supported options: ${RECONCILE_FLAGS.join(", ")}.`,
+      );
+    }
+    const value = rest[index + 1];
+    if (value === undefined || value.startsWith("--")) {
+      return fail("unavailable-configuration", `option "${argument}" requires a value.`);
+    }
+    if (target !== undefined) {
+      return fail("unavailable-configuration", `option "${argument}" was supplied more than once.`);
+    }
+    target = value;
+    index += 1;
+  }
+
+  if (target === undefined) {
+    if (help) {
+      return succeed({ kind: "help" });
+    }
+    return fail(
+      "unavailable-configuration",
+      '"reconcile" requires --target <path>: the destination project whose reconciliation is proposed.',
+    );
+  }
+  return succeed({ kind: "reconcile", target, help });
 }
 
 /**

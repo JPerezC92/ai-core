@@ -11,7 +11,8 @@ export type FailureCode =
   | "unsupported-editor"
   | "unknown-editor"
   | "invalid-destination"
-  | "invalid-revision";
+  | "invalid-revision"
+  | "invalid-bindings";
 
 export type Failure = {
   readonly code: FailureCode;

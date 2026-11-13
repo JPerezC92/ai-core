@@ -10,12 +10,10 @@
 
 import type { BindingMode } from "#domain/synchronization/constants.ts";
 import { type ClearanceEntry, expandClearance } from "#domain/synchronization/clearance.ts";
+import type { PathInspection } from "#domain/ports/path-inspection.ts";
 import type { EditorProfile } from "#domain/synchronization/editor-profile.ts";
 import { type SynchronizationFailure, invalid } from "#domain/synchronization/failures.ts";
-import type {
-  ClearanceStore,
-  FilesystemLayout,
-} from "#domain/synchronization/ports.ts";
+import type { ClearanceStore } from "#domain/synchronization/ports.ts";
 
 /** The clearance state one command works from. */
 export type ClearanceModes = {
@@ -28,10 +26,16 @@ export type ClearanceModes = {
   readonly reason: string | null;
 };
 
-/** Load the registry, enumerate its directory roots, and expand its modes. */
+/**
+ * Load the registry, enumerate its directory roots, and expand its modes.
+ *
+ * The layout parameter is the read-only path inspection, so this step can be
+ * shared with a command that must not hold a write capability; the engine's
+ * wider layout satisfies it.
+ */
 export async function readClearanceModes(
   clearance: ClearanceStore,
-  layout: FilesystemLayout,
+  layout: PathInspection,
   sourceRoot: string,
   editor: EditorProfile,
 ): Promise<ClearanceModes> {

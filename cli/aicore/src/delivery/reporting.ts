@@ -8,6 +8,11 @@
 
 import type { Failure } from "#domain/failures.ts";
 import type { EngineRun, SynchronizeOutcome } from "#domain/outcomes.ts";
+import type {
+  ProposalEntry,
+  ReconciliationProposal,
+} from "#domain/synchronization/reconciliation-proposal.ts";
+import { PROPOSAL_CLASSES } from "#domain/synchronization/reconciliation-proposal.ts";
 
 /** Process exit statuses, matching the engine's published contract. */
 export const EXIT_OK = 0;
@@ -20,6 +25,7 @@ const EXIT_BY_FAILURE = {
   "unknown-editor": EXIT_INVALID,
   "invalid-destination": EXIT_INVALID,
   "invalid-revision": EXIT_INVALID,
+  "invalid-bindings": EXIT_INVALID,
 } as const;
 
 export function exitStatusForFailure(failure: Failure): number {
@@ -86,4 +92,61 @@ export function renderAdvanced(run: EngineRun): {
     stderr: rendered.stderr,
     status: run.status,
   };
+}
+
+/** Width of the action column, so a proposal reads as a table. */
+const ACTION_COLUMN = 10;
+
+/** Width of the class column, so a proposal reads as a table. */
+const CLASS_COLUMN = 17;
+
+/**
+ * Render a reconciliation proposal, and its exit status.
+ *
+ * The proposal is standard output: it is the result the operator asked for, not
+ * a diagnostic. The exit status carries the part a caller must not have to read
+ * prose to learn — `0` when nothing needs the destination owner, `1` when
+ * something does — so a proposal that preserves or deletes a path is never
+ * mistaken for a destination that is current.
+ */
+export function renderReconciliation(proposal: ReconciliationProposal): {
+  stdout: string[];
+  stderr: string[];
+  status: number;
+} {
+  const stdout: string[] = [
+    `reconcile: proposal for ${proposal.destination} (read-only: nothing was written)`,
+  ];
+
+  for (const entry of proposal.entries) {
+    stdout.push(
+      `reconcile: ${entry.action.padEnd(ACTION_COLUMN)} ${entry.classification.padEnd(
+        CLASS_COLUMN,
+      )} ${entry.path} — ${entry.detail}`,
+    );
+  }
+  if (proposal.entries.length === 0) {
+    stdout.push("reconcile: no path is bound and no managed directory holds an unbound file.");
+  }
+
+  stdout.push(`reconcile: ${classCounts(proposal.entries)}.`);
+  stdout.push(
+    proposal.requiresAction
+      ? "reconcile: the destination owner must decide or act on the entries above; this tool changed nothing."
+      : "reconcile: nothing requires the destination owner's action.",
+  );
+
+  return {
+    stdout,
+    stderr: [],
+    status: proposal.requiresAction ? EXIT_DRIFT : EXIT_OK,
+  };
+}
+
+/** One class's count, in the contract's own class order. */
+function classCounts(entries: readonly ProposalEntry[]): string {
+  return PROPOSAL_CLASSES.map(
+    (classification) =>
+      `${classification} ${entries.filter((entry) => entry.classification === classification).length}`,
+  ).join(", ");
 }

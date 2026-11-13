@@ -37,6 +37,18 @@ function splitWindowsPrefix(path: string): string | null {
 }
 
 /**
+ * Return the directory that contains one safe relative POSIX path.
+ *
+ * `""` means the path sits at the root itself, so a caller can tell a managed
+ * directory apart from the root and never claim the whole destination. No
+ * resolution happens: a persisted path is data an operator wrote down.
+ */
+export function parentDirectory(path: string): string {
+  const separator = path.lastIndexOf("/");
+  return separator === -1 ? "" : path.slice(0, separator);
+}
+
+/**
  * Return whether `path` is a POSIX- or Windows-absolute path.
  *
  * Used by the clearance registry's `region_files` members, which must be

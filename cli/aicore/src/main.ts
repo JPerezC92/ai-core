@@ -18,18 +18,21 @@ import {
 import { parseInvocation } from "#domain/rules/invocation.ts";
 import type { OperatorSettings } from "#domain/settings.ts";
 import { RunAdvancedCommand } from "#application/run-advanced-command.ts";
+import { ReconcileDestination } from "#application/reconcile-destination.ts";
 import { SynchronizeDestination } from "#application/synchronize-destination.ts";
 import {
   EXIT_INVALID,
   EXIT_OK,
   exitStatusForFailure,
   renderAdvanced,
+  renderReconciliation,
   renderSync,
 } from "#delivery/reporting.ts";
 import { ConsoleStreamWriter } from "#delivery/stream-writer.ts";
 import { createCoreSyncEngine } from "#infrastructure/core-sync-engine.ts";
 import { CoreSyncEngineRunner, EngineUnavailableError } from "#infrastructure/engine-runner.ts";
 import { LocalFilesystemProbe } from "#infrastructure/filesystem-probe.ts";
+import { createReconciliationReader } from "#infrastructure/reconciliation-reader.ts";
 import {
   CorruptSelectionError,
   LocalJsonSelectionStore,
@@ -45,6 +48,7 @@ export const USAGE = `aicore — synchronization CLI
 
 Usage:
   pnpm aicore sync [--target <path>] [--editor <editor>] [--source-revision <40-hex>]
+  pnpm aicore reconcile --target <path>
   pnpm aicore check --source <dir> --destination <dir> --bindings <file> --source-revision <40-hex>
   pnpm aicore apply --source <dir> --destination <dir> --bindings <file> --source-revision <40-hex>
   pnpm aicore init  --source <dir> --destination <dir> --bindings <file> --source-revision <40-hex>
@@ -66,6 +70,14 @@ destination-owned migration, not something a synchronization performs.
 Advanced commands (${ADVANCED_COMMANDS.join(", ")}) pass their arguments straight
 to the existing synchronization engine and keep its exit status unchanged.
 
+reconcile is not a synchronization. It reads --target's bindings, the source
+clearance registry and the source tree, and prints a proposal: every bound path
+and every file a bound directory holds, classified as managed, superseded,
+locally modified or destination-owned, with what a reconciliation would do about
+it. It writes nothing under the destination — no bindings, no report, no blocker
+— and a path whose ownership cannot be established is reported as preserved
+rather than proposed for deletion.
+
 The tool never runs Git. The source revision must be supplied by the operator or
 by the release owner, so Herald 📯 (Release Manager) remains the only Git executor.
 
@@ -73,8 +85,9 @@ Environment:
   ${REVISION_ENV_VAR}       source revision to pin when --source-revision is absent
   ${LOCAL_CONFIG_OVERRIDE_ENV_VAR}   override the operator-local selection file path
 
-Exit status: 0 current or applied, 1 drift reported by the engine, 2 invalid input
-or unavailable configuration.`;
+Exit status: 0 current, applied, or a proposal with nothing for the destination
+owner to do; 1 drift reported by the engine, or a proposal the destination owner
+must act on; 2 invalid input or unavailable configuration.`;
 
 function operatorSettings(
   environment: Readonly<Record<string, string | undefined>>,
@@ -108,6 +121,24 @@ export async function main(
   const engine = new CoreSyncEngineRunner(createCoreSyncEngine());
 
   try {
+    if (invocation.kind === "reconcile") {
+      const proposal = await new ReconcileDestination({
+        checkoutRoot: root,
+        files: new LocalFilesystemProbe(),
+        ...createReconciliationReader(),
+      }).execute({ target: invocation.target });
+
+      if (!proposal.ok) {
+        writer.writeStderr([proposal.failure.message]);
+        return exitStatusForFailure(proposal.failure);
+      }
+
+      const rendered = renderReconciliation(proposal.value);
+      writer.writeStdout(rendered.stdout);
+      writer.writeStderr(rendered.stderr);
+      return rendered.status;
+    }
+
     if (invocation.kind === "advanced") {
       const outcome = await new RunAdvancedCommand(engine).execute({
         command: invocation.command,
