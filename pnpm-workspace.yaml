@@ -1,3 +1,4 @@
 packages:
   - "cli/*"
   - ".agents/skills/odd-workflow"
+  - ".agents/skills/git-pr-workflow"

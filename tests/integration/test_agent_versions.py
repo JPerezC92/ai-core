@@ -36,7 +36,7 @@ EXPECTED_SPEC_VERSIONS: dict[str, str] = {
     "crucible.md": "1.18.1",
     "forge.md": "3.2.1",
     "herald.md": "1.14.1",
-    "inquisitor.md": "1.16.1",
+    "inquisitor.md": "1.16.2",
     "investigator.md": "1.5.0",
     "ledger.md": "2.2.0",
     "lumen.md": "1.4.1",
