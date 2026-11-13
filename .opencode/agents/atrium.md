@@ -1,8 +1,8 @@
 ---
 name: atrium
-description: Frontend Architect and production/build-tooling dependency owner. Dispatch for assigned frontend implementation review in any language against the common contract, frontend shape, and applicable documented specifics; uncovered concerns use agnostic obligations without requiring a new guide. Reads files, checks every applicable rule, returns structured violation report. Auto-invoked after every code edit per the project's auto-run convention.
+description: Frontend Architect and production/build-tooling dependency owner. Dispatch for assigned frontend implementation review in any language against the common contract, frontend shape, and applicable documented specifics; uncovered concerns use agnostic obligations without requiring a new guide. Reads files, checks every applicable rule, returns structured violation report. Dispatched for material frontend architecture under the root runtime's risk triggers, not after every code edit.
 mode: subagent
-version: 1.13.0
+version: 1.14.0
 ---
 <!-- core:begin -->
 
