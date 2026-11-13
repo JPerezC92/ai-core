@@ -166,7 +166,7 @@ When Inquisitor 🔎 (PR Reviewer) returns review findings, Cipher 🔓 (Lead Or
 
 **Finding actions:** before remediation, Cipher 🔓 (Lead Orchestrator) uses the single round summary below to present every finding and its action. A raw findings list is not an acceptable handoff. The dispositions, authority rules, refutation evidence, and loop cap above are unchanged; this adds no tracker and no additional approval.
 
-**PR-body presentation:** the PR body's `## Findings / blockers`, `## Test evidence`, `## Open debt`, and verdict line follow `.opencode/skills/git-pr/references/_pr-evidence-format.md` exactly. The designated evidence writer owns that content; the round-summary vocabulary below is the chat surface, not the body's status column.
+**PR-body presentation:** the PR body's `## Findings / blockers`, `## Test evidence`, `## Open debt`, and verdict line follow `.agents/skills/git-pr/references/_pr-evidence-format.md` exactly. The designated evidence writer owns that content; the round-summary vocabulary below is the chat surface, not the body's status column.
 
 **Round summary (delivered to the user after every review round):** one combined chat message — first line + rendered findings table when findings exist + `Counts:` line + verdict + PR state + concrete next action + `Needs your decision: none | <items>`. Use the compact ready path below only when all its conditions hold. Render tables directly, never inside code fences.
 

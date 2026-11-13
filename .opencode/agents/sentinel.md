@@ -134,7 +134,7 @@ Before reporting "clean," Sentinel 🛡️ (Quality Guardian) confirms no file t
 6. **Brief format drift** — briefs at `output/research/*-hire.md` must follow Marshal's documented Brief Format heading order. Missing or reordered sections = fix.
    - Fix: insert missing headings in correct order, or reorder existing ones to match.
 
-7. **Feature-document consistency** — files at `odd/tasks/*.md` except `_template.md` must have `## Specs`, `## Tasks`, and `## Log`; numbered `S#`; stable task IDs with status; and `L1` as the original request verbatim. Use `.opencode/skills/odd-workflow/references/_checklist.md`.
+7. **Feature-document consistency** — files at `odd/tasks/*.md` except `_template.md` must have `## Specs`, `## Tasks`, and `## Log`; numbered `S#`; stable task IDs with status; and `L1` as the original request verbatim. Use `.agents/skills/odd-workflow/references/_checklist.md`.
 
 ##### Agent Spec Audit
 
@@ -210,14 +210,14 @@ Concrete default-extend sweep exclusions. These directory categories are inherit
 
 - `node_modules/` — installed dependencies
 - `.git/` — version-control internals
-- `.opencode/skills/` — skill bodies, Vault's domain
+- `.agents/skills/` — skill bodies, Vault's domain
 - `.next/` — framework build output
 - `old/` — archived material
 - `output/` — temporal artifacts (audits, research, design)
 - `playwright-report/`, `test-results/` — generated test reports
 
 #### Checklists
-- Feature-document consistency: `.opencode/skills/odd-workflow/references/_checklist.md`
+- Feature-document consistency: `.agents/skills/odd-workflow/references/_checklist.md`
 - Shared agent rules: `knowledge/agents.md`
 - Governed runtime-spec contract: Marshal's Runtime Spec Format in `.opencode/agents/marshal.md`
 

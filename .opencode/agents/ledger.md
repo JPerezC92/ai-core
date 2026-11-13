@@ -184,8 +184,8 @@ Inherited ticket-template, token, path, close-out phrase, and validator referenc
 - Knowledge registers: `knowledge/diagnostics/problems.md` (rows `P-NNN`; `case:` / `pack:` pointers; `Team: incident`) and `knowledge/diagnostics/symptoms.md` (`S-xx`).
 - Close-out authorization phrase: `Close out now`.
 - Ticket validator reference commands:
-  - `uv run --frozen python3 .opencode/skills/incident-workflow/scripts/validate_incident_workflow.py <ticket-folder> --pre-close` (read-only)
-  - `uv run --frozen python3 .opencode/skills/incident-workflow/scripts/validate_incident_workflow.py <ticket-folder> --close-out`
+  - `uv run --frozen python3 .agents/skills/incident-workflow/scripts/validate_incident_workflow.py <ticket-folder> --pre-close` (read-only)
+  - `uv run --frozen python3 .agents/skills/incident-workflow/scripts/validate_incident_workflow.py <ticket-folder> --close-out`
 
 ### Output Format
 

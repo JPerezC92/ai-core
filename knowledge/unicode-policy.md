@@ -102,7 +102,7 @@ Editor highlighting cannot provide the checker's complete semantics. A live edit
 
 ## CLI (proposed; agrees with S3)
 
-Entry: `.opencode/skills/op-skill-creator/scripts/check_markdown_text.py`.
+Entry: `.agents/skills/op-skill-creator/scripts/check_markdown_text.py`.
 
 ```
 check_markdown_text.py --policy PATH [--check-editor PATH] PATH [PATH ...]

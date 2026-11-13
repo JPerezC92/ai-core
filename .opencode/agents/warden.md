@@ -229,7 +229,7 @@ Reference forms only. They do not authorize shell execution, installation, lockf
 - Python branch (nonbinding reference example, project-owned): `pyproject.toml`, `uv.lock`.
 - `requirements.txt` (destination reference example, project-owned): an alternative Python manifest, not a core binding.
 - Env/CI: `.env.example`, `.github/workflows/`.
-- Skill installs: `.opencode/skills/`.
+- Skill installs: `.agents/skills/`.
 - Ignore surface: `.gitignore`.
 
 #### Reference Command Forms

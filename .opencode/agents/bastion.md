@@ -93,13 +93,13 @@ Read `architecture/implementation/stacks/python.md` → `Structure and dependenc
 
 ##### PYTHON BACKEND — backend tooling paths, ticket tooling, and feature-scoped skill scripts
 
-Applied when the mapping selects the Python guide for the file being verified — a `.py` file under a backend tooling path, the ticket tooling path, or at an exact feature-document-named `.opencode/skills/*/scripts/` path. Apply the language-agnostic contract first, then this Python section. No language branch suspends the contract.
+Applied when the mapping selects the Python guide for the file being verified — a `.py` file under a backend tooling path, the ticket tooling path, or at an exact feature-document-named `.agents/skills/*/scripts/` path. Apply the language-agnostic contract first, then this Python section. No language branch suspends the contract.
 
 ###### MODULE BOUNDARIES
 
 Read `architecture/implementation/stacks/python.md` → `Imports and language conventions` → `Deployment zones` and `Typing and modules`, and `Adapters and delivery` for feature-script IO separation.
 
-**Feature-scoped skill scripts** (`.opencode/skills/*/scripts/*.py`):
+**Feature-scoped skill scripts** (`.agents/skills/*/scripts/*.py`):
 
 - [ ] The exact file path is named in the active feature document's `## Tasks` or the assignment; a wildcard or folder-level authorization is insufficient
 - [ ] The script is audited by Bastion 🧱 (Backend & Scripts Architect) after every edit before Forge 🔨 (Implementer) proceeds

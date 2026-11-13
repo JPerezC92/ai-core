@@ -8,12 +8,12 @@ A reusable, agnostic **agentic orchestration core** for [OpenCode](https://openc
 |---|---|
 | Act on a request | [AGENTS.md](AGENTS.md) is the lead runtime; [knowledge/agent-workflow.md](knowledge/agent-workflow.md) is the single workflow router, including ODD classification and task-specific reads. |
 | Check evidence, coordination or safety obligations | [knowledge/agents.md](knowledge/agents.md); runtime authority and automatic edit/release/PR gates remain in [AGENTS.md](AGENTS.md) and the assigned specialist runtime. |
-| Work on a feature | `odd/tasks/<YYYY-MM-DD>-<feature-name>.md`, created from [odd/tasks/_template.md](odd/tasks/_template.md) through `.opencode/skills/odd-workflow/SKILL.md`; Specs, Tasks and Log are the single feature record. |
+| Work on a feature | `odd/tasks/<YYYY-MM-DD>-<feature-name>.md`, created from [odd/tasks/_template.md](odd/tasks/_template.md) through `.agents/skills/odd-workflow/SKILL.md`; Specs, Tasks and Log are the single feature record. |
 | Select architecture or testing definitions | [architecture/README.md](architecture/README.md); [architecture/testing/architecture.md](architecture/testing/architecture.md) owns testing. Runtimes own procedures and gates; documentation acceptance is not implementation conformance. |
 | Reuse research or read explanatory documentation | [docs/README.md](docs/README.md) → [research catalog](docs/research/README.md). Research and history are evidence, not execution authority. |
-| Investigate an incident | `knowledge/diagnostics/symptoms.md`, `knowledge/diagnostics/problems.md`, and the register-first procedure in `knowledge/agents.md`; the incident skill is `.opencode/skills/incident-workflow/SKILL.md`. |
-| Author skills/agents or change models | `.opencode/skills/op-skill-creator/SKILL.md`, `.opencode/skills/op-agent-creator/SKILL.md`, `.opencode/skills/op-model/SKILL.md`. |
-| Prepare Git/release artifacts | `.opencode/skills/{git-branch-name,git-commit,git-pr,git-pr-workflow}/SKILL.md`; Git execution belongs to Herald 📯 (Release Manager), under the runtime gates. |
+| Investigate an incident | `knowledge/diagnostics/symptoms.md`, `knowledge/diagnostics/problems.md`, and the register-first procedure in `knowledge/agents.md`; the incident skill is `.agents/skills/incident-workflow/SKILL.md`. |
+| Author skills/agents or change models | `.agents/skills/op-skill-creator/SKILL.md`, `.agents/skills/op-agent-creator/SKILL.md`, `.agents/skills/op-model/SKILL.md`. |
+| Prepare Git/release artifacts | `.agents/skills/{git-branch-name,git-commit,git-pr,git-pr-workflow}/SKILL.md`; Git execution belongs to Herald 📯 (Release Manager), under the runtime gates. |
 | Adopt or update the core | [Adoption guide below](#using-it-in-another-project), [AGENTS.md → Reuse guide](AGENTS.md#reuse-guide-adopting-this-core), and `.opencode/skills/core-sync/SKILL.md`. |
 
 The safety policy and role-specific permissions live in [opencode.jsonc](opencode.jsonc): force-push, PR merge, `sudo`, system-path `rm -rf` and env-file reads are denied; the `plan` agent cannot edit. Irreversible actions remain User-Authority-Only. This map locates owners rather than replacing their instructions.
@@ -47,8 +47,9 @@ Runtime specs live at `.opencode/agents/<name>.md` (Cipher's runtime spec is the
 ```
 AGENTS.md                     Lead runtime: mandatory core + source-project bindings/reuse guide
 opencode.jsonc                OpenCode V2 config: agent/model bindings, permission model, MCP servers
+.agents/skills/               Shared skills: SKILL.md, references/ and scripts/ (including nested tests)
 .opencode/agents/             Specialist runtimes: authority, procedures, scope, gates, reporting and own-role manner
-.opencode/skills/             Skill-local SKILL.md, references/ and scripts/ (including nested tests)
+.opencode/skills/core-sync/   Source-local distribution engine (package + tests); never distributed
 knowledge/agent-workflow.md   Shared ODD workflow and task router
 knowledge/agents.md           Shared rules; source-side extensions stay project-owned
 knowledge/debt.md             Accepted-debt register: shared frame, project-owned filed entries
@@ -100,14 +101,14 @@ Clone AICore, then remove only source-local state so the fresh project starts cl
 
 - **Environment** — `python3` (not `python`), Python ≥ 3.13, managed with `uv`. Every Python command runs through the project environment: `uv run --frozen …`, never a bare or global interpreter.
 - **MCP tooling** — [Portable setup](docs/tooling.md) provisions the two explicitly permitted, separately locked Python tooling environments and documents the `npx` servers; repository scripts and tests retain the root environment.
-- **Tests** — the reviewed whole-suite command is `uv run --frozen --group dev pytest -q`, dispatched to Crucible 🔥 (Test Architect) under `.opencode/agents/crucible.md`; this page is not execution authorization or a test result. `pyproject.toml` configures repository-wide `test_*.py` discovery and pytest-xdist workers. Scope includes core-sync, incident-workflow validators and other skill machinery. Repository tests live in `tests/`; skill tests stay throughout `.opencode/skills/<skill>/scripts/**/test_*.py`, including layered subpackages (e.g. `.opencode/skills/op-model/scripts/op_model_lookup/domain/test_catalog.py`). `conftest.py` owns the default in-repository temporary-root setup.
+- **Tests** — the reviewed whole-suite command is `uv run --frozen --group dev pytest -q`, dispatched to Crucible 🔥 (Test Architect) under `.opencode/agents/crucible.md`; this page is not execution authorization or a test result. `pyproject.toml` configures repository-wide `test_*.py` discovery and pytest-xdist workers. Scope includes core-sync, incident-workflow validators and other skill machinery. Repository tests live in `tests/`; skill tests stay throughout `.agents/skills/<skill>/scripts/**/test_*.py`, including layered subpackages (e.g. `.agents/skills/op-model/scripts/op_model_lookup/domain/test_catalog.py`). `conftest.py` owns the default in-repository temporary-root setup.
 - **Authoring** — use the `op-skill-creator` and `op-agent-creator` skills to scaffold skills/agents, and `op-model` to change agent models deterministically.
 - **Config changes** — the OpenCode TUI must be restarted after any `opencode.jsonc` permission change; active sessions do not reload it. AICore's `opencode.jsonc` targets the OpenCode V2 config definition, which is the project's only OpenCode configuration.
 - **Workflow and runtime changes** — read `knowledge/agent-workflow.md` before acting; it owns classification, feature timing and the task router, with shared-resource rules in `knowledge/agents.md`. Synced spec versions follow `AGENTS.md` → Reuse guide, including destination-local version markers; local history and feature Log never replace that policy. Restart OpenCode after accepting runtime or skill changes; the active session does not hot-reload them.
 
 ## Notes
 
-- Everything is OpenCode-native: agent specs in `.opencode/agents/`, skills in `.opencode/skills/` (`compatibility: opencode`), and feature documents in `odd/tasks/`. Source-local architecture decisions/history and saved research are mapped by `docs/README.md` unless that map is removed or rewritten as the destination's own documentation map.
+- Agent specs stay OpenCode-native in `.opencode/agents/`; shared skills live in `.agents/skills/`, the editor-neutral skills root that OpenCode and Cursor both discover (each skill's frontmatter still declares `compatibility: opencode`); feature documents live in `odd/tasks/`. Source-local architecture decisions/history and saved research are mapped by `docs/README.md` unless that map is removed or rewritten as the destination's own documentation map.
 - `output/` is gitignored — it holds temporal artifacts (audit reports, research briefs, design briefs/audits); agents create it on first write.
 - Skills `git-commit` and `git-pr` write `output/commit.txt` / `output/pr-draft.md` (covered by the `output/` ignore) and, with `git-branch-name`, assume git + pnpm and the GitHub CLI (`gh`) — the dev-team defaults.
 - Each destination's adopted content is bound by its own `.aicore/core.yaml`: it maps each source file to its destination paths and pins the `core_revision` the destination was enrolled at. The bindings are destination-owned state — AICore keeps no adopter registry.

@@ -8,7 +8,7 @@
 > **Delivery:** delivery strategy, authored additions + deletions forecast (generated files excluded), and slice boundaries when known, or `N/A — reason`
 > **Runner:** literal applicable command, or `N/A — reason`
 
-Load and read the `odd-workflow` skill (`.opencode/skills/odd-workflow/SKILL.md`) before creating or maintaining this record. Its creation, delivery, change and closure procedures are canonical; this template illustrates their layout, not another policy definition.
+Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) before creating or maintaining this record. Its creation, delivery, change and closure procedures are canonical; this template illustrates their layout, not another policy definition.
 
 ## Specs
 

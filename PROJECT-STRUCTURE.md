@@ -1,6 +1,6 @@
 # Project structure
 
-Explanatory map of this repository's tracked layout. Tree baseline generated from `git ls-files` at merged head `e70b3870796bfde92e2e1b31864e88e339585b7a`; the documentation entries noted below were manually updated on 2026-11-05, not regenerated from Git.
+Explanatory map of this repository's tracked layout. Tree baseline generated from `git ls-files` at merged head `e70b3870796bfde92e2e1b31864e88e339585b7a`; the documentation entries noted below were manually updated on 2026-11-12, not regenerated from Git.
 
 This file is navigation only. It is source-local, it ships to no destination, and it never overrides `AGENTS.md`, `knowledge/agent-workflow.md`, `architecture/`, or any runtime spec. When the tree changes, this map is stale until regenerated — treat the files themselves as truth.
 
@@ -16,18 +16,21 @@ ai-core/
 ├── pyproject.toml  uv.lock        Python toolchain + pytest config
 ├── conftest.py                    Repository-wide temp-dir policy
 │
+├── .agents/                       Shared skills root (OpenCode + Cursor)
+│   └── skills/                    9 shared skills, each self-contained
+│       ├── odd-workflow/          Feature-record lifecycle + validator
+│       ├── incident-workflow/     Incident analysis + validator
+│       ├── git-branch-name/  git-commit/  git-pr/
+│       ├── git-pr-workflow/       PR publication workflow, evidence and identity
+│       └── op-agent-creator/  op-model/  op-skill-creator/
+│
 ├── .opencode/
 │   ├── agents/                    16 specialist runtimes
 │   │   atrium  augur  bastion  crucible  forge  herald  inquisitor
 │   │   investigator  ledger  lumen  marshal  quill  scribe
 │   │   sentinel  vault  warden
-│   ├── skills/                    10 skills, each self-contained
-│   │   ├── core-sync/             Distribution engine (package + tests)
-│   │   ├── odd-workflow/          Feature-record lifecycle + validator
-│   │   ├── incident-workflow/     Incident analysis + validator
-│   │   ├── git-branch-name/  git-commit/  git-pr/
-│   │   ├── git-pr-workflow/       PR publication workflow, evidence and identity
-│   │   └── op-agent-creator/  op-model/  op-skill-creator/
+│   ├── skills/                    Source-local distribution engine
+│   │   └── core-sync/             Distribution engine (package + tests)
 │   └── tooling/                   astgrep/ · semgrep/ (own locked envs)
 │
 ├── knowledge/                     Shared operating rules
@@ -104,7 +107,7 @@ What an adopting project receives, per `distribution-clearance.json`:
 | `odd/tasks/_template.md`, `odd/features/_template.md` | raw, whole file | — |
 | `architecture/` (whole directory) | raw | — |
 | `.opencode/agents/` | region | runtime `project` regions |
-| `.opencode/skills/` (each skill) | raw | — |
+| `.agents/skills/` (each shared skill) | raw | — |
 | — | — | `docs/`, ODD feature records, `output/`, this file |
 
 Two consequences are visible in the tree:
@@ -120,6 +123,6 @@ Two consequences are visible in the tree:
 | Work on a feature | `odd/tasks/<YYYY-MM-DD>-<feature-name>.md` from `odd/tasks/_template.md` |
 | Select architecture rules | `architecture/README.md` |
 | Understand why a rule exists | `docs/architecture/decisions/` |
-| Investigate an incident | `knowledge/diagnostics/` and `.opencode/skills/incident-workflow/SKILL.md` |
+| Investigate an incident | `knowledge/diagnostics/` and `.agents/skills/incident-workflow/SKILL.md` |
 | Reuse research | `docs/research/README.md` |
 | Adopt or update this core | `README.md`, `AGENTS.md` reuse guide, `.opencode/skills/core-sync/SKILL.md` |
