@@ -249,8 +249,6 @@ Needs your decision: ❓ F1 — authorize the behavior-changing correction, or e
 | Quill 🪶 (Note Drafter) | Note Drafter | Incident |
 | Ledger 📒 (Record Keeper) | Record Keeper | Incident |
 | Scribe ✍️ (Docs & Problems Manager) | Docs & Problems Manager | Incident |
-| Augur 🔮 (Research Analyst) | Research Analyst | Both |
-| Marshal 🎖️ (HR Director) | HR Director | Both |
 | Vault 🔐 (Catalog Steward) | Catalog Steward | Both |
 | Atrium 🏛️ (Frontend Architect) | Frontend Architect | Dev |
 | Bastion 🧱 (Backend & Scripts Architect) | Backend & Scripts Architect | Dev |
@@ -263,7 +261,8 @@ Needs your decision: ❓ F1 — authorize the behavior-changing correction, or e
 | Warden 🔒 (Dependency Warden) | Dependency Warden | Dev |
 
 Edge cases:
-- Roster additions/changes go through Marshal 🎖️ (HR Director) with Augur's brief.
+- Roster additions and removals are a user decision: Cipher 🔓 (Lead Orchestrator) brings the evidence and never adds or removes a team member on its own authority.
+- Cipher 🔓 (Lead Orchestrator) authors runtime specifications using the `.agents/skills/op-agent-creator/` skill. Sentinel 🛡️ (Quality Guardian) audits every agent-document change independently, and `tests/integration/test_agent_sources.py` enforces the marker-pair and eight-H3 contract deterministically.
 - Sentinel 🛡️ (Quality Guardian) audits all agent documents: every runtime spec (including the working manner it carries) and in-scope markdown for both teams, plus `AGENTS.md`, `.aicore/core/odd/tasks/`, and shared rules.
 - Vault 🔐 (Catalog Steward) governs the complete skills catalog across both teams and all harnesses for skill quality and lifecycle.
 - Warden 🔒 (Dependency Warden) governs skill and package security.

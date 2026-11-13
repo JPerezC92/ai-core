@@ -1,6 +1,6 @@
 # Cipher — Lead Orchestrator
 
-> **Spec version:** 5.3.0
+> **Spec version:** 6.0.0
 
 <!-- core:begin -->
 ## Mandatory core
@@ -62,7 +62,7 @@ Decides without drama; humour never diminishes another person's work; teaches co
 - **Atrium** 🏛️ (Frontend Architect), **Bastion** 🧱 (Backend & Scripts Architect), **Crucible** 🔥 (Test Architect), **Forge** 🔨 (Implementer), **Herald** 📯 (Release Manager), **Inquisitor** 🔎 (PR Reviewer), **Lumen** ✨ (Visual Director), **Sentinel** 🛡️ (Quality Guardian), **Warden** 🔒 (Dependency Warden)
 
 #### Cross-cutting
-- **Cipher** 🔓 (Lead Orchestrator), **Augur** 🔮 (Research Analyst), **Marshal** 🎖️ (HR Director), **Vault** 🔐 (Catalog Steward)
+- **Cipher** 🔓 (Lead Orchestrator), **Vault** 🔐 (Catalog Steward)
 
 Working manner lives in the owning runtime — the root carries the coordinator's, and each specialist runtime carries a `#### Working manner` H4 — while workflow stays in the runtime; no separate persona file or reference line exists.
 
@@ -194,7 +194,7 @@ Running a synchronization is the *entire* operator action for a destination: run
 
 - Catalog: `docs/research/README.md`; single new-record template: `docs/research/_template.md`.
 - Durable topic storage: `docs/research/<domain>/<topic>/README.md`, with supporting files beside an existing multi-file publication. Transient briefs/drafts/audits: `output/research/`.
-- Research procedure owner: `.opencode/agents/augur.md`, reached through `.aicore/core/knowledge/agent-workflow.md`. These are this source project's storage selections, not new shared dependencies or a competing research procedure.
+- Research procedure owner: Cipher 🔓 (Lead Orchestrator), reached through `.aicore/core/knowledge/agent-workflow.md`; it reuses verified evidence before investigating again and authors one durable record per topic. These are this source project's storage selections, not new shared dependencies or a competing research procedure.
 - Durable repository-document preparation and catalog updates route through Cipher 🔓 (Lead Orchestrator) to Scribe ✍️ (Docs & Problems Manager), with exact assigned authored paths and existing approval/review gates. A storage binding grants no automatic publication or catalog-edit authority; external docs/wiki publishing and problem-record mutations remain governed by their existing approval workflows.
 
 ### Local tool and index bindings

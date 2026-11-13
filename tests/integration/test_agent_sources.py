@@ -79,7 +79,7 @@ def _project_text(content: str) -> str:
 
 def test_agent_sources_place_core_markers_after_frontmatter() -> None:
     spec_paths = _spec_surfaces()
-    assert len(spec_paths) == 16
+    assert len(spec_paths) == 14
 
     for path in spec_paths:
         content = path.read_text(encoding="utf-8")

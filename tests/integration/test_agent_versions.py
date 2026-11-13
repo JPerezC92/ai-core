@@ -14,7 +14,6 @@ from support.agent_spec_documents import AGENT_SPECS_DIR, split_frontmatter  # n
 EXPECTED_SPEC_FILES: frozenset[str] = frozenset(
     {
         "atrium.md",
-        "augur.md",
         "bastion.md",
         "crucible.md",
         "forge.md",
@@ -23,7 +22,6 @@ EXPECTED_SPEC_FILES: frozenset[str] = frozenset(
         "investigator.md",
         "ledger.md",
         "lumen.md",
-        "marshal.md",
         "quill.md",
         "scribe.md",
         "sentinel.md",
@@ -33,22 +31,20 @@ EXPECTED_SPEC_FILES: frozenset[str] = frozenset(
 )
 
 EXPECTED_SPEC_VERSIONS: dict[str, str] = {
-    "atrium.md": "1.14.0",
-    "augur.md": "1.6.0",
-    "bastion.md": "1.18.0",
-    "crucible.md": "1.18.0",
-    "forge.md": "3.2.0",
-    "herald.md": "1.14.0",
-    "inquisitor.md": "1.16.0",
+    "atrium.md": "1.14.1",
+    "bastion.md": "1.18.1",
+    "crucible.md": "1.18.1",
+    "forge.md": "3.2.1",
+    "herald.md": "1.14.1",
+    "inquisitor.md": "1.16.1",
     "investigator.md": "1.5.0",
     "ledger.md": "2.2.0",
-    "lumen.md": "1.4.0",
-    "marshal.md": "1.6.1",
+    "lumen.md": "1.4.1",
     "quill.md": "1.6.0",
     "scribe.md": "1.4.0",
-    "sentinel.md": "1.21.0",
+    "sentinel.md": "1.21.1",
     "vault.md": "1.8.0",
-    "warden.md": "1.9.1",
+    "warden.md": "1.9.2",
 }
 
 SEMVER = re.compile(r"\d+\.\d+\.\d+")

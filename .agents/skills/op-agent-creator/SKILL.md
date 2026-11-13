@@ -28,7 +28,7 @@ An existing Claude Code agent spec lives at `.claude/agents/{name}.md`. Migratin
 | `color` | `color` |
 | (no mode field) | `mode: subagent` (this skill's migration-intent selection for child agents, not the OpenCode omission default) |
 
-Source-harness cleanup is outside this skill's write scope: preserve `.claude/agents/{name}.md` and mark it read-only in the migration preview. Any later deletion or move is a separate owner-run operation. Preview, confirmation, execution, and prevalidation steps for this sub-flow are described in the Mandatory core migration workflow. The `op-agent-creator` does NOT modify `.claude/agents/*.md` (that is Marshal 🎖️ (HR Director) territory).
+Source-harness cleanup is outside this skill's write scope: preserve `.claude/agents/{name}.md` and mark it read-only in the migration preview. Any later deletion or move is a separate owner-run operation. Preview, confirmation, execution, and prevalidation steps for this sub-flow are described in the Mandatory core migration workflow. The `op-agent-creator` does NOT modify `.claude/agents/*.md` (that is Cipher 🔓 (Lead Orchestrator) territory, executed as a separate agent-spec change).
 
 ### Example model identifiers
 
@@ -122,7 +122,7 @@ Create a new OpenCode-native agent under `.opencode/agents/{name}.md`. The agent
      - **A.** Auto-update the description with a recommended addition
      - **B.** Let the user edit manually
       - **C.** Abort agent creation
-6. **Step 6 — Pre-validation (agent-contract subset).** Generated specs must cite `.aicore/core/knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)` and must not tell a language section to suspend it. Before writing, run these checks against the fully built agent definition. The agent runtime-spec contract (Marshal 🎖️ (HR Director)'s Runtime Spec Format; Sentinel 🛡️ (Quality Guardian) rule SP-3) is authoritative; reference it for full text:
+6. **Step 6 — Pre-validation (agent-contract subset).** Generated specs must cite `.aicore/core/knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)` and must not tell a language section to suspend it. Before writing, run these checks against the fully built agent definition. The agent runtime-spec contract (the eight-H3 and region layout enforced by `tests/integration/test_agent_sources.py`; Sentinel 🛡️ (Quality Guardian) rule SP-3) is authoritative; reference it for full text:
 
    ```
    - [ ] File is `.opencode/agents/<name>.md` — a single markdown file, not a folder — QC-1 (adapted)
@@ -136,7 +136,7 @@ Create a new OpenCode-native agent under `.opencode/agents/{name}.md`. The agent
    - [ ] Contract: frontmatter has repository-metadata `version` in SemVer MAJOR.MINOR.PATCH form (`local-version` only on destination-derived specs)
     - [ ] Contract: technical framing present — H1 inside the core region, no persona reference line, and a governed roster spec's manner carried as a `#### Working manner` H4 at the end of `### Your Role` (no `> **Rule layout:**` marker)
    - [ ] Contract: if the Rulebook states language-specific rules, it opens with a language-agnostic subsection before the first language section, and no language section suspends the clean-architecture contract (SP-11, SP-12)
-     - [ ] Contract: follow Marshal 🎖️ (HR Director)'s Runtime Spec Format and Sentinel 🛡️ (Quality Guardian) SP-3 — do not invent a competing layout. Exactly one `<!-- core:begin -->` … `<!-- core:end -->` pair immediately after the frontmatter closing `---`. Governed roster specs use all eight H3s in order under `## Mandatory core`: Your Role, Roster Context, Rulebook, Workflow, Tools and References, Output Format, Stop and Report, Hard Rules. Custom non-roster specs omit `### Roster Context` explicitly and keep the other seven in core. Persona-bearing manner lives in the runtime that owns the role — a `#### Working manner` H4 inside `### Your Role`, never a separate profile file or reference line; shared conduct belongs to the root runtime. Optional project markers only for evidenced local configuration, actual local grants, selected bindings, or local history. `### Hard Rules` is the last H3. A command named in the body is a reference form, not a grant; the frontmatter `permission` block is the configured grant.
+     - [ ] Contract: follow the eight-H3 runtime-spec contract and Sentinel 🛡️ (Quality Guardian) SP-3 - do not invent a competing layout. Exactly one `<!-- core:begin -->` … `<!-- core:end -->` pair immediately after the frontmatter closing `---`. Governed roster specs use all eight H3s in order under `## Mandatory core`: Your Role, Roster Context, Rulebook, Workflow, Tools and References, Output Format, Stop and Report, Hard Rules. Custom non-roster specs omit `### Roster Context` explicitly and keep the other seven in core. Persona-bearing manner lives in the runtime that owns the role — a `#### Working manner` H4 inside `### Your Role`, never a separate profile file or reference line; shared conduct belongs to the root runtime. Optional project markers only for evidenced local configuration, actual local grants, selected bindings, or local history. `### Hard Rules` is the last H3. A command named in the body is a reference form, not a grant; the frontmatter `permission` block is the configured grant.
    ```
 
    If any check FAILS, fix safe defects or report to Cipher 🔓 (Lead Orchestrator) before the write step (Step 10). Never invoke the user-facing `question` tool from a delegated run. Mandatory portable requirements, runtime validity, and shared/core agent-contract obligations cannot be waived by a generic override. A legitimate discretionary project-local exception must be explicitly permitted by its owning rule, approved by its authorized owner, and recorded with scope and rationale; it resolves that local choice, never a mandatory-check failure or a conflict with core. If the authority or applicability is unclear, stop and report rather than treating the check as optional.
@@ -257,7 +257,7 @@ This table names which keys gate which tools. It is a reference, not a grant. Ex
 
 ### Examples
 
-Generated agent files follow the region-delimited eight-section contract in Marshal 🎖️ (HR Director)'s Runtime Spec Format (`.opencode/agents/marshal.md`) and Sentinel 🛡️ (Quality Guardian) SP-3. Cite those sources; do not treat this skill as a competing standard. No `> **Rule layout:**` marker is used.
+Generated agent files follow the region-delimited eight-section contract enforced by `tests/integration/test_agent_sources.py` and Sentinel 🛡️ (Quality Guardian) SP-3. Cite those sources; do not treat this skill as a competing standard. No `> **Rule layout:**` marker is used.
 
 Exactly one `<!-- core:begin -->` … `<!-- core:end -->` pair sits immediately after the frontmatter closing `---`. Technical framing is inside that core: an H1, then `## Mandatory core`. `### Hard Rules` is the last H3. When there is no evidenced local content, omit the project pair and end the core at EOF.
 
@@ -269,11 +269,11 @@ Reusable review, documentation, and diagnostic rules belong in core. Add `<!-- p
 
 #### Governed roster spec (primary) — `code-reviewer`
 
-Read `references/governed-roster-code-reviewer.md` before rendering a governed roster spec. It is illustrative; validate new specs against the current Runtime Spec Format and SP-3 rules.
+Read `references/governed-roster-code-reviewer.md` before rendering a governed roster spec. It is illustrative; validate new specs against the eight-H3 runtime-spec contract and SP-3 rules.
 
 #### Custom and hidden subagent examples
 
-When creating custom or hidden subagents, read this skill's `references/custom-agent-examples.md` before rendering the agent spec. It contains the complete rendered `docs-writer` and `internal-helper` examples; validate new specs against the current Runtime Spec Format and SP-3 rules above.
+When creating custom or hidden subagents, read this skill's `references/custom-agent-examples.md` before rendering the agent spec. It contains the complete rendered `docs-writer` and `internal-helper` examples; validate new specs against the eight-H3 runtime-spec contract and SP-3 rules above.
 
 ### Migration: Claude Code → OpenCode
 
@@ -314,4 +314,4 @@ Use this when the user has an existing Claude Code agent spec and wants an OpenC
 - **`prompt` file not found**: when using `prompt: "{file:./prompts/foo.txt}"`, the path is relative to the directory containing `opencode.json` / `opencode.jsonc` (not the agent file). For project-local config, this is the project root.
 - **Body not being used as system prompt**: if `prompt` is set to an external file, the body markdown is ignored. Remove `prompt` (or set it to empty) to use the body.
 - **Mode missing or ambiguous**: write an explicit `primary`, `subagent`, or `all`; request-implied child-only intent selects `subagent`, not a platform default. Otherwise report the missing decision before writing. Do not reject `hidden` based solely on mode.
-- **Missing core markers or eight-section contract**: the written file must match Marshal 🎖️ (HR Director)'s Runtime Spec Format and Sentinel 🛡️ (Quality Guardian) SP-3 (Step 6). A markerless body, optional heading layout, or reusable rules parked in a project region fails prevalidation. Fix the shape; do not treat a reference command in the body as permission to change grants.
+- **Missing core markers or eight-section contract**: the written file must match the eight-H3 runtime-spec contract and Sentinel 🛡️ (Quality Guardian) SP-3 (Step 6). A markerless body, optional heading layout, or reusable rules parked in a project region fails prevalidation. Fix the shape; do not treat a reference command in the body as permission to change grants.

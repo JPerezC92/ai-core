@@ -23,8 +23,6 @@ The safety policy and role-specific permissions live in [opencode.jsonc](opencod
 | Agent | Team |
 |---|---|
 | Cipher 🔓 (Lead Orchestrator) | cross-cutting |
-| Augur 🔮 (Research Analyst) | cross-cutting |
-| Marshal 🎖️ (HR Director) | cross-cutting |
 | Vault 🔐 (Catalog Steward) | cross-cutting |
 | Investigator 🔍 (Incident Investigator) | incident |
 | Ledger 📒 (Record Keeper) | incident |
