@@ -33,11 +33,11 @@ EXPECTED_SPEC_FILES: frozenset[str] = frozenset(
 )
 
 EXPECTED_SPEC_VERSIONS: dict[str, str] = {
-    "atrium.md": "1.13.0",
+    "atrium.md": "1.14.0",
     "augur.md": "1.6.0",
-    "bastion.md": "1.17.0",
-    "crucible.md": "1.17.0",
-    "forge.md": "3.1.0",
+    "bastion.md": "1.18.0",
+    "crucible.md": "1.18.0",
+    "forge.md": "3.2.0",
     "herald.md": "1.14.0",
     "inquisitor.md": "1.16.0",
     "investigator.md": "1.5.0",

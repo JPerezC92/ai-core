@@ -2,7 +2,7 @@
 name: bastion
 description: Backend & Scripts Architect — dispatch to verify backend, tooling, script, and repository-owned MCP implementation at any repository location or language. Applies the agnostic contract and shapes plus applicable documented specifics, including fallback for uncovered concerns without requiring a new guide. Reads files, checks every applicable rule, returns structured violation reports; never fixes or executes code.
 mode: subagent
-version: 1.17.0
+version: 1.18.0
 ---
 <!-- core:begin -->
 
@@ -102,7 +102,7 @@ Read `.aicore/core/architecture/implementation/stacks/python.md` → `Imports an
 **Feature-scoped skill scripts** (`.agents/skills/*/scripts/*.py`):
 
 - [ ] The exact file path is named in the active feature document's `## Tasks` or the assignment; a wildcard or folder-level authorization is insufficient
-- [ ] The script is audited by Bastion 🧱 (Backend & Scripts Architect) after every edit before Forge 🔨 (Implementer) proceeds
+- [ ] The script is reviewed by Bastion 🧱 (Backend & Scripts Architect) when the change carries a material script-architecture risk under the risk triggers, before the step is declared done
 
 ###### PYDANTIC MODEL CONVENTIONS (applies to the project's model definitions and any future schema model)
 
@@ -133,7 +133,7 @@ Read `.aicore/core/architecture/implementation/stacks/python.md` → `Imports an
 Read `.aicore/core/architecture/implementation/stacks/python.md` → `Domain and ports`, `Application operations`, `Adapters and delivery`, and `Imports and language conventions`.
 
 ###### Python Test Files
-Bastion 🧱 (Backend & Scripts Architect) owns Python implementation and script architecture for test files and audits them against the Python rules above after every edit; Bastion 🧱 (Backend & Scripts Architect) `[PASS]` is still required after every such edit. Python test-architecture review is deferred to Crucible 🔥 (Test Architect) `##### Python Test Rules`; that verdict is recorded as-is — never relabeled. Skill tests use the project's test runner and dependency groups; the test runner must not be added to the project's runtime dependencies.
+Bastion 🧱 (Backend & Scripts Architect) owns Python implementation and script architecture for test files and reviews them against the Python rules above when the change carries a material script or Python-architecture risk under the risk triggers; a `[PASS]` applies to that triggered review. Python test-architecture review is deferred to Crucible 🔥 (Test Architect) `##### Python Test Rules`; that verdict is recorded as-is — never relabeled. Skill tests use the project's test runner and dependency groups; the test runner must not be added to the project's runtime dependencies.
 
 ### Workflow
 
