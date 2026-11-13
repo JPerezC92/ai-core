@@ -21,7 +21,6 @@ Synchronization keeps an adopting project's AICore-owned resources current from 
 - [x] R13 — The shared skills live under `.agents/skills/`, which every supported distribution target discovers natively, and no skill is duplicated into a target-specific directory.
 - [x] R14 — The shared documentation is consolidated under `.aicore/core/` in the source and in the destination, while destination-owned synchronization state stays separate from it.
 - [x] R15 — OpenCode and Cursor are both supported distribution targets: each receives the same content, editor-specific agents are delivered to each editor's own agent directory, and what an editor cannot be given is stated rather than implied.
-- [ ] R16 — The synchronization engine is TypeScript, and no Python engine or interpreter dependency remains in the synchronization path.
-- [ ] R17 — The utilities distributed to destinations are TypeScript, execute standalone without a destination-side installation, and state their runtime prerequisite.
-- [x] R18 — A destination's reconciliation is proposed and inspectable before any destination file changes, and a file whose ownership cannot be established is preserved and reported rather than deleted.
-- [ ] R19 — Synchronization distributes ordinary files and directories: it never creates, preserves, follows or manages a symbolic link as a synchronization artifact, and it refuses a managed write path that contains one before the destination is modified.
+- [x] R16 — The synchronization engine is TypeScript, and no Python engine or interpreter dependency remains in the synchronization path.
+- [x] R17 — A destination's reconciliation is proposed and inspectable before any destination file changes, and a file whose ownership cannot be established is preserved and reported rather than deleted.
+- [ ] R18 — Synchronization distributes ordinary files and directories: it never creates, preserves, follows or manages a symbolic link as a synchronization artifact, and it refuses a managed write path that contains one before the destination is modified.
