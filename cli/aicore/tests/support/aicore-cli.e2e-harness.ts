@@ -35,15 +35,28 @@ export type Fixture = {
   dispose(): Promise<void>;
 };
 
-export async function createFixture(agentsBody?: string): Promise<Fixture> {
+export async function createFixture(
+  options: {
+    readonly agentsBody?: string;
+    readonly editor?: string;
+  } = {},
+): Promise<Fixture> {
   const { root, prefix } = await createTemporaryRoot(FIXTURE_PREFIX);
   const destination = join(root, "destination");
   await mkdir(destination, { recursive: true });
   await writeFile(
     join(destination, "AGENTS.md"),
-    agentsBody ?? "# Fixture project\n\nA disposable destination for end-to-end verification.\n",
+    options.agentsBody ?? "# Fixture project\n\nA disposable destination for end-to-end verification.\n",
     "utf8",
   );
+  if (options.editor !== undefined) {
+    await mkdir(join(destination, ".aicore"), { recursive: true });
+    await writeFile(
+      join(destination, ".aicore", "core.yaml"),
+      enrolledBindings(options.editor),
+      "utf8",
+    );
+  }
 
   return {
     destination,
@@ -107,10 +120,30 @@ export async function invoke(
   }
 }
 
-/** Invoke with the default valid revision. */
+/**
+ * Invoke with the default valid revision.
+ */
 export function invokeWithRevision(
   arguments_: readonly string[],
   fixture: Fixture,
 ): Promise<Invocation> {
   return invoke(arguments_, { fixture, revision: REVISION });
+}
+
+/**
+ * The bindings of a destination already enrolled for one editor profile.
+ *
+ * The bindings file is the destination's own state: it records the editor the
+ * destination was enrolled for, so a fixture can stand in for an enrollment
+ * without running one.
+ */
+function enrolledBindings(editor: string): string {
+  return [
+    "schema: 1",
+    `core_revision: ${REVISION}`,
+    `editor: ${editor}`,
+    "bindings: []",
+    "pending: []",
+    "",
+  ].join("\n");
 }

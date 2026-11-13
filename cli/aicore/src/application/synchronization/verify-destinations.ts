@@ -15,6 +15,7 @@ import {
 } from "#domain/synchronization/constants.ts";
 import {
   bindingModeConflict,
+  destinationDrift,
   nonRegionDestinations,
   normalizePending,
   unclearedSources,
@@ -27,6 +28,7 @@ import {
   type OperationOutcome,
 } from "#domain/synchronization/failures.ts";
 import { isMerged } from "#domain/synchronization/merge.ts";
+import { editorMismatch, effectiveEditor } from "#domain/synchronization/editor-profile.ts";
 import { frontmatterIsCurrent, splitFrontmatter } from "#domain/synchronization/frontmatter.ts";
 import { splitRegions } from "#domain/synchronization/regions.ts";
 import type {
@@ -68,7 +70,18 @@ export class VerifyDestinations {
       return failed(invalid(`invalid bindings: ${request.bindingsPath}`));
     }
 
-    const clearance = await readClearanceModes(clearanceStore, layout, request.sourceRoot);
+    const mismatch = editorMismatch(document.editor, request.editor);
+    if (mismatch !== null) {
+      return failed(mismatch);
+    }
+    const editor = effectiveEditor(request.editor, document.editor);
+
+    const clearance = await readClearanceModes(
+      clearanceStore,
+      layout,
+      request.sourceRoot,
+      editor,
+    );
 
     const refusal = await guard.refuse({
       command: "check",
@@ -100,6 +113,12 @@ export class VerifyDestinations {
     const uncleared = unclearedSources(document, new Set(clearance.modes.keys()));
     if (uncleared.length > 0) {
       return failed(drift(`source not cleared for distribution: ${uncleared.join(", ")}`));
+    }
+    if (clearance.entries !== null) {
+      const relocated = destinationDrift(document, clearance.entries, clearance.destinations);
+      if (relocated !== null) {
+        return failed(relocated);
+      }
     }
 
     const sourceCores = new Map<string, string>();

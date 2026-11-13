@@ -5,12 +5,12 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.9.2
+  version: 2.10.0
 ---
 
 ## What I do
 
-Update the bound files of a destination from a source of truth, and keep the destination's root runtime file carrying a reconciliation blocker while region reconciliation is pending. Each binding runs in one of three modes: `region` (the default) mirrors the source `core` region between destination markers; `raw` copies the whole source file byte-for-byte with no markers or project region; `merge` merges only the source's top-level object keys into the destination, source keys winning while destination-only keys, comments, and formatting outside replaced or inserted keys stay — except the `mcp` key, which merges by server name. The source is read-only; raw sources are read as bytes without decoding or newline normalization, and merge sources are read as JSONC text (UTF-8, no newline translation). Before mutation, write targets must be regular files: a symlinked bindings or payload/root/report target is rejected before any read or write, and an existing non-regular target is rejected. All write targets — payloads, bindings, reconciliation report, and root blocker — are resolved and preflighted against the source and destination roots. Existing output-file device/inode identities are checked against regular files under the source tree, so hard links cannot mutate source files; distinct output paths that resolve to the same target are rejected. `init` also rejects a newly created raw target that would become the implicit root runtime file. In region mode, the destination's own `project` region and the rest of the text outside the destination core markers are preserved by content, not byte-for-byte: a destination that used CRLF keeps that outside content while its line endings become LF. The leading YAML frontmatter is the exception — a region write refreshes it from the source, so a key the source defines takes the source value, a source-only key is added, and a destination-only key keeps its exact bytes, which is why `local-version` is never reset; `metadata` merges one level down. Text reads perform no newline translation, while text writes normalize `\r\n` and any lone `\r` to `\n`, so every text file core-sync writes carries LF terminators only. AICore text files are authored LF-only. Marker parsing still compares exact line content after splitting both LF and CRLF separators. Region-mode writes in `apply` are unconditional, so a region destination is rewritten and LF-normalized even when its shared region is unchanged (`init` skips the write only when the rebuilt file would be byte-identical to the current one); merge mode skips the write when the merged text already equals the current text, so an untouched CRLF destination keeps its endings; raw mode remains byte-exact.
+Update the bound files of a destination from a source of truth, and keep the destination's root runtime file carrying a reconciliation blocker while region reconciliation is pending. Each destination is enrolled for one editor profile (`opencode` or `cursor`); the profile decides where that editor's agents land and which sources it receives at all, and it is declared by the source-side clearance registry — see *Editor profiles*. Each binding runs in one of three modes: `region` (the default) mirrors the source `core` region between destination markers; `raw` copies the whole source file byte-for-byte with no markers or project region; `merge` merges only the source's top-level object keys into the destination, source keys winning while destination-only keys, comments, and formatting outside replaced or inserted keys stay — except the `mcp` key, which merges by server name. The source is read-only; raw sources are read as bytes without decoding or newline normalization, and merge sources are read as JSONC text (UTF-8, no newline translation). Before mutation, write targets must be regular files: a symlinked bindings or payload/root/report target is rejected before any read or write, and an existing non-regular target is rejected. All write targets — payloads, bindings, reconciliation report, and root blocker — are resolved and preflighted against the source and destination roots. Existing output-file device/inode identities are checked against regular files under the source tree, so hard links cannot mutate source files; distinct output paths that resolve to the same target are rejected. `init` also rejects a newly created raw target that would become the implicit root runtime file. In region mode, the destination's own `project` region and the rest of the text outside the destination core markers are preserved by content, not byte-for-byte: a destination that used CRLF keeps that outside content while its line endings become LF. The leading YAML frontmatter is the exception — a region write refreshes it from the source, so a key the source defines takes the source value, a source-only key is added, and a destination-only key keeps its exact bytes, which is why `local-version` is never reset; `metadata` merges one level down. Text reads perform no newline translation, while text writes normalize `\r\n` and any lone `\r` to `\n`, so every text file core-sync writes carries LF terminators only. AICore text files are authored LF-only. Marker parsing still compares exact line content after splitting both LF and CRLF separators. Region-mode writes in `apply` are unconditional, so a region destination is rewritten and LF-normalized even when its shared region is unchanged (`init` skips the write only when the rebuilt file would be byte-identical to the current one); merge mode skips the write when the merged text already equals the current text, so an untouched CRLF destination keeps its endings; raw mode remains byte-exact.
 
 ## Operator boundary (HARD RULE)
 
@@ -31,18 +31,18 @@ The sync operator only **runs this tool and reads its report**. The operator MUS
 # Verify every destination core region against the source revision and sync the blocker.
 pnpm aicore check \
   --source <source-dir> --destination <destination-dir> \
-  --bindings <bindings-file> --source-revision <40-hex>
+  --bindings <bindings-file> --source-revision <40-hex> [--editor <editor>]
 
 # Write: splice each source core region into its destinations and pin the revision.
 pnpm aicore apply \
   --source <source-dir> --destination <destination-dir> \
-  --bindings <bindings-file> --source-revision <40-hex>
+  --bindings <bindings-file> --source-revision <40-hex> [--editor <editor>]
 
 # Enroll region-mode destinations, raw-copy whole-file bindings, merge
 # top-level keys, and refresh existing bindings.
 pnpm aicore init \
   --source <source-dir> --destination <destination-dir> \
-  --bindings <bindings-file> --source-revision <40-hex>
+  --bindings <bindings-file> --source-revision <40-hex> [--editor <editor>]
   [--bind <source>=<destination>]... [--bind-raw <source>=<destination>]...
   [--bind-cleared] [--root <destination-root-path>]
 ```
@@ -53,6 +53,7 @@ The command runs from the AICore checkout root, where the workspace exposes the 
 - `--destination` — directory holding the destination files named by the bindings.
 - `--bindings` — the bindings YAML file (schema below). For a destination root blocker, use the canonical path `<destination>/.aicore/core.yaml`.
 - `--source-revision` — the 40-character lowercase hex source revision to compare (`check`) or pin (`apply`/`init`).
+- `--editor` — the editor profile the run delivers for: `opencode` or `cursor`. It decides where the agents land and which sources the editor receives at all; see *Editor profiles*. Without it, a run uses the destination's own recorded editor, and a destination that records none is read as `opencode`.
 - `init --bind SOURCE=DESTINATION` — append a region-mode binding to the loaded bindings file before preflight. Repeatable and idempotent for an identical mapping.
 - `init --bind-raw SOURCE=DESTINATION` — append a raw binding. Repeatable and idempotent for an identical mapping; a destination already mapped to a different source fails closed.
 - `init --bind-cleared` — enroll every source `distribution-clearance.json` resolves to that is not already bound, using its resolved `mode`. A directory root resolves to every file under it (its `region_files` members use `region`, the rest use the root's default mode; exclusions are in *Bindings schema*); a file row resolves to itself. Ordinary sources map to the same relative path; the `role: root` source maps to the destination instruction root. Absent bindings are initialized; existing mappings are preserved.
@@ -82,6 +83,24 @@ Each bound source runs in one of three modes, resolved from the source-side `dis
 
 Region mode, raw mode, and merge mode may coexist in one bindings file; each entry is handled independently.
 
+## Editor profiles
+
+A destination is enrolled for one **editor profile**, and the profile decides what that destination receives and where it receives it. The profiles are declared by the source-side clearance registry, which may name a per-editor destination for a row and may omit a row for an editor entirely; `distribution-clearance.definition.md` is the format's source of truth.
+
+| Content | `opencode` | `cursor` |
+|---|---|---|
+| Skills | `.agents/skills/<name>/` | `.agents/skills/<name>/` — identical |
+| Shared rules | `AGENTS.md` | `AGENTS.md` — identical |
+| Shared documents | their canonical paths | their canonical paths — identical |
+| Agents | `.opencode/agents/<name>.md` | `.cursor/agents/<name>.md` |
+| Project configuration | `opencode.jsonc` (merge mode) | none — omitted, because no merge target exists |
+
+The shared content is delivered identically under either profile: the same bytes, the same paths, and the same region rules, so a destination's own `project` region content is preserved either way. The agent documents are one shared body delivered to two different directories; the project configuration is the one row a profile does not receive.
+
+**What a Cursor destination receives, and what it does not.** It receives the shared skills, the shared rules and the shared documents, with its own content preserved, and its agents delivered as Cursor agent documents at `.cursor/agents/`. It receives **no project configuration**, because no merge target exists for it. Its **Git and GitHub permission posture is not enforced by anything this project distributes** — the permission model this repository carries lives in the OpenCode project configuration, and a Cursor destination's editor settings are its own operator's responsibility. No claim of an enforced Git or GitHub restriction is made for it.
+
+A destination's editor is fixed by its enrollment: the files it holds were placed for that editor. A run that asks for another editor is refused (exit `2`) and writes nothing — changing an enrolled destination's editor is a destination-owned migration, not something a synchronization performs. The enrollment records the editor in the bindings file; a destination enrolled before editor profiles existed records none and is read as `opencode`, the only profile that existed then.
+
 For raw references, "no markers/project region" means no active region ownership is
 introduced or interpreted by synchronization. Fenced template/example marker literals
 remain ordinary source bytes and are copied intact, not rejected or extracted.
@@ -102,6 +121,7 @@ A region-mode source is markerless only when it has no exact core markers or pro
 `schema: 1`. `core_revision` is the pinned 40-hex source revision or `null`. Each `bindings` entry maps one `source` to one or more `destinations`; source and destination paths must be canonical safe relative POSIX paths and must not contain NUL characters (no absolute paths, empty/`.`/`..` components, backslashes, or Windows drive/root prefixes), and destination paths must be unique. Invalid persisted paths are rejected as malformed bindings (exit `2`) before filesystem operations use them.
 A binding carries no `mode`: the distribution mode is owned by source clearance (below). A persisted `mode` key is read as a declaration; a persisted `raw` declaration whose source record is not `raw` fails closed (exit `2`), and the key is dropped on the next save.
 `pending` lists outstanding paths; `check` requires it to be empty. A region, raw, or merge binding whose `source` is absent from the source-side `distribution-clearance.json` (`schema: 1`, read from `--source`) is not cleared for distribution and cannot be synchronized.
+`editor` (optional) records the editor profile the destination was enrolled for — `opencode` or `cursor`. A document that records none was enrolled before editor profiles existed and is read as `opencode`; an unknown editor is rejected as malformed bindings (exit `2`).
 That file is `{"schema": 1, "cleared": {…}}` — the only accepted version label; any other is rejected (exit `2`), and there is no legacy or migration machinery.
 Records are either file rows `{ "mode": "region"|"raw"|"merge", "role"?: "root" }` (the root runtime `AGENTS.md` is the only `role: root`) or directory-root rows — keys ending in `/` with `{ "mode": <default>, "region_files": [<root-relative paths>]? }` as declared by `distribution-clearance.json`. Agent specs are covered by the `.opencode/agents/` directory root, `region`.
 The sync tool expands directory roots at every sync: `region_files` members deliver only their core region, all other files use the root's default mode, `__pycache__`/`*.pyc` caches never join, and new files join automatically.
@@ -115,6 +135,7 @@ Read `distribution-clearance.definition.md` in full as the format's source of tr
 schema: 1
 core_revision: "86ef8aab65c9bf7bdaeab65e86edd6e1968207d5"
 root: CLAUDE.md
+editor: opencode
 bindings:
   - source: .opencode/agents/lumen.md
     destinations:
@@ -152,15 +173,17 @@ When `pending:` is empty, delete the entire blocker block (markers included). Th
 
 ## Exit contract
 
-Argument-parser/CLI validation errors (including invalid `--source-revision` syntax) exit `2` before a command starts. The table covers successfully parsed commands.
+Argument-parser/CLI validation errors (including invalid `--source-revision` syntax and an unknown `--editor`) exit `2` before a command starts. The table covers successfully parsed commands.
 
 | Exit | `check` | `apply` | `init` |
 |---|---|---|---|
 | `0` | every core region matches the pinned revision, every raw destination byte-matches its source, every merge destination carries each source top-level key with the source value (extra destination-only keys and, for an object `mcp.servers` on both sides, extra destination-only servers allowed), the `qmd` server's `--index` is the destination folder's name, and `pending` is empty; prints `current` | every region spliced or created / raw file copied / merge document written and the revision pinned; prints `applied`, or `applied; created: <path>[, <path>]` when it recreated absent targets | every markerless destination enrolled, absent region, raw, or newly bound merge target created, raw file copied, merge document written, or marked destination refreshed and the revision pinned; prints `initialized` |
 | `1` | drift: stale `core_revision`, missing/unreadable source, missing destination, raw/region/merge mismatch (including a `qmd` `--index` other than the destination folder's name), `frontmatter drift` (a region destination frontmatter a write would change), non-empty region `pending`, stale non-region-bound `pending`, a bound source absent from `distribution-clearance.json` or that file itself missing, or write-time filesystem I/O error | drift: missing/unreadable source, a merge destination that does not exist, a bound source absent from `distribution-clearance.json` or that file itself missing, or write-time filesystem I/O error | drift: missing/unreadable source, a merge destination that does not exist and this enrollment did not newly bind, a bound source absent from `distribution-clearance.json` or that file itself missing, or write-time filesystem I/O error |
-| `2` | malformed bindings/source markers, a source carrying project markers without a valid core pair, `distribution-clearance.json` present but malformed, malformed JSONC in a merge source/destination, invalid or unreadable region-destination markers, overlapping roots, unsafe root targets (including source-inode aliases), or root/non-region alias | malformed bindings/source markers, a source carrying project markers without a valid core pair, `distribution-clearance.json` present but malformed, malformed JSONC in a merge source/destination, invalid or unreadable region-destination markers, unsafe write targets (including source-inode aliases and duplicate resolved output paths), root/non-region alias, or failed outside-marker preservation (nothing is written) | malformed bindings/source markers, a source carrying project markers without a valid core pair, `distribution-clearance.json` present but malformed, malformed JSONC in a merge source/destination, invalid region-destination markers, unsafe write targets (including source-inode aliases and duplicate resolved output paths), root/non-region alias, or a planned raw target that would become the implicit root |
+| `2` | malformed bindings/source markers, a source carrying project markers without a valid core pair, `distribution-clearance.json` present but malformed, malformed JSONC in a merge source/destination, invalid or unreadable region-destination markers, overlapping roots, unsafe root targets (including source-inode aliases), root/non-region alias, or a run for an editor the destination is not enrolled for | malformed bindings/source markers, a source carrying project markers without a valid core pair, `distribution-clearance.json` present but malformed, malformed JSONC in a merge source/destination, invalid or unreadable region-destination markers, unsafe write targets (including source-inode aliases and duplicate resolved output paths), root/non-region alias, failed outside-marker preservation (nothing is written), or a run for an editor the destination is not enrolled for | malformed bindings/source markers, a source carrying project markers without a valid core pair, `distribution-clearance.json` present but malformed, malformed JSONC in a merge source/destination, invalid region-destination markers, unsafe write targets (including source-inode aliases and duplicate resolved output paths), root/non-region alias, a planned raw target that would become the implicit root, or a run for an editor the destination is not enrolled for |
 
 `check` reports an absent bound destination as drift and creates nothing; `apply` and `init` repair a declared region or raw target by creating it, while merge is created only by the first enrollment that newly binds it, and drift otherwise.
+
+The `1` rows also cover the drift the editor profiles introduce: when a source is bound to a destination that the clearance registry no longer declares for that source — including a per-editor destination that differs from the one recorded — the command reports drift naming the source and both destinations, and never rewrites the bindings. A changed destination is the destination owner's migration, exactly as a changed enrolled editor is refused rather than delivered.
 
 `apply` and `init` append `frontmatter not refreshed: <path> (<reason>)` to their success message when a region destination's frontmatter could not be refreshed, and still exit `0`: that frontmatter keeps its current text, so the rest of the write stands. The reason distinguishes a whole-document skip, where nothing refreshed, from an unmappable `metadata` block, which keeps its bytes while every other source-defined key still refreshes. `check` reports neither as drift — only a frontmatter a refresh would change.
 

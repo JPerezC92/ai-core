@@ -59,6 +59,9 @@ export function writeBindingsDocument(record: BindingsRecord): string {
   if (record.root !== undefined) {
     lines.push(`root: ${scalar(record.root)}`);
   }
+  if (record.editor !== undefined) {
+    lines.push(`editor: ${scalar(record.editor)}`);
+  }
   if (record.bindings.length === 0) {
     lines.push("bindings: []");
   } else {

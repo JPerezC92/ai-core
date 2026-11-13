@@ -6,10 +6,24 @@
  * replaced in place on later runs, and removed together with its one-line
  * separator once `pending` is empty. The transform is idempotent and changes
  * nothing outside the block.
+ *
+ * The block's words are the enrolled editor's, not one destination's: the
+ * project-configuration section describes a file only some profiles receive, so
+ * a destination enrolled for another editor is never told it was merged.
  */
 
-import { RECONCILE_BEGIN, RECONCILE_BODY, RECONCILE_END } from "./constants.ts";
+import {
+  RECONCILE_BEGIN,
+  RECONCILE_BODY_CONFIG,
+  RECONCILE_BODY_HEAD,
+  RECONCILE_BODY_TAIL,
+  RECONCILE_END,
+} from "./constants.ts";
+import type { EditorProfile } from "./editor-profile.ts";
 import { findReconcileBlock, splitLinesWithTerminators } from "./markers.ts";
+
+/** The editors whose delivery includes the project-configuration file. */
+const CONFIG_FILE_EDITORS: readonly EditorProfile[] = ["opencode"];
 
 /** One destination `init` generated or refreshed for review. */
 export type ReconciliationEntry = {
@@ -18,9 +32,26 @@ export type ReconciliationEntry = {
   readonly action: string;
 };
 
+/**
+ * The blocker body one editor receives.
+ *
+ * One body, selected rather than rewritten: the shared opening and closing stay
+ * identical, and only the configuration section an editor's delivery does not
+ * contain is left out.
+ */
+function reconciliationBody(editor: EditorProfile): readonly string[] {
+  return CONFIG_FILE_EDITORS.includes(editor)
+    ? [...RECONCILE_BODY_HEAD, ...RECONCILE_BODY_CONFIG, ...RECONCILE_BODY_TAIL]
+    : [...RECONCILE_BODY_HEAD, ...RECONCILE_BODY_TAIL];
+}
+
 /** The block's lines, terminators included. */
-function blockLines(): readonly string[] {
-  return [`${RECONCILE_BEGIN}\n`, `${RECONCILE_BODY.join("\n")}\n`, `${RECONCILE_END}\n`];
+function blockLines(editor: EditorProfile): readonly string[] {
+  return [
+    `${RECONCILE_BEGIN}\n`,
+    `${reconciliationBody(editor).join("\n")}\n`,
+    `${RECONCILE_END}\n`,
+  ];
 }
 
 /**
@@ -32,6 +63,7 @@ function blockLines(): readonly string[] {
 export function syncReconciliationBlocker(
   rootText: string,
   pending: readonly string[],
+  editor: EditorProfile,
 ): string {
   const lines = splitLinesWithTerminators(rootText);
   const block = findReconcileBlock(lines);
@@ -39,11 +71,11 @@ export function syncReconciliationBlocker(
     if (block !== null) {
       return (
         lines.slice(0, block.begin).join("") +
-        blockLines().join("") +
+        blockLines(editor).join("") +
         lines.slice(block.end + 1).join("")
       );
     }
-    return appendBlock(rootText);
+    return appendBlock(rootText, editor);
   }
   if (block === null) {
     return rootText;
@@ -59,8 +91,8 @@ export function syncReconciliationBlocker(
 }
 
 /** Append the block after a single blank separator line. */
-function appendBlock(rootText: string): string {
+function appendBlock(rootText: string, editor: EditorProfile): string {
   const base = rootText !== "" && !rootText.endsWith("\n") ? `${rootText}\n` : rootText;
   const separator = base === "" ? "" : "\n";
-  return base + separator + blockLines().join("");
+  return base + separator + blockLines(editor).join("");
 }

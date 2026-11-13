@@ -3,10 +3,11 @@
  *
  * The engine's public command line is part of its published contract:
  * `--source`, `--destination`, `--bindings` and `--source-revision` for every
- * command, plus `--bind`, `--bind-raw`, `--bind-cleared` and `--root` for
- * `init`. This module turns that vector into the engine's request record in a
- * single mapping step (contract C4), so the engine receives the command the
- * wrapper always forwarded and the operator's syntax keeps working unchanged.
+ * command, `--editor` for every command, plus `--bind`, `--bind-raw`,
+ * `--bind-cleared` and `--root` for `init`. This module turns that vector into
+ * the engine's request record in a single mapping step (contract C4), so the
+ * engine receives the command the wrapper always forwarded and the operator's
+ * syntax keeps working unchanged.
  *
  * A vector the engine's own syntax rejects produces the result the engine
  * produced for it before: exit `2`, the diagnostic on standard error, and
@@ -33,6 +34,7 @@ const VALUE_FLAGS: readonly string[] = [
   "--bind",
   "--bind-raw",
   "--root",
+  "--editor",
 ];
 
 /** The options that stand alone. */
@@ -192,6 +194,7 @@ export function toEngineRequest(
       bindRaw,
       bindCleared: flags.has("--bind-cleared"),
       root: values.get("--root"),
+      editor: values.get("--editor"),
     },
   };
 }

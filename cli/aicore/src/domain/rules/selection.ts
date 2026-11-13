@@ -38,7 +38,8 @@ export function resolveDestinationEditor(
     return succeed(saved.editor);
   }
   const reason = destinationIsBound
-    ? "this destination is already enrolled but its editor is not recorded"
+    ? "no editor was supplied for this run; repeat the run with the editor this " +
+      "destination is enrolled for, or with --editor"
     : "this destination has no recorded editor yet";
   return fail(
     "unknown-editor",

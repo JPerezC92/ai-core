@@ -76,7 +76,7 @@ export interface FilesystemLayout {
   resolveRootFile(destinationRoot: string, document: BindingsDocument): Promise<string>;
   /** The destination instruction root present on disk, or `null`. */
   detectRootFile(destinationRoot: string): Promise<string | null>;
-  /** Bring the root runtime file's blocker in line with `pending`. */
+  /** Bring the root runtime file's blocker in line with `pending`, worded for the document's editor. */
   syncBlocker(
     destinationRoot: string,
     document: BindingsDocument,

@@ -5,6 +5,10 @@
  * key ending in `/` with a default `mode` and optional root-relative
  * `region_files`). Expansion over enumerated paths is pure: the enumeration is
  * infrastructure's, the mode decision is this module's.
+ *
+ * A record may also name its per-editor destination behaviour: where that editor
+ * receives the source, or that the editor does not receive it at all. A record
+ * without that dimension reaches every editor at its own path.
  */
 
 import {
@@ -14,6 +18,12 @@ import {
   MODE_REGION,
   ROLE_ROOT,
 } from "./constants.ts";
+import {
+  EDITOR_PROFILES,
+  type EditorDelivery,
+  type EditorProfile,
+  isEditorProfile,
+} from "./editor-profile.ts";
 import { isAbsolutePath, isSafeRelativePath } from "./paths.ts";
 
 /** One cleared source path with its mode and optional root role. */
@@ -21,6 +31,8 @@ export type ClearanceRecord = {
   readonly kind: "file";
   readonly mode: BindingMode;
   readonly role: typeof ROLE_ROOT | null;
+  /** Per-editor destination behaviour; `null` when the record names none. */
+  readonly editors: ReadonlyMap<EditorProfile, EditorDelivery> | null;
 };
 
 /** One cleared directory root: a default mode plus root-relative region files. */
@@ -28,6 +40,8 @@ export type ClearanceDirectoryRoot = {
   readonly kind: "directory-root";
   readonly mode: BindingMode;
   readonly regionFiles: readonly string[];
+  /** Per-editor destination behaviour; `null` when the record names none. */
+  readonly editors: ReadonlyMap<EditorProfile, EditorDelivery> | null;
 };
 
 /** One cleared entry of the registry. */
@@ -38,8 +52,16 @@ export type ClearanceParse =
   | { readonly ok: true; readonly entries: ReadonlyMap<string, ClearanceEntry> }
   | { readonly ok: false; readonly reason: string };
 
-const RECORD_FIELDS: ReadonlySet<string> = new Set(["mode", "role"]);
-const DIRECTORY_ROOT_FIELDS: ReadonlySet<string> = new Set(["mode", "region_files"]);
+/** What one editor receives from the whole cleared set. */
+export type ClearanceExpansion = {
+  /** The distribution mode of every source this editor receives. */
+  readonly modes: ReadonlyMap<string, BindingMode>;
+  /** The destination path of every source this editor receives. */
+  readonly destinations: ReadonlyMap<string, string>;
+};
+
+const RECORD_FIELDS: ReadonlySet<string> = new Set(["mode", "role", "editors"]);
+const DIRECTORY_ROOT_FIELDS: ReadonlySet<string> = new Set(["mode", "region_files", "editors"]);
 const DOCUMENT_FIELDS: ReadonlySet<string> = new Set(["schema", "cleared"]);
 
 /**
@@ -94,20 +116,48 @@ export function parseClearanceDocument(data: unknown): ClearanceParse {
 }
 
 /**
+ * Decide what one editor receives from one cleared entry.
+ *
+ * A record that names its per-editor behaviour answers for that editor; a record
+ * that names none reaches every editor at its own path, which is the layout the
+ * shared content uses.
+ */
+function deliveryForEditor(
+  path: string,
+  entry: ClearanceEntry,
+  editor: EditorProfile,
+): EditorDelivery {
+  const declared = entry.editors?.get(editor);
+  if (declared !== undefined) {
+    return declared;
+  }
+  return { kind: "delivered", destination: path };
+}
+
+/**
  * Map every cleared path, and every enumerated file under a cleared directory
- * root, to its distribution mode.
+ * root, to its distribution mode and its destination for one editor.
  *
  * A `region_files` member delivers its core region; every other enumerated file
  * under that root uses the root's default mode. Interpreter caches never join.
+ * A source the editor does not receive joins neither map: it is not cleared for
+ * that editor and cannot be synchronized to it.
  */
 export function expandClearance(
   entries: ReadonlyMap<string, ClearanceEntry>,
   enumerated: ReadonlyMap<string, readonly string[]>,
-): ReadonlyMap<string, BindingMode> {
+  editor: EditorProfile,
+): ClearanceExpansion {
   const modes = new Map<string, BindingMode>();
+  const destinations = new Map<string, string>();
   for (const [path, entry] of entries) {
+    const delivery = deliveryForEditor(path, entry, editor);
+    if (delivery.kind === "omitted") {
+      continue;
+    }
     if (entry.kind === "file") {
       modes.set(path, entry.mode);
+      destinations.set(path, delivery.destination);
       continue;
     }
     const regionFiles = new Set(entry.regionFiles);
@@ -116,9 +166,10 @@ export function expandClearance(
         continue;
       }
       modes.set(path + relativePath, regionFiles.has(relativePath) ? MODE_REGION : entry.mode);
+      destinations.set(path + relativePath, delivery.destination + relativePath);
     }
   }
-  return modes;
+  return { modes, destinations };
 }
 
 function readRecord(path: string, rawRecord: unknown): ClearanceRecord | string {
@@ -143,7 +194,16 @@ function readRecord(path: string, rawRecord: unknown): ClearanceRecord | string 
   if (rawRole === ROLE_ROOT && mode !== MODE_REGION) {
     return `root role for ${path} must use region mode`;
   }
-  return { kind: "file", mode, role: rawRole === ROLE_ROOT ? ROLE_ROOT : null };
+  const editors = readEditors(rawRecord["editors"], path, false);
+  if (typeof editors === "string") {
+    return editors;
+  }
+  return {
+    kind: "file",
+    mode,
+    role: rawRole === ROLE_ROOT ? ROLE_ROOT : null,
+    editors,
+  };
 }
 
 function readDirectoryRoot(path: string, rawRecord: unknown): ClearanceDirectoryRoot | string {
@@ -181,7 +241,95 @@ function readDirectoryRoot(path: string, rawRecord: unknown): ClearanceDirectory
     }
     regionFiles.push(member);
   }
-  return { kind: "directory-root", mode, regionFiles };
+  const editors = readEditors(rawRecord["editors"], path, true);
+  if (typeof editors === "string") {
+    return editors;
+  }
+  return { kind: "directory-root", mode, regionFiles, editors };
+}
+
+/**
+ * Read a record's per-editor destination behaviour.
+ *
+ * An absent map means the record reaches every editor at its own path. A present
+ * map names every editor explicitly, so adding an editor to the closed set
+ * forces a decision here instead of silently reusing the previous behaviour.
+ */
+function readEditors(
+  rawEditors: unknown,
+  path: string,
+  directoryRoot: boolean,
+): ReadonlyMap<EditorProfile, EditorDelivery> | null | string {
+  if (rawEditors === undefined) {
+    return null;
+  }
+  if (!isRecord(rawEditors)) {
+    return `cleared record for ${path} has an invalid editors map`;
+  }
+  const deliveries = new Map<EditorProfile, EditorDelivery>();
+  for (const [editor, rawDelivery] of Object.entries(rawEditors)) {
+    if (!isEditorProfile(editor)) {
+      return `cleared record for ${path} names an unknown editor: ${editor}`;
+    }
+    const parsed = readDelivery(rawDelivery, path, editor, directoryRoot);
+    if (typeof parsed === "string") {
+      return parsed;
+    }
+    deliveries.set(editor, parsed);
+  }
+  const missing = EDITOR_PROFILES.filter((editor) => !deliveries.has(editor));
+  if (missing.length > 0) {
+    return `cleared record for ${path} does not name every editor: ${missing.join(", ")}`;
+  }
+  return deliveries;
+}
+
+/**
+ * Read one editor's delivery of a cleared record.
+ *
+ * A record either names the destination that editor receives, or says that the
+ * editor does not receive it at all. Both at once, or neither, is a malformed
+ * declaration rather than a choice.
+ */
+function readDelivery(
+  rawDelivery: unknown,
+  path: string,
+  editor: EditorProfile,
+  directoryRoot: boolean,
+): EditorDelivery | string {
+  if (!isRecord(rawDelivery)) {
+    return `cleared record for ${path} has an invalid ${editor} delivery`;
+  }
+  const unknown = Object.keys(rawDelivery).find(
+    (key) => key !== "destination" && key !== "omitted",
+  );
+  if (unknown !== undefined) {
+    return `cleared record for ${path} has an unknown ${editor} delivery field: ${unknown}`;
+  }
+  const omitted = rawDelivery["omitted"];
+  const destination = rawDelivery["destination"];
+  if (omitted !== undefined && destination !== undefined) {
+    return `cleared record for ${path} declares both a destination and an omission for ${editor}`;
+  }
+  if (omitted !== undefined) {
+    if (omitted !== true) {
+      return `cleared record for ${path} declares a non-true omission for ${editor}`;
+    }
+    return { kind: "omitted" };
+  }
+  if (typeof destination !== "string") {
+    return `cleared record for ${path} declares no destination for ${editor}`;
+  }
+  if (directoryRoot) {
+    if (!destination.endsWith("/") || !isSafeRelativePath(destination.slice(0, -1))) {
+      return `cleared record for ${path} declares an unsafe ${editor} directory destination: ${destination}`;
+    }
+    return { kind: "delivered", destination };
+  }
+  if (!isSafeRelativePath(destination)) {
+    return `cleared record for ${path} declares an unsafe ${editor} destination: ${destination}`;
+  }
+  return { kind: "delivered", destination };
 }
 
 function isAbsolutePathLike(path: string): boolean {

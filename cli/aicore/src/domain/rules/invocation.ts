@@ -6,7 +6,6 @@
 
 import {
   ADVANCED_COMMANDS,
-  PLANNED_EDITORS,
   REVISION_ENV_VAR,
   REVISION_PATTERN,
   SUPPORTED_EDITORS,
@@ -118,19 +117,11 @@ export function parseInvocation(argv: readonly string[]): Result<ParsedInvocatio
  * Resolve the requested editor.
  *
  * A named editor the engine does not implement is refused by name; the CLI never
- * substitutes OpenCode for a requested Cursor run.
+ * substitutes one editor for a requested another.
  */
 export function resolveEditor(requested: string): Result<SupportedEditor> {
   if (isSupportedEditor(requested)) {
     return succeed(requested);
-  }
-  if ((PLANNED_EDITORS as readonly string[]).includes(requested)) {
-    return fail(
-      "unsupported-editor",
-      `editor "${requested}" is not implemented: this build distributes only ` +
-        `${SUPPORTED_EDITORS.join(", ")}. Nothing was written. Cursor agent support ` +
-        "is tracked separately and is not available yet.",
-    );
   }
   return fail(
     "unsupported-editor",

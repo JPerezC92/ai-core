@@ -65,12 +65,31 @@ describe("enrollment decision", () => {
       BINDINGS_PATH,
       "--source-revision",
       REVISION,
+      "--editor",
+      "opencode",
       "--bind-cleared",
     ]);
     expect(engine.run).toHaveBeenNthCalledWith(2, "check", expect.anything());
     expect(engine.run).toHaveBeenCalledTimes(2);
     expect(result.ok && result.value.enrolled).toBe(true);
     expect(result.ok && result.value.current).toBe(true);
+  });
+
+  test("the requested editor reaches the engine as the profile to deliver", async () => {
+    const engine = makeEngine([0, 0]);
+
+    const result = await operation({ engine }).execute({
+      target: DESTINATION_PATH,
+      editor: "cursor",
+      revision: undefined,
+    });
+
+    expect(result.ok).toBeTruthy();
+    const arguments_ = engine.run.mock.calls[0]?.[1] ?? [];
+    const editorPosition = arguments_.indexOf("--editor");
+    expect(editorPosition).not.toBe(-1);
+    expect(arguments_[editorPosition + 1]).toBe("cursor");
+    expect(result.ok && result.value.editor).toBe("cursor");
   });
 
   test("the explicitly supplied revision wins over the operator setting", async () => {

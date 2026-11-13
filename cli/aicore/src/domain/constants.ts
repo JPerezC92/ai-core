@@ -6,13 +6,20 @@
  * belong to the delivery edge.
  */
 
-/** Editors whose agent distribution the engine actually implements today. */
-export const SUPPORTED_EDITORS = ["opencode"] as const;
+import {
+  EDITOR_PROFILES,
+  type EditorProfile,
+} from "#domain/synchronization/editor-profile.ts";
 
-/** Editors the CLI can name in an error without implying support. */
-export const PLANNED_EDITORS = ["cursor"] as const;
+/**
+ * Editors whose agent distribution the engine implements.
+ *
+ * The set is the synchronization engine's own, so the wrapper never accepts an
+ * editor the engine cannot deliver.
+ */
+export const SUPPORTED_EDITORS = EDITOR_PROFILES;
 
-export type SupportedEditor = (typeof SUPPORTED_EDITORS)[number];
+export type SupportedEditor = EditorProfile;
 
 /** Canonical bindings file, relative to the destination project root. */
 export const BINDINGS_RELATIVE_PATH = ".aicore/core.yaml";

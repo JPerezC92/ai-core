@@ -108,7 +108,7 @@ describe("corrupt persisted state", () => {
   });
 
   test("an unsupported editor is reported rather than ignored", async () => {
-    await writeConfig(JSON.stringify({ version: 1, target: "G:/x", editor: "cursor" }));
+    await writeConfig(JSON.stringify({ version: 1, target: "G:/x", editor: "vim" }));
     await expect(new LocalJsonSelectionStore(root).read()).rejects.toThrow(
       CorruptSelectionError,
     );

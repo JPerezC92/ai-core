@@ -18,7 +18,9 @@ import {
   REVISION_PATTERN,
   SCHEMA_VERSION,
 } from "./constants.ts";
-import { type SynchronizationFailure, invalid } from "./failures.ts";
+import type { ClearanceEntry } from "./clearance.ts";
+import { type EditorProfile, isEditorProfile } from "./editor-profile.ts";
+import { type SynchronizationFailure, drift, invalid } from "./failures.ts";
 import { isSafeRelativePath } from "./paths.ts";
 
 /** One source file and the destination files that mirror it. */
@@ -33,6 +35,8 @@ export type BindingEntry = {
 export type BindingsDocument = {
   readonly coreRevision: string | null;
   readonly root: string | null;
+  /** The editor profile the destination was enrolled for; `null` when unrecorded. */
+  readonly editor: EditorProfile | null;
   readonly bindings: readonly BindingEntry[];
   readonly pending: readonly string[];
 };
@@ -42,6 +46,7 @@ export type BindingsRecord = {
   readonly schema: number;
   readonly core_revision: string | null;
   readonly root?: string;
+  readonly editor?: string;
   readonly bindings: readonly {
     readonly source: string;
     readonly destinations: readonly string[];
@@ -81,6 +86,10 @@ export function parseBindingsDocument(data: unknown): BindingsDocument | null {
   if (root === undefined) {
     return null;
   }
+  const editor = readEditor(data["editor"]);
+  if (editor === undefined) {
+    return null;
+  }
   const rawPending = data["pending"] ?? [];
   if (!Array.isArray(rawPending) || !rawPending.every((item) => typeof item === "string")) {
     return null;
@@ -88,17 +97,24 @@ export function parseBindingsDocument(data: unknown): BindingsDocument | null {
   return {
     coreRevision: revision,
     root,
+    editor,
     bindings,
     pending: rawPending as string[],
   };
 }
 
-/** Project a validated document onto its persisted shape. */
+/**
+ * Project a validated document onto its persisted shape.
+ *
+ * The editor profile is written only when the document records one, so a
+ * destination enrolled before editor profiles existed keeps its own shape.
+ */
 export function bindingsRecord(document: BindingsDocument): BindingsRecord {
   const record: BindingsRecord = {
     schema: SCHEMA_VERSION,
     core_revision: document.coreRevision,
     ...(document.root === null ? {} : { root: document.root }),
+    ...(document.editor === null ? {} : { editor: document.editor }),
     bindings: document.bindings.map((entry) => ({
       source: entry.source,
       destinations: [...entry.destinations],
@@ -276,6 +292,44 @@ export function unclearedSources(
   return uncleared;
 }
 
+/**
+ * Return the drift a bound source earns when clearance declares another
+ * destination than the bindings record.
+ *
+ * The registry's per-editor destination is the registry's own decision, so a
+ * changed one is a destination-owned migration: rewriting the bindings here
+ * would move a destination's files without the operator asking, and calling the
+ * destination current would hide the divergence. Only a record that declares
+ * that dimension is compared — where it declares none, the destination comes
+ * from the destination's own `root:` detection or an explicit declaration, and
+ * the registry makes no claim to contradict.
+ */
+export function destinationDrift(
+  document: BindingsDocument,
+  entries: ReadonlyMap<string, ClearanceEntry>,
+  declared: ReadonlyMap<string, string>,
+): SynchronizationFailure | null {
+  for (const entry of document.bindings) {
+    const record = entries.get(entry.source);
+    if (record === undefined || record.editors === null) {
+      continue;
+    }
+    const destination = declared.get(entry.source);
+    if (destination === undefined) {
+      continue;
+    }
+    if (entry.destinations.length === 1 && entry.destinations[0] === destination) {
+      continue;
+    }
+    return drift(
+      `destination drift: ${entry.source} is bound to '${entry.destinations.join(", ")}' but the ` +
+        `clearance registry now declares '${destination}'; a changed destination is the ` +
+        "destination owner's migration, and nothing was written",
+    );
+  }
+  return null;
+}
+
 function readBindingEntry(
   rawEntry: unknown,
   seenDestinations: Set<string>,
@@ -327,6 +381,24 @@ function readOptionalPath(value: unknown): string | null | undefined {
     return null;
   }
   if (typeof value !== "string" || !isSafeRelativePath(value)) {
+    return undefined;
+  }
+  return value;
+}
+
+/**
+ * Return the enrolled editor profile, `null` for none, or `undefined` when the
+ * document names an editor this build does not implement.
+ *
+ * An unknown editor is malformed rather than unrecorded: a document written for
+ * another editor says what it was enrolled for, and reading it as unrecorded
+ * would deliver that editor's payload to the wrong one.
+ */
+function readEditor(value: unknown): EditorProfile | null | undefined {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  if (typeof value !== "string" || !isEditorProfile(value)) {
     return undefined;
   }
   return value;

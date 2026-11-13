@@ -101,14 +101,16 @@ What an adopting project receives, per `distribution-clearance.json`:
 | Travels | Mode | Stays source-local |
 |---|---|---|
 | `AGENTS.md` | region (core only) | `AGENTS.md` project extensions |
-| `opencode.jsonc` | merge (by top-level key) | — |
+| `opencode.jsonc` | merge (by top-level key), OpenCode targets only | — |
 | `.aicore/core/knowledge/agent-workflow.md`, `.aicore/core/knowledge/release.md` | raw, whole file | — |
 | `.aicore/core/knowledge/agents.md`, `debt.md`, `architecture-decision-workflow.md`, `diagnostics/*` | region | their `project` regions |
 | `.aicore/core/odd/tasks/_template.md`, `.aicore/core/odd/features/_template.md` | raw, whole file | — |
 | `.aicore/core/architecture/` (whole directory) | raw | — |
-| `.opencode/agents/` | region | runtime `project` regions |
+| `.opencode/agents/` | region; delivered to `.opencode/agents/` (OpenCode) or `.cursor/agents/` (Cursor) | runtime `project` regions |
 | `.agents/skills/` (each shared skill) | raw | — |
 | — | — | `docs/`, ODD feature records, `output/`, this file |
+
+The editor profiles are declared by `distribution-clearance.json`: the shared content travels identically to either editor, the agents land in each editor's own agent directory, and `opencode.jsonc` reaches OpenCode only — a Cursor destination receives no project configuration, and its Git and GitHub permission posture is whatever its own operator configures.
 
 Two consequences are visible in the tree:
 

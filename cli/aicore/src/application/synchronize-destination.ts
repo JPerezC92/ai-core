@@ -110,6 +110,8 @@ export class SynchronizeDestination {
       bindingsPath,
       "--source-revision",
       revision,
+      "--editor",
+      editor,
     ];
 
     const writeRun = destinationIsBound

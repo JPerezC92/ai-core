@@ -8,6 +8,11 @@
  * declaration does not depend on when it was recorded. A newly enrolled or
  * rewritten region destination is recorded in `pending` and in the reconciliation
  * report; raw and merge destinations are non-region and record neither.
+ *
+ * An already-bound source whose clearance record now declares another
+ * destination is the drift `apply` and `check` refuse, refused here before any
+ * write: enrollment never moves a destination, and never reports a diverged
+ * binding as initialized.
  */
 
 import {
@@ -21,6 +26,7 @@ import {
 } from "#domain/synchronization/constants.ts";
 import {
   bindingModeConflict,
+  destinationDrift,
   nonRegionDestinations,
   normalizePending,
   parseInitBindingSpec,
@@ -40,6 +46,7 @@ import { mergeTopLevel } from "#domain/synchronization/merge.ts";
 import { hasExactCoreMarkerLines } from "#domain/synchronization/markers.ts";
 import type { ReconciliationEntry } from "#domain/synchronization/reconciliation.ts";
 import { protectedBytes, renderInitFile, renderWithRegion, splitRegions } from "#domain/synchronization/regions.ts";
+import { editorMismatch, effectiveEditor } from "#domain/synchronization/editor-profile.ts";
 import type { BindingMode } from "#domain/synchronization/constants.ts";
 import type { BindingsDocument } from "#domain/synchronization/bindings.ts";
 import type { ClearanceEntry } from "#domain/synchronization/clearance.ts";
@@ -93,9 +100,19 @@ export class EnrollDestinations {
     const base: BindingsDocument = loaded ?? {
       coreRevision: request.sourceRevision,
       root: null,
+      editor: null,
       bindings: [],
       pending: [],
     };
+
+    // A destination with no bindings file is not enrolled for any editor yet, so
+    // this enrollment chooses one; an enrolled destination keeps the editor it
+    // was enrolled for.
+    const mismatch = loaded === null ? null : editorMismatch(base.editor, request.editor);
+    if (mismatch !== null) {
+      return failed(mismatch);
+    }
+    const editor = effectiveEditor(request.editor, base.editor);
 
     const declared = withInitDeclarations(
       base,
@@ -106,7 +123,12 @@ export class EnrollDestinations {
       return failed(declared.failure);
     }
 
-    const clearance = await readClearanceModes(clearanceStore, layout, request.sourceRoot);
+    const clearance = await readClearanceModes(
+      clearanceStore,
+      layout,
+      request.sourceRoot,
+      editor,
+    );
 
     const bulk = request.bindCleared && clearance.entries !== null
       ? await this.#bulkEnroll(
@@ -114,6 +136,7 @@ export class EnrollDestinations {
           request,
           clearance.entries,
           clearance.modes,
+          clearance.destinations,
           layout,
         )
       : null;
@@ -174,6 +197,18 @@ export class EnrollDestinations {
     const uncleared = unclearedSources(document, new Set(clearance.modes.keys()));
     if (uncleared.length > 0) {
       return failed(drift(`source not cleared for distribution: ${uncleared.join(", ")}`));
+    }
+    // Same refusal, at the same position, as `apply` and `check`: an already-bound
+    // source whose record now declares another destination is drift, not a state
+    // enrollment silently delivers. Nothing is written, because the changed
+    // destination is the destination owner's migration.
+    const relocated = destinationDrift(
+      document,
+      clearance.entries,
+      clearance.destinations,
+    );
+    if (relocated !== null) {
+      return failed(relocated);
     }
 
     const textWrites: TextWrite[] = [];
@@ -331,6 +366,7 @@ export class EnrollDestinations {
       ...document,
       coreRevision: request.sourceRevision,
       pending,
+      editor,
     };
     await bindings.save(request.bindingsPath, pinned);
     await layout.syncBlocker(request.destinationRoot, pinned, pending);
@@ -341,15 +377,17 @@ export class EnrollDestinations {
   /**
    * Enroll every cleared source that is not already bound.
    *
-   * A directory root's expansion supplies the mode each file takes; the root-role
-   * source maps to the destination instruction root, and destinations this run
-   * discovers absent become the creation set.
+   * A directory root's expansion supplies the mode each file takes and the
+   * destination the editor receives it at; the root-role source maps to the
+   * destination instruction root, and destinations this run discovers absent
+   * become the creation set.
    */
   async #bulkEnroll(
     document: BindingsDocument,
     request: EnrollmentRequest,
     entries: ReadonlyMap<string, ClearanceEntry>,
     modes: ReadonlyMap<string, BindingMode>,
+    destinations: ReadonlyMap<string, string>,
     layout: FilesystemLayout,
   ): Promise<BulkEnrollment | { readonly failure: SynchronizationFailure }> {
     const bindings = document.bindings.map((entry) => ({ ...entry }));
@@ -382,7 +420,9 @@ export class EnrollDestinations {
         continue;
       }
       const destination =
-        source === rootSource && rootDestination !== null ? rootDestination : source;
+        source === rootSource && rootDestination !== null
+          ? rootDestination
+          : (destinations.get(source) ?? source);
       bindings.push({ source, destinations: [destination], declaredMode: mode });
       bound.add(source);
       if (!(await layout.exists(layout.join(request.destinationRoot, destination)))) {

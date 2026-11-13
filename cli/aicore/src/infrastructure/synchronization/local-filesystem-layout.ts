@@ -11,6 +11,7 @@ import { dirname, join, relative, sep } from "node:path";
 
 import { ROOT_CANDIDATES } from "#domain/synchronization/constants.ts";
 import type { BindingsDocument } from "#domain/synchronization/bindings.ts";
+import { effectiveEditor } from "#domain/synchronization/editor-profile.ts";
 import { syncReconciliationBlocker } from "#domain/synchronization/reconciliation.ts";
 import type { FilesystemLayout } from "#domain/synchronization/ports.ts";
 
@@ -101,7 +102,11 @@ export class LocalFilesystemLayout implements FilesystemLayout {
     if (text === null) {
       return;
     }
-    const next = syncReconciliationBlocker(text, pending);
+    const next = syncReconciliationBlocker(
+      text,
+      pending,
+      effectiveEditor(undefined, document.editor),
+    );
     if (next !== text) {
       await writeTextFile(rootPath, next);
     }

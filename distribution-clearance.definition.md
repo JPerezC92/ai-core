@@ -19,12 +19,13 @@ The document carries `"schema": 1`. The version stays **v1** through every compa
 | Kind | Key | Record | Mode semantics |
 |---|---|---|---|
 | Root runtime | `AGENTS.md` | `{"mode": "region", "role": "root"}` | core region only; `role: root` is unique to this row |
-| Harness config | `opencode.jsonc` | `{"mode": "merge"}` | top-level JSON(C) key merge, destination-only keys preserved; the `mcp` key merges by server name, keeping destination-only MCP servers and making a same-named entry core-wins |
+| Harness config | `opencode.jsonc` | `{"mode": "merge", "editors": {…}}` | top-level JSON(C) key merge, destination-only keys preserved; the `mcp` key merges by server name, keeping destination-only MCP servers and making a same-named entry core-wins; delivered to OpenCode only — see **Editor profiles** |
 | Region knowledge documents | individually cleared `.aicore/core/knowledge/` files (`.aicore/core/knowledge/agents.md`, `.aicore/core/knowledge/debt.md`, `.aicore/core/knowledge/architecture-decision-workflow.md`, `.aicore/core/knowledge/escalation.md`) | `{"mode": "region"}` | core region only (core/project markers) |
 | Whole-file workflows | `.aicore/core/knowledge/agent-workflow.md`, `.aicore/core/knowledge/release.md` | `{"mode": "raw"}` | whole-file byte-for-byte transport, no ownership regions; source-local grants stay in root-runtime project extensions |
 | Canonical ODD templates | individually cleared `.aicore/core/odd/tasks/_template.md`, `.aicore/core/odd/features/_template.md` | `{"mode": "raw"}` | whole-file byte-for-byte transport of the templates only; feature records stay source-local |
 | Architecture documents | `.aicore/core/architecture/` directory root | `{"mode": "raw"}` | whole-file byte-for-byte transport with no ownership markers and no project region; no reconciliation report and no `pending` entry; common/shape contracts, implementation and testing templates/guides, and navigation; tools remain destination-owned |
 | Directory roots | e.g. `.aicore/core/architecture/`, `.aicore/core/knowledge/diagnostics/`, `.agents/skills/<name>/`, `.opencode/agents/` | `{"mode": <default>, "region_files": [<paths>]?}` | root `mode` is the default mode of every file under the root; `region_files` overrides selected files; see below |
+| Editor-specific rows | any row carrying `"editors": {…}` | `{"mode": …, "editors": {"<editor>": {"destination": "…"} \| {"omitted": true}}}` | the row names what each editor receives and where; see **Editor profiles** |
 
 Agent specs are covered by the `.opencode/agents/` directory root, `{"mode": "region"}`, so every file under it delivers only its core region between markers (it holds `<name>.md` runtimes, each carrying its own role manner; there is no separate persona tier).
 
@@ -34,8 +35,51 @@ The two canonical ODD templates are individual file entries, not an `.aicore/cor
 
 - `mode` is the default mode of every file under the root.
 - `region_files` is optional (absent = empty subset) and names root-relative files that instead use **region** mode. Today the only member is `SKILL.md` — within a skill directory root, the only file type governed by active core/project ownership markers. Raw references may illustrate marker literals without interpreting them, as described under **Scope rules**.
-- Current classification: `.aicore/core/architecture/` and the six tooling skill roots (`.agents/skills/git-branch-name/`, `.agents/skills/git-commit/`, `.agents/skills/git-pr/`, `.agents/skills/op-agent-creator/`, `.agents/skills/op-model/`, `.agents/skills/op-skill-creator/`) declare `{"mode": "raw"}`; the three workflow skill roots (`.agents/skills/incident-workflow/`, `.agents/skills/odd-workflow/`, `.agents/skills/git-pr-workflow/`) declare `{"mode": "raw", "region_files": ["SKILL.md"]}`; the `.opencode/agents/` directory and `.aicore/core/knowledge/diagnostics/` declare `{"mode": "region"}` — their files are all region-mode sources, so they need no `region_files`.
+- Current classification: `.aicore/core/architecture/` and the six tooling skill roots (`.agents/skills/git-branch-name/`, `.agents/skills/git-commit/`, `.agents/skills/git-pr/`, `.agents/skills/op-agent-creator/`, `.agents/skills/op-model/`, `.agents/skills/op-skill-creator/`) declare `{"mode": "raw"}`; the three workflow skill roots (`.agents/skills/incident-workflow/`, `.agents/skills/odd-workflow/`, `.agents/skills/git-pr-workflow/`) declare `{"mode": "raw", "region_files": ["SKILL.md"]}`; the `.opencode/agents/` directory and `.aicore/core/knowledge/diagnostics/` declare `{"mode": "region"}` — their files are all region-mode sources, so they need no `region_files`. The `.opencode/agents/` directory additionally names its per-editor destinations (see **Editor profiles**), and `opencode.jsonc` does the same.
 - **Expansion** — the sync tool identifies the files at every sync: every file under the root joins the sync set; `region_files` members deliver only their core region; every other file uses the root's default `mode` — `region` delivers only that file's core region, `raw` copies it byte-for-byte (mode semantics under **Scope rules**); interpreter caches (`__pycache__` path parts, `*.pyc` suffixes) never join. Files added under a root later join automatically. Clearance records durable ownership, not file inventories.
+
+## Editor profiles
+
+A cleared row may name its **per-editor destination behaviour**: what each editor receives from it, and where. The dimension is optional, and a row without it reaches every editor at its own path — which is the layout the shared content uses.
+
+```json
+"cleared": {
+  ".opencode/agents/": {
+    "mode": "region",
+    "editors": {
+      "opencode": { "destination": ".opencode/agents/" },
+      "cursor": { "destination": ".cursor/agents/" }
+    }
+  },
+  "opencode.jsonc": {
+    "mode": "merge",
+    "editors": {
+      "opencode": { "destination": "opencode.jsonc" },
+      "cursor": { "omitted": true }
+    }
+  }
+}
+```
+
+- `editors` names **every** supported editor explicitly. A missing editor is a malformed registry, not a default: adding an editor to the closed set forces a decision here instead of silently reusing another editor's layout.
+- Each editor's value is either `{"destination": "<path>"}` or `{"omitted": true}`. A destination is a canonical safe relative POSIX path — a file path for a file row, a directory path ending in `/` for a directory root. Both at once, or neither, is malformed.
+- `{"omitted": true}` means that editor does not receive the source at all: it is not cleared for that editor and cannot be synchronized to it.
+- A file row's destination is that file's destination path. A directory root's destination is the directory the root's files land in, so `.cursor/agents/` delivers `.opencode/agents/atrium.md` to `.cursor/agents/atrium.md`.
+- The mode is unchanged by the dimension: a row keeps one mode for every editor that receives it.
+
+**The two profiles this registry declares.**
+
+| Content | OpenCode | Cursor |
+|---|---|---|
+| Skills | `.agents/skills/<name>/` | `.agents/skills/<name>/` — identical |
+| Shared rules | `AGENTS.md` | `AGENTS.md` — identical |
+| Shared documents | their canonical paths | their canonical paths — identical |
+| Agents | `.opencode/agents/<name>.md` | `.cursor/agents/<name>.md` |
+| Project configuration | `opencode.jsonc` (merge mode) | none — omitted, because no merge target exists |
+
+The shared content is delivered identically: the same bytes, the same paths, and the same region rules, so a destination's own content in the `project` region is preserved under either editor. The agents are the one shared body delivered to two different directories, and the project configuration is the one row an editor does not receive.
+
+**What a Cursor destination does not get, stated plainly.** A Cursor destination receives the shared skills, the shared rules and the shared documents, with its own content preserved, and its agents delivered as Cursor agent documents. It receives **no project configuration**, because no merge target exists for it. Its **Git and GitHub permission posture is not enforced by anything this project distributes** — the project configuration that carries this repository's permission model is an OpenCode file, and a Cursor destination's editor settings are its own operator's responsibility.
 
 ## Knowledge distribution classes
 
@@ -86,4 +130,4 @@ New required documents ship with their consumers at one selected revision. A des
 
 ## Validation
 
-A document is valid when `parseClearanceDocument` in `cli/aicore/src/domain/synchronization/clearance.ts` accepts it: schema exactly `1`; keys unique and repo-relative; directory-root keys end with `/`; `region_files` members are root-relative, stay inside the root, and contain no `..` or absolute paths; `role` appears at most once and only on a `region` record (this registry uses `role: root` on `AGENTS.md` only). Any other version label is rejected (exit 2) — there is no version migration.
+A document is valid when `parseClearanceDocument` in `cli/aicore/src/domain/synchronization/clearance.ts` accepts it: schema exactly `1`; keys unique and repo-relative; directory-root keys end with `/`; `region_files` members are root-relative, stay inside the root, and contain no `..` or absolute paths; `role` appears at most once and only on a `region` record (this registry uses `role: root` on `AGENTS.md` only); and an `editors` map, when present, names every supported editor exactly once, with each editor's value carrying either one safe destination path or `{"omitted": true}` — no unknown editor, no unknown field, and no editor left unnamed. Any other version label is rejected (exit 2) — there is no version migration.

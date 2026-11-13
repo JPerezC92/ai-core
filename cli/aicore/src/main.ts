@@ -53,9 +53,15 @@ Options for sync:
   --target <path>          destination project; remembered for later runs.
                            Relative --target paths are resolved against the
                            current working directory.
-  --editor <editor>        editor to distribute for (${SUPPORTED_EDITORS.join(", ")})
+  --editor <editor>        editor to distribute for (${SUPPORTED_EDITORS.join(", ")}).
+                           Each editor receives the shared content and its own agent
+                           directory; only an editor with a merge target receives the
+                           project configuration.
   --source-revision <hex>  source revision to pin, or set $${REVISION_ENV_VAR}
   -h, --help               show this message
+
+A destination's editor is fixed by its enrollment; changing it is a
+destination-owned migration, not something a synchronization performs.
 
 Advanced commands (${ADVANCED_COMMANDS.join(", ")}) pass their arguments straight
 to the existing synchronization engine and keep its exit status unchanged.

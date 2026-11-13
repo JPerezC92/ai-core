@@ -1,9 +1,11 @@
 /**
  * What one synchronization command is asked to do.
  *
- * The four values every command needs; enrollment adds the declarations that
- * only `init` accepts.
+ * The four values every command needs, plus the editor profile the run acts
+ * for; enrollment adds the declarations that only `init` accepts.
  */
+
+import type { EditorProfile } from "#domain/synchronization/editor-profile.ts";
 
 /** A read or write command's inputs. */
 export type SynchronizationRequest = {
@@ -11,6 +13,8 @@ export type SynchronizationRequest = {
   readonly destinationRoot: string;
   readonly bindingsPath: string;
   readonly sourceRevision: string;
+  /** The requested editor profile; absent leaves the destination's own choice. */
+  readonly editor: EditorProfile | undefined;
 };
 
 /** An enrollment's inputs, including its declarations. */

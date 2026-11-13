@@ -1,11 +1,11 @@
 /**
  * End to end: editor refusal.
  *
- * One behavioral concern — a requested editor the engine does not implement is
- * refused by name and writes nothing.
+ * One behavioral concern — a destination enrolled for one editor refuses a run
+ * for another, by name, and writes nothing.
  */
 
-import { stat } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 
@@ -23,8 +23,8 @@ afterEach(async () => {
 });
 
 describe("editor refusal", () => {
-  test("Cursor is refused and writes nothing", async () => {
-    const created = await createFixture();
+  test("a destination enrolled for one editor refuses a run for another and writes nothing", async () => {
+    const created = await createFixture({ editor: "opencode" });
     fixture = created;
 
     const result = await invokeWithRevision(
@@ -33,8 +33,14 @@ describe("editor refusal", () => {
     );
 
     expect(result.status).toBe(2);
-    expect(result.stderr).toMatch(/not implemented/);
+    expect(result.stderr).toMatch(/enrolled for editor 'opencode'/);
+    expect(result.stderr).toMatch(/requested 'cursor'/);
     expect(result.stderr).toMatch(/Nothing was written/);
-    await expect(stat(join(created.destination, ".aicore"))).rejects.toThrow();
+
+    // The destination kept the bindings it had; no payload was written.
+    const bindings = await readFile(join(created.destination, ".aicore", "core.yaml"), "utf8");
+    expect(bindings).toMatch(/^editor: opencode$/m);
+    await expect(stat(join(created.destination, ".cursor", "agents"))).rejects.toThrow();
+    await expect(stat(join(created.destination, ".agents", "skills"))).rejects.toThrow();
   });
 });

@@ -14,6 +14,11 @@ import { VerifyDestinations } from "#application/synchronization/verify-destinat
 import { reportFileSystemFailure, reportMalformed, reportOutcome } from "#delivery/synchronization-report.ts";
 import type { SynchronizationReport } from "#delivery/synchronization-report.ts";
 import { REVISION_PATTERN, type CommandName } from "#domain/synchronization/constants.ts";
+import {
+  EDITOR_PROFILES,
+  type EditorProfile,
+  isEditorProfile,
+} from "#domain/synchronization/editor-profile.ts";
 import type { OperationOutcome } from "#domain/synchronization/failures.ts";
 
 import { YamlBindingsStore } from "./synchronization/bindings-store.ts";
@@ -35,6 +40,8 @@ export type CoreSyncEngineRequest = {
   readonly bindRaw?: readonly string[] | undefined;
   readonly bindCleared?: boolean | undefined;
   readonly root?: string | undefined;
+  /** The editor profile the run acts for; absent leaves the destination's own. */
+  readonly editor?: string | undefined;
 };
 
 /** What one command reported. */
@@ -95,6 +102,7 @@ async function execute(
     destinationRoot: request.destinationRoot,
     bindingsPath: request.bindingsPath,
     sourceRevision: request.sourceRevision,
+    editor: requestedEditor(request),
   };
   let outcome: OperationOutcome;
   switch (request.command) {
@@ -120,15 +128,35 @@ async function execute(
 }
 
 /**
+ * The requested editor profile.
+ *
+ * The command line is validated before a command starts, so an editor that
+ * reaches this point is one the engine implements; the fallback keeps the
+ * request honest if that ever stops being true.
+ */
+function requestedEditor(request: CoreSyncEngineRequest): EditorProfile | undefined {
+  const editor = request.editor;
+  if (editor === undefined) {
+    return undefined;
+  }
+  return isEditorProfile(editor) ? editor : undefined;
+}
+
+/**
  * Validate the command line before a command starts.
  *
- * A malformed `--source-revision` and a flag only `init` accepts are argument
- * errors: they exit `2` and touch nothing.
+ * A malformed `--source-revision`, an unknown `--editor` and a flag only `init`
+ * accepts are argument errors: they exit `2` and touch nothing.
  */
 function validate(request: CoreSyncEngineRequest): SynchronizationReport | null {
   if (!REVISION_PATTERN.test(request.sourceRevision)) {
     return reportMalformed(
       "argument --source-revision: must be a 40-character lowercase hex string",
+    );
+  }
+  if (request.editor !== undefined && !isEditorProfile(request.editor)) {
+    return reportMalformed(
+      `argument --editor: unknown editor '${request.editor}' (supported: ${EDITOR_PROFILES.join(", ")})`,
     );
   }
   if (request.command !== "init") {

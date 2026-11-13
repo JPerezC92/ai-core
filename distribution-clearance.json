@@ -6,7 +6,15 @@
       "role": "root"
     },
     "opencode.jsonc": {
-      "mode": "merge"
+      "mode": "merge",
+      "editors": {
+        "opencode": {
+          "destination": "opencode.jsonc"
+        },
+        "cursor": {
+          "omitted": true
+        }
+      }
     },
     ".aicore/core/knowledge/agents.md": {
       "mode": "region"
@@ -75,7 +83,15 @@
       ]
     },
     ".opencode/agents/": {
-      "mode": "region"
+      "mode": "region",
+      "editors": {
+        "opencode": {
+          "destination": ".opencode/agents/"
+        },
+        "cursor": {
+          "destination": ".cursor/agents/"
+        }
+      }
     }
   }
 }

@@ -47,19 +47,6 @@ describe("pre-write refusals", () => {
     vi.clearAllMocks();
   });
 
-  test("an unimplemented editor runs no engine command", async () => {
-    const engine = makeEngine();
-    const result = await operation({ engine }).execute({
-      target: DESTINATION_PATH,
-      editor: "cursor",
-      revision: undefined,
-    });
-
-    expect(!result.ok).toBeTruthy();
-    expect(result.ok ? "" : result.failure.code).toBe("unsupported-editor");
-    expect(engine.run).not.toHaveBeenCalled();
-  });
-
   test("an unknown editor is refused by name and runs no engine command", async () => {
     const engine = makeEngine();
     const result = await operation({ engine }).execute({
