@@ -40,7 +40,8 @@ function splitLines(text: string): string[] {
   return lines;
 }
 
-function pythonDecimalToAscii(value: string): string {
+/** Maps non-ASCII decimal digits onto their ASCII digits and leaves every other character unchanged. */
+function decimalDigitsToAscii(value: string): string {
   return [...value]
     .map((character) => {
       const codePoint = character.codePointAt(0);
@@ -111,14 +112,14 @@ function stripCode(line: string): string {
 }
 
 /**
- * Format a value with Python `repr` semantics for strings.
+ * Format a diagnostic value as a quoted literal.
  *
- * Python prefers single quotes and switches to double quotes only when the
- * value contains a single quote and no double quote. Backslashes, the chosen
- * delimiter and control characters are escaped; every other character stays
- * literal.
+ * Single quotes are the default. The value is wrapped in double quotes only
+ * when it contains a single quote and no double quote. Backslashes, the
+ * chosen delimiter and control characters are escaped; every other character
+ * stays literal.
  */
-export function pythonRepr(value: string): string {
+export function quoteDiagnosticValue(value: string): string {
   const delimiter = value.includes("'") && !value.includes('"') ? '"' : "'";
   let rendered = "";
   for (const character of value) {
@@ -162,7 +163,7 @@ export function validateFeature(text: string): string[] {
   for (const heading of REQUIRED_HEADINGS) {
     const count = headings.filter((candidate) => candidate === heading).length;
     if (count !== 1) {
-      findings.push(`heading ${pythonRepr(heading)} must appear exactly once; found ${count}`);
+      findings.push(`heading ${quoteDiagnosticValue(heading)} must appear exactly once; found ${count}`);
     }
   }
 
@@ -269,7 +270,7 @@ export function validateFeature(text: string): string[] {
       findings.push(`Log entry identifier is not a valid L number: ${line.trim()}`);
       continue;
     }
-    logIdentifiers.push(BigInt(pythonDecimalToAscii(digits)));
+    logIdentifiers.push(BigInt(decimalDigitsToAscii(digits)));
   }
 
   for (let index = 1; index < logIdentifiers.length; index += 1) {

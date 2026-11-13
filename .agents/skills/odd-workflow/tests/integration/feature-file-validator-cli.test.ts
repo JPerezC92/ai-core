@@ -56,7 +56,7 @@ describe("validate_feature_file CLI with the real filesystem adapter", () => {
     });
   });
 
-  it("prints the Python-compatible invalid-document diagnostic and exit status", () => {
+  it("prints the invalid-document diagnostic and exit status", () => {
     const directory = makeDirectory();
     const file = join(directory, "invalid.md");
     writeFileSync(file, makeFeatureFile("achieved"), "utf8");
@@ -67,7 +67,7 @@ describe("validate_feature_file CLI with the real filesystem adapter", () => {
     });
   });
 
-  it("prints the Python repr quoting for an apostrophe-bearing status and mark", () => {
+  it("prints the double-quoted diagnostics for an apostrophe-bearing status and mark", () => {
     const directory = makeDirectory();
     const file = join(directory, "apostrophe.md");
     writeFileSync(file, makeApostropheFeatureFile(), "utf8");

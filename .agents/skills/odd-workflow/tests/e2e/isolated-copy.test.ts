@@ -1,13 +1,12 @@
 import { spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import { makeFeature } from "../support/feature-fixtures.ts";
 
 const skillRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const repositoryRoot = resolve(skillRoot, "../../..");
 const runtimeFiles = [
   "scripts/validate_feature.ts",
   "scripts/feature_validation/domain/records.ts",
@@ -34,14 +33,7 @@ function createEnvironment(): { root: string; runtime: string; fixtures: string 
   return { root, runtime, fixtures };
 }
 
-function runPythonBaseline(args: string[]): ReturnType<typeof spawnSync> {
-  const script = relative(repositoryRoot, join(skillRoot, "scripts", "validate_feature.py"));
-  return spawnSync("uv", ["run", "--frozen", "python3", script, ...args], {
-    cwd: repositoryRoot,
-    encoding: "utf8",
-  });
-}
-
+/** Runs the copied entry point with the environment's Node binary and no dependency paths. */
 function runIsolatedNode(runtime: string, args: string[]): ReturnType<typeof spawnSync> {
   const environment = { ...process.env };
   delete environment.NODE_PATH;
@@ -53,40 +45,6 @@ function runIsolatedNode(runtime: string, args: string[]): ReturnType<typeof spa
   );
 }
 
-/** Normalizes the platform line terminator so only the diagnostic text is compared. */
-function normalizeLineEndings(text: string): string {
-  return text.replaceAll("\r\n", "\n");
-}
-
-/** The Python baseline names its own script in the usage line; the entry point names its file. */
-const PYTHON_USAGE = "usage: validate_feature.py <file-or-directory>";
-const NODE_USAGE = "usage: validate_feature.ts <file-or-directory>";
-
-/** Normalizes only the exact launcher token; every other byte is compared as it stands. */
-function normalizeLauncherToken(text: string): string {
-  return text.replaceAll(PYTHON_USAGE, NODE_USAGE);
-}
-
-function expectPythonParity(
-  runtime: string,
-  args: string[],
-  expectedStatus: number,
-): void {
-  const python = runPythonBaseline(args);
-  const node = runIsolatedNode(runtime, args);
-
-  expect(python.error).toBeUndefined();
-  expect(node.error).toBeUndefined();
-  expect(python.status).toBe(expectedStatus);
-  expect(node.status).toBe(expectedStatus);
-  expect(normalizeLineEndings(String(node.stdout))).toBe(
-    normalizeLineEndings(normalizeLauncherToken(String(python.stdout))),
-  );
-  expect(normalizeLineEndings(String(node.stderr))).toBe(
-    normalizeLineEndings(String(python.stderr)),
-  );
-}
-
 afterEach(() => {
   for (const directory of temporaryDirectories.splice(0)) {
     rmSync(directory, { recursive: true, force: true });
@@ -94,39 +52,59 @@ afterEach(() => {
 });
 
 describe("validate_feature process in an isolated source-only copy", () => {
-  it("matches Python success output and skips the template", () => {
+  it("pins one ok line per document and skips the template of a directory that holds both", () => {
     const { runtime, fixtures } = createEnvironment();
     const documents = join(fixtures, "valid");
     mkdirSync(documents);
     writeFileSync(join(documents, "_template.md"), makeFeature("Feature name"), "utf8");
     writeFileSync(join(documents, "feature.md"), makeFeature(), "utf8");
 
-    expectPythonParity(runtime, [documents], 0);
+    const run = runIsolatedNode(runtime, [documents]);
+
+    expect(run.error).toBeUndefined();
+    expect(run.status).toBe(0);
+    expect(String(run.stdout)).toBe(`ok ${join(documents, "feature.md")}\n`);
+    expect(String(run.stderr)).toBe("");
     expect(readdirSync(runtime).sort()).toEqual(["package.json", "scripts"]);
     expect(existsSync(join(runtime, "node_modules"))).toBe(false);
     expect(existsSync(join(runtime, "cli", "aicore"))).toBe(false);
   });
 
-  it("matches Python usage output and nonzero process status", () => {
+  it("pins the usage error, its message and its exit status", () => {
     const { runtime } = createEnvironment();
 
-    expectPythonParity(runtime, [], 2);
+    const run = runIsolatedNode(runtime, []);
+
+    expect(run.error).toBeUndefined();
+    expect(run.status).toBe(2);
+    expect(String(run.stdout)).toBe("usage: validate_feature.ts <file-or-directory>\n");
+    expect(String(run.stderr)).toBe("");
   });
 
-  it("matches Python invalid-document diagnostics and exit status", () => {
+  it("pins the invalid-document diagnostic and its exit status", () => {
     const { runtime, fixtures } = createEnvironment();
     const file = join(fixtures, "invalid.md");
     writeFileSync(file, makeFeature("Feature name"), "utf8");
 
-    expectPythonParity(runtime, [file], 1);
+    const run = runIsolatedNode(runtime, [file]);
+
+    expect(run.error).toBeUndefined();
+    expect(run.status).toBe(1);
+    expect(String(run.stdout)).toBe(`FAIL ${file}\n  - title must not be the template placeholder\n`);
+    expect(String(run.stderr)).toBe("");
   });
 
-  it("matches Python no-documents output for a template-only directory", () => {
+  it("pins the no-documents output and its exit status for a template-only directory", () => {
     const { runtime, fixtures } = createEnvironment();
     const documents = join(fixtures, "template-only");
     mkdirSync(documents);
     writeFileSync(join(documents, "_template.md"), makeFeature("Feature name"), "utf8");
 
-    expectPythonParity(runtime, [documents], 1);
+    const run = runIsolatedNode(runtime, [documents]);
+
+    expect(run.error).toBeUndefined();
+    expect(run.status).toBe(1);
+    expect(String(run.stdout)).toBe("no feature documents found\n");
+    expect(String(run.stderr)).toBe("");
   });
 });

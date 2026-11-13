@@ -60,7 +60,7 @@ describe("validate_feature CLI with the real filesystem adapter", () => {
     });
   });
 
-  it("ignores an unknown heading and reports the duplicated required heading with the exact repr-formatted text", () => {
+  it("ignores an unknown heading and reports the duplicated required heading with the exact quoted text", () => {
     const directory = makeDirectory();
     const file = join(directory, "feature.md");
     writeFileSync(file, makeFeatureWithApostropheHeading(), "utf8");

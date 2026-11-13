@@ -21,7 +21,7 @@ export function makeFeatureFile(status = "partial"): string {
 
 /**
  * A durable feature file whose declared status and requirement mark carry an
- * apostrophe, so Python `repr` formats both with double quotes.
+ * apostrophe, so both are reported wrapped in double quotes.
  */
 export function makeApostropheFeatureFile(): string {
   return [

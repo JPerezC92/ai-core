@@ -10,7 +10,7 @@
   },
   "scripts": {
     "aicore": "node cli/aicore/src/main.ts",
-    "typecheck": "pnpm --dir cli/aicore typecheck && pnpm --dir cli/aicore exec tsc -p ../../.agents/skills/odd-workflow/tsconfig.json",
+    "typecheck": "pnpm --dir cli/aicore typecheck && pnpm --dir .agents/skills/odd-workflow typecheck",
     "test:cli": "pnpm --dir cli/aicore test",
     "test:cli:e2e": "pnpm --dir cli/aicore test:e2e"
   }

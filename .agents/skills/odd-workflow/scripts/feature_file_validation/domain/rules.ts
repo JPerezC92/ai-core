@@ -52,7 +52,8 @@ function splitLines(text: string): string[] {
   return lines;
 }
 
-function pythonDecimalToAscii(value: string): string {
+/** Maps non-ASCII decimal digits onto their ASCII digits and leaves every other character unchanged. */
+function decimalDigitsToAscii(value: string): string {
   return [...value]
     .map((character) => {
       const codePoint = character.codePointAt(0);
@@ -123,14 +124,14 @@ function stripCode(line: string): string {
 }
 
 /**
- * Format a value with Python `repr` semantics for strings.
+ * Format a diagnostic value as a quoted literal.
  *
- * Python prefers single quotes and switches to double quotes only when the
- * value contains a single quote and no double quote. Backslashes, the chosen
- * delimiter and control characters are escaped; every other character stays
- * literal.
+ * Single quotes are the default. The value is wrapped in double quotes only
+ * when it contains a single quote and no double quote. Backslashes, the
+ * chosen delimiter and control characters are escaped; every other character
+ * stays literal.
  */
-export function pythonRepr(value: string): string {
+export function quoteDiagnosticValue(value: string): string {
   const delimiter = value.includes("'") && !value.includes('"') ? '"' : "'";
   let rendered = "";
   for (const character of value) {
@@ -216,7 +217,7 @@ function statusFindings(lines: readonly string[]): string[] {
   const value = values[0]!;
   if (!STATUSES.includes(value as FeatureStatus)) {
     return [
-      `feature-file-status: status must be one of 'achieved', 'partial' or 'not started'; found ${pythonRepr(value)}`,
+      `feature-file-status: status must be one of 'achieved', 'partial' or 'not started'; found ${quoteDiagnosticValue(value)}`,
     ];
   }
   return [];
@@ -258,7 +259,7 @@ function entryFindings(lines: readonly string[]): string[] {
 function requirementNumbers(lines: readonly string[]): bigint[] {
   return requirementLines(lines).flatMap((line) => {
     const number = REQUIREMENT_RE.exec(line)?.groups?.number;
-    return number === undefined ? [] : [BigInt(pythonDecimalToAscii(number))];
+    return number === undefined ? [] : [BigInt(decimalDigitsToAscii(number))];
   });
 }
 
@@ -298,7 +299,7 @@ function markFindings(text: string): string[] {
     .filter((requirement) => requirement.mark !== "" && !MARKS.includes(requirement.mark as (typeof MARKS)[number]))
     .map(
       (requirement) =>
-        `feature-file-requirement-mark: requirement ${requirement.number} carries an unknown mark ${pythonRepr(requirement.mark)}; marks are 'upstream', 'upstream · local detail', 'upstream · narrowed', 'local' or 'local · conflicts'`,
+        `feature-file-requirement-mark: requirement ${requirement.number} carries an unknown mark ${quoteDiagnosticValue(requirement.mark)}; marks are 'upstream', 'upstream · local detail', 'upstream · narrowed', 'local' or 'local · conflicts'`,
     );
 }
 
@@ -348,7 +349,7 @@ function derivationFindings(text: string): string[] {
   const derived = deriveFeatureStatus(readRequirements(text));
   if (derived === null || derived === values[0]) return [];
   return [
-    `feature-file-status-derivation: declared status ${pythonRepr(values[0]!)} does not match the status derived from the ticks ${pythonRepr(derived)}`,
+    `feature-file-status-derivation: declared status ${quoteDiagnosticValue(values[0]!)} does not match the status derived from the ticks ${quoteDiagnosticValue(derived)}`,
   ];
 }
 
