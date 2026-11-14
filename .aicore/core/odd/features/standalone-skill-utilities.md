@@ -1,6 +1,6 @@
 # Standalone skill utilities
 
-AICore distributes runtime utilities as part of their skills so operators can invoke them independently. Their original modular TypeScript source is authoritative and runs through native Node.js support without destination-side package installation.
+AICore distributes runtime utilities as part of their skills so operators can invoke them independently. Their original modular TypeScript source is authoritative and runs through native Node.js support with any documented runtime dependencies installed by the operator.
 
 **Status:** achieved
 

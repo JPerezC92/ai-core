@@ -15,7 +15,7 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
 - S1 — The six named skills are migrated serially on one dedicated branch created by Herald 📯 (Release Manager) from updated `main`, starting with `odd-workflow`. Exact requirement: "The six previously identified skills are: odd-workflow; git-pr-workflow; incident-workflow; op-skill-creator; git-pr; op-model. Start from updated main. Use one dedicated migration branch, created by Herald. Migrate one skill at a time." Acceptance: inspect the branch's base and the six ordered task rows; observe one Herald-created branch from updated `main` and no overlapping skill migrations.
 - S2 — TypeScript is the authoritative source for each selected runtime utility, and Vitest runs its tests. Exact requirement: "TypeScript is the authoritative implementation language for migrated runtime utilities. Use Vitest for their tests." Acceptance: inspect a completed skill's source and test imports; observe TypeScript sources and Vitest tests.
 - S3 — Each migrated utility preserves its existing observable behavior, CLI, diagnostics and exit codes where applicable. Exact requirement: "Preserve existing observable behavior, command-line interfaces, diagnostics and exit codes where applicable." Acceptance: run the same documented inputs against the Python baseline and replacement; observe matching specified output and exit status, with documented language-only command-path changes.
-- S4 — Each utility distributes original TypeScript source modules in its own skill directory, remains independently copyable without runtime imports from another skill or `cli/aicore/`, and runs through native Node.js TypeScript support without compilation or bundling unless a concrete incompatibility requires it. Any justified runtime dependencies and the Node version requirement are documented; no destination-side package installation is required. Exact requirement: "Distribute original TypeScript source files. Keep each skill independently copyable, with its required runtime modules inside its own directory. Avoid runtime imports from other skills or from `cli/aicore/`. Prefer native Node.js TypeScript execution. Do not introduce compilation, bundling, or generated JavaScript unless technically necessary. Allow justified dependencies, documented in the skill's instructions. Document the actual Node.js runtime requirement. Ensure runtime imports use paths compatible with native TypeScript execution. Validate the distributed utility from an isolated directory without access to the AICore development package." Acceptance: copy only odd-workflow runtime source files to an isolated directory without `node_modules` or AICore package access; invoke both `.ts` entrypoints with Node.js `>=24.12.0`; observe expected CLI output and exit statuses.
+- S4 — Each utility distributes original TypeScript source in its skill, independently copyable without runtime imports from another skill or `cli/aicore/`, and runs natively without compilation or bundling unless necessary; documented runtime dependencies may be installed by the destination, but development dependencies are not needed to execute it. Exact requirement: "zero destination-side installation is not an absolute requirement"; "Declare necessary runtime dependencies in its skill-local `package.json`." Acceptance: copy the skill outside the AICore checkout, install only its documented runtime dependencies if needed, and invoke its TypeScript entry points with the documented Node version; observe the specified output and exit status.
 - S5 — A Python implementation is removed only after its TypeScript replacement is verified; this initiative does not alter the completed synchronization engine. Exact requirement: "Remove Python implementations only after their replacements are verified. Keep the migration independent of the completed synchronization engine." Acceptance: compare the approved diff and verify the replacement before observing removal of the corresponding Python source, with no synchronization-engine changes.
 - S6 — No push, PR, merge, or destination-repository modification occurs without separate authorization. Exact requirement: "No push, PR, merge, or destination-repository modifications without separate authorization." Acceptance: inspect Herald's Git report and changed-path set; observe no publication action and no destination path.
 
@@ -23,7 +23,7 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
 
 - T1 | S2, S3, S4, S5, S6 | delegated (odd-workflow only: the two document validators ported to native `.ts` runtime modules with an explicit ESM package boundary and a self-contained skill TypeScript project, Vitest unit, integration and end-to-end suites with shared fixtures under the skill's package-root `tests/`, both application operations class-based with `execute()` and constructor-injected collaborators to satisfy DEBT-046/047 criteria, and the Python validators, their packages and their tests retired once parity was demonstrated) — Forge 🔨 (Implementer) | done | commit: 3cbe053f9dc3aaa2023900524dbb101070c7914e
 - T2 | S1, S2, S3, S4, S5, S6 | delegated (migrate `git-pr-workflow` after T1 was verified and committed: its two CLIs and runtime modules ported to native `.ts`, a skill-local ESM boundary and self-contained strict project, a three-level Vitest suite with shared fixtures, parity demonstrated against the Python implementation before that implementation and its tests were retired by exact path, and the skill's documents and the reviewer runtime spec updated to the new entry points) — Forge 🔨 (Implementer) | done | commit: b9140e42e11a5a12d515bcb27f0d322e66c5f6ca
-- T3 | S1, S2, S3, S4, S5, S6 | delegated (migrate `incident-workflow` only after T2 is verified and committed) — Forge 🔨 (Implementer) | open | commit: pending
+- T3 | S1, S2, S3, S4, S5, S6 | delegated (migrate `incident-workflow` after T2 was verified and committed: its Python validator, package, tests and testkit retired once the TypeScript replacement passed architecture and test-architecture review; native `.ts` runtime under the skill with a documented `yaml` runtime dependency; three Vitest levels with shared fixtures; the original import convention applied to all three migrated skills) — Forge 🔨 (Implementer) | done | commit: b57ba71
 - T4 | S1, S2, S3, S4, S5, S6 | delegated (migrate `op-skill-creator` only after T3 is verified and committed) — Forge 🔨 (Implementer) | open | commit: pending
 - T5 | S1, S2, S3, S4, S5, S6 | delegated (migrate `git-pr` only after T4 is verified and committed) — Forge 🔨 (Implementer) | open | commit: pending
 - T6 | S1, S2, S3, S4, S5, S6 | delegated (migrate `op-model` only after T5 is verified and committed) — Forge 🔨 (Implementer) | open | commit: pending
@@ -83,6 +83,7 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   Do not migrate the other skills simultaneously.
 
   No push, PR, merge, or destination-repository modifications without separate authorization.
+
 
 - L2 — 2026-11-13 — Classification: non-small. The authorized scope spans six independent skill runtimes, with language, test, distribution and compatibility changes, and cannot be resumed safely from a request plus a diff. The first slice is odd-workflow only. The completed synchronization migration remains closed (`.aicore/core/odd/tasks/2026-11-12-core-synchronization-migration.md`); its prior U6 record says 179 distributed Python utility files were deliberately left untouched. Herald's bounded read-only inventory found a clean `main` at `a312e90249d7f8269be694080c1d68ce8d74bd6`, equal to the local `origin/main` ref, but no remote fetch has yet verified freshness. The previous pilot is not present in the current odd-workflow scripts or `output`; no recovery beyond that bounded search is planned. `odd/features/typescript-testing.md` covers test capability, not standalone skill runtimes, so this change creates a distinct durable feature file. Git refresh/branch creation, current-main source verification, and behavior checks remain pending.
 - L3 — 2026-11-13 — Bootstrap anatomy check: `uv run --frozen python3 .agents/skills/odd-workflow/scripts/validate_feature.py .aicore/core/odd/tasks/2026-11-13-independent-skill-utilities-typescript.md` first exited 1 because the validator rejected Unicode range notation `S1–S6` in T2–T6. The rows now enumerate linked specs explicitly; rerun returned `ok`, exit 0. `uv run --frozen python3 .agents/skills/odd-workflow/scripts/validate_feature_file.py .aicore/core/odd/features/standalone-skill-utilities.md` returned `ok`, derived status `not started`, exit 0.
@@ -442,7 +443,152 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   Gates: Bastion 🧱 (Backend & Scripts Architect) B3 `[PASS]` with zero findings. Crucible 🔥 (Test Architect) C6 `[FAIL]` with nine findings, C7 `[FAIL]` with one further finding, then C8 `[PASS]` with zero findings after the module split, the removal of a direct domain-helper unit target, literal expectations replacing a self-fulfilling one, shared factories, cases for both input-shape differences and every loader rejection branch, and isolated-copy execution for both utilities; its finding that the skill should own its own runner configuration was refuted under L14's explicit mandate ("Do not introduce a new Vitest or TypeScript configuration standard." and "Reuse AICore's existing TypeScript/Vitest development tooling.") and the reviewer accepted the refutation, keeping the reviewed discovery command as the coordinator's to hold stable. Sentinel 🛡️ (Quality Guardian) S3 `[FAIL]` with four document findings — entry points attributed to the `git-pr` skill that do not exist yet, an incomplete exclusive-create list, an incomplete exit-code enumeration, and a skill version not advanced for the modify — all corrected in the documents; **no fresh Sentinel review was run on those corrections**, so this entry records fixes, not a passing document verdict. Warden 🔒 (Dependency Warden) cleared the manifest and workspace entry (`[PASS]`) and withheld the lockfile gate once for absent byte-level evidence, then returned `[PASS]` after Herald supplied the literal diff showing a single additive importer block and one workspace line (+16/−0).
   Residual state: the `initialize` and `validate` content commands remain with the `git-pr` skill and stay Python until its own slice; the suite keeps a few synthetic `.py` fixture path literals, which assert nothing Python-specific; discovery for both migrated skills reuses the repository's reviewed Vitest configurations, so those commands must stay stable; DEBT-046 and DEBT-047 stay open for the remaining skills. The full mirror refresh for this slice is pending recovery — the mirror record still holds the closed L1–L21 revision and has not been rewritten with L22. Next authorized slice: T3, `incident-workflow`.
 
+- L23 — 2026-11-13 — User correction, verbatim:
 
+  # AICore — T3 YAML Dependency Decision
 
+  Do not vendor or implement a custom YAML parser.
 
+  We previously clarified that destination projects are allowed to manage their own runtime dependencies and configuration.
 
+  Therefore, **zero destination-side installation is not an absolute requirement** for these independently distributed skills.
+
+  ## Decision
+
+  Evaluate the maintained npm `yaml` package as the preferred dependency for `incident-workflow`.
+
+  Requirements:
+
+  1. Keep `incident-workflow` independently copyable.
+  2. Declare necessary runtime dependencies in its skill-local `package.json`.
+  3. Document the installation and execution requirements in `SKILL.md`.
+  4. Preserve support for the YAML structures used by the existing validator, including nested mappings and lists.
+  5. Verify meaningful compatibility against the existing PyYAML behavior.
+  6. Document actual parser differences rather than claiming unconditional parity.
+  7. Do not write a custom YAML parser or vendor library source without a demonstrated necessity.
+  8. Keep TypeScript as the sole authoritative implementation after verification.
+
+  Use the existing Warden dependency review for the chosen package. Do not start another broad architecture or dependency investigation.
+
+  If the package meets the requirements, proceed with T3 implementation on the existing migration branch.
+
+  Do not create another branch, push, open a PR, or merge.
+
+  Herald remains the sole Git/GitHub executor.
+
+  Scope delta: S4 now allows documented runtime dependency installation while retaining independent copying and no destination development dependencies. The durable feature's introduction reflects this correction; its existing R3 already permits documented runtime dependencies. T2's schema 1.0 and Unicode case-folding differences remain recorded in L22; neither is claimed equivalent. Full mirror refresh remains pending recovery.
+
+- L24 — 2026-11-13 — User approval, verbatim:
+
+  # AICore — Permission Change Approved
+
+  I approve the following two changes:
+
+  1. Add this exact shell permission to Warden's allowlist in `opencode.jsonc`:
+
+     ```json
+     {
+       "action": "shell",
+       "resource": "pnpm audit --json",
+       "effect": "allow"
+     }
+     ```
+
+  2. Update `.opencode/agents/warden.md` to:
+     - Authorize the exact `pnpm audit --json` command.
+     - Correct the outdated statement that AICore has no root JavaScript manifest or lockfile.
+
+  ## Constraints
+
+  - Do not grant unrestricted `pnpm` execution.
+  - Do not authorize `pnpm audit --fix`, unrelated installs, or upgrades.
+  - Ensure the proposed `yaml` dependency is present in the resolved lockfile before auditing.
+  - Warden must assess the actual dependency graph, license, advisories, and lockfile changes.
+  - Herald remains the sole Git/GitHub executor.
+
+  Once Warden's dependency gate passes, **continue directly with T3 (`incident-workflow`)** on the existing migration branch.
+
+  Do not start another broad audit or permission-review cycle.
+
+  No push, PR, merge, or destination-repository modifications without separate authorization.
+
+- L25 — 2026-11-13 — User correction, verbatim:
+
+  # AICore — Resolve the Dependency Bootstrap Deadlock
+
+  The dependency workflow has a circular approval requirement. Stop treating it as another reason to postpone T3.
+
+  I explicitly authorize a **one-time, narrowly scoped dependency-preparation exception for T3**.
+
+  ## Authorized preparation
+
+  Forge may prepare the `incident-workflow` manifest and corresponding lockfile entry for the selected `yaml` dependency.
+
+  I authorize the exact preparation command:
+
+  `pnpm install --lockfile-only --ignore-scripts`
+
+  This authorization does not permit unrestricted installs, lifecycle script execution, dependency upgrades, or unrelated package changes.
+
+  If the existing agent permission contract prevents Forge from executing even this explicitly authorized command, identify the exact rule and make the minimum necessary permission adjustment through the authorized process. Do not bypass a mandatory security restriction silently.
+
+  ## Warden verification
+
+  Once the lockfile represents the proposed dependency:
+
+  1. Execute `pnpm audit --json`.
+  2. Review the dependency graph, license and lockfile changes.
+  3. Distinguish new findings from existing advisories.
+  4. Complete the required outdated check using its existing authorized command, or report its exact permission blocker.
+  5. Approve or reject the dependency based on the actual evidence.
+
+  Do not fabricate bootstrap evidence or mark a gate PASS without executing its requirements.
+
+  ## Workflow correction
+
+  Record the bootstrap-ordering conflict as a workflow defect.
+
+  The dependency process should permit preparation of an auditable lockfile before requiring final dependency approval.
+
+  Do not implement a broad permission redesign or create another independent migration task for this issue.
+
+  ## Resume T3
+
+  If Warden approves `yaml`, proceed directly with the `incident-workflow` TypeScript migration on the existing branch.
+
+  Keep YAML frontmatter unchanged.
+
+  Do not launch another broad investigation, create branches, or restart completed reviews.
+
+  Herald remains the sole Git/GitHub executor.
+
+  No push, PR, merge, or destination-repository modifications without separate authorization.
+
+  Workflow defect: Forge's blanket install-command prohibition and Warden's first-invocation bootstrap ordering prevent a lockfile-only, scripts-disabled resolution before an audit of the resulting graph. Forge P2 reported its effective prohibition and did not execute the command or edit files. Final dependency approval and installation safeguards remain required; no bootstrap is claimed complete.
+  Preparation: `.opencode/agents/forge.md` now contains a bounded, user-authorized lockfile-only exception; Forge prepared `.agents/skills/incident-workflow/package.json` and `pnpm-workspace.yaml`, then `pnpm install --lockfile-only --ignore-scripts` exited 0. Herald reported the lockfile adds `yaml@2.9.1` and changes Vite/Vitest peer-resolution references; no other dependency changes appear in the two inspected diffs. Warden executed `pnpm audit --json` and reported an empty advisory object and zero counts, with exit status not separately displayed; registry and lock integrity metadata match, license ISC. Gate remains BLOCKED: `pnpm outdated --json` is not granted to Warden, bootstrap completion and other integrity evidence are unverified. The current permission/runtime-spec edits require their independent review; no dependency approval or T3 implementation is claimed.
+
+- L26 — 2026-11-13 — User authorized a one-time exception for T3 `yaml@2.9.1` to Warden's first-invocation bootstrap prerequisite; the repository-wide bootstrap remains incomplete. Warden's scoped upstream verdict was CONDITIONAL on confirmation of the exact pin and intended registry source; downstream was ADVISORY pending installed-environment compatibility and approved-source/canonical mapping evidence. Forge confirmed the manifest and lock pin `2.9.1`, but effective registry source is not established. Publisher provenance is indeterminate, not evidence of compromise. Separately, Warden identified that `.gitignore` does not cover bare `.env`; this is a security-hygiene gap for its owner, with no evidenced secret exposure, and does not independently block the YAML candidate.
+  Subsequent evidence: `pnpm config get registry` returned `https://registry.npmjs.org/`; Warden issued upstream APPROVE for `yaml@2.9.1` only, with downstream ADVISORY still pending. T3 started: the skill-local strict `tsconfig.json`, YAML frontmatter loader and integration tests exist; the focused Vitest command passed 1 file / 6 tests, and skill typecheck passed. The initial pre-implementation run failed on a missing module before collecting tests, so it is not behavioral RED. That pnpm invocation unexpectedly reported preparing five packages; yaml 2.9.1 is visible under skill-local `node_modules`, but the pre-run filesystem state is unknown. No cleanup is authorized or claimed. A separate validator-mode test-first slice exists but has not run; its fixture cleanup does not cover failure before fixture creation returns. Python remains authoritative until replacement verification. The Warden/Forge permission changes and test/architecture reviews remain pending; no staging PASS is claimed.
+
+- L27 — 2026-11-13 — T3 authoring checkpoint, not completion. The TypeScript validator now exists under `.agents/skills/incident-workflow/scripts/`: `validate_incident_workflow.ts`, `incident_workflow_pkg/entry.ts`, `infrastructure/{arguments,frontmatter,records,filesystem}.ts`, `domain/{errors,problem,ports,rules,entities}.ts`, and `application/{validate_analysis,validate_scaffold,validate_step,validate_pre_close,validate_close_out}.ts`; tests are `tests/integration/{incident-yaml,pre-close-filesystem}.test.ts`, `tests/unit/{pre-close-safety,pre-close-errors}.test.ts`, `tests/e2e/validator-cli.test.ts` and two shared support modules. Python remains authoritative and untouched.
+  Measured by the coordinator on the working tree: `pnpm --dir .agents/skills/incident-workflow typecheck` exits 0 with no diagnostics; the unit and integration configuration passes 3 files / 8 tests; the end-to-end configuration passes 1 file / 6 tests.
+  Direct same-input comparison against the Python validator, using only disposable inputs: `--scaffold` (both `ok scaffold: …`), default analysis and `--step identify` on `references/analysis` (identical six `UNFILLED-TOKEN` lines, exit 1), a no-argument invocation (identical required-argument diagnostic and exit, with launcher name and line folding differing), `--pre-close` on a missing ticket directory (identical `PRE-CLOSE-0`, four `PRE-CLOSE-2`, `PRE-CLOSE-3`, `PRE-CLOSE-4` and `PRE-CLOSE-5`), `--close-out` on the same path (identical `CLOSE-SKIPPED …`), and default mode on a missing analysis directory (identical `HEADER-ERROR: ` prefix, with OS-level detail wording differing as `[Errno 2] No such file or directory` versus `ENOENT: no such file or directory`). The pre-close comparison initially diverged — Python emitted structured findings while the TypeScript adapter raised an IO error for the absent directory — and was corrected before this entry by tolerating a missing directory during enumeration and resolving the ticket root only when citations exist.
+  Behavioral RED genuinely observed: the two pre-close safety cases failed for their intended reason before remediation (a directory named `state.md` counted as a loaded working file; a required name without loaded content passed); after remediation the same suites pass.
+  Bastion 🧱 (Backend & Scripts Architect) B1 returned `[FAIL]` with two findings — pre-close catching every error as `PRE-CLOSE-IO`, and the missing-regular-file pre-close gap, whose origin it classified as `baseline` in the compared Python source — and both were remediated; a further `parseRecord` misclassification risk was closed by introducing a distinct rejected-input error type while filesystem failures remain the only mapped IO boundary. **No re-review of the remediated candidate was obtained**, so the architecture gate is not closed. Crucible 🔥 (Test Architect) has not reviewed the new suites, Warden's downstream staging ADVISORY remains open, and Sentinel 🛡️ (Quality Guardian) has not reviewed the changed permission documents.
+  Blocker for retirement: the Python implementation is not removed. Deletion was authorized only after the replacement is verified, and the remaining verification needs the independent architecture re-review, a test-architecture review of the new suites, broader parity coverage for clock/DST, register diagnostics, `--step investigate|synthesize` and a successful close-out, plus the staging gate. The subagent budget for this session is exhausted, so those gates could not run and no retirement is claimed. The skill documents still name the Python commands, which is correct while Python remains authoritative. Nothing was committed; no branch, push, PR, merge or destination change occurred.
+
+- L28 — 2026-11-13 — T3 implementation and retirement, authoring complete but not committed. Parity gaps closed by direct comparison against the Python validator on disposable inputs: `--step investigate` and `--step synthesize` on `references/analysis` (identical token findings), a successful `--close-out` on a synthetic durable set (identical `ok  close-out: …`), a verdict-consistency run citing an absent `P-999` (identical `VERDICT-4`), and two SLA windows — one spanning the autumnal transition and one the spring transition — which exposed a real defect: the TypeScript window was computed from absolute instants, giving 25 or 23 hours where the reference measures 24 hours of wall clock. It was corrected to encode both the header stamps and `now` from literal components, and is now asserted at the `ValidateAnalysis` unit. Register diagnostics are covered at the loader and through verdict consistency, not by a CLI surface, because the reference exposes `check_register_rows` only as a helper.
+  Reviews: Bastion 🧱 (Backend & Scripts Architect) B1 `[FAIL]` (broad `PRE-CLOSE-IO` catch; a directory named `state.md` counting as loaded) → B2 `[PASS]` with both closed, no new violation. Crucible 🔥 (Test Architect) C1 `[FAIL]` (10 items) → C2 `[FAIL]` (5 coverage items) → C3 `[FAIL]` (2 remaining LOW items) → C4 `[PASS]`, with zero open findings; its C1 findings on skill-local runner configuration and `*.spec.ts` naming were refuted under L14 and L16 and it accepted both.
+  Retirement: exactly 40 `.py` files deleted by explicit path — the wrapper `validate_incident_workflow.py`, `_incident_workflow_testkit.py`, `entry.py`, the `incident_workflow_pkg/{application,domain}` modules and package markers, and every `test_*.py` including `scripts/e2e/`. No directory was removed; a post-retirement glob for `**/*.py` under the skill returns nothing. No Python file outside this skill was touched. Python remains installed in the root environment and `PyYAML` stays in the root manifest: removing a root dependency is a separate change requiring its own gate and was not attempted.
+  Documentation updated after retirement: `SKILL.md` metadata `version` 4.2.0 → 5.0.0 with `dependencies: yaml@2.9.1`, and its project extension now documents native Node.js `>=24.12.0` plus the runtime install step and the `node …validate_incident_workflow.ts` command; `references/_consistency-checklist.md` commands and script references moved to `.ts`; `.opencode/agents/ledger.md` reference commands moved to the Node.js form with `version` 2.2.0 → 2.3.0 and the matching pin in `tests/integration/test_agent_versions.py`.
+  Verification observed by the coordinator on the retired state: `pnpm --dir .agents/skills/incident-workflow typecheck` exits 0; the unit and integration configuration collects 11 files and passes 73 tests; the end-to-end configuration collects 1 file and passes 18 tests; `node .agents/skills/incident-workflow/scripts/validate_incident_workflow.ts .agents/skills/incident-workflow/references/analysis --scaffold` prints `ok scaffold: …`; `uv run --frozen --group dev pytest -q` exits 0 with 204 passed and 6 skipped, the 132-item drop from 336 matching the retired incident-workflow Python tests.
+  Limitations recorded rather than waived: the `PRE-CLOSE-IO` route stays unasserted — it needs a filesystem failure this platform cannot create reproducibly, and Crucible accepted that as pending, not as passing; the I/O error detail wording differs from Python (`ENOENT: no such file or directory` versus `[Errno 2] No such file or directory`) while the `HEADER-ERROR: ` prefix and exit status are preserved; the `yaml` parser is configured with `version: '1.1'` and `uniqueKeys: false` to match the reference's `safe_load` shape, but that equivalence is asserted for the fixture shapes exercised, not proven exhaustively. Warden's downstream staging ADVISORY remains open and the repository-wide bootstrap remains incomplete; staging the dependency files therefore needs explicit user acknowledgment under `.opencode/agents/warden.md` `[ADVISORY]`. Nothing is committed yet, so no task row carries a commit reference; no branch, push, PR, merge or destination change occurred.
+
+- L29 — 2026-11-13 — User correction and decision, verbatim: the original TypeScript guides forbid parent-relative imports and require aliases for non-sibling imports, while the agnostic contract carries no equivalent rule; the migrated code must follow the original convention, and the discrepancy was recorded as technical debt with the broader integrity investigation deferred. Applied to the three skills in this migration: each skill's `package.json` now declares Node subpath imports — `"#scripts/*": "./scripts/*"` and `"#tests/*": "./tests/*"` — and every cross-directory specifier was rewritten to the matching alias while same-directory `./sibling.ts` imports were left unchanged. The rewrite touched 60 files: 21 in `incident-workflow` (9 runtime, 12 test/support), 14 in `odd-workflow` (6 runtime, 8 test/support) and 25 in `git-pr-workflow` (10 runtime, 15 test/support). No bundler, loader, compilation step, generated JavaScript or shared resolution framework was introduced; each skill resolves its own aliases from its own manifest, so independent copyability is unchanged, and the mechanism was chosen because it is the only alias form that a bare `node file.ts` resolves.
+  Verified on all three surfaces per skill, not merely in the editor: `pnpm --dir .agents/skills/<skill> typecheck` exits 0 for all three; the unit and integration suites pass (11 files / 73 tests `incident-workflow`, 4 files / 17 tests `odd-workflow`, 9 files / 52 tests `git-pr-workflow`); the end-to-end suites pass (1 file / 18, 2 files / 9, 4 files / 20 respectively), including the isolated-copy cases that execute a copied skill from its own manifest; and native execution works — `node .agents/skills/incident-workflow/scripts/validate_incident_workflow.ts … --scaffold` prints `ok scaffold: …`, `node .agents/skills/odd-workflow/scripts/validate_feature_file.ts …` prints the derived status, and `node .agents/skills/git-pr-workflow/scripts/prepare_pr_evidence.ts` prints its usage diagnostic. A bounded search for a parent-relative specifier across the three skills returns no match. `pnpm typecheck` at the repository root exits 0 and `uv run --frozen --group dev pytest -q` exits 0 with 204 passed and 6 skipped, so no unrelated surface moved.
+  Debt: `.aicore/core/knowledge/debt.md` `DEBT-049` records that the architecture contract may have lost normative rules during agnostic-base extraction, with the verified statements (both TypeScript guides, the scripts shape's delegation to a missing stack guide, the README's ban on importing unrelated framework rules) separated from what still requires historical investigation (whether extraction removed, weakened or rescoped an import rule, and whether other approved requirements were affected). No architecture document was changed and no TypeScript scripts guide was created, per the same instruction.
+  Also advanced in this work unit for consistency with the repository's version contract: `SKILL.md` metadata 4.2.0 → 5.0.0 with `dependencies: yaml@2.9.1`, `.opencode/agents/ledger.md` 2.2.0 → 2.3.0, `.opencode/agents/forge.md` 3.2.1 → 3.3.0 and `.opencode/agents/warden.md` 1.9.2 → 1.10.0, with their pins in `tests/integration/test_agent_versions.py` aligned; `pytest -q tests/integration` passes 8 tests. The permission and runtime-spec edits themselves still await the independent Sentinel 🛡️ (Quality Guardian) document review recorded as outstanding in L27, so this entry does not claim a passing document verdict.
+  Warden's staging ADVISORY for the three T3 dependency files (`.agents/skills/incident-workflow/package.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml`) was explicitly acknowledged by the user for staging only; it remains an ADVISORY and is not represented as a Warden PASS, a BLOCK waiver, or permission to stage unrelated dependency changes.
+  Work unit committed locally by Herald 📯 (Release Manager) as `b57ba71` on `refactor/skills/migrate-utilities-typescript`, subject `refactor(skills): port incident-workflow runtime to native TypeScript`: 122 files changed, 2,059 insertions, 4,653 deletions; 40 deleted paths, all `.py`, every one under `.agents/skills/incident-workflow/scripts/` with zero deletions elsewhere; no `node_modules` content staged. Herald reported that the two already-migrated skills' manifests changed only by their `imports` map — no dependency entry, pin, version delta or lockfile importer — so no additional dependency gate applied. No push, PR, merge, tag, release, branch or remote operation occurred.
+
+- L30 — 2026-11-13 — User instruction and scope for the remaining migration, verbatim: correct the imports, complete T3, then proceed sequentially through T4 `op-skill-creator`, T5 `git-pr` and T6 `op-model` using the corrected import convention from the beginning of each remaining skill, keeping all six on the existing branch with one eventual PR. The user also stated, verbatim: "Do not launch a broad architecture audit during this migration." and "Do not create new branches or separate PRs per skill." and "Do not add unnecessary test frameworks or review rounds." and "Do not change unrelated Python utilities." Recorded as the continuation basis for T4–T6; no separate record is opened.
