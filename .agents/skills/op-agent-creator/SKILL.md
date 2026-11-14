@@ -122,7 +122,7 @@ Create a new OpenCode-native agent under `.opencode/agents/{name}.md`. The agent
      - **A.** Auto-update the description with a recommended addition
      - **B.** Let the user edit manually
       - **C.** Abort agent creation
-6. **Step 6 — Pre-validation (agent-contract subset).** Generated specs must cite `.aicore/core/knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)` and must not tell a language section to suspend it. Before writing, run these checks against the fully built agent definition. The agent runtime-spec contract (the eight-H3 and region layout enforced by `tests/integration/test_agent_sources.py`; Sentinel 🛡️ (Quality Guardian) rule SP-3) is authoritative; reference it for full text:
+6. **Step 6 — Pre-validation (agent-contract subset).** Generated specs must cite `.aicore/core/knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)` and must not tell a language section to suspend it. Before writing, run these checks against the fully built agent definition. The agent runtime-spec contract (the eight-H3 and region layout enforced by `tests/integration/agent-sources.test.ts`; Sentinel 🛡️ (Quality Guardian) rule SP-3) is authoritative; reference it for full text:
 
    ```
    - [ ] File is `.opencode/agents/<name>.md` — a single markdown file, not a folder — QC-1 (adapted)
@@ -257,7 +257,7 @@ This table names which keys gate which tools. It is a reference, not a grant. Ex
 
 ### Examples
 
-Generated agent files follow the region-delimited eight-section contract enforced by `tests/integration/test_agent_sources.py` and Sentinel 🛡️ (Quality Guardian) SP-3. Cite those sources; do not treat this skill as a competing standard. No `> **Rule layout:**` marker is used.
+Generated agent files follow the region-delimited eight-section contract enforced by `tests/integration/agent-sources.test.ts` and Sentinel 🛡️ (Quality Guardian) SP-3. Cite those sources; do not treat this skill as a competing standard. No `> **Rule layout:**` marker is used.
 
 Exactly one `<!-- core:begin -->` … `<!-- core:end -->` pair sits immediately after the frontmatter closing `---`. Technical framing is inside that core: an H1, then `## Mandatory core`. `### Hard Rules` is the last H3. When there is no evidenced local content, omit the project pair and end the core at EOF.
 
