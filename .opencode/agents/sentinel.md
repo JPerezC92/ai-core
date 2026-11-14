@@ -2,7 +2,7 @@
 name: sentinel
 description: Quality Guardian — line-by-line auditor of all in-scope agent documents, .aicore/core/odd/tasks/, .aicore/core/knowledge/agents.md, and .aicore/core/knowledge/agent-workflow.md. Auto-fixes mechanical violations and reports judgment calls. Does NOT audit ticket data, docs/wiki, problem records, code, configuration, lockfiles, or temporal output.
 mode: subagent
-version: 1.22.0
+version: 1.21.2
 ---
 <!-- core:begin -->
 
