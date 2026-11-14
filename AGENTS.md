@@ -186,9 +186,8 @@ Running a synchronization is the *entire* operator action for a destination: run
 
 ### Environment constraints
 
-- `python3` is the interpreter (not `python`); skill tests run with `uv run --frozen --group dev pytest`; the root UV environment locks runtime dependencies (PyYAML) separately from the `dev` group (pytest).
-- Every Python command runs through the project's virtual environment (`uv run --frozen …`), never a bare or global interpreter.
-- Narrow exception: the two MCP tooling projects `.opencode/tooling/astgrep/` and `.opencode/tooling/semgrep/` each use their own locked environment through `uv run --frozen --project <tooling-directory> …`. This does not authorize other environments or root dependency changes; repository Python scripts still use `uv run --frozen python3 …`. Provisioning is documented in `docs/tooling.md`.
+- The repository root carries no Python project. Every first-party test suite runs under Vitest from the package that owns it; the repository contract suite is `pnpm --dir tests test`.
+- Every Python command in this repository serves one of the two MCP tooling projects: `.opencode/tooling/astgrep/` and `.opencode/tooling/semgrep/` each use their own locked environment through `uv run --frozen --project <tooling-directory> …`. No other environment, global interpreter or root dependency change is authorized. Provisioning is documented in `docs/tooling.md`.
 
 ### Saved-research bindings
 

@@ -10,8 +10,9 @@
   },
   "scripts": {
     "aicore": "node cli/aicore/src/main.ts",
-    "typecheck": "pnpm --dir cli/aicore typecheck && pnpm --dir .agents/skills/odd-workflow typecheck",
+    "typecheck": "pnpm --dir cli/aicore typecheck && pnpm --dir .agents/skills/odd-workflow typecheck && pnpm --dir tests typecheck",
     "test:cli": "pnpm --dir cli/aicore test",
-    "test:cli:e2e": "pnpm --dir cli/aicore test:e2e"
+    "test:cli:e2e": "pnpm --dir cli/aicore test:e2e",
+    "test:contracts": "pnpm --dir tests test"
   }
 }
