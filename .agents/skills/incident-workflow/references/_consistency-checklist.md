@@ -1,21 +1,21 @@
 # Working analysis — consistency checklist
 
-> Canonical contract for artifacts written by the `incident-workflow` skill. Applied at write-time by the skill's post-write self-verification loop (analysis) and mechanically by `scripts/validate_incident_workflow.py` (repetitive subset). The script is a helper, not the authority — semantic correctness is the loop's analysis job.
+> Canonical contract for artifacts written by the `incident-workflow` skill. Applied at write-time by the skill's post-write self-verification loop (analysis) and mechanically by `scripts/validate_incident_workflow.ts` (repetitive subset). The script is a helper, not the authority — semantic correctness is the loop's analysis job.
 
 ## Validation modes
 
 Run every command from the project root. The validator enforces only the mechanical/repetitive subset; this checklist's evidence analysis remains the agent's responsibility.
 
-- **Fresh scaffold:** run `<python> .agents/skills/incident-workflow/scripts/validate_incident_workflow.py <analysis-dir> --scaffold`. It requires the copied `analysis/` structure but intentionally permits template-body fill tokens. The analysis pass verifies `01-identify.md` `Pre` contains this ticket's context; later step bodies are intentionally still template content.
+- **Fresh scaffold:** run `node .agents/skills/incident-workflow/scripts/validate_incident_workflow.ts <analysis-dir> --scaffold`. It requires the copied `analysis/` structure but intentionally permits template-body fill tokens. The analysis pass verifies `01-identify.md` `Pre` contains this ticket's context; later step bodies are intentionally still template content.
 - **Scaffold-only invocation (`… <id> scaffold`):** check mandatory ticket context before creation and populate ticket identity, metadata, symptom summary and identify `Pre` before validation. Perform only creation/header initialization, not the normal identification-result step: matching and discriminator/exclusion evaluation are explicitly not performed, with `identification_verdict` still `pending`, counters unchanged and step gates unchecked. Run both structural and semantic self-verification; exit 0 alone does not establish truthful context. Validation passing here never authorizes identification, hypotheses, queries, or dispatch; the invocation stops after reporting the created set.
-- **Completed step:** before advancing completed step `NAME` (`identify`, `investigate`, `synthesize`), run `<python> .agents/skills/incident-workflow/scripts/validate_incident_workflow.py <analysis-dir> --step NAME`. That completed step must have no unfilled tokens.
-- **Completed working state:** after the `Phase:` header advances, reserve `<python> .agents/skills/incident-workflow/scripts/validate_incident_workflow.py <analysis-dir>` for full validation of all completed steps through that header.
-- **Pre-close readiness (before collapse):** run `<python> .agents/skills/incident-workflow/scripts/validate_incident_workflow.py <ticket-folder> --pre-close`. It is read-only and proves the durable record and complete working set are ready before any deletion.
-- **Close-out postcondition (after collapse):** run `<python> .agents/skills/incident-workflow/scripts/validate_incident_workflow.py <ticket-folder> --close-out`. It verifies the durable set and confirms the working set is gone.
+- **Completed step:** before advancing completed step `NAME` (`identify`, `investigate`, `synthesize`), run `node .agents/skills/incident-workflow/scripts/validate_incident_workflow.ts <analysis-dir> --step NAME`. That completed step must have no unfilled tokens.
+- **Completed working state:** after the `Phase:` header advances, reserve `node .agents/skills/incident-workflow/scripts/validate_incident_workflow.ts <analysis-dir>` for full validation of all completed steps through that header.
+- **Pre-close readiness (before collapse):** run `node .agents/skills/incident-workflow/scripts/validate_incident_workflow.ts <ticket-folder> --pre-close`. It is read-only and proves the durable record and complete working set are ready before any deletion.
+- **Close-out postcondition (after collapse):** run `node .agents/skills/incident-workflow/scripts/validate_incident_workflow.ts <ticket-folder> --close-out`. It verifies the durable set and confirms the working set is gone.
 
 ## analysis/state.md
 
-- Header has exactly the existing 7 YAML fields: `Phase`, `SLA-due`, `Updated`, `Hypotheses-outstanding`, `Query-budget`, `identification_verdict`, `Same-query-reruns`; coordination lives only in existing Markdown/dispatch, not extra YAML. *(required-field presence delegated to `validate_incident_workflow.py`; exact schema is analysis)*
+- Header has exactly the existing 7 YAML fields: `Phase`, `SLA-due`, `Updated`, `Hypotheses-outstanding`, `Query-budget`, `identification_verdict`, `Same-query-reruns`; coordination lives only in existing Markdown/dispatch, not extra YAML. *(required-field presence delegated to `validate_incident_workflow.ts`; exact schema is analysis)*
 - `Phase` is one of `identify` / `investigate` / `synthesize` and advances only after the previous step's gate passes and the validator exits clean. *(enum delegated)*
 - `identification_verdict` is one of `pending` / `exact` / `structural` / `no_match`. *(enum delegated; verdict-vs-register is delegated for cited `P-NNN`/lifecycle consistency and is analysis for discriminator evidence)*
 - `Query-budget` is `used/limit` with used less than or equal to the current limit (default 6). A fresh scaffold is `0/6`; exhausted means used equals limit. The used value reflects actually consumed queries. *(delegated)*
@@ -46,7 +46,7 @@ Run every command from the project root. The validator enforces only the mechani
 
 - Required `##` sections present: `Steps`, `Output`, `Gate`, `Abort conditions`. *(delegated)*
 - Blockquote labels present: `Owner`, `Pre`, `Reads`, `Writes`. *(delegated)*
-- No unfilled `<...>` placeholder tokens (except the boilerplate tokens in `validate_incident_workflow.py`). *(delegated)*
+- No unfilled `<...>` placeholder tokens (except the boilerplate tokens in `validate_incident_workflow.ts`). *(delegated)*
 - `01-identify.md` `Pre` is populated with THIS ticket's context; `Step`/`Gate`/`Abort` remain template-intact. *(analysis)*
 - Every result value is verbatim (no paraphrase, no rounding). *(analysis)*
 

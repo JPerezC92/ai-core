@@ -34,17 +34,17 @@ EXPECTED_SPEC_VERSIONS: dict[str, str] = {
     "atrium.md": "1.14.1",
     "bastion.md": "1.18.1",
     "crucible.md": "1.18.1",
-    "forge.md": "3.2.1",
+    "forge.md": "3.3.0",
     "herald.md": "1.14.1",
-    "inquisitor.md": "1.16.1",
+    "inquisitor.md": "1.16.2",
     "investigator.md": "1.5.0",
-    "ledger.md": "2.2.0",
+    "ledger.md": "2.3.0",
     "lumen.md": "1.4.1",
     "quill.md": "1.6.0",
     "scribe.md": "1.4.0",
     "sentinel.md": "1.21.1",
     "vault.md": "1.8.0",
-    "warden.md": "1.9.2",
+    "warden.md": "1.10.0",
 }
 
 SEMVER = re.compile(r"\d+\.\d+\.\d+")

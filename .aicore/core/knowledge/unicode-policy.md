@@ -102,10 +102,10 @@ Editor highlighting cannot provide the checker's complete semantics. A live edit
 
 ## CLI (proposed; agrees with S3)
 
-Entry: `.agents/skills/op-skill-creator/scripts/check_markdown_text.py`.
+Entry: `.agents/skills/op-skill-creator/scripts/check_markdown_text.ts`.
 
 ```
-check_markdown_text.py --policy PATH [--check-editor PATH] PATH [PATH ...]
+check_markdown_text.ts --policy PATH [--check-editor PATH] PATH [PATH ...]
 ```
 
 - `--policy PATH` is required. Missing, unreadable, symlink, or invalid policy is stderr and exit 2, never a clean result.

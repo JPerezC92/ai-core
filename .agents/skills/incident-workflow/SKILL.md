@@ -5,8 +5,8 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 4.2.0
-  dependencies: PyYAML==6.0.3
+  version: 5.0.0
+  dependencies: yaml@2.9.1
 ---
 <!-- core:begin -->
 
@@ -240,13 +240,13 @@ For synthesis only, explicitly read the external dependency `.aicore/core/knowle
 <!-- project:begin -->
 ## Project extensions
 
-### Python invocation
+### Node.js invocation
 
-This project's `<python>` is `uv run --frozen python3`.
+This project's validator runs natively on Node.js `>=24.12.0` from the skill's own TypeScript source. It needs no build step and no bundle; install its declared runtime dependency with `pnpm install` inside the skill directory.
 
 ### Validator script
 
-This project's incident-workflow validator script is `<python> .agents/skills/incident-workflow/scripts/validate_incident_workflow.py`.
+This project's incident-workflow validator script is `node .agents/skills/incident-workflow/scripts/validate_incident_workflow.ts`.
 
 ### Register paths
 

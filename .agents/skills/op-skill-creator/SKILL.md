@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.6.1
+  version: 2.0.0
   source: opencode-docs-skills
 ---
 
@@ -95,8 +95,8 @@ Optional only — not a pre-write check, completion gate, or mandatory every-tas
 
 - Read the project's Markdown text-integrity policy when present; absence is not a blocker and not a default path.
 - The caller supplies `--policy PATH`. This skill does not hardcode a source-root policy file or imply destination synchronization.
-- Read `scripts/check_markdown_text.py` explicitly; it is not loaded automatically.
-- CLI shape via the project's `<python>` binding is a usage reference, not a shell grant or install: `<python> .agents/skills/op-skill-creator/scripts/check_markdown_text.py --policy PATH [--check-editor PATH] PATH [PATH ...]`
+- Read `scripts/check_markdown_text.ts` explicitly; it is not loaded automatically.
+- CLI shape: `node .agents/skills/op-skill-creator/scripts/check_markdown_text.ts --policy PATH [--check-editor PATH] PATH [PATH ...]`. It runs natively on Node.js `>=24.12.0` from the skill's own TypeScript source, with no build step and no runtime dependency; a destination runs it as it stands with nothing installed.
 - Required: `--policy PATH` and one or more explicit Markdown file or directory paths. Optional: `--check-editor PATH`. No implicit repository-root scan.
 - Read-only: no formatting, Git, network, or runtime dependency installation.
 - Exit 0: no errors (warnings may exist; they are not file defects). Exit 1: content errors or editor-projection drift. Exit 2: policy, input, or IO failure.

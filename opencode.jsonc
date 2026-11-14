@@ -190,6 +190,8 @@
         "warden": {
             "permissions": [
                 { "action": "shell", "resource": "*", "effect": "deny" },
+                { "action": "shell", "resource": "pnpm audit --json", "effect": "allow" },
+                { "action": "shell", "resource": "pnpm outdated --json", "effect": "allow" },
                 { "action": "shell", "resource": "uv audit*", "effect": "allow" },
                 { "action": "shell", "resource": "uv lock --check*", "effect": "allow" },
                 { "action": "shell", "resource": "uv tree --frozen*", "effect": "allow" },

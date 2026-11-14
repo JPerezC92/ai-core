@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.12.1
+  version: 2.0.0
   domain: git
 ---
 <!-- core:begin -->
@@ -80,7 +80,7 @@ Title: <title>
 
 This skill owns the pull-request content only: the title, the body, the format and the content-specific validation. The publication, evidence, attribution and persistence procedure — the immutable-head identity, the evidence preparation, the single publication write, the attribution scan and the persisted-body consistency — is `.agents/skills/git-pr-workflow/SKILL.md`; read it before handing a draft off.
 
-The two commands that belong to this skill are `prepare_pr_review.py initialize` and `prepare_pr_review.py validate`, with their arguments unchanged; their input schemas and exit codes are in `.agents/skills/git-pr-workflow/references/_pr-workflow-inputs.md`.
+The two commands that belong to this skill are `node .agents/skills/git-pr/scripts/prepare_pr_review.ts initialize` and `node .agents/skills/git-pr/scripts/prepare_pr_review.ts validate`, with their arguments unchanged; their input schemas and exit codes are in `.agents/skills/git-pr-workflow/references/_pr-workflow-inputs.md`. The commands run natively on Node.js `>=24.12.0` from this skill's own TypeScript source with no build step and no runtime dependency.
 
 The creation draft is written only to `output/pr-draft.md` and the sole working body to `output/pr-working-body.md`. This skill never publishes or mutates a pull request and never runs a Git or GitHub command.
 
