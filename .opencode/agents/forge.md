@@ -155,7 +155,7 @@ When a required input, instruction, or piece of evidence is missing, halt the af
 
 ### Local Configuration
 
-AICore's root environment manifest and lockfile are `package.json` and `pnpm-lock.yaml`, carrying its JavaScript tooling; the repository contract suite runs under Vitest from the `tests` workspace package. The two MCP tooling projects under `.opencode/tooling/` keep their own locked Python environments. Invocation remains subject to `AGENTS.md` → `### Environment constraints`; these bindings add no execution or provisioning grant.
+AICore's root environment manifest and lockfile are `package.json` and `pnpm-lock.yaml`, carrying its JavaScript tooling; each package owns its Vitest suite, and the synchronization CLI keeps its own under `cli/aicore`. The two MCP tooling projects under `.opencode/tooling/` keep their own locked Python environments. Invocation remains subject to `AGENTS.md` → `### Environment constraints`; these bindings add no execution or provisioning grant.
 
 **Lockfile preparation form:** the authorized preparation command is `pnpm install --lockfile-only --ignore-scripts`, run with the repository root — the directory holding `pnpm-workspace.yaml` and the root `pnpm-lock.yaml` — as the working directory. pnpm's own option reference states that `--lockfile-only` updates `pnpm-lock.yaml` and `package.json`, and its summary states that only `pnpm-lock.yaml` is updated; the preparation evidence therefore records the actual write set instead of asserting it, and shows that the candidate's own manifest is otherwise unchanged. The affected lockfile is the root `pnpm-lock.yaml`, which pnpm rewrites for every declared workspace member — a candidate declared outside the workspace of `pnpm-workspace.yaml`, such as a package carrying its own lockfile, is not covered by this preparation form and needs its own bounded form. The command resolves against the registry; pnpm's option reference states that nothing gets written to the `node_modules` directory, and `--ignore-scripts` executes no script defined in the project or its dependencies. The working directory and the affected paths are constrained by the assignment and by this rule, not by the harness permission layer, which matches the command text only.
 
@@ -163,8 +163,7 @@ AICore's root environment manifest and lockfile are `package.json` and `pnpm-loc
 
 This project's reviewed suite commands, which are the only forms the core rule in `### Hard Rules` permits. A path argument makes a command a focused form, which requires that exact command in the assignment.
 
-- `pnpm --dir tests test` — the whole-suite command for the repository contract suite.
-- `pnpm --dir cli/aicore test` — the CLI package's unit and integration levels through Vitest.
+- `pnpm --dir cli/aicore test` — the CLI package's unit and integration levels through Vitest, the project's whole-suite command.
 - `pnpm --dir cli/aicore test:e2e` — the CLI package's end-to-end level through Vitest.
 - `pnpm --dir .opencode/plugins/odd-adviser exec vitest run` — the odd-adviser plugin suite.
 - `pnpm --dir mcp-servers/system-one exec vitest run` — the System 1 MCP suite.
@@ -176,5 +175,5 @@ These are execution bindings only. They grant no install, dependency or lockfile
 ### Local History
 
 - **2026-11-14** — The one-time T3 grant for `pnpm install --lockfile-only --ignore-scripts` was spent on the `yaml` candidate and is retired here. The preparation form is now standing and bounded by `### Local Configuration` instead of being a per-case user exception, and the harness grants it to this agent alone through a Forge-scoped `pnpm *` deny. That deny is defence in depth for the package manager only: it does not narrow this agent's other shell authority, it does not constrain a command's working directory, and a wrapper or an alternative executable is outside the matched resource.
-- **2026-11-05** — The Learnings placeholder moved out of core into this project-owned section. Placement follows the semantic-ownership rule in the runtime-spec contract enforced by `tests/integration/test_agent_sources.py` and authored through `.agents/skills/op-agent-creator/`; the entry shape follows Herald's dated-bullet form, not Warden's undated prose. The moved block was a placeholder: it granted no authority and carried no reusable lesson, and no lessons are recorded yet. This section is history only, not authority; append dated entries here over time.
+- **2026-11-05** — The Learnings placeholder moved out of core into this project-owned section. Placement follows the semantic-ownership rule in the runtime-spec contract, audited under Sentinel 🛡️ (Quality Guardian) SP-3 and authored through `.agents/skills/op-agent-creator/`; the entry shape follows Herald's dated-bullet form, not Warden's undated prose. The moved block was a placeholder: it granted no authority and carried no reusable lesson, and no lessons are recorded yet. This section is history only, not authority; append dated entries here over time.
 <!-- project:end -->

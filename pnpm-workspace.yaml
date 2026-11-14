@@ -1,6 +1,5 @@
 packages:
   - "cli/*"
-  - "tests"
   - ".agents/skills/odd-workflow"
   - ".agents/skills/git-pr-workflow"
   - ".agents/skills/incident-workflow"
