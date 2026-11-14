@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.2.0
+  version: 2.0.0
   domain: opencode
 ---
 
@@ -13,7 +13,7 @@ metadata:
 
 ### Model lookup script
 
-This project's model-lookup script is `<python> .agents/skills/op-model/scripts/models.py` (`<python>` is the project's Python invocation) — invoke it with the model query as its single positional argument, or with no argument to list everything. It runs `opencode models` (OpenCode V2) and emits one structured JSON record per match — six fields in order: `config`, `id`, `provider`, `name`, `cost_in`, `cost_out`, where `cost_in`/`cost_out` report `0.0` when the source provides no cost. With no query it prints a grouped listing instead: one `## <provider>` heading per provider and one line per model holding its `provider/model` selector, with cost segments shown only when the source provides them. Matching normalizes both sides (lowercase, non-alphanumerics stripped) against the config name and the human name.
+This project's model-lookup script is `node .agents/skills/op-model/scripts/models.ts` — invoke it with the model query as its single positional argument, or with no argument to list everything. It runs natively on Node.js `>=24.12.0` from this skill's own TypeScript source with no build step and no runtime dependency. It runs `opencode models` (OpenCode V2) and emits one structured JSON record per match — six fields in order: `config`, `id`, `provider`, `name`, `cost_in`, `cost_out`, where `cost_in`/`cost_out` report `0.0` when the source provides no cost. With no query it prints a grouped listing instead: one `## <provider>` heading per provider and one line per model holding its `provider/model` selector, with cost segments shown only when the source provides them. Matching normalizes both sides (lowercase, non-alphanumerics stripped) against the config name and the human name.
 
 Non-selector lines are skipped, never fabricated into records: a line that is not a usable `provider/model` selector is skipped one by one and reported as an issue while valid neighbouring lines survive. When nothing usable remains, the script reports the truthful no-models error — "No models parsed from `opencode models` output." — on stderr and exits non-zero; a query that matches nothing is reported as a no-match instead.
 
