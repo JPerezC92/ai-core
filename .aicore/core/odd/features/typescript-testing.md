@@ -12,3 +12,4 @@ AICore's TypeScript test suites run under one runner, with that runner's own ass
 - [x] R4 `upstream` — Doubled collaborators in TypeScript tests use the mocking facility the applicable TypeScript testing guide requires.
 - [x] R5 — A package's TypeScript test suites remain runnable from that package alone, without a repository-root command.
 - [x] R6 — Changing the runner of an existing TypeScript suite preserves every scenario it asserted and alters no production behavior.
+- [x] R7 `local` — A first-party test suite written in another language is replaced only after its replacement asserts the same behaviour, and the replacement runs under Vitest from a package that owns it.

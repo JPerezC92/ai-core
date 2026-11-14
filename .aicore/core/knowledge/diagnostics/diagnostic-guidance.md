@@ -19,5 +19,5 @@ Follow the bounded-query and evidence rules in `.aicore/core/knowledge/agents.md
 <!-- project:begin -->
 ## Historical context
 
-An incident-only query-verification pilot and a broader verifier design were previously recorded here. The user directed removal of the skill in `.aicore/core/odd/tasks/2026-11-02-query-verification-debt.md` L16; historical pilot results are not evidence of a currently available capability or destination adoption. The feature record retains the removal decision and relevant delivery history.
+An incident-only query-verification pilot and a broader verifier design were previously recorded here. The user directed removal of the skill in the retired query-verification debt record, which this repository retired under the seven-day retention policy on 2026-11-14; historical pilot results are not evidence of a currently available capability or destination adoption. The feature record retains the removal decision and relevant delivery history.
 <!-- project:end -->

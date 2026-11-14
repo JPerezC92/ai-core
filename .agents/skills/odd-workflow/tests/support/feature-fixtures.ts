@@ -147,3 +147,77 @@ export class FeatureSourceFake implements FeatureSource {
     return document;
   }
 }
+
+/**
+ * A feature document whose every task row is `done` while its status stays `active`.
+ *
+ * With `blocked`, one Log entry names the open closure prerequisite, which is the
+ * documented escape from the completed-but-active finding.
+ */
+export function makeCompletedFeature(
+  options: {
+    readonly blocked?: boolean;
+    readonly status?: "active" | "closed";
+    readonly created?: string;
+  } = {},
+): string {
+  const status = options.status ?? "active";
+  const created = options.created ?? "2026-11-14";
+  const logEntries = ["- L1 — original request"];
+  if (options.blocked === true) {
+    logEntries.push("- L2 — 2026-11-14 — Blocked: independent acceptance is outstanding");
+  }
+  const header = [
+    `> **Status:** ${status}`,
+    "> **Owner:** Cipher (Lead Orchestrator)",
+    `> **Created:** ${created}`,
+  ];
+  if (status === "closed") header.push("> **Closed:** 2026-11-01");
+  return [
+    "# Sample feature",
+    "",
+    ...header,
+    "",
+    "## Specs",
+    "",
+    "- S1 — A requirement.",
+    "",
+    "## Tasks",
+    "",
+    "- T1 | S1 | route | done | commit: abc1234",
+    "- T2 | S1 | route | done | commit: abc1234",
+    "",
+    "## Log",
+    "",
+    ...logEntries,
+    ...(status === "closed" ? ["- L3 — Close: delivered"] : []),
+    "",
+  ].join("\n");
+}
+
+/** A closed feature document that still carries an unfinished task. */
+export function makeClosedFeatureWithUnfinishedTask(): string {
+  return [
+    "# Sample feature",
+    "",
+    "> **Status:** closed",
+    "> **Owner:** Cipher (Lead Orchestrator)",
+    "> **Created:** 2026-10-23",
+    "> **Closed:** 2026-11-01",
+    "",
+    "## Specs",
+    "",
+    "- S1 — A requirement.",
+    "",
+    "## Tasks",
+    "",
+    "- T1 | S1 | route | open | commit: pending",
+    "",
+    "## Log",
+    "",
+    "- L1 — original request",
+    "- L2 — Close: delivered",
+    "",
+  ].join("\n");
+}
+

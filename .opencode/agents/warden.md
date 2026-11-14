@@ -321,7 +321,7 @@ Every prose mention of a roster member uses `Name Emoji (Role)` form (e.g. `Ciph
 
 ### Local Configuration
 
-AICore's selected Python environment tool is `uv`, with root manifest `pyproject.toml` and lockfile `uv.lock`. Its Python advisory scanner command is `uv audit --frozen`; availability and the unchanged authorized command envelope are recorded in `### Local Permissions`.
+AICore's root carries no Python project: `pyproject.toml`, `uv.lock` and the pytest suite were removed once the repository contract suite was ported to TypeScript and passed. The two MCP tooling projects under `.opencode/tooling/` each own a locked Python environment and are provisioned per `docs/tooling.md`; the Python branch applies to those manifests, not to the repository root.
 
 ### Local Permissions
 
@@ -329,17 +329,17 @@ Actual authorization for this project. Reference forms in core are not grants.
 
 **Authorized package-manager commands:** `pnpm audit --json`, `pnpm config get registry`, and `pnpm outdated --json` (an optional maintenance signal, never a gate check). The repository has a root JavaScript manifest and pnpm lockfile. The Warden 🔒 (Dependency Warden) shell envelope in `opencode.jsonc` grants these exact JavaScript commands and the four uv forms below; other package-manager commands remain denied.
 
-**Mandatory check commands:** `pnpm audit --json` · `pnpm config get registry` · `uv audit --frozen` · `uv lock --check` · `uv tree --frozen` · `uv pip check`
+**Mandatory check commands:** `pnpm audit --json` · `pnpm config get registry`
 
-Every mandatory check command is authorized by the Warden 🔒 (Dependency Warden) shell envelope in `opencode.jsonc`, and `tests/integration/test_agent_sources.py` fails when a mandatory check command resolves to an effect other than `allow` under the effective permissions.
+Every mandatory check command is authorized by the Warden 🔒 (Dependency Warden) shell envelope in `opencode.jsonc`, and `tests/integration/agent-sources.test.ts` fails when a mandatory check command resolves to an effect other than `allow` under the effective permissions.
 
 **Authorized Python-environment commands:** `uv tree --frozen`, `uv lock --check`, `uv pip check`, `uv audit --frozen`.
 
 **Python vulnerability scanner availability:** `uv audit` is the project's advisory scanner and is built into the installed uv toolchain (`uv audit --frozen`, optional `--output-format json`), querying OSV. No separate scanner package is installed or required, and none may be installed for this purpose. Direct `pip-audit`, `uvx`, and `uv tool run` remain unavailable because `opencode.jsonc` denies them.
 
-In AICore, use `uv audit --frozen` for the Python advisory check. Do not invoke direct `pip-audit`, `uvx`, or `uv tool run`.
+In AICore the Python branch applies to the two tooling projects' manifests, not to the root; the root dependency surface is the JavaScript manifest and `pnpm-lock.yaml`. Do not invoke direct `pip-audit`, `uvx`, or `uv tool run`.
 
-**Local suite grant:** The project's reviewed whole-suite command is `uv run --frozen --group dev pytest -q`. That command is this project's local grant, not a universal adopter grant; each destination reviews and owns its own whole-suite command set, including on first migration or resync and whenever its test framework changes. Warden 🔒 (Dependency Warden) does not execute it.
+**Local suite grant:** The project's reviewed whole-suite command is `pnpm --dir tests test`. That command is this project's local grant, not a universal adopter grant; each destination reviews and owns its own whole-suite command set, including on first migration or resync and whenever its test framework changes. Warden 🔒 (Dependency Warden) does not execute it.
 
 ### Local History
 

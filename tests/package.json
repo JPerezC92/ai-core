@@ -1,0 +1,22 @@
+{
+  "name": "aicore-contracts",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Repository-contract suite for the AICore checkout: agent runtime-specification regions, version pins, retired-profile absence and effective harness permissions.",
+  "engines": {
+    "node": ">=24"
+  },
+  "imports": {
+    "#support/*": "./support/*"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p ."
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "6.0.3",
+    "vitest": "5.1.0"
+  }
+}

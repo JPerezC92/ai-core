@@ -3,12 +3,23 @@
 import { basename, normalize, parse, sep } from "node:path";
 
 const REQUIRED_HEADINGS = ["## Specs", "## Tasks", "## Log"] as const;
-const SPEC_RE = /^- S\p{Nd}+ — .+$/u;
+const SPEC_RE = /^- (?:\*\*)?S\p{Nd}+ — .+(?:\*\*)?$/u;
 const TASK_RE =
   /^- T\p{Nd}+ \| S\p{Nd}+(?:, S\p{Nd}+)* \| .+ \| (?<status>open|in progress|done) \| commit: (?<commit>.*)$/u;
 const COMMIT_RE = /^[0-9a-fA-F]{7,64}$/u;
 const LOG_RE = /^- L1 — .+$/u;
 const LOG_ENTRY_RE = /^- L(\p{Nd}+)/u;
+const BLOCKED_LOG_RE = /^- L\p{Nd}+ .*\bBlocked: .+$/u;
+const CREATED_DATE_RE = /^> \*\*Created:\*\* (\d{4}-\d{2}-\d{2})$/u;
+
+/**
+ * The date the completed-but-active rule took effect.
+ *
+ * The rule is prospective: it applies to records created on or after this date and
+ * never retroactively. A record created earlier is historical, so its status and Log
+ * are left exactly as written rather than rewritten to satisfy a later convention.
+ */
+export const CLOSURE_CONSISTENCY_EFFECTIVE_FROM = "2026-11-14";
 const MAX_LOG_IDENTIFIER_DIGITS = 9;
 const HEADER_RE = /^> \*\*(Status|Owner|Created):\*\* .+$/u;
 const STATUS_RE = /^> \*\*Status:\*\* (active|closed)$/u;
@@ -33,7 +44,7 @@ const DECIMAL_ZERO_CODE_POINTS = [
   0x1d7ec, 0x1d7f6, 0x1e140, 0x1e2f0, 0x1e4f0, 0x1e950, 0x1fbf0,
 ];
 
-function splitLines(text: string): string[] {
+export function splitLines(text: string): string[] {
   if (text.length === 0) return [];
   const lines = text.split(LINE_BREAK_RE);
   if (LINE_BREAK_AT_END_RE.test(text)) lines.pop();
@@ -94,7 +105,7 @@ export function sortFeatureReferences(
   return [...references].sort((left, right) => comparePath(left, right, policy));
 }
 
-function section(lines: readonly string[], heading: string): string[] {
+export function section(lines: readonly string[], heading: string): string[] {
   const start = lines.findIndex((line) => line.trim() === heading);
   if (start < 0) return [];
   let end = lines.length;
@@ -153,6 +164,70 @@ export function quoteDiagnosticValue(value: string): string {
   return `${delimiter}${rendered}${delimiter}`;
 }
 
+/**
+ * Whether the completed-but-active rule applies to a record.
+ *
+ * The rule is prospective, so a record created before the effective date is exempt
+ * and its history is never rewritten. A record that declares no readable creation
+ * date is treated as in scope, so a new record cannot escape the rule by omitting
+ * the field.
+ */
+function closureConsistencyApplies(lines: readonly string[]): boolean {
+  const headerEnd = lines.findIndex((line) => line.startsWith("## "));
+  const header = headerEnd < 0 ? lines : lines.slice(0, headerEnd);
+  const created = header
+    .map((line) => CREATED_DATE_RE.exec(line.trim()))
+    .filter((match) => match !== null);
+  if (created.length !== 1) return true;
+  return created[0]![1]! >= CLOSURE_CONSISTENCY_EFFECTIVE_FROM;
+}
+
+/**
+ * Whether the record's most recent Log entry names an open closure prerequisite.
+ *
+ * The exemption tracks the record's current state: a prerequisite recorded once and
+ * later resolved stops suppressing the finding, because the finding asks for the
+ * prerequisite that is open now.
+ */
+function namesOpenClosurePrerequisite(logLines: readonly string[]): boolean {
+  let latestIdentifier: bigint | null = null;
+  let latestLine = "";
+  for (const line of logLines) {
+    const match = LOG_ENTRY_RE.exec(line);
+    const digits = match?.[1];
+    if (digits === undefined) continue;
+    if ([...digits].length > MAX_LOG_IDENTIFIER_DIGITS) continue;
+    const identifier = BigInt(decimalDigitsToAscii(digits));
+    if (latestIdentifier === null || identifier > latestIdentifier) {
+      latestIdentifier = identifier;
+      latestLine = line;
+    }
+  }
+  return latestIdentifier !== null && BLOCKED_LOG_RE.test(latestLine);
+}
+
+/**
+ * Groups the `## Specs` section into entries.
+ *
+ * An entry begins at a top-level bullet and owns the indented lines that follow it,
+ * so a specification may carry its heading, its verbatim requirement quotation and
+ * its acceptance criteria as separate readable lines without becoming several
+ * entries.
+ */
+function specSectionBlocks(specLines: readonly string[]): string[][] {
+  const blocks: string[][] = [];
+  for (const line of specLines) {
+    if (line.startsWith("- ")) {
+      blocks.push([line]);
+      continue;
+    }
+    if (blocks.length > 0 && line.trim().length > 0) {
+      blocks[blocks.length - 1]!.push(line);
+    }
+  }
+  return blocks;
+}
+
 export function validateFeature(text: string): string[] {
   const findings: string[] = [];
   const lines = splitLines(text);
@@ -182,6 +257,12 @@ export function validateFeature(text: string): string[] {
   if (text.includes("> **Created:** date")) {
     findings.push("Created must be a real date, not the template placeholder");
   }
+  const createdFields = lines.filter((line) =>
+    line.trim().startsWith("> **Created:**"),
+  ).length;
+  if (createdFields !== 1) {
+    findings.push(`header must include exactly one Created line; found ${createdFields}`);
+  }
 
   const log = section(lines, "## Log");
   const statusLines = lines
@@ -208,15 +289,16 @@ export function validateFeature(text: string): string[] {
 
   const specs = section(lines, "## Specs");
   const tasks = section(lines, "## Tasks");
-  const specEntries = specs.filter((line) => line.trim().startsWith("- "));
-  const taskEntries = tasks.filter((line) => line.trim().startsWith("- "));
+  const specBlocks = specSectionBlocks(specs);
+  const taskEntries = tasks.filter((line) => line.startsWith("- "));
 
-  if (specEntries.length === 0) {
+  if (specBlocks.length === 0) {
     findings.push("Specs needs at least one '- S# — ...' entry");
   }
-  for (const line of specEntries) {
-    if (!SPEC_RE.test(line)) {
-      findings.push(`Specs entry must match '- S# — ...': ${line.trim()}`);
+  for (const block of specBlocks) {
+    const heading = block[0]!;
+    if (!SPEC_RE.test(heading)) {
+      findings.push(`Specs entry must match '- S# — ...': ${heading.trim()}`);
     }
   }
 
@@ -261,6 +343,23 @@ export function validateFeature(text: string): string[] {
 
   const unfencedLines = splitLines(text.replace(FENCED_BLOCK_RE, ""));
   const unfencedLog = section(unfencedLines, "## Log");
+
+  const taskStatuses = taskEntries
+    .map((line) => TASK_RE.exec(line)?.groups?.status)
+    .filter((status) => status !== undefined);
+  if (
+    closureConsistencyApplies(lines) &&
+    !isClosed &&
+    taskEntries.length > 0 &&
+    taskStatuses.length === taskEntries.length &&
+    taskStatuses.every((status) => status === "done") &&
+    !namesOpenClosurePrerequisite(unfencedLog)
+  ) {
+    findings.push(
+      "active record has every task done: close the record or record the open closure prerequisite as a Log entry",
+    );
+  }
+
   const logIdentifiers: bigint[] = [];
   for (const line of unfencedLog) {
     const match = LOG_ENTRY_RE.exec(line);

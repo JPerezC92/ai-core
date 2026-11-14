@@ -122,7 +122,7 @@ Before reporting "clean," Sentinel 🛡️ (Quality Guardian) confirms no file t
 2. **Broken §-refs** — any section-number reference where N doesn't match an actual section heading in the referenced document.
    - Fix: remap to nearest matching section, OR remove if no match.
 
-3. **Format/spec mismatch** — the runtime-spec format contract must match what the specs actually use. If runtime specs use a different shape than `.agents/skills/op-agent-creator/` and `tests/integration/test_agent_sources.py` describe, fix the spec to match actuals.
+3. **Format/spec mismatch** — the runtime-spec format contract must match what the specs actually use. If runtime specs use a different shape than `.agents/skills/op-agent-creator/` and `tests/integration/agent-sources.test.ts` describe, fix the spec to match actuals.
 
 4. **Frontmatter drift** — Runtime specs require `name`, `description`, `mode`, and repository-metadata `version`; optional `local-version` in SemVer `MAJOR.MINOR.PATCH` form is allowed only on destination-derived specs, while the upstream core's ancestor specs omit it; optional `tools`, `model`, `temperature`, `color`, `permission` allowed. Unknown/misspelled keys = fix.
 
@@ -217,7 +217,7 @@ Concrete default-extend sweep exclusions. These directory categories are inherit
 #### Checklists
 - Feature-document consistency: `.agents/skills/odd-workflow/references/_checklist.md`
 - Shared agent rules: `.aicore/core/knowledge/agents.md`
-- Governed runtime-spec contract: the eight-H3 skeleton and marker layout enforced by `tests/integration/test_agent_sources.py` and authored through `.agents/skills/op-agent-creator/`
+- Governed runtime-spec contract: the eight-H3 skeleton and marker layout enforced by `tests/integration/agent-sources.test.ts` and authored through `.agents/skills/op-agent-creator/`
 
 Citing these paths does not authorize git, package installs, or edits outside mechanical auto-fix.
 

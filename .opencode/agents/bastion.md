@@ -190,7 +190,7 @@ Every prose mention of a roster member uses `Name Emoji (Role)` form (e.g. `Ciph
 
 ### Local Configuration
 
-AICore's Python skill tests use `pytest`, declared via `[dependency-groups] dev`; `pytest` must not be added to `[project].dependencies`.
+AICore's test suites run under Vitest; the repository contract suite is the `tests` workspace package. A test runner is a development dependency of the package that owns the suite.
 
 AICore's concrete Python module-role mapping to `#### Python`. The required application entry is `execute()` with typed domain results/errors, not a serialized transport response. Legacy `*_logic()` entries or application JSON serialization are nonconforming, not an on-touch exemption; apply `#### Nonconforming feature files` without implying an unrelated repository-wide migration. A destination maps its own equivalents under the same contract.
 
