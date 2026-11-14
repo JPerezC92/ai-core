@@ -71,8 +71,8 @@ ai-core/
 │       └── .aicore/core/architecture/          anemic-domain-model-and-use-case-naming,
 │                                  domain-model-repositories-and-naming
 │
-├── .aicore/core/odd/tasks/                     _template.md + 58 feature records
-└── tests/test_pytest_temp_root.py
+├── .aicore/core/odd/tasks/                     _template.md + 17 feature records
+└── tests/                          TypeScript repository-contract suite (Vitest)
 ```
 
 ## Where authority lives
