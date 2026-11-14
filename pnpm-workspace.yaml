@@ -3,3 +3,4 @@ packages:
   - ".agents/skills/odd-workflow"
   - ".agents/skills/git-pr-workflow"
   - ".agents/skills/incident-workflow"
+  - ".agents/skills/op-skill-creator"
