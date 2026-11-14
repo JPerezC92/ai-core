@@ -1,10 +1,10 @@
 /** Compose the attribution scan CLI from input decoding, the operation, and output. */
 
-import { ScanAttribution } from "./attribution_scan/application/scan_attribution.ts";
+import { ScanAttribution } from "#scripts/attribution_scan/application/scan_attribution.ts";
 import {
   PolicyValidationError,
   SnapshotValidationError,
-} from "./attribution_scan/domain/records.ts";
+} from "#scripts/attribution_scan/domain/records.ts";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -19,8 +19,8 @@ export type {
   ScanInput,
   ScanResult,
   Snapshot,
-} from "./attribution_scan/domain/records.ts";
-export { PolicyValidationError, SnapshotValidationError } from "./attribution_scan/domain/records.ts";
+} from "#scripts/attribution_scan/domain/records.ts";
+export { PolicyValidationError, SnapshotValidationError } from "#scripts/attribution_scan/domain/records.ts";
 
 /** The name this entry point reports in its own diagnostics. */
 const PROGRAM_NAME = "scan_attribution.ts";

@@ -6,7 +6,7 @@ import {
   GitBoundaryError,
   GitReader,
   parseStatusEntries,
-} from "../../scripts/pr_review/infrastructure/git_reader.ts";
+} from "#scripts/pr_review/infrastructure/git_reader.ts";
 import {
   createCommittedRepository,
   createOrphanRepository,
@@ -16,7 +16,7 @@ import {
   GIT_RENAMED_TO_PATH,
   GIT_SIDE_EFFECT_NAME,
   GIT_SOURCE_PATH,
-} from "../support/review-fixtures.ts";
+} from "#tests/support/review-fixtures.ts";
 
 const temporaryDirectories: string[] = [];
 

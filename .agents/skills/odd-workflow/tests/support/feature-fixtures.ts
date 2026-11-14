@@ -1,6 +1,6 @@
 /** Shared test data for the feature-document validator: documents and a fake source port. */
 
-import type { FeatureSource } from "../../scripts/feature_validation/domain/ports.ts";
+import type { FeatureSource } from "#scripts/feature_validation/domain/ports.ts";
 
 /** A feature document that satisfies every anatomy rule. */
 export function makeFeature(title = "Sample feature"): string {

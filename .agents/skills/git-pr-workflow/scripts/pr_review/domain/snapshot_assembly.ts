@@ -1,9 +1,9 @@
 /** Reconcile supplied complete scanner snapshots to exact owner-supplied paths. */
 
-import { SnapshotValidationError } from "../../attribution_scan/domain/records.ts";
-import type { Snapshot } from "../../attribution_scan/domain/records.ts";
-import { splitLines } from "../../attribution_scan/domain/matching.ts";
-import { validateSnapshot } from "../../attribution_scan/domain/validation.ts";
+import { SnapshotValidationError } from "#scripts/attribution_scan/domain/records.ts";
+import type { Snapshot } from "#scripts/attribution_scan/domain/records.ts";
+import { splitLines } from "#scripts/attribution_scan/domain/matching.ts";
+import { validateSnapshot } from "#scripts/attribution_scan/domain/validation.ts";
 import { ReviewPreparationError } from "./records.ts";
 import type { LocalInventory } from "./records.ts";
 

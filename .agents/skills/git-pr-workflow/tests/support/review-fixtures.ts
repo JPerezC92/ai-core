@@ -9,8 +9,8 @@ import type {
   ChangedFile,
   ScanResult,
   Snapshot,
-} from "../../scripts/attribution_scan/domain/records.ts";
-import type { LocalInventory } from "../../scripts/pr_review/domain/records.ts";
+} from "#scripts/attribution_scan/domain/records.ts";
+import type { LocalInventory } from "#scripts/pr_review/domain/records.ts";
 import { FIXTURE_HEAD_SHA, makeSyntheticPolicy } from "./attribution-fixtures.ts";
 
 // The capture schema belongs to the content skill; this half builds opaque capture

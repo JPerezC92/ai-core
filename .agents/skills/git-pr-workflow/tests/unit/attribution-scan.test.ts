@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { ScanAttribution } from "../../scripts/attribution_scan/application/scan_attribution.ts";
+import { ScanAttribution } from "#scripts/attribution_scan/application/scan_attribution.ts";
 import {
   PolicyValidationError,
   SnapshotValidationError,
-} from "../../scripts/attribution_scan/domain/records.ts";
-import type { ScanResult } from "../../scripts/attribution_scan/domain/records.ts";
+} from "#scripts/attribution_scan/domain/records.ts";
+import type { ScanResult } from "#scripts/attribution_scan/domain/records.ts";
 import {
   FIXTURE_HEAD_SHA,
   loadApprovedPolicy,
@@ -20,7 +20,7 @@ import {
   makeOrdinaryIdentityMention,
   makeSnapshotWithArtifactContent,
   makeSyntheticPolicy,
-} from "../support/attribution-fixtures.ts";
+} from "#tests/support/attribution-fixtures.ts";
 
 /** Run the scan operation and fail loudly when it rejects the decoded inputs. */
 function scan(snapshotValue: unknown, policyValue: unknown): ScanResult {

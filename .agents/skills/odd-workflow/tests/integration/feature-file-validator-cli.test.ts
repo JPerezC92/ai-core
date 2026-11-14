@@ -2,11 +2,11 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { main as validateFeatureFiles } from "../../scripts/validate_feature_file.ts";
+import { main as validateFeatureFiles } from "#scripts/validate_feature_file.ts";
 import {
   makeApostropheFeatureFile,
   makeFeatureFile,
-} from "../support/feature-file-fixtures.ts";
+} from "#tests/support/feature-file-fixtures.ts";
 
 const temporaryDirectories: string[] = [];
 

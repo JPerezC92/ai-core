@@ -1,6 +1,6 @@
 /** Shared test data for the durable feature-file validator: documents and a fake source port. */
 
-import type { FeatureFileSource } from "../../scripts/feature_file_validation/domain/ports.ts";
+import type { FeatureFileSource } from "#scripts/feature_file_validation/domain/ports.ts";
 
 /** A durable feature file that satisfies every anatomy rule. */
 export function makeFeatureFile(status = "partial"): string {

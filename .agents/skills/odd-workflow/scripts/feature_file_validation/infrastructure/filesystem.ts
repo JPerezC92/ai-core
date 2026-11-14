@@ -3,7 +3,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, normalize, parse, sep } from "node:path";
 import { TextDecoder } from "node:util";
-import type { FeatureFileSource } from "../domain/ports.ts";
+import type { FeatureFileSource } from "#scripts/feature_file_validation/domain/ports.ts";
 
 function normalizeReference(reference: string): string {
   const normalized = normalize(reference);

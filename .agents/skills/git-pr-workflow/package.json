@@ -9,6 +9,10 @@
   "scripts": {
     "typecheck": "tsc -p ."
   },
+  "imports": {
+    "#scripts/*": "./scripts/*",
+    "#tests/*": "./tests/*"
+  },
   "devDependencies": {
     "@types/node": "24.19.2",
     "typescript": "6.0.3",

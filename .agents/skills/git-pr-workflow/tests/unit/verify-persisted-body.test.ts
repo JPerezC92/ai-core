@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { VerifyPersistedBody } from "../../scripts/pr_review/application/verify_persisted_body.ts";
-import { PreparedBody, ReviewPreparationError } from "../../scripts/pr_review/domain/records.ts";
+import { VerifyPersistedBody } from "#scripts/pr_review/application/verify_persisted_body.ts";
+import { PreparedBody, ReviewPreparationError } from "#scripts/pr_review/domain/records.ts";
 import {
   createBody,
   createDivergence,
   createMetadata,
   createMetadataWithUndeclaredKey,
-} from "../support/review-fixtures.ts";
+} from "#tests/support/review-fixtures.ts";
 
 /** Run the verification operation over one capture pair. */
 function verify(expected: unknown, persisted: unknown, body = createBody()): unknown {

@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { AssembleReviewSnapshot } from "../../scripts/pr_review/application/assemble_review_snapshot.ts";
-import { ReviewPreparationError } from "../../scripts/pr_review/domain/records.ts";
+import { AssembleReviewSnapshot } from "#scripts/pr_review/application/assemble_review_snapshot.ts";
+import { ReviewPreparationError } from "#scripts/pr_review/domain/records.ts";
 import {
   createInvalidInventory,
   createNonStringPathList,
   createPaths,
   createSnapshot,
   createSnapshotWithoutCommits,
-} from "../support/review-fixtures.ts";
+} from "#tests/support/review-fixtures.ts";
 
 describe("AssembleReviewSnapshot.execute", () => {
   it("preserves the deleted path of a complete snapshot", () => {

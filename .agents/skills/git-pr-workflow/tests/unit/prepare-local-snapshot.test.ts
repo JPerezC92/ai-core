@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { PrepareLocalSnapshot } from "../../scripts/pr_review/application/prepare_local_snapshot.ts";
-import { ReviewPreparationError } from "../../scripts/pr_review/domain/records.ts";
+import { PrepareLocalSnapshot } from "#scripts/pr_review/application/prepare_local_snapshot.ts";
+import { ReviewPreparationError } from "#scripts/pr_review/domain/records.ts";
 import {
   createBody,
   createLocalDraft,
   createLocalInventory,
   createLocalSnapshot,
   createPaths,
-} from "../support/review-fixtures.ts";
+} from "#tests/support/review-fixtures.ts";
 
 describe("PrepareLocalSnapshot.execute", () => {
   it("assembles the local title and working body over the supplied immutable content", () => {

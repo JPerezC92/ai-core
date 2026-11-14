@@ -1,7 +1,7 @@
 /** Read local Git inventory through argv-only commands with no network or GitHub access. */
 
 import { spawnSync } from "node:child_process";
-import type { GitInventoryPort } from "../domain/ports.ts";
+import type { GitInventoryPort } from "#scripts/pr_review/domain/ports.ts";
 
 /** The one external binary the reader shells out to. */
 const GIT_EXECUTABLE = "git";

@@ -2,8 +2,8 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { main as validateFeatures } from "../../scripts/validate_feature.ts";
-import { makeFeature, makeFeatureWithApostropheHeading } from "../support/feature-fixtures.ts";
+import { main as validateFeatures } from "#scripts/validate_feature.ts";
+import { makeFeature, makeFeatureWithApostropheHeading } from "#tests/support/feature-fixtures.ts";
 
 const temporaryDirectories: string[] = [];
 

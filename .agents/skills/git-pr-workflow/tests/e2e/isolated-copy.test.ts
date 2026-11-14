@@ -6,14 +6,14 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
-import { loadApprovedPolicy, makeCompleteSnapshot } from "../support/attribution-fixtures.ts";
+import { loadApprovedPolicy, makeCompleteSnapshot } from "#tests/support/attribution-fixtures.ts";
 import {
   createBody,
   createLocalDraft,
   createLocalInventory,
   createLocalSnapshot,
   createPaths,
-} from "../support/review-fixtures.ts";
+} from "#tests/support/review-fixtures.ts";
 
 const skillRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const runtimeFiles = [

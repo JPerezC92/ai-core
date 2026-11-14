@@ -6,7 +6,7 @@ import {
   createText,
   InputOutputFailure,
   readText,
-} from "../../scripts/pr_review/infrastructure/filesystem.ts";
+} from "#scripts/pr_review/infrastructure/filesystem.ts";
 
 const temporaryDirectories: string[] = [];
 

@@ -12,7 +12,7 @@ import {
   createExpectedGitSnapshot,
   createFixtureEnvironment,
   createLocalDraft,
-} from "../support/review-fixtures.ts";
+} from "#tests/support/review-fixtures.ts";
 
 const skillRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const entryPoint = join(skillRoot, "scripts", "prepare_pr_evidence.ts");

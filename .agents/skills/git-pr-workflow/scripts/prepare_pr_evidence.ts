@@ -1,12 +1,12 @@
 /** Compose PR review evidence preparation commands from local files and read-only Git data. */
 
-import { AssembleReviewSnapshot } from "./pr_review/application/assemble_review_snapshot.ts";
-import { CollectLocalInventory } from "./pr_review/application/collect_local_inventory.ts";
-import { PrepareLocalSnapshot } from "./pr_review/application/prepare_local_snapshot.ts";
-import { VerifyPersistedBody } from "./pr_review/application/verify_persisted_body.ts";
-import { ReviewPreparationError } from "./pr_review/domain/records.ts";
-import { createText, readText, InputOutputFailure } from "./pr_review/infrastructure/filesystem.ts";
-import { GitBoundaryError, GitReader } from "./pr_review/infrastructure/git_reader.ts";
+import { AssembleReviewSnapshot } from "#scripts/pr_review/application/assemble_review_snapshot.ts";
+import { CollectLocalInventory } from "#scripts/pr_review/application/collect_local_inventory.ts";
+import { PrepareLocalSnapshot } from "#scripts/pr_review/application/prepare_local_snapshot.ts";
+import { VerifyPersistedBody } from "#scripts/pr_review/application/verify_persisted_body.ts";
+import { ReviewPreparationError } from "#scripts/pr_review/domain/records.ts";
+import { createText, readText, InputOutputFailure } from "#scripts/pr_review/infrastructure/filesystem.ts";
+import { GitBoundaryError, GitReader } from "#scripts/pr_review/infrastructure/git_reader.ts";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 

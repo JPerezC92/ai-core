@@ -1,18 +1,18 @@
 /** Validate selected feature documents through an injected source port. */
 
-import type { FeatureSource } from "../domain/ports.ts";
+import type { FeatureSource } from "#scripts/feature_validation/domain/ports.ts";
 import {
   InvalidFeatureError,
   NoFeatureDocumentsError,
   ValidFeature,
-} from "../domain/records.ts";
-import type { FeatureValidationResult } from "../domain/records.ts";
+} from "#scripts/feature_validation/domain/records.ts";
+import type { FeatureValidationResult } from "#scripts/feature_validation/domain/records.ts";
 import {
   isTemplateReference,
   sortFeatureReferences,
   validateFeature,
-} from "../domain/rules.ts";
-import type { PathComparisonPolicy } from "../domain/rules.ts";
+} from "#scripts/feature_validation/domain/rules.ts";
+import type { PathComparisonPolicy } from "#scripts/feature_validation/domain/rules.ts";
 
 export class ValidateFeatures {
   private readonly source: FeatureSource;

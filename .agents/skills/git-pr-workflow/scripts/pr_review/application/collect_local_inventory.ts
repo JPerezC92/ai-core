@@ -1,9 +1,9 @@
 /** Collect local Git inventory and delegate assembly to the existing snapshot operation. */
 
-import type { Artifact, ChangedFile, Snapshot } from "../../attribution_scan/domain/records.ts";
-import type { GitInventoryPort } from "../domain/ports.ts";
-import { ReviewPreparationError } from "../domain/records.ts";
-import type { LocalInventory } from "../domain/records.ts";
+import type { Artifact, ChangedFile, Snapshot } from "#scripts/attribution_scan/domain/records.ts";
+import type { GitInventoryPort } from "#scripts/pr_review/domain/ports.ts";
+import { ReviewPreparationError } from "#scripts/pr_review/domain/records.ts";
+import type { LocalInventory } from "#scripts/pr_review/domain/records.ts";
 import { PrepareLocalSnapshot } from "./prepare_local_snapshot.ts";
 
 /** The revision the local snapshot reads its head commit from. */

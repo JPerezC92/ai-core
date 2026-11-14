@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
-import { makeFeature } from "../support/feature-fixtures.ts";
+import { makeFeature } from "#tests/support/feature-fixtures.ts";
 
 const skillRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const runtimeFiles = [

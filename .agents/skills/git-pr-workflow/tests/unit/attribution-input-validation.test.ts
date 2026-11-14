@@ -4,8 +4,8 @@ import { describe, expect, it } from "vitest";
 import {
   PolicyValidationError,
   SnapshotValidationError,
-} from "../../scripts/attribution_scan/domain/records.ts";
-import { validatePolicy, validateSnapshot } from "../../scripts/attribution_scan/domain/validation.ts";
+} from "#scripts/attribution_scan/domain/records.ts";
+import { validatePolicy, validateSnapshot } from "#scripts/attribution_scan/domain/validation.ts";
 import {
   invalidPaths,
   loadApprovedPolicy,
@@ -18,7 +18,7 @@ import {
   makeSnapshotWithoutChangedFiles,
   makeUnbalancedSurfaceSnapshot,
   makeWrongSchemaSnapshot,
-} from "../support/attribution-fixtures.ts";
+} from "#tests/support/attribution-fixtures.ts";
 
 describe("snapshot validation", () => {
   it("requires at least one changed-file body", () => {

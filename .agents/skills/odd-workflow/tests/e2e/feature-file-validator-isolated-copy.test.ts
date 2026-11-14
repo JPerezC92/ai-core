@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   makeApostropheFeatureFile,
   makeFeatureFile,
-} from "../support/feature-file-fixtures.ts";
+} from "#tests/support/feature-file-fixtures.ts";
 
 const skillRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const runtimeFiles = [

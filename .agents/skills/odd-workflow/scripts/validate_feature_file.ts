@@ -1,19 +1,19 @@
 /** Native Node.js entry point for validating durable feature files. */
 
-import { ValidateFeatureFiles } from "./feature_file_validation/application/validate_feature_files.ts";
+import { ValidateFeatureFiles } from "#scripts/feature_file_validation/application/validate_feature_files.ts";
 import {
   InvalidFeatureFileError,
   NoFeatureFileDocumentsError,
-} from "./feature_file_validation/domain/records.ts";
-import { FilesystemFeatureFileSource } from "./feature_file_validation/infrastructure/filesystem.ts";
+} from "#scripts/feature_file_validation/domain/records.ts";
+import { FilesystemFeatureFileSource } from "#scripts/feature_file_validation/infrastructure/filesystem.ts";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 export {
   assessFeatureFile as assess_feature_file,
   validateFeatureFile as validate_feature_file,
-} from "./feature_file_validation/domain/rules.ts";
-import type { PathComparisonPolicy } from "./feature_file_validation/domain/rules.ts";
+} from "#scripts/feature_file_validation/domain/rules.ts";
+import type { PathComparisonPolicy } from "#scripts/feature_file_validation/domain/rules.ts";
 
 /** The host path-comparison policy: Windows paths compare case-insensitively. */
 const hostPathComparisonPolicy: PathComparisonPolicy = {

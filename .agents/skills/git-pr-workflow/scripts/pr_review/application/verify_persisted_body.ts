@@ -1,6 +1,6 @@
 /** Compare supplied post-upload state with the exact intended review body. */
 
-import { PreparedBody, ReviewPreparationError } from "../domain/records.ts";
+import { PreparedBody, ReviewPreparationError } from "#scripts/pr_review/domain/records.ts";
 
 /** Report whether a decoded value is a JSON object. */
 function isRecord(value: unknown): value is Record<string, unknown> {

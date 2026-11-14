@@ -1,8 +1,8 @@
 /** Prepare scanner input using local authored title/body and supplied immutable data. */
 
-import type { Snapshot } from "../../attribution_scan/domain/records.ts";
-import { ReviewPreparationError } from "../domain/records.ts";
-import { assembleSnapshot, extractDraftTitle, validateLocalInventory } from "../domain/snapshot_assembly.ts";
+import type { Snapshot } from "#scripts/attribution_scan/domain/records.ts";
+import { ReviewPreparationError } from "#scripts/pr_review/domain/records.ts";
+import { assembleSnapshot, extractDraftTitle, validateLocalInventory } from "#scripts/pr_review/domain/snapshot_assembly.ts";
 
 export class PrepareLocalSnapshot {
   /** Assemble local artifacts without fetching remote prose or collecting Git state. */

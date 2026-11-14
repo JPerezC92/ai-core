@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { ValidateFeatureFiles } from "../../scripts/feature_file_validation/application/validate_feature_files.ts";
+import { ValidateFeatureFiles } from "#scripts/feature_file_validation/application/validate_feature_files.ts";
 import {
   InvalidFeatureFileError,
   NoFeatureFileDocumentsError,
   ValidFeatureFile,
-} from "../../scripts/feature_file_validation/domain/records.ts";
-import type { PathComparisonPolicy } from "../../scripts/feature_file_validation/domain/rules.ts";
+} from "#scripts/feature_file_validation/domain/records.ts";
+import type { PathComparisonPolicy } from "#scripts/feature_file_validation/domain/rules.ts";
 import {
   FeatureFileSourceFake,
   featureFileCaseOrderFixture,
@@ -13,7 +13,7 @@ import {
   featureFileFailingFixture,
   featureFileSingleFixture,
   featureFileTemplateOnlyFixture,
-} from "../support/feature-file-fixtures.ts";
+} from "#tests/support/feature-file-fixtures.ts";
 
 const caseSensitivePolicy: PathComparisonPolicy = { caseSensitive: true };
 const caseInsensitivePolicy: PathComparisonPolicy = { caseSensitive: false };

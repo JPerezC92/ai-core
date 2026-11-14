@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { CollectLocalInventory } from "../../scripts/pr_review/application/collect_local_inventory.ts";
-import { PrepareLocalSnapshot } from "../../scripts/pr_review/application/prepare_local_snapshot.ts";
-import type { GitInventoryPort } from "../../scripts/pr_review/domain/ports.ts";
-import { ReviewPreparationError } from "../../scripts/pr_review/domain/records.ts";
+import { CollectLocalInventory } from "#scripts/pr_review/application/collect_local_inventory.ts";
+import { PrepareLocalSnapshot } from "#scripts/pr_review/application/prepare_local_snapshot.ts";
+import type { GitInventoryPort } from "#scripts/pr_review/domain/ports.ts";
+import { ReviewPreparationError } from "#scripts/pr_review/domain/records.ts";
 import {
   createBody,
   createLocalDraft,
   createLocalSnapshot,
   createPaths,
   createSnapshot,
-} from "../support/review-fixtures.ts";
+} from "#tests/support/review-fixtures.ts";
 
 const HEAD_REVISION = "HEAD";
 const ANCESTOR_COMMIT = "b".repeat(40);

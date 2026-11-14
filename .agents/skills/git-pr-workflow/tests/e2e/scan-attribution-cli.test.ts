@@ -15,7 +15,7 @@ import {
   makeFloatSchemaSnapshotText,
   makeMalformedSnapshot,
   makeSnapshotWithArtifactContent,
-} from "../support/attribution-fixtures.ts";
+} from "#tests/support/attribution-fixtures.ts";
 
 const skillRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const entryPoint = join(skillRoot, "scripts", "scan_attribution.ts");

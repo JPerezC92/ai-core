@@ -8,9 +8,9 @@ import type {
   AttributionPolicy,
   ChangedFile,
   Snapshot,
-} from "../../scripts/attribution_scan/domain/records.ts";
-import { PolicyValidationError } from "../../scripts/attribution_scan/domain/records.ts";
-import { validatePolicy } from "../../scripts/attribution_scan/domain/validation.ts";
+} from "#scripts/attribution_scan/domain/records.ts";
+import { PolicyValidationError } from "#scripts/attribution_scan/domain/records.ts";
+import { validatePolicy } from "#scripts/attribution_scan/domain/validation.ts";
 
 const skillRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 

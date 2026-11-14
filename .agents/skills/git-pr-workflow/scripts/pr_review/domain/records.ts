@@ -1,6 +1,6 @@
 /** Define the workflow-side inventory record, prepared body, and returned failures. */
 
-import type { Artifact, ChangedFile } from "../../attribution_scan/domain/records.ts";
+import type { Artifact, ChangedFile } from "#scripts/attribution_scan/domain/records.ts";
 
 /** Carry validated immutable content independently of locally authored prose. */
 export interface LocalInventory {
