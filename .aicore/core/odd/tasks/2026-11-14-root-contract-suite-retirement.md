@@ -4,7 +4,7 @@
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-14
 > **Objective:** Retire the redundant root `tests/` workspace, its hardcoded registries and duplicated helpers, and the obsolete first-party Python artifacts, while leaving synchronization semantics and the CLI's own coverage unchanged.
-> **Branch:** `chore/retire-root-contract-suite`
+> **Branch:** `chore/tests/retire-contract-suite`
 > **Delivery:** one focused PR as the user mandated; authored additions + deletions forecast ≈ 700 deleted / ≈ 45 added (generated files and `pnpm-lock.yaml` importer churn excluded). The forecast exceeds the advisory ~400-line threshold; no chained slice is used because the user required a single focused PR and the change is deletion-dominant and internally coherent.
 > **Runner:** `pnpm --dir cli/aicore test` (surviving synchronization suite); `pnpm --dir cli/aicore typecheck`; `node .agents/skills/odd-workflow/scripts/validate_feature.ts .aicore/core/odd/tasks`; `node .agents/skills/odd-workflow/scripts/validate_feature_file.ts .aicore/core/odd/features`. No repository-root suite remains after this change.
 
@@ -19,11 +19,11 @@
 
 ## Tasks
 
-- T1 | S1 | inline (mechanical deletion of a package and its workspace/config wiring; no design decision) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T2 | S2 | inline (prose and permission-row edits across already-read files; owner of the wording) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T3 | S3, S4 | delegated (owns the whole-suite command and its execution) — Forge 🔨 (Implementer) | open | commit: pending
-- T4 | S5 | inline (working-tree removal of ignored artifacts; no Git content) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T5 | S6 | delegated (sole Git and GitHub executor) — Herald 📯 (Release Manager) | open | commit: pending
+- T1 | S1 | inline (mechanical deletion of a package and its workspace/config wiring; no design decision) — Cipher 🔓 (Lead Orchestrator) | done | bd4737bbbd0f2b35072c04a3b4f26d47e4c60403
+- T2 | S2 | inline (prose and permission-row edits across already-read files; owner of the wording) — Cipher 🔓 (Lead Orchestrator) | done | bd4737bbbd0f2b35072c04a3b4f26d47e4c60403
+- T3 | S3, S4 | delegated (owns the whole-suite command and its execution) — Forge 🔨 (Implementer) | done | bd4737bbbd0f2b35072c04a3b4f26d47e4c60403
+- T4 | S5 | inline (working-tree removal of ignored artifacts; no Git content) — Cipher 🔓 (Lead Orchestrator) | done | bd4737bbbd0f2b35072c04a3b4f26d47e4c60403
+- T5 | S6 | delegated (sole Git and GitHub executor) — Herald 📯 (Release Manager) | done | bd4737bbbd0f2b35072c04a3b4f26d47e4c60403
 
 ## Log
 
@@ -122,3 +122,4 @@
 - L6 — 2026-11-14 — Verification. `pnpm --dir cli/aicore test` exit 0, 26 files, 116 passed, 3 skipped, 4.94s; focused `pnpm --dir cli/aicore test tests/integration/core-sync-parity/marker-contract.parity.spec.ts --reporter=verbose` exit 0, 8 passed, including "a markerless source's whole post-frontmatter body is its core", "a source carrying project markers without a core pair is malformed and fails closed", "a source whose core pair is reversed is malformed and fails closed" and the fenced-literal case; `pnpm --dir cli/aicore typecheck` exit 0; `pnpm install --lockfile-only --ignore-scripts` exit 0 with no `tests` importer remaining and eight importers reported; feature-record validator exit 0. Evidence: the PR body and Forge's verification returns for this work unit.
 - L7 — 2026-11-14 — Python artifact cleanup. Working tree only, all ignored and untracked: `tests/`, `.pytest_cache/` and root `__pycache__/` removed; root `.venv/` reduced to a single locked `Scripts/python.exe`. The two MCP tooling projects and their environments were left untouched, and no first-party `.py` file is tracked. Evidence: Forge's inventory return and `Test-Path` results recorded in the PR body.
 - L8 — 2026-11-14 — Blocker, not a failure. Root `.venv/Scripts/python.exe` cannot be deleted: process 42536 runs it as the VS Code black-formatter language server, so the interpreter is held open. Resolution owner: the user (reload or close the VS Code window, then delete the remaining file). The artifact is ignored and untracked and does not affect the tree or the pull request.
+- L9 — 2026-11-14 — Delivery. Pull request #187 (`https://github.com/JPerezC92/ai-core/pull/187`) carries the work on `chore/tests/retire-contract-suite`; creation head `bd4737bbbd0f2b35072c04a3b4f26d47e4c60403`, state open and unmerged. Merge authority remains the user's. Evidence: the PR body and the verification returns summarized at L6.
