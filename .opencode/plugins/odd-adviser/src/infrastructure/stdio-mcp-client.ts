@@ -134,9 +134,7 @@ export function mapMcpToolResultToOutcome(result: McpToolResult): OddEvidenceOut
 type BoundedAttempt<T> =
   | { readonly kind: 'answered'; readonly result: T }
   | { readonly kind: 'failed' }
-  | { readonly kind: 'elapsed' };
-
-async function boundedAttempt<T>(
+  | { readonly kind: 'elapsed' };async function boundedAttempt<T>(
   work: () => Promise<T>,
   timeoutMs: number,
 ): Promise<BoundedAttempt<T>> {
@@ -157,6 +155,25 @@ async function boundedAttempt<T>(
   }
 }
 
+async function releaseFailedInitialization(
+  client: Client,
+  transport: StdioClientTransport,
+): Promise<void> {
+  // Close the client first so a half-connected session tears down before the transport, then
+  // the transport itself so a child spawned by a failed handshake is released even when the
+  // client never attached to it. Cleanup never replaces the connection error: each release is
+  // contained and reported as a diagnostic on stderr, where this adapter's out-of-band
+  // failures belong.
+  for (const release of [() => client.close(), () => transport.close()]) {
+    try {
+      await release();
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      process.stderr.write(`odd-adviser: failed to release MCP initialization: ${detail}\n`);
+    }
+  }
+}
+
 export function createStdioMcpClient(
   options: StdioMcpClientOptions,
 ): OddEvidenceEvaluatorConnection {
@@ -171,15 +188,34 @@ export function createStdioMcpClient(
       cwd: options.cwd,
       ...(options.env === undefined ? {} : { env: { ...options.env } }),
     });
-    await client.connect(transport);
-    return client;
+    try {
+      await client.connect(transport);
+      return client;
+    } catch (error) {
+      // A handshake can fail after the transport already spawned the child, so initialization
+      // failure releases both before the original error reaches the caller.
+      await releaseFailedInitialization(client, transport);
+      throw error;
+    }
+  }
+
+  // One attempt at a time: a concurrent caller reuses the attempt in flight, and a rejected
+  // attempt is dropped so a later evaluation can reconnect. The slot is cleared only while it
+  // still holds that attempt, so a connection started after a replacement is never discarded.
+  function currentConnection(): Promise<Client> {
+    if (connection !== undefined) return connection;
+    const attempt = connect();
+    connection = attempt;
+    void attempt.catch(() => {
+      if (connection === attempt) connection = undefined;
+    });
+    return attempt;
   }
 
   return {
     evaluate: async (input, evaluationOptions) => {
       const attempt = await boundedAttempt<McpToolResult>(async () => {
-        connection ??= connect();
-        const client = await connection;
+        const client = await currentConnection();
         return client.callTool(
           { name: toolName, arguments: toToolArguments(input) },
           { timeout: evaluationOptions.timeoutMs },
