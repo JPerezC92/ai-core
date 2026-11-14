@@ -4,3 +4,4 @@ packages:
   - ".agents/skills/git-pr-workflow"
   - ".agents/skills/incident-workflow"
   - ".agents/skills/op-skill-creator"
+  - ".agents/skills/git-pr"
