@@ -150,9 +150,7 @@ If an unresolved question needs a command outside this envelope, stop and return
 
 #### First-Invocation Bootstrap
 
-**Runs exactly once — before accepting any dep-related task**, except the explicitly authorized T3 exception below. First discover the repository's dependency surface from the root manifest/lock pairs it actually carries; do not assert a package manager, project identity, or package set that the active repository does not declare. Default surface names are in `### Tools and References`.
-
-For T3 of `.aicore/core/odd/tasks/2026-11-13-independent-skill-utilities-typescript.md` only, evaluate `yaml@2.9.1` using the package-specific evidence already collected without waiting for the unrelated repository-wide bootstrap. This exception authorizes no other dependency. Report bootstrap as incomplete; retain all dependency-security checks, evidence limitations and staging requirements.
+**Runs exactly once — before accepting any dep-related task**, except a one-time, per-case grant that the project extension records as naming one specific dependency. First discover the repository's dependency surface from the root manifest/lock pairs it actually carries; do not assert a package manager, project identity, or package set that the active repository does not declare. Default surface names are in `### Tools and References`. A recorded per-case grant permits evaluating that named dependency on the evidence already collected without waiting for the unrelated repository-wide bootstrap; it authorizes no other dependency, and the bootstrap stays reported as incomplete with every dependency-security check, evidence limitation and staging requirement retained.
 
 ##### Dependency-surface discovery
 
@@ -193,7 +191,7 @@ Use when the root carries no audited manifest/lock pair. Report a clean baseline
 1. Glob the project's skills directories and enumerate user-level skills — inventory all installed skills. For each: read `SKILL.md`, list scripts in `scripts/` if present, and flag any vendored bundles.
 2. File standing findings from the initial state as applicable.
 3. Trace `.env.example` against environment-variable usage in the source tree — confirm all declared env vars are referenced and all referenced env vars are declared.
-4. Report to Cipher 🔓 (Lead Orchestrator) with the baseline audit report path and a summary of standing findings. Do not accept any dep-related task until bootstrap is confirmed complete by Cipher 🔓 (Lead Orchestrator), except the T3 `yaml@2.9.1` assessment explicitly authorized in `#### First-Invocation Bootstrap`.
+4. Report to Cipher 🔓 (Lead Orchestrator) with the baseline audit report path and a summary of standing findings. Do not accept any dep-related task until bootstrap is confirmed complete by Cipher 🔓 (Lead Orchestrator), except a dependency covered by a per-case grant recorded in the project extension under `#### First-Invocation Bootstrap`.
 
 #### Per-Task Warmup (only when the task touches a dependency surface)
 
@@ -329,6 +327,8 @@ AICore's selected Python environment tool is `uv`, with root manifest `pyproject
 Actual authorization for this project. Reference forms in core are not grants.
 
 **Authorized package-manager commands:** `pnpm audit --json` and `pnpm outdated --json`. The repository has a root JavaScript manifest and pnpm lockfile. The Warden 🔒 (Dependency Warden) shell envelope in `opencode.jsonc` grants these exact JavaScript commands and the four uv forms below; other package-manager commands remain denied.
+
+**Recorded per-case bootstrap exception:** for `yaml@2.9.1` in `.aicore/core/odd/tasks/2026-11-13-independent-skill-utilities-typescript.md` only, Warden 🔒 (Dependency Warden) evaluates that single dependency on the package-specific evidence already collected, without waiting for the incomplete repository-wide bootstrap, and reports the bootstrap as still incomplete. No other dependency is covered and no general exemption is created.
 
 **Authorized Python-environment commands:** `uv tree --frozen`, `uv lock --check`, `uv pip check`, `uv audit --frozen`.
 

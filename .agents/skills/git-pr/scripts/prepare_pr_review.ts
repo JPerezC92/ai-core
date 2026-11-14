@@ -18,8 +18,8 @@ interface Command {
 
 type ParseResult = { readonly ok: true; readonly command: Command } | { readonly ok: false; readonly message: string };
 
-/** The reference serializes dataclass fields with Python's default JSON spacing. */
-function pythonJsonObject(entries: ReadonlyArray<readonly [string, string]>): string {
+/** Serialize the payload with the reference's spaced JSON separators. */
+function spacedJsonObject(entries: ReadonlyArray<readonly [string, string]>): string {
   const body = entries.map(([key, value]) => `${JSON.stringify(key)}: ${JSON.stringify(value)}`).join(', ');
   return `{${body}}`;
 }
@@ -82,7 +82,7 @@ export function main(argv: readonly string[], program = 'prepare_pr_review.ts'):
       const body = extractBody(readText(command.draft!));
       if (typeof body !== 'string') {
         const failure = body as ReviewPreparationError;
-        process.stdout.write(`${pythonJsonObject([['code', failure.code], ['message', failure.message]])}\n`);
+        process.stdout.write(`${spacedJsonObject([['code', failure.code], ['message', failure.message]])}\n`);
         return 1;
       }
       createText(command.workingBody, body);
@@ -93,11 +93,11 @@ export function main(argv: readonly string[], program = 'prepare_pr_review.ts'):
       const decisions: unknown = command.decisions === null ? null : JSON.parse(readText(command.decisions));
       const outcome = validate({ baseline, current, body: candidate, decisions });
       if ('code' in outcome) {
-        process.stdout.write(`${pythonJsonObject([['code', outcome.code], ['message', outcome.message]])}\n`);
+        process.stdout.write(`${spacedJsonObject([['code', outcome.code], ['message', outcome.message]])}\n`);
         return 1;
       }
     }
-    process.stdout.write(`${pythonJsonObject([['status', 'prepared'], ['command', command.kind]])}\n`);
+    process.stdout.write(`${spacedJsonObject([['status', 'prepared'], ['command', command.kind]])}\n`);
     return 0;
   } catch (error) {
     process.stderr.write(`input/output failure: ${(error as Error).message}\n`);
