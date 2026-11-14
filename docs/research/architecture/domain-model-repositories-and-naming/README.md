@@ -10,7 +10,7 @@
 - Source versions / revisions: mutable web documentation; no pinned source revisions established for the November observations.
 - Applicability: aggregate-oriented repository design, invariant ownership, and evidence informing the accepted shared documentation convention in ADR 0007; not implementation conformance.
 - Freshness / recheck triggers: changed sources, disputed claims, new language mappings, or adoption beyond the stated aggregate-oriented scope.
-- Related features / decisions: [governing feature](../../../../.aicore/core/odd/tasks/2026-11-05-domain-architecture-definitions.md); [accepted ADR 0007](../../../architecture/decisions/0007-domain-model-repositories-and-naming.md) (explicit acceptance L30).
+- Related features / decisions: governing decision (ADR 0007); [accepted ADR 0007](../../../architecture/decisions/0007-domain-model-repositories-and-naming.md) (explicit acceptance L30).
 - Supersedes / superseded by: none evidenced; extends [anemic-domain research](../anemic-domain-model-and-use-case-naming/README.md), without rewriting its historical observations.
 
 ## Question and boundaries
@@ -36,7 +36,7 @@ Scribe ✍️ (Docs & Problems Manager) synthesized the full feature record, esp
 | R9 | https://peps.python.org/pep-0008/#package-and-module-names | mutable | 2026-11-05; L13/L20 | Lowercase Python modules, underscores where useful; no domain-role suffix mandate |
 | R10 | NestJS Context7 documentation examples; https://docs.nestjs.com/ | exact query/revision unknown | 2026-11-05; prior example observation attributed by dispatch and L13 | Role-suffixed filename examples inform selection, not a cross-language standard |
 | R11 | [Anemic-domain research](../anemic-domain-model-and-use-case-naming/README.md), U1/U5/U8/U11/U12 and findings A1–A7 | preserved 2026-10-28 research | original Augur units and coordinator synthesis | Anemia versus data records, functional rules and application orchestration; historical local paths are not current authority |
-| R12 | [Feature](../../../../.aicore/core/odd/tasks/2026-11-05-domain-architecture-definitions.md), L4–L10, L14, L20, L23 | repository record read 2026-11-05 | user selections; accepted evidence and design returns | Local proposal authority and qualifications, not external-source mandates |
+| R12 | [ADR 0007](../../../architecture/decisions/0007-domain-model-repositories-and-naming.md) | repository record read 2026-11-05 | user selections; accepted evidence and design returns | Local proposal authority and qualifications, not external-source mandates |
 
 ## Findings
 

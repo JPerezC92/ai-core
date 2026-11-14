@@ -13,8 +13,8 @@ ai-core/
 ├── opencode.jsonc                 V2 config: agents, models, permissions, MCP, instructions
 ├── distribution-clearance.json    What ships, and how (raw / region / merge)
 ├── distribution-clearance.definition.md
-├── pyproject.toml  uv.lock        Python toolchain + pytest config
-├── conftest.py                    Repository-wide temp-dir policy
+├── pyproject.toml  uv.lock        retired; the root carries no Python project
+├── conftest.py                    retired with the Python test surface
 │
 ├── .agents/                       Shared skills root (OpenCode + Cursor)
 │   └── skills/                    9 shared skills, each self-contained

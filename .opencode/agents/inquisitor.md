@@ -317,7 +317,7 @@ Every prose mention of a roster member uses `Name Emoji (Role)` form (e.g. `Ciph
 
 ### Local Configuration
 
-AICore's Python skill toolchain uses `python3` invoked through `uv` for skill scripts, and `pytest` for skill tests, subject to `AGENTS.md` → `### Environment constraints`. This binding does not grant Inquisitor 🔎 (PR Reviewer) Python-runtime access.
+AICore's root carries no Python project: the repository contract suite runs under Vitest from the `tests` workspace package, and the reviewed whole-suite command is `pnpm --dir tests test`. This binding does not grant Inquisitor 🔎 (PR Reviewer) test-runner access.
 
 This project's protected upstream base ref is `origin/main` — remote `origin`, branch `main` (`$BASE_REMOTE=origin`, `$BASE_BRANCH=main`). Core composition is `$BASE="${BASE_REMOTE}/${BASE_BRANCH}"`; substituting these values keeps every command identical to `origin/main`.
 

@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.6.0
+  version: 2.7.0
 ---
 <!-- core:begin -->
 
@@ -51,6 +51,10 @@ Those labels are illustrative, not required syntax: the mechanical validator acc
 
 One `S#` per independently verifiable outcome. Split when no single check covers all parts — a request that reports a defect, adds a capability and constrains a platform is three entries, because each part needs its own check.
 
+An entry states what must remain true, not how it was implemented: it carries no file path, command, commit or architecture narration, except where the path, component or artifact is itself the required behaviour, which is then named as the behaviour it guarantees rather than as evidence that the behaviour exists. A requirement is stated once; an entry that repeats a requirement another entry already states is deleted rather than retained beside it.
+
+An entry states what must remain true, not how it was implemented. Implementation narration — the mechanism, the files touched, the architecture applied — is excluded, except where a path, component or artifact is itself the required behaviour, which is then named as the behaviour it guarantees. The same requirement is stated once: an entry that repeats a requirement another entry already states, in paraphrase or in other words, is removed rather than kept.
+
 A symptom report is not yet a requirement: state the behavior you are committing to, and keep the symptom verbatim. The quoted report says what was observed; the entry says what becomes true and how it is checked.
 
 Acceptance names one action and one observable result. `Works correctly` is not acceptable: it names neither.
@@ -95,13 +99,21 @@ For findings exposing related impact or escaped coverage, read and apply the wor
 
 Apply the workflow's `### Behavioral verification and runner selection` for per-spec verification and command-regression evidence. After material record changes, work-unit commits, resume and closure, apply its `### Full feature mirror and resume`; retain the exact verified record revision or pending recovery in the existing Log, never a separate status tracker or a claim based only on a summary.
 
-For feature work, the `## Log` records the outcome, the verdict, and a pointer that identifies where the evidence lives: the task/spec, the result, and the identity of the artifact that carries the detail — a commit, a path, or a pull request. The provenance detail — the literal command with its invocation and arguments, the tested input or commit identity, the dependency and environment identities, the responsible executor, and the expected versus observed result — lives in the durable source that already carries it: the committed diff, the test, a committed artifact, the pull-request body, or the record itself. Record it in the Log only when no durable source carries it. Evidence required for future verification or acceptance must remain in a durable source; a gitignored `output/` artifact may hold reproducible detail only. If no executable check applies, record the actual static/manual verification or justified N/A; never invent a test. This is evidence, not an execution transcript, new heading, or second tracker. Read-only and small work do not acquire a mandatory feature document.
+For feature work, the `## Log` records the outcome, the verdict, and a pointer that identifies where the evidence lives: the task/spec, the result, and the identity of the artifact that carries the detail — a commit, a path, or a pull request. The provenance detail — the literal command with its invocation and arguments, the tested input or commit identity, the dependency and environment identities, the responsible executor, and the expected versus observed result — lives in the durable source that already carries it: the committed diff, the test, a committed artifact, the pull-request body, or the record itself.
+Evidence required for future verification or acceptance must remain in a durable source; a gitignored `output/` artifact may hold reproducible detail only.
+If no executable check applies, record the actual static/manual verification or justified N/A; never invent a test. This is evidence, not an execution transcript, new heading, or second tracker. Read-only and small work do not acquire a mandatory feature document.
 
 For instruction changes, identify original and candidate inputs and preserve complete retained/translated/retired accounting of valid original obligations with authority and rationale before acceptance; the accounting decision and its outcome stay in the existing Log, its itemized detail stays in a durable source — the committed artifact, the pull-request body, or the record itself, and acceptance still requires the complete accounting to exist. For prose and examples, walk through applicable normal and adverse scenarios against their governing rules; record the manual action, inputs, expected outcome and observed outcome there. Literal execution provenance and separate observable-outcome evidence remain required; planned checks or an author's confidence are not results.
 
 ### Log evidence
 
-Evidence for a feature falls into three classes. **Decisive** — requests, corrections, approvals and their labels, decisions, obligations, acceptance limits and commits — is permanent. It lives in the record while the record is live, and it must reach a durable owner — a durable feature file, an architecture decision record, the debt register, or the owning instruction file — before the record may be retired under `### Retire a task record`. **Reproducible** — content a reader can regenerate or re-read from Git, a committed artifact or a gitignored `output/` artifact — is referenced by pointer only. **Attestational** — obligation accounting, reviewer verdicts and identities, input and candidate identities, literal commands with observed results, and preservation mappings — lives in the durable source that already carries it: the committed diff, the test, a committed artifact, the pull-request body, or the record itself. A gitignored `output/` artifact may hold reproducible detail only; it never becomes the sole home of evidence required for future verification or acceptance.
+The `## Log` is a brief logbook, not an execution diary. `L1` holds the original request verbatim; each later user correction is its own dated entry, quoted verbatim, and its evidence and rationale may accompany it in that entry. The rationale for a meaningful accepted change, the observed outcomes, the progress and the next step are appended as the work proceeds. Routine corrections stay brief: there is no exhaustive decision journal, and a command, an inspected file, a delegation, a reviewer response, a repeated successful test or a routine progress update earns no entry of its own.
+
+A Log entry carries the outcome, the verdict and a pointer identifying the durable source that holds the detail: a commit id, a path, or a pull-request number and head. It does not reproduce an enumerated review finding list, an investigation narrative, a raw command-output dump, or a copy of a pull-request body — those live in the durable source that already carries them — and the entry keeps one line naming what happened, the result, and where the detail lives.
+
+Evidence for a feature falls into three classes. **Decisive** — requests, corrections, approvals and their labels, decisions, obligations, acceptance limits and commits — is permanent. It lives in the record while the record is live, and it must reach a durable owner — a durable feature file, an architecture decision record, the debt register, or the owning instruction file — before the record may be retired under `### Retire a task record`.
+**Reproducible** — content a reader can regenerate or re-read from Git, a committed artifact or a gitignored `output/` artifact — is referenced by pointer only. **Attestational** — obligation accounting, reviewer verdicts and identities, input and candidate identities, literal commands with observed results, and preservation mappings — lives in the durable source that already carries it: the committed diff, the test, a committed artifact, the pull-request body, or the record itself.
+A gitignored `output/` artifact may hold reproducible detail only; it never becomes the sole home of evidence required for future verification or acceptance. Record the provenance in the Log only when no durable source carries it.
 
 There is no separate evidence artifact, directory, index or service. The record's `## Log` carries the decision, the outcome, the verdict and the pointer; the durable source carries the provenance. Never move, summarize, reformat or retype an entry that no available tool can read completely: keep it byte-identical in place, flag it, and state what a complete read requires.
 
@@ -117,21 +129,23 @@ Separately verify remediation of reported findings and obtain fresh whole-featur
 
 Read and apply `.aicore/core/knowledge/agent-workflow.md` `### ODD protocol`, step 7, for separate observable-outcome verification, failure reproduction and honest reporting of missing evidence/pending controls before task completion. Reporting and scope-bounded continuation follow its `#### Step reporting and transitions` and `.aicore/core/knowledge/agents.md` `### Message presentation`. On close, every task is `done` and has a commit reference. Set `Status: closed`, add `> **Closed:** date`, and record a final `L# — Close:` entry.
 
+**Closure consistency.** A record whose task rows are all `done` is either closed with its closure evidence — the independent review verdict, the delivery evidence and the observable-outcome verification it asserts — or active with the open closure prerequisite named in its Log by an entry that begins `Blocked:`. Independent acceptance is never fabricated and a feature with missing evidence is never closed automatically: the missing evidence is named, not assumed. The validator detects this only for records created on or after the rule's effective date, so a historical record's status, Log and Specs are left exactly as written rather than rewritten to satisfy a later convention.
+
 ### Retire a task record
 
-A closed task record stays in `.aicore/core/odd/tasks/` until every condition below holds. Retirement is a user-authorized deletion: it is never automatic, never a background service, and never an agent's own initiative.
+A closed task record is deleted once it is eligible. Retirement is part of the normal authorized Git workflow: it is never a background service and never an agent's own initiative, and it requires no per-record approval.
 
-1. **Closed.** The record carries `Status: closed`, a `> **Closed:**` date, a `Close:` Log entry, and every task row `done` with its commit reference.
-2. **Age.** Seven complete calendar days have passed since the recorded `> **Closed:**` date. That date field is the only source; no timestamp is recorded and none is required.
-3. **Delivered.** Closure is not delivery. Delivery is proven by the existing merge-proof rule in `.aicore/core/knowledge/release.md` — the pull request's recorded merge commit reachable from the verified base, with the verified pull-request identity and the pinned branch tips — applied to the pull request that delivered the record. Herald 📯 (Release Manager) executes it. A squash or rebase merge is judged by that rule and never by ordinary commit ancestry; the record's own task commit is not the test.
-4. **Unreferenced.** No durable tracked surface outside `.aicore/core/odd/tasks/` cites the record: not a durable feature file, not an architecture decision record, not the debt register, not a research or architecture document, and not an owner instruction file.
-5. **Durable home.** Every decisive conclusion the record holds — user approvals and authorization boundaries, accepted architectural decisions, open risks and known limitations, and unresolved obligations — already lives in a durable owner, named by the record.
-6. **No open obligation.** No unresolved pull request, review round, approval, delivery dependency or user decision depends on the record.
-7. **Authorized.** The user approved the deletion of that exact record. Herald 📯 (Release Manager) executes it; no agent deletes a record on its own initiative.
+**Eligibility — exactly two conditions.** A record is eligible when its status is exactly `closed` and at least seven complete calendar days have passed since its recorded `> **Closed:**` date. That date field is the only source; no timestamp is recorded and none is required. Nothing else is an eligibility condition.
 
-**Candidate inventory.** On explicit request, a read-only inventory of the records satisfying conditions 1, 2 and 4 is produced, with the reason each excluded record is excluded. The inventory is a proposal: deletion follows only after the user's explicit approval.
+**Never deleted.** A record whose status is not `closed`; a record younger than seven complete calendar days; a record with no recorded closure date or with a closure date that is not a real calendar date; and a record that cannot be read.
 
-**Never retired.** A record whose decisive content has no durable home stays until that content is propagated to one. Retirement reduces the record corpus; it never discards a decision.
+**Running the check.** `node .agents/skills/odd-workflow/scripts/retirement_check.ts .aicore/core/odd/tasks`, optionally with `--as-of YYYY-MM-DD` for a deterministic report. It is a read-only report: it names every eligible record and the reason each excluded record is excluded, and it deletes nothing.
+
+**Executing the deletion.** The deletion is performed by Herald 📯 (Release Manager) in the authorized Git workflow, and the durable feature files under `.aicore/core/odd/features/` are the authoritative specifications, which this rule never touches. The user authorizes the retention policy itself, so a record the check reports as eligible is deleted without a separate per-record approval; a deletion outside this policy is not authorized. Before deleting, confirm that no durable surface depends on a record as the sole home of evidence it requires; a record a durable surface still cites as that evidence is retained and reported, because the retention policy preserves required durable evidence rather than discarding it.
+
+This rule introduces no daemon, scheduler, additional agent, retention database or tracking system: it is one command in the existing skill and the ordinary Git workflow.
+
+**Open closure prerequisite.** A record whose task rows are all `done` but which is not closed names its open closure prerequisite in a Log entry that begins `Blocked:` (see `### Close`). Its status is `active`, so it is not eligible for deletion.
 
 ### Handoff
 
@@ -157,6 +171,8 @@ The validator runs natively on Node.js `>=24.12.0` with no runtime dependency, n
 
 Run `node .agents/skills/odd-workflow/scripts/validate_feature.ts .aicore/core/odd/tasks` before closing. The script is **mechanical anatomy only**; exit 0 proves the headings, `S#`/`T#`/`L1`, the Log's `L#` identifiers ascend with `L1` first, task status, 7–64 character hexadecimal commit references, and placeholders are correct. It does not prove verbatim fidelity, that a spec is meaningful, that a runner applies or ran, that a task is complete, or that the evidence is true — the independent semantic review above owns that, with acceptance by Cipher 🔓 (Lead Orchestrator).
 
+Alongside the two validators, the retirement check `node .agents/skills/odd-workflow/scripts/retirement_check.ts <tasks-directory>` is a read-only report: it lists the records that satisfy the routine eligibility gate and the reason each excluded record is excluded, and it deletes nothing.
+
 ### References
 
 - `.aicore/core/odd/tasks/_template.md` — the only feature-document template.
@@ -164,4 +180,5 @@ Run `node .agents/skills/odd-workflow/scripts/validate_feature.ts .aicore/core/o
 - `.agents/skills/odd-workflow/references/_checklist.md` — creation and close checks; read it in full before creating or closing a feature.
 - `.agents/skills/odd-workflow/scripts/validate_feature.ts` — mechanical validator.
 - `.agents/skills/odd-workflow/scripts/validate_feature_file.ts` — mechanical validator for the durable feature file; it reports the derived status.
+- `.agents/skills/odd-workflow/scripts/retirement_check.ts` — read-only retirement report; it computes the routine eligibility gate and deletes nothing.
 <!-- core:end -->
