@@ -19,11 +19,11 @@
 
 ## Tasks
 
-- T1 | S1 | inline (mechanical deletion of a package and its workspace/config wiring; no design decision) — Cipher 🔓 (Lead Orchestrator) | done | bd4737bbbd0f2b35072c04a3b4f26d47e4c60403
-- T2 | S2 | inline (prose and permission-row edits across already-read files; owner of the wording) — Cipher 🔓 (Lead Orchestrator) | done | bd4737bbbd0f2b35072c04a3b4f26d47e4c60403
-- T3 | S3, S4 | delegated (owns the whole-suite command and its execution) — Forge 🔨 (Implementer) | done | bd4737bbbd0f2b35072c04a3b4f26d47e4c60403
-- T4 | S5 | inline (working-tree removal of ignored artifacts; no Git content) — Cipher 🔓 (Lead Orchestrator) | done | bd4737bbbd0f2b35072c04a3b4f26d47e4c60403
-- T5 | S6 | delegated (sole Git and GitHub executor) — Herald 📯 (Release Manager) | done | bd4737bbbd0f2b35072c04a3b4f26d47e4c60403
+- T1 | S1 | inline (mechanical deletion of a package and its workspace/config wiring; no design decision) — Cipher 🔓 (Lead Orchestrator) | done | commit: bd4737bbbd0f2b35072c04a3b4f26d47e4c60403
+- T2 | S2 | inline (prose and permission-row edits across already-read files; owner of the wording) — Cipher 🔓 (Lead Orchestrator) | done | commit: bd4737bbbd0f2b35072c04a3b4f26d47e4c60403
+- T3 | S3, S4 | delegated (owns the whole-suite command and its execution) — Forge 🔨 (Implementer) | done | commit: bd4737bbbd0f2b35072c04a3b4f26d47e4c60403
+- T4 | S5 | inline (working-tree removal of ignored artifacts; no Git content) — Cipher 🔓 (Lead Orchestrator) | done | commit: bd4737bbbd0f2b35072c04a3b4f26d47e4c60403
+- T5 | S6 | delegated (sole Git and GitHub executor) — Herald 📯 (Release Manager) | done | commit: bd4737bbbd0f2b35072c04a3b4f26d47e4c60403
 
 ## Log
 
