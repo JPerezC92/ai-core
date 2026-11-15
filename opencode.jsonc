@@ -25,7 +25,6 @@
             "permissions": [
                 { "action": "shell", "resource": "*", "effect": "deny" },
                 { "action": "shell", "resource": "pnpm install", "effect": "allow" },
-                { "action": "shell", "resource": "pnpm --dir tests test", "effect": "allow" },
                 { "action": "shell", "resource": "pnpm --dir .opencode/plugins/odd-adviser exec vitest run", "effect": "allow" },
                 { "action": "shell", "resource": "pnpm --dir mcp-servers/system-one exec vitest run", "effect": "allow" },
                 // Package-local CLI test suites, granted as exact commands only so the
@@ -61,8 +60,6 @@
                 { "action": "shell", "resource": "pnpm install --lockfile-only --ignore-scripts", "effect": "allow" },
                 { "action": "shell", "resource": "pnpm --dir cli/aicore test*", "effect": "allow" },
                 { "action": "shell", "resource": "pnpm --dir cli/aicore typecheck*", "effect": "allow" },
-                { "action": "shell", "resource": "pnpm --dir tests test*", "effect": "allow" },
-                { "action": "shell", "resource": "pnpm --dir tests typecheck*", "effect": "allow" },
                 { "action": "shell", "resource": "pnpm --dir .opencode/plugins/odd-adviser exec vitest run*", "effect": "allow" },
                 { "action": "shell", "resource": "pnpm --dir .opencode/plugins/odd-adviser typecheck*", "effect": "allow" },
                 { "action": "shell", "resource": "pnpm --dir mcp-servers/system-one exec vitest run*", "effect": "allow" },

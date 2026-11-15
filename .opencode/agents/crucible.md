@@ -164,7 +164,7 @@ Every prose mention of a roster member uses `Name Emoji (Role)` form (e.g. `Ciph
 
 ### Local Configuration
 
-AICore's reviewed whole-suite command is `pnpm --dir tests test`, running the repository contract suite under Vitest from the `tests` workspace package. Reviewed runner command text and executable grants remain in the root harness config, unchanged by this binding.
+AICore's reviewed whole-suite command is `pnpm --dir cli/aicore test`, running the synchronization CLI's Vitest suites from the `cli/aicore` package. Reviewed runner command text and executable grants remain in the root harness config, unchanged by this binding.
 
 ### Local Permissions
 

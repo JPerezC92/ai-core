@@ -321,7 +321,7 @@ Every prose mention of a roster member uses `Name Emoji (Role)` form (e.g. `Ciph
 
 ### Local Configuration
 
-AICore's root carries no Python project: `pyproject.toml`, `uv.lock` and the pytest suite were removed once the repository contract suite was ported to TypeScript and passed. The two MCP tooling projects under `.opencode/tooling/` each own a locked Python environment and are provisioned per `docs/tooling.md`; the Python branch applies to those manifests, not to the repository root.
+AICore's root carries no Python project: `pyproject.toml`, `uv.lock` and the pytest suite were retired with the TypeScript migration, and the repository root keeps no test package of its own. The two MCP tooling projects under `.opencode/tooling/` each own a locked Python environment and are provisioned per `docs/tooling.md`; the Python branch applies to those manifests, not to the repository root.
 
 ### Local Permissions
 
@@ -331,7 +331,7 @@ Actual authorization for this project. Reference forms in core are not grants.
 
 **Mandatory check commands:** `pnpm audit --json` · `pnpm config get registry`
 
-Every mandatory check command is authorized by the Warden 🔒 (Dependency Warden) shell envelope in `opencode.jsonc`, and `tests/integration/agent-sources.test.ts` fails when a mandatory check command resolves to an effect other than `allow` under the effective permissions.
+Every mandatory check command is authorized by the Warden 🔒 (Dependency Warden) shell envelope in `opencode.jsonc`. A mandatory check command that is not authorized there is reported as `unavailable` and the control it discharges as unverified; the envelope is reviewed directly, because no test adjudicates the permission layer.
 
 **Authorized Python-environment commands:** `uv tree --frozen`, `uv lock --check`, `uv pip check`, `uv audit --frozen`.
 
@@ -339,7 +339,7 @@ Every mandatory check command is authorized by the Warden 🔒 (Dependency Warde
 
 In AICore the Python branch applies to the two tooling projects' manifests, not to the root; the root dependency surface is the JavaScript manifest and `pnpm-lock.yaml`. Do not invoke direct `pip-audit`, `uvx`, or `uv tool run`.
 
-**Local suite grant:** The project's reviewed whole-suite command is `pnpm --dir tests test`. That command is this project's local grant, not a universal adopter grant; each destination reviews and owns its own whole-suite command set, including on first migration or resync and whenever its test framework changes. Warden 🔒 (Dependency Warden) does not execute it.
+**Local suite grant:** The project's reviewed whole-suite command is `pnpm --dir cli/aicore test`. That command is this project's local grant, not a universal adopter grant; each destination reviews and owns its own whole-suite command set, including on first migration or resync and whenever its test framework changes. Warden 🔒 (Dependency Warden) does not execute it.
 
 ### Local History
 
