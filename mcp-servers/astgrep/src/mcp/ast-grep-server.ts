@@ -1,11 +1,23 @@
 import { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 
-import type { AstGrepTools } from '../application/ast-grep-tools.ts';
+import type { DumpSyntaxTree } from '../application/dump-syntax-tree.ts';
+import type { FindCode } from '../application/find-code.ts';
+import type { FindCodeByRule } from '../application/find-code-by-rule.ts';
+import type { TestMatchCodeRule } from '../application/test-match-code-rule.ts';
+import { isAstGrepError } from '../domain/errors.ts';
 import { supportedLanguages } from '../domain/languages.ts';
+import type { MatchRecord } from '../domain/matches.ts';
+
+export type AstGrepOperations = {
+  readonly dumpSyntaxTree: DumpSyntaxTree;
+  readonly findCode: FindCode;
+  readonly findCodeByRule: FindCodeByRule;
+  readonly testMatchCodeRule: TestMatchCodeRule;
+};
 
 export function createAstGrepServer(
-  tools: AstGrepTools,
+  operations: AstGrepOperations,
   languageList: readonly string[],
 ): McpServer {
   const languages = languageList.join(', ');
@@ -27,7 +39,7 @@ export function createAstGrepServer(
       }),
     },
     async ({ code, language, format }) => {
-      const text = await tools.dumpSyntaxTree(code, language, format);
+      const text = await operations.dumpSyntaxTree.execute({ code, language, format });
       return { content: [{ type: 'text' as const, text }] };
     },
   );
@@ -54,14 +66,14 @@ export function createAstGrepServer(
       }),
     },
     async ({ project_folder, pattern, language, max_results, output_format }) => {
-      const result = await tools.findCode(
-        project_folder,
+      const result = await operations.findCode.execute({
+        projectFolder: project_folder,
         pattern,
         language,
-        max_results,
-        output_format,
-      );
-      return jsonOrText(result);
+        maxResults: max_results,
+        outputFormat: output_format,
+      });
+      return serializeFind(result, max_results);
     },
   );
 
@@ -83,13 +95,13 @@ export function createAstGrepServer(
       }),
     },
     async ({ project_folder, yaml, max_results, output_format }) => {
-      const result = await tools.findCodeByRule(
-        project_folder,
+      const result = await operations.findCodeByRule.execute({
+        projectFolder: project_folder,
         yaml,
-        max_results,
-        output_format,
-      );
-      return jsonOrText(result);
+        maxResults: max_results,
+        outputFormat: output_format,
+      });
+      return serializeFind(result, max_results);
     },
   );
 
@@ -107,7 +119,13 @@ export function createAstGrepServer(
       }),
     },
     async ({ code, yaml }) => {
-      const matches = await tools.testMatchCodeRule(code, yaml);
+      const matches = await operations.testMatchCodeRule.execute({ code, yaml });
+      if (isAstGrepError(matches)) {
+        return {
+          content: [{ type: 'text' as const, text: matches.message }],
+          isError: true,
+        };
+      }
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(matches) }],
         structuredContent: { matches },
@@ -122,12 +140,65 @@ export function languageListFromConfigText(configYaml: string | undefined): stri
   return supportedLanguages(configYaml);
 }
 
-function jsonOrText(result: string | unknown[]) {
-  if (typeof result === 'string') {
-    return { content: [{ type: 'text' as const, text: result }] };
+function serializeFind(
+  result:
+    | {
+        readonly matches: MatchRecord[];
+        readonly totalMatches: number;
+        readonly outputFormat: 'text' | 'json';
+      }
+    | { readonly code: string; readonly message: string },
+  maxResults: number,
+) {
+  if (isAstGrepError(result)) {
+    return {
+      content: [{ type: 'text' as const, text: result.message }],
+      isError: true,
+    };
+  }
+  if (result.outputFormat === 'text') {
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: formatFindText(result.matches, result.totalMatches, maxResults),
+        },
+      ],
+    };
   }
   return {
-    content: [{ type: 'text' as const, text: JSON.stringify(result) }],
-    structuredContent: { matches: result },
+    content: [{ type: 'text' as const, text: JSON.stringify(result.matches) }],
+    structuredContent: { matches: result.matches },
   };
+}
+
+function formatFindText(
+  matches: readonly MatchRecord[],
+  totalMatches: number,
+  maxResults: number,
+): string {
+  if (matches.length === 0) {
+    return 'No matches found';
+  }
+  let header = `Found ${matches.length} matches`;
+  if (maxResults && totalMatches > maxResults) {
+    header += ` (showing first ${maxResults} of ${totalMatches})`;
+  }
+  return `${header}:\n\n${formatMatchesAsText(matches)}`;
+}
+
+function formatMatchesAsText(matches: readonly MatchRecord[]): string {
+  if (matches.length === 0) {
+    return '';
+  }
+  const blocks: string[] = [];
+  for (const match of matches) {
+    const startLine = match.range.start.line + 1;
+    const endLine = match.range.end.line + 1;
+    const matchText = match.text.replace(/[\r\n]+$/u, '');
+    const header =
+      startLine === endLine ? `${match.file}:${startLine}` : `${match.file}:${startLine}-${endLine}`;
+    blocks.push(`${header}\n${matchText}`);
+  }
+  return blocks.join('\n\n');
 }

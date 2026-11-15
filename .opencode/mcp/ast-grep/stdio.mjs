@@ -22086,11 +22086,11 @@ var rev2025Codec = {
   },
   encodeResult(method, result) {
     if (method !== "tools/list") return result;
-    const tools2 = result.tools;
-    if (!Array.isArray(tools2) || !tools2.some((t) => toolNeedsLegacyWrap(t))) return result;
+    const tools = result.tools;
+    if (!Array.isArray(tools) || !tools.some((t) => toolNeedsLegacyWrap(t))) return result;
     return {
       ...result,
-      tools: tools2.map((t) => toolNeedsLegacyWrap(t) ? {
+      tools: tools.map((t) => toolNeedsLegacyWrap(t) ? {
         ...t,
         outputSchema: wrapOutputSchemaForLegacy(t.outputSchema)
       } : t)
@@ -23319,8 +23319,8 @@ function enforceDeletedFields(method, result) {
     }
     return next;
   };
-  const tools2 = result.tools;
-  if (method === "tools/list" && Array.isArray(tools2) && tools2.some((tool) => isPlainObject$4(tool) && "execution" in tool)) copy().tools = tools2.map((tool) => {
+  const tools = result.tools;
+  if (method === "tools/list" && Array.isArray(tools) && tools.some((tool) => isPlainObject$4(tool) && "execution" in tool)) copy().tools = tools.map((tool) => {
     if (!isPlainObject$4(tool) || !("execution" in tool)) return tool;
     const rest = { ...tool };
     delete rest["execution"];
@@ -35111,125 +35111,101 @@ function toError(value) {
   return value instanceof Error ? value : new Error(String(value));
 }
 
-// src/domain/matches.ts
-function parseMatches(stdout, maxResults = 0) {
-  const matches = [];
-  let totalLines = 0;
-  for (const raw of stdout.split(/\r?\n/)) {
-    const line = raw.trim();
-    if (line.length === 0 || !line.startsWith("{")) {
-      continue;
-    }
-    totalLines += 1;
-    if (!maxResults || matches.length < maxResults) {
-      matches.push(JSON.parse(line));
-    }
+// src/application/dump-syntax-tree.ts
+var DumpSyntaxTree = class {
+  cli;
+  constructor(cli2) {
+    this.cli = cli2;
   }
-  return { matches, totalMatches: totalLines };
-}
-function formatMatchesAsText(matches) {
-  if (matches.length === 0) {
-    return "";
-  }
-  const blocks = [];
-  for (const match of matches) {
-    const filePath = typeof match.file === "string" ? match.file : "";
-    const range = match.range;
-    const startLine = range && typeof range === "object" && range !== null ? nestedLine(range, "start") + 1 : 1;
-    const endLine = range && typeof range === "object" && range !== null ? nestedLine(range, "end") + 1 : 1;
-    const matchText = typeof match.text === "string" ? match.text.replace(/[\r\n]+$/u, "") : "";
-    const header = startLine === endLine ? `${filePath}:${startLine}` : `${filePath}:${startLine}-${endLine}`;
-    blocks.push(`${header}
-${matchText}`);
-  }
-  return blocks.join("\n\n");
-}
-function nestedLine(range, key) {
-  const side = range[key];
-  if (side && typeof side === "object" && side !== null && "line" in side) {
-    const line = side.line;
-    return typeof line === "number" ? line : 0;
-  }
-  return 0;
-}
-function formatFindText(matches, totalMatches, maxResults) {
-  if (matches.length === 0) {
-    return "No matches found";
-  }
-  let header = `Found ${matches.length} matches`;
-  if (maxResults && totalMatches > maxResults) {
-    header += ` (showing first ${maxResults} of ${totalMatches})`;
-  }
-  return `${header}:
-
-${formatMatchesAsText(matches)}`;
-}
-
-// src/application/ast-grep-tools.ts
-var AstGrepTools = class {
-  process;
-  constructor(process3) {
-    this.process = process3;
-  }
-  async dumpSyntaxTree(code, language, format = "cst") {
-    const result = await this.process.run("run", [
-      "--pattern",
-      code,
-      "--lang",
-      language,
-      `--debug-query=${format}`
-    ]);
-    return result.stderr.trim();
-  }
-  async findCode(projectFolder, pattern, language = "", maxResults = 0, outputFormat = "text") {
-    assertOutputFormat(outputFormat);
-    const args = ["--pattern", pattern];
-    if (language.length > 0) {
-      args.push("--lang", language);
-    }
-    const result = await this.process.run("run", [...args, "--json=stream", projectFolder]);
-    const { matches, totalMatches } = parseMatches(result.stdout, maxResults);
-    if (outputFormat === "text") {
-      return formatFindText(matches, totalMatches, maxResults);
-    }
-    return matches;
-  }
-  async findCodeByRule(projectFolder, yaml, maxResults = 0, outputFormat = "text") {
-    assertOutputFormat(outputFormat);
-    const result = await this.process.run("scan", [
-      "--inline-rules",
-      yaml,
-      "--json=stream",
-      projectFolder
-    ]);
-    const { matches, totalMatches } = parseMatches(result.stdout, maxResults);
-    if (outputFormat === "text") {
-      return formatFindText(matches, totalMatches, maxResults);
-    }
-    return matches;
-  }
-  async testMatchCodeRule(code, yaml) {
-    const result = await this.process.run(
-      "scan",
-      ["--inline-rules", yaml, "--json", "--stdin"],
-      code
-    );
-    const parsed = JSON.parse(result.stdout.trim() || "[]");
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      throw new Error(
-        "No matches found for the given code and rule. Try adding `stopBy: end` to your inside/has rule."
-      );
-    }
-    return parsed;
+  async execute(input2) {
+    return this.cli.dumpQuery(input2.code, input2.language, input2.format ?? "cst");
   }
 };
-function assertOutputFormat(outputFormat) {
-  if (outputFormat !== "text" && outputFormat !== "json") {
-    throw new Error(`Invalid output_format: ${outputFormat}. Must be 'text' or 'json'.`);
+
+// src/domain/errors.ts
+var AstGrepError = class {
+  code;
+  message;
+  constructor(code, message) {
+    this.code = code;
+    this.message = message;
   }
+};
+var NO_MATCH_MESSAGE = "No matches found for the given code and rule. Try adding `stopBy: end` to your inside/has rule.";
+function isAstGrepError(value) {
+  return value instanceof AstGrepError;
 }
 
-// src/infrastructure/ast-grep-process.ts
+// src/application/find-code.ts
+var FindCode = class {
+  cli;
+  constructor(cli2) {
+    this.cli = cli2;
+  }
+  async execute(input2) {
+    const outputFormat = input2.outputFormat ?? "text";
+    if (outputFormat !== "text" && outputFormat !== "json") {
+      return new AstGrepError(
+        "invalid_output_format",
+        `Invalid output_format: ${outputFormat}. Must be 'text' or 'json'.`
+      );
+    }
+    const listed = await this.cli.searchPattern(
+      input2.projectFolder,
+      input2.pattern,
+      input2.language ?? ""
+    );
+    const maxResults = input2.maxResults ?? 0;
+    const matches = maxResults > 0 ? listed.matches.slice(0, maxResults) : listed.matches;
+    return {
+      matches,
+      totalMatches: listed.totalMatches,
+      outputFormat
+    };
+  }
+};
+
+// src/application/find-code-by-rule.ts
+var FindCodeByRule = class {
+  cli;
+  constructor(cli2) {
+    this.cli = cli2;
+  }
+  async execute(input2) {
+    const outputFormat = input2.outputFormat ?? "text";
+    if (outputFormat !== "text" && outputFormat !== "json") {
+      return new AstGrepError(
+        "invalid_output_format",
+        `Invalid output_format: ${outputFormat}. Must be 'text' or 'json'.`
+      );
+    }
+    const listed = await this.cli.searchRule(input2.projectFolder, input2.yaml);
+    const maxResults = input2.maxResults ?? 0;
+    const matches = maxResults > 0 ? listed.matches.slice(0, maxResults) : listed.matches;
+    return {
+      matches,
+      totalMatches: listed.totalMatches,
+      outputFormat
+    };
+  }
+};
+
+// src/application/test-match-code-rule.ts
+var TestMatchCodeRule = class {
+  cli;
+  constructor(cli2) {
+    this.cli = cli2;
+  }
+  async execute(input2) {
+    const matches = await this.cli.matchRuleOnCode(input2.code, input2.yaml);
+    if (matches.length === 0) {
+      return new AstGrepError("no_match", NO_MATCH_MESSAGE);
+    }
+    return matches;
+  }
+};
+
+// src/infrastructure/adapters/ast-grep-process.ts
 import { spawn } from "node:child_process";
 
 // src/domain/exit-code.ts
@@ -35321,11 +35297,50 @@ function posixSplit(input2, posix) {
   return result;
 }
 
-// src/infrastructure/ast-grep-process.ts
+// src/infrastructure/adapters/ast-grep-process.ts
 var AstGrepProcess = class {
   options;
   constructor(options) {
     this.options = options;
+  }
+  async dumpQuery(code, language, format) {
+    const result = await this.run("run", [
+      "--pattern",
+      code,
+      "--lang",
+      language,
+      `--debug-query=${format}`
+    ]);
+    return result.stderr.trim();
+  }
+  async searchPattern(projectFolder, pattern, language) {
+    const args = ["--pattern", pattern];
+    if (language.length > 0) {
+      args.push("--lang", language);
+    }
+    const result = await this.run("run", [...args, "--json=stream", projectFolder]);
+    return parseJsonlMatches(result.stdout);
+  }
+  async searchRule(projectFolder, yaml) {
+    const result = await this.run("scan", [
+      "--inline-rules",
+      yaml,
+      "--json=stream",
+      projectFolder
+    ]);
+    return parseJsonlMatches(result.stdout);
+  }
+  async matchRuleOnCode(code, yaml) {
+    const result = await this.run(
+      "scan",
+      ["--inline-rules", yaml, "--json", "--stdin"],
+      code
+    );
+    const parsed = JSON.parse(result.stdout.trim() || "[]");
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return parsed.map((row) => toMatchRecord(row));
   }
   async run(subcommand, args, inputText) {
     const prefixed = this.options.configPath ? ["--config", this.options.configPath, ...args] : [...args];
@@ -35340,7 +35355,9 @@ var AstGrepProcess = class {
         return result;
       }
       const stderrMsg = result.stderr.trim() || "(no error output)";
-      throw new Error(`Command ${JSON.stringify(argv)} failed with exit code ${result.returncode}: ${stderrMsg}`);
+      throw new Error(
+        `Command ${JSON.stringify(argv)} failed with exit code ${result.returncode}: ${stderrMsg}`
+      );
     }
     return result;
   }
@@ -35386,6 +35403,40 @@ var AstGrepProcess = class {
     });
   }
 };
+function parseJsonlMatches(stdout) {
+  const matches = [];
+  let totalLines = 0;
+  for (const raw of stdout.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (line.length === 0 || !line.startsWith("{")) {
+      continue;
+    }
+    totalLines += 1;
+    matches.push(toMatchRecord(JSON.parse(line)));
+  }
+  return { matches, totalMatches: totalLines };
+}
+function toMatchRecord(row) {
+  const record2 = row !== null && typeof row === "object" ? row : {};
+  const rangeRaw = record2.range;
+  const rangeObj = rangeRaw !== null && typeof rangeRaw === "object" ? rangeRaw : {};
+  return {
+    file: typeof record2.file === "string" ? record2.file : "",
+    range: {
+      start: { line: nestedLine(rangeObj, "start") },
+      end: { line: nestedLine(rangeObj, "end") }
+    },
+    text: typeof record2.text === "string" ? record2.text : ""
+  };
+}
+function nestedLine(range, key) {
+  const side = range[key];
+  if (side && typeof side === "object" && side !== null && "line" in side) {
+    const line = side.line;
+    return typeof line === "number" ? line : 0;
+  }
+  return 0;
+}
 
 // node_modules/.pnpm/@modelcontextprotocol+server@2.4.0/node_modules/@modelcontextprotocol/server/dist/index.mjs
 var DEFAULT_MAX_REQUEST_BODY_SIZE = 4 * 1024 * 1024;
@@ -35458,7 +35509,7 @@ function supportedLanguages(configYaml2) {
 }
 
 // src/mcp/ast-grep-server.ts
-function createAstGrepServer(tools2, languageList) {
+function createAstGrepServer(operations, languageList) {
   const languages2 = languageList.join(", ");
   const server = new McpServer({ name: "ast-grep", version: "0.1.0" });
   server.registerTool(
@@ -35473,7 +35524,7 @@ function createAstGrepServer(tools2, languageList) {
       })
     },
     async ({ code, language, format }) => {
-      const text = await tools2.dumpSyntaxTree(code, language, format);
+      const text = await operations.dumpSyntaxTree.execute({ code, language, format });
       return { content: [{ type: "text", text }] };
     }
   );
@@ -35493,14 +35544,14 @@ function createAstGrepServer(tools2, languageList) {
       })
     },
     async ({ project_folder, pattern, language, max_results, output_format }) => {
-      const result = await tools2.findCode(
-        project_folder,
+      const result = await operations.findCode.execute({
+        projectFolder: project_folder,
         pattern,
         language,
-        max_results,
-        output_format
-      );
-      return jsonOrText(result);
+        maxResults: max_results,
+        outputFormat: output_format
+      });
+      return serializeFind(result, max_results);
     }
   );
   server.registerTool(
@@ -35516,13 +35567,13 @@ function createAstGrepServer(tools2, languageList) {
       })
     },
     async ({ project_folder, yaml, max_results, output_format }) => {
-      const result = await tools2.findCodeByRule(
-        project_folder,
+      const result = await operations.findCodeByRule.execute({
+        projectFolder: project_folder,
         yaml,
-        max_results,
-        output_format
-      );
-      return jsonOrText(result);
+        maxResults: max_results,
+        outputFormat: output_format
+      });
+      return serializeFind(result, max_results);
     }
   );
   server.registerTool(
@@ -35536,7 +35587,13 @@ function createAstGrepServer(tools2, languageList) {
       })
     },
     async ({ code, yaml }) => {
-      const matches = await tools2.testMatchCodeRule(code, yaml);
+      const matches = await operations.testMatchCodeRule.execute({ code, yaml });
+      if (isAstGrepError(matches)) {
+        return {
+          content: [{ type: "text", text: matches.message }],
+          isError: true
+        };
+      }
       return {
         content: [{ type: "text", text: JSON.stringify(matches) }],
         structuredContent: { matches }
@@ -35548,14 +35605,54 @@ function createAstGrepServer(tools2, languageList) {
 function languageListFromConfigText(configYaml2) {
   return supportedLanguages(configYaml2);
 }
-function jsonOrText(result) {
-  if (typeof result === "string") {
-    return { content: [{ type: "text", text: result }] };
+function serializeFind(result, maxResults) {
+  if (isAstGrepError(result)) {
+    return {
+      content: [{ type: "text", text: result.message }],
+      isError: true
+    };
+  }
+  if (result.outputFormat === "text") {
+    return {
+      content: [
+        {
+          type: "text",
+          text: formatFindText(result.matches, result.totalMatches, maxResults)
+        }
+      ]
+    };
   }
   return {
-    content: [{ type: "text", text: JSON.stringify(result) }],
-    structuredContent: { matches: result }
+    content: [{ type: "text", text: JSON.stringify(result.matches) }],
+    structuredContent: { matches: result.matches }
   };
+}
+function formatFindText(matches, totalMatches, maxResults) {
+  if (matches.length === 0) {
+    return "No matches found";
+  }
+  let header = `Found ${matches.length} matches`;
+  if (maxResults && totalMatches > maxResults) {
+    header += ` (showing first ${maxResults} of ${totalMatches})`;
+  }
+  return `${header}:
+
+${formatMatchesAsText(matches)}`;
+}
+function formatMatchesAsText(matches) {
+  if (matches.length === 0) {
+    return "";
+  }
+  const blocks = [];
+  for (const match of matches) {
+    const startLine = match.range.start.line + 1;
+    const endLine = match.range.end.line + 1;
+    const matchText = match.text.replace(/[\r\n]+$/u, "");
+    const header = startLine === endLine ? `${match.file}:${startLine}` : `${match.file}:${startLine}-${endLine}`;
+    blocks.push(`${header}
+${matchText}`);
+  }
+  return blocks.join("\n\n");
 }
 
 // src/mcp/stdio.ts
@@ -35567,20 +35664,29 @@ if (typeof process.on === "function") {
 var configPath = readConfigPath(process.env);
 var commandPrefix = process.env.AST_GREP_PATH?.trim() || "ast-grep";
 var configYaml = configPath === void 0 ? void 0 : readFileSync(configPath, "utf8");
-var tools = new AstGrepTools(
-  new AstGrepProcess({
-    commandPrefix,
-    configPath,
-    platform: process.platform
-  })
-);
-var languages = languageListFromConfigText(configYaml);
-serveStdio(() => createAstGrepServer(tools, languages), {
-  onerror: (error62) => {
-    process.stderr.write(`ast-grep-mcp: ${error62.name}: ${error62.message}
-`);
-  }
+var cli = new AstGrepProcess({
+  commandPrefix,
+  configPath,
+  platform: process.platform
 });
+var languages = languageListFromConfigText(configYaml);
+serveStdio(
+  () => createAstGrepServer(
+    {
+      dumpSyntaxTree: new DumpSyntaxTree(cli),
+      findCode: new FindCode(cli),
+      findCodeByRule: new FindCodeByRule(cli),
+      testMatchCodeRule: new TestMatchCodeRule(cli)
+    },
+    languages
+  ),
+  {
+    onerror: (error62) => {
+      process.stderr.write(`ast-grep-mcp: ${error62.name}: ${error62.message}
+`);
+    }
+  }
+);
 function readConfigPath(environment) {
   const fromEnv = environment.AST_GREP_CONFIG?.trim();
   return fromEnv === void 0 || fromEnv.length === 0 ? void 0 : fromEnv;
