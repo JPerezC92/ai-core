@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { FindCode } from '../../src/application/find-code.ts';
-import { isAstGrepError } from '../../src/domain/errors.ts';
+import { FindCode } from '#application/find-code.ts';
+import { isAstGrepError } from '#domain/errors.ts';
 import {
   createMatch,
   emptyMatchList,
   fakeAstGrepCli,
   matchList,
-} from '../support/ast-grep-cli.factory.ts';
+} from '#support/ast-grep-cli.factory.ts';
 
 describe('FindCode', () => {
   it('returns sliced matches for json format', async () => {

@@ -3,11 +3,11 @@ import { readFileSync } from 'node:fs';
 
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 
-import { DumpSyntaxTree } from '../application/dump-syntax-tree.ts';
-import { FindCode } from '../application/find-code.ts';
-import { FindCodeByRule } from '../application/find-code-by-rule.ts';
-import { TestMatchCodeRule } from '../application/test-match-code-rule.ts';
-import { AstGrepProcess } from '../infrastructure/adapters/ast-grep-process.ts';
+import { DumpSyntaxTree } from '#application/dump-syntax-tree.ts';
+import { FindCode } from '#application/find-code.ts';
+import { FindCodeByRule } from '#application/find-code-by-rule.ts';
+import { TestMatchCodeRule } from '#application/test-match-code-rule.ts';
+import { AstGrepProcess } from '#infrastructure/adapters/ast-grep-process.ts';
 import { createAstGrepServer, languageListFromConfigText } from './ast-grep-server.ts';
 
 if (typeof process.on === 'function') {

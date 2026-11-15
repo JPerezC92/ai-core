@@ -1,4 +1,4 @@
-import type { AstGrepCli } from '../domain/ports.ts';
+import type { AstGrepCli } from '#domain/ports.ts';
 
 export type DumpSyntaxTreeInput = {
   readonly code: string;

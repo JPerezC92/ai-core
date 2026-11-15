@@ -4,13 +4,13 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { DumpSyntaxTree } from '../../src/application/dump-syntax-tree.ts';
-import { FindCode } from '../../src/application/find-code.ts';
-import { FindCodeByRule } from '../../src/application/find-code-by-rule.ts';
-import { TestMatchCodeRule } from '../../src/application/test-match-code-rule.ts';
-import { isAstGrepError } from '../../src/domain/errors.ts';
-import { AstGrepProcess } from '../../src/infrastructure/adapters/ast-grep-process.ts';
-import { astGrepAvailable } from '../support/cli-available.ts';
+import { DumpSyntaxTree } from '#application/dump-syntax-tree.ts';
+import { FindCode } from '#application/find-code.ts';
+import { FindCodeByRule } from '#application/find-code-by-rule.ts';
+import { TestMatchCodeRule } from '#application/test-match-code-rule.ts';
+import { isAstGrepError } from '#domain/errors.ts';
+import { AstGrepProcess } from '#infrastructure/adapters/ast-grep-process.ts';
+import { astGrepAvailable } from '#support/cli-available.ts';
 
 const available = astGrepAvailable();
 

@@ -1,13 +1,13 @@
 import { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 
-import type { DumpSyntaxTree } from '../application/dump-syntax-tree.ts';
-import type { FindCode } from '../application/find-code.ts';
-import type { FindCodeByRule } from '../application/find-code-by-rule.ts';
-import type { TestMatchCodeRule } from '../application/test-match-code-rule.ts';
-import { isAstGrepError } from '../domain/errors.ts';
-import { supportedLanguages } from '../domain/languages.ts';
-import type { MatchRecord } from '../domain/matches.ts';
+import type { DumpSyntaxTree } from '#application/dump-syntax-tree.ts';
+import type { FindCode } from '#application/find-code.ts';
+import type { FindCodeByRule } from '#application/find-code-by-rule.ts';
+import type { TestMatchCodeRule } from '#application/test-match-code-rule.ts';
+import { isAstGrepError } from '#domain/errors.ts';
+import { supportedLanguages } from '#domain/languages.ts';
+import type { MatchRecord } from '#domain/matches.ts';
 
 export type AstGrepOperations = {
   readonly dumpSyntaxTree: DumpSyntaxTree;

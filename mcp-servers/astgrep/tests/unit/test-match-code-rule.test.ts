@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { TestMatchCodeRule } from '../../src/application/test-match-code-rule.ts';
-import { isAstGrepError, NO_MATCH_MESSAGE } from '../../src/domain/errors.ts';
-import { createMatch, emptyMatchList, fakeAstGrepCli } from '../support/ast-grep-cli.factory.ts';
+import { TestMatchCodeRule } from '#application/test-match-code-rule.ts';
+import { isAstGrepError, NO_MATCH_MESSAGE } from '#domain/errors.ts';
+import { createMatch, emptyMatchList, fakeAstGrepCli } from '#support/ast-grep-cli.factory.ts';
 
 describe('TestMatchCodeRule', () => {
   it('returns matches when the CLI finds some', async () => {

@@ -2,12 +2,12 @@ import { Client } from '@modelcontextprotocol/client';
 import { InMemoryTransport } from '@modelcontextprotocol/server';
 import { describe, expect, it } from 'vitest';
 
-import { DumpSyntaxTree } from '../../src/application/dump-syntax-tree.ts';
-import { FindCode } from '../../src/application/find-code.ts';
-import { FindCodeByRule } from '../../src/application/find-code-by-rule.ts';
-import { TestMatchCodeRule } from '../../src/application/test-match-code-rule.ts';
-import { createAstGrepServer } from '../../src/mcp/ast-grep-server.ts';
-import { emptyMatchList, fakeAstGrepCli } from '../support/ast-grep-cli.factory.ts';
+import { DumpSyntaxTree } from '#application/dump-syntax-tree.ts';
+import { FindCode } from '#application/find-code.ts';
+import { FindCodeByRule } from '#application/find-code-by-rule.ts';
+import { TestMatchCodeRule } from '#application/test-match-code-rule.ts';
+import { createAstGrepServer } from '#mcp/ast-grep-server.ts';
+import { emptyMatchList, fakeAstGrepCli } from '#support/ast-grep-cli.factory.ts';
 
 describe('ast-grep MCP assembled server', () => {
   it('lists the four tools', async () => {

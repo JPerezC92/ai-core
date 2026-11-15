@@ -1,5 +1,5 @@
-import type { MatchRecord } from '../../src/domain/matches.ts';
-import type { AstGrepCli, MatchList } from '../../src/domain/ports.ts';
+import type { MatchRecord } from '#domain/matches.ts';
+import type { AstGrepCli, MatchList } from '#domain/ports.ts';
 
 export type FakeCliState = {
   dumpText: string;

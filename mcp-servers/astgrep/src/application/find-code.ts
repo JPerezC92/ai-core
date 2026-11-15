@@ -1,6 +1,6 @@
-import { AstGrepError } from '../domain/errors.ts';
-import type { MatchRecord } from '../domain/matches.ts';
-import type { AstGrepCli } from '../domain/ports.ts';
+import { AstGrepError } from '#domain/errors.ts';
+import type { MatchRecord } from '#domain/matches.ts';
+import type { AstGrepCli } from '#domain/ports.ts';
 
 export type FindCodeInput = {
   readonly projectFolder: string;

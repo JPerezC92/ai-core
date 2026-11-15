@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { DumpSyntaxTree } from '../../src/application/dump-syntax-tree.ts';
-import { emptyMatchList, fakeAstGrepCli } from '../support/ast-grep-cli.factory.ts';
+import { DumpSyntaxTree } from '#application/dump-syntax-tree.ts';
+import { emptyMatchList, fakeAstGrepCli } from '#support/ast-grep-cli.factory.ts';
 
 describe('DumpSyntaxTree', () => {
   it('returns dump text from the injected CLI', async () => {

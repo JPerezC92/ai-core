@@ -3,6 +3,13 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "imports": {
+    "#domain/*": "./src/domain/*",
+    "#application/*": "./src/application/*",
+    "#infrastructure/*": "./src/infrastructure/*",
+    "#mcp/*": "./src/mcp/*",
+    "#support/*": "./tests/support/*"
+  },
   "description": "TypeScript MCP server that spawns the Rust ast-grep CLI. Authoring package; destinations run the committed bundle.",
   "scripts": {
     "test": "vitest run",

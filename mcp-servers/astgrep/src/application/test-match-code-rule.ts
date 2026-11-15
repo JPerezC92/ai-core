@@ -1,6 +1,6 @@
-import { AstGrepError, NO_MATCH_MESSAGE } from '../domain/errors.ts';
-import type { MatchRecord } from '../domain/matches.ts';
-import type { AstGrepCli } from '../domain/ports.ts';
+import { AstGrepError, NO_MATCH_MESSAGE } from '#domain/errors.ts';
+import type { MatchRecord } from '#domain/matches.ts';
+import type { AstGrepCli } from '#domain/ports.ts';
 
 export type TestMatchCodeRuleInput = {
   readonly code: string;

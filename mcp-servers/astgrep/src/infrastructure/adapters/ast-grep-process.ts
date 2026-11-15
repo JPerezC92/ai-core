@@ -1,9 +1,9 @@
 import { spawn } from 'node:child_process';
 
-import { isNoMatchExit } from '../../domain/exit-code.ts';
-import type { MatchRecord } from '../../domain/matches.ts';
-import type { AstGrepCli, CliResult, MatchList } from '../../domain/ports.ts';
-import { resolveSpawnFile, splitCommandPrefix } from '../command-prefix.ts';
+import { isNoMatchExit } from '#domain/exit-code.ts';
+import type { MatchRecord } from '#domain/matches.ts';
+import type { AstGrepCli, CliResult, MatchList } from '#domain/ports.ts';
+import { resolveSpawnFile, splitCommandPrefix } from '#infrastructure/command-prefix.ts';
 
 export type ProcessResult = CliResult;
 
