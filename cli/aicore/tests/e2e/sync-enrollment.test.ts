@@ -116,6 +116,9 @@ describe("enrollment and update", () => {
 
     // The engine's own skill is never distributed to a destination.
     await expect(stat(join(destination, ".opencode", "skills", "core-sync"))).rejects.toThrow();
+    // Retired MCP directories are never distributed.
+    await expect(stat(join(destination, ".opencode", "tooling"))).rejects.toThrow();
+    await expect(stat(join(destination, ".opencode", "mcp"))).rejects.toThrow();
 
     // The project configuration lands in the editor's own directory, and no
     // duplicate configuration file is produced at the destination root.
