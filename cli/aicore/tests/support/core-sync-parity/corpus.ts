@@ -32,6 +32,7 @@ import {
 } from "./blocker.ts";
 import { BINDING_DECLARATION_CASES } from "./cases/binding-declarations.ts";
 import { CLEARANCE_INTEGRITY_CASES } from "./cases/clearance-integrity.ts";
+import { DIRECTORY_EXPANSION_CASES } from "./cases/directory-expansion.ts";
 import { ROOT_ROLE_CASES } from "./cases/root-role.ts";
 import type { ParityCase, TreeEntry } from "./types.ts";
 
@@ -2280,6 +2281,7 @@ export const CORPUS: readonly ParityCase[] = [
   ...BINDING_DECLARATION_CASES,
   ...ROOT_ROLE_CASES,
   ...CLEARANCE_INTEGRITY_CASES,
+  ...DIRECTORY_EXPANSION_CASES,
 ];
 
 /** Return the cases of one behavioural concern, in corpus order. */

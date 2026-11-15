@@ -27,7 +27,8 @@ export type Concern =
   | "idempotence"
   | "binding-declarations"
   | "root-role"
-  | "clearance-integrity";
+  | "clearance-integrity"
+  | "directory-expansion";
 
 /**
  * Where a case's expected outcome came from.
@@ -65,6 +66,14 @@ export type FixtureSpec = {
   readonly sourceFiles?: readonly FixtureFile[];
   /** Symbolic links created under the source root. */
   readonly sourceLinks?: readonly FixtureLink[];
+  /**
+   * Directory links created under the source root, pointing at `target`.
+   *
+   * A directory link is the non-regular entry a distribution set must never
+   * contain; it is materialised as a junction on Windows, where an unprivileged
+   * directory symbolic link is refused.
+   */
+  readonly sourceDirectoryLinks?: readonly FixtureLink[];
   /** Hard links created under the source root, pointing at `target`. */
   readonly sourceHardLinks?: readonly FixtureHardLink[];
   /** Files written under the destination root. */

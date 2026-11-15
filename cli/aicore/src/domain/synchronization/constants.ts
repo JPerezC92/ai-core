@@ -50,14 +50,29 @@ export const RECONCILIATION_DIRECTORY = "reconciliation";
 /** The reconciliation report's filename. */
 export const RECONCILIATION_FILENAME = "init.yaml";
 
-/** The root runtime file the blocker is written into, in priority order. */
-export const ROOT_CANDIDATES: readonly string[] = [
+/**
+ * The root runtime file the blocker is written into, in priority order.
+ *
+ * The supported OpenCode/Cursor baseline loads `AGENTS.md`, so it is the only
+ * file detection reads: a destination whose instruction file has another name is
+ * refused and names the explicit root option instead of having a file guessed
+ * for it.
+ */
+export const ROOT_CANDIDATES: readonly string[] = ["AGENTS.md"];
+
+/**
+ * The cleared sources a destination may never opt out of.
+ *
+ * They are the baseline an enrollment exists to deliver: the root runtime file
+ * that carries the permanent two-region rule and the reconciliation blocker, and
+ * the harness configuration the profile merges. Declaring either as excluded is
+ * refused rather than honored.
+ */
+export const PROTECTED_EXCLUSION_SOURCES: readonly string[] = [
   "AGENTS.md",
-  "agents.md",
-  "CLAUDE.md",
-  "claude.md",
-  "instructions.md",
+  ".opencode/opencode.jsonc",
 ];
+
 
 /** The action words an `init` reconciliation entry can carry. */
 export const ACTION_INITIALIZED = "initialized";
@@ -79,7 +94,7 @@ export const RECONCILE_BODY_HEAD: readonly string[] = [
   "> **Permanent rule — adopt it now, in every future session.** Files here are split into two marked regions:",
   "> - `<!-- core:begin -->` … `<!-- core:end -->` — the **core region**, owned by an upstream core project. **Never edit, move, or delete anything between these two markers.**",
   "> - `<!-- project:begin -->` … `<!-- project:end -->` — the **project region**, owned by THIS project. All edits go here.",
-  "> If this rule is not already in this project's root instructions (`CLAUDE.md` / `AGENTS.md`), add it there permanently. This blocker block is temporary and gets deleted at the end; the rule is permanent.",
+  "> If this rule is not already in this project's root instructions (`AGENTS.md`), add it there permanently. This blocker block is temporary and gets deleted at the end; the rule is permanent.",
   ">",
   "> **What happened.** A core update replaced each file's core region with new shared content. The old content that used to sit there was moved into the project region, so the project region now holds BOTH this project's own rules AND an old copy of the core rules that the new core region already supersedes.",
   ">",
@@ -89,6 +104,8 @@ export const RECONCILE_BODY_HEAD: readonly string[] = [
   "> 3. Edit ONLY inside `<!-- project:begin -->` … `<!-- project:end -->`: remove anything that merely duplicates or contradicts the core region (it is the superseded old copy), and keep this project's genuine, project-specific rules and facts.",
   "> 4. Never touch the core region and never move or delete the markers.",
   "> 5. Delete that file's entry from the `pending:` list in `.aicore/core.yaml`.",
+  ">",
+  "> **If this project no longer wants a listed resource.** Delete that resource's file, then delete the corresponding entry from the `pending:` list in `.aicore/core.yaml`; synchronization never deletes a destination file itself.",
   ">",
 ];
 
@@ -100,7 +117,7 @@ export const RECONCILE_BODY_HEAD: readonly string[] = [
  * told it was merged, so this section is selected out rather than rewritten.
  */
 export const RECONCILE_BODY_CONFIG: readonly string[] = [
-  "> **Config file (`opencode.jsonc`) — finish the migration.** A core update merges the core's top-level keys into this project's `opencode.jsonc`. If this project is still on the OpenCode V1 layout, migrate the file to the V2 layout. The merge keeps this project's own MCP servers alongside the core-registered ones, with a same-named MCP server entry core-wins; every other key is still replaced wholesale.",
+  "> **Config file (`opencode.jsonc`) — finish the migration.** A core update merges the core's top-level keys into this project's `.opencode/opencode.jsonc`. If this project is still on the OpenCode V1 layout, migrate the file to the V2 layout. The merge keeps this project's own MCP servers alongside the core-registered ones, with a same-named MCP server entry core-wins; every other key is still replaced wholesale.",
   ">",
   "> **QMD index (`mcp.servers.qmd`).** The merge registers THIS project's own folder name as the QMD index, so no manual edit is needed after a synchronization. To use a different index name, declare that QMD server in this project's own `.opencode/opencode.jsonc`, which overrides the shipped entry; the shipped `opencode.jsonc` is merged core, so a same-named edit there is restored on the next synchronization. Then verify retrieval works. An empty result under this project's own index name may mean this project has never built that index, so populate it with this project's own retrieval tooling before treating the empty result as a synchronization defect. Never edit the core region to change the index.",
   ">",

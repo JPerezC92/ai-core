@@ -1,10 +1,16 @@
 # Portable MCP tooling setup
 
-This guide provides checkout-local setup instructions, not test evidence or authorization to provision before the required review gates. Run commands from the checkout root with UV >=0.13.1 and Python >=3.13,<3.14 available for the tooling projects.
+This guide provides checkout-local setup instructions for **this AICore source**, not test evidence or authorization to provision before the required review gates, and not a list of what an adopting destination receives.
 
-**Current bindings:** the tracked `opencode.jsonc` launches `astgrep` and `semgrep` through `uv run --frozen --project`, and launches the `memories` and `qmd` MCP servers through `npx`. The `npx` servers need Node.js >= 22 and no separate provisioning step.
+**What the tracked `.opencode/opencode.jsonc` registers (and what ships on OpenCode enrollment):** `chrome-devtools`, `memories`, `qmd`, and `context7` (Context7 uses `{file:../.secrets/context7-api-key}`). Those four are the distributed MCP servers.
 
-## Provision the locked environments
+**What stays AICore-operator-local and is not distributed:** `system-one` (`mcp-servers/system-one/`), `astgrep` and `semgrep` (`.opencode/tooling/`). Destinations must not receive launch commands under `mcp-servers/` or `.opencode/tooling/`. Cursor enrollment ships no MCP configuration.
+
+The `npx` servers need Node.js >= 22 and no separate provisioning step. The two Python tooling environments below exist only so this checkout can run ast-grep and Semgrep locally.
+
+## Provision the locked environments (this checkout only)
+
+Run commands from the checkout root with UV >=0.13.1 and Python >=3.13,<3.14 available for the tooling projects.
 
 ```text
 uv sync --frozen --project .opencode/tooling/astgrep
@@ -27,6 +33,6 @@ The reported version must be `0.51.0`. The ast-grep MCP Python lock does **not**
 
 ## Launch and privacy boundaries
 
-Use this checkout's tracked OpenCode configuration, without editing global OpenCode configuration or embedding machine-specific executable paths. The configuration launches `astgrep` and `semgrep` with `uv run --frozen --project` and their respective root-relative tooling directory, and launches `memories` and `qmd` with `npx`; launch OpenCode from the checkout root. Root Python scripts, the root Python test suite and the repository-root Python environment were retired with the TypeScript migration; the MCP tooling projects keep their own locked environments, and the repository root carries no Python environment of its own. Tooling provisioning does not change root dependencies.
+Use this checkout's tracked OpenCode configuration, without editing global OpenCode configuration or embedding machine-specific executable paths. Launch OpenCode from the checkout root. Root Python scripts, the root Python test suite and the repository-root Python environment were retired with the TypeScript migration; the MCP tooling projects keep their own locked environments, and the repository root carries no Python environment of its own. Tooling provisioning does not change root dependencies.
 
-Keep the existing privacy controls unchanged: the `memories` server sets `MEMORIES_SKIP_POSTINSTALL=1` and both `npx` servers set `npm_config_ignore_scripts=true` so package lifecycle scripts never run; Semgrep uses `SEMGREP_SEND_METRICS=off` and `OTEL_SDK_DISABLED=true`. This setup does not authorize changing other MCP servers, privacy settings, or memory stores. Locking dependencies is not a vulnerability-cleanliness claim.
+Keep the existing privacy controls unchanged: the `memories` server sets `MEMORIES_SKIP_POSTINSTALL=1` and the `npx` servers set `npm_config_ignore_scripts=true` so package lifecycle scripts never run; Semgrep, when launched locally, uses `SEMGREP_SEND_METRICS=off` and `OTEL_SDK_DISABLED=true`. This setup does not authorize changing other MCP servers, privacy settings, or memory stores. Locking dependencies is not a vulnerability-cleanliness claim.

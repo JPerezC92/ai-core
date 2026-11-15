@@ -243,7 +243,7 @@ A Python vulnerability scanner is not a default reference command. Use one only 
 
 - **Python tooling (project-owned nonbinding reference examples):** `uv`, `pyproject.toml`, `uv.lock` (reference commands: `uv lock --check`, `uv tree --frozen`, `uv pip check`).
 - **Destination JavaScript package manager, runtime, and registry (project-owned reference examples, not bindings):** `pnpm` (reference commands: `pnpm audit`, `pnpm outdated`, `pnpm list`, `pnpm info`), `node` (`node --version`), npm, and the JavaScript manifest/lockfile `package.json`/`pnpm-lock.yaml`.
-- **The harness config:** `opencode.jsonc`.
+- **The harness config:** `.opencode/opencode.jsonc`.
 
 ### Output Format
 

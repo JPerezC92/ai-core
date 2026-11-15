@@ -15,6 +15,7 @@ import {
   MODE_MERGE,
   MODE_RAW,
   MODE_REGION,
+  PROTECTED_EXCLUSION_SOURCES,
   REVISION_PATTERN,
   SCHEMA_VERSION,
 } from "./constants.ts";
@@ -37,6 +38,11 @@ export type BindingsDocument = {
   readonly root: string | null;
   /** The editor profile the destination was enrolled for; `null` when unrecorded. */
   readonly editor: EditorProfile | null;
+  /**
+   * The cleared sources this destination opts out of: file paths, and directory
+   * roots ending in `/`. Empty when the destination declares none.
+   */
+  readonly exclude: readonly string[];
   readonly bindings: readonly BindingEntry[];
   readonly pending: readonly string[];
 };
@@ -47,6 +53,8 @@ export type BindingsRecord = {
   readonly core_revision: string | null;
   readonly root?: string;
   readonly editor?: string;
+  /** Written only when the destination declares at least one opt-out. */
+  readonly exclude?: readonly string[];
   readonly bindings: readonly {
     readonly source: string;
     readonly destinations: readonly string[];
@@ -94,10 +102,15 @@ export function parseBindingsDocument(data: unknown): BindingsDocument | null {
   if (!Array.isArray(rawPending) || !rawPending.every((item) => typeof item === "string")) {
     return null;
   }
+  const exclude = readExclusions(data["exclude"]);
+  if (exclude === null) {
+    return null;
+  }
   return {
     coreRevision: revision,
     root,
     editor,
+    exclude,
     bindings,
     pending: rawPending as string[],
   };
@@ -115,6 +128,7 @@ export function bindingsRecord(document: BindingsDocument): BindingsRecord {
     core_revision: document.coreRevision,
     ...(document.root === null ? {} : { root: document.root }),
     ...(document.editor === null ? {} : { editor: document.editor }),
+    ...(document.exclude.length === 0 ? {} : { exclude: [...document.exclude] }),
     bindings: document.bindings.map((entry) => ({
       source: entry.source,
       destinations: [...entry.destinations],
@@ -276,6 +290,115 @@ export function normalizePending(
   return pending.filter((path) => !nonRegion.has(path));
 }
 
+/**
+ * Return whether one declared opt-out covers a cleared source.
+ *
+ * An entry ending in `/` is a directory root and covers every source under it;
+ * every other entry names one source exactly. A source is never covered by a
+ * prefix that is not a directory root, so `.agents/skills/op` does not opt out
+ * `.agents/skills/op-model/SKILL.md`.
+ */
+export function isExcludedSource(source: string, exclude: readonly string[]): boolean {
+  return exclude.some((entry) =>
+    entry.endsWith("/") ? source.startsWith(entry) : source === entry,
+  );
+}
+
+/**
+ * Apply a destination's declared opt-outs to its document.
+ *
+ * An opted-out source keeps no binding — `apply` and `check` treat it as
+ * unmanaged, so it earns no write, no drift and no uncleared-source failure —
+ * and every destination that binding carried joins `pending`: the file stays on
+ * disk until its owner removes it, and `check` reports the destination as not
+ * current until that entry is cleared exactly as any other is.
+ */
+export function withOptOuts(document: BindingsDocument): BindingsDocument {
+  if (document.exclude.length === 0) {
+    return document;
+  }
+  const kept: BindingEntry[] = [];
+  const dropped: string[] = [];
+  for (const entry of document.bindings) {
+    if (isExcludedSource(entry.source, document.exclude)) {
+      dropped.push(...entry.destinations);
+      continue;
+    }
+    kept.push(entry);
+  }
+  if (dropped.length === 0) {
+    return document;
+  }
+  let pending = document.pending;
+  for (const destination of dropped) {
+    pending = pending.includes(destination) ? pending : [...pending, destination];
+  }
+  return { ...document, bindings: kept, pending };
+}
+
+/**
+ * Re-establish the bindings a revoked opt-out left outstanding.
+ *
+ * Dropping an opted-out binding records its destination in `pending`, so a
+ * `pending` path with no binding is an opt-out its owner has not reconciled.
+ * Removing that entry revokes the opt-out: the source is cleared for this run,
+ * no longer excluded, and its destination is still listed, so `apply` binds and
+ * delivers it again and takes the path out of `pending`.
+ */
+export function withRestoredOptOuts(
+  document: BindingsDocument,
+  modes: ReadonlyMap<string, BindingMode>,
+  destinations: ReadonlyMap<string, string>,
+): BindingsDocument {
+  const bound = new Set(document.bindings.map((entry) => entry.source));
+  const outstanding = new Set(document.pending);
+  const bindings = [...document.bindings];
+  let restored = false;
+  for (const [source, mode] of modes) {
+    if (bound.has(source) || isExcludedSource(source, document.exclude)) {
+      continue;
+    }
+    const destination = destinations.get(source);
+    if (destination === undefined || !outstanding.has(destination)) {
+      continue;
+    }
+    bindings.push({ source, destinations: [destination], declaredMode: mode });
+    outstanding.delete(destination);
+    restored = true;
+  }
+  if (!restored) {
+    return document;
+  }
+  return {
+    ...document,
+    bindings,
+    pending: document.pending.filter((path) => outstanding.has(path)),
+  };
+}
+
+/**
+ * Return the refusal a declared opt-out earns when it names a protected source.
+ *
+ * The root runtime file and the harness configuration are the destination's
+ * baseline: disabling either would remove the rule set or the configuration the
+ * enrollment exists to deliver, so the request is malformed and nothing is
+ * written.
+ */
+export function protectedExclusionFailure(
+  document: BindingsDocument,
+): SynchronizationFailure | null {
+  const named = PROTECTED_EXCLUSION_SOURCES.filter((source) =>
+    isExcludedSource(source, document.exclude),
+  );
+  if (named.length === 0) {
+    return null;
+  }
+  return invalid(
+    `protected exclusion: ${named.join(", ")} cannot be excluded; ` +
+      "it is a mandatory baseline resource",
+  );
+}
+
 /** Return distinct bound sources absent from clearance, in document order. */
 export function unclearedSources(
   document: BindingsDocument,
@@ -373,6 +496,35 @@ function readRevision(value: unknown): string | null | undefined {
     return undefined;
   }
   return value;
+}
+
+/**
+ * Return the declared opt-outs, `[]` for none, or `null` when invalid.
+ *
+ * An entry is a cleared source path under the same canonical safe relative POSIX
+ * rule every other persisted path follows; a directory root is that path with a
+ * trailing `/`. Anything else is malformed bindings rather than an opt-out this
+ * engine would guess at.
+ */
+function readExclusions(value: unknown): readonly string[] | null {
+  if (value === null || value === undefined) {
+    return [];
+  }
+  if (!Array.isArray(value)) {
+    return null;
+  }
+  const exclude: string[] = [];
+  for (const entry of value) {
+    if (typeof entry !== "string") {
+      return null;
+    }
+    const path = entry.endsWith("/") ? entry.slice(0, -1) : entry;
+    if (path === "" || !isSafeRelativePath(path)) {
+      return null;
+    }
+    exclude.push(entry);
+  }
+  return exclude;
 }
 
 /** Return the optional root path, `null` for none, or `undefined` when invalid. */

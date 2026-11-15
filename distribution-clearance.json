@@ -5,11 +5,11 @@
       "mode": "region",
       "role": "root"
     },
-    "opencode.jsonc": {
+    ".opencode/opencode.jsonc": {
       "mode": "merge",
       "editors": {
         "opencode": {
-          "destination": "opencode.jsonc"
+          "destination": ".opencode/opencode.jsonc"
         },
         "cursor": {
           "omitted": true

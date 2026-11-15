@@ -139,7 +139,10 @@ function deliveryForEditor(
  * root, to its distribution mode and its destination for one editor.
  *
  * A `region_files` member delivers its core region; every other enumerated file
- * under that root uses the root's default mode. Interpreter caches never join.
+ * under that root uses the root's default mode. A path
+ * `excludedFromDistribution` rejects never joins: dependency installation
+ * directories, the version-control directory and interpreter caches are not
+ * distribution content.
  * A source the editor does not receive joins neither map: it is not cleared for
  * that editor and cannot be synchronized to it.
  */
@@ -162,7 +165,7 @@ export function expandClearance(
     }
     const regionFiles = new Set(entry.regionFiles);
     for (const relativePath of enumerated.get(path) ?? []) {
-      if (isInterpreterCache(relativePath)) {
+      if (excludedFromDistribution(relativePath)) {
         continue;
       }
       modes.set(path + relativePath, regionFiles.has(relativePath) ? MODE_REGION : entry.mode);
@@ -336,8 +339,31 @@ function isAbsolutePathLike(path: string): boolean {
   return isAbsolutePath(path);
 }
 
-function isInterpreterCache(path: string): boolean {
-  return path.split("/").includes("__pycache__") || path.endsWith(".pyc");
+/** The path components that never hold distribution content. */
+const EXCLUDED_PATH_COMPONENTS: ReadonlySet<string> = new Set([
+  "__pycache__",
+  "node_modules",
+  ".git",
+]);
+
+/**
+ * The paths a distribution set never contains.
+ *
+ * This is the whole exclusion rule, stated once over a root-relative POSIX path:
+ * any component named `__pycache__`, `node_modules` or `.git`, or a `.pyc`
+ * suffix. It is also the decision the layout adapter applies while enumerating,
+ * so a second layout implementation is bound by the same rule rather than by its
+ * own list. A bare entry name is a one-component relative path, so the same
+ * predicate decides both a directory name during the walk and a file's relative
+ * path.
+ */
+export function excludedFromDistribution(relativePath: string): boolean {
+  if (relativePath.endsWith(".pyc")) {
+    return true;
+  }
+  return relativePath
+    .split("/")
+    .some((component) => EXCLUDED_PATH_COMPONENTS.has(component));
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

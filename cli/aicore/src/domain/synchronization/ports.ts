@@ -70,7 +70,17 @@ export interface FilesystemLayout {
   join(root: string, relative: string): string;
   /** The directory that contains `path`. */
   parent(path: string): string;
-  /** Every regular file under `root`, as root-relative POSIX paths. */
+  /**
+   * The files a distribution set may contain under `root`, as root-relative
+   * POSIX paths.
+   *
+   * Every path returned is a regular file, and no path a distribution set
+   * excludes (`excludedFromDistribution` in the clearance domain) is returned:
+   * dependency installation directories, the version-control directory,
+   * interpreter caches, and symbolic links and junctions, which are never
+   * followed. An implementation is bound by that rule, not by "every file on
+   * disk".
+   */
   enumerateFilesUnder(root: string): Promise<readonly string[]>;
   /** The destination root runtime file's path. */
   resolveRootFile(destinationRoot: string, document: BindingsDocument): Promise<string>;

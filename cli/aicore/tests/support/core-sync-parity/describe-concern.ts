@@ -10,25 +10,46 @@
 import { describe, expect, test } from "vitest";
 
 import { casesFor } from "./corpus.ts";
-import { canCreateSymlinks } from "./fixtures.ts";
+import { canCreateDirectoryLinks, canCreateSymlinks } from "./fixtures.ts";
 import { runParityCase } from "./runner.ts";
-import type { Concern } from "./types.ts";
+import type { Concern, ParityCase } from "./types.ts";
 
 const symlinksAvailable = await canCreateSymlinks();
+const directoryLinksAvailable = await canCreateDirectoryLinks();
+
+/**
+ * The kind of link a case needs, or `null` when it needs none.
+ *
+ * A platform that refuses to create that link cannot exercise the case, so the
+ * case is reported as skipped rather than as covered. The support probes create
+ * a real link first, so the skip is never unconditional.
+ */
+function requiredLink(
+  testCase: ParityCase,
+): { readonly kind: string; readonly available: boolean } | null {
+  if (testCase.fixture.destinationLinks !== undefined) {
+    return { kind: "symbolic links", available: symlinksAvailable };
+  }
+  if (testCase.fixture.sourceDirectoryLinks !== undefined) {
+    return { kind: "directory links", available: directoryLinksAvailable };
+  }
+  return null;
+}
 
 /** Register the cases of one concern as the tests of the calling spec file. */
 export function describeConcern(concern: Concern, label: string): void {
   describe(label, () => {
     for (const testCase of casesFor(concern)) {
-      const needsSymlinks = testCase.fixture.destinationLinks !== undefined;
-      const title = needsSymlinks && !symlinksAvailable
-        ? `${testCase.title} (skipped: this platform refuses to create symbolic links)`
+      const linkCase = requiredLink(testCase);
+      const skipped = linkCase !== null && !linkCase.available;
+      const title = skipped
+        ? `${testCase.title} (skipped: this platform refuses to create ${linkCase.kind})`
         : testCase.title;
       const run = async (): Promise<void> => {
         const differences = await runParityCase(testCase);
         expect(differences, differences.join("\n")).toEqual([]);
       };
-      if (needsSymlinks && !symlinksAvailable) {
+      if (skipped) {
         test.skip(title, run);
         continue;
       }

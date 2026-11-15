@@ -13,6 +13,10 @@
  * destination is the drift `apply` and `check` refuse, refused here before any
  * write: enrollment never moves a destination, and never reports a diverged
  * binding as initialized.
+ *
+ * A source the destination excludes is never bound and never written here, and
+ * dropping a binding it held lists that destination in `pending` without
+ * deleting the file.
  */
 
 import {
@@ -30,8 +34,12 @@ import {
   nonRegionDestinations,
   normalizePending,
   parseInitBindingSpec,
+  protectedExclusionFailure,
   unclearedSources,
   withInitDeclarations,
+  withOptOuts,
+  withRestoredOptOuts,
+  isExcludedSource,
 } from "#domain/synchronization/bindings.ts";
 import {
   drift,
@@ -60,6 +68,7 @@ import type {
 } from "#domain/synchronization/ports.ts";
 
 import { invalidClearance, readClearanceModes } from "./clearance-modes.ts";
+import { ensureOpenCodeSecrets } from "./open-code-secrets.ts";
 import { projectName } from "./project-name.ts";
 import type { EnrollmentRequest } from "./requests.ts";
 
@@ -101,6 +110,7 @@ export class EnrollDestinations {
       coreRevision: request.sourceRevision,
       root: null,
       editor: null,
+      exclude: [],
       bindings: [],
       pending: [],
     };
@@ -114,6 +124,13 @@ export class EnrollDestinations {
     }
     const editor = effectiveEditor(request.editor, base.editor);
 
+    // Before any clearance read, payload read or write: an opt-out that names the
+    // baseline the enrollment delivers is refused, not honored.
+    const protectedExclusion = protectedExclusionFailure(base);
+    if (protectedExclusion !== null) {
+      return failed(protectedExclusion);
+    }
+
     const declared = withInitDeclarations(
       base,
       request.regionDeclarations,
@@ -122,6 +139,9 @@ export class EnrollDestinations {
     if (declared.failure !== null) {
       return failed(declared.failure);
     }
+    // The destination's own opt-outs win over every path that could bind the
+    // source: a fresh enrollment, a re-enrollment, and an explicit declaration.
+    const applied = withOptOuts(declared.document);
 
     const clearance = await readClearanceModes(
       clearanceStore,
@@ -130,9 +150,13 @@ export class EnrollDestinations {
       editor,
     );
 
+    // A revoked opt-out is delivered again here too, and its outstanding path
+    // leaves `pending`, so a re-enrollment and an `apply` agree on the state.
+    const restored = withRestoredOptOuts(applied, clearance.modes, clearance.destinations);
+
     const bulk = request.bindCleared && clearance.entries !== null
       ? await this.#bulkEnroll(
-          declared.document,
+          restored,
           request,
           clearance.entries,
           clearance.modes,
@@ -143,7 +167,7 @@ export class EnrollDestinations {
     if (bulk !== null && "failure" in bulk) {
       return failed(bulk.failure);
     }
-    const document = bulk === null ? declared.document : bulk.document;
+    const document = bulk === null ? restored : bulk.document;
     const newRawDestinations = new Set<string>([
       ...declared.newRawDestinations,
       ...(bulk === null ? [] : bulk.newRawDestinations),
@@ -357,6 +381,10 @@ export class EnrollDestinations {
       await layout.ensureDirectory(layout.parent(write.path));
       await destinations.writeBytes(write.path, write.content);
     }
+    await ensureOpenCodeSecrets(editor, request.destinationRoot, {
+      destinations,
+      layout,
+    });
 
     if (reportEntries.length > 0) {
       await bindings.writeReport(request.bindingsPath, reportEntries, request.sourceRevision);
@@ -375,12 +403,14 @@ export class EnrollDestinations {
   }
 
   /**
-   * Enroll every cleared source that is not already bound.
+   * Enroll every cleared source that is not already bound and that the
+   * destination has not opted out of.
    *
    * A directory root's expansion supplies the mode each file takes and the
    * destination the editor receives it at; the root-role source maps to the
    * destination instruction root, and destinations this run discovers absent
-   * become the creation set.
+   * become the creation set. An opted-out source is neither bound nor written,
+   * so no later enrollment reintroduces it.
    */
   async #bulkEnroll(
     document: BindingsDocument,
@@ -416,7 +446,7 @@ export class EnrollDestinations {
     const newRawDestinations = new Set<string>();
     const newMergeDestinations = new Set<string>();
     for (const [source, mode] of modes) {
-      if (bound.has(source)) {
+      if (bound.has(source) || isExcludedSource(source, document.exclude)) {
         continue;
       }
       const destination =

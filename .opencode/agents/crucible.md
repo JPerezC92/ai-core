@@ -103,7 +103,7 @@ Reference forms only. They do not authorize editing, installing, running tests, 
 
 - **Python skill-test tooling (project-owned):** use the project's configured skill-test tooling; `pytest` and its exception-assertion helper `pytest.raises` are nonbinding reference examples.
 - **Destination JavaScript/TypeScript application test stacks (project-owned):** the destination project's package manager, unit/integration runner, and end-to-end runner are selected and granted in project-owned configuration, not in this shared spec. Concrete framework names in the selected `.aicore/core/architecture/testing/stacks/` guide (for example Vitest, Playwright, and TypeScript in the TypeScript guide) are reference-architecture examples, not destination bindings.
-- **The harness:** `OpenCode`; the harness config is `opencode.jsonc`; the executable-grant key is `agents.crucible.permissions`.
+- **The harness:** `OpenCode`; the harness config is `.opencode/opencode.jsonc`; the executable-grant key is `agents.crucible.permissions`.
 
 #### Bash Grant Scope
 

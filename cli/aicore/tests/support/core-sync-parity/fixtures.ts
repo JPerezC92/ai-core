@@ -8,7 +8,7 @@
  */
 
 import { link, mkdir, symlink, writeFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 
 import {
   createTemporaryRoot,
@@ -55,10 +55,17 @@ export async function materialiseFixture(spec: FixtureSpec): Promise<Materialise
   await mkdir(destinationRoot, { recursive: true });
 
   for (const file of spec.sourceFiles ?? []) {
-    await writeFile(join(sourceRoot, file.path), file.content, "utf8");
+    const absolute = join(sourceRoot, file.path);
+    await mkdir(dirname(absolute), { recursive: true });
+    await writeFile(absolute, file.content, "utf8");
   }
   for (const linkSpec of spec.sourceLinks ?? []) {
     await symlink(linkSpec.target, join(sourceRoot, linkSpec.path));
+  }
+  for (const directoryLink of spec.sourceDirectoryLinks ?? []) {
+    const absolute = join(sourceRoot, directoryLink.path);
+    await mkdir(dirname(absolute), { recursive: true });
+    await createDirectoryLink(directoryLink.target, absolute);
   }
   for (const hardLink of spec.sourceHardLinks ?? []) {
     await link(join(sourceRoot, hardLink.target), join(sourceRoot, hardLink.path));
@@ -125,4 +132,43 @@ export async function canCreateSymlinks(): Promise<boolean> {
     await disposeTemporaryRoot(created.root, created.prefix);
   }
   return symlinkSupport;
+}
+
+/**
+ * Create a link at `path` that points at the directory `target`.
+ *
+ * Windows refuses a directory symbolic link without an elevated privilege but
+ * creates a junction without elevation, and a junction is the same non-regular
+ * entry the distribution rule must skip; POSIX creates a directory symbolic
+ * link. Both are created here so a case expresses the platform-independent rule.
+ */
+export async function createDirectoryLink(target: string, path: string): Promise<void> {
+  const absoluteTarget = resolve(dirname(path), target);
+  await symlink(absoluteTarget, path, process.platform === "win32" ? "junction" : "dir");
+}
+
+/**
+ * Return `true` when this platform lets the fixture create a directory link.
+ *
+ * The probe creates a real directory link inside a disposable root and follows
+ * a failure as "this platform refuses", so a directory-link case is reported as
+ * skipped only where the platform actually refuses one — never unconditionally.
+ */
+let directoryLinkSupport: boolean | undefined;
+
+export async function canCreateDirectoryLinks(): Promise<boolean> {
+  if (directoryLinkSupport !== undefined) {
+    return directoryLinkSupport;
+  }
+  const created = await createTemporaryRoot(FIXTURE_PREFIX);
+  try {
+    await mkdir(join(created.root, "target"), { recursive: true });
+    await createDirectoryLink("target", join(created.root, "link"));
+    directoryLinkSupport = true;
+  } catch {
+    directoryLinkSupport = false;
+  } finally {
+    await disposeTemporaryRoot(created.root, created.prefix);
+  }
+  return directoryLinkSupport;
 }

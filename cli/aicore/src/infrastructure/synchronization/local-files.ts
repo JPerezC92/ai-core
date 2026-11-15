@@ -8,7 +8,7 @@
  * exception (C5).
  */
 
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { lstat, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 
 /** Read a file as UTF-8 text without newline translation, or `null`. */
@@ -55,6 +55,33 @@ export async function writeBytesFile(path: string, content: Uint8Array): Promise
 /** Create a directory and any missing parent. */
 export async function ensureDirectory(path: string): Promise<void> {
   await mkdir(path, { recursive: true });
+}
+
+/** A directory entry's own kind, read without following a link. */
+export type EntryKind = "directory" | "file" | "other";
+
+/**
+ * Classify one directory entry by its own metadata.
+ *
+ * `lstat` is deliberate: it reports the entry itself, so a symbolic link or a
+ * directory junction is `other` rather than the thing it points at, which is the
+ * classification a distribution set needs. An entry that vanished between the
+ * directory read and this call is classified `other` instead of aborting the
+ * walk; every other failure is a boundary exception (C5).
+ */
+export async function readEntryKind(path: string): Promise<EntryKind> {
+  try {
+    const observed = await lstat(path);
+    if (observed.isDirectory()) {
+      return "directory";
+    }
+    return observed.isFile() ? "file" : "other";
+  } catch (error) {
+    if (isMissing(error)) {
+      return "other";
+    }
+    throw error;
+  }
 }
 
 /** Return whether a `readFile`/`stat` failure means "the path is not there". */

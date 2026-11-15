@@ -10,12 +10,19 @@ import { readdir, stat } from "node:fs/promises";
 import { dirname, join, relative, sep } from "node:path";
 
 import { ROOT_CANDIDATES } from "#domain/synchronization/constants.ts";
+import { excludedFromDistribution } from "#domain/synchronization/clearance.ts";
 import type { BindingsDocument } from "#domain/synchronization/bindings.ts";
 import { effectiveEditor } from "#domain/synchronization/editor-profile.ts";
 import { syncReconciliationBlocker } from "#domain/synchronization/reconciliation.ts";
 import type { FilesystemLayout } from "#domain/synchronization/ports.ts";
 
-import { ensureDirectory, isMissing, readTextFile, writeTextFile } from "./local-files.ts";
+import {
+  ensureDirectory,
+  isMissing,
+  readEntryKind,
+  readTextFile,
+  writeTextFile,
+} from "./local-files.ts";
 
 /** A path's kind, as the preflight and the readers need to know it. */
 export type PathKind = "absent" | "file" | "other";
@@ -41,25 +48,39 @@ export class LocalFilesystemLayout implements FilesystemLayout {
     return dirname(path);
   }
 
+  /**
+   * Every regular file under `root` that a distribution set may contain.
+   *
+   * Each entry is classified by its own `lstat`, so a symbolic link or a
+   * directory junction is never followed and never reported. The walk descends
+   * only into true directories and reports only true regular files, and both
+   * decisions use the domain's `excludedFromDistribution` predicate, so the
+   * exclusion rule has one home.
+   */
   async enumerateFilesUnder(root: string): Promise<readonly string[]> {
     const collected: string[] = [];
     if (!(await this.exists(root))) {
       return collected;
     }
     const walk = async (current: string): Promise<void> => {
-      for (const entry of await readdir(current, { withFileTypes: true })) {
-        const absolute = join(current, entry.name);
-        if (entry.isDirectory()) {
-          if (entry.name === "__pycache__") {
+      for (const name of await readdir(current)) {
+        const absolute = join(current, name);
+        const kind = await readEntryKind(absolute);
+        if (kind === "directory") {
+          if (excludedFromDistribution(name)) {
             continue;
           }
           await walk(absolute);
           continue;
         }
-        if (entry.name.endsWith(".pyc")) {
+        if (kind !== "file") {
           continue;
         }
-        collected.push(relative(root, absolute).split(sep).join("/"));
+        const relativePath = relative(root, absolute).split(sep).join("/");
+        if (excludedFromDistribution(relativePath)) {
+          continue;
+        }
+        collected.push(relativePath);
       }
     };
     await walk(root);
@@ -77,10 +98,10 @@ export class LocalFilesystemLayout implements FilesystemLayout {
     if (detected !== null) {
       return join(destinationRoot, detected);
     }
-    return join(
-      destinationRoot,
-      ROOT_CANDIDATES[ROOT_CANDIDATES.length - 1] ?? "instructions.md",
-    );
+    // No instruction root was detected, so the root runtime file's own name is
+    // resolved and reported missing by the reader: the blocker write is skipped
+    // rather than being written into a file this tool guessed at.
+    return join(destinationRoot, ROOT_CANDIDATES[0] ?? "AGENTS.md");
   }
 
   async detectRootFile(destinationRoot: string): Promise<string | null> {

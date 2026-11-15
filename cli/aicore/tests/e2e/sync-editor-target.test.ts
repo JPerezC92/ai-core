@@ -50,8 +50,13 @@ describe("cursor editor target", () => {
       (await stat(join(destination, ".aicore", "core", "knowledge", "agents.md"))).isFile(),
     ).toBeTruthy();
 
-    // No project configuration: Cursor has no merge target to receive one.
+    // No project configuration: Cursor has no merge target to receive one, so
+    // neither the OpenCode destination path nor a root copy is delivered.
+    await expect(stat(join(destination, ".opencode", "opencode.jsonc"))).rejects.toThrow();
     await expect(stat(join(destination, "opencode.jsonc"))).rejects.toThrow();
+    await expect(stat(join(destination, "opencode.json"))).rejects.toThrow();
+    await expect(stat(join(destination, ".secrets"))).rejects.toThrow();
+    await expect(stat(join(destination, ".gitignore"))).rejects.toThrow();
 
     // The enrollment records the editor profile the destination was enrolled for.
     const bindings = await readFile(join(destination, ".aicore", "core.yaml"), "utf8");

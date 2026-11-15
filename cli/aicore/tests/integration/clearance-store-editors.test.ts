@@ -22,7 +22,7 @@ import { makeClearanceText } from "#support/synchronization.factory.ts";
 /** Prefix that identifies a root this suite owns. */
 const ROOT_PREFIX = "aicore-cli-clearance-editors-";
 
-const CLEARED_PATH = "opencode.jsonc";
+const CLEARED_PATH = ".opencode/opencode.jsonc";
 
 let root: string;
 let rootPrefix: string;

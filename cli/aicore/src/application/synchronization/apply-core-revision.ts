@@ -22,7 +22,10 @@ import {
   destinationDrift,
   nonRegionDestinations,
   normalizePending,
+  protectedExclusionFailure,
   unclearedSources,
+  withOptOuts,
+  withRestoredOptOuts,
 } from "#domain/synchronization/bindings.ts";
 import {
   drift,
@@ -50,6 +53,7 @@ import type {
 } from "#domain/synchronization/ports.ts";
 
 import { invalidClearance, readClearanceModes } from "./clearance-modes.ts";
+import { ensureOpenCodeSecrets } from "./open-code-secrets.ts";
 import { projectName } from "./project-name.ts";
 import type { SynchronizationRequest } from "./requests.ts";
 
@@ -97,6 +101,11 @@ export class ApplyCoreRevision {
     }
     const editor = effectiveEditor(request.editor, document.editor);
 
+    const protectedExclusion = protectedExclusionFailure(document);
+    if (protectedExclusion !== null) {
+      return failed(protectedExclusion);
+    }
+
     const clearance = await readClearanceModes(
       clearanceStore,
       layout,
@@ -104,12 +113,21 @@ export class ApplyCoreRevision {
       editor,
     );
 
+    // A source this destination opted out of is unmanaged: no binding, no write
+    // and no drift. The refusal below therefore never names it as uncleared, and
+    // the write-target preflight never observes its old destination as a target.
+    const managed = withOptOuts(document);
+    // An opt-out its owner revoked — the entry is gone and the source is cleared
+    // for this run — is delivered again, and its outstanding path leaves
+    // `pending`.
+    const current = withRestoredOptOuts(managed, clearance.modes, clearance.destinations);
+
     const refusal = await guard.refuse({
       command: "apply",
       sourceRoot: request.sourceRoot,
       destinationRoot: request.destinationRoot,
       bindingsPath: request.bindingsPath,
-      document,
+      document: current,
       modes: clearance.modes,
       newRawDestinations: new Set<string>(),
     });
@@ -124,18 +142,18 @@ export class ApplyCoreRevision {
     if (clearance.entries === null) {
       return failed(invalidClearance(clearancePath, clearance));
     }
-    for (const entry of document.bindings) {
+    for (const entry of current.bindings) {
       const conflict = bindingModeConflict(entry, clearance.modes);
       if (conflict !== null) {
         return failed(conflict);
       }
     }
-    const uncleared = unclearedSources(document, new Set(clearance.modes.keys()));
+    const uncleared = unclearedSources(current, new Set(clearance.modes.keys()));
     if (uncleared.length > 0) {
       return failed(drift(`source not cleared for distribution: ${uncleared.join(", ")}`));
     }
     if (clearance.entries !== null) {
-      const relocated = destinationDrift(document, clearance.entries, clearance.destinations);
+      const relocated = destinationDrift(current, clearance.entries, clearance.destinations);
       if (relocated !== null) {
         return failed(relocated);
       }
@@ -146,7 +164,7 @@ export class ApplyCoreRevision {
     const created: string[] = [];
     const notes: string[] = [];
 
-    for (const entry of document.bindings) {
+    for (const entry of current.bindings) {
       const mode = clearance.modes.get(entry.source);
       const sourcePath = layout.join(request.sourceRoot, entry.source);
 
@@ -253,12 +271,16 @@ export class ApplyCoreRevision {
       await layout.ensureDirectory(layout.parent(write.path));
       await destinations.writeBytes(write.path, write.content);
     }
+    await ensureOpenCodeSecrets(editor, request.destinationRoot, {
+      destinations,
+      layout,
+    });
 
     const pending = normalizePending(
-      document.pending,
-      nonRegionDestinations(document, clearance.modes),
+      current.pending,
+      nonRegionDestinations(current, clearance.modes),
     );
-    const pinned = { ...document, coreRevision: request.sourceRevision, pending };
+    const pinned = { ...current, coreRevision: request.sourceRevision, pending };
     await bindings.save(request.bindingsPath, pinned);
     await layout.syncBlocker(request.destinationRoot, pinned, pending);
 
