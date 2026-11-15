@@ -321,7 +321,7 @@ Every prose mention of a roster member uses `Name Emoji (Role)` form (e.g. `Ciph
 
 ### Local Configuration
 
-AICore's root carries no Python project: `pyproject.toml`, `uv.lock` and the pytest suite were retired with the TypeScript migration, and the repository root keeps no test package of its own. ast-grep MCP launches through `node .opencode/mcp/ast-grep/stdio.mjs`; Semgrep MCP still launches through `uvx` as registered in `.opencode/opencode.jsonc`. There is no `.opencode/tooling/` Python manifest for Warden 🔒 (Dependency Warden) to treat as a repository Python project.
+AICore's root carries no Python project: `pyproject.toml`, `uv.lock` and the pytest suite were retired with the TypeScript migration, and the repository root keeps no test package of its own. ast-grep MCP launches through `node mcp-servers/astgrep/dist/stdio.mjs`; Semgrep MCP still launches through `uvx` as registered in `.opencode/opencode.jsonc`. There is no `.opencode/tooling/` Python manifest for Warden 🔒 (Dependency Warden) to treat as a repository Python project.
 
 ### Local Permissions
 

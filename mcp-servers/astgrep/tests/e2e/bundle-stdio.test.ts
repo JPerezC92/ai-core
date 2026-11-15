@@ -6,7 +6,7 @@ import { StdioClientTransport } from '@modelcontextprotocol/client/stdio';
 import { describe, expect, it } from 'vitest';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const bundlePath = join(here, '..', '..', '..', '..', '.opencode', 'mcp', 'ast-grep', 'stdio.mjs');
+const bundlePath = join(here, '..', '..', 'dist', 'stdio.mjs');
 
 describe('committed ast-grep MCP bundle', () => {
   it('lists four tools over stdio without uvx or python', async () => {

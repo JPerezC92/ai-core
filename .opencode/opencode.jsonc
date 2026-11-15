@@ -384,7 +384,7 @@
             // remains Python; uvx launches the pinned CLI's `mcp` subcommand.
             "astgrep": {
                 "type": "local",
-                "command": ["node", ".opencode/mcp/ast-grep/stdio.mjs"]
+                "command": ["node", "mcp-servers/astgrep/dist/stdio.mjs"]
             },
             "semgrep": {
                 "type": "local",

@@ -14,7 +14,7 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc -p .",
-    "build": "esbuild src/mcp/stdio.ts --bundle --platform=node --format=esm --outfile=../../.opencode/mcp/ast-grep/stdio.mjs"
+    "build": "esbuild src/mcp/stdio.ts --bundle --platform=node --format=esm --outfile=dist/stdio.mjs"
   },
   "engines": {
     "node": ">=24"

@@ -83,11 +83,11 @@
         "SKILL.md"
       ]
     },
-    ".opencode/mcp/ast-grep/": {
+    "mcp-servers/astgrep/dist/": {
       "mode": "raw",
       "editors": {
         "opencode": {
-          "destination": ".opencode/mcp/ast-grep/"
+          "destination": "mcp-servers/astgrep/dist/"
         },
         "cursor": {
           "omitted": true

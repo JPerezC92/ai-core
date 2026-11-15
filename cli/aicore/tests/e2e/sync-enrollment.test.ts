@@ -149,7 +149,6 @@ describe("enrollment and update", () => {
     );
 
     // Analysis MCP ships with portable launchers. system-one does not ship.
-    // No command names an AICore-only path.
     const servers = at(merged, ["mcp", "servers"]);
     expect(servers).toEqual(expect.any(Object));
     const serverNames = Object.keys(servers as Record<string, unknown>);
@@ -158,10 +157,10 @@ describe("enrollment and update", () => {
     expect(serverNames).toContain("semgrep");
     expect(at(merged, ["mcp", "servers", "astgrep", "command"])).toEqual([
       "node",
-      ".opencode/mcp/ast-grep/stdio.mjs",
+      "mcp-servers/astgrep/dist/stdio.mjs",
     ]);
     const shippedBundle = await stat(
-      join(destination, ".opencode", "mcp", "ast-grep", "stdio.mjs"),
+      join(destination, "mcp-servers", "astgrep", "dist", "stdio.mjs"),
     );
     expect(shippedBundle.isFile()).toBe(true);
     expect(at(merged, ["mcp", "servers", "semgrep", "command"])).toEqual([
@@ -171,8 +170,9 @@ describe("enrollment and update", () => {
       "semgrep",
       "mcp",
     ]);
-    expect(JSON.stringify(servers)).not.toMatch(/mcp-servers\//);
+    expect(JSON.stringify(servers)).not.toMatch(/mcp-servers\/system-one/);
     expect(JSON.stringify(servers)).not.toMatch(/\.opencode\/tooling\//);
+    expect(JSON.stringify(servers)).not.toMatch(/\.opencode\/mcp\//);
 
     const destinationConfigText = await readFile(destinationConfig, "utf8");
     const destinationObject = parseJsoncObject(destinationConfigText);
