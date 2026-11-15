@@ -157,11 +157,13 @@ describe("enrollment and update", () => {
     expect(serverNames).toContain("astgrep");
     expect(serverNames).toContain("semgrep");
     expect(at(merged, ["mcp", "servers", "astgrep", "command"])).toEqual([
-      "uvx",
-      "--from",
-      "git+https://github.com/ast-grep/ast-grep-mcp@149e20d47bb7125fb0c1451feea2f48a98742034",
-      "ast-grep-server",
+      "node",
+      ".opencode/mcp/ast-grep/stdio.mjs",
     ]);
+    const shippedBundle = await stat(
+      join(destination, ".opencode", "mcp", "ast-grep", "stdio.mjs"),
+    );
+    expect(shippedBundle.isFile()).toBe(true);
     expect(at(merged, ["mcp", "servers", "semgrep", "command"])).toEqual([
       "uvx",
       "--from",

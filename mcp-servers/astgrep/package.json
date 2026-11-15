@@ -1,0 +1,26 @@
+{
+  "name": "aicore-astgrep-mcp",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "TypeScript MCP server that spawns the Rust ast-grep CLI. Authoring package; destinations run the committed bundle.",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p .",
+    "build": "esbuild src/mcp/stdio.ts --bundle --platform=node --format=esm --outfile=../../.opencode/mcp/ast-grep/stdio.mjs"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.4.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "esbuild": "0.25.12",
+    "typescript": "6.0.3",
+    "vite": "8.3.6",
+    "vitest": "5.1.0"
+  }
+}

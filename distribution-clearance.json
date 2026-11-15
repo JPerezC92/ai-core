@@ -83,6 +83,17 @@
         "SKILL.md"
       ]
     },
+    ".opencode/mcp/ast-grep/": {
+      "mode": "raw",
+      "editors": {
+        "opencode": {
+          "destination": ".opencode/mcp/ast-grep/"
+        },
+        "cursor": {
+          "omitted": true
+        }
+      }
+    },
     ".opencode/agents/": {
       "mode": "region",
       "editors": {
