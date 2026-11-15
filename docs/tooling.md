@@ -2,11 +2,13 @@
 
 This guide provides checkout-local setup instructions for **this AICore source**, not test evidence or authorization to provision before the required review gates, and not a list of what an adopting destination receives.
 
-**What the tracked `.opencode/opencode.jsonc` registers (and what ships on OpenCode enrollment):** `chrome-devtools`, `memories`, `qmd`, and `context7` (Context7 uses `{file:../.secrets/context7-api-key}`). Those four are the distributed MCP servers.
+**What the tracked `.opencode/opencode.jsonc` registers (and what ships on OpenCode enrollment):** `chrome-devtools`, `memories`, `qmd`, `context7` (Context7 uses `{file:../.secrets/context7-api-key}`), `astgrep`, and `semgrep`.
 
-**What stays AICore-operator-local and is not distributed:** `system-one` (`mcp-servers/system-one/`), `astgrep` and `semgrep` (`.opencode/tooling/`). Destinations must not receive launch commands under `mcp-servers/` or `.opencode/tooling/`. Cursor enrollment ships no MCP configuration.
+**Portable analysis launchers.** `astgrep` is `uvx --from git+https://github.com/ast-grep/ast-grep-mcp@149e20d47bb7125fb0c1451feea2f48a98742034 ast-grep-server`. That MCP is still the official experimental Python server; destinations need `uv` and the Rust `ast-grep` CLI on `PATH` (the MCP shells out; `@ast-grep/napi` is not a substitute MCP). `semgrep` is `uvx --from semgrep==1.182.1 semgrep mcp` with `SEMGREP_SEND_METRICS=off` and `OTEL_SDK_DISABLED=true`. That is the official Semgrep CLI MCP, not a Node rewrite of the engine. First `uvx` run needs network.
 
-The `npx` servers need Node.js >= 22 and no separate provisioning step. The two Python tooling environments below exist only so this checkout can run ast-grep and Semgrep locally.
+**What stays AICore-operator-local and is not distributed:** `system-one` (`mcp-servers/system-one/`). It cannot live in the merged project config without shipping. Destinations must not receive launch commands under `mcp-servers/` or `.opencode/tooling/`. Cursor enrollment ships no MCP configuration.
+
+The `npx` servers need Node.js >= 22 and no separate provisioning step. The two Python tooling directories below remain optional locked environments for this checkout; they are **not** what OpenCode launches.
 
 ## Provision the locked environments (this checkout only)
 

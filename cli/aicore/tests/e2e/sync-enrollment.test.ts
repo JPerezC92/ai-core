@@ -148,14 +148,27 @@ describe("enrollment and update", () => {
       "{file:../.secrets/context7-api-key}",
     );
 
-    // Source-maintenance MCP servers are not distributed, and no command in the
-    // enrolled configuration names a source-only path.
+    // Analysis MCP ships with portable launchers. system-one does not ship.
+    // No command names an AICore-only path.
     const servers = at(merged, ["mcp", "servers"]);
     expect(servers).toEqual(expect.any(Object));
     const serverNames = Object.keys(servers as Record<string, unknown>);
     expect(serverNames).not.toContain("system-one");
-    expect(serverNames).not.toContain("astgrep");
-    expect(serverNames).not.toContain("semgrep");
+    expect(serverNames).toContain("astgrep");
+    expect(serverNames).toContain("semgrep");
+    expect(at(merged, ["mcp", "servers", "astgrep", "command"])).toEqual([
+      "uvx",
+      "--from",
+      "git+https://github.com/ast-grep/ast-grep-mcp@149e20d47bb7125fb0c1451feea2f48a98742034",
+      "ast-grep-server",
+    ]);
+    expect(at(merged, ["mcp", "servers", "semgrep", "command"])).toEqual([
+      "uvx",
+      "--from",
+      "semgrep==1.182.1",
+      "semgrep",
+      "mcp",
+    ]);
     expect(JSON.stringify(servers)).not.toMatch(/mcp-servers\//);
     expect(JSON.stringify(servers)).not.toMatch(/\.opencode\/tooling\//);
 

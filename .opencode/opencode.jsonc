@@ -369,6 +369,28 @@
                 "headers": {
                     "CONTEXT7_API_KEY": "{file:../.secrets/context7-api-key}"
                 }
+            },
+            // Portable analysis MCP: official engines, no AICore-local paths.
+            // ast-grep still requires the Rust `ast-grep` CLI on PATH (sg-mcp
+            // shells out). Semgrep's analysis engine remains Python; uvx
+            // launches the pinned CLI's `mcp` subcommand. Neither is a
+            // TypeScript rewrite of the engine.
+            "astgrep": {
+                "type": "local",
+                "command": [
+                    "uvx",
+                    "--from",
+                    "git+https://github.com/ast-grep/ast-grep-mcp@149e20d47bb7125fb0c1451feea2f48a98742034",
+                    "ast-grep-server"
+                ]
+            },
+            "semgrep": {
+                "type": "local",
+                "command": ["uvx", "--from", "semgrep==1.182.1", "semgrep", "mcp"],
+                "environment": {
+                    "SEMGREP_SEND_METRICS": "off",
+                    "OTEL_SDK_DISABLED": "true"
+                }
             }
         }
     }
