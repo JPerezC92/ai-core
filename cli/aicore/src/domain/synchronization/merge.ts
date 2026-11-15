@@ -40,6 +40,7 @@ export function mergeTopLevel(
   sourceText: string,
   destinationText: string,
   projectName: string,
+  omitMcpServers: ReadonlySet<string> = new Set(),
 ): string | null {
   const source = parseJsoncObject(sourceText);
   const destination = parseJsoncObject(destinationText);
@@ -55,14 +56,22 @@ export function mergeTopLevel(
     if (existing === undefined) {
       sourceOnly.push(
         member.key === MCP_KEY
-          ? retargetMcpMemberText(sourceText, member, projectName)
+          ? retargetMcpMemberText(sourceText, member, projectName, omitMcpServers)
           : sourceText.slice(member.memberStart, member.valueEnd),
       );
       continue;
     }
     if (
       member.key === MCP_KEY &&
-      mergeMcpServers(sourceText, member, destinationText, existing, edits, projectName)
+      mergeMcpServers(
+        sourceText,
+        member,
+        destinationText,
+        existing,
+        edits,
+        projectName,
+        omitMcpServers,
+      )
     ) {
       continue;
     }
@@ -108,6 +117,7 @@ export function isMerged(
   sourceText: string,
   destinationText: string,
   projectName: string,
+  omitMcpServers: ReadonlySet<string> = new Set(),
 ): boolean | null {
   const source = parseJsoncObject(sourceText);
   const destination = parseJsoncObject(destinationText);
@@ -122,7 +132,12 @@ export function isMerged(
     }
     if (
       key === MCP_KEY &&
-      mcpServersContained(sourceSpans.get(key), destinationSpans.get(key), projectName)
+      mcpServersContained(
+        sourceSpans.get(key),
+        destinationSpans.get(key),
+        projectName,
+        omitMcpServers,
+      )
     ) {
       continue;
     }
@@ -141,6 +156,7 @@ function mergeMcpServers(
   destinationSpan: JsoncMember,
   edits: Edit[],
   projectName: string,
+  omitMcpServers: ReadonlySet<string>,
 ): boolean {
   const sourceServers = serversObject(sourceSpan);
   const destinationServers = serversObject(destinationSpan);
@@ -150,6 +166,9 @@ function mergeMcpServers(
   const destinationMembers = membersByKey(destinationServers.members);
   const inserted: string[] = [];
   for (const member of sourceServers.members) {
+    if (omitMcpServers.has(member.key)) {
+      continue;
+    }
     const existing = destinationMembers.get(member.key);
     let rawValue = sourceText.slice(member.valueStart, member.valueEnd);
     if (member.key === QMD_SERVER_KEY) {
@@ -187,6 +206,7 @@ function mcpServersContained(
   sourceSpan: JsoncMember | undefined,
   destinationSpan: JsoncMember | undefined,
   projectName: string,
+  omitMcpServers: ReadonlySet<string>,
 ): boolean {
   const sourceServers = serversObject(sourceSpan);
   const destinationServers = serversObject(destinationSpan);
@@ -194,6 +214,9 @@ function mcpServersContained(
     return false;
   }
   for (const [name, value] of Object.entries(sourceServers.value)) {
+    if (omitMcpServers.has(name)) {
+      continue;
+    }
     if (!Object.hasOwn(destinationServers.value, name)) {
       return false;
     }
@@ -282,11 +305,25 @@ function retargetMcpMemberText(
   sourceText: string,
   member: JsoncMember,
   projectName: string,
+  omitMcpServers: ReadonlySet<string>,
 ): string {
-  return (
-    sourceText.slice(member.memberStart, member.valueStart) +
-    retargetMcpValueText(sourceText, member, projectName)
-  );
+  const prefix = sourceText.slice(member.memberStart, member.valueStart);
+  const valueText = retargetMcpValueText(sourceText, member, projectName);
+  if (omitMcpServers.size === 0) {
+    return prefix + valueText;
+  }
+  const parsed = parseJsoncObject(`{"mcp":${valueText}}`);
+  const mcp = parsed?.value["mcp"];
+  if (parsed === null || !isMapping(mcp) || !isMapping(mcp[SERVERS_KEY])) {
+    return prefix + valueText;
+  }
+  const kept: Record<string, JsoncValue> = {};
+  for (const [name, value] of Object.entries(mcp[SERVERS_KEY])) {
+    if (!omitMcpServers.has(name) && value !== undefined) {
+      kept[name] = value;
+    }
+  }
+  return prefix + JSON.stringify({ ...mcp, [SERVERS_KEY]: kept }, null, 2);
 }
 
 /**

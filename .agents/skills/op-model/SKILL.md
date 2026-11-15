@@ -1,6 +1,6 @@
 ---
 name: op-model
-description: Set or change the model for any agent in the project's opencode config (opencode.json / opencode.jsonc) deterministically, using `opencode models` as the single source of truth. Filters to subscription-available models, resolves ambiguous providers with the question tool, and previews/gets confirmation before editing. Use when the user wants to set/change an agent's model, mentions a model name (gpt, glm, deepseek, qwen, kimi, minimax, grok, claude, gemini, etc.), asks what models are available, or needs the provider/model name for the config.
+description: Set or change the model for any agent in the project's opencode config (`.opencode/opencode.jsonc`, then `.opencode/opencode.json`, then a root `opencode.jsonc` / `opencode.json`) deterministically, using `opencode models` as the single source of truth. Filters to subscription-available models, resolves ambiguous providers with the question tool, and previews/gets confirmation before editing. Use when the user wants to set/change an agent's model, mentions a model name (gpt, glm, deepseek, qwen, kimi, minimax, grok, claude, gemini, etc.), asks what models are available, or needs the provider/model name for the config.
 license: MIT
 compatibility: opencode
 metadata:
@@ -19,13 +19,13 @@ Non-selector lines are skipped, never fabricated into records: a line that is no
 
 ### Opencode config files
 
-This project's opencode config file is `opencode.jsonc` (or `opencode.json`); the `OPENCODE_CONFIG` environment variable overrides the path. When neither exists, the minimal config file to create is `opencode.jsonc`.
+This project's opencode config file is `.opencode/opencode.jsonc`. Look for it in this order: `.opencode/opencode.jsonc`, `.opencode/opencode.json`, then a project-root `opencode.jsonc` or `opencode.json`; the `OPENCODE_CONFIG` environment variable overrides the path. The editor's own directory is the project configuration's home, so `.opencode/opencode.jsonc` is the primary location and the minimal config file to create when none of those files exists. When a configuration already exists at any of those locations, edit that file: never create a second configuration file beside it.
 
 ### Model examples
 
 Worked examples for this project — illustrative, not current subscription facts (live `opencode models` output is authoritative):
 
-- Ambiguous query `deepseek v4 flash`: the lookup script returns `deepseek/deepseek-v4-flash` — DeepSeek V4 Flash, `opencode-go/deepseek-v4-flash` — DeepSeek V4 Flash, and `opencode/deepseek-v4-flash-free` — DeepSeek V4 Flash Free. Because there are ≥2 matches, the skill presents those three options; if the user picks `deepseek/deepseek-v4-flash`, the skill edits `agents.plan.model` in `opencode.jsonc` to `deepseek/deepseek-v4-flash`, preserving `color` and other keys, verifies JSON5 + re-runs the script to confirm the chosen name still appears, and reports "plan → deepseek/deepseek-v4-flash (DeepSeek V4 Flash). Restart the opencode TUI to apply."
+- Ambiguous query `deepseek v4 flash`: the lookup script returns `deepseek/deepseek-v4-flash` — DeepSeek V4 Flash, `opencode-go/deepseek-v4-flash` — DeepSeek V4 Flash, and `opencode/deepseek-v4-flash-free` — DeepSeek V4 Flash Free. Because there are ≥2 matches, the skill presents those three options; if the user picks `deepseek/deepseek-v4-flash`, the skill edits `agents.plan.model` in `.opencode/opencode.jsonc` to `deepseek/deepseek-v4-flash`, preserving `color` and other keys, verifies JSON5 + re-runs the script to confirm the chosen name still appears, and reports "plan → deepseek/deepseek-v4-flash (DeepSeek V4 Flash). Restart the opencode TUI to apply."
 - Single match `glm-4.7` returns `zai-coding-plan/glm-4.7`; edit `agents.build.model`, verify, report.
 - No match `gpt-4o` — no matching usable live entry.
 - Brand/family variant `gpt-5.6` may match `gpt-5.6-terra`, `gpt-5.6-luna`, and `gpt-5.6-sol`.

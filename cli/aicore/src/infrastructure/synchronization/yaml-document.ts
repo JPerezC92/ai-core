@@ -62,6 +62,12 @@ export function writeBindingsDocument(record: BindingsRecord): string {
   if (record.editor !== undefined) {
     lines.push(`editor: ${scalar(record.editor)}`);
   }
+  if (record.exclude !== undefined && record.exclude.length > 0) {
+    lines.push("exclude:");
+    for (const source of record.exclude) {
+      lines.push(`- ${scalar(source)}`);
+    }
+  }
   if (record.bindings.length === 0) {
     lines.push("bindings: []");
   } else {

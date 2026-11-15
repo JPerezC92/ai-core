@@ -6,7 +6,7 @@
  * configuration.
  */
 
-import { readFile, stat } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 
@@ -39,8 +39,26 @@ describe("cursor editor target", () => {
     expect(result.stdout, `stderr: ${result.stderr}`).toMatch(/initialized/);
 
     // The agents land in Cursor's own agent directory, not in OpenCode's.
-    expect((await stat(join(destination, ".cursor", "agents"))).isDirectory()).toBeTruthy();
+    const cursorAgents = join(destination, ".cursor", "agents");
+    expect((await stat(cursorAgents)).isDirectory()).toBeTruthy();
     await expect(stat(join(destination, ".opencode", "agents"))).rejects.toThrow();
+    const agentFiles = (await readdir(cursorAgents)).filter((name) => name.endsWith(".md")).sort();
+    expect(agentFiles).toEqual([
+      "atrium.md",
+      "bastion.md",
+      "crucible.md",
+      "forge.md",
+      "herald.md",
+      "inquisitor.md",
+      "investigator.md",
+      "ledger.md",
+      "lumen.md",
+      "quill.md",
+      "scribe.md",
+      "sentinel.md",
+      "vault.md",
+      "warden.md",
+    ]);
 
     // The shared content is delivered identically, at the same paths.
     expect(
@@ -50,8 +68,13 @@ describe("cursor editor target", () => {
       (await stat(join(destination, ".aicore", "core", "knowledge", "agents.md"))).isFile(),
     ).toBeTruthy();
 
-    // No project configuration: Cursor has no merge target to receive one.
+    // No project configuration: Cursor has no merge target to receive one, so
+    // neither the OpenCode destination path nor a root copy is delivered.
+    await expect(stat(join(destination, ".opencode", "opencode.jsonc"))).rejects.toThrow();
     await expect(stat(join(destination, "opencode.jsonc"))).rejects.toThrow();
+    await expect(stat(join(destination, "opencode.json"))).rejects.toThrow();
+    await expect(stat(join(destination, ".secrets"))).rejects.toThrow();
+    await expect(stat(join(destination, ".gitignore"))).rejects.toThrow();
 
     // The enrollment records the editor profile the destination was enrolled for.
     const bindings = await readFile(join(destination, ".aicore", "core.yaml"), "utf8");

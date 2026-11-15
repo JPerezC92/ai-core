@@ -41,6 +41,7 @@ export function makeBindingsDocument(
     coreRevision: REVISION,
     root: null,
     editor: "opencode",
+    exclude: [],
     bindings: [
       { source: BOUND_SOURCE, destinations: [BOUND_SOURCE], declaredMode: "region" },
     ],

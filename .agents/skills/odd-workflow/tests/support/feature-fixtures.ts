@@ -159,11 +159,21 @@ export function makeCompletedFeature(
     readonly blocked?: boolean;
     readonly status?: "active" | "closed";
     readonly created?: string;
+    readonly verbatimLogHeadings?: boolean;
   } = {},
 ): string {
   const status = options.status ?? "active";
   const created = options.created ?? "2026-11-14";
-  const logEntries = ["- L1 — original request"];
+  const logEntries =
+    options.verbatimLogHeadings === true
+      ? [
+          "- L1 — Original request, verbatim: \"# AICore — Implement All Required Improvements in ONE Pull Request",
+          "",
+          "## Authorization",
+          "",
+          "Do not merge.\"",
+        ]
+      : ["- L1 — original request"];
   if (options.blocked === true) {
     logEntries.push("- L2 — 2026-11-14 — Blocked: independent acceptance is outstanding");
   }

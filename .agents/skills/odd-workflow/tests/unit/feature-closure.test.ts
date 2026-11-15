@@ -52,6 +52,19 @@ describe("validateFeature closure consistency", () => {
     ).toEqual([]);
   });
 
+  it("still sees Close: when the verbatim L1 contains ATX headings", () => {
+    const findings = validateFeature(
+      makeCompletedFeature({
+        created: EFFECTIVE_FROM,
+        status: "closed",
+        verbatimLogHeadings: true,
+      }),
+    );
+
+    expect(findings).toEqual([]);
+    expect(findings).not.toContain("closed feature needs a Log 'Close:' entry");
+  });
+
   it("does not report an active record that still carries an unfinished task", () => {
     expect(validateFeature(makeFeature())).toEqual([]);
   });

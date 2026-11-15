@@ -18,7 +18,9 @@ import {
   destinationDrift,
   nonRegionDestinations,
   normalizePending,
+  protectedExclusionFailure,
   unclearedSources,
+  withOptOuts,
 } from "#domain/synchronization/bindings.ts";
 import {
   drift,
@@ -27,6 +29,7 @@ import {
   succeeded,
   type OperationOutcome,
 } from "#domain/synchronization/failures.ts";
+import { omitMcpServersOf } from "#domain/synchronization/clearance.ts";
 import { isMerged } from "#domain/synchronization/merge.ts";
 import { editorMismatch, effectiveEditor } from "#domain/synchronization/editor-profile.ts";
 import { frontmatterIsCurrent, splitFrontmatter } from "#domain/synchronization/frontmatter.ts";
@@ -65,16 +68,27 @@ export class VerifyDestinations {
     const { bindings, clearance: clearanceStore, sources, destinations, layout, guard } =
       this.#dependencies;
 
-    const document = await bindings.load(request.bindingsPath);
-    if (document === null) {
+    const loaded = await bindings.load(request.bindingsPath);
+    if (loaded === null) {
       return failed(invalid(`invalid bindings: ${request.bindingsPath}`));
     }
 
-    const mismatch = editorMismatch(document.editor, request.editor);
+    const mismatch = editorMismatch(loaded.editor, request.editor);
     if (mismatch !== null) {
       return failed(mismatch);
     }
-    const editor = effectiveEditor(request.editor, document.editor);
+    const editor = effectiveEditor(request.editor, loaded.editor);
+
+    const protectedExclusion = protectedExclusionFailure(loaded);
+    if (protectedExclusion !== null) {
+      return failed(protectedExclusion);
+    }
+
+    // An opted-out source is unmanaged: it has no binding, so it earns no drift
+    // and no uncleared-source failure. Its destination stays in `pending` until
+    // the destination owner removes the file, so the destination is reported as
+    // not current rather than silently accepted.
+    const document = withOptOuts(loaded);
 
     const clearance = await readClearanceModes(
       clearanceStore,
@@ -199,7 +213,12 @@ export class VerifyDestinations {
           if (destinationText === null) {
             return failed(drift(`missing destination: ${destinationPath}`));
           }
-          const merged = isMerged(sourceText, destinationText, projectName(request.destinationRoot));
+          const merged = isMerged(
+            sourceText,
+            destinationText,
+            projectName(request.destinationRoot),
+            omitMcpServersOf(clearance.entries?.get(entry.source)),
+          );
           if (merged === null) {
             return failed(invalid(`invalid JSONC: ${destinationPath}`));
           }

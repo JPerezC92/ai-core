@@ -86,6 +86,7 @@ tests/support/core-sync-parity/
     binding-declarations.ts  the `--bind` / `--bind-raw` declaration cases
     root-role.ts             the `role: root` and `--root` destination-root cases
     clearance-integrity.ts   the duplicate-key clearance cases
+    directory-expansion.ts   what a cleared directory root puts in a distribution set
   blocker.ts             the shipped blocker block (reference behaviour)
   fixtures.ts            the synthetic fixture builders
   engine.ts              the engine seam and its binding
@@ -106,6 +107,7 @@ tests/integration/core-sync-parity/
   binding-declarations.parity.spec.ts
   root-role.parity.spec.ts
   clearance-integrity.parity.spec.ts
+  directory-expansion.parity.spec.ts
 ```
 
 One concern owns one spec file; the cases live in the corpus data module.
@@ -133,3 +135,7 @@ fixture", never "what should this fixture expect".
 Three cases need a symbolic link. Windows refuses to create one without an
 elevated privilege, so on such a machine those three are reported as skipped
 rather than as covered; they run on a platform that allows them.
+
+A case needing a directory link is materialised with a junction on Windows,
+where an unprivileged directory symbolic link is refused, so it runs there too;
+only a platform that refuses the junction as well reports it as skipped.

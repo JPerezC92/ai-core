@@ -187,7 +187,7 @@ Running a synchronization is the *entire* operator action for a destination: run
 ### Environment constraints
 
 - The repository root carries no Python project and no test workspace of its own. Every first-party test suite runs under Vitest from the package that owns it; the synchronization CLI's suite is `pnpm --dir cli/aicore test`.
-- Every Python command in this repository serves one of the two MCP tooling projects: `.opencode/tooling/astgrep/` and `.opencode/tooling/semgrep/` each use their own locked environment through `uv run --frozen --project <tooling-directory> …`. No other environment, global interpreter or root dependency change is authorized. Provisioning is documented in `docs/tooling.md`.
+- Python remains only where an upstream engine requires it: `astgrep` and `semgrep` MCP servers launch through `uvx` from `.opencode/opencode.jsonc` (pinned git revision / `semgrep==1.182.1`). There is no repository-root Python project. `system-one` is this checkout's TypeScript MCP under `mcp-servers/system-one/` and is omitted from destination merges. Provisioning is documented in `docs/tooling.md`.
 
 ### Saved-research bindings
 
@@ -200,7 +200,7 @@ Running a synchronization is the *entire* operator action for a destination: run
 
 - The `memories` MCP server (`npx -y @memories.sh/cli@0.7.9 serve`) supplies this project's memory backend; `qmd` (`npx -y @tobilu/qmd@2.8.3`) supplies read-only repository retrieval. The memory database is `~/.config/memories/local.db`, outside Git, with no recorded backup procedure.
 - Existing Memories is the selected first full-mirror backend, not Engram or a claim of native equivalence. Exposed operations lack exact feature-key upsert, explicit read-scope selection and compare-and-swap: serialize writers and verify returned project/feature/ID/content, never infer atomicity. The governing feature's synthetic probe is not large-document, restart or concurrent-writer acceptance. That first source-contract slice authorized no real feature mirror or additional backend probe, and runtime adoption of full mirroring remains unverified. A later bounded action is separately recorded and does not change this: the governing feature wrote and read back one bounded recall note inside the documented tool limits, then retired its own exact-mirror acceptance rather than reporting it achieved. That note is not a mirror or a recovery copy.
-- `qmd` indexes this repository as `ai-core`; the merge-mode server entry in `opencode.jsonc` names that index.
+- `qmd` indexes this repository as `ai-core`; the merge-mode server entry in `.opencode/opencode.jsonc` names that index.
 - Project memory scope derives from the checkout's git remote. This repository's SSH alias yields `github.com-personal/JPerezC92/ai-core`, which is not the `github.com` form, so pass `project_id` explicitly whenever a call must be unambiguous.
 - Retrieval collections are `tasks`, `knowledge`, `architecture` and `research`.
 - Keep `SEMGREP_SEND_METRICS=off` and `OTEL_SDK_DISABLED=true`. The auto-config scan failed with metrics off; do not enable metrics to make it work, and do not invoke platform findings or supply-chain scanning under this binding.

@@ -243,7 +243,7 @@ A Python vulnerability scanner is not a default reference command. Use one only 
 
 - **Python tooling (project-owned nonbinding reference examples):** `uv`, `pyproject.toml`, `uv.lock` (reference commands: `uv lock --check`, `uv tree --frozen`, `uv pip check`).
 - **Destination JavaScript package manager, runtime, and registry (project-owned reference examples, not bindings):** `pnpm` (reference commands: `pnpm audit`, `pnpm outdated`, `pnpm list`, `pnpm info`), `node` (`node --version`), npm, and the JavaScript manifest/lockfile `package.json`/`pnpm-lock.yaml`.
-- **The harness config:** `opencode.jsonc`.
+- **The harness config:** `.opencode/opencode.jsonc`.
 
 ### Output Format
 
@@ -321,7 +321,7 @@ Every prose mention of a roster member uses `Name Emoji (Role)` form (e.g. `Ciph
 
 ### Local Configuration
 
-AICore's root carries no Python project: `pyproject.toml`, `uv.lock` and the pytest suite were retired with the TypeScript migration, and the repository root keeps no test package of its own. The two MCP tooling projects under `.opencode/tooling/` each own a locked Python environment and are provisioned per `docs/tooling.md`; the Python branch applies to those manifests, not to the repository root.
+AICore's root carries no Python project: `pyproject.toml`, `uv.lock` and the pytest suite were retired with the TypeScript migration, and the repository root keeps no test package of its own. ast-grep and Semgrep MCP launch through `uvx` as registered in `.opencode/opencode.jsonc`; there is no `.opencode/tooling/` Python manifest for Warden 🔒 (Dependency Warden) to treat as a repository Python project.
 
 ### Local Permissions
 

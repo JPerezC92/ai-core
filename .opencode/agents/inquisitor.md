@@ -183,7 +183,7 @@ Command-family matrix (routing defaults; a row names the specialist, it does not
 |---------------|-----------|
 | The project's JavaScript dependency install command (prod/build-tooling deps) | Atrium 🏛️ (Frontend Architect) |
 | The project's JavaScript dependency install command (test-runner deps) | Cipher 🔓 (Lead Orchestrator) explicitly dispatches Crucible 🔥 (Test Architect) after Warden 🔒 (Dependency Warden) APPROVE |
-| The project's reviewed whole-suite test command (root `opencode.jsonc` `agents.crucible.permissions`) | Cipher 🔓 (Lead Orchestrator) explicitly dispatches Crucible 🔥 (Test Architect) |
+| The project's reviewed whole-suite test command (`.opencode/opencode.jsonc` `agents.crucible.permissions`) | Cipher 🔓 (Lead Orchestrator) explicitly dispatches Crucible 🔥 (Test Architect) |
 | The project's dependency audit command | Warden 🔒 (Dependency Warden) |
 | The project's dependency inspection and JavaScript runtime-version commands | Warden 🔒 (Dependency Warden) |
 | The project's visual-tool command family | Lumen ✨ (Visual Director) |
