@@ -29,6 +29,7 @@ import {
   succeeded,
   type OperationOutcome,
 } from "#domain/synchronization/failures.ts";
+import { omitMcpServersOf } from "#domain/synchronization/clearance.ts";
 import { isMerged } from "#domain/synchronization/merge.ts";
 import { editorMismatch, effectiveEditor } from "#domain/synchronization/editor-profile.ts";
 import { frontmatterIsCurrent, splitFrontmatter } from "#domain/synchronization/frontmatter.ts";
@@ -212,7 +213,12 @@ export class VerifyDestinations {
           if (destinationText === null) {
             return failed(drift(`missing destination: ${destinationPath}`));
           }
-          const merged = isMerged(sourceText, destinationText, projectName(request.destinationRoot));
+          const merged = isMerged(
+            sourceText,
+            destinationText,
+            projectName(request.destinationRoot),
+            omitMcpServersOf(clearance.entries?.get(entry.source)),
+          );
           if (merged === null) {
             return failed(invalid(`invalid JSONC: ${destinationPath}`));
           }

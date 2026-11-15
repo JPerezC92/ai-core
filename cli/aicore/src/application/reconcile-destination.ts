@@ -32,6 +32,7 @@ import {
   type BindingMode,
 } from "#domain/synchronization/constants.ts";
 import { effectiveEditor } from "#domain/synchronization/editor-profile.ts";
+import { omitMcpServersOf } from "#domain/synchronization/clearance.ts";
 import { isMerged } from "#domain/synchronization/merge.ts";
 import { parentDirectory } from "#domain/synchronization/paths.ts";
 import type { ClearanceStore, SourceFiles } from "#domain/synchronization/ports.ts";
@@ -70,6 +71,7 @@ type BoundPath = {
   readonly destinationPath: string;
   readonly mode: BindingMode | null;
   readonly declaredDestination: string | null;
+  readonly omitMcpServers: ReadonlySet<string>;
 };
 
 export class ReconcileDestination {
@@ -135,6 +137,7 @@ export class ReconcileDestination {
               destinationPath,
               mode: expanded.modes.get(binding.source) ?? null,
               declaredDestination: expanded.destinations.get(binding.source) ?? null,
+              omitMcpServers: omitMcpServersOf(expanded.entries.get(binding.source)),
             }),
           ),
         );
@@ -165,7 +168,14 @@ export class ReconcileDestination {
 
     const identical = bothPresent ? await this.#sameBytes(sourcePath, destinationPath) : false;
     const matchesSource = bothPresent
-      ? await this.#matchesSource(bound.mode, sourcePath, destinationPath, bound.destinationRoot, identical)
+      ? await this.#matchesSource(
+          bound.mode,
+          sourcePath,
+          destinationPath,
+          bound.destinationRoot,
+          identical,
+          bound.omitMcpServers,
+        )
       : false;
 
     return {
@@ -208,12 +218,18 @@ export class ReconcileDestination {
     destinationPath: string,
     destinationRoot: string,
     identical: boolean,
+    omitMcpServers: ReadonlySet<string>,
   ): Promise<boolean> {
     if (mode === MODE_RAW) {
       return identical;
     }
     if (mode === MODE_MERGE) {
-      return await this.#mergeMatches(sourcePath, destinationPath, destinationRoot);
+      return await this.#mergeMatches(
+        sourcePath,
+        destinationPath,
+        destinationRoot,
+        omitMcpServers,
+      );
     }
     if (mode === MODE_REGION) {
       return await this.#regionMatches(sourcePath, destinationPath);
@@ -241,6 +257,7 @@ export class ReconcileDestination {
     sourcePath: string,
     destinationPath: string,
     destinationRoot: string,
+    omitMcpServers: ReadonlySet<string>,
   ): Promise<boolean> {
     const { sources, destinations } = this.#dependencies;
     const sourceText = await sources.readText(sourcePath);
@@ -248,7 +265,14 @@ export class ReconcileDestination {
     if (sourceText === null || destinationText === null) {
       return false;
     }
-    return isMerged(sourceText, destinationText, projectName(destinationRoot)) === true;
+    return (
+      isMerged(
+        sourceText,
+        destinationText,
+        projectName(destinationRoot),
+        omitMcpServers,
+      ) === true
+    );
   }
 
   /**

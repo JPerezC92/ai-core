@@ -57,7 +57,7 @@ import { protectedBytes, renderInitFile, renderWithRegion, splitRegions } from "
 import { editorMismatch, effectiveEditor } from "#domain/synchronization/editor-profile.ts";
 import type { BindingMode } from "#domain/synchronization/constants.ts";
 import type { BindingsDocument } from "#domain/synchronization/bindings.ts";
-import type { ClearanceEntry } from "#domain/synchronization/clearance.ts";
+import { omitMcpServersOf, type ClearanceEntry } from "#domain/synchronization/clearance.ts";
 import type {
   BindingsStore,
   ClearanceStore,
@@ -291,6 +291,7 @@ export class EnrollDestinations {
               sourceText,
               "{}",
               projectName(request.destinationRoot),
+              omitMcpServersOf(clearance.entries.get(entry.source)),
             );
             if (created === null) {
               return failed(invalid(`invalid JSONC: ${sourcePath}`));
@@ -302,6 +303,7 @@ export class EnrollDestinations {
             sourceText,
             destinationText,
             projectName(request.destinationRoot),
+            omitMcpServersOf(clearance.entries.get(entry.source)),
           );
           if (mergedText === null) {
             return failed(invalid(`invalid JSONC: ${destinationPath}`));

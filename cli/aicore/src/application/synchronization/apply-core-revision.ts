@@ -35,6 +35,7 @@ import {
   type OperationOutcome,
 } from "#domain/synchronization/failures.ts";
 import { splitFrontmatter } from "#domain/synchronization/frontmatter.ts";
+import { omitMcpServersOf } from "#domain/synchronization/clearance.ts";
 import { mergeTopLevel } from "#domain/synchronization/merge.ts";
 import { editorMismatch, effectiveEditor } from "#domain/synchronization/editor-profile.ts";
 import {
@@ -209,6 +210,7 @@ export class ApplyCoreRevision {
             sourceText,
             destinationText,
             projectName(request.destinationRoot),
+            omitMcpServersOf(clearance.entries?.get(entry.source)),
           );
           if (mergedText === null) {
             return failed(invalid(`invalid JSONC: ${destinationPath}`));

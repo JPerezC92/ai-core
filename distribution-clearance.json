@@ -7,6 +7,7 @@
     },
     ".opencode/opencode.jsonc": {
       "mode": "merge",
+      "omit_mcp_servers": ["system-one"],
       "editors": {
         "opencode": {
           "destination": ".opencode/opencode.jsonc"

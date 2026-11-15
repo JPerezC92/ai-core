@@ -187,7 +187,7 @@ Running a synchronization is the *entire* operator action for a destination: run
 ### Environment constraints
 
 - The repository root carries no Python project and no test workspace of its own. Every first-party test suite runs under Vitest from the package that owns it; the synchronization CLI's suite is `pnpm --dir cli/aicore test`.
-- Every Python command in this repository serves one of the two MCP tooling projects: `.opencode/tooling/astgrep/` and `.opencode/tooling/semgrep/` each use their own locked environment through `uv run --frozen --project <tooling-directory> …`. No other environment, global interpreter or root dependency change is authorized. Provisioning is documented in `docs/tooling.md`.
+- Python remains only where an upstream engine requires it: `astgrep` and `semgrep` MCP servers launch through `uvx` from `.opencode/opencode.jsonc` (pinned git revision / `semgrep==1.182.1`). There is no repository-root Python project. `system-one` is this checkout's TypeScript MCP under `mcp-servers/system-one/` and is omitted from destination merges. Provisioning is documented in `docs/tooling.md`.
 
 ### Saved-research bindings
 
