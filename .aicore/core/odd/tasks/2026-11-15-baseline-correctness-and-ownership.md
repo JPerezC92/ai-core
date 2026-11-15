@@ -32,21 +32,21 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
 
 ## Tasks
 
-- T1 | S1 | delegated (one enumeration rule and its cases live in the CLI package) — Forge 🔨 (Implementer) | open | commit: pending
-- T2 | S2 | delegated (root discovery constant, shipped blocker text and parity fixtures) — Forge 🔨 (Implementer) | open | commit: pending
-- T3 | S3 | delegated (registry row, source move and shipped prose) — Forge 🔨 (Implementer) | open | commit: pending
-- T4 | S4 | delegated (secret reference and its portable assertion) — Forge 🔨 (Implementer) | open | commit: pending
-- T5 | S5 | delegated (destination-owned model survival across a write) — Forge 🔨 (Implementer) | open | commit: pending
-- T6 | S6, S7, S8, S9, S10 | delegated (bindings field, three use cases and their suites) — Forge 🔨 (Implementer) | open | commit: pending
-- T7 | S11 | delegated (clearance and configuration payload) — Forge 🔨 (Implementer) | open | commit: pending
-- T8 | S12 | delegated (Cursor enrollment and update evidence) — Forge 🔨 (Implementer) | open | commit: pending
-- T9 | S13 | delegated (documentation owner) — Scribe ✍️ (Docs & Problems Manager) | open | commit: pending
-- T10 | S14 | delegated (whole-suite and parity execution) — Forge 🔨 (Implementer) | open | commit: pending
-- T11 | S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17 | delegated (branch, staged commits, one pull request) — Herald 📯 (Release Manager) | open | commit: pending
+- T1 | S1 | delegated (one enumeration rule and its cases live in the CLI package) — Forge 🔨 (Implementer) | done | commit: d6c351e0172b879a18f3a45a053ad8cfd113ebcc
+- T2 | S2 | delegated (root discovery constant, shipped blocker text and parity fixtures) — Forge 🔨 (Implementer) | done | commit: d6c351e0172b879a18f3a45a053ad8cfd113ebcc
+- T3 | S3 | delegated (registry row, source move and shipped prose) — Forge 🔨 (Implementer) | done | commit: d6c351e0172b879a18f3a45a053ad8cfd113ebcc
+- T4 | S4 | delegated (secret reference and its portable assertion) — Forge 🔨 (Implementer) | done | commit: d6c351e0172b879a18f3a45a053ad8cfd113ebcc
+- T5 | S5 | delegated (destination-owned model survival across a write) — Forge 🔨 (Implementer) | done | commit: d6c351e0172b879a18f3a45a053ad8cfd113ebcc
+- T6 | S6, S7, S8, S9, S10 | delegated (bindings field, three use cases and their suites) — Forge 🔨 (Implementer) | done | commit: d6c351e0172b879a18f3a45a053ad8cfd113ebcc
+- T7 | S11 | delegated (clearance and configuration payload) — Forge 🔨 (Implementer) | done | commit: d6c351e0172b879a18f3a45a053ad8cfd113ebcc
+- T8 | S12 | delegated (Cursor enrollment and update evidence) — Forge 🔨 (Implementer) | done | commit: d6c351e0172b879a18f3a45a053ad8cfd113ebcc
+- T9 | S13 | delegated (documentation owner) — Scribe ✍️ (Docs & Problems Manager) | done | commit: d6c351e0172b879a18f3a45a053ad8cfd113ebcc
+- T10 | S14 | delegated (whole-suite and parity execution) — Forge 🔨 (Implementer) | done | commit: d6c351e0172b879a18f3a45a053ad8cfd113ebcc
+- T11 | S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17 | delegated (branch, staged commits, one pull request) — Herald 📯 (Release Manager) | done | commit: f648f170d3d97c481ccfda93e8f427a1649ec3fa
 - T12 | S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17 | delegated (independent review of the combined diff) — Inquisitor 🔎 (PR Reviewer) | open | commit: pending
-- T13 | S15 | delegated (single-file key-partition ownership proof) — Forge 🔨 (Implementer) | open | commit: pending
-- T14 | S16 | delegated (secret directory, empty placeholder, Git ignore rule) — Forge 🔨 (Implementer) | open | commit: pending
-- T15 | S17 | delegated (portable astgrep and semgrep MCP launchers) — Forge 🔨 (Implementer) | open | commit: pending
+- T13 | S15 | delegated (single-file key-partition ownership proof) — Forge 🔨 (Implementer) | done | commit: d6c351e0172b879a18f3a45a053ad8cfd113ebcc
+- T14 | S16 | delegated (secret directory, empty placeholder, Git ignore rule) — Forge 🔨 (Implementer) | done | commit: d6c351e0172b879a18f3a45a053ad8cfd113ebcc
+- T15 | S17 | delegated (portable astgrep and semgrep MCP launchers) — Forge 🔨 (Implementer) | done | commit: f648f170d3d97c481ccfda93e8f427a1649ec3fa
 
 ## Log
 
@@ -107,3 +107,4 @@ Proceed under these constraints. Do not merge without my explicit approval."
 - L5 — 2026-11-15 — User correction, dated and verbatim: "I approve the corrected Core Synchronization requirements R1–R24, subject to the two precision corrections below, and authorize continuation of the existing implementation toward one PR." plus the secret-directory/Git-ignore rules, R17 preview clarification, R21 permission-as-sync-contract not runtime guarantee, and "Continue the remaining work" listing Stages D–F, T13, agent-runtime path corrections, and `.secrets/` / `.gitignore` regression coverage. Action: R17, R21 and R22 restated; S16 and T14 opened; Stages A–C preserved; remaining work continues under the same one-PR objective. Git-ignore option chosen: idempotent destination `.gitignore` rule, no index mutation.
 - L6 — 2026-11-15 — User correction, dated and verbatim: "# PR #188 — Add ast-grep and Semgrep MCP Modernization" requiring distribution of functional astgrep and semgrep MCP, Node/TypeScript preference when a reliable Node-native solution exists, no custom analysis engine, system-one not distributed, keep PR #188. Action: S17 and T15 opened. Feasibility: ast-grep official MCP is Python `sg-mcp` plus a PATH Rust CLI; a TypeScript MCP over `@ast-grep/napi` would be a new four-tool server, not a small equivalent. Semgrep MCP is `semgrep mcp` inside the Python CLI; npm cannot replace that engine. Bounded implementation: portable `uvx` launchers with no AICore-local paths; Python/uv remain destination prerequisites. No custom MCP, no pnpm-as-Python fiction.
 - L7 — 2026-11-15 — User correction, dated and verbatim: "# PR #188 — Migration Leftovers Audit and Cleanup" requiring inventory of obsolete tooling, verified deletion only, System One preserved in AICore not operator-global, keep PR #188. Action: merge-mode `omit_mcp_servers` restores `system-one` in the source configuration without shipping it; tracked `.opencode/tooling/{astgrep,semgrep}` manifests/locks removed as superseded by `uvx`; root `.venv/` and `output/.pytest-tmp/` reported as ignored local residue, not deleted.
+- L8 — 2026-11-15 — User correction, dated and verbatim: "# PR #188 — Final Acceptance and Closure" requiring independent verification of R11, R15, R21–R24, task-row close with real SHAs, no merge, keep PR #188. Outcome: R11 ticked from committed parity cases `safety-symlinked-write-target`, `safety-non-regular-write-target`, `safety-write-target-inside-source-tree`, `safety-write-target-escapes-destination-root`, `safety-write-target-shares-source-inode`, `safety-two-write-targets-share-an-inode` in `cli/aicore/tests/support/core-sync-parity/corpus.ts` (the outstanding-verification clause was retired from the requirement text). R15 ticked from `sync-editor-target.test.ts` and `sync-enrollment.test.ts` plus README Cursor limitations; behavioural OpenCode/Cursor enforcement equivalence is not claimed. R21 ticked from `sync-enrollment.test.ts` repeated `sync` (destination-only key/server survive, permissions restored, no root `opencode.jsonc`). R22 ticked from enrollment/secret integration tests. R23 ticked from `sync-opt-out.test.ts`. R24 ticked from enrollment omit of `system-one` and portable `uvx` astgrep/semgrep. T1–T10, T13, T14 → `d6c351e0172b879a18f3a45a053ad8cfd113ebcc`; T11 and T15 → `f648f170d3d97c481ccfda93e8f427a1649ec3fa`. T12 remains open until the record-only head is independently reviewed. Limitation: Cursor e2e asserts `.cursor/agents/` exists, not a fourteen-file listing; source holds fourteen agent documents. System One remains in source `.opencode/opencode.jsonc`. Feature document Status stays `active` until T12 and Close review.
