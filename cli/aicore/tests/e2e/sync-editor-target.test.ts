@@ -6,7 +6,7 @@
  * configuration.
  */
 
-import { readFile, stat } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 
@@ -39,8 +39,26 @@ describe("cursor editor target", () => {
     expect(result.stdout, `stderr: ${result.stderr}`).toMatch(/initialized/);
 
     // The agents land in Cursor's own agent directory, not in OpenCode's.
-    expect((await stat(join(destination, ".cursor", "agents"))).isDirectory()).toBeTruthy();
+    const cursorAgents = join(destination, ".cursor", "agents");
+    expect((await stat(cursorAgents)).isDirectory()).toBeTruthy();
     await expect(stat(join(destination, ".opencode", "agents"))).rejects.toThrow();
+    const agentFiles = (await readdir(cursorAgents)).filter((name) => name.endsWith(".md")).sort();
+    expect(agentFiles).toEqual([
+      "atrium.md",
+      "bastion.md",
+      "crucible.md",
+      "forge.md",
+      "herald.md",
+      "inquisitor.md",
+      "investigator.md",
+      "ledger.md",
+      "lumen.md",
+      "quill.md",
+      "scribe.md",
+      "sentinel.md",
+      "vault.md",
+      "warden.md",
+    ]);
 
     // The shared content is delivered identically, at the same paths.
     expect(

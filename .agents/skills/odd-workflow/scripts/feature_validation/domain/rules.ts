@@ -109,8 +109,18 @@ export function section(lines: readonly string[], heading: string): string[] {
   const start = lines.findIndex((line) => line.trim() === heading);
   if (start < 0) return [];
   let end = lines.length;
+  const logBody = heading === "## Log";
   for (let index = start + 1; index < lines.length; index += 1) {
-    if (lines[index]!.startsWith("## ")) {
+    const candidate = lines[index]!;
+    if (logBody) {
+      const trimmed = candidate.trim();
+      if (trimmed !== heading && REQUIRED_HEADINGS.some((required) => required === trimmed)) {
+        end = index;
+        break;
+      }
+      continue;
+    }
+    if (candidate.startsWith("## ")) {
       end = index;
       break;
     }
