@@ -56,6 +56,13 @@ describe('diagnostic knowledge', () => {
   it('reports a local class that reuses a baseline id', () => {
     expect(check({ localSymptoms: '| ID | Symptom |\n|---|---|\n| S-05 | shadowed |\n' })).toEqual([
       'KNOWLEDGE-4: id defined in both baseline and local registers: S-05',
+      'KNOWLEDGE-7: local register defines a non-LOCAL symptom id: S-05',
+    ]);
+  });
+
+  it('rejects a baseline-form id invented in the local register', () => {
+    expect(check({ localSymptoms: '| ID | Symptom |\n|---|---|\n| S-08 | invented |\n' })).toEqual([
+      'KNOWLEDGE-7: local register defines a non-LOCAL symptom id: S-08',
     ]);
   });
 

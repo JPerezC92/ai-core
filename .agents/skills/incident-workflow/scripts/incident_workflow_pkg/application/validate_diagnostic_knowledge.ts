@@ -12,7 +12,7 @@
  */
 
 import { combineSymptomCatalogs, parseSymptomCatalog } from '#scripts/incident_workflow_pkg/domain/symptom-catalog.ts';
-import { parseSymptomReferences } from '#scripts/incident_workflow_pkg/domain/symptom-id.ts';
+import { BASELINE_SYMPTOM_ID, parseSymptomReferences } from '#scripts/incident_workflow_pkg/domain/symptom-id.ts';
 import { readProblemRows } from '#scripts/incident_workflow_pkg/infrastructure/records.ts';
 
 /** The documents a diagnostic-knowledge check reads; `null` means absent. */
@@ -55,6 +55,11 @@ export class ValidateDiagnosticKnowledge {
     }
 
     const known = new Set(combined.ids.length === 0 ? [] : combined.ids);
+    for (const id of local.ids) {
+      if (BASELINE_SYMPTOM_ID.test(id)) {
+        violations.push(`KNOWLEDGE-7: local register defines a non-LOCAL symptom id: ${id}`);
+      }
+    }
     for (const row of readProblemRows(input.localProblems ?? '')) {
       const references = parseSymptomReferences(row.symptom);
       if (references.invalid.length > 0) {
