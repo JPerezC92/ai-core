@@ -5,7 +5,7 @@
 import { describe, expect, test } from "vitest";
 
 import { captureMessage } from "./capture-message.ts";
-import { createAdmittedParts, createCapturedMessage } from "../test/helpers/plugin.factory.ts";
+import { createAdmittedParts, createCapturedMessage } from "#test/helpers/plugin.factory.ts";
 
 describe("captureMessage", () => {
 	test("captures the text and only the inline base64 image of the admitted parts", () => {

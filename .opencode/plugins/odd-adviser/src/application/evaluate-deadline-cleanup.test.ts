@@ -9,7 +9,7 @@ import {
 	createExpectedUnavailableAdvisory,
 	createRecordingEvaluator,
 	createThrowingEvaluator,
-} from "../test/helpers/plugin.factory.ts";
+} from "#test/helpers/plugin.factory.ts";
 
 describe("evaluateEvidence deadline cleanup", () => {
 	test("cancels the pending deadline when evaluation succeeds first", async () => {

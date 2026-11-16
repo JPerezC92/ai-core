@@ -10,8 +10,8 @@ import type {
 	OddEvidenceImage,
 	OddEvidenceInput,
 	QuestionProfileSource,
-} from "../../domain/odd-evidence.ts";
-import { validateQuestionProfile } from "../../domain/question-profile.ts";
+} from "#domain/odd-evidence.ts";
+import { validateQuestionProfile } from "#domain/question-profile.ts";
 
 const decisionModel = "d1-2b@q8_0";
 

@@ -12,11 +12,11 @@ import { fileURLToPath } from "node:url";
 
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
 
-import { EvaluateOddEvidence } from "../application/evaluate-odd-evidence.ts";
-import { ImageStore } from "../infrastructure/image-store.ts";
-import { JsonLinesEvaluationTrace } from "../infrastructure/json-lines-evaluation-trace.ts";
-import { LmStudioDecisionGateway } from "../infrastructure/lm-studio-decision-gateway.ts";
-import { ProfileFileSource } from "../infrastructure/profile-file-source.ts";
+import { EvaluateOddEvidence } from "#application/evaluate-odd-evidence.ts";
+import { ImageStore } from "#infrastructure/image-store.ts";
+import { JsonLinesEvaluationTrace } from "#infrastructure/json-lines-evaluation-trace.ts";
+import { LmStudioDecisionGateway } from "#infrastructure/lm-studio-decision-gateway.ts";
+import { ProfileFileSource } from "#infrastructure/profile-file-source.ts";
 import { createOddEvidenceServer } from "./odd-evidence-server.ts";
 import type { OddEvidenceServerOptions } from "./odd-evidence-server.ts";
 

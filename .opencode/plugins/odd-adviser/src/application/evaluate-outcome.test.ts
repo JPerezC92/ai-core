@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { evaluateEvidence } from "./evaluate-evidence.ts";
-import { formatAdvisoryBlock } from "../domain/advisory-block.ts";
+import { formatAdvisoryBlock } from "#domain/advisory-block.ts";
 import {
 	createCapturedMessage,
 	createControlledDeadline,
@@ -13,7 +13,7 @@ import {
 	createUnavailableEvaluator,
 	createUnansweredEvaluation,
 	TRANSPORT_FAILURE_MESSAGE,
-} from "../test/helpers/plugin.factory.ts";
+} from "#test/helpers/plugin.factory.ts";
 
 describe("evaluateEvidence outcome mapping", () => {
 	test("returns the validated evaluation when the port answers with a contract-valid value", async () => {

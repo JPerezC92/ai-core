@@ -24,8 +24,8 @@ import {
 	createEvaluationTraceRequest,
 	createFailedEvaluationTraceEntry,
 	createFailedEvaluationTraceExchange,
-} from "../test/helpers/evaluation-trace.factory.ts";
-import { createDecisionResponse, createEvidence } from "../test/helpers/odd-evidence.factory.ts";
+} from "#test/helpers/evaluation-trace.factory.ts";
+import { createDecisionResponse, createEvidence } from "#test/helpers/odd-evidence.factory.ts";
 
 // Vitest reports a missing value but does not narrow it for TypeScript, so the stored item
 // is also narrowed here; a missing item still fails the case with the message below.

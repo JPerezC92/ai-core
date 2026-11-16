@@ -8,8 +8,8 @@
 // host session double. Every creator returns fresh values; no module-level mutable state is
 // shared, no process is spawned and no network or model endpoint is used.
 
-import plugin, { createDefaultConnectionOptions, ODD_EVIDENCE_TOOL_NAME } from "../../index.ts";
-import { createPluginEvent } from "../../domain/plugin-event.ts";
+import plugin, { createDefaultConnectionOptions, ODD_EVIDENCE_TOOL_NAME } from "#index.ts";
+import { createPluginEvent } from "#domain/plugin-event.ts";
 
 import type {
 	AdmittedPart,
@@ -42,10 +42,10 @@ import type {
 	ToolExecuteAfterListener,
 	WebSocketReceiveEvent,
 	WebSocketReceiveListener,
-} from "../../index.ts";
-import { OBSERVATION_TEXT_WINDOW_CHARS, createObservation } from "../../domain/observation.ts";
-import type { ObservationInput, ObservationRecord, ObservationSink } from "../../domain/observation.ts";
-import type { PluginEvent, PluginEventSink } from "../../domain/plugin-event.ts";
+} from "#index.ts";
+import { OBSERVATION_TEXT_WINDOW_CHARS, createObservation } from "#domain/observation.ts";
+import type { ObservationInput, ObservationRecord, ObservationSink } from "#domain/observation.ts";
+import type { PluginEvent, PluginEventSink } from "#domain/plugin-event.ts";
 
 // The adapter's tool identity, taken from its single owner. The wire request is built inside
 // `createStdioMcpClient`, so a port-level double never names a tool; the constant stays the

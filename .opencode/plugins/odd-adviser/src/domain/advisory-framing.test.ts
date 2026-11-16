@@ -12,7 +12,7 @@ import {
 	createFigurelessEvaluation,
 	createStatedZeroConfidenceEvaluation,
 	createUnavailableAdvisory,
-} from "../test/helpers/plugin.factory.ts";
+} from "#test/helpers/plugin.factory.ts";
 
 describe("formatAdvisoryBlock framing", () => {
 	test("wraps qualifying findings in the execution-directives markers without a receipt sentence", () => {

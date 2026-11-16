@@ -7,13 +7,13 @@
 import { expect, test } from "vitest";
 
 import { EvaluateOddEvidence } from "./evaluate-odd-evidence.ts";
-import { answerIds } from "../domain/question-profile.ts";
+import { answerIds } from "#domain/question-profile.ts";
 import {
 	createEvaluationTraceHandling,
 	createEvaluationTraceRecorder,
 	createSessionId,
 	createTraceImageStore,
-} from "../test/helpers/evaluation-trace.factory.ts";
+} from "#test/helpers/evaluation-trace.factory.ts";
 import {
 	createDecisionGateway,
 	createDecisionGatewayRejecting,
@@ -30,7 +30,7 @@ import {
 	createOddEvidenceProfile,
 	createQuestionProfileSource,
 	createQuestionProfileSourceWithInvalidProfile,
-} from "../test/helpers/odd-evidence.factory.ts";
+} from "#test/helpers/odd-evidence.factory.ts";
 
 const EVALUATION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 

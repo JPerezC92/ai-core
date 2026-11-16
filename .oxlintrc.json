@@ -8,13 +8,10 @@
   },
   "plugins": ["typescript", "unicorn", "oxc", "import", "promise", "node"],
   "ignorePatterns": ["**/node_modules/**", "**/dist/**", "output/**"],
+  "rules": {
+    "import/no-relative-parent-imports": "error"
+  },
   "overrides": [
-    {
-      "files": ["cli/**", ".agents/skills/**"],
-      "rules": {
-        "import/no-relative-parent-imports": "error"
-      }
-    },
     {
       "files": ["**/*.test.ts", "**/*.spec.ts", "**/tests/**"],
       "rules": {

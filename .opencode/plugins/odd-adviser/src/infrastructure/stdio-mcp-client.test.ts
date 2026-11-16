@@ -10,7 +10,7 @@ import {
 	createEvaluationId,
 	createNumericEvaluationIdPayload,
 	createRejectedMcpPayload,
-} from "../test/helpers/plugin.factory.ts";
+} from "#test/helpers/plugin.factory.ts";
 
 describe("stdio MCP result mapping", () => {
 	test("maps an evaluated payload evaluationId and ignores extra keys", () => {

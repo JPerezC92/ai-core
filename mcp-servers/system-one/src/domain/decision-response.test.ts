@@ -9,7 +9,7 @@ import {
 	createDecisionResponseWithModelMismatch,
 	createDecisionResponseWithThirdProbabilityState,
 	createDecisionResponseWithUnknownChoice,
-} from "../test/helpers/decision-response.factory.ts";
+} from "#test/helpers/decision-response.factory.ts";
 
 test("accepts a response answering exactly present and absent", () => {
 	const response = createDecisionResponse();

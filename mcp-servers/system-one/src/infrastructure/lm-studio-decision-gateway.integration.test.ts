@@ -19,7 +19,7 @@ import {
 	createSuccessFetchDouble,
 	createTimeoutFetchDouble,
 	createTimeoutScenario,
-} from "../test/helpers/lm-studio.factory.ts";
+} from "#test/helpers/lm-studio.factory.ts";
 
 // The transport is stubbed on the global for each case; restoring it after every case
 // keeps the suite independent of run order and of the real `fetch`.

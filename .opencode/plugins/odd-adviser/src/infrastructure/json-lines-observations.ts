@@ -10,7 +10,7 @@
 import { appendFile, mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
 
-import type { ObservationRecord, ObservationSink } from "../domain/observation.ts";
+import type { ObservationRecord, ObservationSink } from "#domain/observation.ts";
 
 export type JsonLinesObservationsOptions = {
 	readonly eventPath: string;

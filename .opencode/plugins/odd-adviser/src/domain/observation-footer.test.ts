@@ -24,7 +24,7 @@ import {
 	createSplitFooterSuffix,
 	createTextFrame,
 	createUnmarkedAssistantText,
-} from "../test/helpers/plugin.factory.ts";
+} from "#test/helpers/plugin.factory.ts";
 
 describe("reconstructed footer classification", () => {
 	test("classifies a footer marker that is split across frames", () => {

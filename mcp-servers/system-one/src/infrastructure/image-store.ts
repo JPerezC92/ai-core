@@ -13,8 +13,8 @@ import { createHash } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-import type { EvaluationTraceImageDescriptor, EvaluationTraceImageStore } from "../domain/evaluation-trace.ts";
-import type { OddEvidenceImage } from "../domain/odd-evidence.ts";
+import type { EvaluationTraceImageDescriptor, EvaluationTraceImageStore } from "#domain/evaluation-trace.ts";
+import type { OddEvidenceImage } from "#domain/odd-evidence.ts";
 
 export type ImageStoreOptions = {
 	// Absolute path supplied by the host. This adapter applies no path policy: the host

@@ -7,7 +7,7 @@ import {
 	createHangingEvaluator,
 	createLeakCanary,
 	type LeakCanary,
-} from "../test/helpers/plugin.factory.ts";
+} from "#test/helpers/plugin.factory.ts";
 
 function expectNoEvidenceLeak(advisory: string, canary: LeakCanary): void {
 	expect(advisory.length).toBeGreaterThan(0);

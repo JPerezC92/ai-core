@@ -12,8 +12,8 @@ import { performance } from "node:perf_hooks";
 import {
 	LmStudioGatewayBoundaryError,
 	type LmStudioDecisionGatewayOptions,
-} from "../../infrastructure/lm-studio-decision-gateway.ts";
-import type { OddEvidenceImage, OddEvidenceInput } from "../../domain/odd-evidence.ts";
+} from "#infrastructure/lm-studio-decision-gateway.ts";
+import type { OddEvidenceImage, OddEvidenceInput } from "#domain/odd-evidence.ts";
 
 const endpointPath = "/v1/systemone";
 const questionIds = ["scope_changed", "user_only_decision"] as const;

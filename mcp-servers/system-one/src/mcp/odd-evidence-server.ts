@@ -14,9 +14,9 @@ import { McpServer } from "@modelcontextprotocol/server";
 import type { CallToolResult, ServerContext } from "@modelcontextprotocol/server";
 import { z } from "zod";
 
-import { EvaluateOddEvidence } from "../application/evaluate-odd-evidence.ts";
-import type { OddEvidenceEvaluation } from "../application/evaluate-odd-evidence.ts";
-import type { OddEvidenceGateway, OddEvidenceImage, QuestionProfileSource } from "../domain/odd-evidence.ts";
+import { EvaluateOddEvidence } from "#application/evaluate-odd-evidence.ts";
+import type { OddEvidenceEvaluation } from "#application/evaluate-odd-evidence.ts";
+import type { OddEvidenceGateway, OddEvidenceImage, QuestionProfileSource } from "#domain/odd-evidence.ts";
 
 export const ODD_EVIDENCE_TOOL_NAME = "evaluate_odd_evidence";
 

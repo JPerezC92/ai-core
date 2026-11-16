@@ -5,7 +5,7 @@
 // this module hardcodes no LM Studio URL and applies no domain policy: the response
 // envelope is returned as `unknown` for the application layer to validate.
 
-import type { OddEvidenceGateway, OddEvidenceInput } from "../domain/odd-evidence.ts";
+import type { OddEvidenceGateway, OddEvidenceInput } from "#domain/odd-evidence.ts";
 
 const decisionPath = "/v1/systemone";
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { evaluateEvidence } from "./evaluate-evidence.ts";
-import { formatAdvisoryBlock } from "../domain/advisory-block.ts";
+import { formatAdvisoryBlock } from "#domain/advisory-block.ts";
 import {
 	createControlledDeadline,
 	createEvaluateEvidenceOptions,
@@ -9,7 +9,7 @@ import {
 	createRecordingEvaluator,
 	createUnavailableEvaluator,
 	type LeakCanary,
-} from "../test/helpers/plugin.factory.ts";
+} from "#test/helpers/plugin.factory.ts";
 
 function expectNoEvidenceLeak(advisory: string, canary: LeakCanary): void {
 	expect(advisory.length).toBeGreaterThan(0);

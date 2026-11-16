@@ -9,10 +9,10 @@ import type {
 	OddEvidenceEvaluator,
 	OddEvidenceInput,
 	OddEvidenceUnavailableCode,
-} from "../domain/advisory.ts";
-import type { CapturedMessage } from "../domain/capture-message.ts";
-import type { Deadline } from "../domain/deadline.ts";
-import type { EvaluateEvidenceOptions, OddEvidenceAdvisory } from "../domain/plugin-contract.ts";
+} from "#domain/advisory.ts";
+import type { CapturedMessage } from "#domain/capture-message.ts";
+import type { Deadline } from "#domain/deadline.ts";
+import type { EvaluateEvidenceOptions, OddEvidenceAdvisory } from "#domain/plugin-contract.ts";
 
 const unavailableAdvisories: Readonly<Record<OddEvidenceUnavailableCode, string>> = {
 	not_implemented: "The System 1 evidence evaluation is not implemented in this build.",

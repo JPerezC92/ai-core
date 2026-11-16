@@ -7,8 +7,8 @@
 
 import { readFile } from "node:fs/promises";
 
-import { validateQuestionProfile } from "../domain/question-profile.ts";
-import type { QuestionProfileSource, QuestionProfileValidation } from "../domain/odd-evidence.ts";
+import { validateQuestionProfile } from "#domain/question-profile.ts";
+import type { QuestionProfileSource, QuestionProfileValidation } from "#domain/odd-evidence.ts";
 
 export type ProfileFileSourceOptions = {
 	// Absolute path supplied by the host. This adapter applies no path policy: the host

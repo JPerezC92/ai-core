@@ -4,20 +4,20 @@
 // Host wire types and admission mapping live here: unknown host messages are mapped, media is
 // inlined, then domain captureMessage runs on typed AdmittedPart only.
 
-import { evaluateEvidence, toUnavailableAdvisory } from "../application/evaluate-evidence.ts";
-import { formatAdvisoryBlock } from "../domain/advisory-block.ts";
-import { captureMessage } from "../domain/capture-message.ts";
-import type { AdmittedPart, CapturedMessage } from "../domain/capture-message.ts";
-import type { Deadline } from "../domain/deadline.ts";
-import { createPluginEvent } from "../domain/plugin-event.ts";
-import type { PluginEventInput, PluginEventSink, PluginEventStage } from "../domain/plugin-event.ts";
+import { evaluateEvidence, toUnavailableAdvisory } from "#application/evaluate-evidence.ts";
+import { formatAdvisoryBlock } from "#domain/advisory-block.ts";
+import { captureMessage } from "#domain/capture-message.ts";
+import type { AdmittedPart, CapturedMessage } from "#domain/capture-message.ts";
+import type { Deadline } from "#domain/deadline.ts";
+import { createPluginEvent } from "#domain/plugin-event.ts";
+import type { PluginEventInput, PluginEventSink, PluginEventStage } from "#domain/plugin-event.ts";
 import type {
 	EvaluateEvidenceOptions,
 	MessageIdentity,
 	OddEvidenceAdvisory,
 	OddEvidenceEvaluatorConnection,
-} from "../domain/plugin-contract.ts";
-import type { OddEvidenceEvaluator } from "../domain/advisory.ts";
+} from "#domain/plugin-contract.ts";
+import type { OddEvidenceEvaluator } from "#domain/advisory.ts";
 import {
 	appendRollingText,
 	classifyAssistantCompletion,
@@ -25,8 +25,8 @@ import {
 	createObservation,
 	extractReceivedText,
 	extractResponseId,
-} from "../domain/observation.ts";
-import type { ObservationRecord, ObservationReportedFooter, ObservationSink } from "../domain/observation.ts";
+} from "#domain/observation.ts";
+import type { ObservationRecord, ObservationReportedFooter, ObservationSink } from "#domain/observation.ts";
 import { createDeferredConnection } from "./stdio-mcp-client.ts";
 
 export type PromptDraft = {

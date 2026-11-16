@@ -12,7 +12,7 @@ import { join } from "node:path";
 import { expect, test } from "vitest";
 
 import { JsonLinesPluginEvents } from "./json-lines-plugin-events.ts";
-import { createContentBearingPluginEvent, createPluginEvents } from "../test/helpers/plugin.factory.ts";
+import { createContentBearingPluginEvent, createPluginEvents } from "#test/helpers/plugin.factory.ts";
 
 // A parsed line is `any`; this narrows it to the keyed object the stored contract requires, so
 // each assertion reads a real field rather than skipping the shape check.

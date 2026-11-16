@@ -18,12 +18,12 @@ import type {
 	EvaluationTraceImageStore,
 	EvaluationTraceOutcome,
 	EvaluationTraceRequest,
-} from "../../domain/evaluation-trace.ts";
+} from "#domain/evaluation-trace.ts";
 import {
 	createEvaluationTraceEntry as createDomainEvaluationTraceEntry,
 	handlingForOutcome,
-} from "../../domain/evaluation-trace.ts";
-import type { OddEvidenceImage } from "../../domain/odd-evidence.ts";
+} from "#domain/evaluation-trace.ts";
+import type { OddEvidenceImage } from "#domain/odd-evidence.ts";
 import {
 	createDecisionResponse,
 	createEvidence,

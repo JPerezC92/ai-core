@@ -14,7 +14,7 @@ import {
 	createContentBearingObservation,
 	createObservationRecord,
 	createToolId,
-} from "../test/helpers/plugin.factory.ts";
+} from "#test/helpers/plugin.factory.ts";
 
 function readObservationLine(lines: ReadonlyArray<string>, index: number): Record<string, unknown> {
 	const line = lines[index];

@@ -8,7 +8,7 @@ import {
 	createQuestionProfileWithNonChoiceQuestion,
 	createQuestionProfileWithoutProfileId,
 	createQuestionProfileWithThirdCriterionState,
-} from "../test/helpers/question-profile.factory.ts";
+} from "#test/helpers/question-profile.factory.ts";
 
 test("accepts a profile declaring exactly present and absent for both questions", () => {
 	const profile = createQuestionProfile();

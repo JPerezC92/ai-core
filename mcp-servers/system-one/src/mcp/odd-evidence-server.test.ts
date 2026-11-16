@@ -20,8 +20,8 @@ import {
 	createRecordingEvaluateOddEvidence,
 	createRejectedEvaluationResult,
 	createServerOptions,
-} from "../test/helpers/mcp.factory.ts";
-import type { EvaluateToolInput } from "../test/helpers/mcp.factory.ts";
+} from "#test/helpers/mcp.factory.ts";
+import type { EvaluateToolInput } from "#test/helpers/mcp.factory.ts";
 
 // Hermetic per-call harness: one server, one linked transport pair, one client. Closing
 // both ends in `finally` keeps each case independent of every other case.

@@ -18,7 +18,7 @@ import type {
 	EvaluationTraceEntry,
 	EvaluationTraceHandling,
 	EvaluationTraceRequest,
-} from "../domain/evaluation-trace.ts";
+} from "#domain/evaluation-trace.ts";
 
 export type JsonLinesEvaluationTraceOptions = {
 	// Absolute path supplied by the host. This adapter applies no path policy: the host

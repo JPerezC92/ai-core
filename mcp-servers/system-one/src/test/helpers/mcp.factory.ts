@@ -5,15 +5,15 @@
 
 import { randomUUID } from "node:crypto";
 
-import type { OddEvidenceEvaluation } from "../../application/evaluate-odd-evidence.ts";
-import type { DecisionChoice, ValidatedDecisionAnswer } from "../../domain/decision-response.ts";
-import type { OddEvidenceImage } from "../../domain/odd-evidence.ts";
+import type { OddEvidenceEvaluation } from "#application/evaluate-odd-evidence.ts";
+import type { DecisionChoice, ValidatedDecisionAnswer } from "#domain/decision-response.ts";
+import type { OddEvidenceImage } from "#domain/odd-evidence.ts";
 import {
 	MAX_ODD_EVIDENCE_IMAGE_BASE64_LENGTH,
 	MAX_ODD_EVIDENCE_IMAGES,
 	type OddEvidenceEvaluator,
 	type OddEvidenceServerOptions,
-} from "../../mcp/odd-evidence-server.ts";
+} from "#mcp/odd-evidence-server.ts";
 import { createExpectedModel } from "./odd-evidence.factory.ts";
 
 export type EvaluateToolInput = {

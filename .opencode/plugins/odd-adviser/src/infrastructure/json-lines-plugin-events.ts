@@ -12,7 +12,7 @@
 import { appendFile, mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
 
-import type { PluginEvent, PluginEventSink } from "../domain/plugin-event.ts";
+import type { PluginEvent, PluginEventSink } from "#domain/plugin-event.ts";
 
 export type JsonLinesPluginEventsOptions = {
 	// The path supplied by composition. This adapter applies no path policy of its own: the

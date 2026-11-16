@@ -20,7 +20,7 @@ import {
 	createUserOnlyPresentEvaluation,
 	createVisualEvidenceAbsentAtCertaintyEvaluation,
 	createVisualPresentEvaluation,
-} from "../test/helpers/plugin.factory.ts";
+} from "#test/helpers/plugin.factory.ts";
 
 const EXECUTE_ACCORDINGLY =
 	"Execute accordingly. Deviate only when stronger evidence or governing constraints justify it.";

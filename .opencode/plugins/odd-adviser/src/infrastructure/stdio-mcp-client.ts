@@ -5,15 +5,15 @@
 import { Client } from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 
-import { answersNoQuestion } from "../application/evaluate-evidence.ts";
+import { answersNoQuestion } from "#application/evaluate-evidence.ts";
 import type {
 	OddEvidenceAnswer,
 	OddEvidenceEvaluation,
 	OddEvidenceInput,
 	OddEvidenceOutcome,
 	OddEvidenceUnavailableCode,
-} from "../domain/advisory.ts";
-import type { OddEvidenceEvaluatorConnection } from "../domain/plugin-contract.ts";
+} from "#domain/advisory.ts";
+import type { OddEvidenceEvaluatorConnection } from "#domain/plugin-contract.ts";
 
 export const ODD_EVIDENCE_TOOL_NAME = "evaluate_odd_evidence";
 

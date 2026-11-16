@@ -18,7 +18,7 @@ import {
 	createResponseCompletedMessageFrame,
 	createToolCallsFinishFrame,
 	createUnmarkedAssistantText,
-} from "../test/helpers/plugin.factory.ts";
+} from "#test/helpers/plugin.factory.ts";
 
 describe("assistant completion classification", () => {
 	test("treats only a user-facing stop as complete, not intermediate or generic signals", () => {

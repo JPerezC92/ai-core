@@ -12,9 +12,9 @@
 // free of IO and needs no gateway change. An evaluation rejected before the gateway call
 // sent nothing, so it records no exchange.
 
-import { validateDecisionResponse } from "../domain/decision-response.ts";
-import type { DecisionChoice, ValidatedDecisionAnswer, ValidatedEvidenceAnswers } from "../domain/decision-response.ts";
-import { createEvaluationTraceEntry, handlingForOutcome } from "../domain/evaluation-trace.ts";
+import { validateDecisionResponse } from "#domain/decision-response.ts";
+import type { DecisionChoice, ValidatedDecisionAnswer, ValidatedEvidenceAnswers } from "#domain/decision-response.ts";
+import { createEvaluationTraceEntry, handlingForOutcome } from "#domain/evaluation-trace.ts";
 import type {
 	EvaluationTrace,
 	EvaluationTraceContext,
@@ -24,16 +24,16 @@ import type {
 	EvaluationTraceOutcome,
 	EvaluationTraceRequest,
 	EvaluationTraceResult,
-} from "../domain/evaluation-trace.ts";
-import { validateOddEvidenceInput } from "../domain/odd-evidence.ts";
+} from "#domain/evaluation-trace.ts";
+import { validateOddEvidenceInput } from "#domain/odd-evidence.ts";
 import type {
 	OddEvidenceGateway,
 	OddEvidenceImage,
 	OddEvidenceInput,
 	OddEvidenceRejectionCode,
 	QuestionProfileSource,
-} from "../domain/odd-evidence.ts";
-import { derivedQuestionId } from "../domain/question-profile.ts";
+} from "#domain/odd-evidence.ts";
+import { derivedQuestionId } from "#domain/question-profile.ts";
 
 export type OddEvidenceEvaluation =
 	| {
