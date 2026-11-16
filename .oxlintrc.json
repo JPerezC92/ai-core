@@ -1,0 +1,25 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "options": {
+    "typeAware": true
+  },
+  "env": {
+    "node": true
+  },
+  "plugins": ["typescript", "unicorn", "oxc", "import", "promise", "node"],
+  "ignorePatterns": ["**/node_modules/**", "**/dist/**", "output/**"],
+  "overrides": [
+    {
+      "files": ["cli/**", ".agents/skills/**"],
+      "rules": {
+        "import/no-relative-parent-imports": "error"
+      }
+    },
+    {
+      "files": ["**/*.test.ts", "**/*.spec.ts", "**/tests/**"],
+      "rules": {
+        "typescript/unbound-method": "off"
+      }
+    }
+  ]
+}

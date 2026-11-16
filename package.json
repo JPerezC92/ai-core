@@ -10,8 +10,19 @@
   },
   "scripts": {
     "aicore": "node cli/aicore/src/main.ts",
-    "typecheck": "pnpm --dir cli/aicore typecheck && pnpm --dir .agents/skills/odd-workflow typecheck",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "typecheck": "pnpm -r typecheck && pnpm --dir mcp-servers/system-one typecheck && pnpm --dir .opencode/plugins/odd-adviser typecheck",
     "test:cli": "pnpm --dir cli/aicore test",
-    "test:cli:e2e": "pnpm --dir cli/aicore test:e2e"
+    "test:cli:e2e": "pnpm --dir cli/aicore test:e2e",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck",
+    "verify:full": "pnpm verify && pnpm -r test && pnpm --dir mcp-servers/system-one test && pnpm --dir .opencode/plugins/odd-adviser test && pnpm test:cli:e2e"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.8",
+    "oxlint": "1.93.0",
+    "oxlint-tsgolint": "7.0.2007"
   }
 }
