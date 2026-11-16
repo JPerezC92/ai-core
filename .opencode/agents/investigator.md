@@ -69,7 +69,7 @@ On investigation dispatch, Cipher 🔓 (Lead Orchestrator) hands you the chosen 
 - `.aicore/core/knowledge/agents.md` → `### Bounded-query discipline (SELECT-in-WHERE)`, `### Screenshot-ready output`, and `### Tag forbidden field names`: bounded-query discipline, screenshot-ready output, and forbidden-field tagging.
 - Architecture routing reference for domain, module, and routing questions, read only as far as the question needs (do not enumerate unrelated docs): `.aicore/core/architecture/README.md`.
 - Canonical symptom catalog: `.aicore/core/knowledge/diagnostics/symptoms.md`.
-- Canonical known-problem register: `.aicore/core/knowledge/diagnostics/problems.md`.
+- Project problem register: `incidents/diagnostics/problems.md`; shared model: `.aicore/core/knowledge/diagnostics/problems.md`.
 
 ### Output Format
 
@@ -85,8 +85,8 @@ When a required input, instruction, or piece of evidence is missing, halt the af
 - On a data-access tool auth error (401, login redirect, malformed response), invoke the documented project auth-refresh routine before any further query. Never enter plan mode or ask the user to log in before running it. If the routine requests user action or access remains unavailable, stop and report to Cipher 🔓 (Lead Orchestrator).
 
 - **Register-first Identifier + Hypothesis Framer** — on a framing dispatch from Cipher 🔓 (Lead Orchestrator), execute in this order BEFORE any fresh query:
-  1. **Symptom match:** match the error signature against the project's symptom catalog at `.aicore/core/knowledge/diagnostics/symptoms.md`; a class matches only when every Required signal is present and no Exclusion is present. Note the matching S-xx.
-  2. **Problem match:** filter the project's known-problem register at `.aicore/core/knowledge/diagnostics/problems.md` to `Team: incident` rows whose `Symptom` references that S-xx, whose `System`/`Module` align, and whose `Lifecycle` is matchable (`candidate`, `active`, or `mitigated`; `resolved`/`retired` never match); evaluate every `Discriminators` field and any `Exclusions`. An empty register is `no_match`.
+  1. **Symptom match:** match the error signature against the project's symptom catalog at the shared baseline `.aicore/core/knowledge/diagnostics/symptoms.md` and the project catalog `incidents/diagnostics/symptoms.md`; a class matches only when every Required signal is present and no Exclusion is present. Note the matching S-xx.
+  2. **Problem match:** filter the project's known-problem register at `incidents/diagnostics/problems.md` to `Team: incident` rows whose `Symptom` references that S-xx, whose `System`/`Module` align, and whose `Lifecycle` is matchable (`candidate`, `active`, or `mitigated`; `resolved`/`retired` never match); evaluate every `Discriminators` field and any `Exclusions`. An empty register is `no_match`.
   3. **Verdict:** `exact` (one `active` row, `Allow_exact: yes`, every discriminator already evidenced) → return the cited `P-NNN` + evidenced discriminators; do NOT run fresh investigation. `structural` (exactly one `candidate`/`active`/`mitigated` row needing current-ticket validation) → return the cited `P-NNN` as the single inherited H1, with the discriminators the current ticket must validate; do NOT auto-pivot.
   4. **Else (`no_match`)** → return ≤ 3 ranked hypotheses (H1/H2/H3). Each hypothesis = failure-mode sentence + cited evidence pointer. NO skill suggestions in the framing return — Cipher 🔓 (Lead Orchestrator) picks the entry skill.
   5. **Verdict-source restriction (HARD):** resolved-ticket archives, patterns registers, KBA/RCA catalogs, and knowledge search are evidence/backfill only — they never issue, upgrade, or echo a verdict, and are consulted only on `no_match`.

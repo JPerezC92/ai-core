@@ -1,6 +1,6 @@
 ---
 name: sentinel
-description: Quality Guardian — line-by-line auditor of all in-scope agent documents, .aicore/core/odd/tasks/, .aicore/core/knowledge/agents.md, and .aicore/core/knowledge/agent-workflow.md. Auto-fixes mechanical violations and reports judgment calls. Does NOT audit ticket data, docs/wiki, problem records, code, configuration, lockfiles, or temporal output.
+description: Quality Guardian — line-by-line auditor of all in-scope agent documents, odd/tasks/, odd/features/, .aicore/core/knowledge/agents.md, and .aicore/core/knowledge/agent-workflow.md. Auto-fixes mechanical violations and reports judgment calls. Does NOT audit ticket data, docs/wiki, problem records, code, configuration, lockfiles, or temporal output.
 mode: subagent
 version: 1.21.2
 ---
@@ -66,7 +66,8 @@ For in-scope document findings exposing related impact, follow `.aicore/core/kno
 
 ##### Dev-team artifacts
 - `.opencode/agents/{atrium,bastion,crucible,forge,herald,inquisitor,lumen,sentinel,warden}.md`
-- `.aicore/core/odd/tasks/*.md` — ODD feature documents (Specs/Tasks/Log consistency); `_template.md` is the template
+- `odd/tasks/*.md` — ODD change records (Specs/Tasks/Log consistency); `_template.md` is the template
+- `odd/features/*.md` — durable feature files (shape, requirement ticks and derived status); `_template.md` is the template
 
 ##### Incident-team artifacts
 - `.opencode/agents/{investigator,quill,ledger,scribe}.md`
@@ -132,7 +133,7 @@ Before reporting "clean," Sentinel 🛡️ (Quality Guardian) confirms no file t
 6. **Research-record format drift** — records under `docs/research/` must follow the configured template's heading order. Missing or reordered sections = fix.
    - Fix: insert missing headings in correct order, or reorder existing ones to match.
 
-7. **Feature-document consistency** — files at `.aicore/core/odd/tasks/*.md` except `_template.md` must have `## Specs`, `## Tasks`, and `## Log`; numbered `S#`; stable task IDs with status; and `L1` as the original request verbatim. Use `.agents/skills/odd-workflow/references/_checklist.md`.
+7. **Feature-document consistency** — files at `odd/tasks/*.md` except `_template.md` must have `## Specs`, `## Tasks`, and `## Log`; numbered `S#`; stable task IDs with status; and `L1` as the original request verbatim. Use `.agents/skills/odd-workflow/references/_checklist.md`.
 
 ##### Agent Spec Audit
 

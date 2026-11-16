@@ -59,6 +59,30 @@ export function parseProblemRegister(content: string): Problem[] {
   return rows;
 }
 
+/** A register row read as declared cells, before any field validation. */
+export interface RawProblemRow {
+  readonly id: string;
+  readonly symptom: string;
+}
+
+/**
+ * Read every declared problem row without validating its fields.
+ *
+ * A row that fails an invariant is still a row the register declares, so the
+ * diagnostic-knowledge check reports it instead of losing it to a filter.
+ */
+export function readProblemRows(content: string): RawProblemRow[] {
+  const rows: RawProblemRow[] = [];
+  for (const line of content.split(/\r\n|\n|\r/)) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith('|')) continue;
+    const cells = trimmed.replace(/^\|+|\|+$/g, '').split('|').map((cell) => cell.trim());
+    if (!/^P-\d+$/.test(cells[0] ?? '')) continue;
+    rows.push({ id: cells[0] ?? '', symptom: cells[3] ?? '' });
+  }
+  return rows;
+}
+
 export function checkRegisterRows(content: string): string[] {
   const violations: string[] = [];
   const lines = content.split(/\r\n|\n|\r/);
