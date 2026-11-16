@@ -1,12 +1,12 @@
 # Durable feature file
 
-One living file per feature in `.aicore/core/odd/features/`, stating what the feature is and the requirements it must satisfy, so the current definition is readable without reconstructing it from the change records.
+One living file per feature in `odd/features/`, stating what the feature is and the requirements it must satisfy, so the current definition is readable without reconstructing it from the change records.
 
 **Status:** achieved
 
 ## Requirements
 
-- [x] R1 — a durable file exists for this feature at `.aicore/core/odd/features/durable-feature-file.md`.
+- [x] R1 — a durable file exists for this feature at `odd/features/durable-feature-file.md`.
 - [x] R2 — the file's shape is fixed: a title for the feature, one paragraph saying what it is, one status line, and the requirement list.
 - [x] R3 — the status is derived from the ticks: every requirement ticked is `achieved`, some ticked is `partial`, none ticked is `not started`.
 - [x] R4 — a tick asserts that the requirement currently holds, a change re-verifies only the requirements it affects, and only the change that delivers or re-verifies a requirement may set its tick.
