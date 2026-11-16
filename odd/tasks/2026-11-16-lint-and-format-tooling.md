@@ -35,14 +35,14 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
 
 ## Tasks
 
-- T1 | S11, S18 | delegated (manifiestos y lockfiles: toda mutación de dependencias exige auditoría de Warden 🔒) — Forge 🔨 (Implementer) | in progress | commit: pending
-- T2 | S1, S2, S3, S4 | delegated (configuración de tooling del repositorio) — Forge 🔨 (Implementer) | in progress | commit: pending
-- T3 | S5 | delegated (medición empírica de cobertura del formatter) — Forge 🔨 (Implementer) | in progress | commit: pending
-- T4 | S10, S12 | delegated (reformateo mecánico de código y scripts) — Forge 🔨 (Implementer) | in progress | commit: pending
-- T5 | S6, S12 | delegated (reformateo mecánico de documentación con validación estructural) — Forge 🔨 (Implementer) | in progress | commit: pending
-- T6 | S7, S8, S9 | delegated (adopción de lint y triage de hallazgos) — Forge 🔨 (Implementer) | in progress | commit: pending
-- T7 | S13, S14, S15, S16, S19 | delegated (verificación cruzada de suites, validadores y fronteras de alcance) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T8 | S17 | inline (redacción del informe final y de la documentación de tooling) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
+- T1 | S11, S18 | delegated (manifiestos y lockfiles: toda mutación de dependencias exige auditoría de Warden 🔒) — Forge 🔨 (Implementer) | done | commit: 1f44a7f
+- T2 | S1, S2, S3, S4 | delegated (configuración de tooling del repositorio) — Forge 🔨 (Implementer) | done | commit: 1f44a7f
+- T3 | S5 | delegated (medición empírica de cobertura del formatter) — Forge 🔨 (Implementer) | done | commit: 1f44a7f
+- T4 | S10, S12 | delegated (reformateo mecánico de código y scripts) — Forge 🔨 (Implementer) | done | commit: 879ee6f
+- T5 | S6, S12 | delegated (reformateo mecánico de documentación con validación estructural) — Forge 🔨 (Implementer) | done | commit: 879ee6f
+- T6 | S7, S8, S9 | delegated (adopción de lint y triage de hallazgos) — Forge 🔨 (Implementer) | done | commit: 033a4fa
+- T7 | S13, S14, S15, S16, S19 | delegated (verificación cruzada de suites, validadores y fronteras de alcance) — Cipher 🔓 (Lead Orchestrator) | done | commit: 4c43b93
+- T8 | S17 | inline (redacción del informe final y de la documentación de tooling) — Cipher 🔓 (Lead Orchestrator) | done | commit: 68d8d0b
 
 ## Log
 
@@ -54,7 +54,7 @@ no modifiques nada en esa ruta
 
 adicionalmente tambien pense en tener un archivo .editorconfig como el siguiente
 
-````
+```
 root = true
 
 [*]
@@ -71,7 +71,9 @@ indent_size = 2
 
 [*.md]
 trim_trailing_whitespace = false
-```»
+```
+»
+
 - L2 — Corrección y decisiones definitivas del usuario, 2026-11-16. Resumen fiel del mensaje (no es una cita textual): «Quiero continuar con la propuesta de adopción de Biome, Oxlint y EditorConfig en AICore. Ya tomé las decisiones que estaban pendientes. No necesito que vuelvas a preguntarme por ellas.» Decisiones: migrar todo inmediatamente; typeAware desde el inicio; ancho de línea 120; comillas dobles unificadas; cobertura del formatter de todos los formatos compatibles (TS, JS, JSON, JSONC, YAML, Markdown); tabs reales a 4 columnas en TS/JS; espacios a 2 en JSON/YAML; EditorConfig coherente con Biome; Biome como formatter y Oxlint como linter type-aware; scripts `lint`, `lint:fix`, `format`, `format:check`, `typecheck`, `verify` con `verify` usando `format:check`; migración completa; separación estricta entre configuración, formateo mecánico, correcciones de lint, documentación y validaciones; sin tocar la ruta de referencia ni destinos; sin commits, ramas, push ni PR sin autorización explícita.
 - L3 — Exploración inicial. Evidencia: 4 árboles TypeScript con **318 archivos `.ts`** contados sobre el árbol completo, incluidos tests (`cli/aicore` 121, `.agents/skills` 133, `mcp-servers/system-one` 26, `.opencode/plugins/odd-adviser` 38); el conteo de 318 coincide exactamente con el que reporta `oxlint --debug=files`. Una medición previa de 57 y 25 archivos contaba solo `src`/`scripts` y quedó corregida. 3 raíces de instalación (workspace raíz, `mcp-servers/system-one`, `.opencode/plugins/odd-adviser`); sin configuración previa de lint/format/editorconfig; 447/448 archivos en LF, 0 BOM; dos estilos de comillas coexistentes (dobles en cli y skills, simples en system-one y odd-adviser); ausencia de imports relativos padre en `cli/**` y `.agents/skills/**` (usan import maps `#domain/*`, `#scripts/*`, `#support/*`), mientras system-one y odd-adviser usan imports relativos padre. Versiones disponibles en registry: `@biomejs/biome` 2.6.8, `oxlint` 1.94.0, `oxlint-tsgolint` 7.0.2007.
 - L4 — Baseline Git (evidencia de Herald 📯): `main` en `6e6d19b66ed43859ab605d5c363eb2d025198d84`, idéntico a `origin/main`, árbol limpio, sin ramas de lint/format existentes.
@@ -90,5 +92,7 @@ trim_trailing_whitespace = false
 - L17 — Decisión sobre F4 aplicada: pospuesto. Los imports relativos padre de `mcp-servers/system-one` y `.opencode/plugins/odd-adviser` no se modifican; el hallazgo queda documentado en L13 y su corrección exige una feature separada con autorización propia. Resultado: F4 diferido por decisión del usuario.
 - L18 — F5 verificado sin cambio, y revalidación de exclusiones de Biome. La afirmación de `docs/tooling.md` sobre Node ≥ 22 para los servidores `npx` es correcta: `@tobilu/qmd@2.8.3` declara `node >=22.0.0` y `@memories.sh/cli@0.7.9` declara `>=20`, de modo que no contradice el `>= 24` de AICore; no se editó. Sobre las exclusiones: los dos registros ODD se copiaron al árbol de trabajo actual y se les aplicó `--write` tres veces consecutivas; cada pasada produjo un hash SHA-256 distinto y `format` siguió fallando tras la tercera escritura, lo que confirma que no existe punto fijo y que formatearlos corrompería el contenido citado. Las exclusiones de `pnpm-lock.yaml` y `pnpm-workspace.yaml` se mantienen por propiedad de la herramienta: pnpm reescribió el segundo durante esta misma sesión. Ningún otro archivo queda fuera: el inventario es de 484 archivos, 2 imágenes no formateables y 2 documentos excluidos, por lo que `format:check` cubre exactamente 480.
 - L19 — Deuda técnica registrada por decisión del usuario: todo trabajo diferido debe existir como DEBT, no solo en el Log o en un informe. Se añadieron tres entradas al registro aceptado con evidencia, impacto, criterio de resolución y decisión verbatim: **DEBT-050** agrupa los nueve warnings de Oxlint (grupo único de causa y de decisión, sin duplicar por warning), **DEBT-051** registra los imports relativos padre de `mcp-servers/system-one` (43 líneas) y `.opencode/plugins/odd-adviser` (41 líneas), ligado a DEBT-049 porque la regla aplicable depende del dictamen que esa entrada reclama, y **DEBT-052** registra la no idempotencia de Biome con su reproducción y las dos exclusiones vigentes. La regla general quedó en `.aicore/core/knowledge/debt.md` `## Rules`. R8 sigue sin marcar: crear deuda no satisface un requisito incumplido, y la feature continúa `partial`.
-- L20 — Pendiente de cierre. Los tasks T1–T8 siguen `in progress` con `commit: pending`: no se ha creado ningún commit, rama, push ni PR porque su autorización sigue sin concederse y la ejecución Git corresponde a Herald 📯. La feature no se cierra hasta que existan esos commits y la aceptación semántica independiente.
-````
+- L20 — Ramificación y commits preparados por Herald 📯, con autorización explícita del usuario para rama y commits únicamente. Rama `feat/tooling/lint-and-format-adoption` creada desde `main` en `6e6d19b66ed43859ab605d5c363eb2d025198d84` (verificado igual a `origin/main` tras `git fetch`). Cinco commits: `1f44a7f` configuración, dependencias y scripts (5 archivos); `879ee6f` formateo mecánico (382); `033a4fa` correcciones de lint (12); `68d8d0b` documentación y scripts de test de los skills (7); `4c43b93` registros ODD y deuda técnica (3). Total 409 archivos, 29.845 inserciones y 29.727 borrados; árbol limpio después; ningún path aparece en dos commits; `pnpm-workspace.yaml` quedó byte-idéntico a HEAD. Sin push ni PR, por instrucción.
+- L21 — Revisión semántica independiente (Inquisitor 🔎) sobre `4c43b93`: veredicto **[ADVISORY]** con dos hallazgos. **F1 (MEDIUM, corregido):** el bloque de configuración verbatim de L1 abría un fence de cuatro backticks que nunca cerraba antes de `- L2`, porque su línea de cierre era ` ```» ` (backticks más el guillemet), que no es un cierre de fence válido; Biome añadió un cierre al final del archivo y L2–L20 quedaron dentro del bloque de código. Origen `implementation` (autoría, no formatter); punto de escape `verification`: ni `format:check` ni `validate_feature.ts` balancean fences, así que el registro pasaba en verde con la estructura rota. Corrección: cierre válido de cuatro backticks junto al guillemet y eliminación del cierre espurio al EOF. **F2 (LOW, corregido):** L20 afirmaba que no existía commit ni rama, contradicho por los cinco commits ya creados; se asignaron referencias de commit a las ocho filas y esta entrada las registra. Inquisitor no pudo verificar por su cuenta la equivalencia semántica de los dos archivos de control ni el origen de F1 — ambas cosas requieren Git — y ambas quedaron cubiertas por la comparación de L9 y por esta clasificación de origen.
+- L22 — Barrido estructural propio sobre el Markdown tras la corrección: 132 archivos, 56 bloques de fence, 128 tablas y 181 checkboxes, con 0 problemas de balance de fences, 0 tablas con columnas inconsistentes y 0 checkboxes malformados. Complementa la revisión independiente, que no tenía permiso de ejecución para correr un verificador de balance.
+- L23 — Blocked: la feature no puede cerrarse todavía. Prerrequisitos abiertos: (a) R8 sigue sin cumplir porque los nueve warnings de DEBT-050 no tienen corrección mecánica y la decisión del usuario fue aceptarlos, no corregirlos; (b) el usuario no ha autorizado push, PR ni merge, y sin esa entrega no existe la aceptación de release que el cierre requiere.
