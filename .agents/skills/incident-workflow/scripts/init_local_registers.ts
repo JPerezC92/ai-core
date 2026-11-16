@@ -10,7 +10,7 @@
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { InitializeLocalRegisters } from './incident_workflow_pkg/application/initialize_local_registers.ts';
@@ -27,17 +27,19 @@ function main(argv: readonly string[]): number {
     return 2;
   }
   const repoRoot = argv.find((argument) => !argument.startsWith('-')) ?? '.';
+  /** Resolve a port path against the repo root unless it is already absolute. */
+  const resolve = (path: string): string => (isAbsolute(path) ? path : join(repoRoot, path));
   const localSymptomsPath = 'incidents/diagnostics/symptoms.md';
   const localProblemsPath = 'incidents/diagnostics/problems.md';
 
   const result = new InitializeLocalRegisters({
-    isFile: (path) => existsSync(join(repoRoot, path)),
-    readText: (path) => readFileSync(join(repoRoot, path), 'utf8'),
+    isFile: (path) => existsSync(resolve(path)),
+    readText: (path) => readFileSync(resolve(path), 'utf8'),
     writeText: (path, content) => {
-      writeFileSync(join(repoRoot, path), content, 'utf8');
+      writeFileSync(resolve(path), content, 'utf8');
     },
     ensureDirectory: (path) => {
-      mkdirSync(join(repoRoot, path), { recursive: true });
+      mkdirSync(resolve(path), { recursive: true });
     },
   }).execute({
     localSymptomsPath,
