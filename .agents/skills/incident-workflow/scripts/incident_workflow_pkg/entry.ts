@@ -5,6 +5,7 @@ import { ValidateScaffold } from '#scripts/incident_workflow_pkg/application/val
 import { ValidateStep } from '#scripts/incident_workflow_pkg/application/validate_step.ts';
 import { ValidatePreClose } from '#scripts/incident_workflow_pkg/application/validate_pre_close.ts';
 import { ValidateCloseOut } from '#scripts/incident_workflow_pkg/application/validate_close_out.ts';
+import { ValidateDiagnosticKnowledge } from '#scripts/incident_workflow_pkg/application/validate_diagnostic_knowledge.ts';
 import { InputError } from '#scripts/incident_workflow_pkg/domain/errors.ts';
 import { REQUIRED_ANALYSIS_FILES, STEP_FILES, STEP_NAMES } from '#scripts/incident_workflow_pkg/domain/rules.ts';
 import type { ParsedRecord } from '#scripts/incident_workflow_pkg/domain/rules.ts';
@@ -34,7 +35,9 @@ export function runValidator(args: ValidatorArguments, clock: () => Date = () =>
     for (const violation of findings.violations) console.error(violation);
     return findings.violations.length === 0;
   };
-  const registerPath = join(args.repoRoot, '.aicore', 'core', 'knowledge', 'diagnostics', 'problems.md');
+  const registerPath = join(args.repoRoot, 'incidents', 'diagnostics', 'problems.md');
+  const localSymptomPath = join(args.repoRoot, 'incidents', 'diagnostics', 'symptoms.md');
+  const baselineSymptomPath = join(args.repoRoot, '.aicore', 'core', 'knowledge', 'diagnostics', 'symptoms.md');
   const loadRegister = () => files.isFile(registerPath) ? parseProblemRegister(files.readText(registerPath)) : [];
 
   if (args.mode.kind === 'pre-close' || args.mode.kind === 'close-out') {
@@ -60,7 +63,14 @@ export function runValidator(args: ValidatorArguments, clock: () => Date = () =>
     const findings = args.mode.kind === 'pre-close'
       ? new ValidatePreClose().execute(snapshot, ticket, header, register)
       : new ValidateCloseOut().execute(snapshot, ticket, register);
-    if (!writeFindings(findings)) return 1;
+    const knowledge = new ValidateDiagnosticKnowledge().execute({
+      baselineSymptoms: files.isFile(baselineSymptomPath) ? files.readText(baselineSymptomPath) : null,
+      localSymptoms: files.isFile(localSymptomPath) ? files.readText(localSymptomPath) : null,
+      localProblems: files.isFile(registerPath) ? files.readText(registerPath) : null,
+      localSymptomsPath: localSymptomPath,
+      localProblemsPath: registerPath,
+    });
+    if (!writeFindings({ violations: [...knowledge.violations, ...findings.violations], warnings: findings.warnings })) return 1;
     console.log(`ok  ${args.mode.kind}: ${args.analysisDir}  (${snapshot.ticketFileNames[0]})`);
     return 0;
   }

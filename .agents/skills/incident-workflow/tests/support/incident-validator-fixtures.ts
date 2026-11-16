@@ -73,6 +73,14 @@ export function createIncidentFixture(root: string, citation = 'screenshots/resp
     'Query-budget: "0/6"', 'identification_verdict: "no_match"',
     'Same-query-reruns: "0/2"', '---', '',
   ].join('\n'));
+  mkdirSync(join(root, 'incidents', 'diagnostics'), { recursive: true });
+  writeFileSync(join(root, 'incidents', 'diagnostics', 'symptoms.md'), [
+    '| ID | Symptom | Required signals |', '|---|---|---|', '',
+  ].join('\n'));
+  writeFileSync(join(root, 'incidents', 'diagnostics', 'problems.md'), [
+    '| ID | Date | Team | Symptom | System | Module | Problem | Discriminators | Exclusions | Evidence | Root cause | Lifecycle | Allow_exact | Status |',
+    '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|', '',
+  ].join('\n'));
   const step = makeStepContent();
   for (const name of ['01-identify.md', '02-investigate.md', '03-synthesize.md']) {
     writeFileSync(join(analysis, name), step);

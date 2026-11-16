@@ -10,7 +10,7 @@ One row per record; columns exactly `ID | Date | Team | Symptom | System | Modul
 - **ID** — `P-NNN` (durable — never renumbered or reused)
 - **Date** — when the problem was first confirmed
 - **Team** — `incident` | `dev` (mandatory discriminator)
-- **Symptom** — >=1 S-xx refs from `.aicore/core/knowledge/diagnostics/symptoms.md`, comma-separated, primary first (e.g. `S-05, S-07`)
+- **Symptom** — >=1 class identifiers from the shared baseline (`S-xx` in `.aicore/core/knowledge/diagnostics/symptoms.md`) or the project's local catalog (`LOCAL:S-xx`), comma-separated, primary first (e.g. `S-05, LOCAL:S-01`)
 - **System** — system the problem belongs to
 - **Module** — module / component / package / tool the problem belongs to
 - **Problem** — one-liner
@@ -40,17 +40,14 @@ Only `Team: incident` rows participate in incident identification.
 
 ## Rules
 
-- Every row MUST reference >=1 existing S-xx from `.aicore/core/knowledge/diagnostics/symptoms.md`.
+- Every row MUST reference >=1 existing class from the shared baseline catalog or the project's local catalog.
 - Team MUST be `incident` or `dev`.
 - Evidence-backed only — no rows without cited evidence.
 - Duplicates merge into the existing row, never re-filed.
-- **An empty register is valid.** With no incident rows, identification returns `no_match` and the investigation proceeds normally — never halt on an empty register.
-- This register is destination-seeded — ships empty.
+- **An empty register is valid**, and identification then reports `no_match` without halting. A register that is **missing, unreadable or malformed is not empty**: it is reported as a defect and blocks the affected verdict rather than being read as `no_match`.
+- The rows themselves are destination-owned and live in the project register described under **Register location**; this document states the model and its rules.
 
-## Register
+## Register location
 
-| ID | Date | Team | Symptom | System | Module | Problem | Discriminators | Exclusions | Evidence | Root cause | Lifecycle | Allow_exact | Status |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-
-An empty register is valid and identifies as no_match.
+This document is AICore-managed and ships without rows. The authoritative project register is `incidents/diagnostics/problems.md`, created by the incident workflow's authorized initialization and never overwritten by that initialization or by synchronization. The project's own symptom classes live in `incidents/diagnostics/symptoms.md` and use the `LOCAL:S-xx` namespace; baseline classes keep `S-xx`.
 <!-- core:end -->

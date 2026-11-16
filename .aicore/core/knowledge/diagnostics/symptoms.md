@@ -17,13 +17,13 @@ This catalog is the fixed, durable index of error-signature classes shared by in
 
 ## Matching rules
 
-- IDs are durable and immutable: an `S-xx` is never deleted, renumbered, or reused. New classes are appended with approval.
-- A class matches only when every **Required signal** is present in the ticket text; any **Exclusion** present disqualifies the class even when the required signals are present.
-- Only this catalog matches a symptom class. Ticket archives, patterns registers, KBA/RCA catalogs, and knowledge search are evidence/backfill sources — they never match a class and never issue an identification verdict.
-- Every record in `.aicore/core/knowledge/diagnostics/problems.md` MUST reference >=1 class here.
+- IDs are durable and immutable: an `S-xx` is never deleted, renumbered, or reused. New baseline classes are appended with approval; a destination creates its own classes in the project register instead, using the `LOCAL:` namespace.
+- A baseline class matches only when every **Required signal** is present in the ticket text; any **Exclusion** present disqualifies the class even when the required signals are present.
+- Only this catalog and the project's local catalog match a symptom class. Ticket archives, patterns registers, KBA/RCA catalogs, and knowledge search are evidence/backfill sources — they never match a class and never issue an identification verdict.
+- Every problem row MUST reference at least one class defined here or in the project's local catalog.
 - Routing is canonical — no workaround before the canonical diagnostic runs (version-first and stop-and-ask per `.aicore/core/knowledge/agents.md`).
 
 ## Register
 
-Filed instances live in `.aicore/core/knowledge/diagnostics/problems.md`.
+This catalog is the shared baseline and ships with AICore. Filed problem instances live in the project-owned register described by `.aicore/core/knowledge/diagnostics/problems.md`. A destination's own symptom classes live beside it, in the project's local symptom catalog, and carry the `LOCAL:` prefix.
 <!-- core:end -->

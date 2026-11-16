@@ -71,8 +71,8 @@ If this invocation carried the `scaffold` argument (see **Arguments**), run only
 Run this order. Do not skip or reorder, and do not consult any other source for a verdict.
 
 1. **Normalize the ticket** — derive system, module, country, campaign, and the raw symptom/error text from step 1.
-2. **Match `S-xx`** — match the ticket's error signature against the project's symptom register (see **Register paths**). A class matches only when every **Required signal** is present and no **Exclusion** is present. Record the matching class (or "no class match"). One class is primary; note any secondary classes.
-3. **Filter incident `P-NNN`** — read the project's problem register (see **Register paths**) and select only rows where `Team: incident`, `Symptom` references the matched `S-xx`, `System` and `Module` align with the ticket, and `Lifecycle` is matchable (`candidate`, `active`, or `mitigated`; `resolved` and `retired` are never matched).
+2. **Match `S-xx`** — match the ticket's error signature against the shared baseline catalog and this project's own catalog (see **Register paths**). A class matches only when every **Required signal** is present and no **Exclusion** is present. Record the matching identifier (or "no class match"). One class is primary; note any secondary classes.
+3. **Filter incident `P-NNN`** — read the project's problem register (see **Register paths**) and select only rows where `Team: incident`, `Symptom` references the matched identifier, `System` and `Module` align with the ticket, and `Lifecycle` is matchable (`candidate`, `active`, or `mitigated`; `resolved` and `retired` are never matched).
 4. **Evaluate discriminators and exclusions** — for each candidate row, every `Discriminators` `field=value` must be evaluated against the current ticket, and any `Exclusions` condition present disqualifies the row.
 5. **Issue the verdict** — `exact`, `structural`, or `no_match`, then write it to the identification-verdict header field in the analysis state file (see **Working-set and record schema**).
 
@@ -93,6 +93,7 @@ Run this order. Do not skip or reorder, and do not consult any other source for 
 
 Always scaffold, whatever the verdict — `exact`, `structural`, and `no_match` all get the same three working files.
 
+0. **Initialize the project's diagnostic registers** (see **Register paths**) before identification consumes them. When `incidents/diagnostics/symptoms.md` or `incidents/diagnostics/problems.md` is absent, create it from the matching local template (see **Working-set and record templates**) as an empty register. An existing file is never overwritten: validate it instead, and halt with the exact path when it is malformed. This creation is the only write that touches those registers; ordinary reads never create or modify them, and synchronization never writes them.
 1. If the ticket folder does not exist, create it first: ticket folder + the inbound `downloads/` directory + the project's screenshots directory + the project's validations directory + ticket record (from the ticket record template — see **Working-set and record templates**) + the project's response-draft file (from the response-draft template — see **Working-set and record templates**).
 2. Copy the analysis template from the analysis template directory (see **Working-set and record templates**) into the ticket folder's analysis subfolder as the project's analysis working set (see **Working-set and record schema**).
 3. Initialize the analysis state-file header (see **Working-set and record schema**): `Phase` (`identify`), `SLA-due` (from ticket), `Updated` (current timestamp), `Hypotheses-outstanding` (`3/3`), `Query-budget` (`0/6`, used/limit, default limit 6), `identification_verdict` (`pending`), `Same-query-reruns` (`0/2`). **Query-budget (HARD):** exhausted means used equals the current limit; halt-and-ask at that point unless the user already raised the denominator. Raise the denominator first (`14/14`); never write used greater than limit; never write `14/6`.
@@ -127,7 +128,7 @@ After the analysis scaffolds and validates:
 
 Preparation starts as soon as the root cause is confirmed — it does not wait for the close-out authorization (see **Working-set and record schema**). Cipher 🔓 (Lead Orchestrator) dispatches Scribe ✍️ (Docs & Problems Manager) to prepare an evidence-backed register draft. Scribe ✍️ (Docs & Problems Manager) presents it for exact user approval (`approved` or `aprobado`); only after that approval does Cipher 🔓 (Lead Orchestrator) apply the mutation through the destination's gated tool. If the destination workflow or tool is unavailable, stop and report; do not improvise. Complete the approved register mutation before destructive collapse:
 
-1. Create the missing `S-xx` symptom class in the project's symptom register (see **Register paths**) when no class matches the confirmed failure signature.
+1. Create the missing class in the project's own symptom catalog (see **Register paths**) using the `LOCAL:S-xx` namespace when no baseline or project class matches the confirmed failure signature.
 2. Admit a novel cause as a `candidate` `P-NNN` row in the project's problem register (see **Register paths**) when no eligible problem exists.
 3. Append the durable `case:` pointer for the current case to the existing `P-NNN` row's Evidence.
 4. Promote a `candidate` to `active` only after a second independent confirmed case.
@@ -225,6 +226,7 @@ Incident-workflow templates and references:
 - Analysis template directory: `references/analysis/` (`state.md`, `01-identify.md`, `02-investigate.md`, `03-synthesize.md`)
 - Ticket record template: `references/ticket-template.md`
 - Response-draft template: `references/response-draft-template.md`
+- Local register templates: `references/local-symptoms-template.md`, `references/local-problems-template.md`
 - Consistency checklist: `references/_consistency-checklist.md`
 
 For synthesis only, explicitly read the external dependency `.aicore/core/knowledge/escalation.md`: it owns the escalation contract and sole five-column matrix template; this project's routing rows and field/value/ID, team and tool mappings belong in its project content. Follow that owner when filling `references/analysis/03-synthesize.md`; do not copy its matrix into this skill or use escalation to issue an identification verdict. A route recommendation is not execution authorization. If the owner, applicable row, target, required mapping or evidence is missing or ambiguous, report the gap and block the affected execution rather than guess; required approval may remain pending while recommending an evidenced route.
@@ -250,8 +252,10 @@ This project's incident-workflow validator script is `node .agents/skills/incide
 
 ### Register paths
 
-- Symptom register: `.aicore/core/knowledge/diagnostics/symptoms.md` (rows `S-xx`).
-- Problem register: `.aicore/core/knowledge/diagnostics/problems.md` (rows `P-NNN`; `Team: incident`; `case:` / `pack:` pointers).
+- Shared baseline symptom catalog: `.aicore/core/knowledge/diagnostics/symptoms.md` (rows `S-xx`); AICore-managed, never edited by this project.
+- Shared problem model and rules: `.aicore/core/knowledge/diagnostics/problems.md`; AICore-managed and ships without rows.
+- Project symptom catalog: `incidents/diagnostics/symptoms.md` (rows `LOCAL:S-xx`).
+- Project problem register: `incidents/diagnostics/problems.md` (rows `P-NNN`; `Team: incident`; `case:` / `pack:` pointers).
 
 ### Screenshot naming convention
 

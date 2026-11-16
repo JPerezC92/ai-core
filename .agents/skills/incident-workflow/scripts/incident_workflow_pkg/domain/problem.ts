@@ -1,3 +1,5 @@
+import { parseSymptomReferences } from './symptom-id.ts';
+
 export interface ProblemFields {
   readonly id: string;
   readonly date: string;
@@ -34,7 +36,10 @@ export class Problem {
     }
     if (!['yes', 'no'].includes(fields.allowExact)) return { code: 'invalid_allow_exact', message: fields.allowExact };
     if (!['open', 'closed'].includes(fields.status)) return { code: 'invalid_status', message: fields.status };
-    if (!/S-\d{2}/.test(fields.symptom)) return { code: 'missing_symptom_reference', message: fields.symptom };
+    const references = parseSymptomReferences(fields.symptom);
+    if (references.tokens.length === 0 || references.invalid.length > 0) {
+      return { code: 'missing_symptom_reference', message: fields.symptom };
+    }
     return new Problem(fields);
   }
 
