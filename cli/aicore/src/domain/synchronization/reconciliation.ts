@@ -13,11 +13,11 @@
  */
 
 import {
-  RECONCILE_BEGIN,
-  RECONCILE_BODY_CONFIG,
-  RECONCILE_BODY_HEAD,
-  RECONCILE_BODY_TAIL,
-  RECONCILE_END,
+	RECONCILE_BEGIN,
+	RECONCILE_BODY_CONFIG,
+	RECONCILE_BODY_HEAD,
+	RECONCILE_BODY_TAIL,
+	RECONCILE_END,
 } from "./constants.ts";
 import type { EditorProfile } from "./editor-profile.ts";
 import { findReconcileBlock, splitLinesWithTerminators } from "./markers.ts";
@@ -27,9 +27,9 @@ const CONFIG_FILE_EDITORS: readonly EditorProfile[] = ["opencode"];
 
 /** One destination `init` generated or refreshed for review. */
 export type ReconciliationEntry = {
-  readonly destination: string;
-  readonly source: string;
-  readonly action: string;
+	readonly destination: string;
+	readonly source: string;
+	readonly action: string;
 };
 
 /**
@@ -40,18 +40,14 @@ export type ReconciliationEntry = {
  * contain is left out.
  */
 function reconciliationBody(editor: EditorProfile): readonly string[] {
-  return CONFIG_FILE_EDITORS.includes(editor)
-    ? [...RECONCILE_BODY_HEAD, ...RECONCILE_BODY_CONFIG, ...RECONCILE_BODY_TAIL]
-    : [...RECONCILE_BODY_HEAD, ...RECONCILE_BODY_TAIL];
+	return CONFIG_FILE_EDITORS.includes(editor)
+		? [...RECONCILE_BODY_HEAD, ...RECONCILE_BODY_CONFIG, ...RECONCILE_BODY_TAIL]
+		: [...RECONCILE_BODY_HEAD, ...RECONCILE_BODY_TAIL];
 }
 
 /** The block's lines, terminators included. */
 function blockLines(editor: EditorProfile): readonly string[] {
-  return [
-    `${RECONCILE_BEGIN}\n`,
-    `${reconciliationBody(editor).join("\n")}\n`,
-    `${RECONCILE_END}\n`,
-  ];
+	return [`${RECONCILE_BEGIN}\n`, `${reconciliationBody(editor).join("\n")}\n`, `${RECONCILE_END}\n`];
 }
 
 /**
@@ -60,39 +56,29 @@ function blockLines(editor: EditorProfile): readonly string[] {
  * A non-empty `pending` ensures the block exists; an empty `pending` removes it
  * and one adjacent blank separator line.
  */
-export function syncReconciliationBlocker(
-  rootText: string,
-  pending: readonly string[],
-  editor: EditorProfile,
-): string {
-  const lines = splitLinesWithTerminators(rootText);
-  const block = findReconcileBlock(lines);
-  if (pending.length > 0) {
-    if (block !== null) {
-      return (
-        lines.slice(0, block.begin).join("") +
-        blockLines(editor).join("") +
-        lines.slice(block.end + 1).join("")
-      );
-    }
-    return appendBlock(rootText, editor);
-  }
-  if (block === null) {
-    return rootText;
-  }
-  const start = block.begin > 0 && (lines[block.begin - 1] ?? "").trim() === ""
-    ? block.begin - 1
-    : block.begin;
-  const stop =
-    block.end + 1 < lines.length && (lines[block.end + 1] ?? "").trim() === ""
-      ? block.end + 2
-      : block.end + 1;
-  return lines.slice(0, start).join("") + lines.slice(stop).join("");
+export function syncReconciliationBlocker(rootText: string, pending: readonly string[], editor: EditorProfile): string {
+	const lines = splitLinesWithTerminators(rootText);
+	const block = findReconcileBlock(lines);
+	if (pending.length > 0) {
+		if (block !== null) {
+			return (
+				lines.slice(0, block.begin).join("") + blockLines(editor).join("") + lines.slice(block.end + 1).join("")
+			);
+		}
+		return appendBlock(rootText, editor);
+	}
+	if (block === null) {
+		return rootText;
+	}
+	const start = block.begin > 0 && (lines[block.begin - 1] ?? "").trim() === "" ? block.begin - 1 : block.begin;
+	const stop =
+		block.end + 1 < lines.length && (lines[block.end + 1] ?? "").trim() === "" ? block.end + 2 : block.end + 1;
+	return lines.slice(0, start).join("") + lines.slice(stop).join("");
 }
 
 /** Append the block after a single blank separator line. */
 function appendBlock(rootText: string, editor: EditorProfile): string {
-  const base = rootText !== "" && !rootText.endsWith("\n") ? `${rootText}\n` : rootText;
-  const separator = base === "" ? "" : "\n";
-  return base + separator + blockLines(editor).join("");
+	const base = rootText !== "" && !rootText.endsWith("\n") ? `${rootText}\n` : rootText;
+	const separator = base === "" ? "" : "\n";
+	return base + separator + blockLines(editor).join("");
 }

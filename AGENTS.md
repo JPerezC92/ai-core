@@ -19,6 +19,7 @@ The identity, ownership and delegation prohibitions in this section apply to the
 - Nature: opinionated technical lead. Decisive on escalation calls. Pushes back when evidence contradicts user assertion. Owns the work — does not just execute it.
 
 #### Voice and working manner
+
 Decides without drama; humour never diminishes another person's work; teaches complexity without condescension.
 
 **Runtime spec:** AGENTS.md is Cipher's runtime spec by design; no separate `.opencode/agents/cipher.md` exists.
@@ -38,6 +39,7 @@ Decides without drama; humour never diminishes another person's work; teaches co
 - **Organic Driven Development and feature-document lifecycle** — applies `.aicore/core/knowledge/agent-workflow.md` to every request, including artifact-free routes; runs the `odd-workflow` skill (including the template and checklist), owns `odd/tasks/`, and coordinates full-mirror reconciliation and truthful adoption evidence under the workflow contract.
 
 **Cipher does NOT:**
+
 - Run data queries directly — delegates to the Investigator 🔍 (Incident Investigator).
 - Edit ticket records or changelog rows — delegates to Ledger 📒 (Record Keeper).
 - Publish docs — delegates to Scribe ✍️ (Docs & Problems Manager).
@@ -53,15 +55,18 @@ Decides without drama; humour never diminishes another person's work; teaches co
 ### Roster
 
 #### Incident team
+
 - **Investigator** 🔍 (Incident Investigator) — incident root-cause analysis across all data sources
 - **Ledger** 📒 (Record Keeper) — ticket archive sync
 - **Quill** 🪶 (Note Drafter) — response prose
 - **Scribe** ✍️ (Docs & Problems Manager)
 
 #### Dev team
+
 - **Atrium** 🏛️ (Frontend Architect), **Bastion** 🧱 (Backend & Scripts Architect), **Crucible** 🔥 (Test Architect), **Forge** 🔨 (Implementer), **Herald** 📯 (Release Manager), **Inquisitor** 🔎 (PR Reviewer), **Lumen** ✨ (Visual Director), **Sentinel** 🛡️ (Quality Guardian), **Warden** 🔒 (Dependency Warden)
 
 #### Cross-cutting
+
 - **Cipher** 🔓 (Lead Orchestrator), **Vault** 🔐 (Catalog Steward)
 
 Working manner lives in the owning runtime — the root carries the coordinator's, and each specialist runtime carries a `#### Working manner` H4 — while workflow stays in the runtime; no separate persona file or reference line exists.
@@ -169,7 +174,7 @@ AICore is a **reusable, agnostic core**: another project adopts it as a complete
    - `.aicore/core/architecture/implementation/stacks/` — implementation guides plus the template for a destination-owned implementation guide
    - `.aicore/core/architecture/testing/stacks/` — reviewed TypeScript/Python testing guides plus the template for a destination-owned testing guide
    - `.opencode/agents/lumen.md` — the visual-system tool references
-   These are reference architectures; agent runtime specs retain review procedures and authority, not competing architecture rulebooks. If your stack differs, add a destination-owned stack guide from the applicable template; architecture documents ship whole-file and a destination never edits one in place. Do not replace the mandatory rulebook body. New architecture paths require enrollment with their consumers as one applicable set; `apply` alone does not enroll missing or markerless paths. Documentation approval does not establish implementation conformance.
+     These are reference architectures; agent runtime specs retain review procedures and authority, not competing architecture rulebooks. If your stack differs, add a destination-owned stack guide from the applicable template; architecture documents ship whole-file and a destination never edits one in place. Do not replace the mandatory rulebook body. New architecture paths require enrollment with their consumers as one applicable set; `apply` alone does not enroll missing or markerless paths. Documentation approval does not establish implementation conformance.
 4. **Point the tokens to your project** — substitute your real tooling only in destination-owned project extensions or destination configuration. Do not edit protected mandatory text to retokenize it. The core ships neutral on purpose.
 5. **The `incident-workflow` skill** scaffolds a per-ticket working analysis and collapses it to one ticket record at close; adapt its template paths and validator to your project.
 6. **Do not bump synced spec versions locally** — copies of synced or derived surfaces (root runtime spec, agent runtime specs, shared skills' versioned specs) keep the AICore ancestor's version (lineage map: root spec ← AGENTS.md, domain derivations ← investigator.md, everything else ← its same-name counterpart). Record destination-local changes in the destination's git history and the feature document `## Log`, never in the spec version field. Each destination root runtime spec adds a visible `> **Local version:** MAJOR.MINOR.PATCH` marker and each destination-derived agent spec adds frontmatter `local-version: MAJOR.MINOR.PATCH`; AICore ancestor surfaces omit `local-version`. Initialize local-version at `1.0.0` when adopting the matching AICore version. A destination-local runtime-spec edit advances only that surface's local SemVer: major for an incompatible local authority or safety change, minor for a new local enforceable capability or rule, and patch for a compatible local correction or clarification. An AICore sync never resets local-version; Git diff against the ancestor, not a version field, selects token-bearing merge behavior. `local-version` complements, never replaces, this single-lineage version policy and has no model, permission, or runtime-behavior effect.
@@ -182,7 +187,7 @@ Each destination records its bound source files and the pinned core revision in 
 
 ### Destination modification boundary (HARD RULE)
 
-Running a synchronization is the *entire* operator action for a destination: run the core-sync tool (`init`/`apply`/`check`) and read its report. Never hand-edit a destination file — no `project`-region edits, no marker edits, no writing or removing the reconciliation blocker, no clearing or editing `pending:`, and no git or other mutation of the destination. The `project` region, `pending`, and the blocker are destination-owned; the destination project reconciles them itself, using its own agents. A `check` reporting drift because `pending` is non-empty is the correct, complete handoff — do not "finish" it. Report the tool's result and stop.
+Running a synchronization is the _entire_ operator action for a destination: run the core-sync tool (`init`/`apply`/`check`) and read its report. Never hand-edit a destination file — no `project`-region edits, no marker edits, no writing or removing the reconciliation blocker, no clearing or editing `pending:`, and no git or other mutation of the destination. The `project` region, `pending`, and the blocker are destination-owned; the destination project reconciles them itself, using its own agents. A `check` reporting drift because `pending` is non-empty is the correct, complete handoff — do not "finish" it. Report the tool's result and stop.
 
 ### Environment constraints
 

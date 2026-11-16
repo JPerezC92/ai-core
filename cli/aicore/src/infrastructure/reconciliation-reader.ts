@@ -20,20 +20,20 @@ import { LocalSourceFiles } from "./synchronization/local-source-files.ts";
 
 /** The capabilities a reconciliation proposal may hold. */
 export type ReconciliationReader = {
-  readonly bindings: BindingsReader;
-  readonly clearance: ClearanceStore;
-  readonly sources: SourceFiles;
-  readonly destinations: DestinationReader;
-  readonly layout: PathInspection;
+	readonly bindings: BindingsReader;
+	readonly clearance: ClearanceStore;
+	readonly sources: SourceFiles;
+	readonly destinations: DestinationReader;
+	readonly layout: PathInspection;
 };
 
 /** Build the readers with their local adapters wired in. */
 export function createReconciliationReader(): ReconciliationReader {
-  return {
-    bindings: new YamlBindingsStore(),
-    clearance: new JsonClearanceStore(),
-    sources: new LocalSourceFiles(),
-    destinations: new LocalDestinationFiles(),
-    layout: new LocalFilesystemLayout(),
-  };
+	return {
+		bindings: new YamlBindingsStore(),
+		clearance: new JsonClearanceStore(),
+		sources: new LocalSourceFiles(),
+		destinations: new LocalDestinationFiles(),
+		layout: new LocalFilesystemLayout(),
+	};
 }

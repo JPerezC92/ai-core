@@ -6,10 +6,7 @@
  * belong to the delivery edge.
  */
 
-import {
-  EDITOR_PROFILES,
-  type EditorProfile,
-} from "#domain/synchronization/editor-profile.ts";
+import { EDITOR_PROFILES, type EditorProfile } from "#domain/synchronization/editor-profile.ts";
 
 /**
  * Editors whose agent distribution the engine implements.

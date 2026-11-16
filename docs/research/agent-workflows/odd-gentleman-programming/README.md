@@ -21,10 +21,12 @@ This set documents the "Gentleman Programming" AI-coding ecosystem created by **
 ## What this is / what this is not
 
 **What this is:**
+
 - A traceable research report on a developer-tooling ecosystem and its documented workflows. Chapters 01–05 use S1–S29 (October 22); chapter 06 uses S30–S38 (October 27); chapter 07 adds S39–S51 (October 28).
 - A structural description of ODD and RDD sufficient for later comparison with other planning/review disciplines.
 
 **What this is not:**
+
 - **Not about the game studio "The Odd Gentlemen."** The confirmed referent of "Gentleman Programming" here is the **AI-coding / developer-tooling ecosystem** by Alan Buscaglia. No sources were consulted for the game studio (brief, Objective).
 - Not a benchmark, endorsement or implementation authorization. Chapter 07's local alignment advice is a proposal only, not an approved runtime policy or permission to weaken safeguards.
 - Not a comprehensive current-release/runtime audit: the additions are bounded, with explicit documentation, inventory, test, transcript and runtime-parity limits.
@@ -47,7 +49,7 @@ This set documents the "Gentleman Programming" AI-coding ecosystem created by **
 The original summary below is historical, not a refreshed statement of every current default, count or release. The blueprint addendum is explicitly dated in its evidence layer.
 
 - **Alan Buscaglia** is the person behind "Gentleman Programming": App Lead at Prowler, Angular GDE, Microsoft MVP, with 120k+ YouTube, ~15k Twitch, ~50k Instagram, 10k+ Discord followers; the GitHub org `Gentleman-Programming` hosts the tool repos (S1, S2, S3, S24).
-- The ecosystem's stated ethos is *"one rule for AI-assisted work — verifying beats generating"*, framed as "the toolset Alan Buscaglia uses every day, refined in public" (S1, S9).
+- The ecosystem's stated ethos is _"one rule for AI-assisted work — verifying beats generating"_, framed as "the toolset Alan Buscaglia uses every day, refined in public" (S1, S9).
 - **ODD is default-on and read-only-first**: it "runs by default on every request, in every configured runtime", while explanation, investigation, and proposal-only requests stay read-only (S4, S5).
 - ODD's core artifact is **one feature document** (`odd/tasks/<feature-name>.md`) with verbatim-quoted numbered specs (`S#`), one line per task, and a `L1` log whose first entry is the user's original request verbatim — mirrored to an Engram topic (S4).
 - Work is classified as small/large by **resumability, not size**: "Counts of files, commands, tests, fixes, or a requested todo list never decide it", and the ~400-authored-line figure is explicitly a planning heuristic, not a cap (S4).

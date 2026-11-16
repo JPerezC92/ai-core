@@ -6,5 +6,5 @@
  * unexpected failure — keeps propagating.
  */
 export class InputError extends Error {
-  override name = 'InputError';
+	override name = "InputError";
 }

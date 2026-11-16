@@ -8,6 +8,7 @@ metadata:
   version: 1.1.0
   domain: git
 ---
+
 <!-- core:begin -->
 
 ## Ownership

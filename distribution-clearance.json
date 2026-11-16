@@ -67,21 +67,15 @@
     },
     ".agents/skills/incident-workflow/": {
       "mode": "raw",
-      "region_files": [
-        "SKILL.md"
-      ]
+      "region_files": ["SKILL.md"]
     },
     ".agents/skills/git-pr-workflow/": {
       "mode": "raw",
-      "region_files": [
-        "SKILL.md"
-      ]
+      "region_files": ["SKILL.md"]
     },
     ".agents/skills/odd-workflow/": {
       "mode": "raw",
-      "region_files": [
-        "SKILL.md"
-      ]
+      "region_files": ["SKILL.md"]
     },
     ".opencode/agents/": {
       "mode": "region",

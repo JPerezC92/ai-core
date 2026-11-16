@@ -41,7 +41,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   ## Scope
 
   The six previously identified skills are:
-
   - odd-workflow
   - git-pr-workflow
   - incident-workflow
@@ -52,7 +51,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   Use the previous U6 inventory as a starting point, but verify the current state of `main` before implementing.
 
   ## Requirements
-
   1. TypeScript is the authoritative implementation language for migrated runtime utilities.
   2. Use Vitest for their tests.
   3. Preserve existing observable behavior, command-line interfaces, diagnostics and exit codes where applicable.
@@ -63,7 +61,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   8. Keep the migration independent of the completed synchronization engine.
 
   ## Execution strategy
-
   - Start from updated `main`.
   - Use one dedicated migration branch, created by Herald.
   - Migrate one skill at a time.
@@ -84,7 +81,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
 
   No push, PR, merge, or destination-repository modifications without separate authorization.
 
-
 - L2 — 2026-11-13 — Classification: non-small. The authorized scope spans six independent skill runtimes, with language, test, distribution and compatibility changes, and cannot be resumed safely from a request plus a diff. The first slice is odd-workflow only. The completed synchronization migration remains closed (`.aicore/core/odd/tasks/2026-11-12-core-synchronization-migration.md`); its prior U6 record says 179 distributed Python utility files were deliberately left untouched. Herald's bounded read-only inventory found a clean `main` at `a312e90249d7f8269be694080c1d68ce8d74bd6`, equal to the local `origin/main` ref, but no remote fetch has yet verified freshness. The previous pilot is not present in the current odd-workflow scripts or `output`; no recovery beyond that bounded search is planned. `odd/features/typescript-testing.md` covers test capability, not standalone skill runtimes, so this change creates a distinct durable feature file. Git refresh/branch creation, current-main source verification, and behavior checks remain pending.
 - L3 — 2026-11-13 — Bootstrap anatomy check: `uv run --frozen python3 .agents/skills/odd-workflow/scripts/validate_feature.py .aicore/core/odd/tasks/2026-11-13-independent-skill-utilities-typescript.md` first exited 1 because the validator rejected Unicode range notation `S1–S6` in T2–T6. The rows now enumerate linked specs explicitly; rerun returned `ok`, exit 0. `uv run --frozen python3 .agents/skills/odd-workflow/scripts/validate_feature_file.py .aicore/core/odd/features/standalone-skill-utilities.md` returned `ok`, derived status `not started`, exit 0.
 - L4 — Bootstrap full mirror initially stored under Memories ID `om0cHBvn0it9` (project `github.com-personal/JPerezC92/ai-core`, feature `independent-skill-utilities-typescript`, locator this record). `memories_search_memories` for the exact feature identity returned the full document matching repository content SHA-256 `9B1ACD1C92E3D296F2819DE2EF852C63A5801362FDCC699749B4B4835121E448`. This readback covers that revision only; the mirror must be refreshed after this entry and the task-row correction.
@@ -100,7 +96,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   **Prefer distributing the original TypeScript source files and their module structure rather than compiling or bundling everything into JavaScript.**
 
   Requirements:
-
   1. Keep TypeScript as the authoritative implementation and the distributed source.
   2. Preserve modular file structure rather than combining modules into one generated file.
   3. Use Node.js native TypeScript execution where compatible.
@@ -115,7 +110,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   Do not begin another architecture investigation or expand the migration beyond `odd-workflow`.
 
   Herald remains the only Git/GitHub executor.
-
   - Assessment: Node.js native TypeScript execution is technically feasible with erasable syntax and `.mts` modules. Node.js v24.12.0 is the selected minimum because type stripping is stable there; `.mts` is always ESM and relative imports need explicit extensions. The raw-cleared skill directory carries new runtime modules. No compilation incompatibility was found.
 
 - L8 — 2026-11-13 — User correction, verbatim:
@@ -129,7 +123,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   I also want agents to be able to inspect distributed source code, identify bugs, and report technical debt for correction in AICore.
 
   My preference is a simple, portable architecture:
-
   - Distribute original TypeScript source files.
   - Keep each skill independently copyable, with its required runtime modules inside its own directory.
   - Avoid runtime imports from other skills or from `cli/aicore/`.
@@ -141,7 +134,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   - Reuse the existing technical-debt process rather than creating new automation.
 
   Before implementing this distribution approach, perform one focused compatibility check of the existing `odd-workflow` runtime utilities:
-
   1. Can their necessary TypeScript functionality run directly under the intended Node.js runtime?
   2. What actual runtime dependencies would be required?
   3. Can the skill be copied independently without broken imports?
@@ -152,7 +144,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   Do not expand into other skills yet, redesign the synchronization engine, or introduce additional frameworks.
 
   Herald remains the sole Git/GitHub executor. No push, PR, or merge without authorization.
-
   - Assessment: the existing runtime depends on Python standard-library file/regex behavior and intra-skill modules only. The TypeScript implementation needs only Node built-ins (`node:fs/promises`, `node:path`) and explicit relative `.mts` imports; Vitest remains development-only. No concrete reason to compile or bundle was identified. CLI behavior remains the parity target, with only the launcher and extension changing. Isolated-copy execution will verify independence.
 
 - L9 — 2026-11-13 — Corrected L6's malformed second Python baseline command to `uv run --frozen python3 .agents/skills/odd-workflow/scripts/validate_feature_file.py .aicore/core/odd/features`; the prior mirror contained a duplicated script path. The durable feature file `.aicore/core/odd/features/standalone-skill-utilities.md` now defines R3 as independent per-skill TypeScript source, no runtime imports from other skills or `cli/aicore/`, native Node.js execution from an isolated copy, and documented Node/dependency requirements. R3 remains unticked pending the authorized implementation and verification.
@@ -172,7 +163,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   **Stop all nonessential audits, repeated investigations, and planning activities immediately.**
 
   The architecture has already been decided:
-
   - Original TypeScript source is distributed.
   - Each skill must be independently copyable.
   - Use native Node.js TypeScript execution where compatible.
@@ -182,7 +172,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   - Keep the scope limited to `odd-workflow`.
 
   ## Immediate actions
-
   1. Finish the current operation safely; do not leave files partially modified.
   2. Report which implementation files have actually been created or modified.
   3. Identify any concrete blocker preventing implementation.
@@ -197,7 +186,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   **Do not spend another cycle auditing the plan. Deliver working code.**
 
   Herald remains the only agent authorized to execute Git/GitHub operations. No push, PR, or merge without separate authorization.
-
   - Assessment: this keeps T1 within the two `odd-workflow` validator CLIs and their required in-skill modules/tests; existing Python implementations remain the comparison baseline until parity is demonstrated. No implementation file had been changed before this correction.
 
 - L13 — 2026-11-13 — Runner correction from observed Vitest 5.1.0 behavior: the assigned `pnpm --dir cli/aicore exec vitest run --root ../../.agents/skills/odd-workflow --config false` exited 1 before test collection with `Cannot resolve entry module ../../.agents/skills/odd-workflow/false.` `pnpm --dir cli/aicore exec vitest --help` identifies `--config <path>`, and no Vitest/Vite config file exists under the skill root; `false` was treated as a path/filter rather than a boolean. The corrected focused command omits that option: `pnpm --dir cli/aicore exec vitest run --root ../../.agents/skills/odd-workflow`. It has not yet been run; Forge 🔨 (Implementer) must use it on explicit continuation. Superseded on the exact command form by L14, which reuses the CLI package's own Vitest configuration.
@@ -213,7 +201,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   Do not rename files merely to match the CLI's `.ts` convention.
 
   ## Decisions
-
   1. Keep the skill independently copyable.
   2. Do not add a package.json solely for ESM.
   3. Do not introduce a new Vitest or TypeScript configuration standard.
@@ -246,7 +233,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   Herald remains the sole Git/GitHub executor.
 
   No push, PR, or merge without authorization.
-
   - Assessment: `.mts` is retained; the correction is limited to test-tooling scope. Verified discovery with `pnpm --dir cli/aicore exec vitest run --root ../../.agents/skills/odd-workflow --config ../../../cli/aicore/vitest.config.ts`: Vitest 5.1.0 collected the four skill unit/integration files from the CLI package's own config, resolved the `vitest` import from the skill tree, left `tests/e2e/**` out (the CLI's e2e config owns that level), and failed only on the not-yet-written runtime modules. The CLI config's `fileParallelism: false` and `sequence.concurrent: false` are preserved, so the existing filesystem safety protections and the level separation are reused rather than duplicated.
   - Strict type-check scope: `tsconfig.skills.json` at the repository root extends `./cli/aicore/tsconfig.json`, so the compiler options, strictness, `erasableSyntaxOnly` and `verbatimModuleSyntax` are reused rather than redefined; `typeRoots` and a `paths` entry for `vitest` point at the CLI package's installed development tooling, because the skill tree has no `node_modules` and the repository uses pnpm's isolated layout. The config is source-local and is not part of any distributed skill, so destinations install nothing. `pnpm --dir cli/aicore exec tsc -p ../../tsconfig.skills.json --noEmit` now type-checks all six skill test files and reports only the expected missing runtime modules plus three genuine strict defects in the current test code.
   - `baseUrl` was rejected: TypeScript 6.0.3 reports it deprecated (TS5101), so the `paths` mapping is used without it.
@@ -266,7 +252,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   Inspect the actual root and `cli/aicore` package configuration, the TypeScript project boundaries, and the current skill test locations.
 
   Determine why the editor cannot resolve:
-
   - `@types/node`
   - `vitest`
 
@@ -277,7 +262,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   Follow the existing testing contract, especially T10, T13, T18, T19 and T24–T25.
 
   Do not invent a parallel testing standard.
-
   - Keep the skill runtime independently copyable.
   - Keep runtime dependencies separate from development/test dependencies.
   - Preserve the existing unit/integration/e2e structure.
@@ -290,7 +274,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   Both VS Code and the terminal must resolve the same TypeScript project and dependencies.
 
   The tests must:
-
   1. Resolve Node.js and Vitest types without editor errors.
   2. Be included in strict TypeScript checking.
   3. Be discovered by Vitest through the intended configuration.
@@ -306,14 +289,13 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
 
   Herald remains the only Git/GitHub executor.
 
-   You were previously asked to justify the use of `.mts`, but your explanation only established why it makes sense for standalone runtime modules.
+  You were previously asked to justify the use of `.mts`, but your explanation only established why it makes sense for standalone runtime modules.
 
   It did not establish why Vitest test files need `.test.mts` instead of AICore's existing `.test.ts` convention.
 
   Please correct that distinction.
 
   For the odd-workflow migration:
-
   - Keep `.mts` for independently distributed runtime modules where explicit ESM semantics are useful.
   - Prefer `.test.ts` for Vitest tests, consistent with the existing TypeScript testing convention.
   - Do not retain `.test.mts` merely because runtime modules use `.mts`.
@@ -323,7 +305,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   Do not perform another broad architecture audit.
 
   Report only a concrete technical blocker if `.test.ts` cannot work correctly. Otherwise, apply the minimal correction and continue implementing odd-workflow.
-
   - Root cause of the editor errors: the skill tree had no `tsconfig.json` — the filename the TypeScript server associates with a project — so VS Code used an inferred project with default options and no `types` or `paths`, leaving `node:*` and `vitest` unresolved; the earlier `tsconfig.skills.json` was invisible to the editor for the same filename reason. Underneath that, pnpm's isolated layout keeps `vitest` and `@types/node` in `cli/aicore/node_modules`, so node resolution started from the skill tree cannot reach them.
   - Correction: a single repository-root `tsconfig.json` now owns the skill trees. It extends `./cli/aicore/tsconfig.json`, so the CLI package's compiler options and strictness are reused rather than redefined; `typeRoots` points at `./cli/aicore/node_modules/@types` and a `paths` entry for `vitest` points at the installed Vitest declaration file. The file is source-local, is not part of any distributed skill, and is the nearest ancestor project for the skill's files, so the editor and the terminal resolve the same project and the same dependencies. The root `typecheck` script now runs both projects: `pnpm --dir cli/aicore typecheck && pnpm --dir cli/aicore exec tsc -p ../../tsconfig.json`. The earlier `tsconfig.skills.json` was removed.
   - Extension distinction, corrected: `.mts` is kept only for the independently distributed runtime modules, because the skill ships without a `package.json` and must be ESM regardless of a destination's manifest. The tests are development-only and never distributed as runtime; they run inside this repository, whose root `package.json` declares `"type": "module"`, so `.test.ts` is ESM there and matches the existing `cli/aicore` convention. The six test files were therefore renamed from `.test.mts` to `.test.ts`; they still import the `.mts` runtime modules, which `allowImportingTsExtensions` and `module: nodenext` permit.
@@ -341,7 +322,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   **My preferred standard is `.ts` for both runtime code and tests, with explicit TypeScript configuration.**
 
   ## Required approach
-
   1. Use `.ts` for TypeScript implementation files.
   2. Use `.test.ts` for Vitest tests.
   3. Introduce a minimal, explicit ESM package boundary using `"type": "module"`.
@@ -361,7 +341,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   If a skill-local `package.json` and `tsconfig.json` are appropriate, use them. Their existence is not considered unnecessary complexity by itself.
 
   ## Verification
-
   - TypeScript strict checking passes.
   - VS Code resolves imports correctly.
   - Vitest discovers and executes the relevant tests.
@@ -373,7 +352,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   Herald remains the only agent authorized to execute Git/GitHub operations.
 
   No push, PR, or merge without separate authorization.
-
   - Correction applied: the 12 runtime modules were renamed from `.mts` to `.ts` and the six tests are `.test.ts`; every relative import specifier now names the real `.ts` file. `.agents/skills/odd-workflow/package.json` declares the minimal explicit ESM boundary (`name`, `private`, `"type": "module"`, and `engines.node >=24.12.0`), and `.agents/skills/odd-workflow/tsconfig.json` is the skill's own strict project: it extends `../../../cli/aicore/tsconfig.json` so the CLI package's compiler options, `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `erasableSyntaxOnly` and `verbatimModuleSyntax` are reused rather than redefined, and it adds `typeRoots` and a `paths` entry for `vitest` that point at the existing workspace installation, so development dependencies stay centralized and no new installation was created.
   - Editor resolution: the skill's own `tsconfig.json` is the nearest ancestor project for its files, so VS Code and the terminal resolve the same project and the same dependencies; the repository-root `tsconfig.json` created earlier was removed, and the root `typecheck` script now runs `pnpm --dir cli/aicore typecheck && pnpm --dir cli/aicore exec tsc -p ../../.agents/skills/odd-workflow/tsconfig.json`.
   - Standalone execution: both entry points print `usage: validate_feature.ts <file-or-directory>` and `usage: validate_feature_file.ts <file-or-directory>`; the end-to-end suites copy the skill's `package.json` with the runtime modules, assert the copy contains no `node_modules` and no AICore package, and compare the copied process output and exit status against the Python baseline.
@@ -403,7 +381,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   **The TypeScript implementation must completely replace the Python validators.**
 
   Proceed as follows:
-
   1. Delete the obsolete Python validator entry points and their exclusively used modules.
   2. Delete obsolete Python-specific tests and the live Python comparison harness.
   3. Keep the existing TypeScript implementation as the sole authoritative runtime.
@@ -421,7 +398,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   Continue the approved odd-workflow migration without another design or audit cycle.
 
   Herald remains the sole Git/GitHub executor. No push, PR, or merge without authorization.
-
   - Retirement executed: the two Python validator entry points, the `feature_validation` and `feature_file_validation` Python packages with their `test_*.py` modules, the `scripts/e2e/` Python CLI tests, the shared `feature_testkit.py` and the Python `__pycache__` directories were removed — 44 `.py` files, every one of them under `.agents/skills/odd-workflow/scripts/`, as measured by Herald 📯 (Release Manager) against the working tree; no Python file outside that directory is modified or deleted. The Python tree contributed 101 test functions across 22 collected files with 12 parametrize decorators, measured from HEAD, so at least that many collected items left the Python suite with the deletion.
   - Comparison harness removed: the end-to-end modules no longer spawn a Python baseline process and no longer normalize the platform line terminator or the Python launcher token. Every scenario they covered — success over a directory that also holds `_template.md`, the usage error, an invalid document, a template-only directory, and the apostrophe-bearing value case — is now an ordinary Vitest assertion with an explicit expected stdout, an explicit empty stderr and an explicit exit status, and the isolated copy is still executed with only the TypeScript entry point. No snapshot file, golden directory or compatibility shim was introduced. The Python-named identifiers were also removed from the TypeScript source and tests: `pythonRepr` became `quoteDiagnosticValue` and `pythonDecimalToAscii` became `decimalDigitsToAscii`, with the doc comments rewritten to state the rules themselves; a grep for `python`, `Python`, `.py` and `repr` across the skill's `.ts` files returns no match. The validation rules, the diagnostic wording and the exit-code behavior are unchanged.
   - Verification observed by the coordinator after the retirement: `pnpm --dir .agents/skills/odd-workflow typecheck` exits 0 with no output; `pnpm --dir cli/aicore exec vitest run --root ../../.agents/skills/odd-workflow --config ../../../cli/aicore/vitest.config.ts` collects 4 files and passes 17 tests; `pnpm --dir cli/aicore exec vitest run --root ../../.agents/skills/odd-workflow --config ../../../cli/aicore/vitest.e2e.config.ts` collects 2 files and passes 9 tests; `node .agents/skills/odd-workflow/scripts/validate_feature.ts .aicore/core/odd/tasks` prints `ok` for every record and exits 0; `node .agents/skills/odd-workflow/scripts/validate_feature_file.ts .aicore/core/odd/features` prints each file with its derived status and exits 0; the repository's reviewed whole-suite command `uv run --frozen --group dev pytest -q` exits 0 with 395 passed and 6 skipped and no failure, so no unrelated Python tooling broke.
@@ -458,7 +434,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   Evaluate the maintained npm `yaml` package as the preferred dependency for `incident-workflow`.
 
   Requirements:
-
   1. Keep `incident-workflow` independently copyable.
   2. Declare necessary runtime dependencies in its skill-local `package.json`.
   3. Document the installation and execution requirements in `SKILL.md`.
@@ -483,7 +458,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   # AICore — Permission Change Approved
 
   I approve the following two changes:
-
   1. Add this exact shell permission to Warden's allowlist in `opencode.jsonc`:
 
      ```json
@@ -499,7 +473,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
      - Correct the outdated statement that AICore has no root JavaScript manifest or lockfile.
 
   ## Constraints
-
   - Do not grant unrestricted `pnpm` execution.
   - Do not authorize `pnpm audit --fix`, unrelated installs, or upgrades.
   - Ensure the proposed `yaml` dependency is present in the resolved lockfile before auditing.
@@ -535,7 +508,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   ## Warden verification
 
   Once the lockfile represents the proposed dependency:
-
   1. Execute `pnpm audit --json`.
   2. Review the dependency graph, license and lockfile changes.
   3. Distinguish new findings from existing advisories.

@@ -36,9 +36,9 @@ No review findings yet.
 
 After review, replace the placeholder with the mandatory table, or with the literal `No findings.` when the review produced no findings.
 
-| ID | Severity | Status | Evidence | Owner / resolution |
-|---|---|---|---|---|
-| F1 | `BLOCK` | `OPEN` | path:line — short literal result | owner — next action |
+| ID  | Severity | Status | Evidence                         | Owner / resolution  |
+| --- | -------- | ------ | -------------------------------- | ------------------- |
+| F1  | `BLOCK`  | `OPEN` | path:line — short literal result | owner — next action |
 
 Rules:
 
@@ -84,8 +84,8 @@ Header, in this order:
 
 Then the mandatory table:
 
-| Test-plan item | Literal action/input | Observed result | Executor |
-|---|---|---|---|
+| Test-plan item      | Literal action/input                                 | Observed result              | Executor               |
+| ------------------- | ---------------------------------------------------- | ---------------------------- | ---------------------- |
 | exact checkbox text | exact executed command, or exact manual action/input | verdict-only observed result | actual person or agent |
 
 Rules:

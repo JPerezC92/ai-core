@@ -18,15 +18,15 @@ This project's pre-flight knowledge hooks are the files `.aicore/core/knowledge/
 
 An existing Claude Code agent spec lives at `.claude/agents/{name}.md`. Migrating it maps Claude Code fields to OpenCode fields:
 
-| Claude Code | OpenCode |
-|---|---|
-| `name` | `name` (file name becomes agent name) |
-| `description` | `description` |
-| `team` | dropped (not an OpenCode concept) |
-| `tools: Read, Write, Edit, ...` | `permission.read: allow` / `permission.edit: allow` / etc. |
-| `model: sonnet/opus/haiku/inherit` | `model: provider/model-id` (map `sonnet` → `anthropic/claude-sonnet-4-20250514`, etc.) |
-| `color` | `color` |
-| (no mode field) | `mode: subagent` (this skill's migration-intent selection for child agents, not the OpenCode omission default) |
+| Claude Code                        | OpenCode                                                                                                       |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `name`                             | `name` (file name becomes agent name)                                                                          |
+| `description`                      | `description`                                                                                                  |
+| `team`                             | dropped (not an OpenCode concept)                                                                              |
+| `tools: Read, Write, Edit, ...`    | `permission.read: allow` / `permission.edit: allow` / etc.                                                     |
+| `model: sonnet/opus/haiku/inherit` | `model: provider/model-id` (map `sonnet` → `anthropic/claude-sonnet-4-20250514`, etc.)                         |
+| `color`                            | `color`                                                                                                        |
+| (no mode field)                    | `mode: subagent` (this skill's migration-intent selection for child agents, not the OpenCode omission default) |
 
 Source-harness cleanup is outside this skill's write scope: preserve `.claude/agents/{name}.md` and mark it read-only in the migration preview. Any later deletion or move is a separate owner-run operation. Preview, confirmation, execution, and prevalidation steps for this sub-flow are described in the Mandatory core migration workflow. The `op-agent-creator` does NOT modify `.claude/agents/*.md` (that is Cipher 🔓 (Lead Orchestrator) territory, executed as a separate agent-spec change).
 
@@ -51,21 +51,21 @@ Classify the requested operation as exactly one of:
 
 #### Step 0.2 — Read when present (regardless of scenario)
 
-| File | Why | If absent |
-|---|---|---|
-| This project's shared-rules reference (see Project extensions) | Roster ownership table (per-agent rule boundaries) | Skip; use the roster in this project's docs |
-| This project's agent-workflow entry (see Project extensions) | Authority map; keep files small; do not copy owner rulebooks | Skip; do not invent a competing workflow |
-| This project's skill-migration reference (see Project extensions) | Field deltas, body renames, metadata defaults | Skip; use the embedded rules in this skill |
-| This project's skills inventory (see Project extensions) | Inventory + uniqueness check + adjacent skill state | Skip; uniqueness checked against the agent directory on disk |
-| The catalog steward agent's Quality Checklist section (see Project extensions) | QC-4 (WHAT + WHEN description) guidance; the agent-contract checks are embedded in Step 6 | Skip; the agent-contract checks are embedded in Step 6 |
+| File                                                                           | Why                                                                                       | If absent                                                    |
+| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| This project's shared-rules reference (see Project extensions)                 | Roster ownership table (per-agent rule boundaries)                                        | Skip; use the roster in this project's docs                  |
+| This project's agent-workflow entry (see Project extensions)                   | Authority map; keep files small; do not copy owner rulebooks                              | Skip; do not invent a competing workflow                     |
+| This project's skill-migration reference (see Project extensions)              | Field deltas, body renames, metadata defaults                                             | Skip; use the embedded rules in this skill                   |
+| This project's skills inventory (see Project extensions)                       | Inventory + uniqueness check + adjacent skill state                                       | Skip; uniqueness checked against the agent directory on disk |
+| The catalog steward agent's Quality Checklist section (see Project extensions) | QC-4 (WHAT + WHEN description) guidance; the agent-contract checks are embedded in Step 6 | Skip; the agent-contract checks are embedded in Step 6       |
 
 #### Step 0.3 — Conditionally read
 
-| Trigger | File | Why |
-|---|---|---|
-| Scenario = `modify` | `.opencode/agents/<name>.md` | Surface current spec before rewriting; preserve tone/structure unless explicitly changing |
-| Scenario = `migrate` | The Claude Code agent's file | Source of truth for the conversion; inspect its persona-bearing prose for the target runtime's manner H4 |
-| Agent will have specific permission keys | another existing agent as live reference (consulted at write-time) | Permission-key semantics reference |
+| Trigger                                  | File                                                               | Why                                                                                                      |
+| ---------------------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| Scenario = `modify`                      | `.opencode/agents/<name>.md`                                       | Surface current spec before rewriting; preserve tone/structure unless explicitly changing                |
+| Scenario = `migrate`                     | The Claude Code agent's file                                       | Source of truth for the conversion; inspect its persona-bearing prose for the target runtime's manner H4 |
+| Agent will have specific permission keys | another existing agent as live reference (consulted at write-time) | Permission-key semantics reference                                                                       |
 
 #### Step 0.4 — Acknowledge each loaded file
 
@@ -121,7 +121,7 @@ Create a new OpenCode-native agent under `.opencode/agents/{name}.md`. The agent
    - If a capability is missing from the description, stop and report to Cipher 🔓 (Lead Orchestrator): auto-update, let the user edit, or abort. Never invoke the user-facing `question` tool from a delegated run.
      - **A.** Auto-update the description with a recommended addition
      - **B.** Let the user edit manually
-      - **C.** Abort agent creation
+     - **C.** Abort agent creation
 6. **Step 6 — Pre-validation (agent-contract subset).** Generated specs must cite `.aicore/core/knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)` and must not tell a language section to suspend it. Before writing, run these checks against the fully built agent definition. The agent runtime-spec contract (the eight-H3 and region layout defined by Sentinel 🛡️ (Quality Guardian) rule SP-3) is authoritative; reference it for full text:
 
    ```
@@ -156,16 +156,16 @@ When the initial `name` or `mode` arguments are missing, invalid, or ambiguous, 
 
 #### Fields
 
-| # | name | type | description | validation | options |
-|---|---|---|---|---|---|
-| 1 | `name` | `text` | Agent file name | `^[a-z0-9]+(-[a-z0-9]+)*$`, 1–64 chars | First option = parsed value with "(Recommended)" suffix |
-| 2 | `mode` | `choice` | Main, child-only, or dual-use session agent | Explicit `primary`, `subagent`, or `all`; recommend subagent only for request-implied child-only intent | `[{ label: "primary", description: "Main session" }, { label: "subagent", description: "Child session through subagent tool" }, { label: "all", description: "Primary or child session" }]` |
+| #   | name   | type     | description                                 | validation                                                                                              | options                                                                                                                                                                                     |
+| --- | ------ | -------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `name` | `text`   | Agent file name                             | `^[a-z0-9]+(-[a-z0-9]+)*$`, 1–64 chars                                                                  | First option = parsed value with "(Recommended)" suffix                                                                                                                                     |
+| 2   | `mode` | `choice` | Main, child-only, or dual-use session agent | Explicit `primary`, `subagent`, or `all`; recommend subagent only for request-implied child-only intent | `[{ label: "primary", description: "Main session" }, { label: "subagent", description: "Child session through subagent tool" }, { label: "all", description: "Primary or child session" }]` |
 
 #### Trigger conditions
 
-| Trigger | Example |
-|---|---|
-| **Missing arg** | Name not provided, or mode not stated |
+| Trigger                | Example                                                         |
+| ---------------------- | --------------------------------------------------------------- |
+| **Missing arg**        | Name not provided, or mode not stated                           |
 | **Validation failure** | Name fails regex (e.g., uppercase, underscores, double hyphens) |
 
 Clean parse + clean validation = **no form** — agent proceeds directly. Later missing decisions are reported to Cipher 🔓 (Lead Orchestrator), not asked via the user-facing `question` tool on a delegated run.
@@ -174,18 +174,18 @@ Clean parse + clean validation = **no form** — agent proceeds directly. Later 
 
 Take each field from the request; report missing required fields to Cipher 🔓 (Lead Orchestrator), then build the frontmatter:
 
-| Field | Required? | Notes |
-|---|---|---|
-| `mode` | yes | must be `primary` |
-| `description` | yes | 1–1024 chars; brief behavioral summary, NOT a usage trigger |
-| `model` | optional | `provider/model-id` format; defaults to the globally configured model |
-| `temperature` | optional | 0.0–1.0; lower is more focused, higher is more creative |
-| `top_p` | optional | 0.0–1.0; alternative to temperature |
-| `color` | optional | hex (`#FF5733`) or theme name (`primary`, `secondary`, `accent`, `success`, `warning`, `error`, `info`) |
-| `steps` | optional | positive integer; max agentic iterations before forced summary |
-| `disable` | optional | `true` to disable the agent |
-| `prompt` | optional | external prompt file path; if unset, the markdown body IS the system prompt |
-| `permission` | optional | take keys from the request; typical keys for a primary agent: `edit`, `bash`, `webfetch`, `websearch`, `skill`, `task`, `external_directory` |
+| Field         | Required? | Notes                                                                                                                                        |
+| ------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`        | yes       | must be `primary`                                                                                                                            |
+| `description` | yes       | 1–1024 chars; brief behavioral summary, NOT a usage trigger                                                                                  |
+| `model`       | optional  | `provider/model-id` format; defaults to the globally configured model                                                                        |
+| `temperature` | optional  | 0.0–1.0; lower is more focused, higher is more creative                                                                                      |
+| `top_p`       | optional  | 0.0–1.0; alternative to temperature                                                                                                          |
+| `color`       | optional  | hex (`#FF5733`) or theme name (`primary`, `secondary`, `accent`, `success`, `warning`, `error`, `info`)                                      |
+| `steps`       | optional  | positive integer; max agentic iterations before forced summary                                                                               |
+| `disable`     | optional  | `true` to disable the agent                                                                                                                  |
+| `prompt`      | optional  | external prompt file path; if unset, the markdown body IS the system prompt                                                                  |
+| `permission`  | optional  | take keys from the request; typical keys for a primary agent: `edit`, `bash`, `webfetch`, `websearch`, `skill`, `task`, `external_directory` |
 
 > `hidden` controls visibility across modes, not security; do not reject it solely because mode is `primary`.
 
@@ -193,20 +193,20 @@ Take each field from the request; report missing required fields to Cipher 🔓 
 
 Take each field from the request; report missing required fields to Cipher 🔓 (Lead Orchestrator), then build the frontmatter:
 
-| Field | Required? | Notes |
-|---|---|---|
-| `mode` | yes | must be `subagent` |
-| `description` | yes | 1–1024 chars; WHAT it does and WHEN to dispatch it |
-| `model` | optional | defaults to the model of the invoking primary agent |
-| `temperature` | optional | 0.0–1.0 |
-| `top_p` | optional | 0.0–1.0 |
-| `color` | optional | hex or theme name |
-| `steps` | optional | positive integer |
-| `disable` | optional | `true` to disable the agent |
-| `hidden` | optional | controls visibility in normal listings, interactive discovery, and the subagent catalog; not a security boundary |
-| `prompt` | optional | external prompt file path; if unset, the markdown body IS the system prompt |
-| `permission` | optional | typically more restrictive than primary; typical keys: `read`, `edit`, `bash`, `webfetch`, `skill` |
-| `permission.task` | optional | controls which other subagents this one can invoke via the Task tool; uses glob patterns with last-match-wins semantics |
+| Field             | Required? | Notes                                                                                                                   |
+| ----------------- | --------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `mode`            | yes       | must be `subagent`                                                                                                      |
+| `description`     | yes       | 1–1024 chars; WHAT it does and WHEN to dispatch it                                                                      |
+| `model`           | optional  | defaults to the model of the invoking primary agent                                                                     |
+| `temperature`     | optional  | 0.0–1.0                                                                                                                 |
+| `top_p`           | optional  | 0.0–1.0                                                                                                                 |
+| `color`           | optional  | hex or theme name                                                                                                       |
+| `steps`           | optional  | positive integer                                                                                                        |
+| `disable`         | optional  | `true` to disable the agent                                                                                             |
+| `hidden`          | optional  | controls visibility in normal listings, interactive discovery, and the subagent catalog; not a security boundary        |
+| `prompt`          | optional  | external prompt file path; if unset, the markdown body IS the system prompt                                             |
+| `permission`      | optional  | typically more restrictive than primary; typical keys: `read`, `edit`, `bash`, `webfetch`, `skill`                      |
+| `permission.task` | optional  | controls which other subagents this one can invoke via the Task tool; uses glob patterns with last-match-wins semantics |
 
 ### Sub-flow: all (primary or child session)
 
@@ -216,40 +216,40 @@ Use only the requested or evidenced permission configuration and existing role a
 
 ### Validation rules (centralized)
 
-| Field | Rule |
-|---|---|
-| `name` | `^[a-z0-9]+(-[a-z0-9]+)*$`, 1–64 chars, no leading/trailing `-`, no `--` |
-| `description` | 1–1024 chars |
-| `mode` | Explicit `primary` \| `subagent` \| `all` required by this skill; platform omission default for a new custom agent is `primary`, not `all` |
-| `temperature` | 0.0–1.0 (typical range) |
-| `top_p` | 0.0–1.0 (typical range) |
-| `color` | hex (`#RRGGBB`) or theme name |
-| `steps` | positive integer |
-| `hidden` | boolean, visibility option across all modes; not a permission grant |
-| `disable` | boolean |
-| `model` | `provider/model-id` format |
-| `prompt` | string with `{file:./path}` syntax for external file, or omit to use the body |
-| `permission` keys | see the table below |
+| Field             | Rule                                                                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`            | `^[a-z0-9]+(-[a-z0-9]+)*$`, 1–64 chars, no leading/trailing `-`, no `--`                                                                   |
+| `description`     | 1–1024 chars                                                                                                                               |
+| `mode`            | Explicit `primary` \| `subagent` \| `all` required by this skill; platform omission default for a new custom agent is `primary`, not `all` |
+| `temperature`     | 0.0–1.0 (typical range)                                                                                                                    |
+| `top_p`           | 0.0–1.0 (typical range)                                                                                                                    |
+| `color`           | hex (`#RRGGBB`) or theme name                                                                                                              |
+| `steps`           | positive integer                                                                                                                           |
+| `hidden`          | boolean, visibility option across all modes; not a permission grant                                                                        |
+| `disable`         | boolean                                                                                                                                    |
+| `model`           | `provider/model-id` format                                                                                                                 |
+| `prompt`          | string with `{file:./path}` syntax for external file, or omit to use the body                                                              |
+| `permission` keys | see the table below                                                                                                                        |
 
 #### Permission keys reference
 
-| Key | Tools it gates |
-|---|---|
-| `read` | `read` |
-| `edit` | `write`, `edit`, `apply_patch` |
-| `glob` | `glob` |
-| `grep` | `grep` |
-| `list` | `list` |
-| `bash` | `bash` |
-| `task` | `task` |
+| Key                  | Tools it gates                                        |
+| -------------------- | ----------------------------------------------------- |
+| `read`               | `read`                                                |
+| `edit`               | `write`, `edit`, `apply_patch`                        |
+| `glob`               | `glob`                                                |
+| `grep`               | `grep`                                                |
+| `list`               | `list`                                                |
+| `bash`               | `bash`                                                |
+| `task`               | `task`                                                |
 | `external_directory` | any tool reading/writing outside the project worktree |
-| `todowrite` | `todowrite`, `todoread` |
-| `webfetch` | `webfetch` |
-| `websearch` | `websearch` |
-| `lsp` | `lsp` |
-| `skill` | `skill` |
-| `question` | `question` |
-| `doom_loop` | recovery prompts when agent is stuck |
+| `todowrite`          | `todowrite`, `todoread`                               |
+| `webfetch`           | `webfetch`                                            |
+| `websearch`          | `websearch`                                           |
+| `lsp`                | `lsp`                                                 |
+| `skill`              | `skill`                                               |
+| `question`           | `question`                                            |
+| `doom_loop`          | recovery prompts when agent is stuck                  |
 
 Each permission key accepts either a shorthand action (`"allow" | "ask" | "deny"`) or a pattern→action object for fine-grained control. **Last matching rule wins.**
 
@@ -294,11 +294,11 @@ Use this when the user has an existing Claude Code agent spec and wants an OpenC
 
 ### Relationship to existing skills
 
-| Skill | Scope | Distinction |
-|---|---|---|
-| `op-skill-creator` | Creates new OpenCode skills in `.agents/skills/{name}/SKILL.md` | Different file shape (folder + SKILL.md vs single .md), different frontmatter fields, different body semantics (skill doc vs agent system prompt) |
-| `customize-opencode` (built-in) | Edits or creates opencode config in `opencode.json` / `opencode.jsonc` and files under `.opencode/`, `~/.config/opencode/` | Broader config-ecosystem view; `op-agent-creator` is the focused, interactive, validated alternative for agent creation |
-| `op-agent-creator` (this skill) | Creates new OpenCode agents in `.opencode/agents/{name}.md` with interactive validation | Focused on agents only; does not touch `opencode.jsonc` (markdown agents are auto-discovered) |
+| Skill                           | Scope                                                                                                                      | Distinction                                                                                                                                       |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `op-skill-creator`              | Creates new OpenCode skills in `.agents/skills/{name}/SKILL.md`                                                            | Different file shape (folder + SKILL.md vs single .md), different frontmatter fields, different body semantics (skill doc vs agent system prompt) |
+| `customize-opencode` (built-in) | Edits or creates opencode config in `opencode.json` / `opencode.jsonc` and files under `.opencode/`, `~/.config/opencode/` | Broader config-ecosystem view; `op-agent-creator` is the focused, interactive, validated alternative for agent creation                           |
+| `op-agent-creator` (this skill) | Creates new OpenCode agents in `.opencode/agents/{name}.md` with interactive validation                                    | Focused on agents only; does not touch `opencode.jsonc` (markdown agents are auto-discovered)                                                     |
 
 > The `op-agent-creator` does NOT modify `opencode.jsonc` (markdown agents in `.opencode/agents/` are auto-discovered, no registration needed).
 

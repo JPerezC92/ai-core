@@ -11,19 +11,19 @@ import type { SupportedEditor } from "./constants.ts";
 
 /** One engine invocation's verbatim result. */
 export type EngineRun = {
-  readonly status: number;
-  readonly stdout: string;
-  readonly stderr: string;
+	readonly status: number;
+	readonly stdout: string;
+	readonly stderr: string;
 };
 
 export type SynchronizeOutcome = {
-  /** Absolute destination path the run acted on. */
-  readonly destination: string;
-  readonly editor: SupportedEditor;
-  /** True when this run enrolled a destination rather than updating one. */
-  readonly enrolled: boolean;
-  /** The write invocation and, when it ran, the verification invocation. */
-  readonly runs: readonly EngineRun[];
-  /** True when the engine reported the destination is current. */
-  readonly current: boolean;
+	/** Absolute destination path the run acted on. */
+	readonly destination: string;
+	readonly editor: SupportedEditor;
+	/** True when this run enrolled a destination rather than updating one. */
+	readonly enrolled: boolean;
+	/** The write invocation and, when it ran, the verification invocation. */
+	readonly runs: readonly EngineRun[];
+	/** True when the engine reported the destination is current. */
+	readonly current: boolean;
 };

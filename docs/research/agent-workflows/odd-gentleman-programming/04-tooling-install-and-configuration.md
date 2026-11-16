@@ -6,11 +6,11 @@
 
 From usage.md Persona Modes (S4) and pi.dev/gentle-pi (S20):
 
-| Mode | Behavior |
-|---|---|
+| Mode        | Behavior                                                                                                                                                                      |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `gentleman` | Teaching mentor, pushes back on bad practices; per gentle-pi: "Senior architect, teacher, direct technical feedback, Rioplatense Spanish/voseo when the user writes Spanish." |
-| `neutral` | "Same teacher, same philosophy, no regional language" |
-| `custom` | gentle-ai injects no persona (ownership choice) |
+| `neutral`   | "Same teacher, same philosophy, no regional language"                                                                                                                         |
+| `custom`    | gentle-ai injects no persona (ownership choice)                                                                                                                               |
 
 gentle-pi stores the persona at `~/.pi/gentle-ai/persona.json` (S20). Themes Gentleman & Gentleman-Cute are documented at v4.0.0 (S10).
 
@@ -34,11 +34,11 @@ gentle-pi stores the persona at `~/.pi/gentle-ai/persona.json` (S20). Themes Gen
 
 README, via pkg.go.dev gentle-ai/v4 (S9). Named triggers only:
 
-| Trigger | Condition (as documented) |
-|---|---|
-| **Exploration** | understanding needs > ~3 inline calls / 10k tokens or > ~5 sequential lookups |
-| **Parallel writers** | ≥2 independent units with disjoint edit surfaces, ~100+ changed lines |
-| **Context backstop** | (named trigger; condition per README) |
+| Trigger                  | Condition (as documented)                                                               |
+| ------------------------ | --------------------------------------------------------------------------------------- |
+| **Exploration**          | understanding needs > ~3 inline calls / 10k tokens or > ~5 sequential lookups           |
+| **Parallel writers**     | ≥2 independent units with disjoint edit surfaces, ~100+ changed lines                   |
+| **Context backstop**     | (named trigger; condition per README)                                                   |
 | **Independent verifier** | change naming a high-risk item: data, security, shared contracts, concurrency, delivery |
 
 "A trigger holds only when its condition truly holds; none holds by default… File count, task size, or a model price ratio never decide the route on their own." (S9)
@@ -58,15 +58,15 @@ README, via pkg.go.dev gentle-ai/v4 (S9). Named triggers only:
 
 ## 6. Install paths
 
-| Target | Method |
-|---|---|
-| macOS / Linux | curl script `scripts/install.sh \| bash` (with `--channel beta`) (S4) |
-| macOS (Homebrew) | tap `Gentleman-Programming/homebrew-tap`; `brew install gentle-ai`; `brew trust --formula …` for Homebrew 6 (S4) |
-| **Windows** | **PowerShell source install via `go install github.com/gentleman-programming/gentle-ai/v4/cmd/gentle-ai@<tag>` with Go 1.25.10+** (S9); platforms.md lists Windows as "Supported (binary distribution held)" (S16) |
-| engram | `brew install gentleman-programming/tap/engram`; GitHub Releases (S17, S18) |
-| engram (self-host) | Docker image `ghcr.io/gentleman-programming/engram:v2.0.0` (S19) |
-| gentle-pi | `pi install npm:gentle-pi` (S20) |
-| gga | `brew install gentleman-programming/tap/gga` or `./install.sh`; Windows Git Bash + `gga.bat`/`gga.ps1` shim (S22) |
+| Target             | Method                                                                                                                                                                                                             |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| macOS / Linux      | curl script `scripts/install.sh \| bash` (with `--channel beta`) (S4)                                                                                                                                              |
+| macOS (Homebrew)   | tap `Gentleman-Programming/homebrew-tap`; `brew install gentle-ai`; `brew trust --formula …` for Homebrew 6 (S4)                                                                                                   |
+| **Windows**        | **PowerShell source install via `go install github.com/gentleman-programming/gentle-ai/v4/cmd/gentle-ai@<tag>` with Go 1.25.10+** (S9); platforms.md lists Windows as "Supported (binary distribution held)" (S16) |
+| engram             | `brew install gentleman-programming/tap/engram`; GitHub Releases (S17, S18)                                                                                                                                        |
+| engram (self-host) | Docker image `ghcr.io/gentleman-programming/engram:v2.0.0` (S19)                                                                                                                                                   |
+| gentle-pi          | `pi install npm:gentle-pi` (S20)                                                                                                                                                                                   |
+| gga                | `brew install gentleman-programming/tap/gga` or `./install.sh`; Windows Git Bash + `gga.bat`/`gga.ps1` shim (S22)                                                                                                  |
 
 **Windows install conflict/note (both statements, not reconciled):** older v1.x docs push **Scoop** on Windows, while current platforms.md says "Scoop and official Windows binaries are still temporarily unavailable" pending an Authenticode restoration gate (S16). Both stated; see [README.md](README.md#open-questions-and-gaps), gap 4.
 

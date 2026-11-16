@@ -24,13 +24,13 @@ One row per record; columns exactly `ID | Date | Team | Symptom | System | Modul
 
 ## Lifecycle
 
-| Lifecycle | Meaning | Eligible verdict |
-|---|---|---|
-| `candidate` | First confirmed case. | `structural` only |
-| `active` | A second independent confirmed case confirmed the pattern. | `structural`; `exact` only when `Allow_exact: yes` and every discriminator is already evidenced in the current ticket |
-| `mitigated` | A fix is in place but the problem may recur. | `structural` only |
-| `resolved` | Confirmed fixed; retained for history. | none — never matched |
-| `retired` | Permanently removed from matching. | none — never matched |
+| Lifecycle   | Meaning                                                    | Eligible verdict                                                                                                      |
+| ----------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `candidate` | First confirmed case.                                      | `structural` only                                                                                                     |
+| `active`    | A second independent confirmed case confirmed the pattern. | `structural`; `exact` only when `Allow_exact: yes` and every discriminator is already evidenced in the current ticket |
+| `mitigated` | A fix is in place but the problem may recur.               | `structural` only                                                                                                     |
+| `resolved`  | Confirmed fixed; retained for history.                     | none — never matched                                                                                                  |
+| `retired`   | Permanently removed from matching.                         | none — never matched                                                                                                  |
 
 **Admission:** the first confirmed case admits a row as `candidate`; a `candidate` row is never an `exact` match. A second independent confirmed case may promote a `candidate` to `active`, which makes it eligible for `exact` when `Allow_exact: yes`.
 

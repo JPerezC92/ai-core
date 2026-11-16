@@ -11,6 +11,6 @@
 import type { BindingsDocument } from "#domain/synchronization/bindings.ts";
 
 export interface BindingsReader {
-  /** Read and validate the bindings document; `null` when absent or malformed. */
-  load(path: string): Promise<BindingsDocument | null>;
+	/** Read and validate the bindings document; `null` when absent or malformed. */
+	load(path: string): Promise<BindingsDocument | null>;
 }

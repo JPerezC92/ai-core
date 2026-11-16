@@ -65,22 +65,22 @@ Read `.aicore/core/architecture/testing/architecture.md` and `.aicore/core/archi
 
 ## Obligation mapping
 
-| Obligation | Concrete mapping | Applicability or uncovered decision |
-|---|---|---|
-| C1 Layers/dependencies | Structure and dependency mapping | Co-location does not permit operation framework imports. |
-| C2 Domain/ports | Domain and ports | Feature-specific error, shared/local records and conditional framework-free models. |
-| C3 Operation | Application operations | Undecorated class with `execute()` and a constructor-injected port, not a Hook and not a standalone function; no base class, interface, hierarchy or forwarding wrapper. |
-| C4 Mapping/composition | Domain and ports; Service and Hook | Rule ownership: a rule-bearing domain model owns the rule (C8) and the service owns none; unknown HTTP input parsed once; synchronous local-data branch. |
-| C5 Failures | Domain and ports; Application operations; Service and Hook | Frontend F2 maps documented service failures to returned typed errors, never business-failure throws; unrelated exceptions retain identity. Query-state conversion is presentation-only. |
-| C6 Serialization | Service | Transport payload handling stays at the service edge, not in the operation. |
-| C7 Helpers | Application operations; Imports and language conventions | Pure helpers keep their business-function names and are not forced into React Hooks or use cases. |
-| C8 Domain model | Domain and ports | Interfaces for records; conditional private entity factories, immutable replacements/nested values and pending facts. |
-| C9 Repositories/transactions | Domain and ports; Application operations; Service | Applicable service/query ports; conditional local aggregate persistence, no invented client-side transaction over HTTP. |
-| C10 Naming | Imports and language conventions; Service | Shared TS/JS syntax table, precise record/projection and boundary roles. |
-| F1 Layout/domain | Structure; Domain and ports | Feature folders retained. |
-| F2 Operation/adapter | Application operations; Service | Port injection and zero-business adapter. |
-| F3 Presentation | Hook; Component | Query state, notifications, controlled dialogs. |
-| F4 Organization | Structure and dependency mapping; Domain and ports | Feature/business-local modules and internal role growth, shared-type reuse. |
+| Obligation                   | Concrete mapping                                           | Applicability or uncovered decision                                                                                                                                                      |
+| ---------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| C1 Layers/dependencies       | Structure and dependency mapping                           | Co-location does not permit operation framework imports.                                                                                                                                 |
+| C2 Domain/ports              | Domain and ports                                           | Feature-specific error, shared/local records and conditional framework-free models.                                                                                                      |
+| C3 Operation                 | Application operations                                     | Undecorated class with `execute()` and a constructor-injected port, not a Hook and not a standalone function; no base class, interface, hierarchy or forwarding wrapper.                 |
+| C4 Mapping/composition       | Domain and ports; Service and Hook                         | Rule ownership: a rule-bearing domain model owns the rule (C8) and the service owns none; unknown HTTP input parsed once; synchronous local-data branch.                                 |
+| C5 Failures                  | Domain and ports; Application operations; Service and Hook | Frontend F2 maps documented service failures to returned typed errors, never business-failure throws; unrelated exceptions retain identity. Query-state conversion is presentation-only. |
+| C6 Serialization             | Service                                                    | Transport payload handling stays at the service edge, not in the operation.                                                                                                              |
+| C7 Helpers                   | Application operations; Imports and language conventions   | Pure helpers keep their business-function names and are not forced into React Hooks or use cases.                                                                                        |
+| C8 Domain model              | Domain and ports                                           | Interfaces for records; conditional private entity factories, immutable replacements/nested values and pending facts.                                                                    |
+| C9 Repositories/transactions | Domain and ports; Application operations; Service          | Applicable service/query ports; conditional local aggregate persistence, no invented client-side transaction over HTTP.                                                                  |
+| C10 Naming                   | Imports and language conventions; Service                  | Shared TS/JS syntax table, precise record/projection and boundary roles.                                                                                                                 |
+| F1 Layout/domain             | Structure; Domain and ports                                | Feature folders retained.                                                                                                                                                                |
+| F2 Operation/adapter         | Application operations; Service                            | Port injection and zero-business adapter.                                                                                                                                                |
+| F3 Presentation              | Hook; Component                                            | Query state, notifications, controlled dialogs.                                                                                                                                          |
+| F4 Organization              | Structure and dependency mapping; Domain and ports         | Feature/business-local modules and internal role growth, shared-type reuse.                                                                                                              |
 
 ## Open decisions
 

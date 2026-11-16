@@ -8,5 +8,5 @@ same table, because the model treats one register as shared knowledge.
 This file is created once by the incident workflow's authorized initialization
 and is never overwritten by that initialization or by synchronization.
 
-| ID | Date | Team | Symptom | System | Module | Problem | Discriminators | Exclusions | Evidence | Root cause | Lifecycle | Allow_exact | Status |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| ID  | Date | Team | Symptom | System | Module | Problem | Discriminators | Exclusions | Evidence | Root cause | Lifecycle | Allow_exact | Status |
+| --- | ---- | ---- | ------- | ------ | ------ | ------- | -------------- | ---------- | -------- | ---------- | --------- | ----------- | ------ |

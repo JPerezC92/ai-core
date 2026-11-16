@@ -13,26 +13,26 @@ import { dirname } from "node:path";
 
 /** Read a file as UTF-8 text without newline translation, or `null`. */
 export async function readTextFile(path: string): Promise<string | null> {
-  try {
-    return await readFile(path, "utf8");
-  } catch (error) {
-    if (isUnreadableAsFile(error)) {
-      return null;
-    }
-    throw error;
-  }
+	try {
+		return await readFile(path, "utf8");
+	} catch (error) {
+		if (isUnreadableAsFile(error)) {
+			return null;
+		}
+		throw error;
+	}
 }
 
 /** Read a file's bytes verbatim, or `null`. */
 export async function readBytesFile(path: string): Promise<Uint8Array | null> {
-  try {
-    return await readFile(path);
-  } catch (error) {
-    if (isUnreadableAsFile(error)) {
-      return null;
-    }
-    throw error;
-  }
+	try {
+		return await readFile(path);
+	} catch (error) {
+		if (isUnreadableAsFile(error)) {
+			return null;
+		}
+		throw error;
+	}
 }
 
 /**
@@ -42,19 +42,19 @@ export async function readBytesFile(path: string): Promise<Uint8Array | null> {
  * surviving lone `\r` become `\n` before the write.
  */
 export async function writeTextFile(path: string, content: string): Promise<void> {
-  await mkdir(dirname(path), { recursive: true });
-  await writeFile(path, content.replaceAll("\r\n", "\n").replaceAll("\r", "\n"), "utf8");
+	await mkdir(dirname(path), { recursive: true });
+	await writeFile(path, content.replaceAll("\r\n", "\n").replaceAll("\r", "\n"), "utf8");
 }
 
 /** Write bytes exactly as given, creating the parent directory when absent. */
 export async function writeBytesFile(path: string, content: Uint8Array): Promise<void> {
-  await mkdir(dirname(path), { recursive: true });
-  await writeFile(path, content);
+	await mkdir(dirname(path), { recursive: true });
+	await writeFile(path, content);
 }
 
 /** Create a directory and any missing parent. */
 export async function ensureDirectory(path: string): Promise<void> {
-  await mkdir(path, { recursive: true });
+	await mkdir(path, { recursive: true });
 }
 
 /** A directory entry's own kind, read without following a link. */
@@ -70,24 +70,24 @@ export type EntryKind = "directory" | "file" | "other";
  * walk; every other failure is a boundary exception (C5).
  */
 export async function readEntryKind(path: string): Promise<EntryKind> {
-  try {
-    const observed = await lstat(path);
-    if (observed.isDirectory()) {
-      return "directory";
-    }
-    return observed.isFile() ? "file" : "other";
-  } catch (error) {
-    if (isMissing(error)) {
-      return "other";
-    }
-    throw error;
-  }
+	try {
+		const observed = await lstat(path);
+		if (observed.isDirectory()) {
+			return "directory";
+		}
+		return observed.isFile() ? "file" : "other";
+	} catch (error) {
+		if (isMissing(error)) {
+			return "other";
+		}
+		throw error;
+	}
 }
 
 /** Return whether a `readFile`/`stat` failure means "the path is not there". */
 export function isMissing(error: unknown): boolean {
-  const code = (error as { code?: string }).code;
-  return code === "ENOENT" || code === "ENOTDIR";
+	const code = (error as { code?: string }).code;
+	return code === "ENOENT" || code === "ENOTDIR";
 }
 
 /**
@@ -95,24 +95,24 @@ export function isMissing(error: unknown): boolean {
  * operation — the failure class the engine handles as an I/O result.
  */
 const FILE_SYSTEM_ERROR_CODES: ReadonlySet<string> = new Set([
-  "EACCES",
-  "EBUSY",
-  "EDQUOT",
-  "EIO",
-  "EISDIR",
-  "ELOOP",
-  "EMFILE",
-  "ENAMETOOLONG",
-  "ENFILE",
-  "ENOENT",
-  "ENOSPC",
-  "ENOTDIR",
-  "ENOTEMPTY",
-  "EOVERFLOW",
-  "EPERM",
-  "EROFS",
-  "ETXTBSY",
-  "EXDEV",
+	"EACCES",
+	"EBUSY",
+	"EDQUOT",
+	"EIO",
+	"EISDIR",
+	"ELOOP",
+	"EMFILE",
+	"ENAMETOOLONG",
+	"ENFILE",
+	"ENOENT",
+	"ENOSPC",
+	"ENOTDIR",
+	"ENOTEMPTY",
+	"EOVERFLOW",
+	"EPERM",
+	"EROFS",
+	"ETXTBSY",
+	"EXDEV",
 ]);
 
 /**
@@ -122,8 +122,8 @@ const FILE_SYSTEM_ERROR_CODES: ReadonlySet<string> = new Set([
  * programming fault and must surface as one, never as a business outcome (C5).
  */
 export function isFileSystemError(error: unknown): boolean {
-  const code = (error as { code?: unknown }).code;
-  return typeof code === "string" && FILE_SYSTEM_ERROR_CODES.has(code);
+	const code = (error as { code?: unknown }).code;
+	return typeof code === "string" && FILE_SYSTEM_ERROR_CODES.has(code);
 }
 
 /**
@@ -134,5 +134,5 @@ export function isFileSystemError(error: unknown): boolean {
  * transport fault.
  */
 function isUnreadableAsFile(error: unknown): boolean {
-  return isMissing(error) || (error as { code?: string }).code === "EISDIR";
+	return isMissing(error) || (error as { code?: string }).code === "EISDIR";
 }

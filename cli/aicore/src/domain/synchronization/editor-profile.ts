@@ -27,12 +27,12 @@ export const DEFAULT_EDITOR_PROFILE: EditorProfile = "opencode";
 
 /** What one editor receives from a cleared source. */
 export type EditorDelivery =
-  | { readonly kind: "delivered"; readonly destination: string }
-  | { readonly kind: "omitted" };
+	| { readonly kind: "delivered"; readonly destination: string }
+	| { readonly kind: "omitted" };
 
 /** Report whether a value names an editor profile. */
 export function isEditorProfile(value: string): value is EditorProfile {
-  return (EDITOR_PROFILES as readonly string[]).includes(value);
+	return (EDITOR_PROFILES as readonly string[]).includes(value);
 }
 
 /**
@@ -41,14 +41,11 @@ export function isEditorProfile(value: string): value is EditorProfile {
  * An explicit request always wins; otherwise the destination's own record does,
  * and a destination that records none is read as the default profile.
  */
-export function effectiveEditor(
-  requested: EditorProfile | undefined,
-  enrolled: EditorProfile | null,
-): EditorProfile {
-  if (requested !== undefined) {
-    return requested;
-  }
-  return enrolled ?? DEFAULT_EDITOR_PROFILE;
+export function effectiveEditor(requested: EditorProfile | undefined, enrolled: EditorProfile | null): EditorProfile {
+	if (requested !== undefined) {
+		return requested;
+	}
+	return enrolled ?? DEFAULT_EDITOR_PROFILE;
 }
 
 /**
@@ -63,20 +60,20 @@ export function effectiveEditor(
  * for another editor is refused rather than delivered to the wrong target.
  */
 export function editorMismatch(
-  enrolled: EditorProfile | null,
-  requested: EditorProfile | undefined,
+	enrolled: EditorProfile | null,
+	requested: EditorProfile | undefined,
 ): SynchronizationFailure | null {
-  if (requested === undefined) {
-    return null;
-  }
-  const destinationEditor = enrolled ?? DEFAULT_EDITOR_PROFILE;
-  if (destinationEditor === requested) {
-    return null;
-  }
-  return invalid(
-    `destination is enrolled for editor '${destinationEditor}'; this run requested '${requested}'. ` +
-      "Changing an enrolled destination's editor is a destination-owned migration: " +
-      "enroll the destination again under the new editor, or move its files yourself. " +
-      "Nothing was written.",
-  );
+	if (requested === undefined) {
+		return null;
+	}
+	const destinationEditor = enrolled ?? DEFAULT_EDITOR_PROFILE;
+	if (destinationEditor === requested) {
+		return null;
+	}
+	return invalid(
+		`destination is enrolled for editor '${destinationEditor}'; this run requested '${requested}'. ` +
+			"Changing an enrolled destination's editor is a destination-owned migration: " +
+			"enroll the destination again under the new editor, or move its files yourself. " +
+			"Nothing was written.",
+	);
 }

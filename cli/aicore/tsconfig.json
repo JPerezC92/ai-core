@@ -20,10 +20,5 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": [
-    "src/**/*.ts",
-    "tests/**/*.ts",
-    "vitest.config.ts",
-    "vitest.e2e.config.ts"
-  ]
+  "include": ["src/**/*.ts", "tests/**/*.ts", "vitest.config.ts", "vitest.e2e.config.ts"]
 }

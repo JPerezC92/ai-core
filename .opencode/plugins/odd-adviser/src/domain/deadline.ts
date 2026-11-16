@@ -3,5 +3,5 @@
 // test supplies a manually triggered double. This module performs no IO.
 
 export type Deadline = {
-  schedule(timeoutMs: number, onElapsed: () => void): () => void;
+	schedule(timeoutMs: number, onElapsed: () => void): () => void;
 };

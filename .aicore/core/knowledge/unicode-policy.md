@@ -24,14 +24,14 @@ Parse with the Python standard library only. Unknown keys, missing keys, wrong t
 
 ### Root object — exact keys
 
-| Key | Type | v1 constraint |
-|---|---|---|
-| `version` | integer | `1` |
-| `id` | string | non-empty |
-| `default_classification` | string | exactly `allow` |
-| `decoding` | object | see below |
-| `rules` | array | objects; coverage pairwise non-overlapping |
-| `editor_projection` | object | see below |
+| Key                      | Type    | v1 constraint                              |
+| ------------------------ | ------- | ------------------------------------------ |
+| `version`                | integer | `1`                                        |
+| `id`                     | string  | non-empty                                  |
+| `default_classification` | string  | exactly `allow`                            |
+| `decoding`               | object  | see below                                  |
+| `rules`                  | array   | objects; coverage pairwise non-overlapping |
+| `editor_projection`      | object  | see below                                  |
 
 No `suppressions` key exists. Warnings do not fail validation, so no suppression interface is provided.
 
@@ -39,9 +39,9 @@ No `suppressions` key exists. Warnings do not fail validation, so no suppression
 
 ### `decoding` — exact keys
 
-| Key | Type | v1 constraint |
-|---|---|---|
-| `encoding` | string | exactly `utf-8` |
+| Key                | Type   | v1 constraint                         |
+| ------------------ | ------ | ------------------------------------- |
+| `encoding`         | string | exactly `utf-8`                       |
 | `invalid_sequence` | object | envelope rule, not a code-point range |
 
 `invalid_sequence` exact keys: `id` (string), `severity` (exactly `error`), `class` (string), `rationale` (string). This is the only classification that is not a scalar range. Ill-formed UTF-8 never becomes `U+FFFD` for scanning.
@@ -61,11 +61,11 @@ Hex form: `U+` plus uppercase hexadecimal, minimum four digits (`U+0000` .. `U+1
 
 ### `editor_projection` — exact keys
 
-| Key | Type | v1 instance |
-|---|---|---|
-| `scope` | string | `[markdown]` |
-| `setting_key` | string | `gremlins.characters` |
-| `overrides` | array | representable allow-overrides only |
+| Key           | Type   | v1 instance                        |
+| ------------- | ------ | ---------------------------------- |
+| `scope`       | string | `[markdown]`                       |
+| `setting_key` | string | `gremlins.characters`              |
+| `overrides`   | array  | representable allow-overrides only |
 
 Each override exact keys: `codepoint` (integer), `hex` (`U+` form, must match), `gremlins_key` (lowercase hexadecimal of `codepoint`, minimum four digits, no `U+` prefix), `severity` (exactly `none`), `description` (non-empty string). Codepoints and `gremlins_key` values must be unique. This object is not a clone of Gremlins extension defaults and is not mixed into `rules`.
 
@@ -121,13 +121,13 @@ Never follow symlinks (`lstat` / `abspath` + `normpath` only; not `realpath` / `
 
 Inspect each explicit path without following links:
 
-| Explicit path | Result |
-|---|---|
-| Missing or unreadable | stderr, exit 2; do not crash |
-| Symlink file or symlink directory | stderr, exit 2; do not follow |
-| Regular file whose `suffix.lower() != ".md"` | stderr, exit 2; do not scan arbitrary content |
-| Regular file whose `suffix.lower() == ".md"` | scan that file |
-| Real directory | enter it even when its own basename is an excluded name (user opt-in) |
+| Explicit path                                | Result                                                                |
+| -------------------------------------------- | --------------------------------------------------------------------- |
+| Missing or unreadable                        | stderr, exit 2; do not crash                                          |
+| Symlink file or symlink directory            | stderr, exit 2; do not follow                                         |
+| Regular file whose `suffix.lower() != ".md"` | stderr, exit 2; do not scan arbitrary content                         |
+| Regular file whose `suffix.lower() == ".md"` | scan that file                                                        |
+| Real directory                               | enter it even when its own basename is an excluded name (user opt-in) |
 
 A passed symlink root is retained only as an input error: no follow, no findings from the target.
 
@@ -149,11 +149,11 @@ Stdout `ERR-UTF8`: `{path}:{line}:{col}: error ERR-UTF8 byte {n}` with 1-based b
 
 Stdout `EDITOR-DRIFT`: `{settings-path}: error EDITOR-DRIFT missing={k} extra={k} mismatched={k}` with no line, column, or `U+` name. Sort as path, then line 0, column 0, ID `EDITOR-DRIFT`. Sanitize keys to printable ASCII.
 
-| Exit | Meaning |
-|---|---|
-| 0 | No errors. Warnings may exist. |
-| 1 | Content errors and/or `EDITOR-DRIFT`. |
-| 2 | Any policy, input, or IO failure. Exit 2 takes precedence over content errors found in the same run. |
+| Exit | Meaning                                                                                              |
+| ---- | ---------------------------------------------------------------------------------------------------- |
+| 0    | No errors. Warnings may exist.                                                                       |
+| 1    | Content errors and/or `EDITOR-DRIFT`.                                                                |
+| 2    | Any policy, input, or IO failure. Exit 2 takes precedence over content errors found in the same run. |
 
 ## Escaped examples
 
@@ -175,9 +175,9 @@ Mojibake that is still well-formed Unicode is not detected. Homoglyphs and TR39 
 
 ## Original `unicode-policy.md` accounting
 
-| Original | Disposition |
-|---|---|
-| Six typographic characters permitted as prose; do not rewrite verbatim quotations | Retained; encoded as default allow, not as `rules`. S4 also permits en dashes in inline-code numeric ranges. |
-| Markdown-only Gremlins allowlist; six characters `none`; no global Gremlins change; non-Markdown keeps extension defaults | Retained for the six `none` overrides and the non-Markdown/global boundary. |
-| Retain every other Gremlins default inside `[markdown]` | Retired by S5. Copied default tables are not a second policy. Checker owns C0/C1/bidi/ZWSP/NBSP/SHY/FFFD. |
-| Live Gremlins verification of em dash/curly quote plus ZWSP error | Retired as a claimed runtime proof. Static `--check-editor` checks representable overrides only. Live reload remains unverified. |
+| Original                                                                                                                  | Disposition                                                                                                                      |
+| ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Six typographic characters permitted as prose; do not rewrite verbatim quotations                                         | Retained; encoded as default allow, not as `rules`. S4 also permits en dashes in inline-code numeric ranges.                     |
+| Markdown-only Gremlins allowlist; six characters `none`; no global Gremlins change; non-Markdown keeps extension defaults | Retained for the six `none` overrides and the non-Markdown/global boundary.                                                      |
+| Retain every other Gremlins default inside `[markdown]`                                                                   | Retired by S5. Copied default tables are not a second policy. Checker owns C0/C1/bidi/ZWSP/NBSP/SHY/FFFD.                        |
+| Live Gremlins verification of em dash/curly quote plus ZWSP error                                                         | Retired as a claimed runtime proof. Static `--check-editor` checks representable overrides only. Live reload remains unverified. |

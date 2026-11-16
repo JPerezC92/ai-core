@@ -6,12 +6,12 @@ import type { ScanInput, ScanResult } from "#scripts/attribution_scan/domain/rec
 import { validatePolicy, validateSnapshot } from "#scripts/attribution_scan/domain/validation.ts";
 
 export class ScanAttribution {
-  /** Validate the snapshot before the policy, then scan the validated snapshot. */
-  execute(input: ScanInput): ScanResult | PolicyValidationError | SnapshotValidationError {
-    const snapshot = validateSnapshot(input.snapshotValue);
-    if (snapshot instanceof SnapshotValidationError) return snapshot;
-    const policy = validatePolicy(input.policyValue);
-    if (policy instanceof PolicyValidationError) return policy;
-    return scanValidatedSnapshot(snapshot, policy);
-  }
+	/** Validate the snapshot before the policy, then scan the validated snapshot. */
+	execute(input: ScanInput): ScanResult | PolicyValidationError | SnapshotValidationError {
+		const snapshot = validateSnapshot(input.snapshotValue);
+		if (snapshot instanceof SnapshotValidationError) return snapshot;
+		const policy = validatePolicy(input.policyValue);
+		if (policy instanceof PolicyValidationError) return policy;
+		return scanValidatedSnapshot(snapshot, policy);
+	}
 }

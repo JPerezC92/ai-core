@@ -12,45 +12,30 @@
  * refusal cannot leave a directory or a half-applied payload behind.
  */
 
+import { CLEARANCE_FILENAME, MODE_MERGE, MODE_RAW } from "#domain/synchronization/constants.ts";
 import {
-  CLEARANCE_FILENAME,
-  MODE_MERGE,
-  MODE_RAW,
-} from "#domain/synchronization/constants.ts";
-import {
-  bindingModeConflict,
-  destinationDrift,
-  nonRegionDestinations,
-  normalizePending,
-  protectedExclusionFailure,
-  unclearedSources,
-  withOptOuts,
-  withRestoredOptOuts,
+	bindingModeConflict,
+	destinationDrift,
+	nonRegionDestinations,
+	normalizePending,
+	protectedExclusionFailure,
+	unclearedSources,
+	withOptOuts,
+	withRestoredOptOuts,
 } from "#domain/synchronization/bindings.ts";
-import {
-  drift,
-  failed,
-  invalid,
-  succeeded,
-  type OperationOutcome,
-} from "#domain/synchronization/failures.ts";
+import { drift, failed, invalid, succeeded, type OperationOutcome } from "#domain/synchronization/failures.ts";
 import { splitFrontmatter } from "#domain/synchronization/frontmatter.ts";
 import { omitMcpServersOf } from "#domain/synchronization/clearance.ts";
 import { mergeTopLevel } from "#domain/synchronization/merge.ts";
 import { editorMismatch, effectiveEditor } from "#domain/synchronization/editor-profile.ts";
-import {
-  protectedBytes,
-  renderInitFile,
-  renderWithRegion,
-  splitRegions,
-} from "#domain/synchronization/regions.ts";
+import { protectedBytes, renderInitFile, renderWithRegion, splitRegions } from "#domain/synchronization/regions.ts";
 import type {
-  BindingsStore,
-  ClearanceStore,
-  DestinationFiles,
-  FilesystemLayout,
-  SourceFiles,
-  WriteTargetGuard,
+	BindingsStore,
+	ClearanceStore,
+	DestinationFiles,
+	FilesystemLayout,
+	SourceFiles,
+	WriteTargetGuard,
 } from "#domain/synchronization/ports.ts";
 
 import { invalidClearance, readClearanceModes } from "./clearance-modes.ts";
@@ -60,236 +45,224 @@ import type { SynchronizationRequest } from "./requests.ts";
 
 /** Collaborators the update needs. */
 export type ApplyCoreRevisionDependencies = {
-  readonly bindings: BindingsStore;
-  readonly clearance: ClearanceStore;
-  readonly sources: SourceFiles;
-  readonly destinations: DestinationFiles;
-  readonly layout: FilesystemLayout;
-  readonly guard: WriteTargetGuard;
+	readonly bindings: BindingsStore;
+	readonly clearance: ClearanceStore;
+	readonly sources: SourceFiles;
+	readonly destinations: DestinationFiles;
+	readonly layout: FilesystemLayout;
+	readonly guard: WriteTargetGuard;
 };
 
 /** One pending text write. */
 type TextWrite = {
-  readonly path: string;
-  readonly content: string;
+	readonly path: string;
+	readonly content: string;
 };
 
 /** One pending byte write. */
 type ByteWrite = {
-  readonly path: string;
-  readonly content: Uint8Array;
+	readonly path: string;
+	readonly content: Uint8Array;
 };
 
 export class ApplyCoreRevision {
-  readonly #dependencies: ApplyCoreRevisionDependencies;
+	readonly #dependencies: ApplyCoreRevisionDependencies;
 
-  constructor(dependencies: ApplyCoreRevisionDependencies) {
-    this.#dependencies = dependencies;
-  }
+	constructor(dependencies: ApplyCoreRevisionDependencies) {
+		this.#dependencies = dependencies;
+	}
 
-  async execute(request: SynchronizationRequest): Promise<OperationOutcome> {
-    const { bindings, clearance: clearanceStore, sources, destinations, layout, guard } =
-      this.#dependencies;
+	async execute(request: SynchronizationRequest): Promise<OperationOutcome> {
+		const { bindings, clearance: clearanceStore, sources, destinations, layout, guard } = this.#dependencies;
 
-    const document = await bindings.load(request.bindingsPath);
-    if (document === null) {
-      return failed(invalid(`invalid bindings: ${request.bindingsPath}`));
-    }
+		const document = await bindings.load(request.bindingsPath);
+		if (document === null) {
+			return failed(invalid(`invalid bindings: ${request.bindingsPath}`));
+		}
 
-    const mismatch = editorMismatch(document.editor, request.editor);
-    if (mismatch !== null) {
-      return failed(mismatch);
-    }
-    const editor = effectiveEditor(request.editor, document.editor);
+		const mismatch = editorMismatch(document.editor, request.editor);
+		if (mismatch !== null) {
+			return failed(mismatch);
+		}
+		const editor = effectiveEditor(request.editor, document.editor);
 
-    const protectedExclusion = protectedExclusionFailure(document);
-    if (protectedExclusion !== null) {
-      return failed(protectedExclusion);
-    }
+		const protectedExclusion = protectedExclusionFailure(document);
+		if (protectedExclusion !== null) {
+			return failed(protectedExclusion);
+		}
 
-    const clearance = await readClearanceModes(
-      clearanceStore,
-      layout,
-      request.sourceRoot,
-      editor,
-    );
+		const clearance = await readClearanceModes(clearanceStore, layout, request.sourceRoot, editor);
 
-    // A source this destination opted out of is unmanaged: no binding, no write
-    // and no drift. The refusal below therefore never names it as uncleared, and
-    // the write-target preflight never observes its old destination as a target.
-    const managed = withOptOuts(document);
-    // An opt-out its owner revoked — the entry is gone and the source is cleared
-    // for this run — is delivered again, and its outstanding path leaves
-    // `pending`.
-    const current = withRestoredOptOuts(managed, clearance.modes, clearance.destinations);
+		// A source this destination opted out of is unmanaged: no binding, no write
+		// and no drift. The refusal below therefore never names it as uncleared, and
+		// the write-target preflight never observes its old destination as a target.
+		const managed = withOptOuts(document);
+		// An opt-out its owner revoked — the entry is gone and the source is cleared
+		// for this run — is delivered again, and its outstanding path leaves
+		// `pending`.
+		const current = withRestoredOptOuts(managed, clearance.modes, clearance.destinations);
 
-    const refusal = await guard.refuse({
-      command: "apply",
-      sourceRoot: request.sourceRoot,
-      destinationRoot: request.destinationRoot,
-      bindingsPath: request.bindingsPath,
-      document: current,
-      modes: clearance.modes,
-      newRawDestinations: new Set<string>(),
-    });
-    if (refusal !== null) {
-      return failed(refusal);
-    }
+		const refusal = await guard.refuse({
+			command: "apply",
+			sourceRoot: request.sourceRoot,
+			destinationRoot: request.destinationRoot,
+			bindingsPath: request.bindingsPath,
+			document: current,
+			modes: clearance.modes,
+			newRawDestinations: new Set<string>(),
+		});
+		if (refusal !== null) {
+			return failed(refusal);
+		}
 
-    const clearancePath = layout.join(request.sourceRoot, CLEARANCE_FILENAME);
-    if (!clearance.exists) {
-      return failed(drift(`missing clearance file: ${clearancePath}`));
-    }
-    if (clearance.entries === null) {
-      return failed(invalidClearance(clearancePath, clearance));
-    }
-    for (const entry of current.bindings) {
-      const conflict = bindingModeConflict(entry, clearance.modes);
-      if (conflict !== null) {
-        return failed(conflict);
-      }
-    }
-    const uncleared = unclearedSources(current, new Set(clearance.modes.keys()));
-    if (uncleared.length > 0) {
-      return failed(drift(`source not cleared for distribution: ${uncleared.join(", ")}`));
-    }
-    if (clearance.entries !== null) {
-      const relocated = destinationDrift(current, clearance.entries, clearance.destinations);
-      if (relocated !== null) {
-        return failed(relocated);
-      }
-    }
+		const clearancePath = layout.join(request.sourceRoot, CLEARANCE_FILENAME);
+		if (!clearance.exists) {
+			return failed(drift(`missing clearance file: ${clearancePath}`));
+		}
+		if (clearance.entries === null) {
+			return failed(invalidClearance(clearancePath, clearance));
+		}
+		for (const entry of current.bindings) {
+			const conflict = bindingModeConflict(entry, clearance.modes);
+			if (conflict !== null) {
+				return failed(conflict);
+			}
+		}
+		const uncleared = unclearedSources(current, new Set(clearance.modes.keys()));
+		if (uncleared.length > 0) {
+			return failed(drift(`source not cleared for distribution: ${uncleared.join(", ")}`));
+		}
+		if (clearance.entries !== null) {
+			const relocated = destinationDrift(current, clearance.entries, clearance.destinations);
+			if (relocated !== null) {
+				return failed(relocated);
+			}
+		}
 
-    const textWrites: TextWrite[] = [];
-    const byteWrites: ByteWrite[] = [];
-    const created: string[] = [];
-    const notes: string[] = [];
+		const textWrites: TextWrite[] = [];
+		const byteWrites: ByteWrite[] = [];
+		const created: string[] = [];
+		const notes: string[] = [];
 
-    for (const entry of current.bindings) {
-      const mode = clearance.modes.get(entry.source);
-      const sourcePath = layout.join(request.sourceRoot, entry.source);
+		for (const entry of current.bindings) {
+			const mode = clearance.modes.get(entry.source);
+			const sourcePath = layout.join(request.sourceRoot, entry.source);
 
-      if (mode === MODE_RAW) {
-        const sourceBytes = await sources.readBytes(sourcePath);
-        if (sourceBytes === null) {
-          return failed(drift(`missing source: ${sourcePath}`));
-        }
-        for (const destination of entry.destinations) {
-          const destinationPath = layout.join(request.destinationRoot, destination);
-          if (!(await layout.isFile(destinationPath))) {
-            if (await layout.exists(destinationPath)) {
-              return failed(drift(`missing destination: ${destinationPath}`));
-            }
-            created.push(destination);
-          }
-          byteWrites.push({ path: destinationPath, content: sourceBytes });
-        }
-        continue;
-      }
+			if (mode === MODE_RAW) {
+				const sourceBytes = await sources.readBytes(sourcePath);
+				if (sourceBytes === null) {
+					return failed(drift(`missing source: ${sourcePath}`));
+				}
+				for (const destination of entry.destinations) {
+					const destinationPath = layout.join(request.destinationRoot, destination);
+					if (!(await layout.isFile(destinationPath))) {
+						if (await layout.exists(destinationPath)) {
+							return failed(drift(`missing destination: ${destinationPath}`));
+						}
+						created.push(destination);
+					}
+					byteWrites.push({ path: destinationPath, content: sourceBytes });
+				}
+				continue;
+			}
 
-      if (mode === MODE_MERGE) {
-        const sourceText = await sources.readText(sourcePath);
-        if (sourceText === null) {
-          return failed(drift(`missing source: ${sourcePath}`));
-        }
-        for (const destination of entry.destinations) {
-          const destinationPath = layout.join(request.destinationRoot, destination);
-          if (!(await layout.isFile(destinationPath))) {
-            return failed(
-              drift(
-                `missing destination: ${destinationPath} ` +
-                  "(merge mode cannot create it; the destination must exist)",
-              ),
-            );
-          }
-          const destinationText = await destinations.readText(destinationPath);
-          if (destinationText === null) {
-            return failed(drift(`missing destination: ${destinationPath}`));
-          }
-          const mergedText = mergeTopLevel(
-            sourceText,
-            destinationText,
-            projectName(request.destinationRoot),
-            omitMcpServersOf(clearance.entries?.get(entry.source)),
-          );
-          if (mergedText === null) {
-            return failed(invalid(`invalid JSONC: ${destinationPath}`));
-          }
-          if (mergedText !== destinationText) {
-            textWrites.push({ path: destinationPath, content: mergedText });
-          }
-        }
-        continue;
-      }
+			if (mode === MODE_MERGE) {
+				const sourceText = await sources.readText(sourcePath);
+				if (sourceText === null) {
+					return failed(drift(`missing source: ${sourcePath}`));
+				}
+				for (const destination of entry.destinations) {
+					const destinationPath = layout.join(request.destinationRoot, destination);
+					if (!(await layout.isFile(destinationPath))) {
+						return failed(
+							drift(
+								`missing destination: ${destinationPath} ` +
+									"(merge mode cannot create it; the destination must exist)",
+							),
+						);
+					}
+					const destinationText = await destinations.readText(destinationPath);
+					if (destinationText === null) {
+						return failed(drift(`missing destination: ${destinationPath}`));
+					}
+					const mergedText = mergeTopLevel(
+						sourceText,
+						destinationText,
+						projectName(request.destinationRoot),
+						omitMcpServersOf(clearance.entries?.get(entry.source)),
+					);
+					if (mergedText === null) {
+						return failed(invalid(`invalid JSONC: ${destinationPath}`));
+					}
+					if (mergedText !== destinationText) {
+						textWrites.push({ path: destinationPath, content: mergedText });
+					}
+				}
+				continue;
+			}
 
-      const read = await sources.readCore(sourcePath);
-      if (read === null) {
-        return failed(drift(`missing source: ${sourcePath}`));
-      }
-      if (read.kind === "malformed") {
-        return failed(invalid(`invalid source markers: ${sourcePath}`));
-      }
-      const sourceText = await sources.readText(sourcePath);
-      const sourceFrontmatter =
-        sourceText === null ? "" : splitFrontmatter(sourceText).frontmatter;
+			const read = await sources.readCore(sourcePath);
+			if (read === null) {
+				return failed(drift(`missing source: ${sourcePath}`));
+			}
+			if (read.kind === "malformed") {
+				return failed(invalid(`invalid source markers: ${sourcePath}`));
+			}
+			const sourceText = await sources.readText(sourcePath);
+			const sourceFrontmatter = sourceText === null ? "" : splitFrontmatter(sourceText).frontmatter;
 
-      for (const destination of entry.destinations) {
-        const destinationPath = layout.join(request.destinationRoot, destination);
-        if (!(await layout.isFile(destinationPath))) {
-          if (await layout.exists(destinationPath)) {
-            return failed(drift(`missing destination: ${destinationPath}`));
-          }
-          textWrites.push({
-            path: destinationPath,
-            content: renderInitFile("", read.core, sourceFrontmatter).text,
-          });
-          created.push(destination);
-          continue;
-        }
-        const destinationContent = await destinations.readText(destinationPath);
-        const split = destinationContent === null ? null : splitRegions(destinationContent);
-        if (split === null) {
-          return failed(invalid(`invalid destination markers: ${destinationPath}`));
-        }
-        const rendered = renderWithRegion(split, read.core, sourceFrontmatter);
-        if (rendered.skipped !== "") {
-          notes.push(
-            `frontmatter not refreshed: ${destinationPath} (${rendered.skipped})`,
-          );
-        }
-        const newSplit = splitRegions(rendered.text);
-        if (newSplit === null || protectedBytes(newSplit) !== protectedBytes(split)) {
-          return failed(invalid(`outside-marker mismatch: ${destinationPath}`));
-        }
-        textWrites.push({ path: destinationPath, content: rendered.text });
-      }
-    }
+			for (const destination of entry.destinations) {
+				const destinationPath = layout.join(request.destinationRoot, destination);
+				if (!(await layout.isFile(destinationPath))) {
+					if (await layout.exists(destinationPath)) {
+						return failed(drift(`missing destination: ${destinationPath}`));
+					}
+					textWrites.push({
+						path: destinationPath,
+						content: renderInitFile("", read.core, sourceFrontmatter).text,
+					});
+					created.push(destination);
+					continue;
+				}
+				const destinationContent = await destinations.readText(destinationPath);
+				const split = destinationContent === null ? null : splitRegions(destinationContent);
+				if (split === null) {
+					return failed(invalid(`invalid destination markers: ${destinationPath}`));
+				}
+				const rendered = renderWithRegion(split, read.core, sourceFrontmatter);
+				if (rendered.skipped !== "") {
+					notes.push(`frontmatter not refreshed: ${destinationPath} (${rendered.skipped})`);
+				}
+				const newSplit = splitRegions(rendered.text);
+				if (newSplit === null || protectedBytes(newSplit) !== protectedBytes(split)) {
+					return failed(invalid(`outside-marker mismatch: ${destinationPath}`));
+				}
+				textWrites.push({ path: destinationPath, content: rendered.text });
+			}
+		}
 
-    for (const write of textWrites) {
-      await layout.ensureDirectory(layout.parent(write.path));
-      await destinations.writeText(write.path, write.content);
-    }
-    for (const write of byteWrites) {
-      await layout.ensureDirectory(layout.parent(write.path));
-      await destinations.writeBytes(write.path, write.content);
-    }
-    await ensureOpenCodeSecrets(editor, request.destinationRoot, {
-      destinations,
-      layout,
-    });
+		for (const write of textWrites) {
+			await layout.ensureDirectory(layout.parent(write.path));
+			await destinations.writeText(write.path, write.content);
+		}
+		for (const write of byteWrites) {
+			await layout.ensureDirectory(layout.parent(write.path));
+			await destinations.writeBytes(write.path, write.content);
+		}
+		await ensureOpenCodeSecrets(editor, request.destinationRoot, {
+			destinations,
+			layout,
+		});
 
-    const pending = normalizePending(
-      current.pending,
-      nonRegionDestinations(current, clearance.modes),
-    );
-    const pinned = { ...current, coreRevision: request.sourceRevision, pending };
-    await bindings.save(request.bindingsPath, pinned);
-    await layout.syncBlocker(request.destinationRoot, pinned, pending);
+		const pending = normalizePending(current.pending, nonRegionDestinations(current, clearance.modes));
+		const pinned = { ...current, coreRevision: request.sourceRevision, pending };
+		await bindings.save(request.bindingsPath, pinned);
+		await layout.syncBlocker(request.destinationRoot, pinned, pending);
 
-    const parts = ["applied", ...notes];
-    if (created.length > 0) {
-      parts.push(`created: ${created.join(", ")}`);
-    }
-    return succeeded(parts.join("; "));
-  }
+		const parts = ["applied", ...notes];
+		if (created.length > 0) {
+			parts.push(`created: ${created.join(", ")}`);
+		}
+		return succeeded(parts.join("; "));
+	}
 }

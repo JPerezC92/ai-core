@@ -7,6 +7,7 @@ Query-budget: "0/6"
 identification_verdict: "pending"
 Same-query-reruns: "0/2"
 ---
+
 <!-- Query-budget is used/limit, default 6; exhausted when used equals limit. -->
 <!-- identification_verdict valid values:
      pending    — set at scaffold; the identify step replaces it
@@ -29,21 +30,21 @@ For each handoff, record the outgoing/incoming instance, accepted inputs/outputs
 
 ## Step index
 
-| Step | File | Owner | Status |
-|---|---|---|---|
-| identify | `01-identify.md` | Cipher 🔓 (Lead Orchestrator) | ⬜ |
-| investigate | `02-investigate.md` | Investigator 🔍 (Incident Investigator) | ⬜ |
-| synthesize | `03-synthesize.md` | Cipher 🔓 (Lead Orchestrator) | ⬜ |
-| respond | `response-draft.md` | Quill 🪶 (Note Drafter) | ⬜ |
+| Step        | File                | Owner                                   | Status |
+| ----------- | ------------------- | --------------------------------------- | ------ |
+| identify    | `01-identify.md`    | Cipher 🔓 (Lead Orchestrator)           | ⬜     |
+| investigate | `02-investigate.md` | Investigator 🔍 (Incident Investigator) | ⬜     |
+| synthesize  | `03-synthesize.md`  | Cipher 🔓 (Lead Orchestrator)           | ⬜     |
+| respond     | `response-draft.md` | Quill 🪶 (Note Drafter)                 | ⬜     |
 
 ## Kill-switch status
 
-| Kill-switch | Budget | Consumed | Remaining |
-|---|---|---|---|
-| Hypotheses | 3 | 0 | 3 |
-| Queries | 6 | 0 | 6 |
-| Same-query reruns | 2 | 0 | 2 |
-| SLA warn at | 75% | — | — |
+| Kill-switch       | Budget | Consumed | Remaining |
+| ----------------- | ------ | -------- | --------- |
+| Hypotheses        | 3      | 0        | 3         |
+| Queries           | 6      | 0        | 6         |
+| Same-query reruns | 2      | 0        | 2         |
+| SLA warn at       | 75%    | —        | —         |
 
 `Hypotheses-outstanding` starts `3/3` and decrements per resolved hypothesis; no concurrent competing hypotheses. `Query-budget` is used/current-authorized-limit, initially `0/6`; record each actual query execution once, including inconclusive executions, and never invent consumption for unexecuted work. Exhaustion is used = limit; raise the denominator only with user authorization before further execution and never write used > limit or `14/6`. `Same-query-reruns` starts `0/2`; increment per identical rerun and stop reruns at 2. Transfer all three unchanged except for evidenced consumption; keep this table consistent with the header. Queries remain sequential H1→H2→H3.
 

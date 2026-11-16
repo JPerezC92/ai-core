@@ -7,13 +7,13 @@ Accepted decisions reach agents through their architecture owners, not through t
 
 ### Artifact roles
 
-| Artifact | Carries |
-|---|---|
-| Research record | evidence: what was observed, its bounds, what stays unknown |
-| Decision record (ADR) | the immutable rationale of one decision, its alternatives, and its authorization boundary |
-| Architecture owner | the normative current rule an agent follows |
-| Architecture gate | per-change application of that rule to the edit under review |
-| Adoption audit | evidence of how far current code conforms at a point in time — never a conformance certificate |
+| Artifact              | Carries                                                                                        |
+| --------------------- | ---------------------------------------------------------------------------------------------- |
+| Research record       | evidence: what was observed, its bounds, what stays unknown                                    |
+| Decision record (ADR) | the immutable rationale of one decision, its alternatives, and its authorization boundary      |
+| Architecture owner    | the normative current rule an agent follows                                                    |
+| Architecture gate     | per-change application of that rule to the edit under review                                   |
+| Adoption audit        | evidence of how far current code conforms at a point in time — never a conformance certificate |
 
 An agent implementing or reviewing work reads the architecture owner and applies its gate. The record explains why the rule exists and what was rejected; it never overrides the owner and is never the operative text.
 
@@ -28,12 +28,12 @@ An agent implementing or reviewing work reads the architecture owner and applies
 
 ### Statuses
 
-| Status | Meaning |
-|---|---|
-| `Proposed` | recorded, not in force; no agent obligation arises from it |
-| `Accepted` | in force, with its rule present in the named owner |
-| `Amended` | accepted and later corrected; the decision text is unchanged and the amendment line carries the change |
-| `Superseded` | replaced by a later record; its line cites that record and the delivering commit |
+| Status       | Meaning                                                                                                |
+| ------------ | ------------------------------------------------------------------------------------------------------ |
+| `Proposed`   | recorded, not in force; no agent obligation arises from it                                             |
+| `Accepted`   | in force, with its rule present in the named owner                                                     |
+| `Amended`    | accepted and later corrected; the decision text is unchanged and the amendment line carries the change |
+| `Superseded` | replaced by a later record; its line cites that record and the delivering commit                       |
 
 Only explicit user approval moves `Proposed` to `Accepted`; an agent never promotes a record on its own reading, and the decision is recorded verbatim in the governing feature `## Log`. An `Accepted` record is never rewritten: a correction adds an `Amended` line, a replacement adds a `Superseded` line citing the superseding record and its commit. The decision body below those lines stays as originally accepted.
 

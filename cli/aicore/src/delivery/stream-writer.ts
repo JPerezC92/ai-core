@@ -5,20 +5,20 @@
  */
 
 export interface StreamWriter {
-  writeStdout(lines: readonly string[]): void;
-  writeStderr(lines: readonly string[]): void;
+	writeStdout(lines: readonly string[]): void;
+	writeStderr(lines: readonly string[]): void;
 }
 
 export class ConsoleStreamWriter implements StreamWriter {
-  writeStdout(lines: readonly string[]): void {
-    for (const line of lines) {
-      process.stdout.write(`${line}\n`);
-    }
-  }
+	writeStdout(lines: readonly string[]): void {
+		for (const line of lines) {
+			process.stdout.write(`${line}\n`);
+		}
+	}
 
-  writeStderr(lines: readonly string[]): void {
-    for (const line of lines) {
-      process.stderr.write(`${line}\n`);
-    }
-  }
+	writeStderr(lines: readonly string[]): void {
+		for (const line of lines) {
+			process.stderr.write(`${line}\n`);
+		}
+	}
 }

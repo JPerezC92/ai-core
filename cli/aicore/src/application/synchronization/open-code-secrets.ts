@@ -19,8 +19,8 @@ const SECRET_FILE_RELATIVE = ".secrets/context7-api-key";
 
 /** Collaborators the OpenCode secret writes need. */
 export type OpenCodeSecretsDependencies = {
-  readonly destinations: DestinationFiles;
-  readonly layout: FilesystemLayout;
+	readonly destinations: DestinationFiles;
+	readonly layout: FilesystemLayout;
 };
 
 /**
@@ -28,32 +28,32 @@ export type OpenCodeSecretsDependencies = {
  * an existing secret file.
  */
 export async function ensureOpenCodeSecrets(
-  editor: EditorProfile,
-  destinationRoot: string,
-  dependencies: OpenCodeSecretsDependencies,
+	editor: EditorProfile,
+	destinationRoot: string,
+	dependencies: OpenCodeSecretsDependencies,
 ): Promise<void> {
-  if (editor !== "opencode") {
-    return;
-  }
-  const { destinations, layout } = dependencies;
-  const configurationPath = layout.join(destinationRoot, ".opencode/opencode.jsonc");
-  if (!(await layout.exists(configurationPath))) {
-    return;
-  }
-  const gitignorePath = layout.join(destinationRoot, GITIGNORE_RELATIVE);
-  const existingIgnore = await destinations.readText(gitignorePath);
-  const nextIgnore = withSecretsIgnore(existingIgnore);
-  if (nextIgnore !== existingIgnore) {
-    await destinations.writeBytes(gitignorePath, new TextEncoder().encode(nextIgnore));
-  }
+	if (editor !== "opencode") {
+		return;
+	}
+	const { destinations, layout } = dependencies;
+	const configurationPath = layout.join(destinationRoot, ".opencode/opencode.jsonc");
+	if (!(await layout.exists(configurationPath))) {
+		return;
+	}
+	const gitignorePath = layout.join(destinationRoot, GITIGNORE_RELATIVE);
+	const existingIgnore = await destinations.readText(gitignorePath);
+	const nextIgnore = withSecretsIgnore(existingIgnore);
+	if (nextIgnore !== existingIgnore) {
+		await destinations.writeBytes(gitignorePath, new TextEncoder().encode(nextIgnore));
+	}
 
-  const secretsDirectory = layout.join(destinationRoot, SECRETS_DIRECTORY);
-  if (!(await layout.exists(secretsDirectory))) {
-    await layout.ensureDirectory(secretsDirectory);
-  }
+	const secretsDirectory = layout.join(destinationRoot, SECRETS_DIRECTORY);
+	if (!(await layout.exists(secretsDirectory))) {
+		await layout.ensureDirectory(secretsDirectory);
+	}
 
-  const secretFile = layout.join(destinationRoot, SECRET_FILE_RELATIVE);
-  if (!(await layout.exists(secretFile))) {
-    await destinations.writeBytes(secretFile, new Uint8Array());
-  }
+	const secretFile = layout.join(destinationRoot, SECRET_FILE_RELATIVE);
+	if (!(await layout.exists(secretFile))) {
+		await destinations.writeBytes(secretFile, new Uint8Array());
+	}
 }

@@ -20,43 +20,40 @@ import type { FilesystemProbe } from "#domain/ports/filesystem-probe.ts";
  * destination it could not actually read.
  */
 function isAbsent(error: unknown): boolean {
-  const code = (error as { code?: string }).code;
-  return code === "ENOENT" || code === "ENOTDIR";
+	const code = (error as { code?: string }).code;
+	return code === "ENOENT" || code === "ENOTDIR";
 }
 
 export class LocalFilesystemProbe implements FilesystemProbe {
-  resolve(path: string): string {
-    return resolve(path);
-  }
+	resolve(path: string): string {
+		return resolve(path);
+	}
 
-  async isDirectory(path: string): Promise<boolean> {
-    try {
-      return (await stat(path)).isDirectory();
-    } catch (error) {
-      if (isAbsent(error)) {
-        return false;
-      }
-      throw error;
-    }
-  }
+	async isDirectory(path: string): Promise<boolean> {
+		try {
+			return (await stat(path)).isDirectory();
+		} catch (error) {
+			if (isAbsent(error)) {
+				return false;
+			}
+			throw error;
+		}
+	}
 
-  async isFile(path: string): Promise<boolean> {
-    try {
-      return (await stat(path)).isFile();
-    } catch (error) {
-      if (isAbsent(error)) {
-        return false;
-      }
-      throw error;
-    }
-  }
+	async isFile(path: string): Promise<boolean> {
+		try {
+			return (await stat(path)).isFile();
+		} catch (error) {
+			if (isAbsent(error)) {
+				return false;
+			}
+			throw error;
+		}
+	}
 
-  isInside(root: string, path: string): boolean {
-    const normalizedRoot = resolve(root);
-    const normalizedPath = resolve(path);
-    return (
-      normalizedPath === normalizedRoot ||
-      normalizedPath.startsWith(`${normalizedRoot}${sep}`)
-    );
-  }
+	isInside(root: string, path: string): boolean {
+		const normalizedRoot = resolve(root);
+		const normalizedPath = resolve(path);
+		return normalizedPath === normalizedRoot || normalizedPath.startsWith(`${normalizedRoot}${sep}`);
+	}
 }

@@ -10,10 +10,10 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
-  ADVANCED_COMMANDS,
-  LOCAL_CONFIG_OVERRIDE_ENV_VAR,
-  REVISION_ENV_VAR,
-  SUPPORTED_EDITORS,
+	ADVANCED_COMMANDS,
+	LOCAL_CONFIG_OVERRIDE_ENV_VAR,
+	REVISION_ENV_VAR,
+	SUPPORTED_EDITORS,
 } from "#domain/constants.ts";
 import { parseInvocation } from "#domain/rules/invocation.ts";
 import type { OperatorSettings } from "#domain/settings.ts";
@@ -21,27 +21,24 @@ import { RunAdvancedCommand } from "#application/run-advanced-command.ts";
 import { ReconcileDestination } from "#application/reconcile-destination.ts";
 import { SynchronizeDestination } from "#application/synchronize-destination.ts";
 import {
-  EXIT_INVALID,
-  EXIT_OK,
-  exitStatusForFailure,
-  renderAdvanced,
-  renderReconciliation,
-  renderSync,
+	EXIT_INVALID,
+	EXIT_OK,
+	exitStatusForFailure,
+	renderAdvanced,
+	renderReconciliation,
+	renderSync,
 } from "#delivery/reporting.ts";
 import { ConsoleStreamWriter } from "#delivery/stream-writer.ts";
 import { createCoreSyncEngine } from "#infrastructure/core-sync-engine.ts";
 import { CoreSyncEngineRunner, EngineUnavailableError } from "#infrastructure/engine-runner.ts";
 import { LocalFilesystemProbe } from "#infrastructure/filesystem-probe.ts";
 import { createReconciliationReader } from "#infrastructure/reconciliation-reader.ts";
-import {
-  CorruptSelectionError,
-  LocalJsonSelectionStore,
-} from "#infrastructure/selection-store.ts";
+import { CorruptSelectionError, LocalJsonSelectionStore } from "#infrastructure/selection-store.ts";
 
 /** The AICore checkout root: three levels above this module's directory. */
 export function checkoutRoot(): string {
-  const here = dirname(fileURLToPath(import.meta.url));
-  return join(here, "..", "..", "..");
+	const here = dirname(fileURLToPath(import.meta.url));
+	return join(here, "..", "..", "..");
 }
 
 export const USAGE = `aicore — synchronization CLI
@@ -89,110 +86,108 @@ Exit status: 0 current, applied, or a proposal with nothing for the destination
 owner to do; 1 drift reported by the engine, or a proposal the destination owner
 must act on; 2 invalid input or unavailable configuration.`;
 
-function operatorSettings(
-  environment: Readonly<Record<string, string | undefined>>,
-): OperatorSettings {
-  return {
-    sourceRevision: environment[REVISION_ENV_VAR],
-    localConfigPath: environment[LOCAL_CONFIG_OVERRIDE_ENV_VAR],
-  };
+function operatorSettings(environment: Readonly<Record<string, string | undefined>>): OperatorSettings {
+	return {
+		sourceRevision: environment[REVISION_ENV_VAR],
+		localConfigPath: environment[LOCAL_CONFIG_OVERRIDE_ENV_VAR],
+	};
 }
 
 export async function main(
-  argv: readonly string[],
-  environment: Readonly<Record<string, string | undefined>> = process.env,
+	argv: readonly string[],
+	environment: Readonly<Record<string, string | undefined>> = process.env,
 ): Promise<number> {
-  const writer = new ConsoleStreamWriter();
+	const writer = new ConsoleStreamWriter();
 
-  const parsed = parseInvocation(argv);
-  if (!parsed.ok) {
-    writer.writeStderr([parsed.failure.message]);
-    return exitStatusForFailure(parsed.failure);
-  }
+	const parsed = parseInvocation(argv);
+	if (!parsed.ok) {
+		writer.writeStderr([parsed.failure.message]);
+		return exitStatusForFailure(parsed.failure);
+	}
 
-  const invocation = parsed.value;
-  if (invocation.kind === "help" || invocation.help) {
-    writer.writeStdout([USAGE]);
-    return EXIT_OK;
-  }
+	const invocation = parsed.value;
+	if (invocation.kind === "help" || invocation.help) {
+		writer.writeStdout([USAGE]);
+		return EXIT_OK;
+	}
 
-  const root = checkoutRoot();
-  const settings = operatorSettings(environment);
-  const engine = new CoreSyncEngineRunner(createCoreSyncEngine());
+	const root = checkoutRoot();
+	const settings = operatorSettings(environment);
+	const engine = new CoreSyncEngineRunner(createCoreSyncEngine());
 
-  try {
-    if (invocation.kind === "reconcile") {
-      const proposal = await new ReconcileDestination({
-        checkoutRoot: root,
-        files: new LocalFilesystemProbe(),
-        ...createReconciliationReader(),
-      }).execute({ target: invocation.target });
+	try {
+		if (invocation.kind === "reconcile") {
+			const proposal = await new ReconcileDestination({
+				checkoutRoot: root,
+				files: new LocalFilesystemProbe(),
+				...createReconciliationReader(),
+			}).execute({ target: invocation.target });
 
-      if (!proposal.ok) {
-        writer.writeStderr([proposal.failure.message]);
-        return exitStatusForFailure(proposal.failure);
-      }
+			if (!proposal.ok) {
+				writer.writeStderr([proposal.failure.message]);
+				return exitStatusForFailure(proposal.failure);
+			}
 
-      const rendered = renderReconciliation(proposal.value);
-      writer.writeStdout(rendered.stdout);
-      writer.writeStderr(rendered.stderr);
-      return rendered.status;
-    }
+			const rendered = renderReconciliation(proposal.value);
+			writer.writeStdout(rendered.stdout);
+			writer.writeStderr(rendered.stderr);
+			return rendered.status;
+		}
 
-    if (invocation.kind === "advanced") {
-      const outcome = await new RunAdvancedCommand(engine).execute({
-        command: invocation.command,
-        passthrough: invocation.passthrough,
-      });
-      const rendered = renderAdvanced(outcome);
+		if (invocation.kind === "advanced") {
+			const outcome = await new RunAdvancedCommand(engine).execute({
+				command: invocation.command,
+				passthrough: invocation.passthrough,
+			});
+			const rendered = renderAdvanced(outcome);
 
-      writer.writeStdout(rendered.stdout);
-      writer.writeStderr(rendered.stderr);
-      return rendered.status;
-    }
+			writer.writeStdout(rendered.stdout);
+			writer.writeStderr(rendered.stderr);
+			return rendered.status;
+		}
 
-    const result = await new SynchronizeDestination({
-      checkoutRoot: root,
-      settings,
-      engine,
-      files: new LocalFilesystemProbe(),
-      selections: new LocalJsonSelectionStore(root, settings.localConfigPath),
-    }).execute({
-      target: invocation.target,
-      editor: invocation.editor,
-      revision: invocation.revision,
-    });
+		const result = await new SynchronizeDestination({
+			checkoutRoot: root,
+			settings,
+			engine,
+			files: new LocalFilesystemProbe(),
+			selections: new LocalJsonSelectionStore(root, settings.localConfigPath),
+		}).execute({
+			target: invocation.target,
+			editor: invocation.editor,
+			revision: invocation.revision,
+		});
 
-    if (!result.ok) {
-      writer.writeStderr([result.failure.message]);
-      return exitStatusForFailure(result.failure);
-    }
+		if (!result.ok) {
+			writer.writeStderr([result.failure.message]);
+			return exitStatusForFailure(result.failure);
+		}
 
-    const rendered = renderSync(result.value);
-    writer.writeStdout(rendered.stdout);
-    writer.writeStderr(rendered.stderr);
-    return rendered.status;
-  } catch (error) {
-    if (error instanceof EngineUnavailableError) {
-      writer.writeStderr([error.message]);
-      return EXIT_INVALID;
-    }
-    if (error instanceof CorruptSelectionError) {
-      writer.writeStderr([error.message]);
-      return EXIT_INVALID;
-    }
-    throw error;
-  }
+		const rendered = renderSync(result.value);
+		writer.writeStdout(rendered.stdout);
+		writer.writeStderr(rendered.stderr);
+		return rendered.status;
+	} catch (error) {
+		if (error instanceof EngineUnavailableError) {
+			writer.writeStderr([error.message]);
+			return EXIT_INVALID;
+		}
+		if (error instanceof CorruptSelectionError) {
+			writer.writeStderr([error.message]);
+			return EXIT_INVALID;
+		}
+		throw error;
+	}
 }
 
 function invokedDirectly(): boolean {
-  const entry = process.argv[1];
-  if (entry === undefined) {
-    return false;
-  }
-  return resolve(entry) === resolve(fileURLToPath(import.meta.url));
+	const entry = process.argv[1];
+	if (entry === undefined) {
+		return false;
+	}
+	return resolve(entry) === resolve(fileURLToPath(import.meta.url));
 }
 
 if (invokedDirectly()) {
-  process.exitCode = await main(process.argv.slice(2));
+	process.exitCode = await main(process.argv.slice(2));
 }

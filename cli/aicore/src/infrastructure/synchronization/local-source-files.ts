@@ -13,19 +13,19 @@ import type { SourceFiles } from "#domain/synchronization/ports.ts";
 import { readBytesFile, readTextFile } from "./local-files.ts";
 
 export class LocalSourceFiles implements SourceFiles {
-  async readCore(path: string): Promise<SourceCoreRead | null> {
-    const text = await readTextFile(path);
-    if (text === null) {
-      return null;
-    }
-    return extractSourceCore(text);
-  }
+	async readCore(path: string): Promise<SourceCoreRead | null> {
+		const text = await readTextFile(path);
+		if (text === null) {
+			return null;
+		}
+		return extractSourceCore(text);
+	}
 
-  async readBytes(path: string): Promise<Uint8Array | null> {
-    return readBytesFile(path);
-  }
+	async readBytes(path: string): Promise<Uint8Array | null> {
+		return readBytesFile(path);
+	}
 
-  async readText(path: string): Promise<string | null> {
-    return readTextFile(path);
-  }
+	async readText(path: string): Promise<string | null> {
+		return readTextFile(path);
+	}
 }

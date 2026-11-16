@@ -27,14 +27,14 @@ const COMMANDS: readonly CommandName[] = ["check", "apply", "init"];
 
 /** The options that carry a value. */
 const VALUE_FLAGS: readonly string[] = [
-  "--source",
-  "--destination",
-  "--bindings",
-  "--source-revision",
-  "--bind",
-  "--bind-raw",
-  "--root",
-  "--editor",
+	"--source",
+	"--destination",
+	"--bindings",
+	"--source-revision",
+	"--bind",
+	"--bind-raw",
+	"--root",
+	"--editor",
 ];
 
 /** The options that stand alone. */
@@ -42,14 +42,14 @@ const BOOLEAN_FLAGS: readonly string[] = ["--bind-cleared"];
 
 /** The outcome of mapping one command line onto the engine's request. */
 export type EngineArgumentMapping =
-  | { readonly ok: true; readonly request: CoreSyncEngineRequest }
-  | { readonly ok: false; readonly message: string };
+	| { readonly ok: true; readonly request: CoreSyncEngineRequest }
+	| { readonly ok: false; readonly message: string };
 
 /** How one option name resolves to the option it names. */
 type FlagResolution =
-  | { readonly kind: "resolved"; readonly flag: string }
-  | { readonly kind: "ambiguous"; readonly candidates: readonly string[] }
-  | { readonly kind: "unknown" };
+	| { readonly kind: "resolved"; readonly flag: string }
+	| { readonly kind: "ambiguous"; readonly candidates: readonly string[] }
+	| { readonly kind: "unknown" };
 
 /**
  * Map one engine command line onto the engine's request.
@@ -59,149 +59,141 @@ type FlagResolution =
  * option, and a repeated option keeps the last value while a repeatable option
  * keeps every value.
  */
-export function toEngineRequest(
-  command: string,
-  arguments_: readonly string[],
-): EngineArgumentMapping {
-  if (!isCommand(command)) {
-    return {
-      ok: false,
-      message:
-        `core-sync: error: invalid choice: '${command}' ` +
-        `(choose from ${COMMANDS.map((name) => `'${name}'`).join(", ")})`,
-    };
-  }
+export function toEngineRequest(command: string, arguments_: readonly string[]): EngineArgumentMapping {
+	if (!isCommand(command)) {
+		return {
+			ok: false,
+			message:
+				`core-sync: error: invalid choice: '${command}' ` +
+				`(choose from ${COMMANDS.map((name) => `'${name}'`).join(", ")})`,
+		};
+	}
 
-  const values = new Map<string, string>();
-  const bind: string[] = [];
-  const bindRaw: string[] = [];
-  const flags = new Set<string>();
-  const unrecognized: string[] = [];
+	const values = new Map<string, string>();
+	const bind: string[] = [];
+	const bindRaw: string[] = [];
+	const flags = new Set<string>();
+	const unrecognized: string[] = [];
 
-  for (let index = 0; index < arguments_.length; index += 1) {
-    const argument = arguments_[index];
-    if (argument === undefined) {
-      continue;
-    }
-    if (!argument.startsWith("--")) {
-      unrecognized.push(argument);
-      continue;
-    }
+	for (let index = 0; index < arguments_.length; index += 1) {
+		const argument = arguments_[index];
+		if (argument === undefined) {
+			continue;
+		}
+		if (!argument.startsWith("--")) {
+			unrecognized.push(argument);
+			continue;
+		}
 
-    const separator = argument.indexOf("=");
-    const name = separator === -1 ? argument : argument.slice(0, separator);
-    const attached = separator === -1 ? undefined : argument.slice(separator + 1);
+		const separator = argument.indexOf("=");
+		const name = separator === -1 ? argument : argument.slice(0, separator);
+		const attached = separator === -1 ? undefined : argument.slice(separator + 1);
 
-    const resolution = resolveFlag(name);
-    if (resolution.kind === "unknown") {
-      unrecognized.push(argument);
-      continue;
-    }
-    if (resolution.kind === "ambiguous") {
-      return {
-        ok: false,
-        message:
-          `core-sync ${command}: error: ambiguous option: ${name} ` +
-          `could match ${resolution.candidates.join(", ")}`,
-      };
-    }
+		const resolution = resolveFlag(name);
+		if (resolution.kind === "unknown") {
+			unrecognized.push(argument);
+			continue;
+		}
+		if (resolution.kind === "ambiguous") {
+			return {
+				ok: false,
+				message:
+					`core-sync ${command}: error: ambiguous option: ${name} ` +
+					`could match ${resolution.candidates.join(", ")}`,
+			};
+		}
 
-    const flag = resolution.flag;
-    if (BOOLEAN_FLAGS.includes(flag)) {
-      if (attached !== undefined) {
-        return {
-          ok: false,
-          message:
-            `core-sync ${command}: error: argument ${flag}: ` +
-            `ignored explicit argument '${attached}'`,
-        };
-      }
-      flags.add(flag);
-      continue;
-    }
+		const flag = resolution.flag;
+		if (BOOLEAN_FLAGS.includes(flag)) {
+			if (attached !== undefined) {
+				return {
+					ok: false,
+					message:
+						`core-sync ${command}: error: argument ${flag}: ` + `ignored explicit argument '${attached}'`,
+				};
+			}
+			flags.add(flag);
+			continue;
+		}
 
-    let value = attached;
-    if (value === undefined) {
-      const next = arguments_[index + 1];
-      if (next === undefined || next.startsWith("-")) {
-        return {
-          ok: false,
-          message: `core-sync ${command}: error: argument ${flag}: expected one argument`,
-        };
-      }
-      value = next;
-      index += 1;
-    }
+		let value = attached;
+		if (value === undefined) {
+			const next = arguments_[index + 1];
+			if (next === undefined || next.startsWith("-")) {
+				return {
+					ok: false,
+					message: `core-sync ${command}: error: argument ${flag}: expected one argument`,
+				};
+			}
+			value = next;
+			index += 1;
+		}
 
-    if (flag === "--bind") {
-      bind.push(value);
-    } else if (flag === "--bind-raw") {
-      bindRaw.push(value);
-    } else {
-      values.set(flag, value);
-    }
-  }
+		if (flag === "--bind") {
+			bind.push(value);
+		} else if (flag === "--bind-raw") {
+			bindRaw.push(value);
+		} else {
+			values.set(flag, value);
+		}
+	}
 
-  const sourceRoot = values.get("--source");
-  const destinationRoot = values.get("--destination");
-  const bindingsPath = values.get("--bindings");
-  const sourceRevision = values.get("--source-revision");
+	const sourceRoot = values.get("--source");
+	const destinationRoot = values.get("--destination");
+	const bindingsPath = values.get("--bindings");
+	const sourceRevision = values.get("--source-revision");
 
-  if (
-    sourceRoot === undefined ||
-    destinationRoot === undefined ||
-    bindingsPath === undefined ||
-    sourceRevision === undefined
-  ) {
-    const missing: string[] = [];
-    if (sourceRoot === undefined) {
-      missing.push("--source");
-    }
-    if (destinationRoot === undefined) {
-      missing.push("--destination");
-    }
-    if (bindingsPath === undefined) {
-      missing.push("--bindings");
-    }
-    if (sourceRevision === undefined) {
-      missing.push("--source-revision");
-    }
-    return {
-      ok: false,
-      message:
-        `core-sync ${command}: error: the following arguments are required: ` +
-        missing.join(", "),
-    };
-  }
-  if (unrecognized.length > 0) {
-    return {
-      ok: false,
-      message:
-        `core-sync ${command}: error: unrecognized arguments: ` +
-        unrecognized.join(" "),
-    };
-  }
+	if (
+		sourceRoot === undefined ||
+		destinationRoot === undefined ||
+		bindingsPath === undefined ||
+		sourceRevision === undefined
+	) {
+		const missing: string[] = [];
+		if (sourceRoot === undefined) {
+			missing.push("--source");
+		}
+		if (destinationRoot === undefined) {
+			missing.push("--destination");
+		}
+		if (bindingsPath === undefined) {
+			missing.push("--bindings");
+		}
+		if (sourceRevision === undefined) {
+			missing.push("--source-revision");
+		}
+		return {
+			ok: false,
+			message: `core-sync ${command}: error: the following arguments are required: ` + missing.join(", "),
+		};
+	}
+	if (unrecognized.length > 0) {
+		return {
+			ok: false,
+			message: `core-sync ${command}: error: unrecognized arguments: ` + unrecognized.join(" "),
+		};
+	}
 
-  return {
-    ok: true,
-    request: {
-      command,
-      sourceRoot,
-      destinationRoot,
-      bindingsPath,
-      sourceRevision,
-      bind,
-      bindRaw,
-      bindCleared: flags.has("--bind-cleared"),
-      root: values.get("--root"),
-      editor: values.get("--editor"),
-    },
-  };
+	return {
+		ok: true,
+		request: {
+			command,
+			sourceRoot,
+			destinationRoot,
+			bindingsPath,
+			sourceRevision,
+			bind,
+			bindRaw,
+			bindCleared: flags.has("--bind-cleared"),
+			root: values.get("--root"),
+			editor: values.get("--editor"),
+		},
+	};
 }
 
 /** Whether the named command is one the engine exposes. */
 function isCommand(command: string): command is CommandName {
-  return (COMMANDS as readonly string[]).includes(command);
+	return (COMMANDS as readonly string[]).includes(command);
 }
 
 /**
@@ -211,16 +203,16 @@ function isCommand(command: string): command is CommandName {
  * option is ambiguous — the rule the engine's own argument syntax follows.
  */
 function resolveFlag(name: string): FlagResolution {
-  const known = [...VALUE_FLAGS, ...BOOLEAN_FLAGS];
-  if (known.includes(name)) {
-    return { kind: "resolved", flag: name };
-  }
-  const candidates = known.filter((flag) => flag.startsWith(name));
-  if (candidates.length === 1) {
-    return { kind: "resolved", flag: candidates[0] as string };
-  }
-  if (candidates.length > 1) {
-    return { kind: "ambiguous", candidates };
-  }
-  return { kind: "unknown" };
+	const known = [...VALUE_FLAGS, ...BOOLEAN_FLAGS];
+	if (known.includes(name)) {
+		return { kind: "resolved", flag: name };
+	}
+	const candidates = known.filter((flag) => flag.startsWith(name));
+	if (candidates.length === 1) {
+		return { kind: "resolved", flag: candidates[0] as string };
+	}
+	if (candidates.length > 1) {
+		return { kind: "ambiguous", candidates };
+	}
+	return { kind: "unknown" };
 }

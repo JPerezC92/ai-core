@@ -10,10 +10,7 @@
  * `MockProxy`, so no mock is shared between cases.
  */
 
-import type {
-  EnrollmentRequest,
-  SynchronizationRequest,
-} from "#application/synchronization/requests.ts";
+import type { EnrollmentRequest, SynchronizationRequest } from "#application/synchronization/requests.ts";
 import type { BindingsDocument } from "#domain/synchronization/bindings.ts";
 import { parseClearanceDocument } from "#domain/synchronization/clearance.ts";
 import { CLEARANCE_SCHEMA } from "#domain/synchronization/constants.ts";
@@ -34,34 +31,28 @@ export const SYNCHRONIZATION_BINDINGS_PATH = `${SYNCHRONIZATION_DESTINATION_ROOT
 export const BOUND_SOURCE = "AGENTS.md";
 
 /** A bindings document binding `AGENTS.md` to itself under one editor. */
-export function makeBindingsDocument(
-  overrides: Partial<BindingsDocument> = {},
-): BindingsDocument {
-  return {
-    coreRevision: REVISION,
-    root: null,
-    editor: "opencode",
-    exclude: [],
-    bindings: [
-      { source: BOUND_SOURCE, destinations: [BOUND_SOURCE], declaredMode: "region" },
-    ],
-    pending: [],
-    ...overrides,
-  };
+export function makeBindingsDocument(overrides: Partial<BindingsDocument> = {}): BindingsDocument {
+	return {
+		coreRevision: REVISION,
+		root: null,
+		editor: "opencode",
+		exclude: [],
+		bindings: [{ source: BOUND_SOURCE, destinations: [BOUND_SOURCE], declaredMode: "region" }],
+		pending: [],
+		...overrides,
+	};
 }
 
 /** One command's inputs, naming the roots and the revision a run needs. */
-export function makeSynchronizationRequest(
-  overrides: Partial<SynchronizationRequest> = {},
-): SynchronizationRequest {
-  return {
-    sourceRoot: SOURCE_ROOT,
-    destinationRoot: SYNCHRONIZATION_DESTINATION_ROOT,
-    bindingsPath: SYNCHRONIZATION_BINDINGS_PATH,
-    sourceRevision: REVISION,
-    editor: undefined,
-    ...overrides,
-  };
+export function makeSynchronizationRequest(overrides: Partial<SynchronizationRequest> = {}): SynchronizationRequest {
+	return {
+		sourceRoot: SOURCE_ROOT,
+		destinationRoot: SYNCHRONIZATION_DESTINATION_ROOT,
+		bindingsPath: SYNCHRONIZATION_BINDINGS_PATH,
+		sourceRevision: REVISION,
+		editor: undefined,
+		...overrides,
+	};
 }
 
 /**
@@ -71,10 +62,8 @@ export function makeSynchronizationRequest(
  * only the records under test and the real reader parses what a source root
  * actually holds.
  */
-export function makeClearanceText(
-  cleared: Readonly<Record<string, Readonly<Record<string, unknown>>>>,
-): string {
-  return `${JSON.stringify({ schema: CLEARANCE_SCHEMA, cleared }, null, 2)}\n`;
+export function makeClearanceText(cleared: Readonly<Record<string, Readonly<Record<string, unknown>>>>): string {
+	return `${JSON.stringify({ schema: CLEARANCE_SCHEMA, cleared }, null, 2)}\n`;
 }
 
 /**
@@ -85,14 +74,12 @@ export function makeClearanceText(
  * there is one clearance document shape in the suite rather than a hand-built
  * second one.
  */
-export function makeClearanceLoad(
-  cleared: Readonly<Record<string, Readonly<Record<string, unknown>>>>,
-): ClearanceLoad {
-  const parsed = parseClearanceDocument(JSON.parse(makeClearanceText(cleared)));
-  if (!parsed.ok) {
-    throw new Error(`factory clearance text is unreadable: ${parsed.reason}`);
-  }
-  return { entries: parsed.entries, exists: true, reason: null };
+export function makeClearanceLoad(cleared: Readonly<Record<string, Readonly<Record<string, unknown>>>>): ClearanceLoad {
+	const parsed = parseClearanceDocument(JSON.parse(makeClearanceText(cleared)));
+	if (!parsed.ok) {
+		throw new Error(`factory clearance text is unreadable: ${parsed.reason}`);
+	}
+	return { entries: parsed.entries, exists: true, reason: null };
 }
 
 /** The destination the registry declares for `BOUND_SOURCE` once it has moved. */
@@ -106,27 +93,25 @@ export const RELOCATED_BOUND_DESTINATION = ".opencode/AGENTS.md";
  * `opencode` enrollment receives is the one that moved.
  */
 export function makeRelocatedClearanceLoad(): ClearanceLoad {
-  return makeClearanceLoad({
-    [BOUND_SOURCE]: {
-      mode: "region",
-      editors: {
-        opencode: { destination: RELOCATED_BOUND_DESTINATION },
-        cursor: { destination: `cursor/${BOUND_SOURCE}` },
-      },
-    },
-  });
+	return makeClearanceLoad({
+		[BOUND_SOURCE]: {
+			mode: "region",
+			editors: {
+				opencode: { destination: RELOCATED_BOUND_DESTINATION },
+				cursor: { destination: `cursor/${BOUND_SOURCE}` },
+			},
+		},
+	});
 }
 
 /** One enrollment's inputs: a synchronization request with no declarations. */
-export function makeEnrollmentRequest(
-  overrides: Partial<EnrollmentRequest> = {},
-): EnrollmentRequest {
-  return {
-    ...makeSynchronizationRequest(),
-    regionDeclarations: [],
-    rawDeclarations: [],
-    bindCleared: false,
-    rootOverride: null,
-    ...overrides,
-  };
+export function makeEnrollmentRequest(overrides: Partial<EnrollmentRequest> = {}): EnrollmentRequest {
+	return {
+		...makeSynchronizationRequest(),
+		regionDeclarations: [],
+		rawDeclarations: [],
+		bindCleared: false,
+		rootOverride: null,
+		...overrides,
+	};
 }

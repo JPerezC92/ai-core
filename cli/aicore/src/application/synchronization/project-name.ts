@@ -8,7 +8,7 @@
 
 /** Return the last path component of a destination root. */
 export function projectName(destinationRoot: string): string {
-  const normalized = destinationRoot.replaceAll("\\", "/").replace(/\/+$/u, "");
-  const separator = normalized.lastIndexOf("/");
-  return separator === -1 ? normalized : normalized.slice(separator + 1);
+	const normalized = destinationRoot.replaceAll("\\", "/").replace(/\/+$/u, "");
+	const separator = normalized.lastIndexOf("/");
+	return separator === -1 ? normalized : normalized.slice(separator + 1);
 }

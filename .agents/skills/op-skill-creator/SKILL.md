@@ -64,11 +64,11 @@ This section is the single format authority for a generated skill. Do not create
 
 ## Portable, runtime and local layers
 
-| Layer | Governs | Examples |
-|---|---|---|
-| Portable Agent Skills specification | Package and metadata requirements | A directory containing `SKILL.md`; `name` up to 64 kebab-case characters matching the directory; `description` 1-1024 characters; optional `license`, `compatibility`, `metadata` |
-| OpenCode V2 runtime | Discovery and loading | Frontmatter optional at runtime; the file path derives the exact skill ID; `name` is a display label; `compatibility` is accepted but uninterpreted; supporting files are read on demand, not loaded automatically |
-| Project catalog policy | Stricter local conventions | Exact `compatibility` value per the project's declared convention; metadata author/version/domain convention; catalog checklist item IDs |
+| Layer                               | Governs                           | Examples                                                                                                                                                                                                           |
+| ----------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Portable Agent Skills specification | Package and metadata requirements | A directory containing `SKILL.md`; `name` up to 64 kebab-case characters matching the directory; `description` 1-1024 characters; optional `license`, `compatibility`, `metadata`                                  |
+| OpenCode V2 runtime                 | Discovery and loading             | Frontmatter optional at runtime; the file path derives the exact skill ID; `name` is a display label; `compatibility` is accepted but uninterpreted; supporting files are read on demand, not loaded automatically |
+| Project catalog policy              | Stricter local conventions        | Exact `compatibility` value per the project's declared convention; metadata author/version/domain convention; catalog checklist item IDs                                                                           |
 
 A local convention is reported as local, never as a portable or runtime requirement.
 

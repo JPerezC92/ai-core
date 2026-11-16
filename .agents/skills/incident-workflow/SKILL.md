@@ -8,6 +8,7 @@ metadata:
   version: 5.0.0
   dependencies: yaml@2.9.1
 ---
+
 <!-- core:begin -->
 
 ## Mandatory core
@@ -46,6 +47,7 @@ Apply `.aicore/core/knowledge/agents.md` `### Safe parallel task coordination (H
 Delegate all ticket data extraction to the project's ticket-read tool. Do not read the ticket system directly here.
 
 Required outputs:
+
 - System (business area)
 - Module
 - Country/region + campaign/period (if applicable)
@@ -78,12 +80,12 @@ Run this order. Do not skip or reorder, and do not consult any other source for 
 
 **Verdict rules (HARD):**
 
-| Verdict | Condition |
-|---|---|
-| `exact` | Exactly one `active` incident `P-NNN` with `Allow_exact: yes` remains, and **every** discriminator is already evidenced in the current ticket. |
-| `structural` | Exactly one `candidate`, `active`, or `mitigated` incident `P-NNN` remains; its hypothesis still requires current-ticket validation. |
-| `no_match` | No eligible incident `P-NNN` remains. **An empty problem register (see Register paths) always yields `no_match` — never halt on an empty register.** |
-| `pending` | Initial scaffold value only; replaced in this step. |
+| Verdict      | Condition                                                                                                                                            |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `exact`      | Exactly one `active` incident `P-NNN` with `Allow_exact: yes` remains, and **every** discriminator is already evidenced in the current ticket.       |
+| `structural` | Exactly one `candidate`, `active`, or `mitigated` incident `P-NNN` remains; its hypothesis still requires current-ticket validation.                 |
+| `no_match`   | No eligible incident `P-NNN` remains. **An empty problem register (see Register paths) always yields `no_match` — never halt on an empty register.** |
+| `pending`    | Initial scaffold value only; replaced in this step.                                                                                                  |
 
 - If more than one incident `P-NNN` remains eligible after every filter, do NOT choose. Record every candidate and return `no_match` with an ambiguity note for Cipher 🔓 (Lead Orchestrator).
 - **Verdict-source restriction (HARD RULE):** only `S-xx` → incident `P-NNN` can produce `exact` or `structural`. Resolved-ticket archives, patterns registers, KBA/RCA catalogs, and knowledge search are evidence/backfill sources only — they MUST NOT issue, upgrade, or echo an identification verdict. They may be consulted only after a `no_match`, and only as labeled investigation evidence.
@@ -196,26 +198,32 @@ The validator script is a helper, not the authority — it catches repetitive me
 ### Troubleshooting
 
 **Ownership, freshness or capacity unknown:**
+
 - Cause: conflicting assignments, stale reviewed input, an active prior user or undeclared external capacity; the recent-update warning is not a lock.
 - Fix: halt the affected operation and return `BLOCKED` to Cipher 🔓 (Lead Orchestrator) with observed resource use, inputs and bounded options. Resume only on explicit compatible assignment with accepted current evidence and observed prior-user cessation; never infer permission from ten minutes elapsing.
 
 **Analysis template missing:**
+
 - Cause: the analysis template directory (see **Working-set and record templates**) does not exist in this skill.
 - Fix: halt; report to Cipher 🔓 (Lead Orchestrator) — the template precondition is not met. Do not scaffold manually.
 
 **Validator exits non-zero:**
+
 - Cause: missing or malformed header field in the analysis state file (see **Working-set and record schema**), or a malformed step file.
 - Fix: read the exact error line; edit only the offending field; re-run the validator.
 
 **Empty problem register:**
+
 - Cause: no incident `P-NNN` rows are registered yet.
 - Fix: none — this is the valid `no_match` case. Scaffold the working analysis and proceed without halting.
 
 **Ticket system auth error on read:**
+
 - Cause: tool token expired.
 - Fix: the ticket-read tool triggers the auth-refresh routine internally. If still failing after refresh, halt and report to Cipher 🔓 (Lead Orchestrator).
 
 **Knowledge search unavailable:**
+
 - Cause: the knowledge-search tool is not reachable.
 - Fix: do not block — knowledge search is a backfill source, never a verdict source. Skip it and proceed with the register-first identification.
 

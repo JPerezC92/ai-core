@@ -17,13 +17,13 @@ import type { ClearanceStore } from "#domain/synchronization/ports.ts";
 
 /** The clearance state one command works from. */
 export type ClearanceModes = {
-  readonly modes: ReadonlyMap<string, BindingMode>;
-  /** The destination path of every source this editor receives. */
-  readonly destinations: ReadonlyMap<string, string>;
-  readonly entries: ReadonlyMap<string, ClearanceEntry> | null;
-  readonly exists: boolean;
-  /** Why a present registry was rejected, or `null` when it parsed. */
-  readonly reason: string | null;
+	readonly modes: ReadonlyMap<string, BindingMode>;
+	/** The destination path of every source this editor receives. */
+	readonly destinations: ReadonlyMap<string, string>;
+	readonly entries: ReadonlyMap<string, ClearanceEntry> | null;
+	readonly exists: boolean;
+	/** Why a present registry was rejected, or `null` when it parsed. */
+	readonly reason: string | null;
 };
 
 /**
@@ -34,38 +34,35 @@ export type ClearanceModes = {
  * wider layout satisfies it.
  */
 export async function readClearanceModes(
-  clearance: ClearanceStore,
-  layout: PathInspection,
-  sourceRoot: string,
-  editor: EditorProfile,
+	clearance: ClearanceStore,
+	layout: PathInspection,
+	sourceRoot: string,
+	editor: EditorProfile,
 ): Promise<ClearanceModes> {
-  const loaded = await clearance.load(sourceRoot);
-  if (loaded.entries === null) {
-    return {
-      modes: new Map<string, BindingMode>(),
-      destinations: new Map<string, string>(),
-      entries: null,
-      exists: loaded.exists,
-      reason: loaded.reason,
-    };
-  }
-  const enumerated = new Map<string, readonly string[]>();
-  for (const key of loaded.entries.keys()) {
-    if (key.endsWith("/")) {
-      enumerated.set(
-        key,
-        await layout.enumerateFilesUnder(layout.join(sourceRoot, key.slice(0, -1))),
-      );
-    }
-  }
-  const expansion = expandClearance(loaded.entries, enumerated, editor);
-  return {
-    modes: expansion.modes,
-    destinations: expansion.destinations,
-    entries: loaded.entries,
-    exists: loaded.exists,
-    reason: null,
-  };
+	const loaded = await clearance.load(sourceRoot);
+	if (loaded.entries === null) {
+		return {
+			modes: new Map<string, BindingMode>(),
+			destinations: new Map<string, string>(),
+			entries: null,
+			exists: loaded.exists,
+			reason: loaded.reason,
+		};
+	}
+	const enumerated = new Map<string, readonly string[]>();
+	for (const key of loaded.entries.keys()) {
+		if (key.endsWith("/")) {
+			enumerated.set(key, await layout.enumerateFilesUnder(layout.join(sourceRoot, key.slice(0, -1))));
+		}
+	}
+	const expansion = expandClearance(loaded.entries, enumerated, editor);
+	return {
+		modes: expansion.modes,
+		destinations: expansion.destinations,
+		entries: loaded.entries,
+		exists: loaded.exists,
+		reason: null,
+	};
 }
 
 /**
@@ -74,10 +71,7 @@ export async function readClearanceModes(
  * The class is malformed input; the reader's reason names what was wrong with
  * the document, so a duplicate declaration is reported as one.
  */
-export function invalidClearance(
-  clearancePath: string,
-  clearance: ClearanceModes,
-): SynchronizationFailure {
-  const detail = clearance.reason === null ? "" : `: ${clearance.reason}`;
-  return invalid(`invalid clearance file: ${clearancePath}${detail}`);
+export function invalidClearance(clearancePath: string, clearance: ClearanceModes): SynchronizationFailure {
+	const detail = clearance.reason === null ? "" : `: ${clearance.reason}`;
+	return invalid(`invalid clearance file: ${clearancePath}${detail}`);
 }

@@ -38,12 +38,12 @@ analyses:
 
 <!-- Include ONLY the fields relevant to the ticket. Possible fields (label : type): Entity:code · Entity Name:text · Order Id:number · SKU:number · Zone:number · Region:code · ERP:number. Delete every row and value containing MOCK. -->
 
-| Field | Value |
-|---|---|
-| Entity      | MOCK-0000000 |
+| Field       | Value             |
+| ----------- | ----------------- |
+| Entity      | MOCK-0000000      |
 | Entity Name | MOCK NAME SURNAME |
-| Zone        | MOCK-0000 |
-| Region      | MOCK-00 |
+| Zone        | MOCK-0000         |
+| Region      | MOCK-00           |
 
 ## Analysis
 

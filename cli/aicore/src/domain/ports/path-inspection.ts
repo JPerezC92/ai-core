@@ -9,10 +9,10 @@
  */
 
 export interface PathInspection {
-  /** Report whether the path exists as a regular file. */
-  isFile(path: string): Promise<boolean>;
-  /** Join a relative POSIX path onto a root path. */
-  join(root: string, relative: string): string;
-  /** Every regular file under `root`, as root-relative POSIX paths. */
-  enumerateFilesUnder(root: string): Promise<readonly string[]>;
+	/** Report whether the path exists as a regular file. */
+	isFile(path: string): Promise<boolean>;
+	/** Join a relative POSIX path onto a root path. */
+	join(root: string, relative: string): string;
+	/** Every regular file under `root`, as root-relative POSIX paths. */
+	enumerateFilesUnder(root: string): Promise<readonly string[]>;
 }

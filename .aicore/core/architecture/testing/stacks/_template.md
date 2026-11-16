@@ -15,11 +15,11 @@ A destination may add its selected runner, framework adapter, or local tool bind
 
 ## Test pyramid mapping
 
-| Level | Target | Collaborators and doubles | Observable assertion |
-|---|---|---|---|
-| Unit | <one application use-case class, one parser/loader whose responsibility is converting an external representation into domain data, or one component with its real hook> | <what is doubled> | <what is asserted> |
-| Integration | <one adapter or boundary> | <real isolated dependency; transport stub only for a capability whose dependency cannot be isolated> | <mapping assertion> |
-| End to end | <assembled entry point> | <real composition and adapters> | <observable result> |
+| Level       | Target                                                                                                                                                                  | Collaborators and doubles                                                                            | Observable assertion |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | -------------------- |
+| Unit        | <one application use-case class, one parser/loader whose responsibility is converting an external representation into domain data, or one component with its real hook> | <what is doubled>                                                                                    | <what is asserted>   |
+| Integration | <one adapter or boundary>                                                                                                                                               | <real isolated dependency; transport stub only for a capability whose dependency cannot be isolated> | <mapping assertion>  |
+| End to end  | <assembled entry point>                                                                                                                                                 | <real composition and adapters>                                                                      | <observable result>  |
 
 Explain any stack-specific meaning of a level. Do not rename a level or move a boundary.
 
@@ -99,18 +99,18 @@ Do not grant execution authority in this guide. Name the project configuration s
 
 Complete this table for every contract section. Every row cites the contract rule identifiers the guide achieves; a coverage claim without a cited identifier is a defect. Follow `.aicore/core/architecture/README.md` → `## Content model`.
 
-| Contract section | Cited rule IDs | Language-specific achievement or N/A reason |
-|---|---|---|
-| Applicability and ownership | <T-IDs> | <how this stack achieves them, or the N/A reason> |
-| Test pyramid mapping | <T-IDs> | <how this stack achieves them, or the N/A reason> |
-| File organization | <T-IDs> | <how this stack achieves them, or the N/A reason> |
-| Unit tests | <T-IDs> | <how this stack achieves them, or the N/A reason> |
-| Integration tests | <T-IDs> | <how this stack achieves them, or the N/A reason> |
-| End-to-end tests | <T-IDs> | <how this stack achieves them, or the N/A reason> |
-| Test data and doubles | <T-IDs> | <how this stack achieves them, or the N/A reason> |
-| Execution and evidence | <T-IDs> | <how this stack achieves them, or the N/A reason> |
-| Cross-stack parity | <T-IDs> | <how this stack achieves them, or the N/A reason> |
-| Open decisions | <T-IDs> | <how this stack achieves them, or the N/A reason> |
+| Contract section            | Cited rule IDs | Language-specific achievement or N/A reason       |
+| --------------------------- | -------------- | ------------------------------------------------- |
+| Applicability and ownership | <T-IDs>        | <how this stack achieves them, or the N/A reason> |
+| Test pyramid mapping        | <T-IDs>        | <how this stack achieves them, or the N/A reason> |
+| File organization           | <T-IDs>        | <how this stack achieves them, or the N/A reason> |
+| Unit tests                  | <T-IDs>        | <how this stack achieves them, or the N/A reason> |
+| Integration tests           | <T-IDs>        | <how this stack achieves them, or the N/A reason> |
+| End-to-end tests            | <T-IDs>        | <how this stack achieves them, or the N/A reason> |
+| Test data and doubles       | <T-IDs>        | <how this stack achieves them, or the N/A reason> |
+| Execution and evidence      | <T-IDs>        | <how this stack achieves them, or the N/A reason> |
+| Cross-stack parity          | <T-IDs>        | <how this stack achieves them, or the N/A reason> |
+| Open decisions              | <T-IDs>        | <how this stack achieves them, or the N/A reason> |
 
 A difference is allowed only for language semantics and must be declared in the parity table above. `N/A` is allowed for a language, runtime, or scope reason; a scope-based `N/A` states why the obligation cannot be achieved by guide content under this guide's scope. A thinner section is not a difference. State only how this stack achieves a cited rule; never restate the rule, here or in the body.
 

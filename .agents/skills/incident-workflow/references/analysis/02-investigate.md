@@ -37,6 +37,7 @@ Accept current relevant supporting results through the coordinator before consum
 ## Investigation results
 
 ### H1 — <title>
+
 - **Statement:** The problem could be <X>
 - **Partial evidence:** <what supports this>
 - **Refutation criteria:** <what single result would rule it out>
@@ -45,6 +46,7 @@ Accept current relevant supporting results through the coordinator before consum
 - **Confirmed:** yes / no / inconclusive
 
 ### H2 — <title>
+
 - **Statement:** The problem could be <X>
 - **Partial evidence:** <what supports this>
 - **Refutation criteria:** <what single result would rule it out>
@@ -53,6 +55,7 @@ Accept current relevant supporting results through the coordinator before consum
 - **Confirmed:** yes / no / inconclusive
 
 ### H3 — <title>
+
 - **Statement:** The problem could be <X>
 - **Partial evidence:** <what supports this>
 - **Refutation criteria:** <what single result would rule it out>
@@ -62,11 +65,11 @@ Accept current relevant supporting results through the coordinator before consum
 
 ## Kill-switch summary
 
-| Kill-switch | Budget | Consumed | Status |
-|---|---|---|---|
-| Query-budget (used/limit) | 6 | <fill> | <ok / exhausted> |
-| Same-query-reruns | 2 | <fill> | <ok / limit reached> |
-| Hypotheses-outstanding | 3 | <fill> | <fill> remaining |
+| Kill-switch               | Budget | Consumed | Status               |
+| ------------------------- | ------ | -------- | -------------------- |
+| Query-budget (used/limit) | 6      | <fill>   | <ok / exhausted>     |
+| Same-query-reruns         | 2      | <fill>   | <ok / limit reached> |
+| Hypotheses-outstanding    | 3      | <fill>   | <fill> remaining     |
 
 ## Gate
 

@@ -34,7 +34,7 @@ Unknown historical rationale for individual placement choices is unrecorded; the
 
 ## Alternatives
 
-- **Require rich object-oriented entities with domain methods everywhere.** Rejected: C2 and both stack guides already accept framework-free classes *or* typed data plus pure functions, and the research record states Clean Architecture does not require rich OO entities. Mandating one representation would force a rewrite with no evidenced defect and would contradict the accepted Python functional-domain style.
+- **Require rich object-oriented entities with domain methods everywhere.** Rejected: C2 and both stack guides already accept framework-free classes _or_ typed data plus pure functions, and the research record states Clean Architecture does not require rich OO entities. Mandating one representation would force a rewrite with no evidenced defect and would contradict the accepted Python functional-domain style.
 - **Treat every data-only type as anemic and wrap it in an operation or class.** Rejected: a category error for boundary records, and it contradicts C7's prohibition on artificial wrappers for pure helpers. It adds indirection without adding an enforcement point.
 - **Keep a thin domain and place all rules in use cases.** Rejected as a general rule. It is acceptable for genuinely simple, CRUD-like tooling with no invariants and one entry point, but it becomes the "clean but anemic" shape once invariants exist: every new caller must re-implement them.
 - **Move all policy into the domain preemptively.** Rejected: it narrows C3's explicit dual permission, adds indirection for single-caller application policy, and confuses application concerns such as transaction scope and authorization with domain invariants.

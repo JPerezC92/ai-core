@@ -8,8 +8,8 @@
  */
 
 export interface DestinationReader {
-  /** Read a file as UTF-8 text without newline translation; `null` when absent. */
-  readText(path: string): Promise<string | null>;
-  /** Read a file's bytes verbatim, or `null` when absent. */
-  readBytes(path: string): Promise<Uint8Array | null>;
+	/** Read a file as UTF-8 text without newline translation; `null` when absent. */
+	readText(path: string): Promise<string | null>;
+	/** Read a file's bytes verbatim, or `null` when absent. */
+	readBytes(path: string): Promise<Uint8Array | null>;
 }

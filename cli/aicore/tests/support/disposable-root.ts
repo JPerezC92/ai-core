@@ -16,10 +16,10 @@ import { basename, join, resolve, sep } from "node:path";
 
 /** Raised when a cleanup request names a path the fixture does not own. */
 export class UnsafeCleanupTargetError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "UnsafeCleanupTargetError";
-  }
+	constructor(message: string) {
+		super(message);
+		this.name = "UnsafeCleanupTargetError";
+	}
 }
 
 /**
@@ -30,16 +30,16 @@ export class UnsafeCleanupTargetError extends Error {
  * differently-cased spelling cannot satisfy the check by accident.
  */
 export function isOwnedTemporaryRoot(candidate: string, prefix: string): boolean {
-  const temporaryRoot = resolve(tmpdir());
-  const target = resolve(candidate);
+	const temporaryRoot = resolve(tmpdir());
+	const target = resolve(candidate);
 
-  if (target === temporaryRoot) {
-    return false;
-  }
-  if (!target.startsWith(`${temporaryRoot}${sep}`)) {
-    return false;
-  }
-  return basename(target).startsWith(prefix);
+	if (target === temporaryRoot) {
+		return false;
+	}
+	if (!target.startsWith(`${temporaryRoot}${sep}`)) {
+		return false;
+	}
+	return basename(target).startsWith(prefix);
 }
 
 /**
@@ -48,11 +48,9 @@ export function isOwnedTemporaryRoot(candidate: string, prefix: string): boolean
  * The prefix is retained on the returned record so cleanup can validate
  * ownership without the caller restating it.
  */
-export async function createTemporaryRoot(
-  prefix: string,
-): Promise<{ readonly root: string; readonly prefix: string }> {
-  const root = await mkdtemp(join(tmpdir(), prefix));
-  return { root, prefix };
+export async function createTemporaryRoot(prefix: string): Promise<{ readonly root: string; readonly prefix: string }> {
+	const root = await mkdtemp(join(tmpdir(), prefix));
+	return { root, prefix };
 }
 
 /**
@@ -62,15 +60,12 @@ export async function createTemporaryRoot(
  * immediately before deletion rather than at creation time, so a value mutated
  * in between is still caught.
  */
-export async function disposeTemporaryRoot(
-  root: string,
-  prefix: string,
-): Promise<void> {
-  if (!isOwnedTemporaryRoot(root, prefix)) {
-    throw new UnsafeCleanupTargetError(
-      `refusing to delete a path this fixture does not own: ${resolve(root)} ` +
-        `(expected a directory under ${resolve(tmpdir())} whose name starts with ${prefix})`,
-    );
-  }
-  await rm(root, { recursive: true, force: true });
+export async function disposeTemporaryRoot(root: string, prefix: string): Promise<void> {
+	if (!isOwnedTemporaryRoot(root, prefix)) {
+		throw new UnsafeCleanupTargetError(
+			`refusing to delete a path this fixture does not own: ${resolve(root)} ` +
+				`(expected a directory under ${resolve(tmpdir())} whose name starts with ${prefix})`,
+		);
+	}
+	await rm(root, { recursive: true, force: true });
 }

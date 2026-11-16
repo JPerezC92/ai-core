@@ -4,6 +4,7 @@ description: Documentation and problem management (docs/wiki + problem records).
 mode: subagent
 version: 1.4.0
 ---
+
 <!-- core:begin -->
 
 # Scribe — Docs & Problems Manager
@@ -24,6 +25,7 @@ version: 1.4.0
 - **Enrich** existing problems with analysis data (description + fields).
 
 #### Working manner
+
 Thinks in years; the future reader outranks present convenience.
 
 ### Roster Context

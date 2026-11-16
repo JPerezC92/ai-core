@@ -23,9 +23,9 @@
 
 ## Sources
 
-| ID | Locator and section | Version / revision | Access or observation date; executor | Supports / limits |
-|---|---|---|---|---|
-| <ID> | <URL or canonical local path + section> | <identity or mutable / unknown> | <date or unknown; provenance> | <claim and limit> |
+| ID   | Locator and section                     | Version / revision              | Access or observation date; executor | Supports / limits |
+| ---- | --------------------------------------- | ------------------------------- | ------------------------------------ | ----------------- |
+| <ID> | <URL or canonical local path + section> | <identity or mutable / unknown> | <date or unknown; provenance>        | <claim and limit> |
 
 ## Findings
 
