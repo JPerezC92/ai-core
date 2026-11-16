@@ -9,7 +9,6 @@
 
 import { execFile } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
@@ -29,50 +28,43 @@ export const REVISION = "0123456789abcdef0123456789abcdef01234567";
 
 /** A disposable destination directory plus its isolated selection file. */
 export type Fixture = {
-  readonly destination: string;
-  readonly configPath: string;
-  readonly root: string;
-  dispose(): Promise<void>;
+	readonly destination: string;
+	readonly configPath: string;
+	readonly root: string;
+	dispose(): Promise<void>;
 };
 
 export async function createFixture(
-  options: {
-    readonly agentsBody?: string;
-    readonly editor?: string;
-  } = {},
+	options: { readonly agentsBody?: string; readonly editor?: string } = {},
 ): Promise<Fixture> {
-  const { root, prefix } = await createTemporaryRoot(FIXTURE_PREFIX);
-  const destination = join(root, "destination");
-  await mkdir(destination, { recursive: true });
-  await writeFile(
-    join(destination, "AGENTS.md"),
-    options.agentsBody ?? "# Fixture project\n\nA disposable destination for end-to-end verification.\n",
-    "utf8",
-  );
-  if (options.editor !== undefined) {
-    await mkdir(join(destination, ".aicore"), { recursive: true });
-    await writeFile(
-      join(destination, ".aicore", "core.yaml"),
-      enrolledBindings(options.editor),
-      "utf8",
-    );
-  }
+	const { root, prefix } = await createTemporaryRoot(FIXTURE_PREFIX);
+	const destination = join(root, "destination");
+	await mkdir(destination, { recursive: true });
+	await writeFile(
+		join(destination, "AGENTS.md"),
+		options.agentsBody ?? "# Fixture project\n\nA disposable destination for end-to-end verification.\n",
+		"utf8",
+	);
+	if (options.editor !== undefined) {
+		await mkdir(join(destination, ".aicore"), { recursive: true });
+		await writeFile(join(destination, ".aicore", "core.yaml"), enrolledBindings(options.editor), "utf8");
+	}
 
-  return {
-    destination,
-    configPath: join(root, "local.json"),
-    root,
-    async dispose(): Promise<void> {
-      // Ownership is re-validated here, immediately before deletion.
-      await disposeTemporaryRoot(root, prefix);
-    },
-  };
+	return {
+		destination,
+		configPath: join(root, "local.json"),
+		root,
+		async dispose(): Promise<void> {
+			// Ownership is re-validated here, immediately before deletion.
+			await disposeTemporaryRoot(root, prefix);
+		},
+	};
 }
 
 export type Invocation = {
-  readonly status: number;
-  readonly stdout: string;
-  readonly stderr: string;
+	readonly status: number;
+	readonly stdout: string;
+	readonly stderr: string;
 };
 
 /**
@@ -82,52 +74,49 @@ export type Invocation = {
  * the real operator selection.
  */
 export async function invoke(
-  arguments_: readonly string[],
-  options: {
-    readonly fixture: Fixture;
-    readonly revision?: string | undefined;
-  },
+	arguments_: readonly string[],
+	options: {
+		readonly fixture: Fixture;
+		readonly revision?: string | undefined;
+	},
 ): Promise<Invocation> {
-  const env: Record<string, string> = {};
-  for (const [key, value] of Object.entries(process.env)) {
-    if (value !== undefined) {
-      env[key] = value;
-    }
-  }
-  delete env["AICORE_SOURCE_REVISION"];
-  delete env["AICORE_LOCAL_CONFIG"];
+	const env: Record<string, string> = {};
+	for (const [key, value] of Object.entries(process.env)) {
+		if (value !== undefined) {
+			env[key] = value;
+		}
+	}
+	delete env["AICORE_SOURCE_REVISION"];
+	delete env["AICORE_LOCAL_CONFIG"];
 
-  if (options.revision !== undefined && options.revision !== "") {
-    env["AICORE_SOURCE_REVISION"] = options.revision;
-  }
-  env["AICORE_LOCAL_CONFIG"] = options.fixture.configPath;
+	if (options.revision !== undefined && options.revision !== "") {
+		env["AICORE_SOURCE_REVISION"] = options.revision;
+	}
+	env["AICORE_LOCAL_CONFIG"] = options.fixture.configPath;
 
-  try {
-    const { stdout, stderr } = await run(process.execPath, [CLI_ENTRY, ...arguments_], {
-      cwd: CHECKOUT,
-      env,
-      maxBuffer: 32 * 1024 * 1024,
-      windowsHide: true,
-    });
-    return { status: 0, stdout, stderr };
-  } catch (error) {
-    const failure = error as { code?: number | string; stdout?: string; stderr?: string };
-    return {
-      status: typeof failure.code === "number" ? failure.code : 1,
-      stdout: failure.stdout ?? "",
-      stderr: failure.stderr ?? "",
-    };
-  }
+	try {
+		const { stdout, stderr } = await run(process.execPath, [CLI_ENTRY, ...arguments_], {
+			cwd: CHECKOUT,
+			env,
+			maxBuffer: 32 * 1024 * 1024,
+			windowsHide: true,
+		});
+		return { status: 0, stdout, stderr };
+	} catch (error) {
+		const failure = error as { code?: number | string; stdout?: string; stderr?: string };
+		return {
+			status: typeof failure.code === "number" ? failure.code : 1,
+			stdout: failure.stdout ?? "",
+			stderr: failure.stderr ?? "",
+		};
+	}
 }
 
 /**
  * Invoke with the default valid revision.
  */
-export function invokeWithRevision(
-  arguments_: readonly string[],
-  fixture: Fixture,
-): Promise<Invocation> {
-  return invoke(arguments_, { fixture, revision: REVISION });
+export function invokeWithRevision(arguments_: readonly string[], fixture: Fixture): Promise<Invocation> {
+	return invoke(arguments_, { fixture, revision: REVISION });
 }
 
 /**
@@ -138,12 +127,7 @@ export function invokeWithRevision(
  * without running one.
  */
 function enrolledBindings(editor: string): string {
-  return [
-    "schema: 1",
-    `core_revision: ${REVISION}`,
-    `editor: ${editor}`,
-    "bindings: []",
-    "pending: []",
-    "",
-  ].join("\n");
+	return ["schema: 1", `core_revision: ${REVISION}`, `editor: ${editor}`, "bindings: []", "pending: []", ""].join(
+		"\n",
+	);
 }
