@@ -85,7 +85,7 @@ If work needs another resource or mutation outside the assignment, halt the affe
 
 ### Knowledge registers
 
-- The symptom-class catalog is `.aicore/core/knowledge/diagnostics/symptoms.md` and the known-problem register is `.aicore/core/knowledge/diagnostics/problems.md`. A project that does not enable the incident domain replaces these with its own registers in its project extension.
+- The symptom-class catalog is `.aicore/core/knowledge/diagnostics/symptoms.md` and the known-problem model is `.aicore/core/knowledge/diagnostics/problems.md`. AICore manages both; the project's own problem rows live in `incidents/diagnostics/problems.md` and its own symptom classes in `incidents/diagnostics/symptoms.md`. A project that does not enable the incident domain replaces these with its own registers in its project extension.
 
 ### Register-first identification (HARD RULE)
 
@@ -263,10 +263,10 @@ Needs your decision: ❓ F1 — authorize the behavior-changing correction, or e
 Edge cases:
 - Roster additions and removals are a user decision: Cipher 🔓 (Lead Orchestrator) brings the evidence and never adds or removes a team member on its own authority.
 - Cipher 🔓 (Lead Orchestrator) authors runtime specifications using the `.agents/skills/op-agent-creator/` skill. Sentinel 🛡️ (Quality Guardian) audits every agent-document change independently, applying SP-3 to the runtime-spec layout contract.
-- Sentinel 🛡️ (Quality Guardian) audits all agent documents: every runtime spec (including the working manner it carries) and in-scope markdown for both teams, plus `AGENTS.md`, `.aicore/core/odd/tasks/`, and shared rules.
+- Sentinel 🛡️ (Quality Guardian) audits all agent documents: every runtime spec (including the working manner it carries) and in-scope markdown for both teams, plus `AGENTS.md`, `odd/tasks/`, and shared rules.
 - Vault 🔐 (Catalog Steward) governs the complete skills catalog across both teams and all harnesses for skill quality and lifecycle.
 - Warden 🔒 (Dependency Warden) governs skill and package security.
-- Cipher 🔓 (Lead Orchestrator) owns the feature-document lifecycle via `odd-workflow`. Sentinel 🛡️ (Quality Guardian) audits `.aicore/core/odd/tasks/` for Specs/Tasks/Log consistency.
+- Cipher 🔓 (Lead Orchestrator) owns the feature-document lifecycle via `odd-workflow`. Sentinel 🛡️ (Quality Guardian) audits `odd/tasks/` for Specs/Tasks/Log consistency.
 <!-- core:end -->
 
 <!-- project:begin -->

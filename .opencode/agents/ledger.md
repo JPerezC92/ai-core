@@ -177,11 +177,11 @@ After the posted-response verification passes, the durable set is the ticket rec
 
 Inherited ticket-template, token, path, close-out phrase, and validator reference defaults. These command forms are references, not an invocation grant; executing them requires the destination harness's existing permission config.
 
-- Canonical ticket folder pattern: `tickets/<DATE> #ID/`, where `<DATE>` is the ticket's first analysis start date (`YYYY-MM-DD`), fixed for the ticket's life and never renamed on re-analysis.
+- Canonical ticket folder pattern: `incidents/<DATE> #ID/`, where `<DATE>` is the ticket's first analysis start date (`YYYY-MM-DD`), fixed for the ticket's life and never renamed on re-analysis.
 - Ticket record fields: frontmatter (`created`, `date_resolved`, `analyses[N].started`, `analyses[N].ended`, `issue_type`, `status`, `related_ticket`, `escalated_to`, `derivation`), body sections (`## Responses`, `## Root Cause`, `## Solution`, `## Conclusion`, `## Summary`, `## Impact`, `## Recommendations`, `## Workaround`, `## Images`), identification fields (`symptom_ids`, `known_problem_ids`, `identification_verdict`), response blocks (`### Response N — YYYY-MM-DD · note <id>`, `#### ImagenN`), image citation subfields (`image_id`, `path:` as `screenshots/response-N/<filename>`, `url:`), and the ephemeral `response-draft.md`.
 - Durable record and directories: `ticket_<id>.md`, `screenshots/`, and `validations/` (dated `validations/YYYY-MM-DD/` per session). Leftover files in `downloads/` are not durable.
 - Analysis working set: `analysis/state.md`, `01-identify.md`, `02-investigate.md`, `03-synthesize.md`; ephemeral files deleted at collapse: `analysis/state.md`, every `analysis/*.md`, `response-draft.md`, and unused files in `downloads/`.
-- Knowledge registers: `.aicore/core/knowledge/diagnostics/problems.md` (rows `P-NNN`; `case:` / `pack:` pointers; `Team: incident`) and `.aicore/core/knowledge/diagnostics/symptoms.md` (`S-xx`).
+- Knowledge registers: project rows `P-NNN` live in `incidents/diagnostics/problems.md` (`case:` / `pack:` pointers; `Team: incident`), project classes `LOCAL:S-xx` in `incidents/diagnostics/symptoms.md`, and the shared model with baseline `S-xx` classes in `.aicore/core/knowledge/diagnostics/`.
 - Close-out authorization phrase: `Close out now`.
 - Ticket validator reference commands:
   - `node .agents/skills/incident-workflow/scripts/validate_incident_workflow.ts <ticket-folder> --pre-close` (read-only)

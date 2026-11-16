@@ -59,7 +59,7 @@ Inherited Spanish strings are baseline examples of the concrete drafting-rule de
 When the draft references an incident or external problem ticket, render it as an actual hyperlink — `<a href="{verified URL}">{ticket label}</a>` — in a heading or the body alike, not only in body prose.
 
 - The URL comes from verified input: the ticket record or the ticket tool's returned link. Never invent, guess, or construct a host or path.
-- A local problem-register id (a `.aicore/core/knowledge/diagnostics/problems.md` row) is **not** automatically an external ticket URL; a register id alone never becomes a link target.
+- A local problem-register id (an `incidents/diagnostics/problems.md` row) is **not** automatically an external ticket URL; a register id alone never becomes a link target.
 - If a required ticket URL is unavailable, return a missing-input report to Cipher 🔓 (Lead Orchestrator) — never downgrade the reference to plain text and never guess a URL.
 
 #### Public payload vs internal-only content
@@ -111,7 +111,7 @@ If the correction requires multiple disjoint edits, do them as separate Edit cal
 
 - Draft file: the ticket's `response-draft.md` (ephemeral scratch file).
 - Durable record block: the ticket record's `## Responses` section.
-- Local image files: ticket-folder-relative `screenshots/response-N/<filename>` (N = current response). The screenshot directory for this draft is `screenshots/response-N/`, not a flat `screenshots/<filename>`. A `path:` under `downloads/` is invalid. Repo-relative spellings (`tickets/.../screenshots/...`) are invalid.
+- Local image files: ticket-folder-relative `screenshots/response-N/<filename>` (N = current response). The screenshot directory for this draft is `screenshots/response-N/`, not a flat `screenshots/<filename>`. A `path:` under `downloads/` is invalid. Repo-relative spellings (`incidents/.../screenshots/...`) are invalid.
 - Image markers/internal footers: `(ImagenN)` / `(ver ImagenN)` public body references correspond to `Imagen{N}: desc: ... | path: ... | url: ...` lines ONLY under internal metadata. `path:` appears only for an analyst screenshot (ticket-folder-relative local file); an original ticket-system image records `image_id:` + `url:` and NO `path:`. The public bold image caption sits immediately above its remote `<img>` tag in the form `**ImagenN — description**`, where the label number matches both the `(ver ImagenN)` marker that cites it and the internal `ImagenN:` mapping; cite images as `(ver ImagenN)`. Never publish the mapping/footer line or its literal `url:` field.
 - Non-canonical marker (forbidden): `[IMG: ...]`.
 
