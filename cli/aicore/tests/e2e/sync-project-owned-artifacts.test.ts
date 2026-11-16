@@ -121,6 +121,12 @@ describe("synchronization preserves project-owned artifacts", () => {
       const afterSecond = await readAll(fixture, planted.keys());
       expect([...afterSecond]).toEqual([...planted]);
 
+      const checked = await invoke(argumentsFor("check", fixture), { fixture, revision: REVISION });
+      // Enrollment leaves region reconciliation pending, so a non-zero check is
+      // the documented handoff; either status is acceptable, and neither may
+      // touch a destination-owned record.
+      expect([0, 1]).toContain(checked.status);
+
       const afterCheck = await readAll(fixture, planted.keys());
       expect([...afterCheck]).toEqual([...planted]);
     } finally {

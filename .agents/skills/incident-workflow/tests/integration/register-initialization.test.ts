@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { InitializeLocalRegisters } from '#scripts/incident_workflow_pkg/application/initialize_local_registers.ts';
+import { validateDiagnosticKnowledge } from '#scripts/incident_workflow_pkg/application/initialize_local_registers.ts';
 
 const SYMPTOMS = 'incidents/diagnostics/symptoms.md';
 const PROBLEMS = 'incidents/diagnostics/problems.md';
@@ -109,9 +110,23 @@ describe('authorized register initialization', () => {
     expect(memory.files.get(SYMPTOMS)).toBe(incompatible);
   });
 
-  it('does not create registers during a read-only validation', () => {
+  it('a read-only validation reports absent registers and creates nothing', () => {
     const memory = makePorts(seedTemplates());
-    expect(memory.files.has(SYMPTOMS)).toBe(false);
+    const before = new Map(memory.files);
+
+    const findings = validateDiagnosticKnowledge({
+      baselineSymptoms: memory.files.get(BASELINE) ?? null,
+      localSymptoms: null,
+      localProblems: null,
+      localSymptomsPath: SYMPTOMS,
+      localProblemsPath: PROBLEMS,
+    });
+
+    expect(findings.violations).toEqual([
+      `KNOWLEDGE-1: local symptom register missing: ${SYMPTOMS}`,
+      `KNOWLEDGE-2: local problem register missing: ${PROBLEMS}`,
+    ]);
+    expect([...memory.files]).toEqual([...before]);
     expect(memory.directories).toEqual([]);
   });
 });
