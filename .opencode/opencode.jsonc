@@ -23,6 +23,28 @@
       "permissions": [
         { "action": "shell", "resource": "*", "effect": "deny" },
         { "action": "shell", "resource": "pnpm install", "effect": "allow" },
+        // Isolated-verification provisioning. A disposable checkout for an
+        // exact committed revision carries no node_modules, so the reviewed
+        // suite cannot run there until the approved lockfile is materialised.
+        // These three forms mirror docs/tooling.md's three install roots.
+        // `--frozen-lockfile` makes pnpm fail rather than write a manifest or
+        // lockfile that disagrees with the committed one, and
+        // `--ignore-scripts` executes no lifecycle script, so the operation is
+        // reproduced from evidence Warden already gated and cannot become an
+        // approval path. No wildcard, no `pnpm add`, no update or upgrade
+        // form. The working directory is constrained by the assignment, not
+        // by this layer, which matches command text only.
+        { "action": "shell", "resource": "pnpm install --frozen-lockfile --ignore-scripts", "effect": "allow" },
+        {
+          "action": "shell",
+          "resource": "pnpm --dir mcp-servers/system-one install --frozen-lockfile --ignore-scripts",
+          "effect": "allow"
+        },
+        {
+          "action": "shell",
+          "resource": "pnpm --dir .opencode/plugins/odd-adviser install --frozen-lockfile --ignore-scripts",
+          "effect": "allow"
+        },
         // Package-local CLI test suites, granted as exact commands only so the
         // test architect can observe the committed suite directly instead of
         // relying on coordinator-supplied results. The root `test:cli` and
@@ -54,6 +76,17 @@
       "permissions": [
         { "action": "shell", "resource": "pnpm *", "effect": "deny" },
         { "action": "shell", "resource": "pnpm install --lockfile-only --ignore-scripts", "effect": "allow" },
+        // The repository's own read-only whole-tree gates. The 2026-11-16
+        // tooling adoption added these root scripts after this block was
+        // written, so the role that implements a slice could not run the
+        // formatter check, the linter or the typechecker over it. Each form
+        // is read-only and reaches only a checker; `pnpm format` and
+        // `pnpm lint:fix` stay denied because Forge's autofix authority is
+        // the formatter and linter invoked directly, and `pnpm verify` is
+        // omitted because it only composes these three.
+        { "action": "shell", "resource": "pnpm lint", "effect": "allow" },
+        { "action": "shell", "resource": "pnpm format:check", "effect": "allow" },
+        { "action": "shell", "resource": "pnpm typecheck", "effect": "allow" },
         { "action": "shell", "resource": "pnpm --dir cli/aicore test*", "effect": "allow" },
         { "action": "shell", "resource": "pnpm --dir cli/aicore typecheck*", "effect": "allow" },
         {
@@ -213,6 +246,28 @@
         { "action": "shell", "resource": "*", "effect": "deny" },
         { "action": "shell", "resource": "pnpm audit --json", "effect": "allow" },
         { "action": "shell", "resource": "pnpm outdated --json", "effect": "allow" },
+        // Candidate registry metadata. The Default Audit Gate and the
+        // per-task warmup require the changed candidate's registry
+        // metadata document — declared license, published integrity
+        // digest and any published attestation — and no other
+        // authorized command reaches it. Read-only, exact `--json`
+        // form, never an install or mutation, never a blanket
+        // registry-research allowance.
+        { "action": "shell", "resource": "pnpm info * --json", "effect": "allow" },
+        // The allow above is a plain name-or-version spec plus `--json`.
+        // The matched value spans spaces, so a flag that redirects the
+        // metadata source or relocates pnpm's config root would otherwise
+        // be reachable and could answer the approved-source control from a
+        // registry the project never approved. These denies come after the
+        // allow so last-match-wins keeps the retrieval narrow, and none can
+        // match the plain `<spec> --json` form. As everywhere else in this
+        // file, this is cooperative matching, not a sandbox: an unlisted
+        // spelling through a wrapper or another executable is outside it.
+        { "action": "shell", "resource": "pnpm info *--registry*", "effect": "deny" },
+        { "action": "shell", "resource": "pnpm info *:registry*", "effect": "deny" },
+        { "action": "shell", "resource": "pnpm info *--config*", "effect": "deny" },
+        { "action": "shell", "resource": "pnpm info *--dir*", "effect": "deny" },
+        { "action": "shell", "resource": "pnpm info * -C *", "effect": "deny" },
         // The effective registry, read offline. The lockfile records
         // each artifact's integrity digest but not the registry that
         // resolved it, so this is the only way to discharge the
