@@ -8,7 +8,7 @@
  */
 
 import { execFile } from "node:child_process";
-import { mkdir, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
@@ -59,6 +59,82 @@ export async function createFixture(
 			await disposeTemporaryRoot(root, prefix);
 		},
 	};
+}
+
+/**
+ * Files copied into the representative source. The clearance registry lists
+ * only these paths (directory-root keys for the skill and agent trees).
+ */
+export const REPRESENTATIVE_FILES = [
+	"AGENTS.md",
+	".opencode/opencode.jsonc",
+	".opencode/agents/forge.md",
+	".opencode/agents/lumen.md",
+	".agents/skills/op-model/SKILL.md",
+	".agents/skills/git-commit/SKILL.md",
+	".aicore/core/odd/tasks/_template.md",
+	".aicore/core/knowledge/agents.md",
+] as const;
+
+/** Agent documents the representative source actually ships. */
+export const REPRESENTATIVE_AGENT_FILES = ["forge.md", "lumen.md"] as const;
+
+const REPRESENTATIVE_CLEARED: Readonly<Record<string, Readonly<Record<string, unknown>>>> = {
+	"AGENTS.md": { mode: "region", role: "root" },
+	".opencode/opencode.jsonc": {
+		mode: "merge",
+		omit_mcp_servers: ["system-one"],
+		editors: {
+			opencode: { destination: ".opencode/opencode.jsonc" },
+			cursor: { omitted: true },
+		},
+	},
+	".aicore/core/knowledge/agents.md": { mode: "region" },
+	".aicore/core/odd/tasks/_template.md": { mode: "raw" },
+	".agents/skills/op-model/": { mode: "raw" },
+	".agents/skills/git-commit/": { mode: "raw" },
+	".opencode/agents/": {
+		mode: "region",
+		editors: {
+			opencode: { destination: ".opencode/agents/" },
+			cursor: { destination: ".cursor/agents/" },
+		},
+	},
+};
+
+/** A disposable destination whose source is the representative tree, not the checkout. */
+export type RepresentativeFixture = Fixture & {
+	readonly source: string;
+};
+
+/**
+ * Copy real checkout bytes for a small set that still proves region, raw, merge,
+ * root role, one agent pair, one optional skill directory, one kept skill, the
+ * protected baselines, and the managed ODD template. Isolation is the same
+ * mkdtemp root the fixture already owns.
+ */
+export async function createRepresentativeSource(root: string): Promise<string> {
+	const source = join(root, "source");
+	await mkdir(source, { recursive: true });
+	for (const relative of REPRESENTATIVE_FILES) {
+		const target = join(source, relative);
+		await mkdir(dirname(target), { recursive: true });
+		await copyFile(join(CHECKOUT, relative), target);
+	}
+	await writeFile(
+		join(source, "distribution-clearance.json"),
+		`${JSON.stringify({ schema: 1, cleared: REPRESENTATIVE_CLEARED }, null, 2)}\n`,
+		"utf8",
+	);
+	return source;
+}
+
+export async function createRepresentativeFixture(
+	options: { readonly agentsBody?: string; readonly editor?: string } = {},
+): Promise<RepresentativeFixture> {
+	const fixture = await createFixture(options);
+	const source = await createRepresentativeSource(fixture.root);
+	return { ...fixture, source };
 }
 
 export type Invocation = {

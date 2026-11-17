@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { evaluateEvidence } from "./evaluate-evidence.ts";
+import { EvaluateEvidence } from "./evaluate-evidence.ts";
 import {
 	createCapturedMessage,
 	createControlledDeadline,
@@ -15,12 +15,10 @@ describe("evaluateEvidence deadline cleanup", () => {
 	test("cancels the pending deadline when evaluation succeeds first", async () => {
 		const deadline = createControlledDeadline();
 		const evaluation = createEvaluation();
-		const outcome = await evaluateEvidence(
-			createCapturedMessage(),
-			createRecordingEvaluator(evaluation),
-			createEvaluateEvidenceOptions(),
+		const outcome = await new EvaluateEvidence({
+			evaluator: createRecordingEvaluator(evaluation),
 			deadline,
-		);
+		}).execute(createCapturedMessage(), createEvaluateEvidenceOptions());
 
 		expect(outcome).toStrictEqual(createExpectedEvaluatedAdvisory(evaluation, expect.any(String)));
 		expect(deadline.cancellations).toBe(1);
@@ -29,12 +27,10 @@ describe("evaluateEvidence deadline cleanup", () => {
 
 	test("cancels the pending deadline when evaluation rejects first", async () => {
 		const deadline = createControlledDeadline();
-		const outcome = await evaluateEvidence(
-			createCapturedMessage(),
-			createThrowingEvaluator(),
-			createEvaluateEvidenceOptions(),
+		const outcome = await new EvaluateEvidence({
+			evaluator: createThrowingEvaluator(),
 			deadline,
-		);
+		}).execute(createCapturedMessage(), createEvaluateEvidenceOptions());
 
 		expect(outcome).toStrictEqual(createExpectedUnavailableAdvisory("transport_error", expect.any(String)));
 		expect(deadline.cancellations).toBe(1);

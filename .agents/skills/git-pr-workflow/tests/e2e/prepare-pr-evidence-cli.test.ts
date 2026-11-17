@@ -8,6 +8,8 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import {
 	createBody,
+	createCommittedRepository,
+	createFixtureEnvironment,
 	createLocalDraft,
 	createLocalInventory,
 	createLocalSnapshot,
@@ -34,11 +36,11 @@ function makeDirectory(): string {
 }
 
 /** Run the entry point as a spawned process and capture its status and streams. */
-function runCli(args: readonly string[], cwd: string): CliRun {
+function runCli(args: readonly string[], cwd: string, env: NodeJS.ProcessEnv = process.env): CliRun {
 	const completed = spawnSync(process.execPath, [entryPoint, ...args], {
 		cwd,
 		encoding: "utf8",
-		env: process.env,
+		env,
 	});
 	if (completed.error) throw completed.error;
 	return {
@@ -89,6 +91,46 @@ describe("prepare_pr_evidence as a spawned process", () => {
 		expect(run.stderr).toBe("");
 		expect(readFileSync(output, "utf8")).toBe(`${JSON.stringify(createLocalSnapshot(), null, 2)}\n`);
 		expect(JSON.parse(readFileSync(output, "utf8"))).toEqual(createLocalSnapshot());
+	});
+
+	it("prepares a real local inventory from one committed repository and reports the prepared status", () => {
+		const directory = makeDirectory();
+		const repository = createCommittedRepository(join(directory, "repository"));
+		const draft = join(directory, "pr-draft.md");
+		const body = join(directory, "pr-working-body.md");
+		const output = join(directory, "snapshot.json");
+		writeFileSync(draft, createLocalDraft(), "utf8");
+		writeFileSync(body, createBody(), "utf8");
+
+		const run = runCli(
+			[
+				"prepare-local",
+				"--pr",
+				"80",
+				"--base",
+				repository.base,
+				"--draft",
+				draft,
+				"--working-body",
+				body,
+				"--output",
+				output,
+			],
+			repository.directory,
+			createFixtureEnvironment(),
+		);
+
+		expect(run.status).toBe(0);
+		expect(run.stdout).toBe('{"status": "prepared", "command": "prepare-local"}\n');
+		expect(run.stderr).toBe("");
+		const snapshot = JSON.parse(readFileSync(output, "utf8")) as {
+			head_sha: string;
+			base: string;
+			changed_files: Array<{ path: string }>;
+		};
+		expect(snapshot.head_sha).toBe(repository.head);
+		expect(snapshot.base).toBe(repository.base);
+		expect(snapshot.changed_files.map((file) => file.path)).toEqual(repository.changedPaths);
 	});
 
 	it("rejects a path inventory that is not the exact diff inventory", () => {
@@ -224,5 +266,43 @@ describe("prepare_pr_evidence as a spawned process", () => {
 		expect(run.stdout).toBe("");
 		expect(run.stderr).toBe(`input/output failure: ENOENT: no such file or directory, open '${input}'\n`);
 		expect(existsSync(output)).toBe(false);
+	});
+
+	it("leaves an existing output untouched and reports an input/output failure", () => {
+		const directory = makeDirectory();
+		const draft = join(directory, "pr-draft.md");
+		const body = join(directory, "pr-working-body.md");
+		const inventory = join(directory, "inventory.json");
+		const paths = join(directory, "paths.json");
+		const output = join(directory, "snapshot.json");
+		writeFileSync(draft, createLocalDraft(), "utf8");
+		writeFileSync(body, createBody(), "utf8");
+		writeFileSync(inventory, JSON.stringify(createLocalInventory()), "utf8");
+		writeFileSync(paths, JSON.stringify(createPaths()), "utf8");
+		writeFileSync(output, "existing\n", "utf8");
+
+		const run = runCli(
+			[
+				"prepare-snapshot",
+				"--draft",
+				draft,
+				"--working-body",
+				body,
+				"--input",
+				inventory,
+				"--paths",
+				paths,
+				"--output",
+				output,
+			],
+			directory,
+		);
+
+		// The fixed contract is the `input/output failure: ` prefix and exit status 2;
+		// the detail after the prefix is this runtime's own error wording.
+		expect(run.status).toBe(2);
+		expect(run.stdout).toBe("");
+		expect(run.stderr.startsWith("input/output failure: ")).toBe(true);
+		expect(readFileSync(output, "utf8")).toBe("existing\n");
 	});
 });

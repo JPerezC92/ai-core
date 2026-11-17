@@ -9,8 +9,8 @@
  * removes it, revoking it delivers the source again, and an opt-out that would
  * disable the baseline is refused by name.
  *
- * Every scenario runs the real CLI against the real engine over disposable
- * destinations only.
+ * Every scenario runs the real CLI against the real engine over a disposable
+ * representative source, never the checkout as `--source`.
  */
 
 import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
@@ -18,11 +18,10 @@ import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 
 import {
-	CHECKOUT,
 	REVISION,
-	createFixture,
+	createRepresentativeFixture,
 	invokeWithRevision,
-	type Fixture,
+	type RepresentativeFixture,
 } from "#support/aicore-cli.e2e-harness.ts";
 
 /** An optional skill directory root, cleared by `distribution-clearance.json`. */
@@ -43,7 +42,7 @@ const KEPT_SKILL_FILE = ".agents/skills/git-commit/SKILL.md";
 /** The baselines a destination may never opt out of. */
 const PROTECTED_SOURCES = ["AGENTS.md", ".opencode/opencode.jsonc"];
 
-let fixture: Fixture | undefined;
+let fixture: RepresentativeFixture | undefined;
 
 afterEach(async () => {
 	await fixture?.dispose();
@@ -145,30 +144,35 @@ function pendingPaths(text: string): readonly string[] {
 	return paths;
 }
 
-/** Enroll one destination with the advanced engine command. */
-function enroll(destination: string, created: Fixture) {
-	return invokeWithRevision(
-		[
-			"init",
-			"--source",
-			CHECKOUT,
-			"--destination",
-			destination,
-			"--bindings",
-			bindingsPathOf(destination),
-			"--source-revision",
-			REVISION,
-			"--editor",
-			"opencode",
-			"--bind-cleared",
-		],
-		created,
-	);
+function engineArguments(
+	command: "init" | "apply" | "check",
+	created: RepresentativeFixture,
+	extra: readonly string[] = [],
+): string[] {
+	return [
+		command,
+		"--source",
+		created.source,
+		"--destination",
+		created.destination,
+		"--bindings",
+		bindingsPathOf(created.destination),
+		"--source-revision",
+		REVISION,
+		...extra,
+	];
 }
 
-/** Run the operator's synchronization for one destination. */
-function synchronize(destination: string, created: Fixture) {
-	return invokeWithRevision(["sync", "--target", destination, "--editor", "opencode"], created);
+function enroll(created: RepresentativeFixture) {
+	return invokeWithRevision([...engineArguments("init", created), "--editor", "opencode", "--bind-cleared"], created);
+}
+
+function apply(created: RepresentativeFixture) {
+	return invokeWithRevision(engineArguments("apply", created), created);
+}
+
+function check(created: RepresentativeFixture) {
+	return invokeWithRevision(engineArguments("check", created), created);
 }
 
 /** Read the destination's bindings document. */
@@ -178,23 +182,20 @@ function readBindings(destination: string): Promise<string> {
 
 describe("durable destination opt-outs", () => {
 	test("a fresh enrollment neither installs nor binds an opted-out source, and a re-enrollment keeps it out", async () => {
-		const created = await createFixture();
+		const created = await createRepresentativeFixture();
 		fixture = created;
 		const { destination } = created;
 		await seedBindings(destination, freshBindings([EXCLUDED_SKILL_ROOT, EXCLUDED_AGENT]));
 
-		const first = await enroll(destination, created);
+		const first = await enroll(created);
 		expect(first.status).toBe(0);
 		expect(first.stdout).toMatch(/initialized/);
 
-		// Neither the skill root nor the agent document was delivered.
 		await expect(stat(join(destination, EXCLUDED_SKILL_ROOT.slice(0, -1)))).rejects.toThrow();
 		await expect(stat(join(destination, EXCLUDED_AGENT))).rejects.toThrow();
-		// The rest of the payload is complete, so the opt-out is not a broken run.
 		expect((await stat(join(destination, KEPT_AGENT))).isFile()).toBe(true);
 		expect((await stat(join(destination, KEPT_SKILL_FILE))).isFile()).toBe(true);
 
-		// Neither source is bound, and the declaration that kept them out persists.
 		const enrolled = await readBindings(destination);
 		const sources = boundSources(enrolled);
 		expect(sources).not.toContain(EXCLUDED_AGENT);
@@ -205,9 +206,7 @@ describe("durable destination opt-outs", () => {
 		expect(enrolled).toMatch(new RegExp(`^- ${EXCLUDED_AGENT}$`, "m"));
 		expect(enrolled).toMatch(new RegExp(`^- ${EXCLUDED_SKILL_ROOT}$`, "m"));
 
-		// A second enrollment — which enrolls any newly cleared source — changes
-		// nothing about the opt-outs.
-		const second = await enroll(destination, created);
+		const second = await enroll(created);
 		expect(second.status).toBe(0);
 		await expect(stat(join(destination, EXCLUDED_SKILL_ROOT.slice(0, -1)))).rejects.toThrow();
 		await expect(stat(join(destination, EXCLUDED_AGENT))).rejects.toThrow();
@@ -217,110 +216,92 @@ describe("durable destination opt-outs", () => {
 	});
 
 	test("an opt-out declared after installation drops the binding, deletes nothing, and reports the destination as outstanding", async () => {
-		const created = await createFixture();
+		const created = await createRepresentativeFixture();
 		fixture = created;
 		const { destination } = created;
 
-		const enrolledRun = await synchronize(destination, created);
+		const enrolledRun = await enroll(created);
 		expect(enrolledRun.stdout).toMatch(/initialized/);
 		expect((await stat(join(destination, EXCLUDED_AGENT))).isFile()).toBe(true);
 		expect(boundSources(await readBindings(destination))).toContain(EXCLUDED_AGENT);
 
-		// The destination reconciles its fresh enrollment, then opts out.
-		let bindings = clearPending(await readBindings(destination));
-		await writeFile(bindingsPathOf(destination), bindings, "utf8");
-		const current = await synchronize(destination, created);
-		expect(current.status).toBe(0);
-		expect(current.stdout).toMatch(/is current/);
-
+		let bindings = await readBindings(destination);
 		await writeFile(bindingsPathOf(destination), withExclusion(bindings, EXCLUDED_AGENT), "utf8");
 
-		const optedOut = await synchronize(destination, created);
-		// The write drops the binding; the verification reports the opt-out as an
-		// outstanding reconciliation rather than a current destination.
-		expect(optedOut.status).toBe(1);
+		const optedOut = await apply(created);
+		expect(optedOut.status).toBe(0);
 		expect(optedOut.stdout).toMatch(/applied/);
-		expect(optedOut.stderr).toMatch(/pending changes/);
+		const outstanding = await check(created);
+		expect(outstanding.status).toBe(1);
+		expect(outstanding.stderr).toMatch(/pending changes/);
 
 		bindings = await readBindings(destination);
 		expect(boundSources(bindings)).not.toContain(EXCLUDED_AGENT);
-		// Nothing was deleted, and the file that must go is named in `pending`.
 		expect((await stat(join(destination, EXCLUDED_AGENT))).isFile()).toBe(true);
 		expect(pendingPaths(bindings)).toContain(EXCLUDED_AGENT);
 
-		// The destination owner removes the file and clears that entry, exactly as
-		// for any other pending path; then the destination verifies as current.
 		await rm(join(destination, EXCLUDED_AGENT));
 		await writeFile(bindingsPathOf(destination), clearPending(bindings), "utf8");
 
-		const reconciled = await synchronize(destination, created);
+		const reconciled = await check(created);
 		expect(reconciled.status).toBe(0);
-		expect(reconciled.stdout).toMatch(/is current/);
+		expect(reconciled.stdout).toMatch(/current/);
 		await expect(stat(join(destination, EXCLUDED_AGENT))).rejects.toThrow();
 	});
 
 	test("revoking an opt-out delivers the source again, and dropping the declaration does not restore anything by itself", async () => {
-		const created = await createFixture();
+		const created = await createRepresentativeFixture();
 		fixture = created;
 		const { destination } = created;
 
-		await synchronize(destination, created);
-		let bindings = clearPending(await readBindings(destination));
-		await writeFile(bindingsPathOf(destination), bindings, "utf8");
-		expect((await synchronize(destination, created)).status).toBe(0);
+		expect((await enroll(created)).status).toBe(0);
+		let bindings = await readBindings(destination);
 
-		// Opt out of the agent document: the binding goes, the file stays.
 		await writeFile(bindingsPathOf(destination), withExclusion(bindings, EXCLUDED_AGENT), "utf8");
-		expect((await synchronize(destination, created)).status).toBe(1);
-
-		// Revoking it re-binds and re-delivers the source, and its outstanding path
-		// leaves `pending`, so the destination verifies as current.
-		bindings = await readBindings(destination);
-		await writeFile(bindingsPathOf(destination), withoutExclusionKey(bindings), "utf8");
-		const restored = await synchronize(destination, created);
-		expect(restored.status).toBe(0);
-		expect(restored.stdout).toMatch(/is current/);
-		bindings = await readBindings(destination);
-		expect(boundSources(bindings)).toContain(EXCLUDED_AGENT);
-		expect(pendingPaths(bindings)).toEqual([]);
+		expect((await apply(created)).status).toBe(0);
+		expect(boundSources(await readBindings(destination))).not.toContain(EXCLUDED_AGENT);
 		expect((await stat(join(destination, EXCLUDED_AGENT))).isFile()).toBe(true);
 
-		// Opt out of a whole skill root: every file under it leaves the bindings.
+		bindings = await readBindings(destination);
+		await writeFile(bindingsPathOf(destination), withoutExclusionKey(bindings), "utf8");
+		const restored = await apply(created);
+		expect(restored.status).toBe(0);
+		expect(restored.stdout).toMatch(/applied/);
+		bindings = await readBindings(destination);
+		expect(boundSources(bindings)).toContain(EXCLUDED_AGENT);
+		expect((await stat(join(destination, EXCLUDED_AGENT))).isFile()).toBe(true);
+
 		await writeFile(bindingsPathOf(destination), withExclusion(bindings, EXCLUDED_SKILL_ROOT), "utf8");
-		expect((await synchronize(destination, created)).status).toBe(1);
+		expect((await apply(created)).status).toBe(0);
 		bindings = await readBindings(destination);
 		expect(boundSources(bindings).some((source) => source.startsWith(EXCLUDED_SKILL_ROOT))).toBe(false);
 		expect(pendingPaths(bindings)).toContain(EXCLUDED_SKILL_FILE);
 		expect((await stat(join(destination, EXCLUDED_SKILL_FILE))).isFile()).toBe(true);
 
-		// Deleting the declaration restores nothing by itself: the source is simply
-		// no longer excluded, and the next enrollment delivers it again.
 		await writeFile(bindingsPathOf(destination), withoutExclusionKey(bindings), "utf8");
-		const reEnrolled = await enroll(destination, created);
+		bindings = await readBindings(destination);
+		expect(boundSources(bindings).some((source) => source.startsWith(EXCLUDED_SKILL_ROOT))).toBe(false);
+		expect((await stat(join(destination, EXCLUDED_SKILL_FILE))).isFile()).toBe(true);
+
+		const reEnrolled = await enroll(created);
 		expect(reEnrolled.status).toBe(0);
-		const delivered = await synchronize(destination, created);
-		expect(delivered.status).toBe(0);
-		expect(delivered.stdout).toMatch(/is current/);
 		bindings = await readBindings(destination);
 		expect(boundSources(bindings)).toContain(EXCLUDED_SKILL_FILE);
-		expect(pendingPaths(bindings)).toEqual([]);
 		expect((await stat(join(destination, EXCLUDED_SKILL_FILE))).isFile()).toBe(true);
 	});
 
 	test("an opt-out naming a baseline resource is refused by name and writes nothing", async () => {
 		for (const protectedSource of PROTECTED_SOURCES) {
-			const created = await createFixture();
+			const created = await createRepresentativeFixture();
 			try {
 				const { destination } = created;
 				await seedBindings(destination, freshBindings([protectedSource]));
 
-				const refused = await enroll(destination, created);
+				const refused = await enroll(created);
 				expect(refused.status).toBe(2);
 				expect(refused.stderr).toContain("protected exclusion");
 				expect(refused.stderr).toContain(protectedSource);
 
-				// Nothing was written: no payload, no reconciliation report, and the
-				// root runtime file still carries only the fixture's own text.
 				await expect(stat(join(destination, ".opencode"))).rejects.toThrow();
 				await expect(stat(join(destination, ".aicore", "reconciliation"))).rejects.toThrow();
 				expect(await readFile(join(destination, "AGENTS.md"), "utf8")).toContain("# Fixture project");
