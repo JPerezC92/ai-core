@@ -77,7 +77,10 @@ test("posts the evidence to the system-1 endpoint with inline image data URLs", 
 	expect(request.init.method).toBe("POST");
 	expect(new Headers(request.init.headers).get("content-type") ?? "").toMatch(/^application\/json/);
 
-	const body = readRecord(JSON.parse(String(request.init.body)), "the request body is a JSON object");
+	const rawBody = request.init.body;
+	expect(typeof rawBody, "the request body is a JSON string").toBe("string");
+	if (typeof rawBody !== "string") throw new Error("the request body is a JSON string");
+	const body = readRecord(JSON.parse(rawBody), "the request body is a JSON object");
 
 	// The observed body carries exactly these four fields; an invented field is a defect, so
 	// the whole key set is asserted rather than only the fields this adapter sends.

@@ -214,7 +214,7 @@ export function describeDifference(expected: string, actual: string): string {
 }
 
 function codePoints(text: string): string {
-	return [...text]
+	return Array.from(text)
 		.map((character) => `${character} (U+${character.codePointAt(0)?.toString(16).toUpperCase().padStart(4, "0")})`)
 		.join(" ");
 }

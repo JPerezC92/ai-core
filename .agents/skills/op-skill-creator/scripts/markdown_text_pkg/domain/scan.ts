@@ -109,7 +109,7 @@ function utf8Finding(data: Uint8Array, policy: Policy, path: string, start: numb
 		kind: "utf8",
 		path,
 		line,
-		column: 1 + [...tail].length,
+		column: 1 + Array.from(tail).length,
 		severity: envelope.severity,
 		ruleId: envelope.id,
 		byteOffset: start + 1,

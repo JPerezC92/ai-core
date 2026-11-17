@@ -43,7 +43,7 @@ function splitLines(text: string): string[] {
 
 /** Maps non-ASCII decimal digits onto their ASCII digits and leaves every other character unchanged. */
 function decimalDigitsToAscii(value: string): string {
-	return [...value]
+	return Array.from(value)
 		.map((character) => {
 			const codePoint = character.codePointAt(0);
 			if (codePoint === undefined) return character;

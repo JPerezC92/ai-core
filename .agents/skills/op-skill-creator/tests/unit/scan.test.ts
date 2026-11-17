@@ -86,6 +86,24 @@ describe("markdown scanning", () => {
 		]);
 	});
 
+	it("counts an astral character as one column position, not two UTF-16 units", () => {
+		// "😀b" then an invalid byte: the column must count the emoji as one code point, so a
+		// reader is pointed at the third position rather than the fourth.
+		const invalid = new Uint8Array([0xf0, 0x9f, 0x98, 0x80, 0x62, 0xff]);
+		const findings = scanMarkdownBytes(invalid, policy(), "a.md");
+		expect(findings).toEqual([
+			{
+				kind: "utf8",
+				path: "a.md",
+				line: 1,
+				column: 3,
+				severity: "error",
+				ruleId: "INVALID-UTF8",
+				byteOffset: 6,
+			},
+		]);
+	});
+
 	it("treats a truncated multi-byte sequence as invalid at its first byte", () => {
 		const findings = scanMarkdownBytes(new Uint8Array([0x61, 0xe2, 0x82]), policy(), "a.md");
 		expect(findings[0]?.kind === "utf8" ? findings[0].byteOffset : 0).toBe(2);

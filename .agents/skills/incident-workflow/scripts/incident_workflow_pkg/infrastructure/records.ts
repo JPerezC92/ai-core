@@ -4,21 +4,36 @@ import type { ProblemFields } from "#scripts/incident_workflow_pkg/domain/proble
 import type { AnalysisHeader, TicketIdentification } from "#scripts/incident_workflow_pkg/domain/rules.ts";
 import { loadFrontMatter } from "./frontmatter.ts";
 
-function scalarText(value: unknown): string {
-	if (value === null) return "None";
-	if (value === true) return "True";
-	if (value === false) return "False";
-	return String(value);
+/**
+ * Name what actually arrived, so a writer can act on it. The YAML 1.1 schema this skill parses
+ * with turns an unquoted timestamp into a `Date`, which is neither a mapping nor a scalar and must
+ * not be reported as one.
+ */
+function describeKind(value: unknown): string {
+	if (Array.isArray(value)) return "a list";
+	if (typeof value !== "object") return `a value of type ${typeof value}`;
+	const prototype = Object.getPrototypeOf(value) as { constructor?: { name?: string } } | null;
+	if (prototype === null || prototype === Object.prototype) return "a mapping";
+	const name = prototype.constructor?.name;
+	return name === undefined ? "a non-scalar object" : `a ${name} value`;
 }
 
-function stringList(value: unknown): string[] {
+function scalarText(value: unknown, field: string, source: string): string {
+	if (value === null) return "None";
+	if (typeof value === "boolean") return value ? "True" : "False";
+	if (typeof value === "string") return value;
+	if (typeof value === "number" || typeof value === "bigint") return String(value);
+	throw new InputError(`Field '${field}' in ${source} must be a scalar value, found ${describeKind(value)}`);
+}
+
+function stringList(value: unknown, field: string, source: string): string[] {
 	if (value === null || value === undefined) return [];
 	if (Array.isArray(value))
 		return value
-			.map(scalarText)
+			.map((item) => scalarText(item, field, source))
 			.map((item) => item.trim())
 			.filter(Boolean);
-	const text = scalarText(value).trim();
+	const text = scalarText(value, field, source).trim();
 	if (!text || text === "[]") return [];
 	return text
 		.split(",")
@@ -43,23 +58,25 @@ export function parseStateHeader(content: string, source: string): AnalysisHeade
 			`Missing header fields in ${source}: [${missing.map((field) => `'${field}'`).join(", ")}]`,
 		);
 	return {
-		Phase: scalarText(data.Phase),
-		SLA_due: scalarText(data["SLA-due"]),
-		Updated: scalarText(data.Updated),
-		Hypotheses_outstanding: scalarText(data["Hypotheses-outstanding"]),
-		Query_budget: scalarText(data["Query-budget"]),
-		Identification_verdict: scalarText(data.identification_verdict),
-		Same_query_reruns: scalarText(data["Same-query-reruns"]),
+		Phase: scalarText(data.Phase, "Phase", source),
+		SLA_due: scalarText(data["SLA-due"], "SLA-due", source),
+		Updated: scalarText(data.Updated, "Updated", source),
+		Hypotheses_outstanding: scalarText(data["Hypotheses-outstanding"], "Hypotheses-outstanding", source),
+		Query_budget: scalarText(data["Query-budget"], "Query-budget", source),
+		Identification_verdict: scalarText(data.identification_verdict, "identification_verdict", source),
+		Same_query_reruns: scalarText(data["Same-query-reruns"], "Same-query-reruns", source),
 	};
 }
 
 export function parseTicketRecord(content: string, source: string): TicketIdentification {
 	const data = loadFrontMatter(content, source);
 	return {
-		symptom_ids: stringList(data.symptom_ids),
-		known_problem_ids: stringList(data.known_problem_ids),
+		symptom_ids: stringList(data.symptom_ids, "symptom_ids", source),
+		known_problem_ids: stringList(data.known_problem_ids, "known_problem_ids", source),
 		identification_verdict: scalarText(
 			Object.hasOwn(data, "identification_verdict") ? data.identification_verdict : "pending",
+			"identification_verdict",
+			source,
 		).trim(),
 	};
 }

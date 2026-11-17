@@ -188,7 +188,18 @@ function readRecord(path: string, rawRecord: unknown): ClearanceRecord | string 
 	}
 	const rawRole = rawRecord["role"];
 	if (rawRole !== undefined && rawRole !== ROLE_ROOT) {
-		return `cleared record for ${path} has an invalid role: ${String(rawRole)}`;
+		// A JSON primitive keeps the exact text it always rendered; a structure, which String()
+		// would collapse to "[object Object]" or comma-joined members, is rendered as JSON so the
+		// diagnostic names the actual shape. The value comes from JSON.parse, so only JSON kinds
+		// can reach either branch and stringify cannot fail on a cycle or a bigint.
+		const renderedRole =
+			typeof rawRole === "string" ||
+			typeof rawRole === "number" ||
+			typeof rawRole === "boolean" ||
+			typeof rawRole === "bigint"
+				? String(rawRole)
+				: JSON.stringify(rawRole);
+		return `cleared record for ${path} has an invalid role: ${renderedRole}`;
 	}
 	if (rawRole === ROLE_ROOT && mode !== MODE_REGION) {
 		return `root role for ${path} must use region mode`;

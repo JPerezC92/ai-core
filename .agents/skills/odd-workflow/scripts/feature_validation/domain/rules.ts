@@ -52,7 +52,7 @@ export function splitLines(text: string): string[] {
 
 /** Maps non-ASCII decimal digits onto their ASCII digits and leaves every other character unchanged. */
 function decimalDigitsToAscii(value: string): string {
-	return [...value]
+	return Array.from(value)
 		.map((character) => {
 			const codePoint = character.codePointAt(0);
 			if (codePoint === undefined) return character;
@@ -200,7 +200,7 @@ function namesOpenClosurePrerequisite(logLines: readonly string[]): boolean {
 		const match = LOG_ENTRY_RE.exec(line);
 		const digits = match?.[1];
 		if (digits === undefined) continue;
-		if ([...digits].length > MAX_LOG_IDENTIFIER_DIGITS) continue;
+		if (Array.from(digits).length > MAX_LOG_IDENTIFIER_DIGITS) continue;
 		const identifier = BigInt(decimalDigitsToAscii(digits));
 		if (latestIdentifier === null || identifier > latestIdentifier) {
 			latestIdentifier = identifier;
@@ -361,7 +361,7 @@ export function validateFeature(text: string): string[] {
 		const match = LOG_ENTRY_RE.exec(line);
 		const digits = match?.[1];
 		if (digits === undefined) continue;
-		if ([...digits].length > MAX_LOG_IDENTIFIER_DIGITS) {
+		if (Array.from(digits).length > MAX_LOG_IDENTIFIER_DIGITS) {
 			findings.push(`Log entry identifier is not a valid L number: ${line.trim()}`);
 			continue;
 		}
