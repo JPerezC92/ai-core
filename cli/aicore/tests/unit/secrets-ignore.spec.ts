@@ -12,25 +12,25 @@ import { describe, expect, test } from "vitest";
 import { withSecretsIgnore } from "#domain/synchronization/secrets-ignore.ts";
 
 describe("withSecretsIgnore", () => {
-  test("an absent file becomes a single-rule ignore file", () => {
-    expect(withSecretsIgnore(null)).toBe(".secrets/\n");
-  });
+	test("an absent file becomes a single-rule ignore file", () => {
+		expect(withSecretsIgnore(null)).toBe(".secrets/\n");
+	});
 
-  test("an effective .secrets/ rule is left unchanged", () => {
-    const existing = "node_modules/\n.secrets/\n";
-    expect(withSecretsIgnore(existing)).toBe(existing);
-  });
+	test("an effective .secrets/ rule is left unchanged", () => {
+		const existing = "node_modules/\n.secrets/\n";
+		expect(withSecretsIgnore(existing)).toBe(existing);
+	});
 
-  test("an effective .secrets rule with a trailing comment counts", () => {
-    const existing = ".secrets # local credentials\n";
-    expect(withSecretsIgnore(existing)).toBe(existing);
-  });
+	test("an effective .secrets rule with a trailing comment counts", () => {
+		const existing = ".secrets # local credentials\n";
+		expect(withSecretsIgnore(existing)).toBe(existing);
+	});
 
-  test("a commented-out line does not count", () => {
-    expect(withSecretsIgnore("# .secrets/\n")).toBe("# .secrets/\n.secrets/\n");
-  });
+	test("a commented-out line does not count", () => {
+		expect(withSecretsIgnore("# .secrets/\n")).toBe("# .secrets/\n.secrets/\n");
+	});
 
-  test("other rules are preserved, including a missing trailing newline", () => {
-    expect(withSecretsIgnore("dist")).toBe("dist\n.secrets/\n");
-  });
+	test("other rules are preserved, including a missing trailing newline", () => {
+		expect(withSecretsIgnore("dist")).toBe("dist\n.secrets/\n");
+	});
 });

@@ -19,13 +19,13 @@ import { defineConfig } from "vitest/config";
 const E2E_TIMEOUT_MS = 300_000;
 
 export default defineConfig({
-  test: {
-    include: ["tests/e2e/**"],
-    fileParallelism: false,
-    sequence: {
-      concurrent: false,
-    },
-    testTimeout: E2E_TIMEOUT_MS,
-    hookTimeout: E2E_TIMEOUT_MS,
-  },
+	test: {
+		include: ["tests/e2e/**"],
+		fileParallelism: false,
+		sequence: {
+			concurrent: false,
+		},
+		testTimeout: E2E_TIMEOUT_MS,
+		hookTimeout: E2E_TIMEOUT_MS,
+	},
 });

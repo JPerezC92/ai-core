@@ -6,8 +6,8 @@
  */
 
 export type OperatorSettings = {
-  /** Revision supplied by the operator or release owner; never Git-derived. */
-  readonly sourceRevision: string | undefined;
-  /** Explicit override for the operator-local selection file's location. */
-  readonly localConfigPath: string | undefined;
+	/** Revision supplied by the operator or release owner; never Git-derived. */
+	readonly sourceRevision: string | undefined;
+	/** Explicit override for the operator-local selection file's location. */
+	readonly localConfigPath: string | undefined;
 };

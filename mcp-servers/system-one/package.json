@@ -7,6 +7,13 @@
   "bin": {
     "system-one-mcp": "./src/mcp/stdio.ts"
   },
+  "imports": {
+    "#application/*": "./src/application/*",
+    "#domain/*": "./src/domain/*",
+    "#infrastructure/*": "./src/infrastructure/*",
+    "#mcp/*": "./src/mcp/*",
+    "#test/*": "./src/test/*"
+  },
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc -p .",

@@ -10,89 +10,87 @@
 // or serialization errors are swallowed and nothing is written to stdout, which carries
 // MCP protocol frames.
 
-import { appendFile, mkdir } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { appendFile, mkdir } from "node:fs/promises";
+import { dirname } from "node:path";
 
 import type {
-  EvaluationTrace,
-  EvaluationTraceEntry,
-  EvaluationTraceHandling,
-  EvaluationTraceRequest,
-} from '../domain/evaluation-trace.ts';
+	EvaluationTrace,
+	EvaluationTraceEntry,
+	EvaluationTraceHandling,
+	EvaluationTraceRequest,
+} from "#domain/evaluation-trace.ts";
 
 export type JsonLinesEvaluationTraceOptions = {
-  // Absolute path supplied by the host. This adapter applies no path policy: the host
-  // configuration owns which file is written.
-  readonly tracePath: string;
+	// Absolute path supplied by the host. This adapter applies no path policy: the host
+	// configuration owns which file is written.
+	readonly tracePath: string;
 };
 
 export class JsonLinesEvaluationTrace implements EvaluationTrace {
-  readonly #tracePath: string;
+	readonly #tracePath: string;
 
-  constructor(options: JsonLinesEvaluationTraceOptions) {
-    this.#tracePath = options.tracePath;
-  }
+	constructor(options: JsonLinesEvaluationTraceOptions) {
+		this.#tracePath = options.tracePath;
+	}
 
-  async record(entry: EvaluationTraceEntry): Promise<void> {
-    try {
-      await mkdir(dirname(this.#tracePath), { recursive: true });
-      await appendFile(this.#tracePath, `${toTraceLine(entry)}\n`, {
-        encoding: 'utf8',
-        flag: 'a',
-      });
-    } catch {
-      // Tracing is diagnostic capture; an unwritable path must never fail the evaluation
-      // it describes. No diagnostic is emitted here at all.
-    }
-  }
+	async record(entry: EvaluationTraceEntry): Promise<void> {
+		try {
+			await mkdir(dirname(this.#tracePath), { recursive: true });
+			await appendFile(this.#tracePath, `${toTraceLine(entry)}\n`, {
+				encoding: "utf8",
+				flag: "a",
+			});
+		} catch {
+			// Tracing is diagnostic capture; an unwritable path must never fail the evaluation
+			// it describes. No diagnostic is emitted here at all.
+		}
+	}
 }
 
 // One mapping step from the domain record to the stored line. The projection is explicit,
 // so the stored record contains exactly these fields and exactly one of response/error.
 function toTraceLine(entry: EvaluationTraceEntry): string {
-  return JSON.stringify({
-    schemaVersion: entry.schemaVersion,
-    evaluationId: entry.evaluationId,
-    at: entry.at,
-    sessionId: entry.sessionId,
-    profileId: entry.profileId,
-    profileVersion: entry.profileVersion,
-    model: entry.model,
-    request: toRequestLine(entry.request),
-    ...toResultLine(entry),
-    outcome: entry.outcome,
-    handling: toHandlingLine(entry.handling),
-    elapsedMs: entry.elapsedMs,
-  });
+	return JSON.stringify({
+		schemaVersion: entry.schemaVersion,
+		evaluationId: entry.evaluationId,
+		at: entry.at,
+		sessionId: entry.sessionId,
+		profileId: entry.profileId,
+		profileVersion: entry.profileVersion,
+		model: entry.model,
+		request: toRequestLine(entry.request),
+		...toResultLine(entry),
+		outcome: entry.outcome,
+		handling: toHandlingLine(entry.handling),
+		elapsedMs: entry.elapsedMs,
+	});
 }
 
 function toRequestLine(request: EvaluationTraceRequest) {
-  return {
-    model: request.model,
-    state: request.state,
-    questions: request.questions,
-    images: request.images.map((image) => ({
-      mimeType: image.mimeType,
-      bytes: image.bytes,
-      sha256: image.sha256,
-      path: image.path,
-    })),
-  };
+	return {
+		model: request.model,
+		state: request.state,
+		questions: request.questions,
+		images: request.images.map((image) => ({
+			mimeType: image.mimeType,
+			bytes: image.bytes,
+			sha256: image.sha256,
+			path: image.path,
+		})),
+	};
 }
 
 // The response body is stored as received; on a transport failure the line carries the
 // bounded error instead, and no `response` key is written.
 function toResultLine(entry: EvaluationTraceEntry) {
-  return 'response' in entry
-    ? { response: entry.response }
-    : { error: entry.error };
+	return "response" in entry ? { response: entry.response } : { error: entry.error };
 }
 
 function toHandlingLine(handling: EvaluationTraceHandling) {
-  return {
-    disposition: handling.disposition,
-    reportedFooter: handling.reportedFooter,
-    observedActions: handling.observedActions,
-    assessment: handling.assessment,
-  };
+	return {
+		disposition: handling.disposition,
+		reportedFooter: handling.reportedFooter,
+		observedActions: handling.observedActions,
+		assessment: handling.assessment,
+	};
 }

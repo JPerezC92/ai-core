@@ -59,23 +59,23 @@ Every function has parameter and return annotations; no untyped parameters or ba
 
 Python spells C10's shared role vocabulary as snake_case `<concept>_<role>.py`; role folders use snake_case too (B4/P4).
 
-| C10 role | Python filename |
-|---|---|
-| entity | `order_entity.py` |
-| value object | `shipping_address_value_object.py` |
-| event | `order_placed_event.py` |
-| repository | `order_repository.py` |
-| port | `clock_port.py` |
-| domain service | `pricing_domain_service.py` |
-| policy | `pricing_policy.py` |
-| error | `order_closed_error.py` |
-| row | `order_row.py` |
-| model | `order_model.py` |
-| request | `create_order_request.py` |
-| response | `order_response.py` |
-| projection | `order_summary_projection.py` |
-| record | `order_snapshot_record.py` |
-| query | `order_summary_query.py` |
+| C10 role       | Python filename                    |
+| -------------- | ---------------------------------- |
+| entity         | `order_entity.py`                  |
+| value object   | `shipping_address_value_object.py` |
+| event          | `order_placed_event.py`            |
+| repository     | `order_repository.py`              |
+| port           | `clock_port.py`                    |
+| domain service | `pricing_domain_service.py`        |
+| policy         | `pricing_policy.py`                |
+| error          | `order_closed_error.py`            |
+| row            | `order_row.py`                     |
+| model          | `order_model.py`                   |
+| request        | `create_order_request.py`          |
+| response       | `order_response.py`                |
+| projection     | `order_summary_projection.py`      |
+| record         | `order_snapshot_record.py`         |
+| query          | `order_summary_query.py`           |
 
 Pure predicates/calculations map to names such as `is_order_eligible.py` or `calculate_price.py` (C7, C10).
 
@@ -85,27 +85,27 @@ Read `.aicore/core/architecture/testing/architecture.md` and `.aicore/core/archi
 
 ## Obligation mapping
 
-| Obligation | Concrete mapping | Applicability or uncovered decision |
-|---|---|---|
-| C1 Layers/dependencies | Structure; Adapters and delivery | Layer packages, main.py constructor wiring and Python IO-library import exclusions. |
-| C2 Domain/ports | Domain and ports | Ordinary classes, underscore storage, read-only `@property`, `@classmethod create`, Protocol/ABC and typed code/message attributes. |
-| C3 Operation | Application operations | One class per operation with `execute()` and constructor-injected ports; no base class, interface or invented framework class. |
-| C4 Mapping/composition | Domain and ports; Adapters and delivery | Rule ownership: a business rule lives in a domain module or entity and a use case applies it (C3), while an adapter maps outside data to domain data without business rules. Adapter and mapping modules under `infrastructure/adapters/`, repository adapters under `infrastructure/repositories/`, loaders/builders/clients, and entry wiring. |
-| C5 Failures | Application operations; Adapters and delivery; Domain and ports | Union annotations, isinstance narrowing and illustrative ValueError corrupt-state path. |
-| C6 Serialization | Adapters and delivery | Handler dictionary conversion and optional standard-library json.dumps. |
-| C7 Helpers | Domain and ports; Concept-role filenames | Annotated def functions and predicate/calculation module names. |
-| C8 Domain model | Domain and ports | Same-identity replacement, protected nested values, create/reconstitute, tuple events and record/function alternatives. |
-| C9 Repositories/transactions | Domain and ports; Application operations; Adapters and delivery | Protocol/ABC aggregate or projection ports, None lookup, explicit replacement save and injected transaction capability. |
-| C10 Naming | Concept-role filenames; Adapters and delivery | Snake_case spelling of the shared vocabulary, domain versus boundary records. |
-| P1 Responsibilities | Structure; Domain; Application | Data-only constants and typed transformations. |
-| P2 IO/delivery | Adapters and delivery | Explicit IO helpers and assembled entry. |
-| P3 Deployment | Deployment zones | Three independent zones and startup exceptions. |
-| B1 Backend domain/layout | Structure; Domain and ports | Per-field properties; aggregate, projection and other capability results with optional lookup. |
-| B2 Backend operation | Application operations | is None branch returns OrderNotFoundError. |
-| B3 Backend infrastructure | Adapters and delivery | order_from_row signature, reconstitute call and main.py constructors. |
-| B4 Backend organization | Structure and dependency mapping | Aggregate-local role folders and one entity per module. |
-| P4 Script organization | Structure and dependency mapping; Concept-role filenames | Business folders inside each deployment zone; functional modules retained. |
-| F1–F4 Frontend shape | Not selected | This guide covers CLI/backend, not a Python UI runtime; no Hook/toast equivalent invented. |
+| Obligation                   | Concrete mapping                                                | Applicability or uncovered decision                                                                                                                                                                                                                                                                                                              |
+| ---------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| C1 Layers/dependencies       | Structure; Adapters and delivery                                | Layer packages, main.py constructor wiring and Python IO-library import exclusions.                                                                                                                                                                                                                                                              |
+| C2 Domain/ports              | Domain and ports                                                | Ordinary classes, underscore storage, read-only `@property`, `@classmethod create`, Protocol/ABC and typed code/message attributes.                                                                                                                                                                                                              |
+| C3 Operation                 | Application operations                                          | One class per operation with `execute()` and constructor-injected ports; no base class, interface or invented framework class.                                                                                                                                                                                                                   |
+| C4 Mapping/composition       | Domain and ports; Adapters and delivery                         | Rule ownership: a business rule lives in a domain module or entity and a use case applies it (C3), while an adapter maps outside data to domain data without business rules. Adapter and mapping modules under `infrastructure/adapters/`, repository adapters under `infrastructure/repositories/`, loaders/builders/clients, and entry wiring. |
+| C5 Failures                  | Application operations; Adapters and delivery; Domain and ports | Union annotations, isinstance narrowing and illustrative ValueError corrupt-state path.                                                                                                                                                                                                                                                          |
+| C6 Serialization             | Adapters and delivery                                           | Handler dictionary conversion and optional standard-library json.dumps.                                                                                                                                                                                                                                                                          |
+| C7 Helpers                   | Domain and ports; Concept-role filenames                        | Annotated def functions and predicate/calculation module names.                                                                                                                                                                                                                                                                                  |
+| C8 Domain model              | Domain and ports                                                | Same-identity replacement, protected nested values, create/reconstitute, tuple events and record/function alternatives.                                                                                                                                                                                                                          |
+| C9 Repositories/transactions | Domain and ports; Application operations; Adapters and delivery | Protocol/ABC aggregate or projection ports, None lookup, explicit replacement save and injected transaction capability.                                                                                                                                                                                                                          |
+| C10 Naming                   | Concept-role filenames; Adapters and delivery                   | Snake_case spelling of the shared vocabulary, domain versus boundary records.                                                                                                                                                                                                                                                                    |
+| P1 Responsibilities          | Structure; Domain; Application                                  | Data-only constants and typed transformations.                                                                                                                                                                                                                                                                                                   |
+| P2 IO/delivery               | Adapters and delivery                                           | Explicit IO helpers and assembled entry.                                                                                                                                                                                                                                                                                                         |
+| P3 Deployment                | Deployment zones                                                | Three independent zones and startup exceptions.                                                                                                                                                                                                                                                                                                  |
+| B1 Backend domain/layout     | Structure; Domain and ports                                     | Per-field properties; aggregate, projection and other capability results with optional lookup.                                                                                                                                                                                                                                                   |
+| B2 Backend operation         | Application operations                                          | is None branch returns OrderNotFoundError.                                                                                                                                                                                                                                                                                                       |
+| B3 Backend infrastructure    | Adapters and delivery                                           | order_from_row signature, reconstitute call and main.py constructors.                                                                                                                                                                                                                                                                            |
+| B4 Backend organization      | Structure and dependency mapping                                | Aggregate-local role folders and one entity per module.                                                                                                                                                                                                                                                                                          |
+| P4 Script organization       | Structure and dependency mapping; Concept-role filenames        | Business folders inside each deployment zone; functional modules retained.                                                                                                                                                                                                                                                                       |
+| F1–F4 Frontend shape         | Not selected                                                    | This guide covers CLI/backend, not a Python UI runtime; no Hook/toast equivalent invented.                                                                                                                                                                                                                                                       |
 
 ## Open decisions
 

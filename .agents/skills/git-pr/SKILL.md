@@ -8,6 +8,7 @@ metadata:
   version: 2.0.0
   domain: git
 ---
+
 <!-- core:begin -->
 
 ## Steps
@@ -17,7 +18,7 @@ metadata:
    - **Small work:** use the authorized request/assignment with the scoped commits and diff for intent and current state; require no artificial feature document.
    - **Non-small work:** identify the unique governing ODD feature document at `odd/tasks/<YYYY-MM-DD>-<feature-name>.md` from the task context and reconciled changed files, never merely by filename, date, or status; read its `## Specs`, relevant `## Tasks`, and `## Log` for intent and current state. A missing document or timing evidence is a blocker, not permission to document implementation retroactively.
    - **Explicit legacy migration** may consume its existing legacy input for intent; it is not an alternative workflow for new work and does not waive applicable ODD classification or timing requirements.
-   Use ticket references from recent commit subjects where present. The Summary explains why, grounded in the applicable authorized intent rather than inferred from the diff alone. If classification, authority, intent, or the required document's applicability is ambiguous or missing, investigate accessible evidence, then stop and report unresolved gaps and inspected candidates to the coordinator/requester before drafting; never infer an answer.
+     Use ticket references from recent commit subjects where present. The Summary explains why, grounded in the applicable authorized intent rather than inferred from the diff alone. If classification, authority, intent, or the required document's applicability is ambiguous or missing, investigate accessible evidence, then stop and report unresolved gaps and inspected candidates to the coordinator/requester before drafting; never infer an answer.
 3. Derive the title and body from the diff. When the current branch follows `type/scope/description` and its type or scope disagrees with the derived title, keep the diff-derived title and report both values explicitly: a branch is evidence of intent, not authority.
 4. Before any draft or working-body write, obtain a read-only effective-ignore check for the exact intended path (`output/pr-draft.md` or `output/pr-working-body.md`) through the existing Git owner (Herald 📯 (Release Manager) when the roster is installed, otherwise the authorized requester). Confirm the actual path is ignored, including negation rules and whether it is already tracked; merely finding an ignore entry is not proof. Check a not-yet-created path prospectively. Not ignored, tracked, denied, failed, or inconclusive → stop and report the checked path and observed blocker to the coordinator/requester for separately authorized remediation by the existing ignore-configuration owner. This skill never edits `.gitignore` or other ignore configuration. While remediation is blocked, pending, or declined, create/overwrite neither draft, working body nor directory and do not hand off a stale file as ready. Resume only after a fresh successful check; this grants no new Git-command authority.
 5. Write `output/pr-draft.md` in the shape below only after that check succeeds. Create `output/` if needed. Never write `pr-draft.md` at the repository root. It is the initial creation draft, not the post-review evidence document; the sole later working body is `output/pr-working-body.md`.

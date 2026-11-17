@@ -11,9 +11,9 @@ import type { OperationOutcome } from "#domain/synchronization/failures.ts";
 
 /** What one command reported, as an operator observes it. */
 export type SynchronizationReport = {
-  readonly exitCode: number;
-  readonly stdout: string;
-  readonly stderr: string;
+	readonly exitCode: number;
+	readonly stdout: string;
+	readonly stderr: string;
 };
 
 const EXIT_CURRENT = 0;
@@ -22,19 +22,19 @@ const EXIT_MALFORMED = 2;
 
 /** Map a domain outcome onto the process-level result. */
 export function reportOutcome(outcome: OperationOutcome): SynchronizationReport {
-  if (outcome.ok) {
-    return { exitCode: EXIT_CURRENT, stdout: `${outcome.message}\n`, stderr: "" };
-  }
-  return {
-    exitCode: outcome.failure.code === "drift" ? EXIT_DRIFT : EXIT_MALFORMED,
-    stdout: "",
-    stderr: `${outcome.failure.message}\n`,
-  };
+	if (outcome.ok) {
+		return { exitCode: EXIT_CURRENT, stdout: `${outcome.message}\n`, stderr: "" };
+	}
+	return {
+		exitCode: outcome.failure.code === "drift" ? EXIT_DRIFT : EXIT_MALFORMED,
+		stdout: "",
+		stderr: `${outcome.failure.message}\n`,
+	};
 }
 
 /** Report a malformed command line, before any command started. */
 export function reportMalformed(reason: string): SynchronizationReport {
-  return { exitCode: EXIT_MALFORMED, stdout: "", stderr: `${reason}\n` };
+	return { exitCode: EXIT_MALFORMED, stdout: "", stderr: `${reason}\n` };
 }
 
 /**
@@ -44,5 +44,5 @@ export function reportMalformed(reason: string): SynchronizationReport {
  * later `check` is required. The cause is named so the operator can act on it.
  */
 export function reportFileSystemFailure(reason: string): SynchronizationReport {
-  return { exitCode: EXIT_DRIFT, stdout: "", stderr: `core-sync I/O error: ${reason}\n` };
+	return { exitCode: EXIT_DRIFT, stdout: "", stderr: `core-sync I/O error: ${reason}\n` };
 }

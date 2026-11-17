@@ -28,40 +28,40 @@ Intended reuse: design guidance and local-contract comparison. This record is ev
 
 ## Method and provenance
 
-- Unit 1 (anemic model): Augur read Fowler's *Anemic Domain Model*, *Domain Model*, and *Transaction Script*; Martin's *The Clean Architecture*; Microsoft's DDD validation guidance; and the local architecture contract.
-- Unit 2 (use-case naming): Augur read Cockburn's *Writing Effective Use Cases* extract; Martin's 2011 and 2012 posts; Fowler's *Service Layer*; Evans's DDD Reference; Microsoft CQRS/DDD guidance; MediatR's handler interface; Bogard's vertical-slice article; and the local stack/test guides.
+- Unit 1 (anemic model): Augur read Fowler's _Anemic Domain Model_, _Domain Model_, and _Transaction Script_; Martin's _The Clean Architecture_; Microsoft's DDD validation guidance; and the local architecture contract.
+- Unit 2 (use-case naming): Augur read Cockburn's _Writing Effective Use Cases_ extract; Martin's 2011 and 2012 posts; Fowler's _Service Layer_; Evans's DDD Reference; Microsoft CQRS/DDD guidance; MediatR's handler interface; Bogard's vertical-slice article; and the local stack/test guides.
 - Cipher read the local files cited as `L*` and synthesized both units. No code was executed; no git, tests, installs, browser sessions, or memory writes.
 - Saved-research lookup: `docs/research/README.md` has no matching topic; Basic Memory search for `anemic domain model` returned no results. No prior evidence was reused.
 - Structural/source scanners were not used: this is conceptual prose research, not syntax-dependent code exploration or a source-risk audit.
 
 ## Sources
 
-| ID | Locator and section | Version / revision | Access or observation date; executor | Supports / limits |
-|---|---|---|---|---|
-| U1 | https://martinfowler.com/bliki/AnemicDomainModel.html | mutable web article | 2003-11-25; read 2026-10-28 by Augur | Definition and critique of the anti-pattern |
-| U2 | https://martinfowler.com/eaaCatalog/domainModel.html | mutable web article | 2003-03-05; read 2026-10-28 | Domain Model combines behavior and data |
-| U3 | https://martinfowler.com/eaaCatalog/transactionScript.html | mutable web article | 2003-03-05; read 2026-10-28 | Procedural alternative; not always inferior |
-| U4 | https://martinfowler.com/eaaCatalog/serviceLayer.html | mutable web article | read 2026-10-28 | Service Layer as an application boundary; no class-per-use-case rule |
-| U5 | https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html | mutable web article | 2012-08-13; read 2026-10-28 | Entities may be objects or data structures plus functions; Dependency Rule |
-| U6 | https://blog.cleancoder.com/uncle-bob/2011/11/22/Clean-Architecture.html | mutable web article | 2011-11-22; read 2026-10-28 | "Interactor" terminology; no suffix mandate |
-| U7 | https://www.ifi.uzh.ch/dam/jcr:00000000-25a0-3d08-0000-00000ce96422/weuc_extract.pdf | pre-publication draft #3 | 2000-02-21 (pub. 2001); read 2026-10-28 | Use-case name as active verb phrase; user-goal level; CRUD discussion truncated |
-| U8 | https://learn.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/domain-model-layer-validations | revision `1811c6d1c9ec56ba2132295802c17b5dc7ef659b` | updated 2026-04-28; read 2026-10-28 | Aggregates enforce invariants; DTO validation does not replace domain validation |
-| U9 | https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs | mutable vendor doc | 2025-02-20; read 2026-10-28 | Commands as business tasks, not data updates; CQRS not for simple CRUD |
-| U10 | https://learn.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/ddd-oriented-microservice | mutable vendor doc | 2022-04-13; read 2026-10-28 | Application layer coordinates; domain holds business rules |
-| U11 | https://learn.microsoft.com/en-us/azure/architecture/microservices/model/tactical-domain-driven-design | mutable vendor doc | 2026-02-25; read 2026-10-28 | Business logic outside entities creates an anemic model |
-| U12 | https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf | 2015, CC BY 4.0 | read 2026-10-28 | Thin application layer; domain services; intention-revealing interfaces |
-| U13 | https://raw.githubusercontent.com/LuckyPennySoftware/MediatR/main/src/MediatR/IRequestHandler.cs | `main`, commit not resolved | read 2026-10-28 | `Handle()` is the handler method |
-| U14 | https://www.jimmybogard.com/vertical-slice-architecture/ | mutable web article | 2018-04-19; read 2026-10-28 | One use case per request; vertical slices |
-| L1 | `architecture/clean-architecture.md:10-18,22-34` | working tree, 2026-10-28 | read by Cipher | Local layers, C2–C7 rules |
-| L2 | `architecture/shapes/backend.md:10-14` | working tree | read by Cipher | `application/` one file per use case; entity construction |
-| L3 | `architecture/stacks/typescript/nestjs.md:13,17,24,42` | working tree | read by Cipher | Pure TS class, `execute()`, `XUseCase` factory example |
-| L4 | `architecture/testing/stacks/typescript.md:30-60` | working tree | read by Cipher | `new XUseCase(repository)` test example |
-| L5 | `architecture/stacks/python.md:13,18,31` | working tree | read by Cipher | Module-level named `execute()`; class not required |
-| L6 | `.opencode/skills/op-model/scripts/op_model_lookup/application/find_models.py:1,14` | working tree | read by Cipher | Module-level `execute()` use case |
-| L7 | `.opencode/skills/core-sync/scripts/core_sync_pkg/application/apply_core_revision.py:40,59` | working tree | read by Cipher | `ApplyCoreRevision` class with `execute()`, no suffix |
-| L8 | `.opencode/skills/core-sync/scripts/core_sync_pkg/domain/merge.py:1-23` | working tree | read by Cipher | Pure, IO-free domain rule in a module |
-| L9 | `.opencode/skills/core-sync/scripts/core_sync_pkg/domain/regions.py:1-3` | working tree | read by Cipher | Pure region parsing/rebuilding |
-| L10 | `docs/research/README.md:16-42` | working tree | read by Cipher | No existing matching topic |
+| ID  | Locator and section                                                                                                               | Version / revision                                  | Access or observation date; executor    | Supports / limits                                                                |
+| --- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- | --------------------------------------- | -------------------------------------------------------------------------------- |
+| U1  | https://martinfowler.com/bliki/AnemicDomainModel.html                                                                             | mutable web article                                 | 2003-11-25; read 2026-10-28 by Augur    | Definition and critique of the anti-pattern                                      |
+| U2  | https://martinfowler.com/eaaCatalog/domainModel.html                                                                              | mutable web article                                 | 2003-03-05; read 2026-10-28             | Domain Model combines behavior and data                                          |
+| U3  | https://martinfowler.com/eaaCatalog/transactionScript.html                                                                        | mutable web article                                 | 2003-03-05; read 2026-10-28             | Procedural alternative; not always inferior                                      |
+| U4  | https://martinfowler.com/eaaCatalog/serviceLayer.html                                                                             | mutable web article                                 | read 2026-10-28                         | Service Layer as an application boundary; no class-per-use-case rule             |
+| U5  | https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html                                                      | mutable web article                                 | 2012-08-13; read 2026-10-28             | Entities may be objects or data structures plus functions; Dependency Rule       |
+| U6  | https://blog.cleancoder.com/uncle-bob/2011/11/22/Clean-Architecture.html                                                          | mutable web article                                 | 2011-11-22; read 2026-10-28             | "Interactor" terminology; no suffix mandate                                      |
+| U7  | https://www.ifi.uzh.ch/dam/jcr:00000000-25a0-3d08-0000-00000ce96422/weuc_extract.pdf                                              | pre-publication draft #3                            | 2000-02-21 (pub. 2001); read 2026-10-28 | Use-case name as active verb phrase; user-goal level; CRUD discussion truncated  |
+| U8  | https://learn.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/domain-model-layer-validations | revision `1811c6d1c9ec56ba2132295802c17b5dc7ef659b` | updated 2026-04-28; read 2026-10-28     | Aggregates enforce invariants; DTO validation does not replace domain validation |
+| U9  | https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs                                                                | mutable vendor doc                                  | 2025-02-20; read 2026-10-28             | Commands as business tasks, not data updates; CQRS not for simple CRUD           |
+| U10 | https://learn.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/ddd-oriented-microservice      | mutable vendor doc                                  | 2022-04-13; read 2026-10-28             | Application layer coordinates; domain holds business rules                       |
+| U11 | https://learn.microsoft.com/en-us/azure/architecture/microservices/model/tactical-domain-driven-design                            | mutable vendor doc                                  | 2026-02-25; read 2026-10-28             | Business logic outside entities creates an anemic model                          |
+| U12 | https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf                                               | 2015, CC BY 4.0                                     | read 2026-10-28                         | Thin application layer; domain services; intention-revealing interfaces          |
+| U13 | https://raw.githubusercontent.com/LuckyPennySoftware/MediatR/main/src/MediatR/IRequestHandler.cs                                  | `main`, commit not resolved                         | read 2026-10-28                         | `Handle()` is the handler method                                                 |
+| U14 | https://www.jimmybogard.com/vertical-slice-architecture/                                                                          | mutable web article                                 | 2018-04-19; read 2026-10-28             | One use case per request; vertical slices                                        |
+| L1  | `architecture/clean-architecture.md:10-18,22-34`                                                                                  | working tree, 2026-10-28                            | read by Cipher                          | Local layers, C2–C7 rules                                                        |
+| L2  | `architecture/shapes/backend.md:10-14`                                                                                            | working tree                                        | read by Cipher                          | `application/` one file per use case; entity construction                        |
+| L3  | `architecture/stacks/typescript/nestjs.md:13,17,24,42`                                                                            | working tree                                        | read by Cipher                          | Pure TS class, `execute()`, `XUseCase` factory example                           |
+| L4  | `architecture/testing/stacks/typescript.md:30-60`                                                                                 | working tree                                        | read by Cipher                          | `new XUseCase(repository)` test example                                          |
+| L5  | `architecture/stacks/python.md:13,18,31`                                                                                          | working tree                                        | read by Cipher                          | Module-level named `execute()`; class not required                               |
+| L6  | `.opencode/skills/op-model/scripts/op_model_lookup/application/find_models.py:1,14`                                               | working tree                                        | read by Cipher                          | Module-level `execute()` use case                                                |
+| L7  | `.opencode/skills/core-sync/scripts/core_sync_pkg/application/apply_core_revision.py:40,59`                                       | working tree                                        | read by Cipher                          | `ApplyCoreRevision` class with `execute()`, no suffix                            |
+| L8  | `.opencode/skills/core-sync/scripts/core_sync_pkg/domain/merge.py:1-23`                                                           | working tree                                        | read by Cipher                          | Pure, IO-free domain rule in a module                                            |
+| L9  | `.opencode/skills/core-sync/scripts/core_sync_pkg/domain/regions.py:1-3`                                                          | working tree                                        | read by Cipher                          | Pure region parsing/rebuilding                                                   |
+| L10 | `docs/research/README.md:16-42`                                                                                                   | working tree                                        | read by Cipher                          | No existing matching topic                                                       |
 
 ## Findings
 
@@ -105,16 +105,16 @@ Clean Architecture owns layers, dependency direction, boundaries, and testabilit
 
 The useful rule is not "put methods on entities." It is: **put each rule where every caller is forced to obey it.**
 
-| Kind of logic | Preferred home | Why |
-|---|---|---|
-| Enduring validity rules, legal state transitions, invariants | Domain entity/aggregate or pure domain function | Must hold regardless of caller; prevents bypass |
-| Rules spanning multiple entities | Domain service or domain function | Does not belong to one entity; still framework-free |
-| Workflow sequencing, transaction scope, authorization, application-specific decisions | Use case | Orchestration and application policy |
-| Transport shape/format validation | Delivery edge / DTO | Rejects malformed input before the domain |
-| Mapping between outside records and domain types | Adapter | No business rules [L1:22] |
-| Serialization | Delivery edge | Transport concern [L1:30] |
-| Pure calculation | Pure helper | No artificial use-case wrapper [L1:34] |
-| Read projections/reporting | Query/read model or use case returning DTO | May bypass the domain by design [U9] |
+| Kind of logic                                                                         | Preferred home                                  | Why                                                 |
+| ------------------------------------------------------------------------------------- | ----------------------------------------------- | --------------------------------------------------- |
+| Enduring validity rules, legal state transitions, invariants                          | Domain entity/aggregate or pure domain function | Must hold regardless of caller; prevents bypass     |
+| Rules spanning multiple entities                                                      | Domain service or domain function               | Does not belong to one entity; still framework-free |
+| Workflow sequencing, transaction scope, authorization, application-specific decisions | Use case                                        | Orchestration and application policy                |
+| Transport shape/format validation                                                     | Delivery edge / DTO                             | Rejects malformed input before the domain           |
+| Mapping between outside records and domain types                                      | Adapter                                         | No business rules [L1:22]                           |
+| Serialization                                                                         | Delivery edge                                   | Transport concern [L1:30]                           |
+| Pure calculation                                                                      | Pure helper                                     | No artificial use-case wrapper [L1:34]              |
+| Read projections/reporting                                                            | Query/read model or use case returning DTO      | May bypass the domain by design [U9]                |
 
 Two important nuances:
 
@@ -147,14 +147,14 @@ The cost is that invariants become implicit, duplicated, or enforced only by the
 
 #### A8. Anemia spectrum
 
-| Shape | Assessment |
-|---|---|
-| DTO, event, read model, persistence record | Not anemic; data structure by design |
-| Simple CRUD with no invariants, one entry point | Thin model acceptable; transaction script is honest |
-| Domain classes with public setters and no behavior; `UserService` holds all rules | Classic anemic anti-pattern |
-| Rich-domain intent but all logic in use cases; entities are data bags | Clean-Architecture-compliant but domain-anemic |
-| Immutable records plus centralized pure transitions | Not anemic if invariants and construction are controlled |
-| Functional style with rules duplicated in every handler | Anemic in substance, regardless of syntax |
+| Shape                                                                             | Assessment                                               |
+| --------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| DTO, event, read model, persistence record                                        | Not anemic; data structure by design                     |
+| Simple CRUD with no invariants, one entry point                                   | Thin model acceptable; transaction script is honest      |
+| Domain classes with public setters and no behavior; `UserService` holds all rules | Classic anemic anti-pattern                              |
+| Rich-domain intent but all logic in use cases; entities are data bags             | Clean-Architecture-compliant but domain-anemic           |
+| Immutable records plus centralized pure transitions                               | Not anemic if invariants and construction are controlled |
+| Functional style with rules duplicated in every handler                           | Anemic in substance, regardless of syntax                |
 
 #### A9. Local reading
 
@@ -173,11 +173,11 @@ Observed local style: the Python skill tooling uses module-level `execute()` ope
 
 #### B1. Three different names are being conflated
 
-| Thing being named | Example | Source of the convention |
-|---|---|---|
-| Business operation / use case | `PlaceOrder` (verb phrase) | Cockburn [U7], CQRS [U9] |
-| Implementing component | `PlaceOrderUseCase`, `PlaceOrderHandler`, `OrderPlacer` | Framework/style conventions; Martin's "interactor" [U6] |
-| Method | `execute()`, `handle()` | Local contract [L1:18]; MediatR [U13] |
+| Thing being named             | Example                                                 | Source of the convention                                |
+| ----------------------------- | ------------------------------------------------------- | ------------------------------------------------------- |
+| Business operation / use case | `PlaceOrder` (verb phrase)                              | Cockburn [U7], CQRS [U9]                                |
+| Implementing component        | `PlaceOrderUseCase`, `PlaceOrderHandler`, `OrderPlacer` | Framework/style conventions; Martin's "interactor" [U6] |
+| Method                        | `execute()`, `handle()`                                 | Local contract [L1:18]; MediatR [U13]                   |
 
 Most naming arguments fail because they compare a business-operation name with a component name. `PlaceOrder` is a good operation name and an unusual class name; `PlaceOrderUseCase` is a good class name and a redundant operation label inside `application/use-cases/`.
 
@@ -209,17 +209,17 @@ These are valid conventions in a message-oriented architecture. They are **not**
 
 #### B7. Naming-shape assessment
 
-| Candidate | What it names | Example | Assessment |
-|---|---|---|---|
-| `<Verb><Object>` | Business operation | `PlaceOrder` | Best as the operation name; as a class it is a verb-phrase compromise |
-| `<Verb><Object>UseCase` | Operation + role | `PlaceOrderUseCase` | Recommended for TS classes; local exemplar; redundant only at the definition site |
-| `<Verb><Object>Interactor` | Martin's component role | `PlaceOrderInteractor` | Valid, but introduces a second vocabulary here |
-| `XHandler` | Message handler | `PlaceOrderHandler` | Implies MediatR-style `handle()`; not local |
-| `XCommand` | Message | `PlaceOrderCommand` | Names the request, not the operation class |
-| `XService` | Layer/grouping | `OrderService` | Usually multiple operations; conflicts with C3's one-operation rule |
-| `XManager` / `XHelper` / `XProcessor` / `XUtil` | Mechanism or vagueness | `OrderManager` | Avoid; not intention-revealing |
-| `OrderPlacer` | Agent noun | — | Descriptive but indirect; uncommon here |
-| `execute()` / `handle()` / `run()` | Method | `execute()` | `execute()` is mandated locally; `handle()` belongs to MediatR |
+| Candidate                                       | What it names           | Example                | Assessment                                                                        |
+| ----------------------------------------------- | ----------------------- | ---------------------- | --------------------------------------------------------------------------------- |
+| `<Verb><Object>`                                | Business operation      | `PlaceOrder`           | Best as the operation name; as a class it is a verb-phrase compromise             |
+| `<Verb><Object>UseCase`                         | Operation + role        | `PlaceOrderUseCase`    | Recommended for TS classes; local exemplar; redundant only at the definition site |
+| `<Verb><Object>Interactor`                      | Martin's component role | `PlaceOrderInteractor` | Valid, but introduces a second vocabulary here                                    |
+| `XHandler`                                      | Message handler         | `PlaceOrderHandler`    | Implies MediatR-style `handle()`; not local                                       |
+| `XCommand`                                      | Message                 | `PlaceOrderCommand`    | Names the request, not the operation class                                        |
+| `XService`                                      | Layer/grouping          | `OrderService`         | Usually multiple operations; conflicts with C3's one-operation rule               |
+| `XManager` / `XHelper` / `XProcessor` / `XUtil` | Mechanism or vagueness  | `OrderManager`         | Avoid; not intention-revealing                                                    |
+| `OrderPlacer`                                   | Agent noun              | —                      | Descriptive but indirect; uncommon here                                           |
+| `execute()` / `handle()` / `run()`              | Method                  | `execute()`            | `execute()` is mandated locally; `handle()` belongs to MediatR                    |
 
 #### B8. Granularity is not fixed by any one source
 
@@ -245,12 +245,12 @@ Naming is a **signal, not proof**:
 
 #### B10. Local contract and exemplars
 
-| Local rule | What it fixes | What it leaves open |
-|---|---|---|
-| C3 [L1:18] | One named business operation; single `execute()`; injected ports; policy in application or domain | Class suffix, imperative vs noun class name, file name |
-| Backend shape [L2:10] | `application/` with one file per use case | File naming pattern |
-| NestJS [L3:24,42] | Pure class, one `execute()`, `application/use-cases/`; factory example `XUseCase` | Whether `XUseCase` is mandatory |
-| Python [L5:13,31] | Module holding a named `execute()`; class not required | Module/class naming pattern |
+| Local rule            | What it fixes                                                                                     | What it leaves open                                    |
+| --------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| C3 [L1:18]            | One named business operation; single `execute()`; injected ports; policy in application or domain | Class suffix, imperative vs noun class name, file name |
+| Backend shape [L2:10] | `application/` with one file per use case                                                         | File naming pattern                                    |
+| NestJS [L3:24,42]     | Pure class, one `execute()`, `application/use-cases/`; factory example `XUseCase`                 | Whether `XUseCase` is mandatory                        |
+| Python [L5:13,31]     | Module holding a named `execute()`; class not required                                            | Module/class naming pattern                            |
 
 The only explicit `XUseCase` spellings are the factory example [L3:42] and the test example [L4:60]. Both are **exemplars, not normative rules**. The Python examples use an unsuffixed operation class [L7:40] and a module-level `execute()` [L6:14].
 
@@ -331,7 +331,7 @@ A "no" on 1, 2, 3, or 6 is a naming finding. A "no" on 4 or 5 is a signal to ins
 
 ## Limitations and open questions
 
-- **Books not read:** Martin's *Clean Architecture* (2017), Fowler's *PoEAA* (2002), and Evans's *Domain-Driven Design* (2003). Claims rely on free articles, the DDD Reference, and vendor docs. No claim is made about specific class names used in those books.
+- **Books not read:** Martin's _Clean Architecture_ (2017), Fowler's _PoEAA_ (2002), and Evans's _Domain-Driven Design_ (2003). Claims rely on free articles, the DDD Reference, and vendor docs. No claim is made about specific class names used in those books.
 - **Cockburn extract:** a 2000 pre-publication draft; the CRUD discussion is truncated. The "no consensus" finding is from that extract, not the published book.
 - **No empirical evidence:** no controlled study shows that a naming scheme or rich model reduces defects or cost. The recommendations are clarity, consistency, and invariant-safety arguments, not measured outcomes.
 - **No implementation audit:** only the cited files were read. No TypeScript application exists in this repo; no conformance claim is made for any destination.

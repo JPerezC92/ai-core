@@ -11,18 +11,18 @@ import type { EngineRun } from "#domain/outcomes.ts";
 import type { EngineRunner } from "#domain/ports/engine-runner.ts";
 
 export type AdvancedRequest = {
-  readonly command: string;
-  readonly passthrough: readonly string[];
+	readonly command: string;
+	readonly passthrough: readonly string[];
 };
 
 export class RunAdvancedCommand {
-  readonly #engine: EngineRunner;
+	readonly #engine: EngineRunner;
 
-  constructor(engine: EngineRunner) {
-    this.#engine = engine;
-  }
+	constructor(engine: EngineRunner) {
+		this.#engine = engine;
+	}
 
-  async execute(request: AdvancedRequest): Promise<EngineRun> {
-    return this.#engine.run(request.command, request.passthrough);
-  }
+	async execute(request: AdvancedRequest): Promise<EngineRun> {
+		return this.#engine.run(request.command, request.passthrough);
+	}
 }

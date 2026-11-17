@@ -32,16 +32,16 @@ Supporting evidence instances may return bounded attributed results against comp
 
 ## Identification results
 
-| Field | Value |
-|---|---|
-| System | <SYSTEM> |
-| Module | <fill> |
-| Symptom class | <S-xx> or none |
-| Matched incident problem | <P-NNN> or none |
-| Discriminators evaluated | <fill> |
-| Exclusions present | <fill> or none |
-| Verdict | pending / exact / structural / no_match |
-| Rationale | <fill> |
+| Field                    | Value                                   |
+| ------------------------ | --------------------------------------- |
+| System                   | <SYSTEM>                                |
+| Module                   | <fill>                                  |
+| Symptom class            | <S-xx> or none                          |
+| Matched incident problem | <P-NNN> or none                         |
+| Discriminators evaluated | <fill>                                  |
+| Exclusions present       | <fill> or none                          |
+| Verdict                  | pending / exact / structural / no_match |
+| Rationale                | <fill>                                  |
 
 ## Gate
 

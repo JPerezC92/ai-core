@@ -26,19 +26,19 @@ If the change set is empty, derive the name from in-progress work — the curren
 
 ### Type
 
-| Prefix | Use for |
-|--------|---------|
-| `build` | Build system or external dependency changes |
-| `chore` | Maintenance or tooling outside source, tests, docs, build, and CI |
-| `ci` | Continuous-integration configuration or scripts |
-| `docs` | Documentation only |
-| `feat` | New feature or capability |
-| `fix` | Bug fix, including an urgent production fix |
-| `perf` | Performance improvement |
-| `refactor` | Restructuring without behavior change |
-| `revert` | Revert a previous commit or PR |
-| `style` | Formatting only, not CSS or UI design |
-| `test` | Adding or updating tests only |
+| Prefix     | Use for                                                           |
+| ---------- | ----------------------------------------------------------------- |
+| `build`    | Build system or external dependency changes                       |
+| `chore`    | Maintenance or tooling outside source, tests, docs, build, and CI |
+| `ci`       | Continuous-integration configuration or scripts                   |
+| `docs`     | Documentation only                                                |
+| `feat`     | New feature or capability                                         |
+| `fix`      | Bug fix, including an urgent production fix                       |
+| `perf`     | Performance improvement                                           |
+| `refactor` | Restructuring without behavior change                             |
+| `revert`   | Revert a previous commit or PR                                    |
+| `style`    | Formatting only, not CSS or UI design                             |
+| `test`     | Adding or updating tests only                                     |
 
 ### Scope
 

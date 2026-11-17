@@ -69,12 +69,12 @@ From usage.md "Tests" (S4):
 
 One delivery strategy per feature in v4.x (S4):
 
-| Strategy | Behavior (as documented) |
-|---|---|
-| `ask-on-risk` | **Default** — asks when risk warrants |
-| `auto-chain` | Chains delivery automatically |
-| `single-pr` | One PR for the feature |
-| `exception-ok` | Exceptions permitted |
+| Strategy       | Behavior (as documented)              |
+| -------------- | ------------------------------------- |
+| `ask-on-risk`  | **Default** — asks when risk warrants |
+| `auto-chain`   | Chains delivery automatically         |
+| `single-pr`    | One PR for the feature                |
+| `exception-ok` | Exceptions permitted                  |
 
 Forecast authored lines at document creation; slice boundaries recorded in the feature document (S4).
 

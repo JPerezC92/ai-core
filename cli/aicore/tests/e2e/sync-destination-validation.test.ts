@@ -15,43 +15,39 @@
 import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 
-import {
-  createFixture,
-  invokeWithRevision,
-  type Fixture,
-} from "#support/aicore-cli.e2e-harness.ts";
+import { createFixture, invokeWithRevision, type Fixture } from "#support/aicore-cli.e2e-harness.ts";
 
 let fixture: Fixture | undefined;
 
 afterEach(async () => {
-  await fixture?.dispose();
-  fixture = undefined;
+	await fixture?.dispose();
+	fixture = undefined;
 });
 
 describe("destination validation", () => {
-  test("a destination that does not exist is refused", async () => {
-    const created = await createFixture();
-    fixture = created;
+	test("a destination that does not exist is refused", async () => {
+		const created = await createFixture();
+		fixture = created;
 
-    const result = await invokeWithRevision(
-      ["sync", "--target", join(created.destination, "absent"), "--editor", "opencode"],
-      created,
-    );
+		const result = await invokeWithRevision(
+			["sync", "--target", join(created.destination, "absent"), "--editor", "opencode"],
+			created,
+		);
 
-    expect(result.status).toBe(2);
-    expect(result.stderr).toMatch(/not a directory/);
-  });
+		expect(result.status).toBe(2);
+		expect(result.stderr).toMatch(/not a directory/);
+	});
 
-  test("a file is refused as a destination", async () => {
-    const created = await createFixture();
-    fixture = created;
+	test("a file is refused as a destination", async () => {
+		const created = await createFixture();
+		fixture = created;
 
-    const result = await invokeWithRevision(
-      ["sync", "--target", join(created.destination, "AGENTS.md"), "--editor", "opencode"],
-      created,
-    );
+		const result = await invokeWithRevision(
+			["sync", "--target", join(created.destination, "AGENTS.md"), "--editor", "opencode"],
+			created,
+		);
 
-    expect(result.status).toBe(2);
-    expect(result.stderr).toMatch(/not a directory/);
-  });
+		expect(result.status).toBe(2);
+		expect(result.stderr).toMatch(/not a directory/);
+	});
 });

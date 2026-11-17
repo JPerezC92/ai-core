@@ -31,28 +31,26 @@ export const DESTINATION_PATH = "G:/projects/destination";
 export const BINDINGS_PATH = `${DESTINATION_PATH}/.aicore/core.yaml`;
 
 export function makeSettings(overrides: Partial<OperatorSettings> = {}): OperatorSettings {
-  return { sourceRevision: REVISION, localConfigPath: undefined, ...overrides };
+	return { sourceRevision: REVISION, localConfigPath: undefined, ...overrides };
 }
 
 export function makeEngineRun(overrides: Partial<EngineRun> = {}): EngineRun {
-  return { status: 0, stdout: "", stderr: "", ...overrides };
+	return { status: 0, stdout: "", stderr: "", ...overrides };
 }
 
-export function makeSynchronizeOutcome(
-  overrides: Partial<SynchronizeOutcome> = {},
-): SynchronizeOutcome {
-  return {
-    destination: DESTINATION_PATH,
-    editor: "opencode",
-    enrolled: true,
-    runs: [makeEngineRun()],
-    current: true,
-    ...overrides,
-  };
+export function makeSynchronizeOutcome(overrides: Partial<SynchronizeOutcome> = {}): SynchronizeOutcome {
+	return {
+		destination: DESTINATION_PATH,
+		editor: "opencode",
+		enrolled: true,
+		runs: [makeEngineRun()],
+		current: true,
+		...overrides,
+	};
 }
 
 export function makeSavedSelection(overrides: Partial<SavedSelection> = {}): SavedSelection {
-  return { target: DESTINATION_PATH, editor: "opencode", ...overrides };
+	return { target: DESTINATION_PATH, editor: "opencode", ...overrides };
 }
 
 /**
@@ -62,32 +60,32 @@ export function makeSavedSelection(overrides: Partial<SavedSelection> = {}): Sav
  * reports success, exactly as a run with no further commands does.
  */
 export function makeEngine(statuses: readonly number[] = []): MockProxy<EngineRunner> {
-  const engine = mock<EngineRunner>();
-  engine.run.mockResolvedValue(makeEngineRun());
-  for (const status of statuses) {
-    engine.run.mockResolvedValueOnce(makeEngineRun({ status }));
-  }
-  return engine;
+	const engine = mock<EngineRunner>();
+	engine.run.mockResolvedValue(makeEngineRun());
+	for (const status of statuses) {
+		engine.run.mockResolvedValueOnce(makeEngineRun({ status }));
+	}
+	return engine;
 }
 
 /** A filesystem double describing an imaginary destination. */
 export function makeFilesystem(
-  options: {
-    readonly directories?: readonly string[];
-    readonly files?: readonly string[];
-    readonly insideCheckout?: readonly string[];
-  } = {},
+	options: {
+		readonly directories?: readonly string[];
+		readonly files?: readonly string[];
+		readonly insideCheckout?: readonly string[];
+	} = {},
 ): MockProxy<FilesystemProbe> {
-  const directories = options.directories ?? [];
-  const files = options.files ?? [];
-  const insideCheckout = options.insideCheckout ?? [];
+	const directories = options.directories ?? [];
+	const files = options.files ?? [];
+	const insideCheckout = options.insideCheckout ?? [];
 
-  const probe = mock<FilesystemProbe>();
-  probe.resolve.mockImplementation((path) => path);
-  probe.isDirectory.mockImplementation(async (path) => directories.includes(path));
-  probe.isFile.mockImplementation(async (path) => files.includes(path));
-  probe.isInside.mockImplementation((_root, path) => insideCheckout.includes(path));
-  return probe;
+	const probe = mock<FilesystemProbe>();
+	probe.resolve.mockImplementation((path) => path);
+	probe.isDirectory.mockImplementation(async (path) => directories.includes(path));
+	probe.isFile.mockImplementation(async (path) => files.includes(path));
+	probe.isInside.mockImplementation((_root, path) => insideCheckout.includes(path));
+	return probe;
 }
 
 /**
@@ -97,12 +95,12 @@ export function makeFilesystem(
  * itself is asserted on the port mock.
  */
 export function makeSelections(saved?: SavedSelection): MockProxy<SelectionStore> {
-  let stored = saved;
+	let stored = saved;
 
-  const selections = mock<SelectionStore>();
-  selections.read.mockImplementation(async () => stored);
-  selections.write.mockImplementation(async (selection) => {
-    stored = selection;
-  });
-  return selections;
+	const selections = mock<SelectionStore>();
+	selections.read.mockImplementation(async () => stored);
+	selections.write.mockImplementation(async (selection) => {
+		stored = selection;
+	});
+	return selections;
 }

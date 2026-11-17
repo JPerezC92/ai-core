@@ -12,31 +12,31 @@ export type FailureCode = "drift" | "invalid";
 
 /** One expected business rejection. */
 export type SynchronizationFailure = {
-  readonly code: FailureCode;
-  readonly message: string;
+	readonly code: FailureCode;
+	readonly message: string;
 };
 
 /** What one command produced: a success word, or a typed failure. */
 export type OperationOutcome =
-  | { readonly ok: true; readonly message: string }
-  | { readonly ok: false; readonly failure: SynchronizationFailure };
+	| { readonly ok: true; readonly message: string }
+	| { readonly ok: false; readonly failure: SynchronizationFailure };
 
 /** Build a drift failure: the destination is not current. */
 export function drift(message: string): SynchronizationFailure {
-  return { code: "drift", message };
+	return { code: "drift", message };
 }
 
 /** Build a malformed-input failure: the command cannot be attempted. */
 export function invalid(message: string): SynchronizationFailure {
-  return { code: "invalid", message };
+	return { code: "invalid", message };
 }
 
 /** Report a completed command. */
 export function succeeded(message: string): OperationOutcome {
-  return { ok: true, message };
+	return { ok: true, message };
 }
 
 /** Report a refused command. */
 export function failed(failure: SynchronizationFailure): OperationOutcome {
-  return { ok: false, failure };
+	return { ok: false, failure };
 }

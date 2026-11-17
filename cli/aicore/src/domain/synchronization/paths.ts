@@ -14,14 +14,14 @@
  * hide a malformed document instead of reporting one.
  */
 export function isSafeRelativePath(path: string): boolean {
-  if (path === "" || path.includes("\u0000") || path.includes("\\")) {
-    return false;
-  }
-  if (path.split("/").some((part) => part === "" || part === "." || part === "..")) {
-    return false;
-  }
-  const windowsPath = splitWindowsPrefix(path);
-  return windowsPath === null;
+	if (path === "" || path.includes("\u0000") || path.includes("\\")) {
+		return false;
+	}
+	if (path.split("/").some((part) => part === "" || part === "." || part === "..")) {
+		return false;
+	}
+	const windowsPath = splitWindowsPrefix(path);
+	return windowsPath === null;
 }
 
 /**
@@ -32,8 +32,8 @@ export function isSafeRelativePath(path: string): boolean {
  * form is the only additional shape this rule must recognise.
  */
 function splitWindowsPrefix(path: string): string | null {
-  const drive = /^[A-Za-z]:/u.exec(path);
-  return drive === null ? null : drive[0];
+	const drive = /^[A-Za-z]:/u.exec(path);
+	return drive === null ? null : drive[0];
 }
 
 /**
@@ -44,8 +44,8 @@ function splitWindowsPrefix(path: string): string | null {
  * resolution happens: a persisted path is data an operator wrote down.
  */
 export function parentDirectory(path: string): string {
-  const separator = path.lastIndexOf("/");
-  return separator === -1 ? "" : path.slice(0, separator);
+	const separator = path.lastIndexOf("/");
+	return separator === -1 ? "" : path.slice(0, separator);
 }
 
 /**
@@ -55,5 +55,5 @@ export function parentDirectory(path: string): string {
  * root-relative but are not themselves required to be canonical.
  */
 export function isAbsolutePath(path: string): boolean {
-  return path.startsWith("/") || splitWindowsPrefix(path) !== null || path.startsWith("\\");
+	return path.startsWith("/") || splitWindowsPrefix(path) !== null || path.startsWith("\\");
 }

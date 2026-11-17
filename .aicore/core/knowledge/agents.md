@@ -151,18 +151,18 @@ Name a business artifact for the predicate or use case it expresses, not for the
 
 When Inquisitor 🔎 (PR Reviewer) returns review findings, Cipher 🔓 (Lead Orchestrator) adjudicates every finding before remediation:
 
-| Finding | Disposition | Ask user? |
-|---|---|---|
-| Real source defect, fix in scope | Route to the owning agent (Forge 🔨 (Implementer) for code, the responsible architect for docs); source changes use a NEW authorized commit — never amend; re-review | No — report |
-| Evidence-row or checkbox correction | Route verified head-bound evidence to the designated Inquisitor 🔎 (PR Reviewer) evidence writer; validate, join rows and ticks atomically, live-reread; do not route a body-only correction through a source commit | No — within existing authority |
-| Already-authorized, in-scope reversible factual PR-prose correction | Route the minimal draft-backed delta to Herald 📯 (Release Manager) after observed release of evidence-body ownership; read the fresh live head/body before writing, preserve evidence/ticks and unrelated prose, then live-reread. No source commit or repeated permission request for this body-only repair | No — report the verified factual basis |
-| Real defect, fix needs scope expansion | Stop; present options | **Yes** |
-| False finding — mechanically decidable (one command settles it) | Refute: persist the literal command + output as PR-body evidence, instruct re-instrumentation, re-review | No — report prominently |
-| False finding — judgment-dependent | Present both readings with their evidence | **Yes** |
-| ADVISORY finding (open) | Fix first when the finding is in scope, local and reversible, has one correct answer, changes no behavior/API/security/data/dependency/permission, and is verifiable now; otherwise the user decides whether it stays open — Cipher 🔓 (Lead Orchestrator) documents that decision and cannot accept the risk. An authorized deferral names its destination (for example `.aicore/core/knowledge/debt.md`); never ignore, and deferral needs explicit authority. Record in the active feature document `## Log` | Fix-now: No — report. Remaining finding: **Yes** |
-| INFO observation (no action required) | Record as a note only; never a finding, a gate input, or a `[PASS]` blocker | No — report |
-| Fix requires destructive or irreversible action | User-Authority-Only rule applies | **Yes** |
-| Same finding survives 2 remediation rounds, or 3 total review rounds | Loop cap — stop | **Yes** |
+| Finding                                                              | Disposition                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Ask user?                                        |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Real source defect, fix in scope                                     | Route to the owning agent (Forge 🔨 (Implementer) for code, the responsible architect for docs); source changes use a NEW authorized commit — never amend; re-review                                                                                                                                                                                                                                                                                                                                            | No — report                                      |
+| Evidence-row or checkbox correction                                  | Route verified head-bound evidence to the designated Inquisitor 🔎 (PR Reviewer) evidence writer; validate, join rows and ticks atomically, live-reread; do not route a body-only correction through a source commit                                                                                                                                                                                                                                                                                            | No — within existing authority                   |
+| Already-authorized, in-scope reversible factual PR-prose correction  | Route the minimal draft-backed delta to Herald 📯 (Release Manager) after observed release of evidence-body ownership; read the fresh live head/body before writing, preserve evidence/ticks and unrelated prose, then live-reread. No source commit or repeated permission request for this body-only repair                                                                                                                                                                                                   | No — report the verified factual basis           |
+| Real defect, fix needs scope expansion                               | Stop; present options                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | **Yes**                                          |
+| False finding — mechanically decidable (one command settles it)      | Refute: persist the literal command + output as PR-body evidence, instruct re-instrumentation, re-review                                                                                                                                                                                                                                                                                                                                                                                                        | No — report prominently                          |
+| False finding — judgment-dependent                                   | Present both readings with their evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | **Yes**                                          |
+| ADVISORY finding (open)                                              | Fix first when the finding is in scope, local and reversible, has one correct answer, changes no behavior/API/security/data/dependency/permission, and is verifiable now; otherwise the user decides whether it stays open — Cipher 🔓 (Lead Orchestrator) documents that decision and cannot accept the risk. An authorized deferral names its destination (for example `.aicore/core/knowledge/debt.md`); never ignore, and deferral needs explicit authority. Record in the active feature document `## Log` | Fix-now: No — report. Remaining finding: **Yes** |
+| INFO observation (no action required)                                | Record as a note only; never a finding, a gate input, or a `[PASS]` blocker                                                                                                                                                                                                                                                                                                                                                                                                                                     | No — report                                      |
+| Fix requires destructive or irreversible action                      | User-Authority-Only rule applies                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | **Yes**                                          |
+| Same finding survives 2 remediation rounds, or 3 total review rounds | Loop cap — stop                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | **Yes**                                          |
 
 **Finding actions:** before remediation, Cipher 🔓 (Lead Orchestrator) uses the single round summary below to present every finding and its action. A raw findings list is not an acceptable handoff. The dispositions, authority rules, refutation evidence, and loop cap above are unchanged; this adds no tracker and no additional approval.
 
@@ -199,18 +199,18 @@ Three message types cover every user-facing status report:
 
 **State emojis.** Emojis mark state, never severity, and never replace required text.
 
-| Emoji | State |
-|---|---|
-| ✅ | COMPLETE / FIXED / PASS |
-| 🟡 | IN PROGRESS / PENDING |
-| 🚧 | BLOCKED |
-| ⏭️ | NOT APPLICABLE / SKIPPED |
-| 🔴 | OPEN |
-| ⏸ | DEFERRED |
-| ✖ | REJECTED |
-| ❌ | FAIL / ERROR |
-| ⚠️ | ADVISORY |
-| ❓ | DECISION REQUIRED |
+| Emoji | State                    |
+| ----- | ------------------------ |
+| ✅    | COMPLETE / FIXED / PASS  |
+| 🟡    | IN PROGRESS / PENDING    |
+| 🚧    | BLOCKED                  |
+| ⏭️    | NOT APPLICABLE / SKIPPED |
+| 🔴    | OPEN                     |
+| ⏸     | DEFERRED                 |
+| ✖     | REJECTED                 |
+| ❌    | FAIL / ERROR             |
+| ⚠️    | ADVISORY                 |
+| ❓    | DECISION REQUIRED        |
 
 - Never show an empty findings table; state the absence of findings in prose.
 - Unresolved, pending, or advisory items never become a clean `[PASS]`; `[PASS]` still requires zero open findings of any severity.
@@ -224,10 +224,10 @@ Three message types cover every user-facing status report:
 
 Unresolved findings: 1 of 2 — open 1, deferred 0; not ready — behavior-changing remediation requires a user decision
 
-| ID | Finding | Severity | Status | Evidence | Owner / next action | Needs your decision? |
-|---|---|---|---|---|---|---|
-| F1 | Retry procedure contradicts the specified stop condition | MEDIUM | 🔴 OPEN | fixture candidate C1, procedure §Retry vs spec S1, review R1 | Cipher 🔓 (Lead Orchestrator) — recommend authorizing the behavior-changing correction; await decision before routing remediation | Yes — authorize correction or explicitly defer to the feature Log; neither is assumed |
-| F2 | Runbook links a retired skill path | LOW | ✅ FIXED (round 1) | fixture C1 §Links, fix C0→C1; independent verifier R1 confirmed replacement resolves | closed — verifier: fixture review R1 | No |
+| ID  | Finding                                                  | Severity | Status             | Evidence                                                                             | Owner / next action                                                                                                               | Needs your decision?                                                                  |
+| --- | -------------------------------------------------------- | -------- | ------------------ | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| F1  | Retry procedure contradicts the specified stop condition | MEDIUM   | 🔴 OPEN            | fixture candidate C1, procedure §Retry vs spec S1, review R1                         | Cipher 🔓 (Lead Orchestrator) — recommend authorizing the behavior-changing correction; await decision before routing remediation | Yes — authorize correction or explicitly defer to the feature Log; neither is assumed |
+| F2  | Runbook links a retired skill path                       | LOW      | ✅ FIXED (round 1) | fixture C1 §Links, fix C0→C1; independent verifier R1 confirmed replacement resolves | closed — verifier: fixture review R1                                                                                              | No                                                                                    |
 
 Counts: fixed 1 · open 1 · deferred 0 · rejected 0 (of 2)
 
@@ -242,25 +242,26 @@ Needs your decision: ❓ F1 — authorize the behavior-changing correction, or e
 
 ### Roster ownership table
 
-| Agent | Role | Team |
-|---|---|---|
-| Cipher 🔓 (Lead Orchestrator) | Lead Orchestrator | Both |
-| Investigator 🔍 (Incident Investigator) | Incident root-cause analysis | Incident |
-| Quill 🪶 (Note Drafter) | Note Drafter | Incident |
-| Ledger 📒 (Record Keeper) | Record Keeper | Incident |
-| Scribe ✍️ (Docs & Problems Manager) | Docs & Problems Manager | Incident |
-| Vault 🔐 (Catalog Steward) | Catalog Steward | Both |
-| Atrium 🏛️ (Frontend Architect) | Frontend Architect | Dev |
-| Bastion 🧱 (Backend & Scripts Architect) | Backend & Scripts Architect | Dev |
-| Crucible 🔥 (Test Architect) | Test Architect | Dev |
-| Forge 🔨 (Implementer) | Implementer | Dev |
-| Herald 📯 (Release Manager) | Release Manager | Dev |
-| Inquisitor 🔎 (PR Reviewer) | PR Reviewer | Dev |
-| Lumen ✨ (Visual Director) | Visual Director | Dev |
-| Sentinel 🛡️ (Quality Guardian) | Quality Guardian | Both |
-| Warden 🔒 (Dependency Warden) | Dependency Warden | Dev |
+| Agent                                    | Role                         | Team     |
+| ---------------------------------------- | ---------------------------- | -------- |
+| Cipher 🔓 (Lead Orchestrator)            | Lead Orchestrator            | Both     |
+| Investigator 🔍 (Incident Investigator)  | Incident root-cause analysis | Incident |
+| Quill 🪶 (Note Drafter)                  | Note Drafter                 | Incident |
+| Ledger 📒 (Record Keeper)                | Record Keeper                | Incident |
+| Scribe ✍️ (Docs & Problems Manager)      | Docs & Problems Manager      | Incident |
+| Vault 🔐 (Catalog Steward)               | Catalog Steward              | Both     |
+| Atrium 🏛️ (Frontend Architect)           | Frontend Architect           | Dev      |
+| Bastion 🧱 (Backend & Scripts Architect) | Backend & Scripts Architect  | Dev      |
+| Crucible 🔥 (Test Architect)             | Test Architect               | Dev      |
+| Forge 🔨 (Implementer)                   | Implementer                  | Dev      |
+| Herald 📯 (Release Manager)              | Release Manager              | Dev      |
+| Inquisitor 🔎 (PR Reviewer)              | PR Reviewer                  | Dev      |
+| Lumen ✨ (Visual Director)               | Visual Director              | Dev      |
+| Sentinel 🛡️ (Quality Guardian)           | Quality Guardian             | Both     |
+| Warden 🔒 (Dependency Warden)            | Dependency Warden            | Dev      |
 
 Edge cases:
+
 - Roster additions and removals are a user decision: Cipher 🔓 (Lead Orchestrator) brings the evidence and never adds or removes a team member on its own authority.
 - Cipher 🔓 (Lead Orchestrator) authors runtime specifications using the `.agents/skills/op-agent-creator/` skill. Sentinel 🛡️ (Quality Guardian) audits every agent-document change independently, applying SP-3 to the runtime-spec layout contract.
 - Sentinel 🛡️ (Quality Guardian) audits all agent documents: every runtime spec (including the working manner it carries) and in-scope markdown for both teams, plus `AGENTS.md`, `odd/tasks/`, and shared rules.

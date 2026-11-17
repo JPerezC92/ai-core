@@ -1,406 +1,415 @@
 {
-    "$schema": "https://opencode.ai/config.json",
-    "agents": {
-        "plan": {
-            "color": "#56b6c2",
-            "permissions": [
-                { "action": "question", "resource": "*", "effect": "allow" },
-                { "action": "edit", "resource": "*", "effect": "deny" }
-            ]
-        },
-        "build": {
-            "color": "#e5a00d",
-            "permissions": [
-                { "action": "question", "resource": "*", "effect": "allow" },
-                // Cipher retains session move/rename. Worktree creation is
-                // Herald-owned; removal is manual because the built-in
-                // worktree_remove tool bypasses this build's policy layer.
-                { "action": "opencode_session_move", "resource": "*", "effect": "allow" },
-                { "action": "opencode_session_rename", "resource": "*", "effect": "allow" }
-            ]
-        },
-        "crucible": {
-            "permissions": [
-                { "action": "shell", "resource": "*", "effect": "deny" },
-                { "action": "shell", "resource": "pnpm install", "effect": "allow" },
-                // Package-local CLI test suites, granted as exact commands only so the
-                // test architect can observe the committed suite directly instead of
-                // relying on coordinator-supplied results. The root `test:cli` and
-                // `test:cli:e2e` scripts delegate to exactly these two commands.
-                // Nothing wider is granted: no `pnpm *`, no `node *`, no unrestricted
-                // shell. Both scripts run the package's committed test files
-                // through Vitest and spawn no Git or GitHub command. TUI restart
-                // required.
-                { "action": "shell", "resource": "pnpm --dir cli/aicore test", "effect": "allow" },
-                { "action": "shell", "resource": "pnpm --dir cli/aicore test:e2e", "effect": "allow" },
-                // Read-only discovery so the test architect can inspect the tree
-                // with `rg`/`ls`. Use Glob/Grep for filesystem discovery. Editing,
-                // network, and interpreter access stay denied. TUI restart required.
-                { "action": "shell", "resource": "rg *", "effect": "allow" },
-                { "action": "shell", "resource": "rg *--pre*", "effect": "deny" },
-                { "action": "shell", "resource": "ls *", "effect": "allow" },
-                { "action": "shell", "resource": "wc *", "effect": "allow" }
-            ]
-        },
-        // Forge's package-manager surface. Every direct pnpm invocation is
-        // denied except the forms re-allowed below: the script-disabled
-        // lockfile-only preparation command, and the reviewed testing and
-        // typechecking forms this project already runs. This is defence in
-        // depth for the package manager only. It does not narrow the agent's
-        // other shell authority, it does not constrain the working directory
-        // of a command, and a wrapper or an alternative executable is outside
-        // the matched resource.
-        "forge": {
-            "permissions": [
-                { "action": "shell", "resource": "pnpm *", "effect": "deny" },
-                { "action": "shell", "resource": "pnpm install --lockfile-only --ignore-scripts", "effect": "allow" },
-                { "action": "shell", "resource": "pnpm --dir cli/aicore test*", "effect": "allow" },
-                { "action": "shell", "resource": "pnpm --dir cli/aicore typecheck*", "effect": "allow" },
-                { "action": "shell", "resource": "pnpm --dir .opencode/plugins/odd-adviser exec vitest run*", "effect": "allow" },
-                { "action": "shell", "resource": "pnpm --dir .opencode/plugins/odd-adviser typecheck*", "effect": "allow" },
-                { "action": "shell", "resource": "pnpm --dir mcp-servers/system-one exec vitest run*", "effect": "allow" },
-                { "action": "shell", "resource": "pnpm --dir mcp-servers/system-one typecheck*", "effect": "allow" },
-                { "action": "shell", "resource": "pnpm --dir .agents/skills/* exec vitest run*", "effect": "allow" },
-                { "action": "shell", "resource": "pnpm --dir .agents/skills/* typecheck*", "effect": "allow" }
-            ]
-        },
-        // Herald is the sole Git and GitHub executor: the broad allows are
-        // followed by the narrow rules so a command-family allow never widens a
-        // dangerous shape, and the global `git *` / `gh *` denies close the
-        // global shell allow for every other agent.
-        "herald": {
-            "permissions": [
-                { "action": "shell", "resource": "git *", "effect": "allow" },
-                { "action": "shell", "resource": "gh *", "effect": "allow" },
-                // A push outside the granted families still asks; a force-delete
-                // outside the granted form still asks. These come before the
-                // force-push denies so a force push resolves to deny, not ask.
-                { "action": "shell", "resource": "git push *", "effect": "ask" },
-                { "action": "shell", "resource": "git branch -D *", "effect": "ask" },
-                // Dangerous shapes stay denied for Herald too: the broad allow
-                // above is cooperative, not a sandbox.
-                { "action": "shell", "resource": "git push --force *", "effect": "deny" },
-                { "action": "shell", "resource": "git push --force", "effect": "deny" },
-                { "action": "shell", "resource": "git push -f *", "effect": "deny" },
-                { "action": "shell", "resource": "git push -f", "effect": "deny" },
-                { "action": "shell", "resource": "git reset --hard", "effect": "deny" },
-                { "action": "shell", "resource": "git reset --hard *", "effect": "deny" },
-                { "action": "shell", "resource": "git clean -fd", "effect": "deny" },
-                { "action": "shell", "resource": "git clean -fd *", "effect": "deny" },
-                { "action": "shell", "resource": "git update-ref *", "effect": "deny" },
-                { "action": "shell", "resource": "git reflog *", "effect": "deny" },
-                { "action": "shell", "resource": "git gc", "effect": "deny" },
-                { "action": "shell", "resource": "git gc *", "effect": "deny" },
-                { "action": "shell", "resource": "git prune", "effect": "deny" },
-                { "action": "shell", "resource": "git prune *", "effect": "deny" },
-                { "action": "shell", "resource": "git repack", "effect": "deny" },
-                { "action": "shell", "resource": "git repack *", "effect": "deny" },
-                { "action": "shell", "resource": "git symbolic-ref refs/stash *", "effect": "deny" },
-                { "action": "shell", "resource": "gh pr merge", "effect": "deny" },
-                { "action": "shell", "resource": "gh pr merge *", "effect": "deny" },
-                { "action": "shell", "resource": "gh repo delete", "effect": "deny" },
-                { "action": "shell", "resource": "gh repo delete *", "effect": "deny" },
-                // Stash: Herald may park and recover work; erasure stays user-only.
-                { "action": "shell", "resource": "git stash *", "effect": "deny" },
-                { "action": "shell", "resource": "git stash", "effect": "deny" },
-                { "action": "shell", "resource": "git stash push", "effect": "allow" },
-                { "action": "shell", "resource": "git stash push *", "effect": "allow" },
-                { "action": "shell", "resource": "git stash save", "effect": "allow" },
-                { "action": "shell", "resource": "git stash save *", "effect": "allow" },
-                { "action": "shell", "resource": "git stash apply", "effect": "allow" },
-                { "action": "shell", "resource": "git stash apply *", "effect": "allow" },
-                { "action": "shell", "resource": "git stash list", "effect": "allow" },
-                { "action": "shell", "resource": "git stash show -u", "effect": "allow" },
-                { "action": "shell", "resource": "git stash show -u *", "effect": "allow" },
-                { "action": "shell", "resource": "gh pr view *", "effect": "allow" },
-                { "action": "shell", "resource": "git ls-remote *", "effect": "allow" },
-                { "action": "shell", "resource": "git rev-parse *", "effect": "allow" },
-                { "action": "shell", "resource": "git merge-base *", "effect": "allow" },
-                { "action": "shell", "resource": "git diff *", "effect": "allow" },
-                { "action": "shell", "resource": "git diff *--output*", "effect": "deny" },
-                { "action": "shell", "resource": "git diff *--ext-diff*", "effect": "deny" },
-                { "action": "shell", "resource": "git --literal-pathspecs diff *", "effect": "allow" },
-                { "action": "shell", "resource": "git --literal-pathspecs diff *--output*", "effect": "deny" },
-                { "action": "shell", "resource": "git --literal-pathspecs diff *--ext-diff*", "effect": "deny" },
-                { "action": "shell", "resource": "git status *", "effect": "allow" },
-                { "action": "shell", "resource": "git branch --show-current", "effect": "allow" },
-                { "action": "shell", "resource": "git fetch origin", "effect": "allow" },
-                { "action": "shell", "resource": "git fetch origin main", "effect": "allow" },
-                { "action": "shell", "resource": "git switch main", "effect": "allow" },
-                { "action": "shell", "resource": "git switch --no-guess main", "effect": "allow" },
-                { "action": "shell", "resource": "git merge --ff-only origin/main", "effect": "allow" },
-                { "action": "shell", "resource": "git branch -d -- *", "effect": "allow" },
-                { "action": "shell", "resource": "git branch -D -- *", "effect": "allow" },
-                // Worktree creation is a Git workspace operation and belongs to
-                // Herald. Removal is manual because the built-in worktree_remove
-                // tool bypasses this build's permission/policy layer.
-                { "action": "opencode_worktree_create", "resource": "*", "effect": "allow" },
-                // Herald-only ordinary feature pushes to origin; no base, force,
-                // destination-refspec or extra-argument grant. The upstream-tracking
-                // `-u` form is granted for the same branch families under the same
-                // suffix guards. Cooperative scope, not a sandbox. Cleanup
-                // exceptions remain ordered afterward.
-                { "action": "shell", "resource": "git push origin docs/*", "effect": "allow" },
-                // Multi-segment docs branches (docs/architecture/..., docs/workflow/...):
-                // the single-segment docs/* rule does not cross `/`.
-                { "action": "shell", "resource": "git push origin docs/**", "effect": "allow" },
-                { "action": "shell", "resource": "git push origin feat/*", "effect": "allow" },
-                { "action": "shell", "resource": "git push origin fix/*", "effect": "allow" },
-                { "action": "shell", "resource": "git push origin chore/*", "effect": "allow" },
-                { "action": "shell", "resource": "git push origin refactor/*", "effect": "allow" },
-                { "action": "shell", "resource": "git push origin test/*", "effect": "allow" },
-                { "action": "shell", "resource": "git push origin build/*", "effect": "allow" },
-                { "action": "shell", "resource": "git push origin ci/*", "effect": "allow" },
-                { "action": "shell", "resource": "git push origin perf/*", "effect": "allow" },
-                { "action": "shell", "resource": "git push origin revert/*", "effect": "allow" },
-                { "action": "shell", "resource": "git push origin style/*", "effect": "allow" },
-                // Upstream-tracking form of the same grant: `git push -u origin <family>/<name>`.
-                // These 12 rows mirror the branch families above one-for-one, and the
-                // `-u` deny mirrors below keep an extra argument, a force flag and a
-                // refspec unreachable, so `-u` adds no scope beyond the ordinary push.
-                { "action": "shell", "resource": "git push -u origin docs/*", "effect": "allow" },
-                { "action": "shell", "resource": "git push -u origin docs/**", "effect": "allow" },
-                { "action": "shell", "resource": "git push -u origin feat/*", "effect": "allow" },
-                { "action": "shell", "resource": "git push -u origin fix/*", "effect": "allow" },
-                { "action": "shell", "resource": "git push -u origin chore/*", "effect": "allow" },
-                { "action": "shell", "resource": "git push -u origin refactor/*", "effect": "allow" },
-                { "action": "shell", "resource": "git push -u origin test/*", "effect": "allow" },
-                { "action": "shell", "resource": "git push -u origin build/*", "effect": "allow" },
-                { "action": "shell", "resource": "git push -u origin ci/*", "effect": "allow" },
-                { "action": "shell", "resource": "git push -u origin perf/*", "effect": "allow" },
-                { "action": "shell", "resource": "git push -u origin revert/*", "effect": "allow" },
-                { "action": "shell", "resource": "git push -u origin style/*", "effect": "allow" },
-                { "action": "shell", "resource": "git push origin * -*", "effect": "deny" },
-                { "action": "shell", "resource": "git push origin *\t-*", "effect": "deny" },
-                { "action": "shell", "resource": "git push origin *:*", "effect": "deny" },
-                { "action": "shell", "resource": "git push origin * ?*", "effect": "deny" },
-                { "action": "shell", "resource": "git push origin *\t*", "effect": "deny" },
-                // Same suffix and refspec guards for the `-u` form, placed after its
-                // allow rows so last-match-wins keeps them effective.
-                { "action": "shell", "resource": "git push -u origin * -*", "effect": "deny" },
-                { "action": "shell", "resource": "git push -u origin *\t-*", "effect": "deny" },
-                { "action": "shell", "resource": "git push -u origin *:*", "effect": "deny" },
-                { "action": "shell", "resource": "git push -u origin * ?*", "effect": "deny" },
-                { "action": "shell", "resource": "git push -u origin *\t*", "effect": "deny" },
-                { "action": "shell", "resource": "git push origin --delete refs/heads/*", "effect": "allow" },
-                { "action": "shell", "resource": "git push origin --delete refs/heads/* -*", "effect": "deny" },
-                { "action": "shell", "resource": "git push origin --delete refs/heads/*\t-*", "effect": "deny" },
-                // A pull-request merge is the user's alone, so the base branch is
-                // never a push or delete target and the merges endpoint stays
-                // closed. These come last so last-match-wins keeps them
-                // effective against every allow above. The base-branch row names
-                // no flag position on purpose: a literal `git push origin
-                // --delete refs/heads/main` proved bypassable by interposing a
-                // flag, so any push command naming the base is denied instead.
-                // Cooperative instruction plus pattern matching, not isolation:
-                // a wrapper, alias, encoded URL or nested subprocess is not
-                // covered, and no shell pattern can be exhaustive.
-                { "action": "shell", "resource": "gh api *merge*", "effect": "deny" },
-                { "action": "shell", "resource": "git push * main", "effect": "deny" },
-                { "action": "shell", "resource": "git push *main*", "effect": "deny" }
-            ]
-        },
-        // Warden audit envelope: deny-all first, then the explicit audit
-        // commands. Agent rules load last, so this closes the global shell
-        // allow. An out-of-envelope need returns BLOCKED to Cipher instead of
-        // expanding the audit.
-        "warden": {
-            "permissions": [
-                { "action": "shell", "resource": "*", "effect": "deny" },
-                { "action": "shell", "resource": "pnpm audit --json", "effect": "allow" },
-                { "action": "shell", "resource": "pnpm outdated --json", "effect": "allow" },
-                // The effective registry, read offline. The lockfile records
-                // each artifact's integrity digest but not the registry that
-                // resolved it, so this is the only way to discharge the
-                // approved-source control for a candidate.
-                { "action": "shell", "resource": "pnpm config get registry", "effect": "allow" },
-                { "action": "shell", "resource": "uv audit*", "effect": "allow" },
-                { "action": "shell", "resource": "uv lock --check*", "effect": "allow" },
-                { "action": "shell", "resource": "uv tree --frozen*", "effect": "allow" },
-                { "action": "shell", "resource": "uv pip check*", "effect": "allow" }
-            ]
-        }
+  "$schema": "https://opencode.ai/config.json",
+  "agents": {
+    "plan": {
+      "color": "#56b6c2",
+      "permissions": [
+        { "action": "question", "resource": "*", "effect": "allow" },
+        { "action": "edit", "resource": "*", "effect": "deny" }
+      ]
     },
-    "instructions": [
-        ".aicore/core/knowledge/agent-workflow.md",
-        ".aicore/core/knowledge/agents.md",
-        ".aicore/core/knowledge/release.md",
-        ".aicore/core/knowledge/architecture-decision-workflow.md"
-    ],
-    "permissions": [
-        { "action": "read", "resource": "*", "effect": "allow" },
-        { "action": "read", "resource": "*.env", "effect": "deny" },
-        { "action": "read", "resource": "*.env.*", "effect": "deny" },
-        { "action": "glob", "resource": "*", "effect": "allow" },
-        { "action": "grep", "resource": "*", "effect": "allow" },
-        { "action": "webfetch", "resource": "*", "effect": "allow" },
-        { "action": "websearch", "resource": "*", "effect": "allow" },
-        { "action": "subagent", "resource": "*", "effect": "allow" },
-        { "action": "skill", "resource": "*", "effect": "allow" },
-        { "action": "question", "resource": "*", "effect": "deny" },
-        // memories and qmd MCP tools are not restricted here: the project's
-        // broad `*` allow already applies, and QMD's surface is read-only.
-        // Semgrep custom local rules are allowed; platform/supply-chain
-        // findings are outside this project's binding.
-        { "action": "semgrep_semgrep_scan_with_custom_rule", "resource": "*", "effect": "allow" },
-        { "action": "semgrep_semgrep_scan_supply_chain", "resource": "*", "effect": "deny" },
-        { "action": "semgrep_semgrep_findings", "resource": "*", "effect": "deny" },
-        // Chrome DevTools MCP remains available to every agent; these six
-        // highest-risk capabilities are denied globally.
-        { "action": "chrome-devtools_evaluate_script", "resource": "*", "effect": "deny" },
-        { "action": "chrome-devtools_upload_file", "resource": "*", "effect": "deny" },
-        { "action": "chrome-devtools_handle_dialog", "resource": "*", "effect": "deny" },
-        { "action": "chrome-devtools_take_heapsnapshot", "resource": "*", "effect": "deny" },
-        { "action": "chrome-devtools_screencast_start", "resource": "*", "effect": "deny" },
-        { "action": "chrome-devtools_screencast_stop", "resource": "*", "effect": "deny" },
-        // Session mutation is Cipher-only. Worktree creation belongs to Herald;
-        // no agent uses worktree_remove, which bypasses this build's checks.
-        { "action": "opencode_worktree_create", "resource": "*", "effect": "deny" },
-        { "action": "opencode_session_move", "resource": "*", "effect": "deny" },
-        { "action": "opencode_session_rename", "resource": "*", "effect": "deny" },
-        { "action": "edit", "resource": "*", "effect": "allow" },
-        { "action": "external_directory", "resource": "*", "effect": "allow" },
-        { "action": "shell", "resource": "*", "effect": "allow" },
-        { "action": "shell", "resource": "rm *", "effect": "ask" },
-        { "action": "shell", "resource": "rm -rf *", "effect": "ask" },
-        { "action": "shell", "resource": "rm -rf /*", "effect": "deny" },
-        { "action": "shell", "resource": "rm -rf ~*", "effect": "deny" },
-        { "action": "shell", "resource": "rm -r /*", "effect": "deny" },
-        { "action": "shell", "resource": "rm -fr /*", "effect": "deny" },
-        { "action": "shell", "resource": "rm -f -r /*", "effect": "deny" },
-        { "action": "shell", "resource": "rm -r -f /*", "effect": "deny" },
-        { "action": "shell", "resource": "rm -r ~*", "effect": "deny" },
-        { "action": "shell", "resource": "rm -fr ~*", "effect": "deny" },
-        { "action": "shell", "resource": "rm -f -r ~*", "effect": "deny" },
-        { "action": "shell", "resource": "rm -r -f ~*", "effect": "deny" },
-        { "action": "shell", "resource": "mv *", "effect": "ask" },
-        { "action": "shell", "resource": "cp *", "effect": "ask" },
-        { "action": "shell", "resource": "chmod *", "effect": "ask" },
-        { "action": "shell", "resource": "chown *", "effect": "ask" },
-        { "action": "shell", "resource": "sudo *", "effect": "deny" },
-        // Git and GitHub are executed by Herald alone. These two denies close the
-        // global shell allow for both command families; Herald's agent-scoped
-        // rows reopen them for that agent only.
-        { "action": "shell", "resource": "git *", "effect": "deny" },
-        { "action": "shell", "resource": "gh *", "effect": "deny" },
-        { "action": "shell", "resource": "dd *of=/dev/*", "effect": "deny" },
-        { "action": "shell", "resource": "mkfs*", "effect": "deny" },
-        { "action": "shell", "resource": "chmod -R * /*", "effect": "deny" },
-        { "action": "shell", "resource": "chown -R * /*", "effect": "deny" },
-        { "action": "shell", "resource": "shutdown*", "effect": "deny" },
-        { "action": "shell", "resource": "reboot*", "effect": "deny" },
-        // Read-only tools. Broad allow first, then the narrow deny that
-        // disables its mutating mode under last-match-wins.
-        { "action": "shell", "resource": "jq *", "effect": "allow" },
+    "build": {
+      "color": "#e5a00d",
+      "permissions": [
+        { "action": "question", "resource": "*", "effect": "allow" },
+        // Cipher retains session move/rename. Worktree creation is
+        // Herald-owned; removal is manual because the built-in
+        // worktree_remove tool bypasses this build's policy layer.
+        { "action": "opencode_session_move", "resource": "*", "effect": "allow" },
+        { "action": "opencode_session_rename", "resource": "*", "effect": "allow" }
+      ]
+    },
+    "crucible": {
+      "permissions": [
+        { "action": "shell", "resource": "*", "effect": "deny" },
+        { "action": "shell", "resource": "pnpm install", "effect": "allow" },
+        // Package-local CLI test suites, granted as exact commands only so the
+        // test architect can observe the committed suite directly instead of
+        // relying on coordinator-supplied results. The root `test:cli` and
+        // `test:cli:e2e` scripts delegate to exactly these two commands.
+        // Nothing wider is granted: no `pnpm *`, no `node *`, no unrestricted
+        // shell. Both scripts run the package's committed test files
+        // through Vitest and spawn no Git or GitHub command. TUI restart
+        // required.
+        { "action": "shell", "resource": "pnpm --dir cli/aicore test", "effect": "allow" },
+        { "action": "shell", "resource": "pnpm --dir cli/aicore test:e2e", "effect": "allow" },
+        // Read-only discovery so the test architect can inspect the tree
+        // with `rg`/`ls`. Use Glob/Grep for filesystem discovery. Editing,
+        // network, and interpreter access stay denied. TUI restart required.
         { "action": "shell", "resource": "rg *", "effect": "allow" },
         { "action": "shell", "resource": "rg *--pre*", "effect": "deny" },
-        { "action": "shell", "resource": "ast-grep *", "effect": "allow" },
-        { "action": "shell", "resource": "ast-grep *--rewrite*", "effect": "deny" },
-        { "action": "shell", "resource": "ast-grep *--update-all*", "effect": "deny" },
-        { "action": "shell", "resource": "ast-grep *-U*", "effect": "deny" },
-        // `sg` is ast-grep's deprecated alias and collides with util-linux
-        // `sg` (switch-group); deny the name and use `ast-grep` only.
-        { "action": "shell", "resource": "sg *", "effect": "deny" },
-        // Project virtual environment only: uv run is allowed, uvx is not.
-        { "action": "shell", "resource": "uv run *", "effect": "allow" },
-        { "action": "shell", "resource": "uv run *ruff*--fix*", "effect": "deny" },
-        { "action": "shell", "resource": "ruff *--fix*", "effect": "deny" },
-        // Mutating package/format operations are denied regardless of wrapper.
-        { "action": "shell", "resource": "*pip install*", "effect": "deny" },
-        { "action": "shell", "resource": "*pip3 install*", "effect": "deny" },
-        { "action": "shell", "resource": "*python -m pip *", "effect": "deny" },
-        { "action": "shell", "resource": "*ruff format*", "effect": "deny" },
-        { "action": "shell", "resource": "*ruff format --check*", "effect": "allow" },
-        { "action": "shell", "resource": "uvx *", "effect": "deny" },
-        { "action": "shell", "resource": "uv tool run *", "effect": "deny" },
-        // Redirect denies LAST so no later allow can shadow them; narrowed to
-        // catastrophic absolute targets so /tmp and /dev/null stay usable.
-        // (A fork bomb is not expressible as a glob because the shell tool
-        // emits only the inner command nodes; accepted as a documented gap.)
-        { "action": "shell", "resource": "* > /etc/*", "effect": "deny" },
-        { "action": "shell", "resource": "* >> /etc/*", "effect": "deny" },
-        { "action": "shell", "resource": "* 2> /etc/*", "effect": "deny" },
-        { "action": "shell", "resource": "* 2>> /etc/*", "effect": "deny" },
-        { "action": "shell", "resource": "* &> /etc/*", "effect": "deny" },
-        { "action": "shell", "resource": "* > /boot/*", "effect": "deny" },
-        { "action": "shell", "resource": "* > /usr/*", "effect": "deny" },
-        { "action": "shell", "resource": "* > /root/*", "effect": "deny" },
-        { "action": "shell", "resource": "* > /home/*", "effect": "deny" },
-        { "action": "shell", "resource": "* > /var/*", "effect": "deny" },
-        { "action": "shell", "resource": "* > /opt/*", "effect": "deny" },
-        { "action": "shell", "resource": "* > /dev/sd*", "effect": "deny" }
-        // NOTE: the OpenCode TUI must be RESTARTED for these changes to take effect.
-    ],
-    "compaction": {
-        "auto": true
+        { "action": "shell", "resource": "ls *", "effect": "allow" },
+        { "action": "shell", "resource": "wc *", "effect": "allow" }
+      ]
     },
-    "mcp": {
-        "servers": {
-            "system-one": {
-                "type": "local",
-                "command": ["node", "mcp-servers/system-one/src/mcp/stdio.ts"],
-                "environment": {
-                    "SYSTEM_ONE_ENDPOINT": "http://127.0.0.1:1234",
-                    "SYSTEM_ONE_MODEL": "d1-2b@q8_0",
-                    "SYSTEM_ONE_TIMEOUT_MS": "15000"
-                }
-            },
-            "chrome-devtools": {
-                "type": "local",
-                "command": [
-                    "cmd", "/c", "npx", "-y", "chrome-devtools-mcp@1.12.0",
-                    "--no-usage-statistics", "--no-performance-crux"
-                ],
-                "environment": {
-                    "CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS": "1"
-                }
-            },
-            "memories": {
-                "type": "local",
-                "command": ["npx", "-y", "@memories.sh/cli@0.7.9", "serve"],
-                "codemode": false,
-                "environment": {
-                    "npm_config_ignore_scripts": "true",
-                    "MEMORIES_SKIP_POSTINSTALL": "1"
-                }
-            },
-            "qmd": {
-                "type": "local",
-                "command": ["npx", "-y", "@tobilu/qmd@2.8.3", "--index", "ai-core", "mcp"],
-                "codemode": false,
-                "environment": {
-                    "npm_config_ignore_scripts": "true"
-                }
-            },
-            "context7": {
-                "type": "remote",
-                "url": "https://mcp.context7.com/mcp",
-                "headers": {
-                    "CONTEXT7_API_KEY": "{file:../.secrets/context7-api-key}"
-                }
-            },
-            // Portable analysis MCP: official engines, no AICore-local paths.
-            // ast-grep still requires the Rust `ast-grep` CLI on PATH (sg-mcp
-            // shells out). Semgrep's analysis engine remains Python; uvx
-            // launches the pinned CLI's `mcp` subcommand. Neither is a
-            // TypeScript rewrite of the engine.
-            "astgrep": {
-                "type": "local",
-                "command": [
-                    "uvx",
-                    "--from",
-                    "git+https://github.com/ast-grep/ast-grep-mcp@149e20d47bb7125fb0c1451feea2f48a98742034",
-                    "ast-grep-server"
-                ]
-            },
-            "semgrep": {
-                "type": "local",
-                "command": ["uvx", "--from", "semgrep==1.182.1", "semgrep", "mcp"],
-                "environment": {
-                    "SEMGREP_SEND_METRICS": "off",
-                    "OTEL_SDK_DISABLED": "true"
-                }
-            }
-        }
+    // Forge's package-manager surface. Every direct pnpm invocation is
+    // denied except the forms re-allowed below: the script-disabled
+    // lockfile-only preparation command, and the reviewed testing and
+    // typechecking forms this project already runs. This is defence in
+    // depth for the package manager only. It does not narrow the agent's
+    // other shell authority, it does not constrain the working directory
+    // of a command, and a wrapper or an alternative executable is outside
+    // the matched resource.
+    "forge": {
+      "permissions": [
+        { "action": "shell", "resource": "pnpm *", "effect": "deny" },
+        { "action": "shell", "resource": "pnpm install --lockfile-only --ignore-scripts", "effect": "allow" },
+        { "action": "shell", "resource": "pnpm --dir cli/aicore test*", "effect": "allow" },
+        { "action": "shell", "resource": "pnpm --dir cli/aicore typecheck*", "effect": "allow" },
+        {
+          "action": "shell",
+          "resource": "pnpm --dir .opencode/plugins/odd-adviser exec vitest run*",
+          "effect": "allow"
+        },
+        { "action": "shell", "resource": "pnpm --dir .opencode/plugins/odd-adviser typecheck*", "effect": "allow" },
+        { "action": "shell", "resource": "pnpm --dir mcp-servers/system-one exec vitest run*", "effect": "allow" },
+        { "action": "shell", "resource": "pnpm --dir mcp-servers/system-one typecheck*", "effect": "allow" },
+        { "action": "shell", "resource": "pnpm --dir .agents/skills/* exec vitest run*", "effect": "allow" },
+        { "action": "shell", "resource": "pnpm --dir .agents/skills/* typecheck*", "effect": "allow" }
+      ]
+    },
+    // Herald is the sole Git and GitHub executor: the broad allows are
+    // followed by the narrow rules so a command-family allow never widens a
+    // dangerous shape, and the global `git *` / `gh *` denies close the
+    // global shell allow for every other agent.
+    "herald": {
+      "permissions": [
+        { "action": "shell", "resource": "git *", "effect": "allow" },
+        { "action": "shell", "resource": "gh *", "effect": "allow" },
+        // A push outside the granted families still asks; a force-delete
+        // outside the granted form still asks. These come before the
+        // force-push denies so a force push resolves to deny, not ask.
+        { "action": "shell", "resource": "git push *", "effect": "ask" },
+        { "action": "shell", "resource": "git branch -D *", "effect": "ask" },
+        // Dangerous shapes stay denied for Herald too: the broad allow
+        // above is cooperative, not a sandbox.
+        { "action": "shell", "resource": "git push --force *", "effect": "deny" },
+        { "action": "shell", "resource": "git push --force", "effect": "deny" },
+        { "action": "shell", "resource": "git push -f *", "effect": "deny" },
+        { "action": "shell", "resource": "git push -f", "effect": "deny" },
+        { "action": "shell", "resource": "git reset --hard", "effect": "deny" },
+        { "action": "shell", "resource": "git reset --hard *", "effect": "deny" },
+        { "action": "shell", "resource": "git clean -fd", "effect": "deny" },
+        { "action": "shell", "resource": "git clean -fd *", "effect": "deny" },
+        { "action": "shell", "resource": "git update-ref *", "effect": "deny" },
+        { "action": "shell", "resource": "git reflog *", "effect": "deny" },
+        { "action": "shell", "resource": "git gc", "effect": "deny" },
+        { "action": "shell", "resource": "git gc *", "effect": "deny" },
+        { "action": "shell", "resource": "git prune", "effect": "deny" },
+        { "action": "shell", "resource": "git prune *", "effect": "deny" },
+        { "action": "shell", "resource": "git repack", "effect": "deny" },
+        { "action": "shell", "resource": "git repack *", "effect": "deny" },
+        { "action": "shell", "resource": "git symbolic-ref refs/stash *", "effect": "deny" },
+        { "action": "shell", "resource": "gh pr merge", "effect": "deny" },
+        { "action": "shell", "resource": "gh pr merge *", "effect": "deny" },
+        { "action": "shell", "resource": "gh repo delete", "effect": "deny" },
+        { "action": "shell", "resource": "gh repo delete *", "effect": "deny" },
+        // Stash: Herald may park and recover work; erasure stays user-only.
+        { "action": "shell", "resource": "git stash *", "effect": "deny" },
+        { "action": "shell", "resource": "git stash", "effect": "deny" },
+        { "action": "shell", "resource": "git stash push", "effect": "allow" },
+        { "action": "shell", "resource": "git stash push *", "effect": "allow" },
+        { "action": "shell", "resource": "git stash save", "effect": "allow" },
+        { "action": "shell", "resource": "git stash save *", "effect": "allow" },
+        { "action": "shell", "resource": "git stash apply", "effect": "allow" },
+        { "action": "shell", "resource": "git stash apply *", "effect": "allow" },
+        { "action": "shell", "resource": "git stash list", "effect": "allow" },
+        { "action": "shell", "resource": "git stash show -u", "effect": "allow" },
+        { "action": "shell", "resource": "git stash show -u *", "effect": "allow" },
+        { "action": "shell", "resource": "gh pr view *", "effect": "allow" },
+        { "action": "shell", "resource": "git ls-remote *", "effect": "allow" },
+        { "action": "shell", "resource": "git rev-parse *", "effect": "allow" },
+        { "action": "shell", "resource": "git merge-base *", "effect": "allow" },
+        { "action": "shell", "resource": "git diff *", "effect": "allow" },
+        { "action": "shell", "resource": "git diff *--output*", "effect": "deny" },
+        { "action": "shell", "resource": "git diff *--ext-diff*", "effect": "deny" },
+        { "action": "shell", "resource": "git --literal-pathspecs diff *", "effect": "allow" },
+        { "action": "shell", "resource": "git --literal-pathspecs diff *--output*", "effect": "deny" },
+        { "action": "shell", "resource": "git --literal-pathspecs diff *--ext-diff*", "effect": "deny" },
+        { "action": "shell", "resource": "git status *", "effect": "allow" },
+        { "action": "shell", "resource": "git branch --show-current", "effect": "allow" },
+        { "action": "shell", "resource": "git fetch origin", "effect": "allow" },
+        { "action": "shell", "resource": "git fetch origin main", "effect": "allow" },
+        { "action": "shell", "resource": "git switch main", "effect": "allow" },
+        { "action": "shell", "resource": "git switch --no-guess main", "effect": "allow" },
+        { "action": "shell", "resource": "git merge --ff-only origin/main", "effect": "allow" },
+        { "action": "shell", "resource": "git branch -d -- *", "effect": "allow" },
+        { "action": "shell", "resource": "git branch -D -- *", "effect": "allow" },
+        // Worktree creation is a Git workspace operation and belongs to
+        // Herald. Removal is manual because the built-in worktree_remove
+        // tool bypasses this build's permission/policy layer.
+        { "action": "opencode_worktree_create", "resource": "*", "effect": "allow" },
+        // Herald-only ordinary feature pushes to origin; no base, force,
+        // destination-refspec or extra-argument grant. The upstream-tracking
+        // `-u` form is granted for the same branch families under the same
+        // suffix guards. Cooperative scope, not a sandbox. Cleanup
+        // exceptions remain ordered afterward.
+        { "action": "shell", "resource": "git push origin docs/*", "effect": "allow" },
+        // Multi-segment docs branches (docs/architecture/..., docs/workflow/...):
+        // the single-segment docs/* rule does not cross `/`.
+        { "action": "shell", "resource": "git push origin docs/**", "effect": "allow" },
+        { "action": "shell", "resource": "git push origin feat/*", "effect": "allow" },
+        { "action": "shell", "resource": "git push origin fix/*", "effect": "allow" },
+        { "action": "shell", "resource": "git push origin chore/*", "effect": "allow" },
+        { "action": "shell", "resource": "git push origin refactor/*", "effect": "allow" },
+        { "action": "shell", "resource": "git push origin test/*", "effect": "allow" },
+        { "action": "shell", "resource": "git push origin build/*", "effect": "allow" },
+        { "action": "shell", "resource": "git push origin ci/*", "effect": "allow" },
+        { "action": "shell", "resource": "git push origin perf/*", "effect": "allow" },
+        { "action": "shell", "resource": "git push origin revert/*", "effect": "allow" },
+        { "action": "shell", "resource": "git push origin style/*", "effect": "allow" },
+        // Upstream-tracking form of the same grant: `git push -u origin <family>/<name>`.
+        // These 12 rows mirror the branch families above one-for-one, and the
+        // `-u` deny mirrors below keep an extra argument, a force flag and a
+        // refspec unreachable, so `-u` adds no scope beyond the ordinary push.
+        { "action": "shell", "resource": "git push -u origin docs/*", "effect": "allow" },
+        { "action": "shell", "resource": "git push -u origin docs/**", "effect": "allow" },
+        { "action": "shell", "resource": "git push -u origin feat/*", "effect": "allow" },
+        { "action": "shell", "resource": "git push -u origin fix/*", "effect": "allow" },
+        { "action": "shell", "resource": "git push -u origin chore/*", "effect": "allow" },
+        { "action": "shell", "resource": "git push -u origin refactor/*", "effect": "allow" },
+        { "action": "shell", "resource": "git push -u origin test/*", "effect": "allow" },
+        { "action": "shell", "resource": "git push -u origin build/*", "effect": "allow" },
+        { "action": "shell", "resource": "git push -u origin ci/*", "effect": "allow" },
+        { "action": "shell", "resource": "git push -u origin perf/*", "effect": "allow" },
+        { "action": "shell", "resource": "git push -u origin revert/*", "effect": "allow" },
+        { "action": "shell", "resource": "git push -u origin style/*", "effect": "allow" },
+        { "action": "shell", "resource": "git push origin * -*", "effect": "deny" },
+        { "action": "shell", "resource": "git push origin *\t-*", "effect": "deny" },
+        { "action": "shell", "resource": "git push origin *:*", "effect": "deny" },
+        { "action": "shell", "resource": "git push origin * ?*", "effect": "deny" },
+        { "action": "shell", "resource": "git push origin *\t*", "effect": "deny" },
+        // Same suffix and refspec guards for the `-u` form, placed after its
+        // allow rows so last-match-wins keeps them effective.
+        { "action": "shell", "resource": "git push -u origin * -*", "effect": "deny" },
+        { "action": "shell", "resource": "git push -u origin *\t-*", "effect": "deny" },
+        { "action": "shell", "resource": "git push -u origin *:*", "effect": "deny" },
+        { "action": "shell", "resource": "git push -u origin * ?*", "effect": "deny" },
+        { "action": "shell", "resource": "git push -u origin *\t*", "effect": "deny" },
+        { "action": "shell", "resource": "git push origin --delete refs/heads/*", "effect": "allow" },
+        { "action": "shell", "resource": "git push origin --delete refs/heads/* -*", "effect": "deny" },
+        { "action": "shell", "resource": "git push origin --delete refs/heads/*\t-*", "effect": "deny" },
+        // A pull-request merge is the user's alone, so the base branch is
+        // never a push or delete target and the merges endpoint stays
+        // closed. These come last so last-match-wins keeps them
+        // effective against every allow above. The base-branch row names
+        // no flag position on purpose: a literal `git push origin
+        // --delete refs/heads/main` proved bypassable by interposing a
+        // flag, so any push command naming the base is denied instead.
+        // Cooperative instruction plus pattern matching, not isolation:
+        // a wrapper, alias, encoded URL or nested subprocess is not
+        // covered, and no shell pattern can be exhaustive.
+        { "action": "shell", "resource": "gh api *merge*", "effect": "deny" },
+        { "action": "shell", "resource": "git push * main", "effect": "deny" },
+        { "action": "shell", "resource": "git push *main*", "effect": "deny" }
+      ]
+    },
+    // Warden audit envelope: deny-all first, then the explicit audit
+    // commands. Agent rules load last, so this closes the global shell
+    // allow. An out-of-envelope need returns BLOCKED to Cipher instead of
+    // expanding the audit.
+    "warden": {
+      "permissions": [
+        { "action": "shell", "resource": "*", "effect": "deny" },
+        { "action": "shell", "resource": "pnpm audit --json", "effect": "allow" },
+        { "action": "shell", "resource": "pnpm outdated --json", "effect": "allow" },
+        // The effective registry, read offline. The lockfile records
+        // each artifact's integrity digest but not the registry that
+        // resolved it, so this is the only way to discharge the
+        // approved-source control for a candidate.
+        { "action": "shell", "resource": "pnpm config get registry", "effect": "allow" },
+        { "action": "shell", "resource": "uv audit*", "effect": "allow" },
+        { "action": "shell", "resource": "uv lock --check*", "effect": "allow" },
+        { "action": "shell", "resource": "uv tree --frozen*", "effect": "allow" },
+        { "action": "shell", "resource": "uv pip check*", "effect": "allow" }
+      ]
     }
+  },
+  "instructions": [
+    ".aicore/core/knowledge/agent-workflow.md",
+    ".aicore/core/knowledge/agents.md",
+    ".aicore/core/knowledge/release.md",
+    ".aicore/core/knowledge/architecture-decision-workflow.md"
+  ],
+  "permissions": [
+    { "action": "read", "resource": "*", "effect": "allow" },
+    { "action": "read", "resource": "*.env", "effect": "deny" },
+    { "action": "read", "resource": "*.env.*", "effect": "deny" },
+    { "action": "glob", "resource": "*", "effect": "allow" },
+    { "action": "grep", "resource": "*", "effect": "allow" },
+    { "action": "webfetch", "resource": "*", "effect": "allow" },
+    { "action": "websearch", "resource": "*", "effect": "allow" },
+    { "action": "subagent", "resource": "*", "effect": "allow" },
+    { "action": "skill", "resource": "*", "effect": "allow" },
+    { "action": "question", "resource": "*", "effect": "deny" },
+    // memories and qmd MCP tools are not restricted here: the project's
+    // broad `*` allow already applies, and QMD's surface is read-only.
+    // Semgrep custom local rules are allowed; platform/supply-chain
+    // findings are outside this project's binding.
+    { "action": "semgrep_semgrep_scan_with_custom_rule", "resource": "*", "effect": "allow" },
+    { "action": "semgrep_semgrep_scan_supply_chain", "resource": "*", "effect": "deny" },
+    { "action": "semgrep_semgrep_findings", "resource": "*", "effect": "deny" },
+    // Chrome DevTools MCP remains available to every agent; these six
+    // highest-risk capabilities are denied globally.
+    { "action": "chrome-devtools_evaluate_script", "resource": "*", "effect": "deny" },
+    { "action": "chrome-devtools_upload_file", "resource": "*", "effect": "deny" },
+    { "action": "chrome-devtools_handle_dialog", "resource": "*", "effect": "deny" },
+    { "action": "chrome-devtools_take_heapsnapshot", "resource": "*", "effect": "deny" },
+    { "action": "chrome-devtools_screencast_start", "resource": "*", "effect": "deny" },
+    { "action": "chrome-devtools_screencast_stop", "resource": "*", "effect": "deny" },
+    // Session mutation is Cipher-only. Worktree creation belongs to Herald;
+    // no agent uses worktree_remove, which bypasses this build's checks.
+    { "action": "opencode_worktree_create", "resource": "*", "effect": "deny" },
+    { "action": "opencode_session_move", "resource": "*", "effect": "deny" },
+    { "action": "opencode_session_rename", "resource": "*", "effect": "deny" },
+    { "action": "edit", "resource": "*", "effect": "allow" },
+    { "action": "external_directory", "resource": "*", "effect": "allow" },
+    { "action": "shell", "resource": "*", "effect": "allow" },
+    { "action": "shell", "resource": "rm *", "effect": "ask" },
+    { "action": "shell", "resource": "rm -rf *", "effect": "ask" },
+    { "action": "shell", "resource": "rm -rf /*", "effect": "deny" },
+    { "action": "shell", "resource": "rm -rf ~*", "effect": "deny" },
+    { "action": "shell", "resource": "rm -r /*", "effect": "deny" },
+    { "action": "shell", "resource": "rm -fr /*", "effect": "deny" },
+    { "action": "shell", "resource": "rm -f -r /*", "effect": "deny" },
+    { "action": "shell", "resource": "rm -r -f /*", "effect": "deny" },
+    { "action": "shell", "resource": "rm -r ~*", "effect": "deny" },
+    { "action": "shell", "resource": "rm -fr ~*", "effect": "deny" },
+    { "action": "shell", "resource": "rm -f -r ~*", "effect": "deny" },
+    { "action": "shell", "resource": "rm -r -f ~*", "effect": "deny" },
+    { "action": "shell", "resource": "mv *", "effect": "ask" },
+    { "action": "shell", "resource": "cp *", "effect": "ask" },
+    { "action": "shell", "resource": "chmod *", "effect": "ask" },
+    { "action": "shell", "resource": "chown *", "effect": "ask" },
+    { "action": "shell", "resource": "sudo *", "effect": "deny" },
+    // Git and GitHub are executed by Herald alone. These two denies close the
+    // global shell allow for both command families; Herald's agent-scoped
+    // rows reopen them for that agent only.
+    { "action": "shell", "resource": "git *", "effect": "deny" },
+    { "action": "shell", "resource": "gh *", "effect": "deny" },
+    { "action": "shell", "resource": "dd *of=/dev/*", "effect": "deny" },
+    { "action": "shell", "resource": "mkfs*", "effect": "deny" },
+    { "action": "shell", "resource": "chmod -R * /*", "effect": "deny" },
+    { "action": "shell", "resource": "chown -R * /*", "effect": "deny" },
+    { "action": "shell", "resource": "shutdown*", "effect": "deny" },
+    { "action": "shell", "resource": "reboot*", "effect": "deny" },
+    // Read-only tools. Broad allow first, then the narrow deny that
+    // disables its mutating mode under last-match-wins.
+    { "action": "shell", "resource": "jq *", "effect": "allow" },
+    { "action": "shell", "resource": "rg *", "effect": "allow" },
+    { "action": "shell", "resource": "rg *--pre*", "effect": "deny" },
+    { "action": "shell", "resource": "ast-grep *", "effect": "allow" },
+    { "action": "shell", "resource": "ast-grep *--rewrite*", "effect": "deny" },
+    { "action": "shell", "resource": "ast-grep *--update-all*", "effect": "deny" },
+    { "action": "shell", "resource": "ast-grep *-U*", "effect": "deny" },
+    // `sg` is ast-grep's deprecated alias and collides with util-linux
+    // `sg` (switch-group); deny the name and use `ast-grep` only.
+    { "action": "shell", "resource": "sg *", "effect": "deny" },
+    // Project virtual environment only: uv run is allowed, uvx is not.
+    { "action": "shell", "resource": "uv run *", "effect": "allow" },
+    { "action": "shell", "resource": "uv run *ruff*--fix*", "effect": "deny" },
+    { "action": "shell", "resource": "ruff *--fix*", "effect": "deny" },
+    // Mutating package/format operations are denied regardless of wrapper.
+    { "action": "shell", "resource": "*pip install*", "effect": "deny" },
+    { "action": "shell", "resource": "*pip3 install*", "effect": "deny" },
+    { "action": "shell", "resource": "*python -m pip *", "effect": "deny" },
+    { "action": "shell", "resource": "*ruff format*", "effect": "deny" },
+    { "action": "shell", "resource": "*ruff format --check*", "effect": "allow" },
+    { "action": "shell", "resource": "uvx *", "effect": "deny" },
+    { "action": "shell", "resource": "uv tool run *", "effect": "deny" },
+    // Redirect denies LAST so no later allow can shadow them; narrowed to
+    // catastrophic absolute targets so /tmp and /dev/null stay usable.
+    // (A fork bomb is not expressible as a glob because the shell tool
+    // emits only the inner command nodes; accepted as a documented gap.)
+    { "action": "shell", "resource": "* > /etc/*", "effect": "deny" },
+    { "action": "shell", "resource": "* >> /etc/*", "effect": "deny" },
+    { "action": "shell", "resource": "* 2> /etc/*", "effect": "deny" },
+    { "action": "shell", "resource": "* 2>> /etc/*", "effect": "deny" },
+    { "action": "shell", "resource": "* &> /etc/*", "effect": "deny" },
+    { "action": "shell", "resource": "* > /boot/*", "effect": "deny" },
+    { "action": "shell", "resource": "* > /usr/*", "effect": "deny" },
+    { "action": "shell", "resource": "* > /root/*", "effect": "deny" },
+    { "action": "shell", "resource": "* > /home/*", "effect": "deny" },
+    { "action": "shell", "resource": "* > /var/*", "effect": "deny" },
+    { "action": "shell", "resource": "* > /opt/*", "effect": "deny" },
+    { "action": "shell", "resource": "* > /dev/sd*", "effect": "deny" }
+    // NOTE: the OpenCode TUI must be RESTARTED for these changes to take effect.
+  ],
+  "compaction": {
+    "auto": true
+  },
+  "mcp": {
+    "servers": {
+      "system-one": {
+        "type": "local",
+        "command": ["node", "mcp-servers/system-one/src/mcp/stdio.ts"],
+        "environment": {
+          "SYSTEM_ONE_ENDPOINT": "http://127.0.0.1:1234",
+          "SYSTEM_ONE_MODEL": "d1-2b@q8_0",
+          "SYSTEM_ONE_TIMEOUT_MS": "15000"
+        }
+      },
+      "chrome-devtools": {
+        "type": "local",
+        "command": [
+          "cmd",
+          "/c",
+          "npx",
+          "-y",
+          "chrome-devtools-mcp@1.12.0",
+          "--no-usage-statistics",
+          "--no-performance-crux"
+        ],
+        "environment": {
+          "CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS": "1"
+        }
+      },
+      "memories": {
+        "type": "local",
+        "command": ["npx", "-y", "@memories.sh/cli@0.7.9", "serve"],
+        "codemode": false,
+        "environment": {
+          "npm_config_ignore_scripts": "true",
+          "MEMORIES_SKIP_POSTINSTALL": "1"
+        }
+      },
+      "qmd": {
+        "type": "local",
+        "command": ["npx", "-y", "@tobilu/qmd@2.8.3", "--index", "ai-core", "mcp"],
+        "codemode": false,
+        "environment": {
+          "npm_config_ignore_scripts": "true"
+        }
+      },
+      "context7": {
+        "type": "remote",
+        "url": "https://mcp.context7.com/mcp",
+        "headers": {
+          "CONTEXT7_API_KEY": "{file:../.secrets/context7-api-key}"
+        }
+      },
+      // Portable analysis MCP: official engines, no AICore-local paths.
+      // ast-grep still requires the Rust `ast-grep` CLI on PATH (sg-mcp
+      // shells out). Semgrep's analysis engine remains Python; uvx
+      // launches the pinned CLI's `mcp` subcommand. Neither is a
+      // TypeScript rewrite of the engine.
+      "astgrep": {
+        "type": "local",
+        "command": [
+          "uvx",
+          "--from",
+          "git+https://github.com/ast-grep/ast-grep-mcp@149e20d47bb7125fb0c1451feea2f48a98742034",
+          "ast-grep-server"
+        ]
+      },
+      "semgrep": {
+        "type": "local",
+        "command": ["uvx", "--from", "semgrep==1.182.1", "semgrep", "mcp"],
+        "environment": {
+          "SEMGREP_SEND_METRICS": "off",
+          "OTEL_SDK_DISABLED": "true"
+        }
+      }
+    }
+  }
 }

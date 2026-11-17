@@ -19,14 +19,14 @@ export const SECRETS_IGNORE_RULE = ".secrets/\n";
  * gains the rule on a new line.
  */
 export function withSecretsIgnore(existingText: string | null): string {
-  if (existingText === null) {
-    return SECRETS_IGNORE_RULE;
-  }
-  if (ignoresSecretsPath(existingText)) {
-    return existingText;
-  }
-  const prefix = existingText.endsWith("\n") ? existingText : `${existingText}\n`;
-  return `${prefix}${SECRETS_IGNORE_RULE}`;
+	if (existingText === null) {
+		return SECRETS_IGNORE_RULE;
+	}
+	if (ignoresSecretsPath(existingText)) {
+		return existingText;
+	}
+	const prefix = existingText.endsWith("\n") ? existingText : `${existingText}\n`;
+	return `${prefix}${SECRETS_IGNORE_RULE}`;
 }
 
 /**
@@ -35,15 +35,15 @@ export function withSecretsIgnore(existingText: string | null): string {
  * line is not.
  */
 function ignoresSecretsPath(text: string): boolean {
-  for (const line of text.split(/\r?\n/u)) {
-    const trimmed = line.trim();
-    if (trimmed === "" || trimmed.startsWith("#")) {
-      continue;
-    }
-    const withoutComment = trimmed.split("#", 1)[0]?.trim() ?? "";
-    if (withoutComment === ".secrets" || withoutComment === ".secrets/") {
-      return true;
-    }
-  }
-  return false;
+	for (const line of text.split(/\r?\n/u)) {
+		const trimmed = line.trim();
+		if (trimmed === "" || trimmed.startsWith("#")) {
+			continue;
+		}
+		const withoutComment = trimmed.split("#", 1)[0]?.trim() ?? "";
+		if (withoutComment === ".secrets" || withoutComment === ".secrets/") {
+			return true;
+		}
+	}
+	return false;
 }

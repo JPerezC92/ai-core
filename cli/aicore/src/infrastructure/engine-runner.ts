@@ -28,38 +28,38 @@ const EXIT_MALFORMED = 2;
 
 /** Raised when the engine could not produce a result. */
 export class EngineUnavailableError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "EngineUnavailableError";
-  }
+	constructor(message: string) {
+		super(message);
+		this.name = "EngineUnavailableError";
+	}
 }
 
 export class CoreSyncEngineRunner implements EngineRunner {
-  readonly #engine: CoreSyncEngine;
+	readonly #engine: CoreSyncEngine;
 
-  constructor(engine: CoreSyncEngine) {
-    this.#engine = engine;
-  }
+	constructor(engine: CoreSyncEngine) {
+		this.#engine = engine;
+	}
 
-  async run(command: string, arguments_: readonly string[]): Promise<EngineRun> {
-    const mapping = toEngineRequest(command, arguments_);
-    if (!mapping.ok) {
-      return { status: EXIT_MALFORMED, stdout: "", stderr: `${mapping.message}\n` };
-    }
+	async run(command: string, arguments_: readonly string[]): Promise<EngineRun> {
+		const mapping = toEngineRequest(command, arguments_);
+		if (!mapping.ok) {
+			return { status: EXIT_MALFORMED, stdout: "", stderr: `${mapping.message}\n` };
+		}
 
-    try {
-      const outcome = await this.#engine.run(mapping.request);
-      return {
-        status: outcome.exitCode,
-        stdout: outcome.stdout,
-        stderr: outcome.stderr,
-      };
-    } catch (error) {
-      throw new EngineUnavailableError(
-        `the synchronization engine produced no result (${
-          error instanceof Error ? error.message : String(error)
-        }). This is not a synchronization result; nothing is claimed current.`,
-      );
-    }
-  }
+		try {
+			const outcome = await this.#engine.run(mapping.request);
+			return {
+				status: outcome.exitCode,
+				stdout: outcome.stdout,
+				stderr: outcome.stderr,
+			};
+		} catch (error) {
+			throw new EngineUnavailableError(
+				`the synchronization engine produced no result (${
+					error instanceof Error ? error.message : String(error)
+				}). This is not a synchronization result; nothing is claimed current.`,
+			);
+		}
+	}
 }

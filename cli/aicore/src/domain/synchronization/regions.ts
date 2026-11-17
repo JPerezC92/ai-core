@@ -10,30 +10,28 @@
 import { CORE_BEGIN, CORE_END, PROJECT_BEGIN, PROJECT_END } from "./constants.ts";
 import { refreshFrontmatter, splitFrontmatter } from "./frontmatter.ts";
 import {
-  findCoreMarkers,
-  hasExactCoreMarkerLines,
-  hasExactProjectMarkerLines,
-  splitLinesWithTerminators,
+	findCoreMarkers,
+	hasExactCoreMarkerLines,
+	hasExactProjectMarkerLines,
+	splitLinesWithTerminators,
 } from "./markers.ts";
 
 /** A marked file split into the bytes before, inside and after its region. */
 export type RegionSplit = {
-  readonly before: string;
-  readonly beginLine: string;
-  readonly region: string;
-  readonly endLine: string;
-  readonly after: string;
+	readonly before: string;
+	readonly beginLine: string;
+	readonly region: string;
+	readonly endLine: string;
+	readonly after: string;
 };
 
 /** The result of reading a source document's core. */
-export type SourceCoreRead =
-  | { readonly kind: "core"; readonly core: string }
-  | { readonly kind: "malformed" };
+export type SourceCoreRead = { readonly kind: "core"; readonly core: string } | { readonly kind: "malformed" };
 
 /** Rebuilt region text, and why its frontmatter could not be refreshed. */
 export type RenderedRegion = {
-  readonly text: string;
-  readonly skipped: string;
+	readonly text: string;
+	readonly skipped: string;
 };
 
 /**
@@ -43,18 +41,18 @@ export type RenderedRegion = {
  * destination must carry exactly one ordered core pair.
  */
 export function splitRegions(content: string): RegionSplit | null {
-  const markers = findCoreMarkers(content);
-  if (markers === null) {
-    return null;
-  }
-  const lines = splitLinesWithTerminators(content);
-  return {
-    before: lines.slice(0, markers.begin).join(""),
-    beginLine: lines[markers.begin] ?? "",
-    region: lines.slice(markers.begin + 1, markers.end).join(""),
-    endLine: lines[markers.end] ?? "",
-    after: lines.slice(markers.end + 1).join(""),
-  };
+	const markers = findCoreMarkers(content);
+	if (markers === null) {
+		return null;
+	}
+	const lines = splitLinesWithTerminators(content);
+	return {
+		before: lines.slice(0, markers.begin).join(""),
+		beginLine: lines[markers.begin] ?? "",
+		region: lines.slice(markers.begin + 1, markers.end).join(""),
+		endLine: lines[markers.end] ?? "",
+		after: lines.slice(markers.end + 1).join(""),
+	};
 }
 
 /**
@@ -65,8 +63,8 @@ export function splitRegions(content: string): RegionSplit | null {
  * and the frontmatter is excluded because a refresh rewrites its keys.
  */
 export function protectedBytes(split: RegionSplit): string {
-  const { body } = splitFrontmatter(split.before);
-  return body + split.beginLine + split.endLine + split.after;
+	const { body } = splitFrontmatter(split.before);
+	return body + split.beginLine + split.endLine + split.after;
 }
 
 /**
@@ -78,22 +76,22 @@ export function protectedBytes(split: RegionSplit): string {
  * never read as core.
  */
 export function extractSourceCore(content: string): SourceCoreRead {
-  const split = splitRegions(content);
-  if (split !== null) {
-    return { kind: "core", core: split.region };
-  }
-  if (hasExactCoreMarkerLines(content) || hasExactProjectMarkerLines(content)) {
-    return { kind: "malformed" };
-  }
-  return { kind: "core", core: splitFrontmatter(content).body };
+	const split = splitRegions(content);
+	if (split !== null) {
+		return { kind: "core", core: split.region };
+	}
+	if (hasExactCoreMarkerLines(content) || hasExactProjectMarkerLines(content)) {
+		return { kind: "malformed" };
+	}
+	return { kind: "core", core: splitFrontmatter(content).body };
 }
 
 /** Return `text` with a trailing newline, adding one only when missing. */
 export function ensureTrailingNewline(text: string): string {
-  if (text === "" || text.endsWith("\n")) {
-    return text;
-  }
-  return `${text}\n`;
+	if (text === "" || text.endsWith("\n")) {
+		return text;
+	}
+	return `${text}\n`;
 }
 
 /**
@@ -104,22 +102,16 @@ export function ensureTrailingNewline(text: string): string {
  * marker keep their bytes.
  */
 export function renderWithRegion(
-  destination: RegionSplit,
-  sourceRegion: string,
-  sourceFrontmatter: string,
+	destination: RegionSplit,
+	sourceRegion: string,
+	sourceFrontmatter: string,
 ): RenderedRegion {
-  const { frontmatter, body } = splitFrontmatter(destination.before);
-  const refresh = refreshFrontmatter(frontmatter, sourceFrontmatter);
-  return {
-    text:
-      refresh.text +
-      body +
-      destination.beginLine +
-      sourceRegion +
-      destination.endLine +
-      destination.after,
-    skipped: refresh.skipped,
-  };
+	const { frontmatter, body } = splitFrontmatter(destination.before);
+	const refresh = refreshFrontmatter(frontmatter, sourceFrontmatter);
+	return {
+		text: refresh.text + body + destination.beginLine + sourceRegion + destination.endLine + destination.after,
+		skipped: refresh.skipped,
+	};
 }
 
 /**
@@ -133,24 +125,24 @@ export function renderWithRegion(
  * frontmatter moves verbatim into the new project region.
  */
 export function renderInitFile(
-  destinationContent: string,
-  sourceCore: string,
-  sourceFrontmatter: string,
+	destinationContent: string,
+	sourceCore: string,
+	sourceFrontmatter: string,
 ): RenderedRegion {
-  const { frontmatter, body } = splitFrontmatter(destinationContent);
-  const refresh =
-    frontmatter === ""
-      ? { text: sourceFrontmatter, skipped: "" }
-      : refreshFrontmatter(frontmatter, sourceFrontmatter);
-  return {
-    text:
-      ensureTrailingNewline(refresh.text) +
-      `${CORE_BEGIN}\n` +
-      ensureTrailingNewline(sourceCore) +
-      `${CORE_END}\n\n` +
-      `${PROJECT_BEGIN}\n` +
-      ensureTrailingNewline(body) +
-      `${PROJECT_END}\n`,
-    skipped: refresh.skipped,
-  };
+	const { frontmatter, body } = splitFrontmatter(destinationContent);
+	const refresh =
+		frontmatter === ""
+			? { text: sourceFrontmatter, skipped: "" }
+			: refreshFrontmatter(frontmatter, sourceFrontmatter);
+	return {
+		text:
+			ensureTrailingNewline(refresh.text) +
+			`${CORE_BEGIN}\n` +
+			ensureTrailingNewline(sourceCore) +
+			`${CORE_END}\n\n` +
+			`${PROJECT_BEGIN}\n` +
+			ensureTrailingNewline(body) +
+			`${PROJECT_END}\n`,
+		skipped: refresh.skipped,
+	};
 }

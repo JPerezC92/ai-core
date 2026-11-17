@@ -6,19 +6,12 @@
  * reconciliation block's markers, and the frontmatter delimiter.
  */
 
-import {
-  CORE_BEGIN,
-  CORE_END,
-  PROJECT_BEGIN,
-  PROJECT_END,
-  RECONCILE_BEGIN,
-  RECONCILE_END,
-} from "./constants.ts";
+import { CORE_BEGIN, CORE_END, PROJECT_BEGIN, PROJECT_END, RECONCILE_BEGIN, RECONCILE_END } from "./constants.ts";
 
 /** One exact marker pair, as line indices. */
 export type MarkerPair = {
-  readonly begin: number;
-  readonly end: number;
+	readonly begin: number;
+	readonly end: number;
 };
 
 const FENCE_OPEN = /^ {0,3}(`{3,}|~{3,})[^\n]*$/u;
@@ -30,7 +23,7 @@ const FENCE_OPEN = /^ {0,3}(`{3,}|~{3,})[^\n]*$/u;
  * unpadded counterpart.
  */
 export function lineWithoutTerminator(line: string): string {
-  return line.replace(/[\r\n]+$/u, "");
+	return line.replace(/[\r\n]+$/u, "");
 }
 
 /**
@@ -40,30 +33,30 @@ export function lineWithoutTerminator(line: string): string {
  * pair can never be split between its two characters.
  */
 export function splitLinesWithTerminators(text: string): string[] {
-  const lines: string[] = [];
-  let start = 0;
-  let index = 0;
-  while (index < text.length) {
-    const character = text.charAt(index);
-    if (character === "\n") {
-      lines.push(text.slice(start, index + 1));
-      index += 1;
-      start = index;
-      continue;
-    }
-    if (character === "\r") {
-      const width = text.charAt(index + 1) === "\n" ? 2 : 1;
-      lines.push(text.slice(start, index + width));
-      index += width;
-      start = index;
-      continue;
-    }
-    index += 1;
-  }
-  if (start < text.length) {
-    lines.push(text.slice(start));
-  }
-  return lines;
+	const lines: string[] = [];
+	let start = 0;
+	let index = 0;
+	while (index < text.length) {
+		const character = text.charAt(index);
+		if (character === "\n") {
+			lines.push(text.slice(start, index + 1));
+			index += 1;
+			start = index;
+			continue;
+		}
+		if (character === "\r") {
+			const width = text.charAt(index + 1) === "\n" ? 2 : 1;
+			lines.push(text.slice(start, index + width));
+			index += width;
+			start = index;
+			continue;
+		}
+		index += 1;
+	}
+	if (start < text.length) {
+		lines.push(text.slice(start));
+	}
+	return lines;
 }
 
 /**
@@ -76,35 +69,35 @@ export function splitLinesWithTerminators(text: string): string[] {
  * delimiter lines themselves are not returned.
  */
 export function unfencedLineIndices(lines: readonly string[]): readonly number[] {
-  let fenceCharacter: string | null = null;
-  let fenceLength = 0;
-  const indices: number[] = [];
-  for (const [index, line] of lines.entries()) {
-    const text = lineWithoutTerminator(line);
-    if (fenceCharacter !== null) {
-      const closing = new RegExp(
-        `^ {0,3}${escapeForRegExp(fenceCharacter)}{${String(fenceLength)},}[ \t]*$`,
-        "u",
-      );
-      if (closing.test(text)) {
-        fenceCharacter = null;
-      }
-      continue;
-    }
-    const opening = FENCE_OPEN.exec(text);
-    if (opening !== null) {
-      const fence = opening[1] ?? "";
-      const info = opening[2] ?? "";
-      const character = fence.slice(0, 1);
-      if (character !== "`" || !info.includes("`")) {
-        fenceCharacter = character;
-        fenceLength = fence.length;
-        continue;
-      }
-    }
-    indices.push(index);
-  }
-  return indices;
+	let fenceCharacter: string | null = null;
+	let fenceLength = 0;
+	const indices: number[] = [];
+	for (const [index, line] of lines.entries()) {
+		const text = lineWithoutTerminator(line);
+		if (fenceCharacter !== null) {
+			const closing = new RegExp(
+				`^ {0,3}${escapeForRegExp(fenceCharacter)}{${String(fenceLength)},}[ \t]*$`,
+				"u",
+			);
+			if (closing.test(text)) {
+				fenceCharacter = null;
+			}
+			continue;
+		}
+		const opening = FENCE_OPEN.exec(text);
+		if (opening !== null) {
+			const fence = opening[1] ?? "";
+			const info = opening[2] ?? "";
+			const character = fence.slice(0, 1);
+			if (character !== "`" || !info.includes("`")) {
+				fenceCharacter = character;
+				fenceLength = fence.length;
+				continue;
+			}
+		}
+		indices.push(index);
+	}
+	return indices;
 }
 
 /**
@@ -112,13 +105,8 @@ export function unfencedLineIndices(lines: readonly string[]): readonly number[]
  *
  * Marker-looking lines inside a fence are ordinary text and are skipped.
  */
-export function exactMarkerLineIndices(
-  lines: readonly string[],
-  marker: string,
-): readonly number[] {
-  return unfencedLineIndices(lines).filter(
-    (index) => lineWithoutTerminator(lines[index] ?? "").trim() === marker,
-  );
+export function exactMarkerLineIndices(lines: readonly string[], marker: string): readonly number[] {
+	return unfencedLineIndices(lines).filter((index) => lineWithoutTerminator(lines[index] ?? "").trim() === marker);
 }
 
 /**
@@ -127,27 +115,23 @@ export function exactMarkerLineIndices(
  * Missing, duplicated, and reversed pairs all answer `null`; the callers turn
  * that into the malformed-marker refusal.
  */
-export function findMarkerPair(
-  lines: readonly string[],
-  beginMarker: string,
-  endMarker: string,
-): MarkerPair | null {
-  const begins = exactMarkerLineIndices(lines, beginMarker);
-  const ends = exactMarkerLineIndices(lines, endMarker);
-  const begin = begins[0];
-  const end = ends[0];
-  if (begins.length !== 1 || ends.length !== 1 || begin === undefined || end === undefined) {
-    return null;
-  }
-  if (begin > end) {
-    return null;
-  }
-  return { begin, end };
+export function findMarkerPair(lines: readonly string[], beginMarker: string, endMarker: string): MarkerPair | null {
+	const begins = exactMarkerLineIndices(lines, beginMarker);
+	const ends = exactMarkerLineIndices(lines, endMarker);
+	const begin = begins[0];
+	const end = ends[0];
+	if (begins.length !== 1 || ends.length !== 1 || begin === undefined || end === undefined) {
+		return null;
+	}
+	if (begin > end) {
+		return null;
+	}
+	return { begin, end };
 }
 
 /** Return the single ordered core marker pair of `content`, if it has one. */
 export function findCoreMarkers(content: string): MarkerPair | null {
-  return findMarkerPair(splitLinesWithTerminators(content), CORE_BEGIN, CORE_END);
+	return findMarkerPair(splitLinesWithTerminators(content), CORE_BEGIN, CORE_END);
 }
 
 /**
@@ -157,27 +141,23 @@ export function findCoreMarkers(content: string): MarkerPair | null {
  * never silently re-read as a markerless document.
  */
 export function hasExactCoreMarkerLines(content: string): boolean {
-  const lines = splitLinesWithTerminators(content);
-  return (
-    exactMarkerLineIndices(lines, CORE_BEGIN).length > 0 ||
-    exactMarkerLineIndices(lines, CORE_END).length > 0
-  );
+	const lines = splitLinesWithTerminators(content);
+	return exactMarkerLineIndices(lines, CORE_BEGIN).length > 0 || exactMarkerLineIndices(lines, CORE_END).length > 0;
 }
 
 /** Return whether either exact project marker occurs outside a code fence. */
 export function hasExactProjectMarkerLines(content: string): boolean {
-  const lines = splitLinesWithTerminators(content);
-  return (
-    exactMarkerLineIndices(lines, PROJECT_BEGIN).length > 0 ||
-    exactMarkerLineIndices(lines, PROJECT_END).length > 0
-  );
+	const lines = splitLinesWithTerminators(content);
+	return (
+		exactMarkerLineIndices(lines, PROJECT_BEGIN).length > 0 || exactMarkerLineIndices(lines, PROJECT_END).length > 0
+	);
 }
 
 /** Return the single ordered reconciliation-block marker pair, if present. */
 export function findReconcileBlock(lines: readonly string[]): MarkerPair | null {
-  return findMarkerPair(lines, RECONCILE_BEGIN, RECONCILE_END);
+	return findMarkerPair(lines, RECONCILE_BEGIN, RECONCILE_END);
 }
 
 function escapeForRegExp(text: string): string {
-  return text.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+	return text.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 }

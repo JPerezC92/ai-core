@@ -14,11 +14,11 @@
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  test: {
-    include: ["tests/unit/**", "tests/integration/**"],
-    fileParallelism: false,
-    sequence: {
-      concurrent: false,
-    },
-  },
+	test: {
+		include: ["tests/unit/**", "tests/integration/**"],
+		fileParallelism: false,
+		sequence: {
+			concurrent: false,
+		},
+	},
 });

@@ -7,6 +7,7 @@ metadata:
   author: Philip Perez Castro
   version: 2.7.0
 ---
+
 <!-- core:begin -->
 
 ## Mandatory core

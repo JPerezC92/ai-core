@@ -46,7 +46,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   The goal is to separate **AICore-managed resources** from **project-owned development records, incident artifacts, and accumulated diagnostic knowledge**, while preserving existing workflows, validation, synchronization behavior, and historical records.
 
   **Important clarification about the current repository:**
-
   - AICore already contains real ODD development tasks and feature records. These must be migrated.
   - AICore currently has no application projects requiring relocation into a new `apps/` or `development/` directory.
   - AICore currently has no actual incident investigation records requiring migration.
@@ -95,7 +94,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   Preserve all other legitimate existing repository files and directories.
 
   ### Ownership rules
-
   - `.aicore/core/`: AICore-managed templates, methodology, shared definitions, and architecture contracts.
   - `odd/`: actual project-owned ODD tasks and features.
   - `incidents/`: actual project-owned incident investigations and evidence.
@@ -110,14 +108,12 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   This is mandatory.
 
   Move actual non-template records from:
-
   - `.aicore/core/odd/tasks/` → `odd/tasks/`
   - `.aicore/core/odd/features/` → `odd/features/`
 
   Keep the distributed `_template.md` files in their existing managed locations.
 
   ### Requirements
-
   1. Complete a file-by-file inventory before moving anything.
   2. Preserve all existing task and feature records.
   3. Preserve statuses, requirement checkboxes, evidence, references, and lifecycle semantics.
@@ -155,7 +151,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   ### AICore-managed definitions
 
   Keep these files under the existing managed path:
-
   - `.aicore/core/knowledge/diagnostics/symptoms.md`
   - `.aicore/core/knowledge/diagnostics/problems.md`
   - `.aicore/core/knowledge/diagnostics/diagnostic-guidance.md`
@@ -165,14 +160,12 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   ### Project-owned learning
 
   The new destination-owned registers must use:
-
   - `incidents/diagnostics/symptoms.md`
   - `incidents/diagnostics/problems.md`
 
   They must be accessible to both Development and Incident workflows.
 
   Preserve the existing diagnostic relationships and semantics:
-
   - Symptom classification.
   - Known problem identification.
   - Team: `incident | dev`.
@@ -191,14 +184,12 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   Destination projects must be able to create new symptoms and problems without modifying AICore-managed content.
 
   Implement collision-safe symptom identifiers using the revised plan's namespaced approach:
-
   - Shared baseline: `S-01`, `S-02`, etc.
   - Destination-owned: `LOCAL:S-01`, `LOCAL:S-02`, etc.
 
   Finalize a consistent, maintainable numeric grammar without imposing an arbitrary small capacity.
 
   ### Required behavior
-
   1. Preserve existing baseline identifiers.
   2. Parse complete identifier tokens rather than substring matches.
   3. Validate local and baseline symptom references.
@@ -221,7 +212,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   Provide managed empty-register templates that allow authorized workflows to create valid destination-owned diagnostic files.
 
   ### Initialization rules
-
   - Create local registers only during an explicitly authorized initialization workflow.
   - Never overwrite existing project-owned files.
   - Validate existing files before using them.
@@ -239,7 +229,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   AICore must support both single-application and multi-application destination repositories.
 
   Do not mandate:
-
   - `apps/`
   - `development/`
   - A particular framework layout
@@ -256,7 +245,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   Preserve the current distribution-clearance architecture and its ownership guarantees.
 
   Verify that:
-
   1. Managed templates and shared definitions continue to synchronize correctly.
   2. Root-level `odd/` records are not distributed as managed framework content.
   3. Root-level `incidents/` records are not bound as managed framework content.
@@ -273,7 +261,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   Use AICore's existing ODD workflow and applicable architecture, testing, and review contracts.
 
   Organize the work into bounded stages:
-
   1. Baseline inventory and safety checks.
   2. Existing ODD record migration.
   3. ODD contracts, references, and validation updates.
@@ -286,7 +273,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   Stage boundaries may be adjusted when real dependencies require it, but do not expand scope unnecessarily.
 
   ### Required acceptance criteria
-
   - Every existing AICore ODD record is accounted for and preserved.
   - Existing ODD features retain their valid derived statuses.
   - New ODD records use the root-level `odd/`.
@@ -323,7 +309,6 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   ## 11. Final deliverable
 
   When implementation and validation are complete, provide:
-
   1. Summary of the implemented architecture.
   2. Final actual AICore directory structure.
   3. Inventory of migrated ODD records and preservation results.
@@ -352,4 +337,3 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
 - L10 — 2026-11-15 — Review findings B2 and A3 closed with executable evidence. **B2:** `cli/aicore/tests/e2e/sync-project-owned-artifacts.test.ts` enrolls a disposable destination with the real `init --bind-cleared`, plants destination-owned ODD records, two diagnostic registers and an incident case, then runs the real `apply` twice and asserts byte-identical preservation after each run, that the destination's bindings record no `odd/` or `incidents/` source, and that managed payloads (the ODD skill and the managed `_template.md`) still arrive. Observed: `pnpm --dir cli/aicore test:e2e` → 10 files, 19 passed, including both new cases; no real destination repository was touched. **A3:** `InitializeLocalRegisters` is now the only creating operation, and `tests/integration/register-initialization.test.ts` records six observed results — creation of both missing registers from their templates, an existing register kept byte-for-byte, both existing registers untouched, a duplicated local id reported as `KNOWLEDGE-3` without repair, a baseline-form id reported as `KNOWLEDGE-7` without repair, and a read-only validation creating nothing. Observed: incident skill 114 passed; `typecheck` exit 0. Regression at this candidate: `pnpm --dir cli/aicore test` 150 passed, 4 skipped; `pnpm --dir cli/aicore typecheck` exit 0; ODD validators `ok`. T5 independent acceptance remains open pending review at the delivered head.
 - L11 — 2026-11-15 — Review findings A4, A5 and A6 closed. **A4:** the end-to-end test now invokes the real `check` command after the two `apply` runs and asserts an accepted status plus unchanged project records; its own comment records why enrollment leaves reconciliation pending. **A5:** the sixth initialization case now calls the read-only validation and asserts both reported violations and that no file or directory was created, instead of asserting a seed map. **A6:** `scripts/init_local_registers.ts` is the runnable entry point, composing `InitializeLocalRegisters` over the real filesystem with `usage: init_local_registers.ts <repo-root>`, exit 1 on a reported defect; `SKILL.md` step 0 names it. Observed at this candidate: incident skill 114 passed, `typecheck` exit 0, `init_local_registers.ts --help` printed its usage line, and the target e2e file passed both cases. L10's earlier "six observed results" wording is corrected by this entry: five were asserted and the sixth is now genuinely observed.
 - L12 — 2026-11-15 — Review finding A7 closed. `init_local_registers.ts` resolved its ports inconsistently: the repo-relative register paths were joined with the repo root while the shipped template paths were already absolute, so a joined absolute segment was not reset and the create path failed. The script now resolves a port path against the repo root only when it is relative, and the new `tests/e2e/init-registers-cli.test.ts` runs the real entry point over three disposable roots: creation of both registers, a second run keeping an authored register byte-identical, and a malformed register reported with exit 1 and left untouched. Observed at this candidate: incident skill 117 passed, `typecheck` exit 0.
-

@@ -54,10 +54,10 @@ If either is missing, collect it with the `question` tool.
 
 #### Argument collection form
 
-| name | type | validation | trigger |
-|---|---|---|---|
-| `agent` | text | non-empty, matches an existing or new agent name | not provided |
-| `model_query` | text | non-empty | not provided |
+| name          | type | validation                                       | trigger      |
+| ------------- | ---- | ------------------------------------------------ | ------------ |
+| `agent`       | text | non-empty, matches an existing or new agent name | not provided |
+| `model_query` | text | non-empty                                        | not provided |
 
 Use one `question` call when both are missing, or per-missing-field otherwise. The first option is the parsed value when one is available; do not add a manual "Other" option.
 
@@ -70,7 +70,7 @@ Use one `question` call when both are missing, or per-missing-field otherwise. T
 3. **Read the records.** The script returns one JSON line per match (or, with no query, the grouped listing of `provider/model` selectors — see Project extensions). Non-selector lines were already skipped with valid-neighbour recovery. Work from the surviving records:
    - **No usable models (the truthful no-models error, exit non-zero)** → nothing in the catalog parsed, with or without a query. Report that `opencode models` output yielded no usable models and do NOT proceed to any edit — never invent names to fill the gap (see Troubleshooting).
    - **No query and no agent target** → show the grouped listing and ask which model to set.
-    - **0 matches** → the script already reports "No match" and exits non-zero. Report "no match found in `opencode models`" and list the closest available config names as a suggestion. Do NOT proceed to any edit. If the user names a model that is not in the output, it is simply not present in the live usable output (absent or skipped as unusable) — do NOT write it to the config.
+   - **0 matches** → the script already reports "No match" and exits non-zero. Report "no match found in `opencode models`" and list the closest available config names as a suggestion. Do NOT proceed to any edit. If the user names a model that is not in the output, it is simply not present in the live usable output (absent or skipped as unusable) — do NOT write it to the config.
    - **1 match** → use its `config` value (`provider/model`) and proceed to step 4.
    - **≥2 matches** → MUST use the `question` tool before proceeding. One option per matching provider, each labeled with the full config name and human name (e.g. `<provider>/<model> — <Human Name>` for each provider). Proceed only with the provider the user picks. NEVER auto-pick a provider silently — that is a FAIL.
 

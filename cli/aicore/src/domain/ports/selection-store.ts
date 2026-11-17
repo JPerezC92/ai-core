@@ -7,14 +7,14 @@
 import type { SupportedEditor } from "#domain/constants.ts";
 
 export type SavedSelection = {
-  /** Absolute destination path the operator last selected explicitly. */
-  readonly target: string;
-  readonly editor: SupportedEditor;
+	/** Absolute destination path the operator last selected explicitly. */
+	readonly target: string;
+	readonly editor: SupportedEditor;
 };
 
 export interface SelectionStore {
-  /** Read the saved selection, or `undefined` when none is usable. */
-  read(): Promise<SavedSelection | undefined>;
-  /** Persist the selection an explicit run established. */
-  write(selection: SavedSelection): Promise<void>;
+	/** Read the saved selection, or `undefined` when none is usable. */
+	read(): Promise<SavedSelection | undefined>;
+	/** Persist the selection an explicit run established. */
+	write(selection: SavedSelection): Promise<void>;
 }

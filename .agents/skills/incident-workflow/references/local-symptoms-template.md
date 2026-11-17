@@ -8,5 +8,5 @@ An identifier is defined once. `S-xx` is never reused for a different signature,
 and `LOCAL:S-xx` is scoped to this project's register. This file is created once
 by the incident workflow's authorized initialization and is never overwritten.
 
-| ID | Symptom / error signature | Required signals | Exclusions | Canonical diagnostic | Canonical fix routing |
-|---|---|---|---|---|---|
+| ID  | Symptom / error signature | Required signals | Exclusions | Canonical diagnostic | Canonical fix routing |
+| --- | ------------------------- | ---------------- | ---------- | -------------------- | --------------------- |

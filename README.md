@@ -4,39 +4,39 @@ A reusable, agnostic **agentic orchestration core** for [OpenCode](https://openc
 
 ## Find the owner for your task
 
-| Task | Start here |
-|---|---|
-| Act on a request | [AGENTS.md](AGENTS.md) is the lead runtime; [.aicore/core/knowledge/agent-workflow.md](.aicore/core/knowledge/agent-workflow.md) is the single workflow router, including ODD classification and task-specific reads. |
-| Check evidence, coordination or safety obligations | [.aicore/core/knowledge/agents.md](.aicore/core/knowledge/agents.md); runtime authority and risk-triggered specialist review, plus edit, release and PR gates, remain in [AGENTS.md](AGENTS.md) and the assigned specialist runtime. |
-| Work on a feature | `odd/tasks/<YYYY-MM-DD>-<feature-name>.md`, created from [.aicore/core/odd/tasks/_template.md](.aicore/core/odd/tasks/_template.md) through `.agents/skills/odd-workflow/SKILL.md`; Specs, Tasks and Log are the single feature record. |
-| Select architecture or testing definitions | [.aicore/core/architecture/README.md](.aicore/core/architecture/README.md); [.aicore/core/architecture/testing/architecture.md](.aicore/core/architecture/testing/architecture.md) owns testing. Runtimes own procedures and gates; documentation acceptance is not implementation conformance. |
-| Reuse research or read explanatory documentation | [docs/README.md](docs/README.md) → [research catalog](docs/research/README.md). Research and history are evidence, not execution authority. |
-| Investigate an incident | `.aicore/core/knowledge/diagnostics/symptoms.md`, `.aicore/core/knowledge/diagnostics/problems.md`, and the register-first procedure in `.aicore/core/knowledge/agents.md`; the incident skill is `.agents/skills/incident-workflow/SKILL.md`. |
-| Author skills/agents or change models | `.agents/skills/op-skill-creator/SKILL.md`, `.agents/skills/op-agent-creator/SKILL.md`, `.agents/skills/op-model/SKILL.md`. |
-| Prepare Git/release artifacts | `.agents/skills/{git-branch-name,git-commit,git-pr,git-pr-workflow}/SKILL.md`; Git execution belongs to Herald 📯 (Release Manager), under the runtime gates. |
-| Adopt or update the core | [Adoption guide below](#using-it-in-another-project), [AGENTS.md → Reuse guide](AGENTS.md#reuse-guide-adopting-this-core), and `.opencode/skills/core-sync/SKILL.md`. |
+| Task                                               | Start here                                                                                                                                                                                                                                                                                      |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Act on a request                                   | [AGENTS.md](AGENTS.md) is the lead runtime; [.aicore/core/knowledge/agent-workflow.md](.aicore/core/knowledge/agent-workflow.md) is the single workflow router, including ODD classification and task-specific reads.                                                                           |
+| Check evidence, coordination or safety obligations | [.aicore/core/knowledge/agents.md](.aicore/core/knowledge/agents.md); runtime authority and risk-triggered specialist review, plus edit, release and PR gates, remain in [AGENTS.md](AGENTS.md) and the assigned specialist runtime.                                                            |
+| Work on a feature                                  | `odd/tasks/<YYYY-MM-DD>-<feature-name>.md`, created from [.aicore/core/odd/tasks/_template.md](.aicore/core/odd/tasks/_template.md) through `.agents/skills/odd-workflow/SKILL.md`; Specs, Tasks and Log are the single feature record.                                                         |
+| Select architecture or testing definitions         | [.aicore/core/architecture/README.md](.aicore/core/architecture/README.md); [.aicore/core/architecture/testing/architecture.md](.aicore/core/architecture/testing/architecture.md) owns testing. Runtimes own procedures and gates; documentation acceptance is not implementation conformance. |
+| Reuse research or read explanatory documentation   | [docs/README.md](docs/README.md) → [research catalog](docs/research/README.md). Research and history are evidence, not execution authority.                                                                                                                                                     |
+| Investigate an incident                            | `.aicore/core/knowledge/diagnostics/symptoms.md`, `.aicore/core/knowledge/diagnostics/problems.md`, and the register-first procedure in `.aicore/core/knowledge/agents.md`; the incident skill is `.agents/skills/incident-workflow/SKILL.md`.                                                  |
+| Author skills/agents or change models              | `.agents/skills/op-skill-creator/SKILL.md`, `.agents/skills/op-agent-creator/SKILL.md`, `.agents/skills/op-model/SKILL.md`.                                                                                                                                                                     |
+| Prepare Git/release artifacts                      | `.agents/skills/{git-branch-name,git-commit,git-pr,git-pr-workflow}/SKILL.md`; Git execution belongs to Herald 📯 (Release Manager), under the runtime gates.                                                                                                                                   |
+| Adopt or update the core                           | [Adoption guide below](#using-it-in-another-project), [AGENTS.md → Reuse guide](AGENTS.md#reuse-guide-adopting-this-core), and `.opencode/skills/core-sync/SKILL.md`.                                                                                                                           |
 
 The safety policy and role-specific permissions live in [.opencode/opencode.jsonc](.opencode/opencode.jsonc): force-push, PR merge, `sudo`, system-path `rm -rf` and env-file reads are denied; the `plan` agent cannot edit. Irreversible actions remain User-Authority-Only. That project configuration is delivered to OpenCode destinations only: a Cursor destination receives no project configuration, so **its Git and GitHub permission posture is not enforced by anything this project distributes** — that remains the destination operator's own editor settings. This map locates owners rather than replacing their instructions.
 
 ## Roster
 
-| Agent | Team |
-|---|---|
-| Cipher 🔓 (Lead Orchestrator) | cross-cutting |
-| Vault 🔐 (Catalog Steward) | cross-cutting |
-| Investigator 🔍 (Incident Investigator) | incident |
-| Ledger 📒 (Record Keeper) | incident |
-| Quill 🪶 (Note Drafter) | incident |
-| Scribe ✍️ (Docs & Problems Manager) | incident |
-| Atrium 🏛️ (Frontend Architect) | dev |
-| Bastion 🧱 (Backend & Scripts Architect) | dev |
-| Crucible 🔥 (Test Architect) | dev |
-| Forge 🔨 (Implementer) | dev |
-| Herald 📯 (Release Manager) | dev |
-| Inquisitor 🔎 (PR Reviewer) | dev |
-| Lumen ✨ (Visual Director) | dev |
-| Sentinel 🛡️ (Quality Guardian) | dev |
-| Warden 🔒 (Dependency Warden) | dev |
+| Agent                                    | Team          |
+| ---------------------------------------- | ------------- |
+| Cipher 🔓 (Lead Orchestrator)            | cross-cutting |
+| Vault 🔐 (Catalog Steward)               | cross-cutting |
+| Investigator 🔍 (Incident Investigator)  | incident      |
+| Ledger 📒 (Record Keeper)                | incident      |
+| Quill 🪶 (Note Drafter)                  | incident      |
+| Scribe ✍️ (Docs & Problems Manager)      | incident      |
+| Atrium 🏛️ (Frontend Architect)           | dev           |
+| Bastion 🧱 (Backend & Scripts Architect) | dev           |
+| Crucible 🔥 (Test Architect)             | dev           |
+| Forge 🔨 (Implementer)                   | dev           |
+| Herald 📯 (Release Manager)              | dev           |
+| Inquisitor 🔎 (PR Reviewer)              | dev           |
+| Lumen ✨ (Visual Director)               | dev           |
+| Sentinel 🛡️ (Quality Guardian)           | dev           |
+| Warden 🔒 (Dependency Warden)            | dev           |
 
 Runtime specs live at `.opencode/agents/<name>.md` and reach a Cursor destination as `.cursor/agents/<name>.md` (Cipher's runtime spec is the root `AGENTS.md` by design). Each spec carries its own authority, workflow and manner: specialists in a `#### Working manner` H4, the root in `#### Voice and working manner`. Persona-bearing manner sits inside the runtime that owns the role, while conduct shared by every role lives in the root. There is no separate profile tier and no persona reference line.
 
@@ -71,17 +71,17 @@ output/                       Gitignored temporary audits, research drafts, desi
 
 AICore separates what it distributes from what a project owns. Distribution is decided only by `.aicore/core/` and applies to managed resources; project-owned records are never bound, overwritten or deleted by synchronization.
 
-| Owner | Location | Contents |
-|---|---|---|
-| AICore-managed | `.aicore/core/knowledge/` | Shared rules, workflow, release and decision lifecycle |
+| Owner          | Location                              | Contents                                                                                                                                            |
+| -------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AICore-managed | `.aicore/core/knowledge/`             | Shared rules, workflow, release and decision lifecycle                                                                                              |
 | AICore-managed | `.aicore/core/knowledge/diagnostics/` | Baseline symptom classes `S-01`–`S-07`, the problem model, its lifecycle, admission and register rules, and diagnostic guidance. Ships without rows |
-| AICore-managed | `.aicore/core/architecture/` | Implementation and testing contracts, shapes and stack guides |
-| AICore-managed | `.aicore/core/odd/` | The only ODD templates; records are created from them |
-| Project-owned | `odd/tasks/` | One ODD change record per change; filename `<YYYY-MM-DD>-<change-name>.md` |
-| Project-owned | `odd/features/` | One durable feature file per capability |
-| Project-owned | `incidents/` | Incident cases at `incidents/<DATE> #ID>/` with their ticket record, screenshots and validations |
-| Project-owned | `incidents/diagnostics/` | `symptoms.md` for this project's own `LOCAL:S-xx` classes and `problems.md` for its `P-NNN` rows, for both teams |
-| Project-owned | `docs/` | Repository technical documentation; not a substitute for ODD records |
+| AICore-managed | `.aicore/core/architecture/`          | Implementation and testing contracts, shapes and stack guides                                                                                       |
+| AICore-managed | `.aicore/core/odd/`                   | The only ODD templates; records are created from them                                                                                               |
+| Project-owned  | `odd/tasks/`                          | One ODD change record per change; filename `<YYYY-MM-DD>-<change-name>.md`                                                                          |
+| Project-owned  | `odd/features/`                       | One durable feature file per capability                                                                                                             |
+| Project-owned  | `incidents/`                          | Incident cases at `incidents/<DATE> #ID>/` with their ticket record, screenshots and validations                                                    |
+| Project-owned  | `incidents/diagnostics/`              | `symptoms.md` for this project's own `LOCAL:S-xx` classes and `problems.md` for its `P-NNN` rows, for both teams                                    |
+| Project-owned  | `docs/`                               | Repository technical documentation; not a substitute for ODD records                                                                                |
 
 The two symptom namespaces never collide: baseline classes keep `S-xx`, and a project's own classes use `LOCAL:S-xx` in its own catalog. Diagnostic knowledge is read as the baseline plus the project catalog, so both teams match against one combined view. A register that is missing or malformed is reported, never silently read as `no_match`.
 

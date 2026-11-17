@@ -15,7 +15,7 @@ import type { SavedSelection } from "#domain/ports/selection-store.ts";
  * The single owner of that validity rule, so no adapter re-decides it.
  */
 export function isSupportedEditor(value: string): value is SupportedEditor {
-  return (SUPPORTED_EDITORS as readonly string[]).includes(value);
+	return (SUPPORTED_EDITORS as readonly string[]).includes(value);
 }
 
 /**
@@ -26,26 +26,26 @@ export function isSupportedEditor(value: string): value is SupportedEditor {
  * editor, because the CLI will not guess an editor for an existing project.
  */
 export function resolveDestinationEditor(
-  requestedEditor: SupportedEditor | undefined,
-  saved: SavedSelection | undefined,
-  destination: string,
-  destinationIsBound: boolean,
+	requestedEditor: SupportedEditor | undefined,
+	saved: SavedSelection | undefined,
+	destination: string,
+	destinationIsBound: boolean,
 ): Result<SupportedEditor> {
-  if (requestedEditor !== undefined) {
-    return succeed(requestedEditor);
-  }
-  if (saved !== undefined && saved.target === destination) {
-    return succeed(saved.editor);
-  }
-  const reason = destinationIsBound
-    ? "no editor was supplied for this run; repeat the run with the editor this " +
-      "destination is enrolled for, or with --editor"
-    : "this destination has no recorded editor yet";
-  return fail(
-    "unknown-editor",
-    `cannot choose an editor: ${reason}. Pass --editor explicitly; ` +
-      "the CLI never infers an editor for a project.",
-  );
+	if (requestedEditor !== undefined) {
+		return succeed(requestedEditor);
+	}
+	if (saved !== undefined && saved.target === destination) {
+		return succeed(saved.editor);
+	}
+	const reason = destinationIsBound
+		? "no editor was supplied for this run; repeat the run with the editor this " +
+			"destination is enrolled for, or with --editor"
+		: "this destination has no recorded editor yet";
+	return fail(
+		"unknown-editor",
+		`cannot choose an editor: ${reason}. Pass --editor explicitly; ` +
+			"the CLI never infers an editor for a project.",
+	);
 }
 
 /**
@@ -56,20 +56,20 @@ export function resolveDestinationEditor(
  * by accident.
  */
 export function resolveDestinationPath(
-  requestedTarget: string | undefined,
-  saved: SavedSelection | undefined,
+	requestedTarget: string | undefined,
+	saved: SavedSelection | undefined,
 ): Result<string> {
-  if (requestedTarget !== undefined) {
-    return succeed(requestedTarget);
-  }
-  if (saved !== undefined) {
-    return succeed(saved.target);
-  }
-  return fail(
-    "unavailable-configuration",
-    "no destination selected. Run once with --target <destination-path>; " +
-      "later runs reuse the saved selection.",
-  );
+	if (requestedTarget !== undefined) {
+		return succeed(requestedTarget);
+	}
+	if (saved !== undefined) {
+		return succeed(saved.target);
+	}
+	return fail(
+		"unavailable-configuration",
+		"no destination selected. Run once with --target <destination-path>; " +
+			"later runs reuse the saved selection.",
+	);
 }
 
 /**
@@ -79,13 +79,13 @@ export function resolveDestinationPath(
  * run that merely reused the saved values never rewrites them.
  */
 export function selectionToSave(
-  requestedTarget: string | undefined,
-  explicitEditor: SupportedEditor | undefined,
-  destination: string,
-  editor: SupportedEditor,
+	requestedTarget: string | undefined,
+	explicitEditor: SupportedEditor | undefined,
+	destination: string,
+	editor: SupportedEditor,
 ): SavedSelection | undefined {
-  if (requestedTarget === undefined && explicitEditor === undefined) {
-    return undefined;
-  }
-  return { target: destination, editor };
+	if (requestedTarget === undefined && explicitEditor === undefined) {
+		return undefined;
+	}
+	return { target: destination, editor };
 }

@@ -56,7 +56,7 @@ Task-row illustration: `open` → `in progress` → `done`; `commit: pending` wh
   > - Use constructor injection for required collaborators where applicable.
   > - Avoid unnecessary inheritance, interfaces, and abstraction layers.
   > - Do not apply this requirement to React components, hooks, or general-purpose utilities.
-  >
+      >
   > Supersede the previous per-stack freedom to use function-based application operations, including the relevant decision in ADR 0005.
   >
   > D2 — APPROVED: Centralized testing
@@ -77,7 +77,7 @@ Task-row illustration: `open` → `in progress` → `done`; `commit: pending` wh
   > - No automatically generated test for every production file.
   > - No additional testing levels.
   > - No invented mandatory nested test directories.
-  >
+      >
   > Supersede the relevant colocation requirements in T10 and ADR 0002.
   >
   > D3 — APPROVED: Preserve the exact testing boundaries
@@ -123,7 +123,7 @@ Task-row illustration: `open` → `in progress` → `done`; `commit: pending` wh
   > - Infrastructure adapters do not own business rules.
   > - Excessive helpers must not replace appropriate domain behavior.
   > - Legitimate data-only records remain permitted when correctly classified.
-  >
+      >
   > Avoid introducing unnecessary abstractions or rewriting established rules that are already clear.
   >
   > **This task authorizes architecture documentation changes, not production implementation changes.**

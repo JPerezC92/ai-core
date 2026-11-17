@@ -16,133 +16,116 @@ import { effectiveEditor } from "#domain/synchronization/editor-profile.ts";
 import { syncReconciliationBlocker } from "#domain/synchronization/reconciliation.ts";
 import type { FilesystemLayout } from "#domain/synchronization/ports.ts";
 
-import {
-  ensureDirectory,
-  isMissing,
-  readEntryKind,
-  readTextFile,
-  writeTextFile,
-} from "./local-files.ts";
+import { ensureDirectory, isMissing, readEntryKind, readTextFile, writeTextFile } from "./local-files.ts";
 
 /** A path's kind, as the preflight and the readers need to know it. */
 export type PathKind = "absent" | "file" | "other";
 
 export class LocalFilesystemLayout implements FilesystemLayout {
-  async exists(path: string): Promise<boolean> {
-    return (await readKind(path)) !== "absent";
-  }
+	async exists(path: string): Promise<boolean> {
+		return (await readKind(path)) !== "absent";
+	}
 
-  async isFile(path: string): Promise<boolean> {
-    return (await readKind(path)) === "file";
-  }
+	async isFile(path: string): Promise<boolean> {
+		return (await readKind(path)) === "file";
+	}
 
-  async ensureDirectory(path: string): Promise<void> {
-    await ensureDirectory(path);
-  }
+	async ensureDirectory(path: string): Promise<void> {
+		await ensureDirectory(path);
+	}
 
-  join(root: string, relativePath: string): string {
-    return relativePath === "" ? root : join(root, relativePath);
-  }
+	join(root: string, relativePath: string): string {
+		return relativePath === "" ? root : join(root, relativePath);
+	}
 
-  parent(path: string): string {
-    return dirname(path);
-  }
+	parent(path: string): string {
+		return dirname(path);
+	}
 
-  /**
-   * Every regular file under `root` that a distribution set may contain.
-   *
-   * Each entry is classified by its own `lstat`, so a symbolic link or a
-   * directory junction is never followed and never reported. The walk descends
-   * only into true directories and reports only true regular files, and both
-   * decisions use the domain's `excludedFromDistribution` predicate, so the
-   * exclusion rule has one home.
-   */
-  async enumerateFilesUnder(root: string): Promise<readonly string[]> {
-    const collected: string[] = [];
-    if (!(await this.exists(root))) {
-      return collected;
-    }
-    const walk = async (current: string): Promise<void> => {
-      for (const name of await readdir(current)) {
-        const absolute = join(current, name);
-        const kind = await readEntryKind(absolute);
-        if (kind === "directory") {
-          if (excludedFromDistribution(name)) {
-            continue;
-          }
-          await walk(absolute);
-          continue;
-        }
-        if (kind !== "file") {
-          continue;
-        }
-        const relativePath = relative(root, absolute).split(sep).join("/");
-        if (excludedFromDistribution(relativePath)) {
-          continue;
-        }
-        collected.push(relativePath);
-      }
-    };
-    await walk(root);
-    return collected.sort();
-  }
+	/**
+	 * Every regular file under `root` that a distribution set may contain.
+	 *
+	 * Each entry is classified by its own `lstat`, so a symbolic link or a
+	 * directory junction is never followed and never reported. The walk descends
+	 * only into true directories and reports only true regular files, and both
+	 * decisions use the domain's `excludedFromDistribution` predicate, so the
+	 * exclusion rule has one home.
+	 */
+	async enumerateFilesUnder(root: string): Promise<readonly string[]> {
+		const collected: string[] = [];
+		if (!(await this.exists(root))) {
+			return collected;
+		}
+		const walk = async (current: string): Promise<void> => {
+			for (const name of await readdir(current)) {
+				const absolute = join(current, name);
+				const kind = await readEntryKind(absolute);
+				if (kind === "directory") {
+					if (excludedFromDistribution(name)) {
+						continue;
+					}
+					await walk(absolute);
+					continue;
+				}
+				if (kind !== "file") {
+					continue;
+				}
+				const relativePath = relative(root, absolute).split(sep).join("/");
+				if (excludedFromDistribution(relativePath)) {
+					continue;
+				}
+				collected.push(relativePath);
+			}
+		};
+		await walk(root);
+		return collected.sort();
+	}
 
-  async resolveRootFile(
-    destinationRoot: string,
-    document: BindingsDocument,
-  ): Promise<string> {
-    if (document.root !== null) {
-      return join(destinationRoot, document.root);
-    }
-    const detected = await this.detectRootFile(destinationRoot);
-    if (detected !== null) {
-      return join(destinationRoot, detected);
-    }
-    // No instruction root was detected, so the root runtime file's own name is
-    // resolved and reported missing by the reader: the blocker write is skipped
-    // rather than being written into a file this tool guessed at.
-    return join(destinationRoot, ROOT_CANDIDATES[0] ?? "AGENTS.md");
-  }
+	async resolveRootFile(destinationRoot: string, document: BindingsDocument): Promise<string> {
+		if (document.root !== null) {
+			return join(destinationRoot, document.root);
+		}
+		const detected = await this.detectRootFile(destinationRoot);
+		if (detected !== null) {
+			return join(destinationRoot, detected);
+		}
+		// No instruction root was detected, so the root runtime file's own name is
+		// resolved and reported missing by the reader: the blocker write is skipped
+		// rather than being written into a file this tool guessed at.
+		return join(destinationRoot, ROOT_CANDIDATES[0] ?? "AGENTS.md");
+	}
 
-  async detectRootFile(destinationRoot: string): Promise<string | null> {
-    for (const candidate of ROOT_CANDIDATES) {
-      if ((await readKind(join(destinationRoot, candidate))) === "file") {
-        return candidate;
-      }
-    }
-    return null;
-  }
+	async detectRootFile(destinationRoot: string): Promise<string | null> {
+		for (const candidate of ROOT_CANDIDATES) {
+			if ((await readKind(join(destinationRoot, candidate))) === "file") {
+				return candidate;
+			}
+		}
+		return null;
+	}
 
-  async syncBlocker(
-    destinationRoot: string,
-    document: BindingsDocument,
-    pending: readonly string[],
-  ): Promise<void> {
-    const rootPath = await this.resolveRootFile(destinationRoot, document);
-    const text = await readTextFile(rootPath);
-    if (text === null) {
-      return;
-    }
-    const next = syncReconciliationBlocker(
-      text,
-      pending,
-      effectiveEditor(undefined, document.editor),
-    );
-    if (next !== text) {
-      await writeTextFile(rootPath, next);
-    }
-  }
+	async syncBlocker(destinationRoot: string, document: BindingsDocument, pending: readonly string[]): Promise<void> {
+		const rootPath = await this.resolveRootFile(destinationRoot, document);
+		const text = await readTextFile(rootPath);
+		if (text === null) {
+			return;
+		}
+		const next = syncReconciliationBlocker(text, pending, effectiveEditor(undefined, document.editor));
+		if (next !== text) {
+			await writeTextFile(rootPath, next);
+		}
+	}
 }
 
 /** Read a path's kind: absent, a regular file, or something else. */
 export async function readKind(path: string): Promise<PathKind> {
-  try {
-    const observed = await stat(path);
-    return observed.isFile() ? "file" : "other";
-  } catch (error) {
-    if (isMissing(error)) {
-      return "absent";
-    }
-    throw error;
-  }
+	try {
+		const observed = await stat(path);
+		return observed.isFile() ? "file" : "other";
+	} catch (error) {
+		if (isMissing(error)) {
+			return "absent";
+		}
+		throw error;
+	}
 }

@@ -10,19 +10,19 @@ import type { DestinationFiles } from "#domain/synchronization/ports.ts";
 import { readBytesFile, readTextFile, writeBytesFile, writeTextFile } from "./local-files.ts";
 
 export class LocalDestinationFiles implements DestinationFiles {
-  async readText(path: string): Promise<string | null> {
-    return readTextFile(path);
-  }
+	async readText(path: string): Promise<string | null> {
+		return readTextFile(path);
+	}
 
-  async readBytes(path: string): Promise<Uint8Array | null> {
-    return readBytesFile(path);
-  }
+	async readBytes(path: string): Promise<Uint8Array | null> {
+		return readBytesFile(path);
+	}
 
-  async writeText(path: string, content: string): Promise<void> {
-    await writeTextFile(path, content);
-  }
+	async writeText(path: string, content: string): Promise<void> {
+		await writeTextFile(path, content);
+	}
 
-  async writeBytes(path: string, content: Uint8Array): Promise<void> {
-    await writeBytesFile(path, content);
-  }
+	async writeBytes(path: string, content: Uint8Array): Promise<void> {
+		await writeBytesFile(path, content);
+	}
 }

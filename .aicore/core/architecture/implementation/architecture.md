@@ -44,17 +44,17 @@ A pure helper needs no artificial use-case wrapper. A module that decides policy
 
 Classify a type by identity, equality, invariant ownership, legal transitions and effects, not its name or the presence of a class declaration:
 
-| Kind | Classification and obligations |
-|---|---|
-| Entity | A class whose stable identity distinguishes instances even when attributes coincide. Its behavior protects enduring invariants and legal changes; a factory creates a valid instance. No public setters or writable identity. A child entity may delegate enforcement to its aggregate root, but no supported child access or construction may bypass that root's invariants. |
-| Value object | No independent identity; equality is by constituent values. Immutable and valid at construction, including nested state. Changes produce another valid value. |
-| Aggregate | Where used, a consistency boundary containing a root entity and its owned parts. The root is the only mutation entry point and enforces cross-part invariants; other aggregates are referenced by identity, not mutable object ownership. A root alone can form an aggregate. |
-| Domain event | Where used, an immutable fact already produced by successful domain behavior, with immutable payload. It is not a command, transport envelope or integration message. |
-| Domain service | Domain behavior without a natural entity/value-object owner. Uses domain types and owns domain policy, not application orchestration or concrete IO. It does not provide an escape hatch for moving an entity's invariants to callers. |
-| Pure rule module | Cohesive, IO-free domain functions named for their predicate or business calculation. Needs neither artificial entity state nor a service/use-case wrapper (C7). |
-| Data-only record | Typed data without a claim to own identity-based behavior or legal transitions. Domain records and read projections are framework-free; storage and transport records belong outside domain. Mutability is determined by the record's use, not an entity label. |
-| Port | A domain-owned typed contract for an external capability, expressed in domain types; implementation is outside domain. Repositories, query capabilities, clocks and other service contracts are distinct port roles. A port declaration performs no IO. |
-| Domain error | A typed expected business rejection with stable code and message, returned as a value (C5); not a wrapper for unexpected exceptions. |
+| Kind             | Classification and obligations                                                                                                                                                                                                                                                                                                                                                |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Entity           | A class whose stable identity distinguishes instances even when attributes coincide. Its behavior protects enduring invariants and legal changes; a factory creates a valid instance. No public setters or writable identity. A child entity may delegate enforcement to its aggregate root, but no supported child access or construction may bypass that root's invariants. |
+| Value object     | No independent identity; equality is by constituent values. Immutable and valid at construction, including nested state. Changes produce another valid value.                                                                                                                                                                                                                 |
+| Aggregate        | Where used, a consistency boundary containing a root entity and its owned parts. The root is the only mutation entry point and enforces cross-part invariants; other aggregates are referenced by identity, not mutable object ownership. A root alone can form an aggregate.                                                                                                 |
+| Domain event     | Where used, an immutable fact already produced by successful domain behavior, with immutable payload. It is not a command, transport envelope or integration message.                                                                                                                                                                                                         |
+| Domain service   | Domain behavior without a natural entity/value-object owner. Uses domain types and owns domain policy, not application orchestration or concrete IO. It does not provide an escape hatch for moving an entity's invariants to callers.                                                                                                                                        |
+| Pure rule module | Cohesive, IO-free domain functions named for their predicate or business calculation. Needs neither artificial entity state nor a service/use-case wrapper (C7).                                                                                                                                                                                                              |
+| Data-only record | Typed data without a claim to own identity-based behavior or legal transitions. Domain records and read projections are framework-free; storage and transport records belong outside domain. Mutability is determined by the record's use, not an entity label.                                                                                                               |
+| Port             | A domain-owned typed contract for an external capability, expressed in domain types; implementation is outside domain. Repositories, query capabilities, clocks and other service contracts are distinct port roles. A port declaration performs no IO.                                                                                                                       |
+| Domain error     | A typed expected business rejection with stable code and message, returned as a value (C5); not a wrapper for unexpected exceptions.                                                                                                                                                                                                                                          |
 
 Entities and value objects may contain public or private methods for domain behaviour, invariant enforcement, business transformations, and domain-native state access. They must not contain methods that map to or from external representations, including JSON or transport payloads, database rows, ORM models, or third-party schemas. Such mapping belongs to the infrastructure adapter or delivery boundary responsible for that representation (C4, C6).
 
@@ -80,23 +80,23 @@ Coordinate successful persistence with event publication outside domain so a fai
 
 Use a business concept plus its actual role, with one shared vocabulary. Classes keep business names such as `Order`, not `OrderEntity`. Shapes own folder placement; guides own language filename syntax. The semantic roles below apply across languages; do not add redundant technical suffixes such as repository-interface or entity-model.
 
-| Role | Concept example and meaning |
-|---|---|
-| entity | `Order`: identity-bearing model |
-| value object | `ShippingAddress`: identity-free value |
-| event | `OrderPlaced`: produced domain fact |
-| repository | `OrderRepository`: aggregate persistence contract/adapter, distinguished by layer |
-| port | `Clock`: other capability contract |
-| domain service | `Pricing`: actual ownerless domain behavior |
-| policy | `PricingPolicy`: an actual business policy, not a label for every pure function |
-| error | `OrderClosed`: expected business rejection |
-| row | `OrderRow`: raw persisted shape, infrastructure-owned |
-| model | `OrderModel`: persistence/ORM model, infrastructure-owned; never a generic domain model bucket |
-| request | `CreateOrderRequest`: action-specific inbound delivery payload |
-| response | `OrderResponse`: outbound delivery representation |
-| projection | `OrderSummary`: framework-free domain-owned read shape |
-| record | A concept-specific intentional data record where no more precise role applies |
-| query | A concept-specific read capability port |
+| Role           | Concept example and meaning                                                                    |
+| -------------- | ---------------------------------------------------------------------------------------------- |
+| entity         | `Order`: identity-bearing model                                                                |
+| value object   | `ShippingAddress`: identity-free value                                                         |
+| event          | `OrderPlaced`: produced domain fact                                                            |
+| repository     | `OrderRepository`: aggregate persistence contract/adapter, distinguished by layer              |
+| port           | `Clock`: other capability contract                                                             |
+| domain service | `Pricing`: actual ownerless domain behavior                                                    |
+| policy         | `PricingPolicy`: an actual business policy, not a label for every pure function                |
+| error          | `OrderClosed`: expected business rejection                                                     |
+| row            | `OrderRow`: raw persisted shape, infrastructure-owned                                          |
+| model          | `OrderModel`: persistence/ORM model, infrastructure-owned; never a generic domain model bucket |
+| request        | `CreateOrderRequest`: action-specific inbound delivery payload                                 |
+| response       | `OrderResponse`: outbound delivery representation                                              |
+| projection     | `OrderSummary`: framework-free domain-owned read shape                                         |
+| record         | A concept-specific intentional data record where no more precise role applies                  |
+| query          | A concept-specific read capability port                                                        |
 
 Pure functions/modules use the predicate or business calculation they express, without fabricated entity/service roles. Apply roles only to artifacts actually needed; do not create unused requests, wrappers or records to fill a naming table. Boundary records do not become domain-owned because they mention a domain concept: rows/models stay in infrastructure, request/response shapes at delivery. Each maps explicitly to/from domain data under C4–C6, never passing as the domain entity itself.
 

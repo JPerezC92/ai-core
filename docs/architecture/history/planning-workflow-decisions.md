@@ -54,20 +54,20 @@ The main cause was avoidable rework. Longer prompts, more files, or more audit r
 
 ### 2.3 Current repository evidence
 
-| Surface | What the current text establishes | Consequence for the recommendation |
-|---|---|---|
-| `AGENTS.md` → Conventions | Repository facts should be established before escalation; only genuine user-only decisions reach `question`; mechanical checks are the orchestrator's responsibility | Investigate before asking. Keep semantic judgment separate from mechanical checking. |
-| `.opencode/skills/plan-enforce/SKILL.md` → Goal lifecycle / User stories / Create new plan | Goals and classification need a combined confirmation; the creation sequence places the story gate afterward | Investigate story ownership before presenting the combined confirmation. |
-| Programming template → Verification; consistency checklist → Verification parity; validator → `check_verification_parity` | The template illustrates goal-level bullets, while the checklist and validator require one verification checkbox per phase | Make examples and executable validation agree. Keep goal evidence within the phase-level verification rather than changing the invariant arbitrarily. |
-| Phase template → Steps; programming template → anti-improvisation footer | Steps are described as individual commands or file edits, with every command/file/gate explicit | Preserve exact public contracts and scope, but distinguish those from implementation details the implementer should decide. |
-| Validator → `check_placeholders`, `_split_table_row`, `_extract_writes_paths` | Instructional comments are rejected in generated artifacts; table cells split at pipes; phase Writes paths are semicolon-separated | Provide compatible examples and regression tests instead of teaching the writer by failed validation. |
-| Consistency checklist → Loop rule; validator module documentation | Mechanical checks do not establish executor authority, goal meaning, or audit quality | Read and assess the content. Do not claim semantic success from exit 0. |
-| `.opencode/agents/forge.md` → Warmup / Per-step execution | The shared contract and architecture rulebooks are read fresh; source reads are scoped to touched/replaced files; edits are gated | Retain rule comprehension; eliminate unrelated codebase reads and inconsistent gate routing. |
-| `.opencode/agents/crucible.md` → Your Role | Test architecture can be reviewed with no implementation present, explicitly including a TDD red phase | TDD is possible through the designated executor; it is not inherently blocked by the implementer's lack of a runner grant. |
-| Test executor's spec → Test Execution / Bash Grant Scope | Only the exact reviewed whole-suite command, explicitly dispatched, is authorized | Do not quietly use a targeted command. Focused execution is a separate, explicitly approved capability if later justified. |
-| `plan-enforce` → Non-TypeScript test files / Completion | Python test phases require whole-suite exit 0 and separate architecture verdicts at their completion gate | A deliberately failing red checkpoint needs an explicit intermediate-state definition; it must not be mistaken for completed work. |
-| `plan-enforce` → Dispatch bundle contract | The current handoff requires the full goals, runbook, and consumed outputs verbatim | Any narrower handoff mechanism needs an explicit rule change, not silent abbreviation. |
-| `plan-enforce` → Resume (completion) / Plan lifecycle rules | Completion evidence and archival precede release; planning and completion audits are distinct | Fix lifecycle execution as part of workflow reliability, not as an optional post-merge cleanup. |
+| Surface                                                                                                                   | What the current text establishes                                                                                                                                    | Consequence for the recommendation                                                                                                                    |
+| ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AGENTS.md` → Conventions                                                                                                 | Repository facts should be established before escalation; only genuine user-only decisions reach `question`; mechanical checks are the orchestrator's responsibility | Investigate before asking. Keep semantic judgment separate from mechanical checking.                                                                  |
+| `.opencode/skills/plan-enforce/SKILL.md` → Goal lifecycle / User stories / Create new plan                                | Goals and classification need a combined confirmation; the creation sequence places the story gate afterward                                                         | Investigate story ownership before presenting the combined confirmation.                                                                              |
+| Programming template → Verification; consistency checklist → Verification parity; validator → `check_verification_parity` | The template illustrates goal-level bullets, while the checklist and validator require one verification checkbox per phase                                           | Make examples and executable validation agree. Keep goal evidence within the phase-level verification rather than changing the invariant arbitrarily. |
+| Phase template → Steps; programming template → anti-improvisation footer                                                  | Steps are described as individual commands or file edits, with every command/file/gate explicit                                                                      | Preserve exact public contracts and scope, but distinguish those from implementation details the implementer should decide.                           |
+| Validator → `check_placeholders`, `_split_table_row`, `_extract_writes_paths`                                             | Instructional comments are rejected in generated artifacts; table cells split at pipes; phase Writes paths are semicolon-separated                                   | Provide compatible examples and regression tests instead of teaching the writer by failed validation.                                                 |
+| Consistency checklist → Loop rule; validator module documentation                                                         | Mechanical checks do not establish executor authority, goal meaning, or audit quality                                                                                | Read and assess the content. Do not claim semantic success from exit 0.                                                                               |
+| `.opencode/agents/forge.md` → Warmup / Per-step execution                                                                 | The shared contract and architecture rulebooks are read fresh; source reads are scoped to touched/replaced files; edits are gated                                    | Retain rule comprehension; eliminate unrelated codebase reads and inconsistent gate routing.                                                          |
+| `.opencode/agents/crucible.md` → Your Role                                                                                | Test architecture can be reviewed with no implementation present, explicitly including a TDD red phase                                                               | TDD is possible through the designated executor; it is not inherently blocked by the implementer's lack of a runner grant.                            |
+| Test executor's spec → Test Execution / Bash Grant Scope                                                                  | Only the exact reviewed whole-suite command, explicitly dispatched, is authorized                                                                                    | Do not quietly use a targeted command. Focused execution is a separate, explicitly approved capability if later justified.                            |
+| `plan-enforce` → Non-TypeScript test files / Completion                                                                   | Python test phases require whole-suite exit 0 and separate architecture verdicts at their completion gate                                                            | A deliberately failing red checkpoint needs an explicit intermediate-state definition; it must not be mistaken for completed work.                    |
+| `plan-enforce` → Dispatch bundle contract                                                                                 | The current handoff requires the full goals, runbook, and consumed outputs verbatim                                                                                  | Any narrower handoff mechanism needs an explicit rule change, not silent abbreviation.                                                                |
+| `plan-enforce` → Resume (completion) / Plan lifecycle rules                                                               | Completion evidence and archival precede release; planning and completion audits are distinct                                                                        | Fix lifecycle execution as part of workflow reliability, not as an optional post-merge cleanup.                                                       |
 
 These references support proposed changes. They are not findings that authorize editing their sources now.
 
@@ -261,14 +261,14 @@ For this proposal to be adopted, define the intermediate red checkpoint explicit
 
 Apply the cycle according to change type:
 
-| Change | Recommended approach |
-|---|---|
-| New business rule or use-case behavior | TDD against the use-case contract and ports |
-| Reproducible bug | A failing regression test, then the fix |
-| Legacy refactor with weak coverage | Characterize the current valid behavior, then refactor behind stable contracts |
-| Parser or boundary rejection behavior | Table-driven valid/invalid cases and explicit error-contract tests |
-| Documentation, rulebook reorganization, or cosmetic edit | Content/semantic review and appropriate checks; no artificial TDD requirement |
-| Exploratory UI work | Clarify the intended interaction first; then test the accepted behavior at the prescribed frontend boundary |
+| Change                                                   | Recommended approach                                                                                        |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| New business rule or use-case behavior                   | TDD against the use-case contract and ports                                                                 |
+| Reproducible bug                                         | A failing regression test, then the fix                                                                     |
+| Legacy refactor with weak coverage                       | Characterize the current valid behavior, then refactor behind stable contracts                              |
+| Parser or boundary rejection behavior                    | Table-driven valid/invalid cases and explicit error-contract tests                                          |
+| Documentation, rulebook reorganization, or cosmetic edit | Content/semantic review and appropriate checks; no artificial TDD requirement                               |
+| Exploratory UI work                                      | Clarify the intended interaction first; then test the accepted behavior at the prescribed frontend boundary |
 
 For React, retain the existing unit definition: render the component with the real Hook and use case; mock the service boundary, not the Hook. TDD must not introduce a replacement test pyramid.
 
@@ -351,14 +351,14 @@ Record the actual documentation paths, the responsible owners, the intended chan
 
 Documentation impact includes:
 
-| Changed concern | Documentation to inspect and update |
-|---|---|
-| Feature behavior and failures | Existing user story, acceptance criteria, and relevant user/developer guidance |
-| Public API, input/output, or configuration | Interface documentation, examples, setup instructions, and callers' documented assumptions |
+| Changed concern                                      | Documentation to inspect and update                                                                |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Feature behavior and failures                        | Existing user story, acceptance criteria, and relevant user/developer guidance                     |
+| Public API, input/output, or configuration           | Interface documentation, examples, setup instructions, and callers' documented assumptions         |
 | Architectural responsibilities or folder conventions | Shared contract, relevant language/library interpretation, diagrams, and authoring/review guidance |
-| Agent authority, routing, or workflow | Runtime specs, shared rules, affected skills, and their templates/checklists |
-| CLI/tool behavior | Skill usage, command examples, exit contracts, and troubleshooting |
-| Renamed or relocated surface | Links, cited sections/symbols, index entries, and all affected examples |
+| Agent authority, routing, or workflow                | Runtime specs, shared rules, affected skills, and their templates/checklists                       |
+| CLI/tool behavior                                    | Skill usage, command examples, exit contracts, and troubleshooting                                 |
+| Renamed or relocated surface                         | Links, cited sections/symbols, index entries, and all affected examples                            |
 
 At slice completion, read the updated documents against the implemented behavior. Verify that they explain the actual contract and that no old instruction, diagram, example, or link contradicts it. Presence checks and matching file counts cannot establish this.
 
@@ -405,16 +405,16 @@ These are proposed operating models, not new executable grants.
 
 ## 7. Examples of adequate verification
 
-| Requirement | Insufficient check | Required meaning to establish |
-|---|---|---|
-| Generic architecture section | Heading exists; framework keyword absent | The section defines responsibilities, folder organization, and dependency constraints derived from the concrete rules |
-| Use-case boundary | `execute()` appears in the file | The named use case has an explicit input/output contract, depends on ports, and does not parse CLI input or perform concrete IO |
-| React interpretation | The word React is under another heading | Component + real Hook + use case remain the unit; the service is mocked; no Hook is called from the ordinary `execute()` function |
-| Python conformance | The suspension sentence is gone | Every detailed rule and example obeys the layers and required entry point; module/IO conventions do not act as an exemption |
-| Preservation | Every old line is still present | Valid obligations survive; obsolete or conflicting ones are deliberately replaced/retired, with their architectural meaning accounted for |
-| Test-first behavior | A new test file exists | The executor observed the intended failure before the fix and observed the same behavior passing afterward |
-| Documentation is current | Files or links exist; a Change log line was added | Read the changed guidance, diagrams, and examples against the actual contract; no superseded instruction survives |
-| Completion | Validator exit 0 or a planning PASS | Applicable final-snapshot reviews and execution evidence satisfy the user's goals; lifecycle records match reality |
+| Requirement                  | Insufficient check                                | Required meaning to establish                                                                                                             |
+| ---------------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Generic architecture section | Heading exists; framework keyword absent          | The section defines responsibilities, folder organization, and dependency constraints derived from the concrete rules                     |
+| Use-case boundary            | `execute()` appears in the file                   | The named use case has an explicit input/output contract, depends on ports, and does not parse CLI input or perform concrete IO           |
+| React interpretation         | The word React is under another heading           | Component + real Hook + use case remain the unit; the service is mocked; no Hook is called from the ordinary `execute()` function         |
+| Python conformance           | The suspension sentence is gone                   | Every detailed rule and example obeys the layers and required entry point; module/IO conventions do not act as an exemption               |
+| Preservation                 | Every old line is still present                   | Valid obligations survive; obsolete or conflicting ones are deliberately replaced/retired, with their architectural meaning accounted for |
+| Test-first behavior          | A new test file exists                            | The executor observed the intended failure before the fix and observed the same behavior passing afterward                                |
+| Documentation is current     | Files or links exist; a Change log line was added | Read the changed guidance, diagrams, and examples against the actual contract; no superseded instruction survives                         |
+| Completion                   | Validator exit 0 or a planning PASS               | Applicable final-snapshot reviews and execution evidence satisfy the user's goals; lifecycle records match reality                        |
 
 ## 8. Rollout order
 
@@ -453,22 +453,22 @@ Desired outcome: routine plans need a coherent first draft and a bounded remedia
 
 The user selected the workflow direction, approved the three story contracts, and required D15's architectural rework for nonconforming planned files. Feature-contract approval does not establish implementation acceptance; all workflow changes remain pending until source surfaces and evidence establish completion. These are decision items, not an execution plan's goal count.
 
-| Decision | Status | Recommended choice |
-|---|---|---|
-| D1 — Discovery | Selected; delivery tracked in the implementation plan | Evidence-first, bounded to affected contracts |
-| D2 — Confirmation | Selected; delivery tracked in the implementation plan | Research first; one combined scope/story/classification decision |
-| D3 — Plan and self-review | Selected; delivery tracked in the implementation plan | Contract-sized phases; semantic writer review before audit |
-| D4 — Audit recovery | Selected; delivery tracked in the implementation plan | Neutral audits; two failed planning audits trigger reassessment, never a waived gate |
-| D5 — Templates and validation | Selected; delivery tracked in the implementation plan | Compatible examples and regression tests; validator remains mechanical |
-| D6 — Communication/execution | Selected; delivery tracked in the implementation plan | Concise result updates; complete authorized work unless genuinely blocked |
-| D7 — Implementation slices | Selected; delivery tracked in the implementation plan | One coherent observable behavior per slice |
-| D8 — TDD | Selected; delivery tracked in the implementation plan | Real red–green–refactor where useful; designated authorized executor; no automatic grant expansion |
-| D9 — Reads and reviews | Selected; delivery tracked in the implementation plan | Impact-scoped full content review; snapshot-aware evidence; retain current edit gates |
-| D10 — Architecture definitions | Selected; delivery tracked in the implementation plan | One effective contract; replace contradictory legacy rules; normalize gate ownership |
-| D11 — Completion | Selected; delivery tracked in the implementation plan | Final-snapshot evidence, criteria reconciliation, and archive before release |
-| D12 — Documentation | Selected; delivery tracked in the implementation plan | Documentation impact, updates, and semantic review belong to the same behavior change |
-| D13 — Story-first workflow | Selected; delivery tracked in the implementation plan | Standalone `user-story` skill; approved behavior before implementation planning |
-| D14 — Story collisions | Selected; delivery tracked in the implementation plan | Read the entire story catalogue; mechanical consistency plus semantic collision analysis |
+| Decision                              | Status                                                | Recommended choice                                                                                       |
+| ------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| D1 — Discovery                        | Selected; delivery tracked in the implementation plan | Evidence-first, bounded to affected contracts                                                            |
+| D2 — Confirmation                     | Selected; delivery tracked in the implementation plan | Research first; one combined scope/story/classification decision                                         |
+| D3 — Plan and self-review             | Selected; delivery tracked in the implementation plan | Contract-sized phases; semantic writer review before audit                                               |
+| D4 — Audit recovery                   | Selected; delivery tracked in the implementation plan | Neutral audits; two failed planning audits trigger reassessment, never a waived gate                     |
+| D5 — Templates and validation         | Selected; delivery tracked in the implementation plan | Compatible examples and regression tests; validator remains mechanical                                   |
+| D6 — Communication/execution          | Selected; delivery tracked in the implementation plan | Concise result updates; complete authorized work unless genuinely blocked                                |
+| D7 — Implementation slices            | Selected; delivery tracked in the implementation plan | One coherent observable behavior per slice                                                               |
+| D8 — TDD                              | Selected; delivery tracked in the implementation plan | Real red–green–refactor where useful; designated authorized executor; no automatic grant expansion       |
+| D9 — Reads and reviews                | Selected; delivery tracked in the implementation plan | Impact-scoped full content review; snapshot-aware evidence; retain current edit gates                    |
+| D10 — Architecture definitions        | Selected; delivery tracked in the implementation plan | One effective contract; replace contradictory legacy rules; normalize gate ownership                     |
+| D11 — Completion                      | Selected; delivery tracked in the implementation plan | Final-snapshot evidence, criteria reconciliation, and archive before release                             |
+| D12 — Documentation                   | Selected; delivery tracked in the implementation plan | Documentation impact, updates, and semantic review belong to the same behavior change                    |
+| D13 — Story-first workflow            | Selected; delivery tracked in the implementation plan | Standalone `user-story` skill; approved behavior before implementation planning                          |
+| D14 — Story collisions                | Selected; delivery tracked in the implementation plan | Read the entire story catalogue; mechanical consistency plus semantic collision analysis                 |
 | D15 — Planned-file design conformance | Selected; delivery tracked in the implementation plan | Rework nonconforming files included in the plan, with necessary tests/docs and declared supporting paths |
 
 ## 11. Story-first additions — D13 and D14
@@ -503,14 +503,14 @@ At the initial catalogue review, nine feature-story files plus the index were en
 
 The skill must repeat catalogue discovery when invoked. Do not assume an earlier inventory remains complete. Draft and superseded stories participate with their status understood; a superseded rule is not treated as current authority.
 
-| Collision or inconsistency | Required assessment |
-|---|---|
-| Duplicate ownership | Two stories promise the same actor/trigger/outcome; recommend updating the canonical story or explicitly establishing distinct scopes |
-| Contradiction | Paired criteria or governing decisions cannot both hold; report the actual statements and obtain a disposition |
-| Extension or supersession | New behavior broadens or replaces an existing contract; show the old-to-new relationship before approval |
-| Dependency | One story needs another's outcome; record the relationship, not a duplicate acceptance definition |
-| Shared affected files | Use as an ownership clue; it is not by itself a semantic collision or a concrete write collision |
-| Index/body drift | Missing file, unindexed story, wrong title/status/areas, or malformed body; report exact inconsistencies |
+| Collision or inconsistency | Required assessment                                                                                                                   |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Duplicate ownership        | Two stories promise the same actor/trigger/outcome; recommend updating the canonical story or explicitly establishing distinct scopes |
+| Contradiction              | Paired criteria or governing decisions cannot both hold; report the actual statements and obtain a disposition                        |
+| Extension or supersession  | New behavior broadens or replaces an existing contract; show the old-to-new relationship before approval                              |
+| Dependency                 | One story needs another's outcome; record the relationship, not a duplicate acceptance definition                                     |
+| Shared affected files      | Use as an ownership clue; it is not by itself a semantic collision or a concrete write collision                                      |
+| Index/body drift           | Missing file, unindexed story, wrong title/status/areas, or malformed body; report exact inconsistencies                              |
 
 Validate the story's meaning and observable criteria as well as its mechanical shape. A script can establish index/body consistency; it cannot determine whether two differently worded scenarios conflict. Do not introduce a keyword-only collision detector or claim collision-free status from a validator exit code.
 

@@ -17,25 +17,21 @@ const DAY_MS = 86_400_000;
 
 /** Parses a `YYYY-MM-DD` calendar date to its UTC midnight, or `null` when it is not a real date. */
 export function parseCalendarDate(value: string): number | null {
-  if (!CALENDAR_DATE_RE.test(value)) return null;
-  const year = Number(value.slice(0, 4));
-  const month = Number(value.slice(5, 7));
-  const day = Number(value.slice(8, 10));
-  const time = Date.UTC(year, month - 1, day);
-  const parsed = new Date(time);
-  if (
-    parsed.getUTCFullYear() !== year ||
-    parsed.getUTCMonth() !== month - 1 ||
-    parsed.getUTCDate() !== day
-  ) {
-    return null;
-  }
-  return time;
+	if (!CALENDAR_DATE_RE.test(value)) return null;
+	const year = Number(value.slice(0, 4));
+	const month = Number(value.slice(5, 7));
+	const day = Number(value.slice(8, 10));
+	const time = Date.UTC(year, month - 1, day);
+	const parsed = new Date(time);
+	if (parsed.getUTCFullYear() !== year || parsed.getUTCMonth() !== month - 1 || parsed.getUTCDate() !== day) {
+		return null;
+	}
+	return time;
 }
 
 /** Whole calendar days between two UTC midnights. */
 export function calendarDaysBetween(fromMs: number, toMs: number): number {
-  return Math.trunc((toMs - fromMs) / DAY_MS);
+	return Math.trunc((toMs - fromMs) / DAY_MS);
 }
 
 /**
@@ -48,40 +44,38 @@ export function calendarDaysBetween(fromMs: number, toMs: number): number {
  * record whose closure date is not a real calendar date are never candidates.
  */
 export function evaluateRetirement(text: string, asOfDate: string): RetirementDecision {
-  const lines = splitLines(text);
+	const lines = splitLines(text);
 
-  if (!lines.some((line) => STATUS_CLOSED_RE.test(line.trim()))) {
-    return { kind: "excluded", reason: "status is not closed" };
-  }
+	if (!lines.some((line) => STATUS_CLOSED_RE.test(line.trim()))) {
+		return { kind: "excluded", reason: "status is not closed" };
+	}
 
-  const closedField = lines
-    .map((line) => CLOSED_DATE_RE.exec(line.trim()))
-    .find((match) => match !== null);
-  const closedOn = closedField?.[1]?.trim() ?? "";
-  if (closedOn.length === 0) {
-    return { kind: "excluded", reason: "no recorded closure date" };
-  }
+	const closedField = lines.map((line) => CLOSED_DATE_RE.exec(line.trim())).find((match) => match !== null);
+	const closedOn = closedField?.[1]?.trim() ?? "";
+	if (closedOn.length === 0) {
+		return { kind: "excluded", reason: "no recorded closure date" };
+	}
 
-  const closedAt = parseCalendarDate(closedOn);
-  if (closedAt === null) {
-    return { kind: "excluded", reason: "closure date is not a calendar date" };
-  }
+	const closedAt = parseCalendarDate(closedOn);
+	if (closedAt === null) {
+		return { kind: "excluded", reason: "closure date is not a calendar date" };
+	}
 
-  const asOfAt = parseCalendarDate(asOfDate);
-  if (asOfAt === null) {
-    return { kind: "excluded", reason: "as-of date is not a calendar date" };
-  }
+	const asOfAt = parseCalendarDate(asOfDate);
+	if (asOfAt === null) {
+		return { kind: "excluded", reason: "as-of date is not a calendar date" };
+	}
 
-  const ageDays = calendarDaysBetween(closedAt, asOfAt);
-  if (ageDays < 0) {
-    return { kind: "excluded", reason: "closure date is after the as-of date" };
-  }
-  if (ageDays < REQUIRED_COMPLETE_DAYS) {
-    return {
-      kind: "excluded",
-      reason: `${ageDays} complete calendar days since closure; ${REQUIRED_COMPLETE_DAYS} required`,
-    };
-  }
+	const ageDays = calendarDaysBetween(closedAt, asOfAt);
+	if (ageDays < 0) {
+		return { kind: "excluded", reason: "closure date is after the as-of date" };
+	}
+	if (ageDays < REQUIRED_COMPLETE_DAYS) {
+		return {
+			kind: "excluded",
+			reason: `${ageDays} complete calendar days since closure; ${REQUIRED_COMPLETE_DAYS} required`,
+		};
+	}
 
-  return { kind: "candidate", closedOn, ageDays };
+	return { kind: "candidate", closedOn, ageDays };
 }

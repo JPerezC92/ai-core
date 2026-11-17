@@ -67,14 +67,14 @@ The source tree is compared too where the case says so: the source is read-only.
 
 ### How each written file is compared
 
-| Kind | Comparison | Why |
-|---|---|---|
-| `file` | byte-for-byte | The contract fixes these bytes (region payloads, raw copies, the root runtime file). |
-| `jsonc` | content, with layout whitespace removed | The contract fixes what a merge preserves "by content, not byte-for-byte". |
-| `bindings` | the parsed document | The contract fixes the schema, not the YAML dialect. |
-| `report` | the parsed document | The contract fixes the report's content, not its YAML dialect. |
-| `blocker` | exact prefix and suffix, required facts in the body | The contract fixes the block's shape; its words are the reference's. |
-| `directory`, `symlink` | kind and link target | The tree must contain exactly what the case states. |
+| Kind                   | Comparison                                          | Why                                                                                  |
+| ---------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `file`                 | byte-for-byte                                       | The contract fixes these bytes (region payloads, raw copies, the root runtime file). |
+| `jsonc`                | content, with layout whitespace removed             | The contract fixes what a merge preserves "by content, not byte-for-byte".           |
+| `bindings`             | the parsed document                                 | The contract fixes the schema, not the YAML dialect.                                 |
+| `report`               | the parsed document                                 | The contract fixes the report's content, not its YAML dialect.                       |
+| `blocker`              | exact prefix and suffix, required facts in the body | The contract fixes the block's shape; its words are the reference's.                 |
+| `directory`, `symlink` | kind and link target                                | The tree must contain exactly what the case states.                                  |
 
 ## Layout
 

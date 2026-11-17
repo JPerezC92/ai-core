@@ -14,38 +14,38 @@ import { createFixture, invoke, type Fixture } from "#support/aicore-cli.e2e-har
 let fixture: Fixture | undefined;
 
 afterEach(async () => {
-  await fixture?.dispose();
-  fixture = undefined;
+	await fixture?.dispose();
+	fixture = undefined;
 });
 
 describe("revision availability", () => {
-  test("a missing revision stops the run without writing", async () => {
-    const created = await createFixture();
-    fixture = created;
+	test("a missing revision stops the run without writing", async () => {
+		const created = await createFixture();
+		fixture = created;
 
-    const result = await invoke(
-      ["sync", "--target", created.destination, "--editor", "opencode"],
-      { fixture: created, revision: undefined },
-    );
+		const result = await invoke(["sync", "--target", created.destination, "--editor", "opencode"], {
+			fixture: created,
+			revision: undefined,
+		});
 
-    expect(result.status).toBe(2);
-    expect(result.stderr).toMatch(/no source revision available/);
-    expect(result.stderr).toMatch(/never runs Git/);
-    expect(result.stderr).toMatch(/Herald/);
-    await expect(stat(join(created.destination, ".aicore"))).rejects.toThrow();
-  });
+		expect(result.status).toBe(2);
+		expect(result.stderr).toMatch(/no source revision available/);
+		expect(result.stderr).toMatch(/never runs Git/);
+		expect(result.stderr).toMatch(/Herald/);
+		await expect(stat(join(created.destination, ".aicore"))).rejects.toThrow();
+	});
 
-  test("a malformed revision is rejected", async () => {
-    const created = await createFixture();
-    fixture = created;
+	test("a malformed revision is rejected", async () => {
+		const created = await createFixture();
+		fixture = created;
 
-    const result = await invoke(
-      ["sync", "--target", created.destination, "--editor", "opencode"],
-      { fixture: created, revision: "not-a-revision" },
-    );
+		const result = await invoke(["sync", "--target", created.destination, "--editor", "opencode"], {
+			fixture: created,
+			revision: "not-a-revision",
+		});
 
-    expect(result.status).toBe(2);
-    expect(result.stderr).toMatch(/40-character lowercase hex/);
-    await expect(stat(join(created.destination, ".aicore"))).rejects.toThrow();
-  });
+		expect(result.status).toBe(2);
+		expect(result.stderr).toMatch(/40-character lowercase hex/);
+		await expect(stat(join(created.destination, ".aicore"))).rejects.toThrow();
+	});
 });

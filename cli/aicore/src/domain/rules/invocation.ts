@@ -5,36 +5,36 @@
  */
 
 import {
-  ADVANCED_COMMANDS,
-  REVISION_ENV_VAR,
-  REVISION_PATTERN,
-  SUPPORTED_EDITORS,
-  type AdvancedCommand,
-  type SupportedEditor,
+	ADVANCED_COMMANDS,
+	REVISION_ENV_VAR,
+	REVISION_PATTERN,
+	SUPPORTED_EDITORS,
+	type AdvancedCommand,
+	type SupportedEditor,
 } from "#domain/constants.ts";
 import { fail, succeed, type Result } from "#domain/failures.ts";
 import { isSupportedEditor } from "./selection.ts";
 
 export type ParsedInvocation =
-  | {
-      readonly kind: "sync";
-      readonly target?: string;
-      readonly editor?: string;
-      readonly revision?: string;
-      readonly help: boolean;
-    }
-  | {
-      readonly kind: "reconcile";
-      readonly target: string;
-      readonly help: boolean;
-    }
-  | {
-      readonly kind: "advanced";
-      readonly command: AdvancedCommand;
-      readonly passthrough: readonly string[];
-      readonly help: boolean;
-    }
-  | { readonly kind: "help" };
+	| {
+			readonly kind: "sync";
+			readonly target?: string;
+			readonly editor?: string;
+			readonly revision?: string;
+			readonly help: boolean;
+	  }
+	| {
+			readonly kind: "reconcile";
+			readonly target: string;
+			readonly help: boolean;
+	  }
+	| {
+			readonly kind: "advanced";
+			readonly command: AdvancedCommand;
+			readonly passthrough: readonly string[];
+			readonly help: boolean;
+	  }
+	| { readonly kind: "help" };
 
 const SYNC_FLAGS = ["--target", "--editor", "--source-revision"] as const;
 
@@ -44,7 +44,7 @@ type SyncFlag = (typeof SYNC_FLAGS)[number];
 const RECONCILE_FLAGS = ["--target"] as const;
 
 function isAdvancedCommand(value: string): value is AdvancedCommand {
-  return (ADVANCED_COMMANDS as readonly string[]).includes(value);
+	return (ADVANCED_COMMANDS as readonly string[]).includes(value);
 }
 
 /**
@@ -55,74 +55,69 @@ function isAdvancedCommand(value: string): value is AdvancedCommand {
  * can never be silently dropped before the engine sees it.
  */
 export function parseInvocation(argv: readonly string[]): Result<ParsedInvocation> {
-  const [command, ...rest] = argv;
-  if (command === undefined || command === "--help" || command === "-h") {
-    return succeed({ kind: "help" });
-  }
+	const [command, ...rest] = argv;
+	if (command === undefined || command === "--help" || command === "-h") {
+		return succeed({ kind: "help" });
+	}
 
-  if (isAdvancedCommand(command)) {
-    return succeed({
-      kind: "advanced",
-      command,
-      passthrough: rest,
-      help: rest.includes("--help") || rest.includes("-h"),
-    });
-  }
+	if (isAdvancedCommand(command)) {
+		return succeed({
+			kind: "advanced",
+			command,
+			passthrough: rest,
+			help: rest.includes("--help") || rest.includes("-h"),
+		});
+	}
 
-  if (command === "reconcile") {
-    return parseReconcile(rest);
-  }
+	if (command === "reconcile") {
+		return parseReconcile(rest);
+	}
 
-  if (command !== "sync") {
-    return fail(
-      "unavailable-configuration",
-      `unknown command "${command}". Use "sync" or "reconcile", or one of: ${ADVANCED_COMMANDS.join(", ")}.`,
-    );
-  }
+	if (command !== "sync") {
+		return fail(
+			"unavailable-configuration",
+			`unknown command "${command}". Use "sync" or "reconcile", or one of: ${ADVANCED_COMMANDS.join(", ")}.`,
+		);
+	}
 
-  const collected: Partial<Record<SyncFlag, string>> = {};
-  let help = false;
+	const collected: Partial<Record<SyncFlag, string>> = {};
+	let help = false;
 
-  for (let index = 0; index < rest.length; index += 1) {
-    const argument = rest[index];
-    if (argument === undefined) {
-      continue;
-    }
-    if (argument === "--help" || argument === "-h") {
-      help = true;
-      continue;
-    }
-    if (!(SYNC_FLAGS as readonly string[]).includes(argument)) {
-      return fail(
-        "unavailable-configuration",
-        `unrecognized option "${argument}" for "sync". Supported options: ${SYNC_FLAGS.join(", ")}.`,
-      );
-    }
+	for (let index = 0; index < rest.length; index += 1) {
+		const argument = rest[index];
+		if (argument === undefined) {
+			continue;
+		}
+		if (argument === "--help" || argument === "-h") {
+			help = true;
+			continue;
+		}
+		if (!(SYNC_FLAGS as readonly string[]).includes(argument)) {
+			return fail(
+				"unavailable-configuration",
+				`unrecognized option "${argument}" for "sync". Supported options: ${SYNC_FLAGS.join(", ")}.`,
+			);
+		}
 
-    const flag = argument as SyncFlag;
-    const value = rest[index + 1];
-    if (value === undefined || value.startsWith("--")) {
-      return fail("unavailable-configuration", `option "${flag}" requires a value.`);
-    }
-    if (collected[flag] !== undefined) {
-      return fail(
-        "unavailable-configuration",
-        `option "${flag}" was supplied more than once.`,
-      );
-    }
-    collected[flag] = value;
-    index += 1;
-  }
+		const flag = argument as SyncFlag;
+		const value = rest[index + 1];
+		if (value === undefined || value.startsWith("--")) {
+			return fail("unavailable-configuration", `option "${flag}" requires a value.`);
+		}
+		if (collected[flag] !== undefined) {
+			return fail("unavailable-configuration", `option "${flag}" was supplied more than once.`);
+		}
+		collected[flag] = value;
+		index += 1;
+	}
 
-  return succeed({
-    kind: "sync",
-    ...(collected["--target"] === undefined ? {} : { target: collected["--target"] }),
-    ...(collected["--editor"] === undefined ? {} : { editor: collected["--editor"] }),
-    ...(collected["--source-revision"] === undefined
-      ? {}
-      : { revision: collected["--source-revision"] }),
-    help,
-  });
+	return succeed({
+		kind: "sync",
+		...(collected["--target"] === undefined ? {} : { target: collected["--target"] }),
+		...(collected["--editor"] === undefined ? {} : { editor: collected["--editor"] }),
+		...(collected["--source-revision"] === undefined ? {} : { revision: collected["--source-revision"] }),
+		help,
+	});
 }
 
 /**
@@ -134,45 +129,45 @@ export function parseInvocation(argv: readonly string[]): Result<ParsedInvocatio
  * selection.
  */
 function parseReconcile(rest: readonly string[]): Result<ParsedInvocation> {
-  let target: string | undefined;
-  let help = false;
+	let target: string | undefined;
+	let help = false;
 
-  for (let index = 0; index < rest.length; index += 1) {
-    const argument = rest[index];
-    if (argument === undefined) {
-      continue;
-    }
-    if (argument === "--help" || argument === "-h") {
-      help = true;
-      continue;
-    }
-    if (!(RECONCILE_FLAGS as readonly string[]).includes(argument)) {
-      return fail(
-        "unavailable-configuration",
-        `unrecognized option "${argument}" for "reconcile". Supported options: ${RECONCILE_FLAGS.join(", ")}.`,
-      );
-    }
-    const value = rest[index + 1];
-    if (value === undefined || value.startsWith("--")) {
-      return fail("unavailable-configuration", `option "${argument}" requires a value.`);
-    }
-    if (target !== undefined) {
-      return fail("unavailable-configuration", `option "${argument}" was supplied more than once.`);
-    }
-    target = value;
-    index += 1;
-  }
+	for (let index = 0; index < rest.length; index += 1) {
+		const argument = rest[index];
+		if (argument === undefined) {
+			continue;
+		}
+		if (argument === "--help" || argument === "-h") {
+			help = true;
+			continue;
+		}
+		if (!(RECONCILE_FLAGS as readonly string[]).includes(argument)) {
+			return fail(
+				"unavailable-configuration",
+				`unrecognized option "${argument}" for "reconcile". Supported options: ${RECONCILE_FLAGS.join(", ")}.`,
+			);
+		}
+		const value = rest[index + 1];
+		if (value === undefined || value.startsWith("--")) {
+			return fail("unavailable-configuration", `option "${argument}" requires a value.`);
+		}
+		if (target !== undefined) {
+			return fail("unavailable-configuration", `option "${argument}" was supplied more than once.`);
+		}
+		target = value;
+		index += 1;
+	}
 
-  if (target === undefined) {
-    if (help) {
-      return succeed({ kind: "help" });
-    }
-    return fail(
-      "unavailable-configuration",
-      '"reconcile" requires --target <path>: the destination project whose reconciliation is proposed.',
-    );
-  }
-  return succeed({ kind: "reconcile", target, help });
+	if (target === undefined) {
+		if (help) {
+			return succeed({ kind: "help" });
+		}
+		return fail(
+			"unavailable-configuration",
+			'"reconcile" requires --target <path>: the destination project whose reconciliation is proposed.',
+		);
+	}
+	return succeed({ kind: "reconcile", target, help });
 }
 
 /**
@@ -182,13 +177,10 @@ function parseReconcile(rest: readonly string[]): Result<ParsedInvocation> {
  * substitutes one editor for a requested another.
  */
 export function resolveEditor(requested: string): Result<SupportedEditor> {
-  if (isSupportedEditor(requested)) {
-    return succeed(requested);
-  }
-  return fail(
-    "unsupported-editor",
-    `unknown editor "${requested}". Supported: ${SUPPORTED_EDITORS.join(", ")}.`,
-  );
+	if (isSupportedEditor(requested)) {
+		return succeed(requested);
+	}
+	return fail("unsupported-editor", `unknown editor "${requested}". Supported: ${SUPPORTED_EDITORS.join(", ")}.`);
 }
 
 /**
@@ -198,24 +190,18 @@ export function resolveEditor(requested: string): Result<SupportedEditor> {
  * failure rather than an implicit lookup. Syntax is checked with the engine's own
  * rule so the engine is never reached with a value it would have to reject.
  */
-export function resolveRevision(
-  flag: string | undefined,
-  setting: string | undefined,
-): Result<string> {
-  const candidate = flag ?? setting;
-  if (candidate === undefined || candidate.trim() === "") {
-    return fail(
-      "invalid-revision",
-      "no source revision available. Supply --source-revision <40-hex> or set " +
-        `$${REVISION_ENV_VAR}. This tool never runs Git: the revision must come from ` +
-        "the release owner, so Herald 📯 (Release Manager) remains the only Git executor.",
-    );
-  }
-  if (!REVISION_PATTERN.test(candidate)) {
-    return fail(
-      "invalid-revision",
-      `source revision "${candidate}" is not a 40-character lowercase hex string.`,
-    );
-  }
-  return succeed(candidate);
+export function resolveRevision(flag: string | undefined, setting: string | undefined): Result<string> {
+	const candidate = flag ?? setting;
+	if (candidate === undefined || candidate.trim() === "") {
+		return fail(
+			"invalid-revision",
+			"no source revision available. Supply --source-revision <40-hex> or set " +
+				`$${REVISION_ENV_VAR}. This tool never runs Git: the revision must come from ` +
+				"the release owner, so Herald 📯 (Release Manager) remains the only Git executor.",
+		);
+	}
+	if (!REVISION_PATTERN.test(candidate)) {
+		return fail("invalid-revision", `source revision "${candidate}" is not a 40-character lowercase hex string.`);
+	}
+	return succeed(candidate);
 }

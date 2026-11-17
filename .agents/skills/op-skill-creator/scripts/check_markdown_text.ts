@@ -12,8 +12,8 @@
  * descriptive character name is intentionally not printed.
  */
 
-import { basename } from 'node:path';
+import { basename } from "node:path";
 
-import { main } from '#scripts/markdown_text_pkg/infrastructure/composition.ts';
+import { main } from "#scripts/markdown_text_pkg/infrastructure/composition.ts";
 
-process.exitCode = main(process.argv.slice(2), basename(process.argv[1] ?? 'check_markdown_text.ts'));
+process.exitCode = main(process.argv.slice(2), basename(process.argv[1] ?? "check_markdown_text.ts"));

@@ -20,37 +20,37 @@ import type { ClearanceLoad, ClearanceStore } from "#domain/synchronization/port
 import { readJsonDocument } from "./json-document.ts";
 
 export class JsonClearanceStore implements ClearanceStore {
-  async load(sourceRoot: string): Promise<ClearanceLoad> {
-    const path = join(sourceRoot, CLEARANCE_FILENAME);
-    let text: string;
-    try {
-      text = await readFile(path, "utf8");
-    } catch (error) {
-      // Absence is drift and an unreadable file is malformed input; the domain
-      // decides which, from the two facts this adapter reports.
-      const code = (error as { code?: string }).code;
-      return {
-        entries: null,
-        exists: code !== "ENOENT" && code !== "ENOTDIR",
-        reason: null,
-      };
-    }
-    const parsed = readJsonDocument(text);
-    if (parsed.kind === "duplicate-key") {
-      return {
-        entries: null,
-        exists: true,
-        reason: `duplicate key in clearance document: ${parsed.key}`,
-      };
-    }
-    if (parsed.kind === "malformed") {
-      return { entries: null, exists: true, reason: "malformed clearance JSON" };
-    }
-    const clearance = parseClearanceDocument(parsed.value);
-    return {
-      entries: clearance.ok ? clearance.entries : null,
-      exists: true,
-      reason: clearance.ok ? null : clearance.reason,
-    };
-  }
+	async load(sourceRoot: string): Promise<ClearanceLoad> {
+		const path = join(sourceRoot, CLEARANCE_FILENAME);
+		let text: string;
+		try {
+			text = await readFile(path, "utf8");
+		} catch (error) {
+			// Absence is drift and an unreadable file is malformed input; the domain
+			// decides which, from the two facts this adapter reports.
+			const code = (error as { code?: string }).code;
+			return {
+				entries: null,
+				exists: code !== "ENOENT" && code !== "ENOTDIR",
+				reason: null,
+			};
+		}
+		const parsed = readJsonDocument(text);
+		if (parsed.kind === "duplicate-key") {
+			return {
+				entries: null,
+				exists: true,
+				reason: `duplicate key in clearance document: ${parsed.key}`,
+			};
+		}
+		if (parsed.kind === "malformed") {
+			return { entries: null, exists: true, reason: "malformed clearance JSON" };
+		}
+		const clearance = parseClearanceDocument(parsed.value);
+		return {
+			entries: clearance.ok ? clearance.entries : null,
+			exists: true,
+			reason: clearance.ok ? null : clearance.reason,
+		};
+	}
 }
