@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { evaluateEvidence } from "./evaluate-evidence.ts";
+import { EvaluateEvidence } from "./evaluate-evidence.ts";
 import {
 	createCapturedMessage,
 	createControlledDeadline,
@@ -14,7 +14,7 @@ describe("evaluateEvidence invocation", () => {
 		const message = createCapturedMessage();
 		const options = createEvaluateEvidenceOptions();
 		const evaluator = createRecordingEvaluator();
-		await evaluateEvidence(message, evaluator, options, createControlledDeadline());
+		await new EvaluateEvidence({ evaluator, deadline: createControlledDeadline() }).execute(message, options);
 		expect(evaluator.calls).toHaveLength(1);
 		expect(evaluator.calls[0]?.input).toStrictEqual(createExpectedEvidenceInput(message, options));
 		expect(evaluator.calls[0]?.options.timeoutMs).toBe(options.timeoutMs);

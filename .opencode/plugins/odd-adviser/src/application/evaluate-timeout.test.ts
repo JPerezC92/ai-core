@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { evaluateEvidence } from "./evaluate-evidence.ts";
+import { EvaluateEvidence } from "./evaluate-evidence.ts";
 import {
 	createControlledDeadline,
 	createEvaluateEvidenceOptions,
@@ -21,7 +21,10 @@ describe("evaluateEvidence timeout", () => {
 		const canary = createLeakCanary();
 		const deadline = createControlledDeadline();
 		const options = createEvaluateEvidenceOptions();
-		const pending = evaluateEvidence(canary.message, createHangingEvaluator(), options, deadline);
+		const pending = new EvaluateEvidence({
+			evaluator: createHangingEvaluator(),
+			deadline,
+		}).execute(canary.message, options);
 		expect(deadline.requestedMs).toBe(options.timeoutMs);
 		expect(deadline.isPending).toBe(true);
 		deadline.trigger();

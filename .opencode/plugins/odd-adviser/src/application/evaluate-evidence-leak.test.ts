@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { evaluateEvidence } from "./evaluate-evidence.ts";
+import { EvaluateEvidence } from "./evaluate-evidence.ts";
 import { formatAdvisoryBlock } from "#domain/advisory-block.ts";
 import {
 	createControlledDeadline,
@@ -19,12 +19,10 @@ function expectNoEvidenceLeak(advisory: string, canary: LeakCanary): void {
 describe("evaluateEvidence evidence confidentiality", () => {
 	test("delivers an evaluated advisory and the block built from it that repeat no supplied text or image bytes", async () => {
 		const canary = createLeakCanary();
-		const outcome = await evaluateEvidence(
-			canary.message,
-			createRecordingEvaluator(),
-			createEvaluateEvidenceOptions(),
-			createControlledDeadline(),
-		);
+		const outcome = await new EvaluateEvidence({
+			evaluator: createRecordingEvaluator(),
+			deadline: createControlledDeadline(),
+		}).execute(canary.message, createEvaluateEvidenceOptions());
 		expect(outcome.status).toBe("evaluated");
 		expectNoEvidenceLeak(outcome.advisory, canary);
 		expectNoEvidenceLeak(formatAdvisoryBlock(outcome), canary);
@@ -32,12 +30,10 @@ describe("evaluateEvidence evidence confidentiality", () => {
 
 	test("delivers an unavailable advisory that repeats no supplied text or image bytes", async () => {
 		const canary = createLeakCanary();
-		const outcome = await evaluateEvidence(
-			canary.message,
-			createUnavailableEvaluator(),
-			createEvaluateEvidenceOptions(),
-			createControlledDeadline(),
-		);
+		const outcome = await new EvaluateEvidence({
+			evaluator: createUnavailableEvaluator(),
+			deadline: createControlledDeadline(),
+		}).execute(canary.message, createEvaluateEvidenceOptions());
 		expect(outcome).toStrictEqual(createExpectedUnavailableAdvisory("tool_error", expect.any(String)));
 		expectNoEvidenceLeak(outcome.advisory, canary);
 	});

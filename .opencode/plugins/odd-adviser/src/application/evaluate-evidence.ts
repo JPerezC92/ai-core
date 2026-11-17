@@ -1,8 +1,9 @@
-// Application operation: one evaluation attempt against the injected advisory capability.
-// It races the port against an injected deadline, maps every outcome to a fixed advisory
-// sentence, and never imports infrastructure. Empty answers are the bounded malformed
-// class rather than a receipt (R2). No supplied text, image bytes, transport message or
-// payload value can reach the returned advisory (S9).
+// Application use case: one evaluation attempt against the injected advisory capability. The
+// class receives its evaluator and deadline ports through constructor injection and exposes a
+// single `execute()`. It races the port against the injected deadline, maps every outcome to a
+// fixed advisory sentence, and never imports infrastructure. Empty answers are the bounded
+// malformed class rather than a receipt (R2). No supplied text, image bytes, transport message
+// or payload value can reach the returned advisory (S9).
 
 import type {
 	OddEvidenceAnswer,
@@ -44,53 +45,65 @@ type EvaluationAttempt =
 	| { readonly kind: "failed" }
 	| { readonly kind: "elapsed" };
 
-export async function evaluateEvidence(
-	message: CapturedMessage,
-	evaluator: OddEvidenceEvaluator,
-	options: EvaluateEvidenceOptions,
-	deadline: Deadline,
-): Promise<OddEvidenceAdvisory> {
-	const input: OddEvidenceInput = {
-		text: message.text,
-		images: message.images,
-		...(options.expectedModel === undefined ? {} : { expectedModel: options.expectedModel }),
-	};
+export type EvaluateEvidenceDependencies = {
+	readonly evaluator: OddEvidenceEvaluator;
+	readonly deadline: Deadline;
+};
 
-	const evaluation: Promise<EvaluationAttempt> = evaluator.evaluate(input, { timeoutMs: options.timeoutMs }).then(
-		(result) => ({ kind: "answered" as const, result }),
-		() => ({ kind: "failed" as const }),
-	);
+export class EvaluateEvidence {
+	readonly #evaluator: OddEvidenceEvaluator;
+	readonly #deadline: Deadline;
 
-	let cancelDeadline = (): void => undefined;
-	const elapsed = new Promise<EvaluationAttempt>((resolve) => {
-		cancelDeadline = deadline.schedule(options.timeoutMs, () => {
-			resolve({ kind: "elapsed" });
+	constructor(dependencies: EvaluateEvidenceDependencies) {
+		this.#evaluator = dependencies.evaluator;
+		this.#deadline = dependencies.deadline;
+	}
+
+	async execute(message: CapturedMessage, options: EvaluateEvidenceOptions): Promise<OddEvidenceAdvisory> {
+		const input: OddEvidenceInput = {
+			text: message.text,
+			images: message.images,
+			...(options.expectedModel === undefined ? {} : { expectedModel: options.expectedModel }),
+		};
+
+		const evaluation: Promise<EvaluationAttempt> = this.#evaluator
+			.evaluate(input, { timeoutMs: options.timeoutMs })
+			.then(
+				(result) => ({ kind: "answered" as const, result }),
+				() => ({ kind: "failed" as const }),
+			);
+
+		let cancelDeadline = (): void => undefined;
+		const elapsed = new Promise<EvaluationAttempt>((resolve) => {
+			cancelDeadline = this.#deadline.schedule(options.timeoutMs, () => {
+				resolve({ kind: "elapsed" });
+			});
 		});
-	});
 
-	try {
-		const attempt = await Promise.race([evaluation, elapsed]);
+		try {
+			const attempt = await Promise.race([evaluation, elapsed]);
 
-		if (attempt.kind === "answered") {
-			const outcome = attempt.result;
-			if (outcome.status !== "evaluated") {
-				return toUnavailableAdvisory(outcome.code, outcome.evaluationId);
+			if (attempt.kind === "answered") {
+				const outcome = attempt.result;
+				if (outcome.status !== "evaluated") {
+					return toUnavailableAdvisory(outcome.code, outcome.evaluationId);
+				}
+				if (answersNoQuestion(outcome.evaluation.answers)) {
+					return toUnavailableAdvisory("malformed_payload", outcome.evaluationId);
+				}
+				return {
+					status: "evaluated",
+					evaluation: outcome.evaluation,
+					advisory: evaluatedAdvisory,
+					...(outcome.evaluationId === undefined || outcome.evaluationId.length === 0
+						? {}
+						: { evaluationId: outcome.evaluationId }),
+				};
 			}
-			if (answersNoQuestion(outcome.evaluation.answers)) {
-				return toUnavailableAdvisory("malformed_payload", outcome.evaluationId);
-			}
-			return {
-				status: "evaluated",
-				evaluation: outcome.evaluation,
-				advisory: evaluatedAdvisory,
-				...(outcome.evaluationId === undefined || outcome.evaluationId.length === 0
-					? {}
-					: { evaluationId: outcome.evaluationId }),
-			};
+
+			return toUnavailableAdvisory(attempt.kind === "failed" ? "transport_error" : "timeout");
+		} finally {
+			cancelDeadline();
 		}
-
-		return toUnavailableAdvisory(attempt.kind === "failed" ? "transport_error" : "timeout");
-	} finally {
-		cancelDeadline();
 	}
 }

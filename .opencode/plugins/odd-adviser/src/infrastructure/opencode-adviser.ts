@@ -4,7 +4,7 @@
 // Host wire types and admission mapping live here: unknown host messages are mapped, media is
 // inlined, then domain captureMessage runs on typed AdmittedPart only.
 
-import { evaluateEvidence, toUnavailableAdvisory } from "#application/evaluate-evidence.ts";
+import { EvaluateEvidence, toUnavailableAdvisory } from "#application/evaluate-evidence.ts";
 import { formatAdvisoryBlock } from "#domain/advisory-block.ts";
 import { captureMessage } from "#domain/capture-message.ts";
 import type { AdmittedPart, CapturedMessage } from "#domain/capture-message.ts";
@@ -300,7 +300,10 @@ function evaluateOnce(
 	const cached = evaluations.get(key);
 	if (cached !== undefined) return cached;
 
-	const pending = evaluateEvidence(message, configuration.evaluator, configuration.options, createTimerDeadline());
+	const pending = new EvaluateEvidence({
+		evaluator: configuration.evaluator,
+		deadline: createTimerDeadline(),
+	}).execute(message, configuration.options);
 	evaluations.set(key, pending);
 	return pending;
 }

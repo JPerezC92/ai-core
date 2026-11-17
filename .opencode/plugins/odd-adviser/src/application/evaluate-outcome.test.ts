@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { evaluateEvidence } from "./evaluate-evidence.ts";
+import { EvaluateEvidence } from "./evaluate-evidence.ts";
 import { formatAdvisoryBlock } from "#domain/advisory-block.ts";
 import {
 	createCapturedMessage,
@@ -18,22 +18,18 @@ import {
 describe("evaluateEvidence outcome mapping", () => {
 	test("returns the validated evaluation when the port answers with a contract-valid value", async () => {
 		const evaluation = createEvaluation();
-		const outcome = await evaluateEvidence(
-			createCapturedMessage(),
-			createRecordingEvaluator(evaluation),
-			createEvaluateEvidenceOptions(),
-			createControlledDeadline(),
-		);
+		const outcome = await new EvaluateEvidence({
+			evaluator: createRecordingEvaluator(evaluation),
+			deadline: createControlledDeadline(),
+		}).execute(createCapturedMessage(), createEvaluateEvidenceOptions());
 		expect(outcome).toStrictEqual(createExpectedEvaluatedAdvisory(evaluation, expect.any(String)));
 	});
 
 	test("maps an evaluation that answers no question to the bounded malformed payload status", async () => {
-		const outcome = await evaluateEvidence(
-			createCapturedMessage(),
-			createRecordingEvaluator(createUnansweredEvaluation()),
-			createEvaluateEvidenceOptions(),
-			createControlledDeadline(),
-		);
+		const outcome = await new EvaluateEvidence({
+			evaluator: createRecordingEvaluator(createUnansweredEvaluation()),
+			deadline: createControlledDeadline(),
+		}).execute(createCapturedMessage(), createEvaluateEvidenceOptions());
 		expect(outcome).toStrictEqual(createExpectedUnavailableAdvisory("malformed_payload", expect.any(String)));
 		const block = formatAdvisoryBlock(outcome);
 		expect(block.split("\n")).toHaveLength(4);
@@ -42,22 +38,18 @@ describe("evaluateEvidence outcome mapping", () => {
 	});
 
 	test("maps a bounded tool error value to the matching unavailable status", async () => {
-		const outcome = await evaluateEvidence(
-			createCapturedMessage(),
-			createUnavailableEvaluator(),
-			createEvaluateEvidenceOptions(),
-			createControlledDeadline(),
-		);
+		const outcome = await new EvaluateEvidence({
+			evaluator: createUnavailableEvaluator(),
+			deadline: createControlledDeadline(),
+		}).execute(createCapturedMessage(), createEvaluateEvidenceOptions());
 		expect(outcome).toStrictEqual(createExpectedUnavailableAdvisory("tool_error", expect.any(String)));
 	});
 
 	test("maps a rejected channel to a bounded status without its message", async () => {
-		const outcome = await evaluateEvidence(
-			createCapturedMessage(),
-			createThrowingEvaluator(),
-			createEvaluateEvidenceOptions(),
-			createControlledDeadline(),
-		);
+		const outcome = await new EvaluateEvidence({
+			evaluator: createThrowingEvaluator(),
+			deadline: createControlledDeadline(),
+		}).execute(createCapturedMessage(), createEvaluateEvidenceOptions());
 		expect(outcome).toStrictEqual(createExpectedUnavailableAdvisory("transport_error", expect.any(String)));
 		expect(outcome.advisory).not.toContain(TRANSPORT_FAILURE_MESSAGE);
 	});

@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 import { getDefaultEnvironment } from "@modelcontextprotocol/client/stdio";
 
-import { evaluateEvidence as evaluateEvidenceAgainstDeadline } from "./application/evaluate-evidence.ts";
+import { EvaluateEvidence } from "./application/evaluate-evidence.ts";
 import type { CapturedMessage } from "./domain/capture-message.ts";
 import type { Deadline } from "./domain/deadline.ts";
 import type { OddEvidenceEvaluator } from "./domain/advisory.ts";
@@ -163,7 +163,7 @@ export async function evaluateEvidence(
 	evaluator: OddEvidenceEvaluator,
 	options: EvaluateEvidenceOptions,
 ): Promise<OddEvidenceAdvisory> {
-	return evaluateEvidenceAgainstDeadline(message, evaluator, options, createTimerDeadline());
+	return new EvaluateEvidence({ evaluator, deadline: createTimerDeadline() }).execute(message, options);
 }
 
 const composed = createOddAdviserPlugin({
