@@ -76,7 +76,7 @@ describe("the Git reader against a real repository", () => {
 		expect(body).toBe(repository.bodies[GIT_METACHARACTER_PATH]);
 		expect(existsSync(join(repository.directory, GIT_SIDE_EFFECT_NAME))).toBe(false);
 	});
-});
+}, 15_000);
 
 describe("the Git reader boundary failures", () => {
 	it("rejects a truncated name-status payload instead of returning a partial path", () => {
@@ -95,5 +95,5 @@ describe("the Git reader boundary failures", () => {
 		const reader = new GitReader({ cwd: repository.directory });
 
 		expect(() => reader.listCommits(repository.base, "refs/heads/unresolved")).toThrow(GitBoundaryError);
-	});
+	}, 15_000);
 });

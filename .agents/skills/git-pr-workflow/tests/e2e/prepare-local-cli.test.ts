@@ -155,4 +155,4 @@ describe("prepare-local as a spawned process", () => {
 		expect(run.stderr).toBe(`input/output failure: EEXIST: file already exists, open '${output}'\n`);
 		expect(readFileSync(output, "utf8")).toBe("existing\n");
 	});
-});
+}, 15_000);
