@@ -8,8 +8,20 @@ import { ModelSourceFailure, parseRecords } from "#scripts/op_model_lookup/domai
 const NOT_FOUND = "ERROR: `opencode` not found on PATH. Cannot list models.";
 const TIMEOUT_MS = 60_000;
 
+/** The external command this adapter runs; the composition root binds it. */
+export interface ModelSourceCommand {
+	readonly executable: string;
+	readonly args: readonly string[];
+}
+
 /** ModelSource adapter over the local `opencode models` process. */
 export class OpencodeModelSource implements ModelSource {
+	private readonly command: ModelSourceCommand;
+
+	constructor(command: ModelSourceCommand) {
+		this.command = command;
+	}
+
 	/**
 	 * Run the checked live command and return the valid parsed models.
 	 *
@@ -17,7 +29,7 @@ export class OpencodeModelSource implements ModelSource {
 	 * ModelSourceFailure; no fallback or partial output is ever returned.
 	 */
 	fetch(): readonly Model[] {
-		const result = spawnSync("opencode", ["models"], {
+		const result = spawnSync(this.command.executable, [...this.command.args], {
 			encoding: "utf8",
 			timeout: TIMEOUT_MS,
 			maxBuffer: 32 * 1024 * 1024,
