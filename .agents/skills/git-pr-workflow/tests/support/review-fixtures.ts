@@ -202,10 +202,9 @@ export const GIT_BASE_ONLY_CHANGED_CONTENT = "side = 2\n";
 export const GIT_BASE_MESSAGE = "feat: add source files";
 export const GIT_CHANGED_MESSAGE = "feat: change source files";
 export const GIT_BASE_ONLY_MESSAGE = "feat: change the base-only path";
-export const GIT_ORPHAN_MESSAGE = "feat: start an unrelated history";
+export const GIT_ORPHAN_MESSAGE = "feat: an unrelated history";
 export const GIT_SIDE_BRANCH = "feature/base-side";
 export const GIT_HEAD_BRANCH = "feature/head-side";
-export const GIT_ORPHAN_BRANCH = "orphan-history";
 export const GIT_BINARY_CONTENT = Buffer.from([0xff, 0xfe, 0x00, 0x6e, 0x6f, 0x74, 0x20, 0x74, 0x65, 0x78, 0x74, 0x0a]);
 export const GIT_REDIRECTING_VARIABLES = ["GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"];
 
@@ -214,6 +213,7 @@ export type GitRepositoryFixture = {
 	readonly directory: string;
 	readonly base: string;
 	readonly head: string;
+	readonly orphanHead: string;
 	readonly message: string;
 	readonly changedPaths: string[];
 	readonly deletedPaths: string[];
@@ -230,13 +230,6 @@ export type GitDivergentFixture = {
 	readonly headContent: string;
 	readonly baseOnlyPath: string;
 	readonly baseOnlyContent: string;
-};
-
-/** One commit and a second history that shares no ancestor with it. */
-export type GitOrphanFixture = {
-	readonly directory: string;
-	readonly base: string;
-	readonly orphanHead: string;
 };
 
 /** Return an environment without machine Git configuration or repository redirection. */
@@ -281,6 +274,26 @@ export function commitFixtureTree(directory: string, message: string): string {
 	return runFixtureGit(directory, "rev-parse", "HEAD").trim();
 }
 
+/** Create one commit object on the empty tree with no parent, so its history shares no ancestor. */
+function createParentlessCommit(directory: string, message: string): string {
+	// `mktree` reads its empty stdin as the empty listing, so the fixture needs no worktree
+	// change and no branch checkout: only a dangling commit object is added.
+	const emptyTree = runFixtureGit(directory, "mktree").trim();
+	return runFixtureGit(
+		directory,
+		"-c",
+		"user.name=Fixture",
+		"-c",
+		"user.email=fixture@example.invalid",
+		"-c",
+		"commit.gpgsign=false",
+		"commit-tree",
+		emptyTree,
+		"-m",
+		message,
+	).trim();
+}
+
 /** Build two commits whose second change adds, renames, and deletes one path each. */
 export function createCommittedRepository(directory: string): GitRepositoryFixture {
 	mkdirSync(join(directory, "src"), { recursive: true });
@@ -296,10 +309,12 @@ export function createCommittedRepository(directory: string): GitRepositoryFixtu
 	runFixtureGit(directory, "mv", GIT_RENAMED_FROM_PATH, GIT_RENAMED_TO_PATH);
 	runFixtureGit(directory, "add", "--all");
 	const head = commitFixtureTree(directory, GIT_CHANGED_MESSAGE);
+	const orphanHead = createParentlessCommit(directory, GIT_ORPHAN_MESSAGE);
 	return {
 		directory,
 		base,
 		head,
+		orphanHead,
 		message: GIT_CHANGED_MESSAGE,
 		changedPaths: [GIT_SOURCE_PATH, GIT_REMOVED_PATH, GIT_METACHARACTER_PATH, GIT_RENAMED_TO_PATH],
 		deletedPaths: [GIT_REMOVED_PATH],
@@ -308,33 +323,6 @@ export function createCommittedRepository(directory: string): GitRepositoryFixtu
 			[GIT_METACHARACTER_PATH]: GIT_METACHARACTER_CONTENT,
 			[GIT_RENAMED_TO_PATH]: GIT_RENAMED_CONTENT,
 		},
-	};
-}
-
-/** Build the snapshot the assembled command must produce for the shared Git fixture. */
-export function createExpectedGitSnapshot(base: string, head: string): Snapshot {
-	const local = createLocalSnapshot();
-	const number = local.pr_number;
-	return {
-		schema: local.schema,
-		pr_number: number,
-		head_sha: head,
-		base,
-		artifacts: [
-			{
-				surface: "pr-title",
-				source: `PR #${number} title`,
-				content: local.artifacts[0]?.content ?? "",
-			},
-			{ surface: "pr-body", source: `PR #${number} body`, content: createBody() },
-			{ surface: "commit-message", source: head, content: GIT_CHANGED_MESSAGE },
-		],
-		changed_files: [
-			{ path: GIT_SOURCE_PATH, content: GIT_CHANGED_CONTENT },
-			{ path: GIT_REMOVED_PATH, content: "" },
-			{ path: GIT_METACHARACTER_PATH, content: GIT_METACHARACTER_CONTENT },
-			{ path: GIT_RENAMED_TO_PATH, content: GIT_RENAMED_CONTENT },
-		],
 	};
 }
 
@@ -369,18 +357,4 @@ export function createDivergentRepository(directory: string): GitDivergentFixtur
 		baseOnlyPath: GIT_BASE_ONLY_PATH,
 		baseOnlyContent: GIT_BASE_ONLY_CHANGED_CONTENT,
 	};
-}
-
-/** Build one commit and an orphan commit whose history includes no common ancestor. */
-export function createOrphanRepository(directory: string): GitOrphanFixture {
-	mkdirSync(join(directory, "src"), { recursive: true });
-	runFixtureGit(directory, "init", "--quiet");
-	writeFileSync(join(directory, GIT_SOURCE_PATH), GIT_BASE_CONTENT, "utf8");
-	runFixtureGit(directory, "add", "--all");
-	const base = commitFixtureTree(directory, GIT_BASE_MESSAGE);
-	runFixtureGit(directory, "checkout", "--quiet", "--orphan", GIT_ORPHAN_BRANCH);
-	writeFileSync(join(directory, GIT_SOURCE_PATH), GIT_CHANGED_CONTENT, "utf8");
-	runFixtureGit(directory, "add", "--all");
-	const orphanHead = commitFixtureTree(directory, GIT_ORPHAN_MESSAGE);
-	return { directory, base, orphanHead };
 }
