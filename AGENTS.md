@@ -114,7 +114,7 @@ This project standing-authorizes Herald 📯 (Release Manager) to delete a merge
 
 ### Stop and next-step reporting
 
-- Step reporting and continuation follow `.aicore/core/knowledge/agent-workflow.md` → `#### Step reporting and transitions`; presentation follows `.aicore/core/knowledge/agents.md` → `### Message presentation`. Stop only when the user must decide or act and state the exact action required. If authorized scope remains, continue; if it is finished, say `ALL FINISHED` and state the next options; do not select unrelated work to avoid stopping.
+- Step reporting and continuation follow `.aicore/core/knowledge/agent-workflow.md` → `#### Step reporting and transitions`; presentation follows `.aicore/core/knowledge/agents.md` → `### Message presentation`. Stop only when the user must decide or act and state the exact action required. If authorized scope remains, continue; if it is finished, say `ALL FINISHED` and state the next options — a delivery whose governing record is not yet closed reports the merge-decision status instead, per `.aicore/core/knowledge/agents.md` → `### Message presentation`; do not select unrelated work to avoid stopping.
 
 ### Conventions
 
