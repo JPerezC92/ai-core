@@ -41,6 +41,11 @@ function diagnostic(message: string): string {
 	return `${USAGE}\n${PROGRAM}: error: ${message}\n`;
 }
 
+/** The documented business refusal payload for one refused command. */
+function refusal(payload: { readonly code: string; readonly message: string }): string {
+	return `{"code": ${JSON.stringify(payload.code)}, "message": ${JSON.stringify(payload.message)}}\n`;
+}
+
 afterEach(() => {
 	for (const path of roots.splice(0)) rmSync(path, { recursive: true, force: true });
 });
@@ -57,19 +62,54 @@ describe("initialize command", () => {
 		expect(result.stdout).toBe('{"status": "prepared", "command": "initialize"}\n');
 		expect(readFileSync(working, "utf8")).toBe(makeCompletedBody());
 	});
+});
 
-	it("refuses a malformed draft with the documented payload and no artifact", () => {
-		const directory = root();
-		const draft = write(join(directory, "draft.md"), makeMalformedDraft());
-		const working = join(directory, "working-body.md");
+describe("business refusal reporting", () => {
+	it("reports a business refusal as exit 1 with its code and message", () => {
+		const cases = [
+			{
+				name: "initialize with a malformed creation draft",
+				arrange: (directory: string) => {
+					const draft = write(join(directory, "draft.md"), makeMalformedDraft());
+					const working = join(directory, "working-body.md");
+					return {
+						args: ["initialize", "--draft", draft, "--working-body", working],
+						artifact: working,
+						payload: {
+							code: "DRAFT_INVALID",
+							message: "creation draft title wrapper and Summary required",
+						},
+					};
+				},
+			},
+			{
+				name: "validate whose supplied metadata diverges from the accepted baseline",
+				arrange: (directory: string) => {
+					const baseline = write(join(directory, "baseline.json"), JSON.stringify(makeMetadata()));
+					const current = write(
+						join(directory, "current.json"),
+						JSON.stringify(makeMetadata({ headRefOid: "def5678abc1234def5678abc1234def5678abc1" })),
+					);
+					const working = write(join(directory, "working-body.md"), makeCompletedBody());
+					return {
+						args: ["validate", "--baseline", baseline, "--current", current, "--working-body", working],
+						artifact: null,
+						payload: { code: "REMOTE_DIVERGED", message: "remote metadata differs from accepted baseline" },
+					};
+				},
+			},
+		];
 
-		const result = run(["initialize", "--draft", draft, "--working-body", working]);
+		for (const testCase of cases) {
+			const directory = root();
+			const { args, artifact, payload } = testCase.arrange(directory);
 
-		expect(result.status).toBe(1);
-		expect(result.stdout).toBe(
-			'{"code": "DRAFT_INVALID", "message": "creation draft title wrapper and Summary required"}\n',
-		);
-		expect(existsSync(working)).toBe(false);
+			const result = run(args);
+
+			expect(result.status, testCase.name).toBe(1);
+			expect(result.stdout, testCase.name).toBe(refusal(payload));
+			if (artifact !== null) expect(existsSync(artifact), testCase.name).toBe(false);
+		}
 	});
 });
 
@@ -140,6 +180,12 @@ describe("command line contract", () => {
 			{
 				args: ["initialize", "--draft", "d.md"],
 				message: "the following arguments are required: --working-body",
+			},
+			{ args: ["initialize", "extra"], message: "unrecognized arguments: extra" },
+			{ args: ["initialize", "--draft"], message: "argument --draft: expected one argument" },
+			{
+				args: ["initialize", "--draft", "d.md", "--working-body", "w.md", "--extra", "x"],
+				message: "unrecognized arguments: --extra",
 			},
 		];
 
