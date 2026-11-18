@@ -130,7 +130,7 @@ Separately verify remediation of reported findings and obtain fresh whole-featur
 
 Read and apply `.aicore/core/knowledge/agent-workflow.md` `### ODD protocol`, step 7, for separate observable-outcome verification, failure reproduction and honest reporting of missing evidence/pending controls before task completion. Reporting and scope-bounded continuation follow its `#### Step reporting and transitions` and `.aicore/core/knowledge/agents.md` `### Message presentation`. On close, every task is `done` and has a commit reference. Set `Status: closed`, add `> **Closed:** date`, and record a final `L# — Close:` entry.
 
-**Closure consistency.** A record whose task rows are all `done` is either closed with its closure evidence — the independent review verdict, the delivery evidence and the observable-outcome verification it asserts — or active with the open closure prerequisite named in its Log by an entry that begins `Blocked:`. Independent acceptance is never fabricated and a feature with missing evidence is never closed automatically: the missing evidence is named, not assumed. The validator detects this only for records created on or after the rule's effective date, so a historical record's status, Log and Specs are left exactly as written rather than rewritten to satisfy a later convention.
+**Closure consistency.** The stages and each stage's precondition are stated in `### Completion stages`. A record whose task rows are all `done` is either closed with its closure evidence — the independent review verdict, the delivery evidence and the observable-outcome verification it asserts — or active with the open closure prerequisite named in its Log by an entry that begins `Blocked:`. Independent acceptance is never fabricated and a feature with missing evidence is never closed automatically: the missing evidence is named, not assumed. The validator detects this only for records created on or after the rule's effective date, so a historical record's status, Log and Specs are left exactly as written rather than rewritten to satisfy a later convention.
 
 ### Retire a task record
 
@@ -161,6 +161,23 @@ The feature's `Specs` and `Tasks` bound its requirements and work; they do not r
 ### Delivery boundary
 
 Closing the feature document is not delivery. Explicit authorization may be supplied per action or through an applicable standing instruction; local commits are standing-authorized only when the project says so. Push, PR, merge, tag, release, and archive remain separately authorized, and a tool-permission denial is never bypassed. A PR is a reviewable slice — work-unit commits or the feature's task slice — never the accumulated branch and never a substitute for the feature document. Git execution remains with Herald 📯 (Release Manager); merge remains user-only.
+
+### Completion stages
+
+A change reaches completion in stages. Each stage has one owner and its own precondition; their ordering dependencies are stated below.
+
+1. **Implementation delivered** — the authorized work is committed, and every affected task row carries its commit reference.
+2. **Verification complete** — the applicable checks and owner gates have run against the delivered content and are recorded with their verdict. Independent semantic review remains a closure prerequisite and, when a PR exists, includes its current evidence as required by `### Close`.
+3. **Pull request published** — Herald 📯 (Release Manager) has published exactly the authorized pull request against its base, and its head is fixed.
+4. **Record closed** — every task row is `done` with a commit reference, `Status: closed`, the `> **Closed:**` date and the final `L# — Close:` entry are set, and the closure evidence is recorded.
+5. **Pull request merged** — the merge is the user's decision alone and stays separately authorized; no agent merges.
+6. **Post-merge cleanup** — the merged-branch cleanup runs only after a proven merge.
+
+**Ordering.** Stages 1 to 3 precede both closure and the merge. Closure and the merge are independent of each other: closure requires no merge evidence, and a merge requires no closure. A merged pull request does not close its record, and a closed record does not merge it; the merge stays separately authorized and remains the user's decision alone. Stage 6 follows a proven merge. A closed record becomes eligible for retirement under `### Retire a task record`, which depends on the record's own closure date and not on a merge. This rule governs records closed after it; a record closed earlier keeps its closure, and a closure obligation `### Close` already required but that was not recorded is completed, not rewritten.
+
+**Commit references.** A `done` task row names a commit that carries the work: the commit exists in this repository and its content is the work that task delivered. A pull request's own work-unit commits remain valid references after the merge, whether or not the merge was a squash; when a squash commit is the carrier on the base branch, the delivery narrative names it as well. The record's own closure edit is delivered by the commit that carries it, because a task row's commit reference cannot name the commit that carries that row.
+
+**Reporting.** A delivery is complete only when stage 4 is satisfied. The report that says so, and the report that distinguishes a merge decision from a finished delivery, follow `.aicore/core/knowledge/agents.md` → `### Message presentation`.
 
 ### Release readiness and review findings
 

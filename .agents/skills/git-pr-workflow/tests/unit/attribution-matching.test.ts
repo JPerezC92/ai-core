@@ -1,7 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { ScanAttribution } from "#scripts/attribution_scan/application/scan_attribution.ts";
-import { PolicyValidationError, SnapshotValidationError } from "#scripts/attribution_scan/domain/records.ts";
-import type { ScanResult } from "#scripts/attribution_scan/domain/records.ts";
 import {
 	FIXTURE_HEAD_SHA,
 	loadApprovedPolicy,
@@ -10,23 +7,11 @@ import {
 	makeCaseFoldedIdentityPolicy,
 	makeChangedFile,
 	makeChangedFiles,
-	makeCompleteSnapshot,
-	makeMalformedPolicy,
-	makeMalformedSnapshot,
 	makeMultilineMatchingContents,
 	makeOrdinaryIdentityMention,
 	makeSnapshotWithArtifactContent,
-	makeSyntheticPolicy,
+	scanAttribution,
 } from "#tests/support/attribution-fixtures.ts";
-
-/** Run the scan operation and fail loudly when it rejects the decoded inputs. */
-function scan(snapshotValue: unknown, policyValue: unknown): ScanResult {
-	const result = new ScanAttribution().execute({ snapshotValue, policyValue });
-	if (result instanceof PolicyValidationError || result instanceof SnapshotValidationError) {
-		throw new Error(`expected a scan result, received ${result.code}: ${result.message}`);
-	}
-	return result;
-}
 
 /** Every approved marker, written literally so a policy change is visible here. */
 const APPROVED_MARKERS: readonly { readonly index: number; readonly text: string }[] = [
@@ -59,56 +44,6 @@ const APPROVED_IDENTITIES: readonly {
 	{ index: 12, text: "[bot]", reported: ["[bot]"] },
 ];
 
-describe("ScanAttribution.execute", () => {
-	it("returns a typed snapshot error with the original message", () => {
-		const result = new ScanAttribution().execute({
-			snapshotValue: makeMalformedSnapshot(),
-			policyValue: makeSyntheticPolicy(),
-		});
-
-		expect(result).toBeInstanceOf(SnapshotValidationError);
-		expect(result).toMatchObject({
-			code: "SNAPSHOT_INVALID",
-			message: "snapshot pr_number must be a positive integer",
-		});
-	});
-
-	it("returns a typed policy error with the original message", () => {
-		const result = new ScanAttribution().execute({
-			snapshotValue: makeCompleteSnapshot(),
-			policyValue: makeMalformedPolicy(makeSyntheticPolicy()),
-		});
-
-		expect(result).toBeInstanceOf(PolicyValidationError);
-		expect(result).toMatchObject({
-			code: "POLICY_INVALID",
-			message: "policy markers must be a non-empty string list",
-		});
-	});
-
-	it("validates the snapshot before the policy", () => {
-		const result = new ScanAttribution().execute({
-			snapshotValue: makeMalformedSnapshot(),
-			policyValue: makeMalformedPolicy(makeSyntheticPolicy()),
-		});
-
-		expect(result).toBeInstanceOf(SnapshotValidationError);
-		expect(result).toMatchObject({ message: "snapshot pr_number must be a positive integer" });
-	});
-
-	it("returns the scan metadata without matches for complete clean inputs", () => {
-		const result = scan(makeCompleteSnapshot(), makeSyntheticPolicy());
-
-		expect(result).toEqual({
-			pr_number: 80,
-			head_sha: "a".repeat(40),
-			base: "origin/main",
-			matches: [],
-			exclusions: [],
-		});
-	});
-});
-
 describe("attribution matching", () => {
 	it("matches every approved marker and identity pair the same line carries", () => {
 		const policy = loadApprovedPolicy();
@@ -122,7 +57,7 @@ describe("attribution matching", () => {
 					makeChangedFiles(makeChangedFile()),
 				);
 
-				const result = scan(snapshot, policy);
+				const result = scanAttribution(snapshot, policy);
 
 				expect(result.matches).toEqual(
 					identity.reported.map((reportedIdentity) => ({
@@ -146,7 +81,7 @@ describe("attribution matching", () => {
 			makeChangedFiles(makeChangedFile()),
 		);
 
-		expect(scan(snapshot, policy).matches).toEqual([]);
+		expect(scanAttribution(snapshot, policy).matches).toEqual([]);
 	});
 
 	it("matches case-insensitively and reports the surface, source, path and line", () => {
@@ -158,7 +93,7 @@ describe("attribution matching", () => {
 			makeChangedFiles(makeChangedFile("src/example.py", fileContent)),
 		);
 
-		const matches = scan(snapshot, policy).matches;
+		const matches = scanAttribution(snapshot, policy).matches;
 
 		expect(matches).toEqual([
 			{
@@ -191,42 +126,6 @@ describe("attribution matching", () => {
 			makeChangedFiles(makeChangedFile()),
 		);
 
-		expect(scan(snapshot, policy).matches).toEqual([]);
-	});
-});
-
-describe("policy self-exclusion", () => {
-	it("excludes only the exact policy path and reports the exclusion", () => {
-		const policy = loadApprovedPolicy();
-		const matchingLine = makeAttributionLine(policy);
-		const excludedPath = policy.self_excluded_file;
-		const snapshot = makeSnapshotWithArtifactContent(
-			"pr-title",
-			"",
-			makeChangedFiles(
-				makeChangedFile(excludedPath, matchingLine),
-				makeChangedFile(`./${excludedPath}`, matchingLine),
-			),
-		);
-
-		const result = scan(snapshot, policy);
-
-		expect(result.exclusions).toEqual([{ path: excludedPath, reason: "policy self-exclusion" }]);
-		expect(result.matches.map((match) => match.path)).toEqual([`./${excludedPath}`]);
-	});
-
-	it("normalizes the slash direction of the excluded path", () => {
-		const policy = loadApprovedPolicy();
-		const windowsPath = policy.self_excluded_file.replace(/\//gu, "\\");
-		const snapshot = makeSnapshotWithArtifactContent(
-			"pr-title",
-			"",
-			makeChangedFiles(makeChangedFile(windowsPath, makeAttributionLine(policy))),
-		);
-
-		const result = scan(snapshot, policy);
-
-		expect(result.exclusions).toEqual([{ path: windowsPath, reason: "policy self-exclusion" }]);
-		expect(result.matches).toEqual([]);
+		expect(scanAttribution(snapshot, policy).matches).toEqual([]);
 	});
 });

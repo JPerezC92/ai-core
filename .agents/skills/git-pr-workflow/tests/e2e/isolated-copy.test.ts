@@ -19,6 +19,7 @@ const skillRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const runtimeFiles = [
 	"scripts/prepare_pr_evidence.ts",
 	"scripts/scan_attribution.ts",
+	"scripts/cli_delivery.ts",
 	"scripts/pr_review/domain/records.ts",
 	"scripts/pr_review/domain/ports.ts",
 	"scripts/pr_review/domain/snapshot_assembly.ts",

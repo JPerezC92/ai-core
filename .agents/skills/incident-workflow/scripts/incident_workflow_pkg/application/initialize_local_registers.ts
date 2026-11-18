@@ -10,18 +10,7 @@
  */
 
 import { ValidateDiagnosticKnowledge } from "./validate_diagnostic_knowledge.ts";
-import type { DiagnosticKnowledgeFindings } from "./validate_diagnostic_knowledge.ts";
-
-/** Read-only validation of one destination's diagnostic knowledge. */
-export function validateDiagnosticKnowledge(input: {
-	readonly baselineSymptoms: string | null;
-	readonly localSymptoms: string | null;
-	readonly localProblems: string | null;
-	readonly localSymptomsPath: string;
-	readonly localProblemsPath: string;
-}): DiagnosticKnowledgeFindings {
-	return new ValidateDiagnosticKnowledge().execute(input);
-}
+import type { ProblemRow } from "#scripts/incident_workflow_pkg/domain/ports.ts";
 
 /** The filesystem facts this operation needs, so it stays testable. */
 export interface RegisterInitializationPorts {
@@ -29,6 +18,7 @@ export interface RegisterInitializationPorts {
 	readonly readText: (path: string) => string;
 	readonly writeText: (path: string, content: string) => void;
 	readonly ensureDirectory: (path: string) => void;
+	readonly loadProblemRows: (path: string) => readonly ProblemRow[] | null;
 }
 
 /** Where the registers live and which template seeds each one. */
@@ -49,9 +39,11 @@ export interface RegisterInitializationResult {
 
 export class InitializeLocalRegisters {
 	private readonly ports: RegisterInitializationPorts;
+	private readonly knowledge: ValidateDiagnosticKnowledge;
 
-	constructor(ports: RegisterInitializationPorts) {
+	constructor(ports: RegisterInitializationPorts, knowledge: ValidateDiagnosticKnowledge) {
 		this.ports = ports;
+		this.knowledge = knowledge;
 	}
 
 	execute(request: RegisterInitializationRequest): RegisterInitializationResult {
@@ -73,16 +65,14 @@ export class InitializeLocalRegisters {
 
 		// An existing register is validated after the create-only pass, so a
 		// malformed file is reported rather than overwritten by a template.
-		const knowledge = validateDiagnosticKnowledge({
+		const knowledge = this.knowledge.execute({
 			baselineSymptoms: this.ports.isFile(request.baselineSymptomsPath)
 				? this.ports.readText(request.baselineSymptomsPath)
 				: null,
 			localSymptoms: this.ports.isFile(request.localSymptomsPath)
 				? this.ports.readText(request.localSymptomsPath)
 				: null,
-			localProblems: this.ports.isFile(request.localProblemsPath)
-				? this.ports.readText(request.localProblemsPath)
-				: null,
+			localProblemRows: this.ports.loadProblemRows(request.localProblemsPath),
 			localSymptomsPath: request.localSymptomsPath,
 			localProblemsPath: request.localProblemsPath,
 		});

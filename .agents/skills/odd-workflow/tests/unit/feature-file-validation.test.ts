@@ -8,6 +8,7 @@ import {
 import type { PathComparisonPolicy } from "#scripts/feature_file_validation/domain/rules.ts";
 import {
 	FeatureFileSourceFake,
+	featureFileApostropheFixture,
 	featureFileCaseOrderFixture,
 	featureFileDirectoryFixture,
 	featureFileFailingFixture,
@@ -47,6 +48,22 @@ describe("ValidateFeatureFiles.execute", () => {
 			path: "features/a.md",
 			findings: [
 				"feature-file-status-derivation: declared status 'achieved' does not match the status derived from the ticks 'partial'",
+			],
+		});
+	});
+
+	it("reports the double-quoted diagnostics for an apostrophe-bearing status and mark", () => {
+		const fixture = featureFileApostropheFixture();
+		const source = new FeatureFileSourceFake(fixture.references, fixture.documents);
+
+		const [rejected] = [...new ValidateFeatureFiles(source, caseSensitivePolicy).execute("features")];
+
+		expect(rejected).toBeInstanceOf(InvalidFeatureFileError);
+		expect(rejected).toMatchObject({
+			path: "features/a.md",
+			findings: [
+				"feature-file-status: status must be one of 'achieved', 'partial' or 'not started'; found \"achieved's\"",
+				"feature-file-requirement-mark: requirement 1 carries an unknown mark \"owner's mark\"; marks are 'upstream', 'upstream · local detail', 'upstream · narrowed', 'local' or 'local · conflicts'",
 			],
 		});
 	});

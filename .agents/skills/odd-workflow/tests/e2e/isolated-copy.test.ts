@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
-import { makeFeature } from "#tests/support/feature-fixtures.ts";
+import { makeFeature, makeFeatureWithApostropheHeading } from "#tests/support/feature-fixtures.ts";
 
 const skillRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const runtimeFiles = [
@@ -57,13 +57,14 @@ describe("validate_feature process in an isolated source-only copy", () => {
 		const documents = join(fixtures, "valid");
 		mkdirSync(documents);
 		writeFileSync(join(documents, "_template.md"), makeFeature("Feature name"), "utf8");
-		writeFileSync(join(documents, "feature.md"), makeFeature(), "utf8");
+		writeFileSync(join(documents, "z.md"), makeFeature(), "utf8");
+		writeFileSync(join(documents, "a.md"), makeFeature(), "utf8");
 
 		const run = runIsolatedNode(runtime, [documents]);
 
 		expect(run.error).toBeUndefined();
 		expect(run.status).toBe(0);
-		expect(String(run.stdout)).toBe(`ok ${join(documents, "feature.md")}\n`);
+		expect(String(run.stdout)).toBe(`ok ${join(documents, "a.md")}\nok ${join(documents, "z.md")}\n`);
 		expect(String(run.stderr)).toBe("");
 		expect(readdirSync(runtime).sort()).toEqual(["package.json", "scripts"]);
 		expect(existsSync(join(runtime, "node_modules"))).toBe(false);
@@ -92,6 +93,16 @@ describe("validate_feature process in an isolated source-only copy", () => {
 		expect(run.status).toBe(1);
 		expect(String(run.stdout)).toBe(`FAIL ${file}\n  - title must not be the template placeholder\n`);
 		expect(String(run.stderr)).toBe("");
+
+		writeFileSync(file, makeFeatureWithApostropheHeading(), "utf8");
+		const duplicatedHeading = runIsolatedNode(runtime, [file]);
+
+		expect(duplicatedHeading.error).toBeUndefined();
+		expect(duplicatedHeading.status).toBe(1);
+		expect(String(duplicatedHeading.stdout)).toBe(
+			`FAIL ${file}\n  - heading '## Tasks' must appear exactly once; found 2\n`,
+		);
+		expect(String(duplicatedHeading.stderr)).toBe("");
 	});
 
 	it("pins the no-documents output and its exit status for a template-only directory", () => {

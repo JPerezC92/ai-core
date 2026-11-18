@@ -53,15 +53,20 @@ export type TaskRecordFixture = {
 	readonly documents: Map<string, string>;
 };
 
+/** The reference whose read fails when a source carries a read failure. */
+const FAILING_REFERENCE = "records/b.md";
+
 /** An in-memory retirement source that records the references it reads. */
 export class RetirementSourceFake implements RetirementSource {
 	readonly reads: string[] = [];
 	private readonly references: string[];
 	private readonly documents: Map<string, string>;
+	private readonly readFailure: Error | undefined;
 
-	constructor(references: string[], documents: Map<string, string>) {
+	constructor(references: string[], documents: Map<string, string>, readFailure?: Error) {
 		this.references = references;
 		this.documents = documents;
+		this.readFailure = readFailure;
 	}
 
 	discover(_target: string): string[] {
@@ -70,6 +75,7 @@ export class RetirementSourceFake implements RetirementSource {
 
 	read(reference: string): string {
 		this.reads.push(reference);
+		if (reference === FAILING_REFERENCE && this.readFailure) throw this.readFailure;
 		const document = this.documents.get(reference);
 		if (document === undefined) throw new Error(`missing fixture: ${reference}`);
 		return document;

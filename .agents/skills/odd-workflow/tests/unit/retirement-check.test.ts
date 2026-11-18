@@ -1,39 +1,66 @@
 import { describe, expect, it } from "vitest";
-import { calendarDaysBetween, evaluateRetirement, parseCalendarDate } from "#scripts/retirement_check/domain/rules.ts";
-import { makeTaskRecord } from "#tests/support/retirement-fixtures.ts";
+import { CheckRetirements } from "#scripts/retirement_check/application/check_retirements.ts";
+import { NoTaskRecordsError, RetirementReport } from "#scripts/retirement_check/domain/records.ts";
+import type { RetirementDecision } from "#scripts/retirement_check/domain/records.ts";
+import { makeTaskRecord, RetirementSourceFake } from "#tests/support/retirement-fixtures.ts";
 
 const AS_OF = "2026-11-14";
+const REFERENCE = "records/a.md";
 
-describe("parseCalendarDate", () => {
-	it("returns the UTC midnight of a real calendar date", () => {
-		expect(parseCalendarDate("2026-11-01")).toBe(Date.UTC(2026, 10, 1));
+/** Runs the retirement check over one record and returns the decision it reports. */
+function decisionFor(text: string, asOfDate: string): RetirementDecision {
+	const source = new RetirementSourceFake([REFERENCE], new Map([[REFERENCE, text]]));
+	const results = [...new CheckRetirements(source).execute("records", asOfDate)];
+	const [result] = results;
+	if (!(result instanceof RetirementReport)) {
+		throw new Error(`expected a retirement report, received ${result?.constructor.name ?? "no result"}`);
+	}
+	return result.decision;
+}
+
+describe("CheckRetirements.execute", () => {
+	it("reads the recorded closure date as its UTC midnight", () => {
+		expect(decisionFor(makeTaskRecord({ closedOn: "2026-11-01" }), "2026-11-01")).toStrictEqual({
+			kind: "excluded",
+			reason: "0 complete calendar days since closure; 7 required",
+		});
+		expect(decisionFor(makeTaskRecord({ closedOn: "2026-11-01" }), "2026-11-02")).toStrictEqual({
+			kind: "excluded",
+			reason: "1 complete calendar days since closure; 7 required",
+		});
+		expect(decisionFor(makeTaskRecord({ closedOn: "2026-11-01" }), "2026-11-15")).toStrictEqual({
+			kind: "candidate",
+			closedOn: "2026-11-01",
+			ageDays: 14,
+		});
 	});
 
-	it("rejects a value that is not a calendar date", () => {
-		expect(parseCalendarDate("2026-13-01")).toBeNull();
-		expect(parseCalendarDate("2026-11-31")).toBeNull();
-		expect(parseCalendarDate("2026-02-30")).toBeNull();
-		expect(parseCalendarDate("1 November 2026")).toBeNull();
-		expect(parseCalendarDate("")).toBeNull();
+	it("excludes a record whose closure date is not a calendar date", () => {
+		for (const closureDate of ["2026-13-01", "2026-11-31", "2026-02-30", "1 November 2026"]) {
+			expect(decisionFor(makeTaskRecord({ closedOn: closureDate }), AS_OF)).toStrictEqual({
+				kind: "excluded",
+				reason: "closure date is not a calendar date",
+			});
+		}
 	});
-});
 
-describe("calendarDaysBetween", () => {
 	it("counts whole calendar days across a month boundary", () => {
-		expect(calendarDaysBetween(parseCalendarDate("2026-12-28")!, parseCalendarDate("2027-01-04")!)).toBe(7);
+		expect(decisionFor(makeTaskRecord({ closedOn: "2026-11-30" }), "2026-12-07")).toStrictEqual({
+			kind: "candidate",
+			closedOn: "2026-11-30",
+			ageDays: 7,
+		});
 	});
-});
 
-describe("evaluateRetirement", () => {
 	it("excludes a record closed six complete calendar days before the report date", () => {
-		expect(evaluateRetirement(makeTaskRecord({ closedOn: "2026-11-08" }), AS_OF)).toEqual({
+		expect(decisionFor(makeTaskRecord({ closedOn: "2026-11-08" }), AS_OF)).toStrictEqual({
 			kind: "excluded",
 			reason: "6 complete calendar days since closure; 7 required",
 		});
 	});
 
 	it("reports a record closed exactly seven complete calendar days before the report date", () => {
-		expect(evaluateRetirement(makeTaskRecord({ closedOn: "2026-11-07" }), AS_OF)).toEqual({
+		expect(decisionFor(makeTaskRecord({ closedOn: "2026-11-07" }), AS_OF)).toStrictEqual({
 			kind: "candidate",
 			closedOn: "2026-11-07",
 			ageDays: 7,
@@ -41,7 +68,7 @@ describe("evaluateRetirement", () => {
 	});
 
 	it("reports a record closed eight complete calendar days before the report date", () => {
-		expect(evaluateRetirement(makeTaskRecord({ closedOn: "2026-11-06" }), AS_OF)).toEqual({
+		expect(decisionFor(makeTaskRecord({ closedOn: "2026-11-06" }), AS_OF)).toStrictEqual({
 			kind: "candidate",
 			closedOn: "2026-11-06",
 			ageDays: 8,
@@ -49,7 +76,7 @@ describe("evaluateRetirement", () => {
 	});
 
 	it("reports a record at the seven-day boundary across a year change", () => {
-		expect(evaluateRetirement(makeTaskRecord({ closedOn: "2026-12-28" }), "2027-01-04")).toEqual({
+		expect(decisionFor(makeTaskRecord({ closedOn: "2026-12-28" }), "2027-01-04")).toStrictEqual({
 			kind: "candidate",
 			closedOn: "2026-12-28",
 			ageDays: 7,
@@ -57,7 +84,7 @@ describe("evaluateRetirement", () => {
 	});
 
 	it("reports a record at the seven-day boundary across a leap day", () => {
-		expect(evaluateRetirement(makeTaskRecord({ closedOn: "2028-02-24" }), "2028-03-02")).toEqual({
+		expect(decisionFor(makeTaskRecord({ closedOn: "2028-02-24" }), "2028-03-02")).toStrictEqual({
 			kind: "candidate",
 			closedOn: "2028-02-24",
 			ageDays: 7,
@@ -65,35 +92,28 @@ describe("evaluateRetirement", () => {
 	});
 
 	it("excludes a record whose status is not closed", () => {
-		expect(evaluateRetirement(makeTaskRecord({ status: "active", closedOn: null }), AS_OF)).toEqual({
+		expect(decisionFor(makeTaskRecord({ status: "active", closedOn: null }), AS_OF)).toStrictEqual({
 			kind: "excluded",
 			reason: "status is not closed",
 		});
 	});
 
 	it("excludes a closed record with no recorded closure date", () => {
-		expect(evaluateRetirement(makeTaskRecord({ closedOn: null }), AS_OF)).toEqual({
+		expect(decisionFor(makeTaskRecord({ closedOn: null }), AS_OF)).toStrictEqual({
 			kind: "excluded",
 			reason: "no recorded closure date",
 		});
 	});
 
-	it("excludes a closed record whose closure date is not a calendar date", () => {
-		expect(evaluateRetirement(makeTaskRecord({ closedOn: "2026-02-30" }), AS_OF)).toEqual({
-			kind: "excluded",
-			reason: "closure date is not a calendar date",
-		});
-	});
-
 	it("excludes a record whose closure date is after the report date", () => {
-		expect(evaluateRetirement(makeTaskRecord({ closedOn: "2026-11-20" }), AS_OF)).toEqual({
+		expect(decisionFor(makeTaskRecord({ closedOn: "2026-11-20" }), AS_OF)).toStrictEqual({
 			kind: "excluded",
 			reason: "closure date is after the as-of date",
 		});
 	});
 
 	it("reports a closed record even when a task row is unfinished, because the policy has two conditions", () => {
-		expect(evaluateRetirement(makeTaskRecord({ taskStatus: "in progress" }), AS_OF)).toEqual({
+		expect(decisionFor(makeTaskRecord({ taskStatus: "in progress" }), AS_OF)).toStrictEqual({
 			kind: "candidate",
 			closedOn: "2026-11-01",
 			ageDays: 13,
@@ -101,7 +121,7 @@ describe("evaluateRetirement", () => {
 	});
 
 	it("reports a closed record even without a Close log entry, because the policy has two conditions", () => {
-		expect(evaluateRetirement(makeTaskRecord({ closeEntry: false }), AS_OF)).toEqual({
+		expect(decisionFor(makeTaskRecord({ closeEntry: false }), AS_OF)).toStrictEqual({
 			kind: "candidate",
 			closedOn: "2026-11-01",
 			ageDays: 13,
@@ -109,9 +129,53 @@ describe("evaluateRetirement", () => {
 	});
 
 	it("excludes every record when the report date is not a calendar date", () => {
-		expect(evaluateRetirement(makeTaskRecord(), "14 November 2026")).toEqual({
+		const source = new RetirementSourceFake(
+			["records/a.md", "records/b.md"],
+			new Map([
+				["records/a.md", makeTaskRecord()],
+				["records/b.md", makeTaskRecord()],
+			]),
+		);
+
+		expect([...new CheckRetirements(source).execute("records", "14 November 2026")]).toStrictEqual([
+			new RetirementReport("records/a.md", {
+				kind: "excluded",
+				reason: "as-of date is not a calendar date",
+			}),
+			new RetirementReport("records/b.md", {
+				kind: "excluded",
+				reason: "as-of date is not a calendar date",
+			}),
+		]);
+		expect(decisionFor(makeTaskRecord(), "")).toStrictEqual({
 			kind: "excluded",
 			reason: "as-of date is not a calendar date",
 		});
+	});
+
+	it("reports an unreadable record as an exclusion and continues with the rest", () => {
+		const failure = new Error("later record cannot be read");
+		const source = new RetirementSourceFake(
+			["records/a.md", "records/b.md"],
+			new Map([["records/a.md", makeTaskRecord({ closedOn: "2026-11-01" })]]),
+			failure,
+		);
+
+		const results = [...new CheckRetirements(source).execute("records", AS_OF)];
+
+		expect(results).toStrictEqual([
+			new RetirementReport("records/a.md", { kind: "candidate", closedOn: "2026-11-01", ageDays: 13 }),
+			new RetirementReport("records/b.md", {
+				kind: "excluded",
+				reason: "cannot be read: later record cannot be read",
+			}),
+		]);
+	});
+
+	it("excludes the template and reports that no task records remain", () => {
+		const source = new RetirementSourceFake(["records/_template.md"], new Map());
+
+		expect([...new CheckRetirements(source).execute("records", AS_OF)]).toStrictEqual([new NoTaskRecordsError()]);
+		expect(source.reads).toStrictEqual([]);
 	});
 });

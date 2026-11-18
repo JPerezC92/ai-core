@@ -10,6 +10,7 @@ import {
 	FeatureSourceFake,
 	featureCaseOrderFixture,
 	featureDirectoryFixture,
+	featureDuplicatedHeadingFixture,
 	featureEmptyFixture,
 	featureFailingFixture,
 	featureSingleFixture,
@@ -55,6 +56,19 @@ describe("ValidateFeatures.execute", () => {
 		expect(result).toMatchObject({
 			path: "features/a.md",
 			findings: ["title must not be the template placeholder"],
+		});
+	});
+
+	it("reports a duplicated required heading with the exact quoted text", () => {
+		const fixture = featureDuplicatedHeadingFixture();
+		const source = new FeatureSourceFake(fixture.references, fixture.documents);
+
+		const [result] = [...new ValidateFeatures(source, caseSensitivePolicy).execute("features")];
+
+		expect(result).toBeInstanceOf(InvalidFeatureError);
+		expect(result).toMatchObject({
+			path: "features/a.md",
+			findings: ["heading '## Tasks' must appear exactly once; found 2"],
 		});
 	});
 

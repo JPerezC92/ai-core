@@ -1,5 +1,6 @@
 /** Compose PR review evidence preparation commands from local files and read-only Git data. */
 
+import { compactJson, isDirectExecution, printError, printOut } from "#scripts/cli_delivery.ts";
 import { AssembleReviewSnapshot } from "#scripts/pr_review/application/assemble_review_snapshot.ts";
 import { CollectLocalInventory } from "#scripts/pr_review/application/collect_local_inventory.ts";
 import { PrepareLocalSnapshot } from "#scripts/pr_review/application/prepare_local_snapshot.ts";
@@ -7,8 +8,6 @@ import { VerifyPersistedBody } from "#scripts/pr_review/application/verify_persi
 import { ReviewPreparationError } from "#scripts/pr_review/domain/records.ts";
 import { createText, readText, InputOutputFailure } from "#scripts/pr_review/infrastructure/filesystem.ts";
 import { GitBoundaryError, GitReader } from "#scripts/pr_review/infrastructure/git_reader.ts";
-import { resolve } from "node:path";
-import { pathToFileURL } from "node:url";
 
 /** The commands this entry point composes. */
 const COMMAND_NAMES = ["snapshot", "prepare-snapshot", "prepare-local", "verify"] as const;
@@ -89,36 +88,6 @@ function parseArguments(argv: readonly string[]): { name: string; options: Map<s
 		throw new UsageError(`unrecognized arguments: ${unrecognized.join(" ")}`, name);
 	}
 	return { name, options };
-}
-
-/** Escape every character outside printable ASCII as a hexadecimal escape. */
-function escapeNonAscii(text: string): string {
-	return text.replace(/[\u007f-\uffff]/gu, (character) => {
-		const code = character.codePointAt(0) ?? 0;
-		if (code <= 0xffff) return `\\u${code.toString(16).padStart(4, "0")}`;
-		const adjusted = code - 0x10000;
-		const high = 0xd800 + (adjusted >> 10);
-		const low = 0xdc00 + (adjusted & 0x3ff);
-		return `\\u${high.toString(16).padStart(4, "0")}\\u${low.toString(16).padStart(4, "0")}`;
-	});
-}
-
-/** Serialize one flat payload the way the documented output is serialized. */
-function compactJson(record: Readonly<Record<string, string>>): string {
-	const entries = Object.entries(record).map(
-		([key, value]) => `${JSON.stringify(key)}: ${escapeNonAscii(JSON.stringify(value))}`,
-	);
-	return `{${entries.join(", ")}}`;
-}
-
-/** Write one line to the standard output stream. */
-function printOut(text: string): void {
-	process.stdout.write(text);
-}
-
-/** Write one line to the standard error stream. */
-function printError(text: string): void {
-	process.stderr.write(text);
 }
 
 /** Report the usage line and the diagnostic of one rejected command line. */
@@ -205,9 +174,4 @@ export function main(argv: readonly string[]): number {
 	}
 }
 
-function isDirectExecution(): boolean {
-	const entry = process.argv[1];
-	return entry !== undefined && pathToFileURL(resolve(entry)).href === import.meta.url;
-}
-
-if (isDirectExecution()) process.exitCode = main(process.argv.slice(2));
+if (isDirectExecution(import.meta.url)) process.exitCode = main(process.argv.slice(2));

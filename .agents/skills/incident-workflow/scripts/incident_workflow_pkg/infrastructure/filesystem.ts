@@ -1,8 +1,10 @@
 import { readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, sep } from "node:path";
 
-import type { CloseOutSnapshot, IncidentFiles } from "#scripts/incident_workflow_pkg/domain/ports.ts";
+import type { CloseOutSnapshot, IncidentFiles, ProblemRow } from "#scripts/incident_workflow_pkg/domain/ports.ts";
+import type { Problem } from "#scripts/incident_workflow_pkg/domain/problem.ts";
 import { REQUIRED_ANALYSIS_FILES, STEP_FILES } from "#scripts/incident_workflow_pkg/domain/rules.ts";
+import { parseProblemRegister, readProblemRows } from "./records.ts";
 
 function statOrMissing(path: string) {
 	try {
@@ -97,6 +99,16 @@ export class Filesystem implements IncidentFiles {
 			if (this.isFile(path)) contents[name] = this.readText(path);
 		}
 		return contents;
+	}
+
+	loadProblemRegister(path: string): Problem[] {
+		if (!this.isFile(path)) return [];
+		return parseProblemRegister(this.readText(path));
+	}
+
+	loadProblemRows(path: string): ProblemRow[] | null {
+		if (!this.isFile(path)) return null;
+		return readProblemRows(this.readText(path));
 	}
 
 	loadCloseOutSnapshot(ticketDir: string): CloseOutSnapshot {

@@ -64,9 +64,9 @@ function revisionRange(ancestor: string, head: string): string {
 
 export class GitReader implements GitInventoryPort {
 	private readonly cwd: string | undefined;
-	private readonly executable: string | null | undefined;
+	private readonly executable: string | undefined;
 
-	constructor(options: { cwd?: string; executable?: string | null } = {}) {
+	constructor(options: { cwd?: string; executable?: string } = {}) {
 		this.cwd = options.cwd;
 		this.executable = options.executable;
 	}
@@ -124,9 +124,6 @@ export class GitReader implements GitInventoryPort {
 
 	/** Run one read-only Git argv with no shell, no optional locks, and a bounded timeout. */
 	private run(arguments_: readonly string[], allowFailure = false): GitCommandResult {
-		if (this.executable === null) {
-			throw new GitBoundaryError(`${GIT_EXECUTABLE} executable was not found on PATH`);
-		}
 		const completed = spawnSync(this.executable ?? GIT_EXECUTABLE, [...arguments_], {
 			cwd: this.cwd,
 			encoding: "buffer",

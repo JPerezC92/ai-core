@@ -267,10 +267,20 @@ export function evaluatePreClose(
 	return violations;
 }
 
-export function evaluateCloseOut(snapshot: CloseOutSnapshot): string[] {
+/**
+ * The outcome of one close-out evaluation: the close is skipped because no
+ * durable ticket record exists, or the durable set is checked against the
+ * close-out postconditions.
+ */
+export type CloseOutEvaluation =
+	| { readonly kind: "skipped"; readonly code: "CLOSE-0"; readonly reason: string }
+	| { readonly kind: "postconditions"; readonly violations: readonly string[] };
+
+export function evaluateCloseOut(snapshot: CloseOutSnapshot): CloseOutEvaluation {
+	if (!snapshot.ticketFileNames.length)
+		return { kind: "skipped", code: "CLOSE-0", reason: "ticket_<id>.md not found" };
 	const violations: string[] = [];
-	if (!snapshot.ticketFileNames.length) violations.push("CLOSE-0: ticket_<id>.md not found");
-	else if (snapshot.ticketFileNames.length > 1)
+	if (snapshot.ticketFileNames.length > 1)
 		violations.push(`CLOSE-6: multiple ticket_<id>.md records found: ${snapshot.ticketFileNames.join(", ")}`);
 	for (const name of snapshot.workingAnalysisFiles)
 		violations.push(`CLOSE-1: working analysis file remains after close: ${name}`);
@@ -282,7 +292,7 @@ export function evaluateCloseOut(snapshot: CloseOutSnapshot): string[] {
 	violations.push(...checkCitationShapes(snapshot.citedPaths, "CLOSE-8"));
 	for (const path of snapshot.leftoverDownloadFiles)
 		violations.push(`CLOSE-9: unused download file remains after close: ${path}`);
-	return violations;
+	return { kind: "postconditions", violations };
 }
 
 export function checkIdentificationConsistency(

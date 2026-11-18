@@ -1,7 +1,12 @@
 import { InputError } from "#scripts/incident_workflow_pkg/domain/errors.ts";
 import { Problem } from "#scripts/incident_workflow_pkg/domain/problem.ts";
 import type { ProblemFields } from "#scripts/incident_workflow_pkg/domain/problem.ts";
-import type { AnalysisHeader, TicketIdentification } from "#scripts/incident_workflow_pkg/domain/rules.ts";
+import type { ProblemRow } from "#scripts/incident_workflow_pkg/domain/ports.ts";
+import type {
+	AnalysisHeader,
+	ParsedRecord,
+	TicketIdentification,
+} from "#scripts/incident_workflow_pkg/domain/rules.ts";
 import { loadFrontMatter } from "./frontmatter.ts";
 
 /**
@@ -41,44 +46,58 @@ function stringList(value: unknown, field: string, source: string): string[] {
 		.filter(Boolean);
 }
 
-export function parseStateHeader(content: string, source: string): AnalysisHeader {
-	const data = loadFrontMatter(content, source);
-	const fields = [
-		"Phase",
-		"SLA-due",
-		"Updated",
-		"Hypotheses-outstanding",
-		"Query-budget",
-		"identification_verdict",
-		"Same-query-reruns",
-	];
-	const missing = fields.filter((field) => !Object.hasOwn(data, field)).sort();
-	if (missing.length)
-		throw new InputError(
-			`Missing header fields in ${source}: [${missing.map((field) => `'${field}'`).join(", ")}]`,
-		);
-	return {
-		Phase: scalarText(data.Phase, "Phase", source),
-		SLA_due: scalarText(data["SLA-due"], "SLA-due", source),
-		Updated: scalarText(data.Updated, "Updated", source),
-		Hypotheses_outstanding: scalarText(data["Hypotheses-outstanding"], "Hypotheses-outstanding", source),
-		Query_budget: scalarText(data["Query-budget"], "Query-budget", source),
-		Identification_verdict: scalarText(data.identification_verdict, "identification_verdict", source),
-		Same_query_reruns: scalarText(data["Same-query-reruns"], "Same-query-reruns", source),
-	};
+export function parseStateHeader(content: string, source: string): ParsedRecord<AnalysisHeader> {
+	try {
+		const data = loadFrontMatter(content, source);
+		const fields = [
+			"Phase",
+			"SLA-due",
+			"Updated",
+			"Hypotheses-outstanding",
+			"Query-budget",
+			"identification_verdict",
+			"Same-query-reruns",
+		];
+		const missing = fields.filter((field) => !Object.hasOwn(data, field)).sort();
+		if (missing.length)
+			throw new InputError(
+				`Missing header fields in ${source}: [${missing.map((field) => `'${field}'`).join(", ")}]`,
+			);
+		return {
+			value: {
+				Phase: scalarText(data.Phase, "Phase", source),
+				SLA_due: scalarText(data["SLA-due"], "SLA-due", source),
+				Updated: scalarText(data.Updated, "Updated", source),
+				Hypotheses_outstanding: scalarText(data["Hypotheses-outstanding"], "Hypotheses-outstanding", source),
+				Query_budget: scalarText(data["Query-budget"], "Query-budget", source),
+				Identification_verdict: scalarText(data.identification_verdict, "identification_verdict", source),
+				Same_query_reruns: scalarText(data["Same-query-reruns"], "Same-query-reruns", source),
+			},
+		};
+	} catch (error) {
+		if (error instanceof InputError) return { error: error.message };
+		throw error;
+	}
 }
 
-export function parseTicketRecord(content: string, source: string): TicketIdentification {
-	const data = loadFrontMatter(content, source);
-	return {
-		symptom_ids: stringList(data.symptom_ids, "symptom_ids", source),
-		known_problem_ids: stringList(data.known_problem_ids, "known_problem_ids", source),
-		identification_verdict: scalarText(
-			Object.hasOwn(data, "identification_verdict") ? data.identification_verdict : "pending",
-			"identification_verdict",
-			source,
-		).trim(),
-	};
+export function parseTicketRecord(content: string, source: string): ParsedRecord<TicketIdentification> {
+	try {
+		const data = loadFrontMatter(content, source);
+		return {
+			value: {
+				symptom_ids: stringList(data.symptom_ids, "symptom_ids", source),
+				known_problem_ids: stringList(data.known_problem_ids, "known_problem_ids", source),
+				identification_verdict: scalarText(
+					Object.hasOwn(data, "identification_verdict") ? data.identification_verdict : "pending",
+					"identification_verdict",
+					source,
+				).trim(),
+			},
+		};
+	} catch (error) {
+		if (error instanceof InputError) return { error: error.message };
+		throw error;
+	}
 }
 
 export function parseProblemRegister(content: string): Problem[] {
@@ -129,20 +148,14 @@ export function parseProblemRegister(content: string): Problem[] {
 	return rows;
 }
 
-/** A register row read as declared cells, before any field validation. */
-export interface RawProblemRow {
-	readonly id: string;
-	readonly symptom: string;
-}
-
 /**
  * Read every declared problem row without validating its fields.
  *
  * A row that fails an invariant is still a row the register declares, so the
  * diagnostic-knowledge check reports it instead of losing it to a filter.
  */
-export function readProblemRows(content: string): RawProblemRow[] {
-	const rows: RawProblemRow[] = [];
+export function readProblemRows(content: string): ProblemRow[] {
+	const rows: ProblemRow[] = [];
 	for (const line of content.split(/\r\n|\n|\r/)) {
 		const trimmed = line.trim();
 		if (!trimmed.startsWith("|")) continue;

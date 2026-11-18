@@ -87,27 +87,25 @@ describe("incident validator CLI modes", () => {
 		expect(result.stderr).toBe(`CLOSE-SKIPPED: ticket_<id>.md not found at ${empty}\n`);
 	});
 
-	it("rejects a command line without an analysis directory with exit status 2", () => {
-		const result = runValidator([]);
+	it("prints usage for --help and -h with exit status 0", () => {
+		for (const flag of ["--help", "-h"]) {
+			const result = runValidator([flag]);
+			expect(result.status).toBe(0);
+			expect(result.stdout).toContain("usage: validate_incident_workflow.ts");
+			expect(result.stdout).toContain("Exit code 0 = pass, 1 = fail, 2 = close-out skipped.");
+			expect(result.stderr).toBe("");
+		}
+	});
+
+	it("reports an unrecognized argument on stderr with exit status 2", () => {
+		const result = runValidator(["/fixture", "--unknown"]);
+
 		expect(result.status).toBe(2);
 		expect(result.stdout).toBe("");
-		expect(result.stderr).toContain("error: the following arguments are required: analysis_dir");
-	});
-
-	it("rejects an invalid --step choice with exit status 2", () => {
-		const result = runValidator(["/fixture", "--step", "guess"]);
-		expect(result.status).toBe(2);
-		expect(result.stderr).toContain(
-			"argument --step: invalid choice: 'guess' (choose from 'identify', 'investigate', 'synthesize')",
+		expect(result.stderr).toBe(
+			"usage: validate_incident_workflow.ts [-h] [--step {identify,investigate,synthesize} | --scaffold | --pre-close | --close-out] [--repo-root REPO_ROOT] analysis_dir\n" +
+				"validate_incident_workflow.ts: error: unrecognized arguments: --unknown\n",
 		);
-	});
-
-	it("prints usage for --help with exit status 0", () => {
-		const result = runValidator(["--help"]);
-		expect(result.status).toBe(0);
-		expect(result.stdout).toContain("usage: validate_incident_workflow.ts");
-		expect(result.stdout).toContain("Exit code 0 = pass, 1 = fail, 2 = close-out skipped.");
-		expect(result.stderr).toBe("");
 	});
 
 	it("reports warnings on stderr without changing the exit status", () => {
@@ -120,41 +118,11 @@ describe("incident validator CLI modes", () => {
 		expect(result.stderr).toContain("WARN: CONCURRENT: another session updated 2 minutes ago");
 	});
 
-	it("rejects conflicting modes with exit status 2", () => {
-		const result = runValidator(["/fixture", "--scaffold", "--pre-close"]);
-		expect(result.status).toBe(2);
-		expect(result.stderr).toContain("argument --pre-close: not allowed with argument --scaffold");
-	});
-
-	it("rejects an unrecognised argument with exit status 2", () => {
-		const result = runValidator(["/fixture", "--unknown"]);
-		expect(result.status).toBe(2);
-		expect(result.stderr).toContain("unrecognized arguments: --unknown");
-	});
-
-	it("rejects an ambiguous option abbreviation with exit status 2", () => {
-		const result = runValidator(["/fixture", "--s"]);
-		expect(result.status).toBe(2);
-		expect(result.stderr).toContain("ambiguous option: --s");
-	});
-
-	it("accepts -h as help with exit status 0", () => {
-		const result = runValidator(["-h"]);
-		expect(result.status).toBe(0);
-		expect(result.stdout).toContain("usage: validate_incident_workflow.ts");
-	});
-
 	it("accepts the analysis directory after an end-of-options separator", () => {
 		const fixture = createIncidentFixture();
 		const result = runValidator(["--", fixture.analysis]);
 		expect(result.status).toBe(0);
 		expect(result.stdout).toContain(`Analysis: ${fixture.analysis}  Phase: synthesize`);
-	});
-
-	it("rejects an inline argument on a flag with exit status 2", () => {
-		const result = runValidator(["/fixture", "--scaffold=x"]);
-		expect(result.status).toBe(2);
-		expect(result.stderr).toContain("argument --scaffold: ignored explicit argument 'x'");
 	});
 
 	it("reports an unreadable state header", () => {

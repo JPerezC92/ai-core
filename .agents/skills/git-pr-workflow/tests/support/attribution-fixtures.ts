@@ -1,10 +1,11 @@
-/** Factories for attribution scanner test data and policy-derived test lines. */
+/** Factories for attribution scanner test data, policy-derived test lines, and the scan operation. */
 
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { AttributionPolicy, ChangedFile, Snapshot } from "#scripts/attribution_scan/domain/records.ts";
-import { PolicyValidationError } from "#scripts/attribution_scan/domain/records.ts";
+import { ScanAttribution } from "#scripts/attribution_scan/application/scan_attribution.ts";
+import type { AttributionPolicy, ChangedFile, ScanResult, Snapshot } from "#scripts/attribution_scan/domain/records.ts";
+import { PolicyValidationError, SnapshotValidationError } from "#scripts/attribution_scan/domain/records.ts";
 import { validatePolicy } from "#scripts/attribution_scan/domain/validation.ts";
 
 const skillRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -228,3 +229,17 @@ export function makeInvalidPathSnapshot(path: string): Snapshot {
 
 /** The head object id every synthetic fixture carries. */
 export const FIXTURE_HEAD_SHA = HEAD_SHA;
+
+/**
+ * Run the scan operation over one snapshot value and one policy value.
+ *
+ * The operation reports a rejected input as a typed business error, so a case
+ * that expects a scan result fails loudly instead of asserting on the error.
+ */
+export function scanAttribution(snapshotValue: unknown, policyValue: unknown): ScanResult {
+	const result = new ScanAttribution().execute({ snapshotValue, policyValue });
+	if (result instanceof PolicyValidationError || result instanceof SnapshotValidationError) {
+		throw new Error(`expected a scan result, received ${result.code}: ${result.message}`);
+	}
+	return result;
+}

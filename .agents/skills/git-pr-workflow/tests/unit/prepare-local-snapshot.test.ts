@@ -36,6 +36,18 @@ describe("PrepareLocalSnapshot.execute", () => {
 		});
 	});
 
+	it("rejects a path inventory that is not the exact diff inventory", () => {
+		const result = new PrepareLocalSnapshot().execute(createLocalDraft(), createBody(), createLocalInventory(), [
+			"src/unlisted-path",
+		]);
+
+		expect(result).toBeInstanceOf(ReviewPreparationError);
+		expect(result).toMatchObject({
+			code: "SNAPSHOT_PATHS_MISMATCH",
+			message: "snapshot paths must equal the exact diff inventory",
+		});
+	});
+
 	it("rejects an inventory that carries a field outside the documented set", () => {
 		const inventory = { ...createLocalInventory(), extra: true };
 
