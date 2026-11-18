@@ -97,6 +97,17 @@ describe("incident validator CLI modes", () => {
 		}
 	});
 
+	it("reports an unrecognized argument on stderr with exit status 2", () => {
+		const result = runValidator(["/fixture", "--unknown"]);
+
+		expect(result.status).toBe(2);
+		expect(result.stdout).toBe("");
+		expect(result.stderr).toBe(
+			"usage: validate_incident_workflow.ts [-h] [--step {identify,investigate,synthesize} | --scaffold | --pre-close | --close-out] [--repo-root REPO_ROOT] analysis_dir\n" +
+				"validate_incident_workflow.ts: error: unrecognized arguments: --unknown\n",
+		);
+	});
+
 	it("reports warnings on stderr without changing the exit status", () => {
 		const fixture = createIncidentFixture();
 		writeFreshState(fixture.analysis, 2);

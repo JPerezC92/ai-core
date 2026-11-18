@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { CollectLocalInventory } from "#scripts/pr_review/application/collect_local_inventory.ts";
 import { PrepareLocalSnapshot } from "#scripts/pr_review/application/prepare_local_snapshot.ts";
 import type { GitInventoryPort } from "#scripts/pr_review/domain/ports.ts";
@@ -6,6 +6,7 @@ import { ReviewPreparationError } from "#scripts/pr_review/domain/records.ts";
 import {
 	createBody,
 	createLocalDraft,
+	createLocalInventory,
 	createLocalSnapshot,
 	createPaths,
 	createSnapshot,
@@ -164,10 +165,23 @@ function collect(reader: RecordingReader): unknown {
 describe("CollectLocalInventory.execute", () => {
 	it("assembles the local snapshot and retains the deleted path", () => {
 		const reader = createReader();
+		const request = createRequest();
+		const preparer = { execute: vi.fn(() => createLocalSnapshot()) };
 
-		const result = collect(reader);
+		const result = new CollectLocalInventory(reader, preparer).execute(
+			request.prNumber,
+			request.base,
+			request.draft,
+			request.body,
+		);
 
 		expect(result).toEqual(createLocalSnapshot());
+		expect(preparer.execute).toHaveBeenCalledWith(
+			request.draft,
+			request.body,
+			createLocalInventory(),
+			createPaths(),
+		);
 		const head = createSnapshot().head_sha;
 		expect(reader.mergeBaseArguments).toEqual([[RESOLVED_BASE_COMMIT, head]]);
 		expect(reader.commitRanges).toEqual([[ANCESTOR_COMMIT, head]]);

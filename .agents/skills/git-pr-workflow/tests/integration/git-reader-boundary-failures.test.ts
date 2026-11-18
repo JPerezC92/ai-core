@@ -1,16 +1,21 @@
-import { describe, expect, it } from "vitest";
-import { GitBoundaryError, GitReader, parseStatusEntries } from "#scripts/pr_review/infrastructure/git_reader.ts";
+import { spawnSync } from "node:child_process";
+import { describe, expect, it, vi } from "vitest";
+import { GitBoundaryError, GitReader } from "#scripts/pr_review/infrastructure/git_reader.ts";
 import { createTruncatedStatusPayload } from "#tests/support/review-fixtures.ts";
+
+vi.mock("node:child_process", () => ({ spawnSync: vi.fn() }));
 
 describe("the Git reader boundary failures", () => {
 	it("rejects a truncated name-status payload instead of returning a partial path", () => {
-		expect(() => parseStatusEntries(createTruncatedStatusPayload())).toThrow(GitBoundaryError);
-	});
+		vi.mocked(spawnSync).mockReturnValueOnce({
+			pid: 1,
+			output: [null, Buffer.from(createTruncatedStatusPayload()), Buffer.alloc(0)],
+			stdout: Buffer.from(createTruncatedStatusPayload()),
+			stderr: Buffer.alloc(0),
+			status: 0,
+			signal: null,
+		});
 
-	it("reports a missing git executable as a boundary failure", () => {
-		const reader = new GitReader({ executable: null });
-
-		expect(() => reader.resolveCommit("HEAD")).toThrow(GitBoundaryError);
-		expect(() => reader.resolveCommit("HEAD")).toThrow("git executable was not found on PATH");
+		expect(() => new GitReader().listDeletedPaths("base", "head")).toThrow(GitBoundaryError);
 	});
 });

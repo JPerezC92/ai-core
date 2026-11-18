@@ -97,9 +97,8 @@ describe("retirement_check CLI entry point with the real filesystem adapter", ()
 
 		expect(result.code).toBe(0);
 		expect(result.output).toContain(`candidate ${candidate} - closed 2026-11-01; 13 complete calendar days`);
-		// The exclusion reason itself belongs to the use case, which reports it as
-		// `cannot be read: <message>`; this entry point owns the rendered line.
-		expect(result.output).toContain(`excluded ${unreadable} - `);
+		// Preserve the stable rendered reason without depending on runtime-specific error detail.
+		expect(result.output).toContain(`excluded ${unreadable} - cannot be read: `);
 		expect(result.output.trimEnd().endsWith("1 candidates of 2 records")).toBe(true);
 	});
 
