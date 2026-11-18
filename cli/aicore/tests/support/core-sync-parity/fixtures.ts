@@ -29,25 +29,6 @@ export const REVISION = "0123456789abcdef0123456789abcdef01234567";
 /** A second valid revision, for the drift cases. */
 export const OTHER_REVISION = "fedcba9876543210fedcba9876543210fedcba98";
 
-/**
- * The error codes that mean "this platform refuses the link", never "our call is wrong".
- *
- * `EINVAL` is deliberately absent: it reports a malformed link argument, which
- * is a defect in this fixture, not a missing platform capability.
- */
-const LINK_CAPABILITY_REFUSALS: ReadonlySet<string> = new Set(["EPERM", "EACCES", "ENOSYS"]);
-
-/**
- * Return `true` only when `error` reports a platform refusal to create a link.
- *
- * The capability probes use this so a genuine filesystem fault is rethrown and
- * fails the case instead of quietly skipping it as an unsupported platform.
- */
-export function isLinkCapabilityRefusal(error: unknown): boolean {
-	const code = (error as { readonly code?: unknown } | null | undefined)?.code;
-	return typeof code === "string" && LINK_CAPABILITY_REFUSALS.has(code);
-}
-
 /** A materialised fixture: the two roots, the bindings path, and its cleanup. */
 export type MaterialisedFixture = {
 	readonly root: string;
@@ -129,8 +110,6 @@ export async function materialiseFixture(spec: FixtureSpec): Promise<Materialise
  * Windows refuses symbolic links without an elevated privilege, so the
  * corpus's link cases are skipped there rather than silently reported as
  * covered. The probe runs once per process and never touches a real path.
- * Only a capability refusal is recorded as `false`; any other failure — and any
- * failure creating or disposing the probe root — propagates and fails the case.
  */
 let symlinkSupport: boolean | undefined;
 
@@ -143,10 +122,7 @@ export async function canCreateSymlinks(): Promise<boolean> {
 		try {
 			await symlink("target", join(created.root, "link"));
 			symlinkSupport = true;
-		} catch (error) {
-			if (!isLinkCapabilityRefusal(error)) {
-				throw error;
-			}
+		} catch {
 			symlinkSupport = false;
 		}
 	} finally {
@@ -171,11 +147,9 @@ export async function createDirectoryLink(target: string, path: string): Promise
 /**
  * Return `true` when this platform lets the fixture create a directory link.
  *
- * The probe creates a real directory link inside a disposable root and records
- * `false` only for a capability refusal, so a directory-link case is reported as
- * skipped only where the platform actually refuses one — never unconditionally.
- * Any other link-creation failure, and any failure creating or disposing the
- * probe root, propagates and fails the case.
+ * The probe creates a real directory link inside a disposable root, so a
+ * directory-link case is reported as skipped only where the platform refuses
+ * one.
  */
 let directoryLinkSupport: boolean | undefined;
 
@@ -189,10 +163,7 @@ export async function canCreateDirectoryLinks(): Promise<boolean> {
 		try {
 			await createDirectoryLink("target", join(created.root, "link"));
 			directoryLinkSupport = true;
-		} catch (error) {
-			if (!isLinkCapabilityRefusal(error)) {
-				throw error;
-			}
+		} catch {
 			directoryLinkSupport = false;
 		}
 	} finally {

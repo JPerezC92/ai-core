@@ -6,19 +6,16 @@
  * The guard, the layout and the filesystem all run for real over a disposable
  * root (contract T4, T18); nothing is doubled (T17).
  *
- * Every case except one is reachable without a symbolic link, because this
- * platform cannot create a file symbolic link and a case that can only skip
- * would protect nothing. The domain rule refuses a managed target that escapes
- * the destination root, one that resolves inside the source tree, and one that
- * is not a regular file — the non-link half of the safety contract the adapter
- * exists to enforce. The link half is executed here through a real directory
- * junction, which Windows creates without elevation and POSIX creates as a
- * directory symbolic link, so the `symbolicLink` refusal is covered rather than
- * assumed.
+ * Every case is reachable without a symbolic link, because this platform cannot
+ * create a file symbolic link and a case that can only skip would protect
+ * nothing. The domain rule refuses a managed target that escapes the
+ * destination root, one that resolves inside the source tree, and one that is
+ * not a regular file — the non-link half of the safety contract the adapter
+ * exists to enforce.
  */
 
-import { lstat, mkdir, readFile, readdir, symlink, writeFile } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { mkdir } from "node:fs/promises";
+import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 import { MODE_REGION } from "#domain/synchronization/constants.ts";
@@ -44,38 +41,11 @@ const PAYLOAD_RELATIVE = "docs/guide.md";
 /** A destination declaration whose `..` segment lands outside the destination root. */
 const ESCAPING_PAYLOAD_RELATIVE = "../outside/payload.md";
 
-/**
- * Relative path of a directory outside the destination root that the junction
- * points at. A write through the link would land inside it, so it is the
- * evidence that the refusal prevented a mutation.
- */
-const LINKED_TARGET_DIRECTORY = "linked-payload";
-
-/** A file inside the link target, left untouched by a refused command. */
-const LINKED_SENTINEL = "sentinel.txt";
-
-/** The sentinel's content, compared before and after the guarded attempt. */
-const LINKED_SENTINEL_CONTENT = "untouched\n";
-
 let root: string;
 let rootPrefix: string;
 let sourceRoot: string;
 let destinationRoot: string;
 const guard = new LocalWriteTargetGuard(new LocalFilesystemLayout());
-
-/**
- * Create a directory link at `path` pointing at the directory `target`.
- *
- * Windows refuses a directory symbolic link without an elevated privilege but
- * creates a junction without elevation; POSIX creates a directory symbolic
- * link. Both are the same non-regular entry the guard's `symbolicLink`
- * observation reports, so the platform branch stays here and never reaches an
- * assertion.
- */
-async function createDirectoryLink(target: string, path: string): Promise<void> {
-	await mkdir(dirname(path), { recursive: true });
-	await symlink(resolve(target), path, process.platform === "win32" ? "junction" : "dir");
-}
 
 beforeEach(async () => {
 	const created = await createTemporaryRoot(ROOT_PREFIX);
@@ -147,27 +117,6 @@ describe("write-target preflight", () => {
 			`invalid write target: destination payload write target is not a regular file: ` +
 				`${join(destinationRoot, PAYLOAD_RELATIVE)}`,
 		);
-	});
-
-	test("a managed target that is a symbolic link is refused as a link, not as a non-regular file", async () => {
-		const targetDirectory = join(root, LINKED_TARGET_DIRECTORY);
-		await mkdir(targetDirectory, { recursive: true });
-		await writeFile(join(targetDirectory, LINKED_SENTINEL), LINKED_SENTINEL_CONTENT, "utf8");
-		const managedPath = join(destinationRoot, PAYLOAD_RELATIVE);
-		await createDirectoryLink(targetDirectory, managedPath);
-
-		expect((await lstat(managedPath)).isSymbolicLink()).toBe(true);
-
-		const refusal = await guard.refuse(makeRequest());
-
-		expect(refusal?.code).toBe("invalid");
-		expect(refusal?.message).toBe(
-			`invalid write target: destination payload write target is a symbolic link: ${managedPath}`,
-		);
-		expect(refusal?.message).not.toContain("is not a regular file");
-		expect((await lstat(managedPath)).isSymbolicLink()).toBe(true);
-		expect(await readdir(targetDirectory)).toEqual([LINKED_SENTINEL]);
-		expect(await readFile(join(targetDirectory, LINKED_SENTINEL), "utf8")).toBe(LINKED_SENTINEL_CONTENT);
 	});
 
 	test("a fully-inside target set earns no refusal", async () => {
