@@ -2,9 +2,8 @@
 
 import { basename } from "node:path";
 
+import { InitializeWorkingBody } from "#scripts/pr_content/application/initialize_working_body.ts";
 import { execute as validate } from "#scripts/pr_content/application/validate_final_body.ts";
-import { extractBody } from "#scripts/pr_content/domain/body_validation.ts";
-import type { ReviewPreparationError } from "#scripts/pr_content/domain/records.ts";
 import { createText, readText } from "#scripts/pr_content/infrastructure/filesystem.ts";
 
 interface Command {
@@ -82,18 +81,19 @@ export function main(argv: readonly string[], program = "prepare_pr_review.ts"):
 	try {
 		const command = parsed.command;
 		if (command.kind === "initialize") {
-			const body = extractBody(readText(command.draft!));
-			if (typeof body !== "string") {
-				const failure = body as ReviewPreparationError;
+			const outcome = new InitializeWorkingBody(readText, createText).execute({
+				draftPath: command.draft!,
+				workingBodyPath: command.workingBody,
+			});
+			if ("code" in outcome) {
 				process.stdout.write(
 					`${spacedJsonObject([
-						["code", failure.code],
-						["message", failure.message],
+						["code", outcome.code],
+						["message", outcome.message],
 					])}\n`,
 				);
 				return 1;
 			}
-			createText(command.workingBody, body);
 		} else {
 			const baseline: unknown = JSON.parse(readText(command.baseline!));
 			const current: unknown = JSON.parse(readText(command.current!));
