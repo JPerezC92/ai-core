@@ -13,13 +13,13 @@
 
 import { combineSymptomCatalogs, parseSymptomCatalog } from "#scripts/incident_workflow_pkg/domain/symptom-catalog.ts";
 import { BASELINE_SYMPTOM_ID, parseSymptomReferences } from "#scripts/incident_workflow_pkg/domain/symptom-id.ts";
-import { readProblemRows } from "#scripts/incident_workflow_pkg/infrastructure/records.ts";
+import type { ProblemRow } from "#scripts/incident_workflow_pkg/domain/ports.ts";
 
 /** The documents a diagnostic-knowledge check reads; `null` means absent. */
 export interface DiagnosticKnowledgeInput {
 	readonly baselineSymptoms: string | null;
 	readonly localSymptoms: string | null;
-	readonly localProblems: string | null;
+	readonly localProblemRows: readonly ProblemRow[] | null;
 	readonly localSymptomsPath: string;
 	readonly localProblemsPath: string;
 }
@@ -35,7 +35,7 @@ export class ValidateDiagnosticKnowledge {
 		if (input.localSymptoms === null) {
 			violations.push(`KNOWLEDGE-1: local symptom register missing: ${input.localSymptomsPath}`);
 		}
-		if (input.localProblems === null) {
+		if (input.localProblemRows === null) {
 			violations.push(`KNOWLEDGE-2: local problem register missing: ${input.localProblemsPath}`);
 		}
 		if (violations.length > 0) return { violations };
@@ -60,7 +60,7 @@ export class ValidateDiagnosticKnowledge {
 				violations.push(`KNOWLEDGE-7: local register defines a non-LOCAL symptom id: ${id}`);
 			}
 		}
-		for (const row of readProblemRows(input.localProblems ?? "")) {
+		for (const row of input.localProblemRows ?? []) {
 			const references = parseSymptomReferences(row.symptom);
 			if (references.invalid.length > 0) {
 				violations.push(
