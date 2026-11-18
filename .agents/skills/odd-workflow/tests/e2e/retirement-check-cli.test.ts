@@ -25,7 +25,7 @@ afterEach(() => {
 	}
 });
 
-describe("retirement_check CLI with the real filesystem adapter", () => {
+describe("retirement_check CLI entry point with the real filesystem adapter", () => {
 	it("reports candidates and exclusion reasons, and exits zero", () => {
 		const directory = makeDirectory();
 		const candidate = join(directory, "a.md");
@@ -89,14 +89,17 @@ describe("retirement_check CLI with the real filesystem adapter", () => {
 	it("reports an unreadable record as an exclusion and still reports the rest", () => {
 		const directory = makeDirectory();
 		const candidate = join(directory, "a.md");
+		const unreadable = join(directory, "b.md");
 		writeFileSync(candidate, makeTaskRecord({ closedOn: "2026-11-01" }), "utf8");
-		writeFileSync(join(directory, "b.md"), Buffer.from([0xff]));
+		writeFileSync(unreadable, Buffer.from([0xff]));
 
 		const result = invoke([directory, "--as-of", "2026-11-14"]);
 
 		expect(result.code).toBe(0);
 		expect(result.output).toContain(`candidate ${candidate} - closed 2026-11-01; 13 complete calendar days`);
-		expect(result.output).toMatch(/^excluded .*b\.md - cannot be read: /mu);
+		// The exclusion reason itself belongs to the use case, which reports it as
+		// `cannot be read: <message>`; this entry point owns the rendered line.
+		expect(result.output).toContain(`excluded ${unreadable} - `);
 		expect(result.output.trimEnd().endsWith("1 candidates of 2 records")).toBe(true);
 	});
 

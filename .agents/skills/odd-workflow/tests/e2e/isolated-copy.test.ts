@@ -57,13 +57,14 @@ describe("validate_feature process in an isolated source-only copy", () => {
 		const documents = join(fixtures, "valid");
 		mkdirSync(documents);
 		writeFileSync(join(documents, "_template.md"), makeFeature("Feature name"), "utf8");
-		writeFileSync(join(documents, "feature.md"), makeFeature(), "utf8");
+		writeFileSync(join(documents, "z.md"), makeFeature(), "utf8");
+		writeFileSync(join(documents, "a.md"), makeFeature(), "utf8");
 
 		const run = runIsolatedNode(runtime, [documents]);
 
 		expect(run.error).toBeUndefined();
 		expect(run.status).toBe(0);
-		expect(String(run.stdout)).toBe(`ok ${join(documents, "feature.md")}\n`);
+		expect(String(run.stdout)).toBe(`ok ${join(documents, "a.md")}\nok ${join(documents, "z.md")}\n`);
 		expect(String(run.stderr)).toBe("");
 		expect(readdirSync(runtime).sort()).toEqual(["package.json", "scripts"]);
 		expect(existsSync(join(runtime, "node_modules"))).toBe(false);

@@ -78,6 +78,14 @@ export function featureDirectoryFixture(): FeatureFixture {
 	};
 }
 
+/** A single document whose required heading appears twice. */
+export function featureDuplicatedHeadingFixture(): FeatureFixture {
+	return {
+		references: ["features/a.md"],
+		documents: new Map([["features/a.md", makeFeatureWithApostropheHeading()]]),
+	};
+}
+
 /** A target with no candidate documents. */
 export function featureEmptyFixture(): FeatureFixture {
 	return { references: [], documents: new Map() };

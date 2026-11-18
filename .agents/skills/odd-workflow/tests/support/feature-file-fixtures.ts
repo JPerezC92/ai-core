@@ -69,6 +69,14 @@ export function featureFileSingleFixture(status = "partial"): FeatureFileFixture
 	};
 }
 
+/** A single file whose declared status and requirement mark carry an apostrophe. */
+export function featureFileApostropheFixture(): FeatureFileFixture {
+	return {
+		references: ["features/a.md"],
+		documents: new Map([["features/a.md", makeApostropheFeatureFile()]]),
+	};
+}
+
 /** Two files whose case-sensitive order differs from their case-insensitive order. */
 export function featureFileCaseOrderFixture(): FeatureFileFixture {
 	return {
