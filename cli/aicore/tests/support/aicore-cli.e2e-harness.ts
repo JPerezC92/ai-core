@@ -72,8 +72,14 @@ export const REPRESENTATIVE_FILES = [
 	".opencode/agents/lumen.md",
 	".agents/skills/op-model/SKILL.md",
 	".agents/skills/git-commit/SKILL.md",
+	".agents/skills/incident-workflow/references/local-symptoms-template.md",
+	".agents/skills/incident-workflow/references/local-problems-template.md",
 	".aicore/core/odd/tasks/_template.md",
+	".aicore/core/odd/features/_template.md",
 	".aicore/core/knowledge/agents.md",
+	".aicore/core/knowledge/diagnostics/symptoms.md",
+	".aicore/core/knowledge/diagnostics/problems.md",
+	".aicore/core/knowledge/diagnostics/diagnostic-guidance.md",
 ] as const;
 
 /** Agent documents the representative source actually ships. */
@@ -90,9 +96,12 @@ const REPRESENTATIVE_CLEARED: Readonly<Record<string, Readonly<Record<string, un
 		},
 	},
 	".aicore/core/knowledge/agents.md": { mode: "region" },
+	".aicore/core/knowledge/diagnostics/": { mode: "region" },
 	".aicore/core/odd/tasks/_template.md": { mode: "raw" },
+	".aicore/core/odd/features/_template.md": { mode: "raw" },
 	".agents/skills/op-model/": { mode: "raw" },
 	".agents/skills/git-commit/": { mode: "raw" },
+	".agents/skills/incident-workflow/": { mode: "raw" },
 	".opencode/agents/": {
 		mode: "region",
 		editors: {
@@ -180,8 +189,14 @@ export async function invoke(
 		return { status: 0, stdout, stderr };
 	} catch (error) {
 		const failure = error as { code?: number | string; stdout?: string; stderr?: string };
+		// A numeric code is a child process that exited with that status. Anything
+		// else — a spawn failure, a missing executable — is not an exit status, and
+		// reporting it as one would let a run that never happened look like exit 1.
+		if (typeof failure.code !== "number") {
+			throw error;
+		}
 		return {
-			status: typeof failure.code === "number" ? failure.code : 1,
+			status: failure.code,
 			stdout: failure.stdout ?? "",
 			stderr: failure.stderr ?? "",
 		};

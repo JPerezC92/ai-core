@@ -26,7 +26,9 @@ import type {
 import {
 	BOUND_SOURCE,
 	RELOCATED_BOUND_DESTINATION,
+	SYNCHRONIZATION_DESTINATION_ROOT,
 	makeBindingsDocument,
+	makeClearanceLoad,
 	makeRelocatedClearanceLoad,
 	makeSynchronizationRequest,
 } from "#support/synchronization.factory.ts";
@@ -113,5 +115,153 @@ describe("destination drift refusal", () => {
 		expect(layout.syncBlocker).not.toHaveBeenCalled();
 		expect(layout.ensureDirectory).not.toHaveBeenCalled();
 		expect(sources.readCore).not.toHaveBeenCalled();
+	});
+});
+
+/** The destination paths the OpenCode secret material is written to. */
+const DESTINATION_ROOT = SYNCHRONIZATION_DESTINATION_ROOT;
+const CONFIGURATION_PATH = `${DESTINATION_ROOT}/.opencode/opencode.jsonc`;
+const GITIGNORE_PATH = `${DESTINATION_ROOT}/.gitignore`;
+const SECRETS_DIRECTORY = `${DESTINATION_ROOT}/.secrets`;
+const SECRET_PATH = `${DESTINATION_ROOT}/.secrets/context7-api-key`;
+const PAYLOAD_PATH = `${DESTINATION_ROOT}/${BOUND_SOURCE}`;
+
+/** The one cleared raw source's bytes. */
+const PAYLOAD = new TextEncoder().encode("payload\n");
+
+type WritableUpdateOptions = {
+	readonly editor?: "opencode" | "cursor";
+	/** Absolute paths the destination already holds. */
+	readonly existing?: readonly string[];
+	/** The destination's `.gitignore` text; `null` means it is absent. */
+	readonly gitignore?: string | null;
+};
+
+/**
+ * The update use case arranged to reach its writes: one cleared raw source, an
+ * existing destination payload, and the OpenCode configuration the secret work
+ * keys off.
+ */
+function makeWritableUpdate(options: WritableUpdateOptions = {}) {
+	const bindings = mock<BindingsStore>();
+	bindings.load.mockResolvedValue(
+		makeBindingsDocument({
+			editor: options.editor ?? "opencode",
+			bindings: [{ source: BOUND_SOURCE, destinations: [BOUND_SOURCE], declaredMode: "raw" }],
+		}),
+	);
+
+	const clearance = mock<ClearanceStore>();
+	clearance.load.mockResolvedValue(makeClearanceLoad({ [BOUND_SOURCE]: { mode: "raw" } }));
+
+	const existing = new Set(options.existing ?? [CONFIGURATION_PATH, PAYLOAD_PATH]);
+	const layout = mock<FilesystemLayout>();
+	layout.join.mockImplementation((root, relative) => `${root}/${relative}`);
+	layout.exists.mockImplementation(async (path) => existing.has(path));
+	layout.isFile.mockImplementation(async (path) => existing.has(path));
+
+	const guard = mock<WriteTargetGuard>();
+	guard.refuse.mockResolvedValue(null);
+
+	const sources = mock<SourceFiles>();
+	sources.readBytes.mockResolvedValue(PAYLOAD);
+
+	const gitignore = options.gitignore ?? null;
+	const destinations = mock<DestinationFiles>();
+	destinations.readText.mockImplementation(async (path) => (path === GITIGNORE_PATH ? gitignore : null));
+
+	const useCase = new ApplyCoreRevision({ bindings, clearance, sources, destinations, layout, guard });
+	return { useCase, bindings, destinations, layout };
+}
+
+/** Every byte payload written to one destination path. */
+function writtenTo(destinations: MockProxy<DestinationFiles>, path: string): readonly Uint8Array[] {
+	return destinations.writeBytes.mock.calls.filter(([target]) => target === path).map(([, bytes]) => bytes);
+}
+
+/** One written payload, as text. */
+function textOf(bytes: Uint8Array | undefined): string {
+	return new TextDecoder().decode(bytes);
+}
+
+describe("OpenCode secret material", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	test("an OpenCode run creates the secret directory, an empty credential file and the ignore rule", async () => {
+		const { useCase, destinations, layout } = makeWritableUpdate();
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(true);
+		// The run reached its writes: the bound payload is on disk.
+		expect(writtenTo(destinations, PAYLOAD_PATH)).toHaveLength(1);
+		expect(layout.ensureDirectory).toHaveBeenCalledWith(SECRETS_DIRECTORY);
+		expect(writtenTo(destinations, SECRET_PATH)).toEqual([new Uint8Array()]);
+		expect(textOf(writtenTo(destinations, GITIGNORE_PATH)[0])).toBe(".secrets/\n");
+	});
+
+	test("an existing credential file keeps its bytes and is never rewritten", async () => {
+		const { useCase, destinations } = makeWritableUpdate({
+			existing: [CONFIGURATION_PATH, PAYLOAD_PATH, SECRET_PATH],
+		});
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(true);
+		expect(writtenTo(destinations, SECRET_PATH)).toEqual([]);
+	});
+
+	test("a cursor run writes no secret material at all", async () => {
+		const { useCase, destinations, layout } = makeWritableUpdate({ editor: "cursor" });
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "cursor" }));
+
+		expect(outcome.ok).toBe(true);
+		expect(writtenTo(destinations, PAYLOAD_PATH)).toHaveLength(1);
+		expect(layout.ensureDirectory).not.toHaveBeenCalledWith(SECRETS_DIRECTORY);
+		expect(writtenTo(destinations, SECRET_PATH)).toEqual([]);
+		expect(writtenTo(destinations, GITIGNORE_PATH)).toEqual([]);
+	});
+});
+
+describe("the destination's ignore rule", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	test("an effective .secrets/ rule among other rules is left alone", async () => {
+		const existing = "node_modules/\n.secrets/\n*.log\n";
+		const { useCase, destinations } = makeWritableUpdate({ gitignore: existing });
+
+		await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(writtenTo(destinations, GITIGNORE_PATH)).toEqual([]);
+	});
+
+	test("an effective rule with a trailing comment counts", async () => {
+		const existing = ".secrets # local credentials\n";
+		const { useCase, destinations } = makeWritableUpdate({ gitignore: existing });
+
+		await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(writtenTo(destinations, GITIGNORE_PATH)).toEqual([]);
+	});
+
+	test("a commented-out line does not count", async () => {
+		const { useCase, destinations } = makeWritableUpdate({ gitignore: "# .secrets/\n" });
+
+		await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(textOf(writtenTo(destinations, GITIGNORE_PATH)[0])).toBe("# .secrets/\n.secrets/\n");
+	});
+
+	test("other rules are preserved, including a missing trailing newline", async () => {
+		const { useCase, destinations } = makeWritableUpdate({ gitignore: "dist" });
+
+		await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(textOf(writtenTo(destinations, GITIGNORE_PATH)[0])).toBe("dist\n.secrets/\n");
 	});
 });

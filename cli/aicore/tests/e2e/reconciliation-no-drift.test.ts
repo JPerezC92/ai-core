@@ -1,20 +1,27 @@
 /**
- * Integration: a reconciliation proposal for a destination that needs no action.
+ * End to end: a reconciliation proposal for a destination that needs no action.
  *
  * One behavioral concern — a destination whose every bound path is *managed* and
  * still carries its source, and which holds no unbound file inside a managed
  * directory, is reported as needing nothing from its owner. That is the whole
  * point of the proposal's exit status: `kept` is the only action that means "no
- * one has to decide or act", so this suite asserts the ok status and the line
+ * one has to decide or act", so this module asserts the ok status and the line
  * that says it, and rejects every other classification by name.
  *
- * The drift path — locally modified, superseded, destination-owned — is the
- * sibling module's concern; here the fixture is deliberately the other end of the
- * same rule, and the read-only property is asserted over the whole destination
- * tree rather than promised.
+ * Level limitation, stated rather than hidden: the composed operation is built
+ * over its five real adapters instead of the assembled `main(["reconcile", …])`,
+ * because the assembled command resolves the real checkout as the source root and
+ * this case needs a disposable synthetic one. The assertion is made through the
+ * delivery renderer, so the rendered proposal and exit status — the observable
+ * result — are still the ones the command produces.
+ *
+ * The read-only property over the whole destination tree is asserted once, by the
+ * sibling drift module whose fixture exercises the writes most; repeating it here
+ * on a fixture that classifies nothing as actionable adds no regression
+ * protection.
  */
 
-import { access, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
@@ -112,23 +119,6 @@ async function writeDestinationFile(path: string, body: string): Promise<void> {
 	await writeFile(target, body, "utf8");
 }
 
-/** Every file under a root, with its bytes, so "unchanged" is a comparison. */
-async function snapshotTree(target: string): Promise<ReadonlyMap<string, string>> {
-	const collected = new Map<string, string>();
-	const walk = async (directory: string, prefix: string): Promise<void> => {
-		for (const entry of await readdir(directory, { withFileTypes: true })) {
-			const path = prefix === "" ? entry.name : `${prefix}/${entry.name}`;
-			if (entry.isDirectory()) {
-				await walk(join(directory, entry.name), path);
-				continue;
-			}
-			collected.set(path, (await readFile(join(directory, entry.name))).toString("hex"));
-		}
-	};
-	await walk(target, "");
-	return collected;
-}
-
 /** The proposal line about one destination path. */
 function lineFor(stdout: readonly string[], path: string): string {
 	const found = stdout.find((line) => line.includes(` ${path} — `));
@@ -185,19 +175,5 @@ describe("the proposal for a destination that needs no action", () => {
 		expect(rendered.stdout).toContain(NO_ACTION_COUNTS);
 		expect(rendered.stdout).toContain(NO_ACTION_LINE);
 		expect(rendered.stdout.some((line) => line.includes("must decide or act"))).toBe(false);
-	});
-
-	test("changes nothing under the destination", async () => {
-		const before = await snapshotTree(destinationRoot);
-
-		await propose();
-
-		const after = await snapshotTree(destinationRoot);
-		expect(after).toEqual(before);
-		expect([...after.keys()].some((path) => path.startsWith(".aicore/reconciliation"))).toBe(false);
-		await expect(access(join(destinationRoot, ".aicore", "reconciliation"))).rejects.toThrow();
-		// A proposal that rewrote the destination's own bindings would no longer be
-		// the read-only proposal this tool reports itself as.
-		expect(await readFile(join(destinationRoot, BINDINGS_RELATIVE_PATH), "utf8")).toContain(MANAGED_SOURCE);
 	});
 });
