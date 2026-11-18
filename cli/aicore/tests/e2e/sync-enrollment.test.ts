@@ -94,7 +94,10 @@ describe("enrollment and update", () => {
 		// Enrollment succeeds; verification then reports the pending reconciliation
 		// the destination project itself must clear. Neither state is overridden.
 		expect(first.stdout).toMatch(/initialized/);
-		expect(first.status).not.toBe(0);
+		// Exactly the contract's drift status: a fresh enrollment is not current
+		// until its owner clears `pending`, and that is exit 1 — never exit 2.
+		expect(first.status).toBe(1);
+		expect(first.stderr).toMatch(/pending changes/);
 
 		const bindings = await readFile(join(destination, ".aicore", "core.yaml"), "utf8");
 		expect(bindings).toMatch(/^schema: 1$/m);

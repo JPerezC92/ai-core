@@ -1,28 +1,30 @@
 /**
- * Infrastructure: the engine's command-line syntax, mapped to its request.
+ * Delivery: the advanced command line, mapped to the typed request it names.
  *
- * The engine's public command line is part of its published contract:
+ * The advanced commands' public command line is part of the published contract:
  * `--source`, `--destination`, `--bindings` and `--source-revision` for every
  * command, `--editor` for every command, plus `--bind`, `--bind-raw`,
  * `--bind-cleared` and `--root` for `init`. This module turns that vector into
- * the engine's request record in a single mapping step (contract C4), so the
- * engine receives the command the wrapper always forwarded and the operator's
- * syntax keeps working unchanged.
+ * the request the application operation receives, in a single mapping step
+ * (contract C4), so the operator's syntax keeps working unchanged while nothing
+ * below the delivery edge speaks a command-line vector.
  *
- * A vector the engine's own syntax rejects produces the result the engine
- * produced for it before: exit `2`, the diagnostic on standard error, and
- * nothing on standard output. The diagnostic keeps the engine's own program
- * name, because the operator asked the engine for that command.
+ * A vector the command line rejects produces the result it produced before:
+ * exit `2`, the diagnostic on standard error, and nothing on standard output.
+ * The diagnostic keeps the command's own program name, because the operator
+ * asked for that command.
  *
- * The revision's own syntax rule stays with the engine, which reports it in the
- * same words the engine's command line always used.
+ * The revision's own syntax, an unknown editor and a flag only `init` accepts
+ * are argument-validity rules, not mapping syntax: the mapping carries what the
+ * operator supplied and `RunAdvancedCommand` decides.
  */
 
+import type { AdvancedRequest } from "#application/run-advanced-command.ts";
+import type { EnrollmentRequest, SynchronizationRequest } from "#application/synchronization/requests.ts";
 import type { CommandName } from "#domain/synchronization/constants.ts";
+import { isEditorProfile } from "#domain/synchronization/editor-profile.ts";
 
-import type { CoreSyncEngineRequest } from "./core-sync-engine.ts";
-
-/** The commands the engine exposes, in the engine's own order. */
+/** The commands the advanced command line exposes, in its own order. */
 const COMMANDS: readonly CommandName[] = ["check", "apply", "init"];
 
 /** The options that carry a value. */
@@ -40,9 +42,9 @@ const VALUE_FLAGS: readonly string[] = [
 /** The options that stand alone. */
 const BOOLEAN_FLAGS: readonly string[] = ["--bind-cleared"];
 
-/** The outcome of mapping one command line onto the engine's request. */
-export type EngineArgumentMapping =
-	| { readonly ok: true; readonly request: CoreSyncEngineRequest }
+/** The outcome of mapping one command line onto the command's request. */
+export type CommandArguments =
+	| ({ readonly ok: true } & AdvancedRequest)
 	| { readonly ok: false; readonly message: string };
 
 /** How one option name resolves to the option it names. */
@@ -52,14 +54,14 @@ type FlagResolution =
 	| { readonly kind: "unknown" };
 
 /**
- * Map one engine command line onto the engine's request.
+ * Map one advanced command line onto the request it names.
  *
- * The mapping is faithful to the engine's own argument syntax: an option's
- * value may follow it or be attached with `=`, an unambiguous prefix names an
- * option, and a repeated option keeps the last value while a repeatable option
- * keeps every value.
+ * The mapping is faithful to the published argument syntax: an option's value
+ * may follow it or be attached with `=`, an unambiguous prefix names an option,
+ * and a repeated option keeps the last value while a repeatable option keeps
+ * every value.
  */
-export function toEngineRequest(command: string, arguments_: readonly string[]): EngineArgumentMapping {
+export function toCommandArguments(command: string, arguments_: readonly string[]): CommandArguments {
 	if (!isCommand(command)) {
 		return {
 			ok: false,
@@ -174,24 +176,56 @@ export function toEngineRequest(command: string, arguments_: readonly string[]):
 		};
 	}
 
+	const requestedEditor = values.get("--editor");
+	const request: SynchronizationRequest = {
+		sourceRoot,
+		destinationRoot,
+		bindingsPath,
+		sourceRevision,
+		editor: requestedEditor !== undefined && isEditorProfile(requestedEditor) ? requestedEditor : undefined,
+	};
+
+	if (command === "init") {
+		const enrollment: EnrollmentRequest = {
+			...request,
+			regionDeclarations: bind,
+			rawDeclarations: bindRaw,
+			bindCleared: flags.has("--bind-cleared"),
+			rootOverride: values.get("--root") ?? null,
+		};
+		return {
+			ok: true,
+			command,
+			request: enrollment,
+			requestedEditor,
+			initOnlyArguments: [],
+		};
+	}
+
+	const initOnlyArguments: string[] = [];
+	if (bind.length > 0) {
+		initOnlyArguments.push("--bind");
+	}
+	if (bindRaw.length > 0) {
+		initOnlyArguments.push("--bind-raw");
+	}
+	if (flags.has("--bind-cleared")) {
+		initOnlyArguments.push("--bind-cleared");
+	}
+	if (values.has("--root")) {
+		initOnlyArguments.push("--root");
+	}
+
 	return {
 		ok: true,
-		request: {
-			command,
-			sourceRoot,
-			destinationRoot,
-			bindingsPath,
-			sourceRevision,
-			bind,
-			bindRaw,
-			bindCleared: flags.has("--bind-cleared"),
-			root: values.get("--root"),
-			editor: values.get("--editor"),
-		},
+		command,
+		request,
+		requestedEditor,
+		initOnlyArguments,
 	};
 }
 
-/** Whether the named command is one the engine exposes. */
+/** Whether the named command is one the advanced command line exposes. */
 function isCommand(command: string): command is CommandName {
 	return (COMMANDS as readonly string[]).includes(command);
 }
@@ -200,7 +234,7 @@ function isCommand(command: string): command is CommandName {
  * Resolve one option name to the option it names.
  *
  * An exact name wins over a prefix, and a prefix that names more than one
- * option is ambiguous — the rule the engine's own argument syntax follows.
+ * option is ambiguous — the rule the published argument syntax follows.
  */
 function resolveFlag(name: string): FlagResolution {
 	const known = [...VALUE_FLAGS, ...BOOLEAN_FLAGS];

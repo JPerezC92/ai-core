@@ -2,19 +2,13 @@
  * Domain outcomes for the synchronization CLI.
  *
  * Business operations return typed values, never transport encodings
- * (architecture contract C6). An engine run's status and streams are the
- * capability's own result and travel as data; turning them into process exit
- * codes and operator copy is the delivery edge's job.
+ * (architecture contract C6). A synchronization run is the domain results its
+ * operations produced, and turning them into process exit codes and operator
+ * copy is the delivery edge's job.
  */
 
 import type { SupportedEditor } from "./constants.ts";
-
-/** One engine invocation's verbatim result. */
-export type EngineRun = {
-	readonly status: number;
-	readonly stdout: string;
-	readonly stderr: string;
-};
+import type { OperationOutcome } from "./synchronization/failures.ts";
 
 export type SynchronizeOutcome = {
 	/** Absolute destination path the run acted on. */
@@ -22,8 +16,8 @@ export type SynchronizeOutcome = {
 	readonly editor: SupportedEditor;
 	/** True when this run enrolled a destination rather than updating one. */
 	readonly enrolled: boolean;
-	/** The write invocation and, when it ran, the verification invocation. */
-	readonly runs: readonly EngineRun[];
-	/** True when the engine reported the destination is current. */
+	/** The write operation and, when it ran, the verification operation's result. */
+	readonly runs: readonly OperationOutcome[];
+	/** True when the verification operation reported the destination is current. */
 	readonly current: boolean;
 };

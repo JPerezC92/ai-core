@@ -24,6 +24,7 @@ import {
 	BOUND_SOURCE,
 	RELOCATED_BOUND_DESTINATION,
 	makeBindingsDocument,
+	makeClearanceLoad,
 	makeRelocatedClearanceLoad,
 	makeSynchronizationRequest,
 } from "#support/synchronization.factory.ts";
@@ -83,5 +84,95 @@ describe("destination drift refusal", () => {
 		expect(destinations.readBytes).not.toHaveBeenCalled();
 		expect(layout.syncBlocker).not.toHaveBeenCalled();
 		expect(sources.readCore).not.toHaveBeenCalled();
+	});
+});
+
+/** The merge-mode source: the harness configuration. */
+const CONFIGURED_SOURCE = ".opencode/opencode.jsonc";
+
+/** The shipped configuration's `mcp` block, as the source carries it. */
+const CONFIGURED_TEXT = `{
+  "mcp": {
+    "servers": {
+      "system-one": { "type": "local", "command": ["node", "mcp-servers/system-one/src/mcp/stdio.ts"] },
+      "qmd": { "type": "local", "command": ["npx", "-y", "@tobilu/qmd@2.8.3", "--index", "ai-core", "mcp"] }
+    }
+  }
+}`;
+
+/** The merged configuration a destination that never received the omitted server holds. */
+const MERGED_TEXT = `{
+      "mcp": {
+        "servers": {
+          "qmd": { "type": "local", "command": ["npx", "-y", "@tobilu/qmd@2.8.3", "--index", "destination", "mcp"] }
+        }
+      }
+    }`;
+
+/** The verification operation over one merge-mode binding and a stated registry. */
+function makeMergeVerification(options: { readonly omitSystemOne: boolean }): {
+	readonly useCase: VerifyDestinations;
+	readonly sources: MockProxy<SourceFiles>;
+	readonly destinations: MockProxy<DestinationFiles>;
+} {
+	const bindings = mock<BindingsStore>();
+	bindings.load.mockResolvedValue(
+		makeBindingsDocument({
+			editor: "opencode",
+			bindings: [{ source: CONFIGURED_SOURCE, destinations: [CONFIGURED_SOURCE], declaredMode: "merge" }],
+		}),
+	);
+
+	const clearance = mock<ClearanceStore>();
+	clearance.load.mockResolvedValue(
+		makeClearanceLoad({
+			[CONFIGURED_SOURCE]: {
+				mode: "merge",
+				...(options.omitSystemOne ? { omit_mcp_servers: ["system-one"] } : {}),
+			},
+		}),
+	);
+
+	const layout = mock<FilesystemLayout>();
+	layout.join.mockImplementation((root, relative) => `${root}/${relative}`);
+	layout.isFile.mockResolvedValue(true);
+	layout.exists.mockResolvedValue(true);
+
+	const guard = mock<WriteTargetGuard>();
+	guard.refuse.mockResolvedValue(null);
+
+	const sources = mock<SourceFiles>();
+	sources.readText.mockResolvedValue(CONFIGURED_TEXT);
+
+	const destinations = mock<DestinationFiles>();
+	destinations.readText.mockResolvedValue(MERGED_TEXT);
+
+	const useCase = new VerifyDestinations({ bindings, clearance, sources, destinations, layout, guard });
+	return { useCase, sources, destinations };
+}
+
+describe("merge currency", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	test("check stays current when the destination never received the omitted server", async () => {
+		const { useCase } = makeMergeVerification({ omitSystemOne: true });
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(true);
+		expect(outcome.ok && outcome.message).toBe("current");
+	});
+
+	test("without the omission the same destination is merge drift", async () => {
+		const { useCase } = makeMergeVerification({ omitSystemOne: false });
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(false);
+		const failure = outcome.ok ? null : outcome.failure;
+		expect(failure?.code).toBe("drift");
+		expect(failure?.message).toBe(`merge drift: G:/projects/destination/${CONFIGURED_SOURCE}`);
 	});
 });

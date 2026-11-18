@@ -1,5 +1,5 @@
 /**
- * Integration: the `--bind` / `--bind-raw` declaration half of the
+ * End to end: the `--bind` / `--bind-raw` declaration half of the
  * behavioral-parity corpus.
  *
  * One behavioural concern — what a CLI binding declaration does: append a

@@ -6,12 +6,18 @@
  * (contract C6, scripts-shape P2).
  */
 
+import {
+	reportOutcome,
+	synchronizationNotCurrent,
+	type SynchronizationReport,
+} from "#delivery/synchronization-report.ts";
 import type { Failure } from "#domain/failures.ts";
-import type { EngineRun, SynchronizeOutcome } from "#domain/outcomes.ts";
+import type { SynchronizeOutcome } from "#domain/outcomes.ts";
+import type { OperationOutcome } from "#domain/synchronization/failures.ts";
 import type { ProposalEntry, ReconciliationProposal } from "#domain/synchronization/reconciliation-proposal.ts";
 import { PROPOSAL_CLASSES } from "#domain/synchronization/reconciliation-proposal.ts";
 
-/** Process exit statuses, matching the engine's published contract. */
+/** Process exit statuses, matching the published exit contract. */
 export const EXIT_OK = 0;
 export const EXIT_DRIFT = 1;
 export const EXIT_INVALID = 2;
@@ -29,18 +35,24 @@ export function exitStatusForFailure(failure: Failure): number {
 	return EXIT_BY_FAILURE[failure.code] ?? EXIT_INVALID;
 }
 
-/** Render one engine run's streams in the order the operator should read them. */
-export function renderRun(run: EngineRun): { stdout: string[]; stderr: string[] } {
-	const stdout = run.stdout.trim() === "" ? [] : [run.stdout.trim()];
-	const stderr = run.stderr.trim() === "" ? [] : [run.stderr.trim()];
-	return { stdout, stderr };
+/** Render one reported result as the lines the operator reads. */
+export function renderReport(report: SynchronizationReport): {
+	stdout: string[];
+	stderr: string[];
+	status: number;
+} {
+	return {
+		stdout: report.stdout.trim() === "" ? [] : [report.stdout.trim()],
+		stderr: report.stderr.trim() === "" ? [] : [report.stderr.trim()],
+		status: report.exitCode,
+	};
 }
 
 /**
  * Render a completed synchronization.
  *
- * The exit status reflects the last engine invocation, so a failed write or a
- * failed verification is never reported as success.
+ * The exit status reflects the last operation, so a failed write or a failed
+ * verification is never reported as success.
  */
 export function renderSync(outcome: SynchronizeOutcome): {
 	stdout: string[];
@@ -50,19 +62,20 @@ export function renderSync(outcome: SynchronizeOutcome): {
 	const stdout: string[] = [];
 	const stderr: string[] = [];
 	for (const run of outcome.runs) {
-		const rendered = renderRun(run);
+		const rendered = renderOutcome(run);
 		stdout.push(...rendered.stdout);
 		stderr.push(...rendered.stderr);
 	}
 
 	const last = outcome.runs[outcome.runs.length - 1];
+	const lastStatus = last === undefined ? EXIT_DRIFT : reportOutcome(last).exitCode;
 
 	if (outcome.current) {
 		stdout.push(`sync: ${outcome.destination} is current (${outcome.editor}).`);
 		return { stdout, stderr, status: EXIT_OK };
 	}
 
-	const wroteSuccessfully = last !== undefined && outcome.runs.length > 1 && last.status !== 0;
+	const wroteSuccessfully = last !== undefined && outcome.runs.length > 1 && lastStatus !== EXIT_OK;
 	stderr.push(
 		wroteSuccessfully
 			? `sync: the write to ${outcome.destination} succeeded, but the engine reports the ` +
@@ -70,24 +83,18 @@ export function renderSync(outcome: SynchronizeOutcome): {
 					"overridden here. A freshly enrolled destination lists region files under " +
 					"`pending:` until that project reconciles its own project regions; clearing " +
 					"`pending:` is destination-owned and is never done by this tool."
-			: `sync: synchronization of ${outcome.destination} failed with status ` +
-					`${last?.status ?? EXIT_DRIFT}; nothing is claimed current.`,
+			: synchronizationNotCurrent(outcome.destination, lastStatus),
 	);
 
-	return { stdout, stderr, status: last?.status ?? EXIT_DRIFT };
+	return { stdout, stderr, status: lastStatus };
 }
 
-/** Render a forwarded advanced command, preserving the engine's exit status. */
-export function renderAdvanced(run: EngineRun): {
-	stdout: string[];
-	stderr: string[];
-	status: number;
-} {
-	const rendered = renderRun(run);
+/** Render one operation's domain result as the lines the operator reads. */
+function renderOutcome(outcome: OperationOutcome): { stdout: string[]; stderr: string[] } {
+	const report = reportOutcome(outcome);
 	return {
-		stdout: rendered.stdout,
-		stderr: rendered.stderr,
-		status: run.status,
+		stdout: report.stdout.trim() === "" ? [] : [report.stdout.trim()],
+		stderr: report.stderr.trim() === "" ? [] : [report.stderr.trim()],
 	};
 }
 

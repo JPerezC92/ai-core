@@ -1,5 +1,5 @@
 /**
- * Integration: the clearance-registry integrity half of the behavioral-parity
+ * End to end: the clearance-registry integrity half of the behavioral-parity
  * corpus.
  *
  * One behavioural concern — whether the registry an engine validates is the

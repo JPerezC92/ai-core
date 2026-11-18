@@ -3,7 +3,7 @@
  *
  * The only place concrete infrastructure is constructed (contract C4) and the
  * only place transport encodings exist (C6, P2). Everything below depends on
- * ports.
+ * ports or on the application operations it is composed from.
  */
 
 import { dirname, join, resolve } from "node:path";
@@ -17,23 +17,48 @@ import {
 } from "#domain/constants.ts";
 import { parseInvocation } from "#domain/rules/invocation.ts";
 import type { OperatorSettings } from "#domain/settings.ts";
-import { RunAdvancedCommand } from "#application/run-advanced-command.ts";
+import type {
+	BindingsStore,
+	ClearanceStore,
+	DestinationFiles,
+	FilesystemLayout,
+	SourceFiles,
+	WriteTargetGuard,
+} from "#domain/synchronization/ports.ts";
+import { RunAdvancedCommand, type AdvancedCommandDependencies } from "#application/run-advanced-command.ts";
 import { ReconcileDestination } from "#application/reconcile-destination.ts";
 import { SynchronizeDestination } from "#application/synchronize-destination.ts";
+import { ApplyCoreRevision } from "#application/synchronization/apply-core-revision.ts";
+import { EnrollDestinations } from "#application/synchronization/enroll-destinations.ts";
+import { VerifyDestinations } from "#application/synchronization/verify-destinations.ts";
+import { toCommandArguments } from "#delivery/command-arguments.ts";
 import {
 	EXIT_INVALID,
 	EXIT_OK,
 	exitStatusForFailure,
-	renderAdvanced,
 	renderReconciliation,
+	renderReport,
 	renderSync,
 } from "#delivery/reporting.ts";
-import { ConsoleStreamWriter } from "#delivery/stream-writer.ts";
-import { createCoreSyncEngine } from "#infrastructure/core-sync-engine.ts";
-import { CoreSyncEngineRunner, EngineUnavailableError } from "#infrastructure/engine-runner.ts";
+import { ConsoleStreamWriter, type StreamWriter } from "#delivery/stream-writer.ts";
+import {
+	reportFileSystemFailure,
+	reportMalformed,
+	reportOutcome,
+	reportSynchronizationFailure,
+	type SynchronizationReport,
+} from "#delivery/synchronization-report.ts";
+import { RunDestinationProbe } from "#delivery/run-destination.ts";
 import { LocalFilesystemProbe } from "#infrastructure/filesystem-probe.ts";
 import { createReconciliationReader } from "#infrastructure/reconciliation-reader.ts";
 import { CorruptSelectionError, LocalJsonSelectionStore } from "#infrastructure/selection-store.ts";
+import { YamlBindingsStore } from "#infrastructure/synchronization/bindings-store.ts";
+import { JsonClearanceStore } from "#infrastructure/synchronization/clearance-store.ts";
+import { LocalDestinationFiles } from "#infrastructure/synchronization/local-destination-files.ts";
+import { isFileSystemError } from "#infrastructure/synchronization/local-files.ts";
+import { LocalFilesystemLayout } from "#infrastructure/synchronization/local-filesystem-layout.ts";
+import { LocalSourceFiles } from "#infrastructure/synchronization/local-source-files.ts";
+import { LocalWriteTargetGuard } from "#infrastructure/synchronization/write-target-guard.ts";
 
 /** The AICore checkout root: three levels above this module's directory. */
 export function checkoutRoot(): string {
@@ -86,6 +111,22 @@ Exit status: 0 current, applied, or a proposal with nothing for the destination
 owner to do; 1 drift reported by the engine, or a proposal the destination owner
 must act on; 2 invalid input or unavailable configuration.`;
 
+/**
+ * The synchronization adapters one command runs over.
+ *
+ * One explicit data-only record: the application operations declare the ports
+ * they need, and the composition root supplies the same adapters to each of
+ * them.
+ */
+type SynchronizationDependencies = {
+	readonly bindings: BindingsStore;
+	readonly clearance: ClearanceStore;
+	readonly sources: SourceFiles;
+	readonly destinations: DestinationFiles;
+	readonly layout: FilesystemLayout;
+	readonly guard: WriteTargetGuard;
+};
+
 function operatorSettings(environment: Readonly<Record<string, string | undefined>>): OperatorSettings {
 	return {
 		sourceRevision: environment[REVISION_ENV_VAR],
@@ -93,12 +134,38 @@ function operatorSettings(environment: Readonly<Record<string, string | undefine
 	};
 }
 
+/** Build the three synchronization operations over the local adapters. */
+function createSynchronizationOperations(): AdvancedCommandDependencies {
+	const layout = new LocalFilesystemLayout();
+	const dependencies: SynchronizationDependencies = {
+		bindings: new YamlBindingsStore(),
+		clearance: new JsonClearanceStore(),
+		sources: new LocalSourceFiles(),
+		destinations: new LocalDestinationFiles(),
+		layout,
+		guard: new LocalWriteTargetGuard(layout),
+	};
+
+	return {
+		check: new VerifyDestinations(dependencies),
+		apply: new ApplyCoreRevision(dependencies),
+		enroll: new EnrollDestinations(dependencies),
+	};
+}
+
+/** Write one reported result and return its exit status. */
+function writeReport(writer: StreamWriter, report: SynchronizationReport): number {
+	const rendered = renderReport(report);
+	writer.writeStdout(rendered.stdout);
+	writer.writeStderr(rendered.stderr);
+	return rendered.status;
+}
+
 export async function main(
 	argv: readonly string[],
 	environment: Readonly<Record<string, string | undefined>> = process.env,
+	writer: StreamWriter = new ConsoleStreamWriter(),
 ): Promise<number> {
-	const writer = new ConsoleStreamWriter();
-
 	const parsed = parseInvocation(argv);
 	if (!parsed.ok) {
 		writer.writeStderr([parsed.failure.message]);
@@ -113,7 +180,10 @@ export async function main(
 
 	const root = checkoutRoot();
 	const settings = operatorSettings(environment);
-	const engine = new CoreSyncEngineRunner(createCoreSyncEngine());
+	const operations = createSynchronizationOperations();
+	// The destination a `sync` run resolved, so a boundary failure it raises can be
+	// rendered the way a failed write always was. Reconcile builds its own probe.
+	const syncFiles = new RunDestinationProbe(new LocalFilesystemProbe());
 
 	try {
 		if (invocation.kind === "reconcile") {
@@ -135,22 +205,20 @@ export async function main(
 		}
 
 		if (invocation.kind === "advanced") {
-			const outcome = await new RunAdvancedCommand(engine).execute({
-				command: invocation.command,
-				passthrough: invocation.passthrough,
-			});
-			const rendered = renderAdvanced(outcome);
+			const arguments_ = toCommandArguments(invocation.command, invocation.passthrough);
+			if (!arguments_.ok) {
+				return writeReport(writer, reportMalformed(arguments_.message));
+			}
 
-			writer.writeStdout(rendered.stdout);
-			writer.writeStderr(rendered.stderr);
-			return rendered.status;
+			const outcome = await new RunAdvancedCommand(operations).execute(arguments_);
+			return writeReport(writer, reportOutcome(outcome));
 		}
 
 		const result = await new SynchronizeDestination({
 			checkoutRoot: root,
 			settings,
-			engine,
-			files: new LocalFilesystemProbe(),
+			...operations,
+			files: syncFiles,
 			selections: new LocalJsonSelectionStore(root, settings.localConfigPath),
 		}).execute({
 			target: invocation.target,
@@ -168,13 +236,26 @@ export async function main(
 		writer.writeStderr(rendered.stderr);
 		return rendered.status;
 	} catch (error) {
-		if (error instanceof EngineUnavailableError) {
-			writer.writeStderr([error.message]);
-			return EXIT_INVALID;
-		}
 		if (error instanceof CorruptSelectionError) {
 			writer.writeStderr([error.message]);
 			return EXIT_INVALID;
+		}
+		// A genuine filesystem condition is a synchronization result at the
+		// published exit contract: the destination is not current, and a later
+		// `check` is required. A programming exception stays an exception, because
+		// a fabricated drift report would claim drift that never happened (C5).
+		if (isFileSystemError(error)) {
+			const reason = error instanceof Error ? error.message : String(error);
+			// A `sync` run reports the destination it failed on the way a failed write
+			// always did; a command that resolved no destination keeps the bare
+			// diagnostic.
+			const destination = syncFiles.destination;
+			return writeReport(
+				writer,
+				destination === null
+					? reportFileSystemFailure(reason)
+					: reportSynchronizationFailure(destination, reason),
+			);
 		}
 		throw error;
 	}

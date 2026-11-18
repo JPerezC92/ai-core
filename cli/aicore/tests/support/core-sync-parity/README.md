@@ -41,9 +41,11 @@ export type EngineUnderTest = {
 };
 ```
 
-The TypeScript engine must live at `cli/aicore/src/infrastructure/core-sync-engine.ts`
-and export `createCoreSyncEngine(): EngineUnderTest`. The seam binds that module;
-no case changes.
+The assembled CLI entry point must live at `cli/aicore/src/main.ts` and export
+`main(argv, environment, writer)`: the seam builds the command's argument vector
+from the request a case declares, runs that entry point in process against a
+recording writer, and reports the exit status and the bytes it wrote. The seam
+binds that module; no case changes.
 
 An engine is free to implement the commands however it likes. It must only
 accept the request, perform the command over the given roots, and report the
@@ -95,7 +97,7 @@ tests/support/core-sync-parity/
   tree.ts                the filesystem snapshot and comparison
   runner.ts              the shared case runner
   describe-concern.ts    the shared spec registration
-tests/integration/core-sync-parity/
+tests/e2e/core-sync-parity/
   region-mode.parity.spec.ts
   raw-mode.parity.spec.ts
   merge-mode.parity.spec.ts
@@ -128,7 +130,7 @@ change the corpus by an explicit decision, never silently.
 
 ## Reading the corpus
 
-`pnpm --dir cli/aicore test` runs it. The seam binds the TypeScript engine, which
+`pnpm --dir cli/aicore test:e2e` runs it. The seam binds the assembled CLI, which
 is the engine the corpus judges: it answers "what does the engine do with this
 fixture", never "what should this fixture expect".
 
