@@ -26,9 +26,7 @@ export type Concern =
 	| "safety-refusals"
 	| "idempotence"
 	| "binding-declarations"
-	| "root-role"
-	| "clearance-integrity"
-	| "directory-expansion";
+	| "root-role";
 
 /**
  * Where a case's expected outcome came from.

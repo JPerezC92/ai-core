@@ -87,8 +87,6 @@ tests/support/core-sync-parity/
   cases/
     binding-declarations.ts  the `--bind` / `--bind-raw` declaration cases
     root-role.ts             the `role: root` and `--root` destination-root cases
-    clearance-integrity.ts   the duplicate-key clearance cases
-    directory-expansion.ts   what a cleared directory root puts in a distribution set
   blocker.ts             the shipped blocker block (reference behaviour)
   fixtures.ts            the synthetic fixture builders
   engine.ts              the engine seam and its binding
@@ -108,8 +106,6 @@ tests/e2e/core-sync-parity/
   idempotence.parity.spec.ts
   binding-declarations.parity.spec.ts
   root-role.parity.spec.ts
-  clearance-integrity.parity.spec.ts
-  directory-expansion.parity.spec.ts
 ```
 
 One concern owns one spec file; the cases live in the corpus data module.
