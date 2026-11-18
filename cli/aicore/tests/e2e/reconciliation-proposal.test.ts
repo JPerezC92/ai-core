@@ -14,7 +14,11 @@
  * because the assembled command resolves the real checkout as the source root and
  * this case needs a disposable synthetic one. The assertion is made through the
  * delivery renderer, so the rendered proposal and exit status — the observable
- * result — are still the ones the command produces.
+ * result — are still the ones the command produces. This is therefore
+ * composed-operation coverage *below* the entry point, not entry-point coverage;
+ * `reconcile-entry-point.test.ts` is the module that exercises the assembled
+ * command, and the coordinator counts this one at no level for that reason. It is
+ * kept because it carries the only real-reader classification coverage.
  *
  * One fixture states all four classes at once: a managed file, a locally modified
  * managed file, a superseded binding whose source is gone (preserved, never
