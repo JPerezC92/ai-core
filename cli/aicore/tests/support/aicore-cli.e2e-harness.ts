@@ -31,6 +31,8 @@ export type Fixture = {
 	readonly destination: string;
 	readonly configPath: string;
 	readonly root: string;
+	/** The exact bytes this fixture planted in the destination's root runtime file. */
+	readonly body: string;
 	dispose(): Promise<void>;
 };
 
@@ -40,11 +42,8 @@ export async function createFixture(
 	const { root, prefix } = await createTemporaryRoot(FIXTURE_PREFIX);
 	const destination = join(root, "destination");
 	await mkdir(destination, { recursive: true });
-	await writeFile(
-		join(destination, "AGENTS.md"),
-		options.agentsBody ?? "# Fixture project\n\nA disposable destination for end-to-end verification.\n",
-		"utf8",
-	);
+	const body = options.agentsBody ?? "# Fixture project\n\nA disposable destination for end-to-end verification.\n";
+	await writeFile(join(destination, "AGENTS.md"), body, "utf8");
 	if (options.editor !== undefined) {
 		await mkdir(join(destination, ".aicore"), { recursive: true });
 		await writeFile(join(destination, ".aicore", "core.yaml"), enrolledBindings(options.editor), "utf8");
@@ -54,6 +53,7 @@ export async function createFixture(
 		destination,
 		configPath: join(root, "local.json"),
 		root,
+		body,
 		async dispose(): Promise<void> {
 			// Ownership is re-validated here, immediately before deletion.
 			await disposeTemporaryRoot(root, prefix);
