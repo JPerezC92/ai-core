@@ -9,16 +9,19 @@
  * matches against the config name AND the human name.
  */
 
-import { execute } from "#scripts/op_model_lookup/application/find_models.ts";
+import { FindModels } from "#scripts/op_model_lookup/application/find_models.ts";
 import { ModelSourceFailure } from "#scripts/op_model_lookup/domain/catalog.ts";
 import { runCli } from "#scripts/op_model_lookup/infrastructure/cli.ts";
 import { OpencodeModelSource } from "#scripts/op_model_lookup/infrastructure/process.ts";
+
+/** The live external command this skill reads, bound here rather than in the adapter. */
+const LIVE_SOURCE = { executable: "opencode", args: ["models"] } as const;
 
 /** Compose the live model source with the use case and CLI renderer. */
 export function main(argv: readonly string[]): number {
 	const query = argv[0] ?? "";
 	try {
-		const outcome = execute(query, new OpencodeModelSource());
+		const outcome = new FindModels(new OpencodeModelSource(LIVE_SOURCE)).execute(query);
 		return runCli(outcome, query);
 	} catch (error) {
 		if (error instanceof ModelSourceFailure) {

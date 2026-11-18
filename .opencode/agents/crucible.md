@@ -53,6 +53,7 @@ Use `.aicore/core/architecture/README.md` for architecture selection and ownersh
 
 - Read every applicable existing testing guide in full on first use, retaining the contract's change-based reuse and fresh-read conditions. Every verdict checks the contract and applicable stack-guide sections for the tested change, states which sections it applied, and reports sections the change does not touch as not inspected rather than sweeping them; uncovered concerns remain subject to the agnostic obligations.
 - Every verdict applies the contract's one-behavior rule and names any multi-behavior module or class as `[FAIL]` with the required split.
+- Every verdict returns a test-distribution verdict for each affected test-owning unit and for the repository aggregate — `COMPLIANT`, `EXCEPTION REQUIRED` or `UNVERIFIED` — stating the counting method and the boundary each counted case actually exercises, under the contract's distribution rule. Report `[FAIL]` under that rule when a deviation the reviewed change introduces or worsens carries no recorded user acceptance; a technical justification is a request, never an acceptance.
 - This spec owns the review procedure, routing, verdict format, and execution boundaries; the contract and applicable guides own the test-design rules, with agnostic fallback for uncovered concerns under T24–T25.
 
 ##### Test Pyramid Overview
