@@ -2,9 +2,8 @@
 
 import { ScanAttribution } from "#scripts/attribution_scan/application/scan_attribution.ts";
 import { PolicyValidationError, SnapshotValidationError } from "#scripts/attribution_scan/domain/records.ts";
+import { compactJson, isDirectExecution, printError, printOut } from "#scripts/cli_delivery.ts";
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-import { pathToFileURL } from "node:url";
 
 // Explicit re-export surface: every typed record stays reachable by name.
 export type {
@@ -71,26 +70,6 @@ function readInput(path: string): string {
 	}
 }
 
-/** Escape every character outside printable ASCII as a hexadecimal escape. */
-function escapeNonAscii(text: string): string {
-	return text.replace(/[\u007f-\uffff]/gu, (character) => {
-		const code = character.codePointAt(0) ?? 0;
-		if (code <= 0xffff) return `\\u${code.toString(16).padStart(4, "0")}`;
-		const adjusted = code - 0x10000;
-		const high = 0xd800 + (adjusted >> 10);
-		const low = 0xdc00 + (adjusted & 0x3ff);
-		return `\\u${high.toString(16).padStart(4, "0")}\\u${low.toString(16).padStart(4, "0")}`;
-	});
-}
-
-/** Serialize one flat payload the way the documented output is serialized. */
-function compactJson(record: Readonly<Record<string, string>>): string {
-	const entries = Object.entries(record).map(
-		([key, value]) => `${JSON.stringify(key)}: ${escapeNonAscii(JSON.stringify(value))}`,
-	);
-	return `{${entries.join(", ")}}`;
-}
-
 /** Serialize one decoded value with sorted object keys and two-space indentation. */
 function toSortedJson(value: unknown): string {
 	const render = (item: unknown, depth: number): string => {
@@ -111,16 +90,6 @@ function toSortedJson(value: unknown): string {
 		return JSON.stringify(item) ?? "null";
 	};
 	return render(value, 0);
-}
-
-/** Write one line to the standard output stream. */
-function printOut(text: string): void {
-	process.stdout.write(text);
-}
-
-/** Write one line to the standard error stream. */
-function printError(text: string): void {
-	process.stderr.write(text);
 }
 
 /** Report the usage line and the diagnostic of one rejected command line. */
@@ -164,9 +133,4 @@ export function main(argv: readonly string[]): number {
 	return result.matches.length > 0 ? 1 : 0;
 }
 
-function isDirectExecution(): boolean {
-	const entry = process.argv[1];
-	return entry !== undefined && pathToFileURL(resolve(entry)).href === import.meta.url;
-}
-
-if (isDirectExecution()) process.exitCode = main(process.argv.slice(2));
+if (isDirectExecution(import.meta.url)) process.exitCode = main(process.argv.slice(2));

@@ -109,6 +109,30 @@ export function createLocalInventoryWithForeignCommitSurface(): Record<string, u
 	};
 }
 
+/**
+ * Create a valid local inventory whose values differ from the shared snapshot fixture.
+ *
+ * A distinct inventory isolates the acceptance of the exact documented field set
+ * from the shared fixture, so the assertion cannot pass by fixture coincidence.
+ */
+export function createAlternateLocalInventory(): LocalInventory {
+	return {
+		schema: 1,
+		pr_number: 81,
+		head_sha: "b".repeat(40),
+		base: "origin/release",
+		commit_messages: [
+			{ surface: "commit-message", source: "b".repeat(40), content: "feat(release): alternate local inventory" },
+		],
+		changed_files: [{ path: "src/alternate.py", content: "alternate = 1\n" }],
+	};
+}
+
+/** Return the exact path inventory that matches the alternate local inventory. */
+export function createAlternateLocalPaths(): string[] {
+	return ["src/alternate.py"];
+}
+
 /** Create synthetic scanner policy data rather than duplicating approved tokens. */
 export function createPolicy(): AttributionPolicy {
 	return makeSyntheticPolicy();
@@ -186,6 +210,7 @@ export function createLocalSnapshot(): Snapshot {
 }
 
 export const GIT_SOURCE_PATH = "src/current.py";
+export const GIT_BINARY_PATH = "src/binary.bin";
 export const GIT_REMOVED_PATH = "src/deleted.py";
 export const GIT_METACHARACTER_PATH = "src/evil;touch injected.txt";
 export const GIT_SIDE_EFFECT_NAME = "injected.txt";
@@ -240,6 +265,21 @@ export function createFixtureEnvironment(): NodeJS.ProcessEnv {
 	environment["GIT_OPTIONAL_LOCKS"] = "0";
 	for (const variable of GIT_REDIRECTING_VARIABLES) delete environment[variable];
 	return environment;
+}
+
+/**
+ * Stop Git's upward repository search at the supplied temporary root.
+ *
+ * Without this ceiling a temporary directory that happens to sit inside a
+ * repository would resolve that repository, and the case could no longer prove
+ * that a directory outside any repository is reported as a boundary failure.
+ */
+export function limitRepositorySearch(root: string): void {
+	const separator = process.platform === "win32" ? ";" : ":";
+	const previous = process.env["GIT_CEILING_DIRECTORIES"];
+	const paths = previous === undefined ? [] : previous.split(separator);
+	paths.push(root.replace(/\\/gu, "/"));
+	process.env["GIT_CEILING_DIRECTORIES"] = paths.join(separator);
 }
 
 /** Run one fixture-only Git command inside the isolated temporary repository. */
@@ -301,6 +341,10 @@ export function createCommittedRepository(directory: string): GitRepositoryFixtu
 	writeFileSync(join(directory, GIT_SOURCE_PATH), GIT_BASE_CONTENT, "utf8");
 	writeFileSync(join(directory, GIT_REMOVED_PATH), GIT_REMOVED_CONTENT, "utf8");
 	writeFileSync(join(directory, GIT_RENAMED_FROM_PATH), GIT_RENAMED_CONTENT, "utf8");
+	// The binary body is committed in the base commit and never changed, so it
+	// carries no changed path and the reader can read it without affecting the
+	// diff inventory the other cases assert.
+	writeFileSync(join(directory, GIT_BINARY_PATH), GIT_BINARY_CONTENT);
 	runFixtureGit(directory, "add", "--all");
 	const base = commitFixtureTree(directory, GIT_BASE_MESSAGE);
 	writeFileSync(join(directory, GIT_SOURCE_PATH), GIT_CHANGED_CONTENT, "utf8");

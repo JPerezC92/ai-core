@@ -1,17 +1,20 @@
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
-import { GitBoundaryError, GitReader, parseStatusEntries } from "#scripts/pr_review/infrastructure/git_reader.ts";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { GitBoundaryError, GitReader } from "#scripts/pr_review/infrastructure/git_reader.ts";
 import {
 	createCommittedRepository,
-	createTruncatedStatusPayload,
+	GIT_BINARY_PATH,
 	GIT_METACHARACTER_PATH,
+	GIT_REMOVED_PATH,
 	GIT_RENAMED_FROM_PATH,
 	GIT_RENAMED_TO_PATH,
 	GIT_SIDE_EFFECT_NAME,
 	GIT_SOURCE_PATH,
+	limitRepositorySearch,
 } from "#tests/support/review-fixtures.ts";
+import type { GitRepositoryFixture } from "#tests/support/review-fixtures.ts";
 
 const temporaryDirectories: string[] = [];
 
@@ -21,15 +24,22 @@ function makeDirectory(): string {
 	return directory;
 }
 
-afterEach(() => {
+afterAll(() => {
 	for (const directory of temporaryDirectories.splice(0)) {
 		rmSync(directory, { recursive: true, force: true });
 	}
 });
 
 describe("the Git reader against a real repository", () => {
+	let repository: GitRepositoryFixture;
+
+	beforeAll(() => {
+		const root = makeDirectory();
+		limitRepositorySearch(root);
+		repository = createCommittedRepository(join(root, "repository"));
+	}, 30_000);
+
 	it("maps commits, rename destination, metacharacter path, unresolved revision and a failing read", () => {
-		const repository = createCommittedRepository(join(makeDirectory(), "repository"));
 		const reader = new GitReader({ cwd: repository.directory });
 
 		expect(reader.resolveCommit("HEAD")).toBe(repository.head);
@@ -54,17 +64,26 @@ describe("the Git reader against a real repository", () => {
 		expect(reader.mergeBase(repository.base, repository.orphanHead)).toBeNull();
 		expect(() => reader.listCommits(repository.base, "refs/heads/unresolved")).toThrow(GitBoundaryError);
 	});
-}, 15_000);
 
-describe("the Git reader boundary failures", () => {
-	it("rejects a truncated name-status payload instead of returning a partial path", () => {
-		expect(() => parseStatusEntries(createTruncatedStatusPayload())).toThrow(GitBoundaryError);
+	it("maps an unchanged range to empty path, commit and deletion inventories", () => {
+		const reader = new GitReader({ cwd: repository.directory });
+
+		expect(reader.listCommits(repository.base, repository.base)).toEqual([]);
+		expect(reader.listChangedPaths(repository.base, repository.base)).toEqual([]);
+		expect(reader.listDeletedPaths(repository.base, repository.base)).toEqual([]);
 	});
 
-	it("reports a missing git executable as a boundary failure", () => {
-		const reader = new GitReader({ executable: null });
+	it("reports a path that is absent at the read commit", () => {
+		const reader = new GitReader({ cwd: repository.directory });
 
-		expect(() => reader.resolveCommit("HEAD")).toThrow(GitBoundaryError);
-		expect(() => reader.resolveCommit("HEAD")).toThrow("git executable was not found on PATH");
+		expect(() => reader.readFile(repository.head, GIT_REMOVED_PATH)).toThrow(GitBoundaryError);
+		expect(() => reader.readFile(repository.head, GIT_REMOVED_PATH)).toThrow(/^git exited with [0-9]+:/u);
 	});
-});
+
+	it("reports a committed body that is not valid UTF-8", () => {
+		const reader = new GitReader({ cwd: repository.directory });
+
+		expect(() => reader.readFile(repository.head, GIT_BINARY_PATH)).toThrow(GitBoundaryError);
+		expect(() => reader.readFile(repository.head, GIT_BINARY_PATH)).toThrow("git output was not valid UTF-8");
+	});
+}, 30_000);

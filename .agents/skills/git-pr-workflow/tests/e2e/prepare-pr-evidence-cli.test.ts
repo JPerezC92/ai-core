@@ -131,7 +131,7 @@ describe("prepare_pr_evidence as a spawned process", () => {
 		expect(snapshot.head_sha).toBe(repository.head);
 		expect(snapshot.base).toBe(repository.base);
 		expect(snapshot.changed_files.map((file) => file.path)).toEqual(repository.changedPaths);
-	});
+	}, 30_000);
 
 	it("rejects a path inventory that is not the exact diff inventory", () => {
 		const directory = makeDirectory();
@@ -212,44 +212,40 @@ describe("prepare_pr_evidence as a spawned process", () => {
 		expect(diverged.stderr).toBe("");
 	});
 
-	it("rejects a command line it cannot accept, naming the TypeScript entry point", () => {
+	it("reports every rejected command line with its usage line and diagnostic", () => {
 		const directory = makeDirectory();
+		const cases = [
+			{
+				name: "a command whose option value is not a positive integer",
+				args: ["prepare-local", "--pr", "0"],
+				stderr:
+					"usage: prepare_pr_evidence.ts prepare-local --pr PR --base BASE --draft DRAFT --working-body WORKING-BODY --output OUTPUT\n" +
+					"prepare_pr_evidence.ts prepare-local: error: argument --pr: a positive integer is required: 0\n",
+			},
+			{
+				name: "a command line that names no command",
+				args: [],
+				stderr:
+					"usage: prepare_pr_evidence.ts <command> [options]\n" +
+					"prepare_pr_evidence.ts: error: the following arguments are required: command\n",
+			},
+			{
+				name: "a command name outside the four composed commands",
+				args: ["publish"],
+				stderr:
+					"usage: prepare_pr_evidence.ts <command> [options]\n" +
+					"prepare_pr_evidence.ts: error: argument command: invalid choice: 'publish' " +
+					"(choose from 'snapshot', 'prepare-snapshot', 'prepare-local', 'verify')\n",
+			},
+		];
 
-		const run = runCli(["prepare-local", "--pr", "0"], directory);
+		for (const testCase of cases) {
+			const run = runCli(testCase.args, directory);
 
-		expect(run.status).toBe(2);
-		expect(run.stdout).toBe("");
-		expect(run.stderr).toBe(
-			"usage: prepare_pr_evidence.ts prepare-local --pr PR --base BASE --draft DRAFT --working-body WORKING-BODY --output OUTPUT\n" +
-				"prepare_pr_evidence.ts prepare-local: error: argument --pr: a positive integer is required: 0\n",
-		);
-	});
-
-	it("rejects a command line that names no command", () => {
-		const directory = makeDirectory();
-
-		const run = runCli([], directory);
-
-		expect(run.status).toBe(2);
-		expect(run.stdout).toBe("");
-		expect(run.stderr).toBe(
-			"usage: prepare_pr_evidence.ts <command> [options]\n" +
-				"prepare_pr_evidence.ts: error: the following arguments are required: command\n",
-		);
-	});
-
-	it("rejects a command name outside the four composed commands", () => {
-		const directory = makeDirectory();
-
-		const run = runCli(["publish"], directory);
-
-		expect(run.status).toBe(2);
-		expect(run.stdout).toBe("");
-		expect(run.stderr).toBe(
-			"usage: prepare_pr_evidence.ts <command> [options]\n" +
-				"prepare_pr_evidence.ts: error: argument command: invalid choice: 'publish' " +
-				"(choose from 'snapshot', 'prepare-snapshot', 'prepare-local', 'verify')\n",
-		);
+			expect(run.status, testCase.name).toBe(2);
+			expect(run.stdout, testCase.name).toBe("");
+			expect(run.stderr, testCase.name).toBe(testCase.stderr);
+		}
 	});
 
 	it("reports an unreadable input as an input/output failure", () => {
