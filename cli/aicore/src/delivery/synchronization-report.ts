@@ -46,3 +46,25 @@ export function reportMalformed(reason: string): SynchronizationReport {
 export function reportFileSystemFailure(reason: string): SynchronizationReport {
 	return { exitCode: EXIT_DRIFT, stdout: "", stderr: `core-sync I/O error: ${reason}\n` };
 }
+
+/** The sentence a synchronization reports when nothing is claimed current. */
+export function synchronizationNotCurrent(destination: string, status: number): string {
+	return `sync: synchronization of ${destination} failed with status ${status}; nothing is claimed current.`;
+}
+
+/**
+ * Report a synchronization whose run raised a boundary exception.
+ *
+ * A run that fails on the filesystem never reaches the operation's return value,
+ * so the delivery edge — which owns the operator's channels — renders it exactly
+ * as a failed write was always rendered: the I/O diagnostic, then the sentence
+ * that nothing is claimed current. The exit status is the drift class the exit
+ * contract already defines, so a caller never has to read the prose to learn it.
+ */
+export function reportSynchronizationFailure(destination: string, reason: string): SynchronizationReport {
+	return {
+		exitCode: EXIT_DRIFT,
+		stdout: "",
+		stderr: `core-sync I/O error: ${reason}\n` + `${synchronizationNotCurrent(destination, EXIT_DRIFT)}\n`,
+	};
+}

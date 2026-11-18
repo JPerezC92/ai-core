@@ -6,7 +6,11 @@
  * (contract C6, scripts-shape P2).
  */
 
-import { reportOutcome, type SynchronizationReport } from "#delivery/synchronization-report.ts";
+import {
+	reportOutcome,
+	synchronizationNotCurrent,
+	type SynchronizationReport,
+} from "#delivery/synchronization-report.ts";
 import type { Failure } from "#domain/failures.ts";
 import type { SynchronizeOutcome } from "#domain/outcomes.ts";
 import type { OperationOutcome } from "#domain/synchronization/failures.ts";
@@ -79,8 +83,7 @@ export function renderSync(outcome: SynchronizeOutcome): {
 					"overridden here. A freshly enrolled destination lists region files under " +
 					"`pending:` until that project reconciles its own project regions; clearing " +
 					"`pending:` is destination-owned and is never done by this tool."
-			: `sync: synchronization of ${outcome.destination} failed with status ` +
-					`${lastStatus}; nothing is claimed current.`,
+			: synchronizationNotCurrent(outcome.destination, lastStatus),
 	);
 
 	return { stdout, stderr, status: lastStatus };

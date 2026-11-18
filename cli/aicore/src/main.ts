@@ -45,8 +45,10 @@ import {
 	reportFileSystemFailure,
 	reportMalformed,
 	reportOutcome,
+	reportSynchronizationFailure,
 	type SynchronizationReport,
 } from "#delivery/synchronization-report.ts";
+import { RunDestinationProbe } from "#delivery/run-destination.ts";
 import { LocalFilesystemProbe } from "#infrastructure/filesystem-probe.ts";
 import { createReconciliationReader } from "#infrastructure/reconciliation-reader.ts";
 import { CorruptSelectionError, LocalJsonSelectionStore } from "#infrastructure/selection-store.ts";
@@ -179,6 +181,9 @@ export async function main(
 	const root = checkoutRoot();
 	const settings = operatorSettings(environment);
 	const operations = createSynchronizationOperations();
+	// The destination a `sync` run resolved, so a boundary failure it raises can be
+	// rendered the way a failed write always was. Reconcile builds its own probe.
+	const syncFiles = new RunDestinationProbe(new LocalFilesystemProbe());
 
 	try {
 		if (invocation.kind === "reconcile") {
@@ -213,7 +218,7 @@ export async function main(
 			checkoutRoot: root,
 			settings,
 			...operations,
-			files: new LocalFilesystemProbe(),
+			files: syncFiles,
 			selections: new LocalJsonSelectionStore(root, settings.localConfigPath),
 		}).execute({
 			target: invocation.target,
@@ -240,7 +245,17 @@ export async function main(
 		// `check` is required. A programming exception stays an exception, because
 		// a fabricated drift report would claim drift that never happened (C5).
 		if (isFileSystemError(error)) {
-			return writeReport(writer, reportFileSystemFailure(error instanceof Error ? error.message : String(error)));
+			const reason = error instanceof Error ? error.message : String(error);
+			// A `sync` run reports the destination it failed on the way a failed write
+			// always did; a command that resolved no destination keeps the bare
+			// diagnostic.
+			const destination = syncFiles.destination;
+			return writeReport(
+				writer,
+				destination === null
+					? reportFileSystemFailure(reason)
+					: reportSynchronizationFailure(destination, reason),
+			);
 		}
 		throw error;
 	}
