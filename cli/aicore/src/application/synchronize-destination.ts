@@ -6,17 +6,22 @@
  * typed failure and performs no delivery: no exit status, no operator copy, no
  * stream writing (C6, P2).
  *
- * Every safety decision stays inside the engine, which this operation delegates
- * to without weakening.
+ * The write and the verification are the other application operations, called
+ * with typed request records: no command line is fabricated for a second module
+ * to parse back (C4).
  */
 
+import { ApplyCoreRevision } from "#application/synchronization/apply-core-revision.ts";
+import { EnrollDestinations } from "#application/synchronization/enroll-destinations.ts";
+import type { EnrollmentRequest, SynchronizationRequest } from "#application/synchronization/requests.ts";
+import { VerifyDestinations } from "#application/synchronization/verify-destinations.ts";
 import { BINDINGS_RELATIVE_PATH, type SupportedEditor } from "#domain/constants.ts";
 import { fail, succeed, type Result } from "#domain/failures.ts";
 import type { SynchronizeOutcome } from "#domain/outcomes.ts";
-import type { EngineRunner } from "#domain/ports/engine-runner.ts";
 import type { FilesystemProbe } from "#domain/ports/filesystem-probe.ts";
 import type { SelectionStore } from "#domain/ports/selection-store.ts";
 import type { OperatorSettings } from "#domain/settings.ts";
+import type { OperationOutcome } from "#domain/synchronization/failures.ts";
 import { resolveEditor, resolveRevision } from "#domain/rules/invocation.ts";
 import { resolveDestinationEditor, resolveDestinationPath, selectionToSave } from "#domain/rules/selection.ts";
 
@@ -29,7 +34,9 @@ export type SynchronizeRequest = {
 export type SynchronizeDependencies = {
 	readonly checkoutRoot: string;
 	readonly settings: OperatorSettings;
-	readonly engine: EngineRunner;
+	readonly check: VerifyDestinations;
+	readonly apply: ApplyCoreRevision;
+	readonly enroll: EnrollDestinations;
 	readonly files: FilesystemProbe;
 	readonly selections: SelectionStore;
 };
@@ -42,7 +49,7 @@ export class SynchronizeDestination {
 	}
 
 	async execute(request: SynchronizeRequest): Promise<Result<SynchronizeOutcome>> {
-		const { engine, files, selections, settings, checkoutRoot } = this.#dependencies;
+		const { check, apply, enroll, files, selections, settings, checkoutRoot } = this.#dependencies;
 
 		// Editor and revision syntax are resolved before any filesystem question, so
 		// an unsupported editor is reported even when the destination is unset.
@@ -86,31 +93,20 @@ export class SynchronizeDestination {
 		}
 		const editor: SupportedEditor = editorResult.value;
 
-		const engineArguments = [
-			"--source",
-			checkoutRoot,
-			"--destination",
-			destination,
-			"--bindings",
+		const synchronization: SynchronizationRequest = {
+			sourceRoot: checkoutRoot,
+			destinationRoot: destination,
 			bindingsPath,
-			"--source-revision",
-			revision,
-			"--editor",
+			sourceRevision: revision,
 			editor,
-		];
+		};
 
-		const writeRun = destinationIsBound
-			? await engine.run("apply", engineArguments)
-			: await engine.run("init", [...engineArguments, "--bind-cleared"]);
+		const writeOutcome = destinationIsBound
+			? await apply.execute(synchronization)
+			: await enroll.execute(this.#enrollmentFor(synchronization));
 
-		if (writeRun.status !== 0) {
-			return succeed({
-				destination,
-				editor,
-				enrolled: !destinationIsBound,
-				runs: [writeRun],
-				current: false,
-			});
+		if (!writeOutcome.ok) {
+			return succeed(this.#outcome(destination, editor, !destinationIsBound, [writeOutcome], false));
 		}
 
 		const selection = selectionToSave(request.target, requestedEditor, destination, editor);
@@ -118,15 +114,38 @@ export class SynchronizeDestination {
 			await selections.write(selection);
 		}
 
-		const verificationRun = await engine.run("check", engineArguments);
+		const verificationOutcome = await check.execute(synchronization);
 
-		return succeed({
-			destination,
-			editor,
-			enrolled: !destinationIsBound,
-			runs: [writeRun, verificationRun],
-			current: verificationRun.status === 0,
-		});
+		return succeed(
+			this.#outcome(
+				destination,
+				editor,
+				!destinationIsBound,
+				[writeOutcome, verificationOutcome],
+				verificationOutcome.ok,
+			),
+		);
+	}
+
+	/** The enrollment this run performs: a first enrollment with bulk clearance. */
+	#enrollmentFor(request: SynchronizationRequest): EnrollmentRequest {
+		return {
+			...request,
+			regionDeclarations: [],
+			rawDeclarations: [],
+			bindCleared: true,
+			rootOverride: null,
+		};
+	}
+
+	#outcome(
+		destination: string,
+		editor: SupportedEditor,
+		enrolled: boolean,
+		runs: readonly OperationOutcome[],
+		current: boolean,
+	): SynchronizeOutcome {
+		return { destination, editor, enrolled, runs, current };
 	}
 
 	#resolveRequestedEditor(requested: string | undefined): Result<SupportedEditor | undefined> {

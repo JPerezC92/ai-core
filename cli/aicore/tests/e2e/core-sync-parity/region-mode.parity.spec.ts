@@ -1,5 +1,5 @@
 /**
- * Integration: the region-mode half of the behavioral-parity corpus.
+ * End to end: the region-mode half of the behavioral-parity corpus.
  *
  * One behavioural concern — what a region-mode binding produces: the spliced
  * core region, the preserved project region, the refreshed frontmatter, the

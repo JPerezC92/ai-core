@@ -1,5 +1,5 @@
 /**
- * Integration: the marker contract half of the behavioral-parity corpus.
+ * End to end: the marker contract half of the behavioral-parity corpus.
  *
  * One behavioural concern — what counts as a marker: the markerless source,
  * the malformed marker pairs, the fenced marker literals and the untouched

@@ -1,5 +1,5 @@
 /**
- * Integration: the idempotence half of the behavioral-parity corpus.
+ * End to end: the idempotence half of the behavioral-parity corpus.
  *
  * One behavioural concern — that applying or enrolling twice changes nothing
  * the second time.

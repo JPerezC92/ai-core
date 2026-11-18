@@ -1,5 +1,5 @@
 /**
- * Integration: the destination-root half of the behavioral-parity corpus.
+ * End to end: the destination-root half of the behavioral-parity corpus.
  *
  * One behavioural concern — how the destination instruction root is chosen: a
  * `role: root` source maps to the detected root rather than to its own path, and

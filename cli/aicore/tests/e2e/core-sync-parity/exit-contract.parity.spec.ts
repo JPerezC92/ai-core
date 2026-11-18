@@ -1,5 +1,5 @@
 /**
- * Integration: the exit-contract half of the behavioral-parity corpus.
+ * End to end: the exit-contract half of the behavioral-parity corpus.
  *
  * One behavioural concern — what each exit code means: 0 for a current or
  * applied result, 1 for drift and 2 for malformed input, with the observable

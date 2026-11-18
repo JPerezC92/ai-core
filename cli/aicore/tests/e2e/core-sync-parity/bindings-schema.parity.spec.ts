@@ -1,5 +1,5 @@
 /**
- * Integration: the bindings-schema half of the behavioral-parity corpus.
+ * End to end: the bindings-schema half of the behavioral-parity corpus.
  *
  * One behavioural concern — the bindings document: how it is written, how a
  * malformed or unsafe one is rejected, and what happens to a pending entry

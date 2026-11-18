@@ -1,5 +1,5 @@
 /**
- * Integration: the directory-expansion half of the behavioral-parity corpus.
+ * End to end: the directory-expansion half of the behavioral-parity corpus.
  *
  * One behavioural concern — which entries a cleared directory root puts in a
  * distribution set: dependency installation directories and `.git` stay out, a

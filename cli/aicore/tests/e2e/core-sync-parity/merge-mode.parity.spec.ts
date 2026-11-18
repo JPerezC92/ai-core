@@ -1,5 +1,5 @@
 /**
- * Integration: the merge-mode half of the behavioral-parity corpus.
+ * End to end: the merge-mode half of the behavioral-parity corpus.
  *
  * One behavioural concern — what a merge-mode binding produces: the top-level
  * key merge, the `mcp` merge by server name and the retargeted QMD index.

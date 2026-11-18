@@ -1,5 +1,5 @@
 /**
- * Integration: the negative safety cases of the behavioral-parity corpus.
+ * End to end: the negative safety cases of the behavioral-parity corpus.
  *
  * One behavioural concern — the refusals that protect the source tree and the
  * destination: unsafe write targets, aliased targets, overlapping roots,
