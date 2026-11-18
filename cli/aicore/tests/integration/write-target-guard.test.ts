@@ -127,6 +127,20 @@ describe("write-target preflight", () => {
 		expect(await guard.refuse(makeRequest())).toBeNull();
 	});
 
+	test("an init whose raw creation would become the implicit root is refused", async () => {
+		// No root is recorded and the destination holds no instruction file, so a
+		// raw destination named AGENTS.md would become the root file itself.
+		const refusal = await guard.refuse(
+			makeRequest(PAYLOAD_RELATIVE, {
+				command: "init",
+				newRawDestinations: new Set(["AGENTS.md"]),
+			}),
+		);
+
+		expect(refusal?.code).toBe("invalid");
+		expect(refusal?.message).toContain("default root would alias newly created raw destination");
+	});
+
 	test("a target that shares the inode of a source-tree file is refused", async () => {
 		const sourceFile = join(sourceRoot, "shared-source.md");
 		const payload = join(destinationRoot, PAYLOAD_RELATIVE);
@@ -195,7 +209,7 @@ describe("root and alias refusals", () => {
 		);
 	});
 
-	test("an init whose raw creation would become the implicit root is refused", async () => {
+	test("an init whose root target aliases a non-region destination is refused", async () => {
 		// The supported instruction file is absent, so this init has no explicit
 		// root and a raw creation at that name would become the root itself.
 		const refusal = await guard.refuse({
