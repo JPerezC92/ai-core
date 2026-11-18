@@ -58,3 +58,44 @@ export function makeMetadata(overrides: Record<string, unknown> = {}): Record<st
 export function metadataWithBody(body: string): Record<string, unknown> {
 	return makeMetadata({ body });
 }
+
+/** A creation draft wrapping a completed body in the creation title wrapper. */
+export function makeCreationDraft(body: string = makeCompletedBody()): string {
+	return `Title: feat: review content preparation\n\n---\n\n${body}`;
+}
+
+/** A creation draft that omits the required title wrapper. */
+export function makeMalformedDraft(): string {
+	return "## Summary\n\nText only, without a title wrapper.\n";
+}
+
+/** The completed body written with CRLF line endings. */
+export function makeCrlfBody(): string {
+	return makeCompletedBody().replaceAll("\n", "\r\n");
+}
+
+/** The completed body carrying multi-byte UTF-8 characters. */
+export function makeMultibyteBody(): string {
+	return makeCompletedBody({ summary: "Keeps “quoted” — dashes and 日本語 text.\n" });
+}
+
+/** An artifact whose bytes must survive a refused overwrite. */
+export function makeExistingArtifact(): string {
+	return "existing working body\n";
+}
+
+/** Supplied creation paths for one initialize invocation. */
+export function makeInitializePaths(overrides: { draftPath?: string; workingBodyPath?: string } = {}): {
+	draftPath: string;
+	workingBodyPath: string;
+} {
+	return {
+		draftPath: overrides.draftPath ?? "/tmp/draft.md",
+		workingBodyPath: overrides.workingBodyPath ?? "/tmp/working-body.md",
+	};
+}
+
+/** Metadata that is not valid JSON. */
+export function makeMalformedMetadataJson(): string {
+	return "{";
+}
