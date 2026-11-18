@@ -17,12 +17,58 @@ import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 import { LocalFilesystemLayout } from "#infrastructure/synchronization/local-filesystem-layout.ts";
-import { canCreateDirectoryLinks, canCreateSymlinks, createDirectoryLink } from "#support/core-sync-parity/fixtures.ts";
 import { createTemporaryRoot, disposeTemporaryRoot } from "#support/disposable-root.ts";
 import { makeBindingsDocument } from "#support/synchronization.factory.ts";
 
 /** Prefix that identifies a root this suite owns. */
 const ROOT_PREFIX = "aicore-cli-layout-";
+
+/** Prefix for the throwaway roots the capability probes create. */
+const PROBE_PREFIX = "aicore-cli-layout-probe-";
+
+/**
+ * Create a link at `path` that points at the directory `target`.
+ *
+ * Windows refuses a directory symbolic link without an elevated privilege but
+ * creates a junction without elevation, and a junction is the same non-regular
+ * entry the distribution rule must skip; POSIX creates a directory symbolic
+ * link. Both are created here so a case expresses the platform-independent rule.
+ */
+async function createDirectoryLink(target: string, path: string): Promise<void> {
+	await symlink(resolve(dirname(path), target), path, process.platform === "win32" ? "junction" : "dir");
+}
+
+/** Return `true` when this platform lets the suite create a directory link. */
+async function canCreateDirectoryLinks(): Promise<boolean> {
+	const created = await createTemporaryRoot(PROBE_PREFIX);
+	try {
+		await mkdir(join(created.root, "target"), { recursive: true });
+		await createDirectoryLink("target", join(created.root, "link"));
+		return true;
+	} catch {
+		return false;
+	} finally {
+		await disposeTemporaryRoot(created.root, created.prefix);
+	}
+}
+
+/**
+ * Return `true` when this platform lets the suite create a symbolic link.
+ *
+ * Windows refuses symbolic links without an elevated privilege, so the
+ * file-link case is reported as skipped there rather than as covered.
+ */
+async function canCreateSymlinks(): Promise<boolean> {
+	const created = await createTemporaryRoot(PROBE_PREFIX);
+	try {
+		await symlink("target", join(created.root, "link"));
+		return true;
+	} catch {
+		return false;
+	} finally {
+		await disposeTemporaryRoot(created.root, created.prefix);
+	}
+}
 
 /** The checkout root, four levels above this file's directory. */
 const CHECKOUT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
