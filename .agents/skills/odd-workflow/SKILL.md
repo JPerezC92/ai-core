@@ -164,10 +164,10 @@ Closing the feature document is not delivery. Explicit authorization may be supp
 
 ### Completion stages
 
-A change reaches completion in stages. Each stage has one owner and its own precondition, and the order below is the only order.
+A change reaches completion in stages. Each stage has one owner and its own precondition; their ordering dependencies are stated below.
 
 1. **Implementation delivered** — the authorized work is committed, and every affected task row carries its commit reference.
-2. **Verification complete** — the applicable checks, the owner gates and the independent semantic review have run against the delivered content and are recorded with their verdict.
+2. **Verification complete** — the applicable checks and owner gates have run against the delivered content and are recorded with their verdict. Independent semantic review remains a closure prerequisite and, when a PR exists, includes its current evidence as required by `### Close`.
 3. **Pull request published** — Herald 📯 (Release Manager) has published exactly the authorized pull request against its base, and its head is fixed.
 4. **Record closed** — every task row is `done` with a commit reference, `Status: closed`, the `> **Closed:**` date and the final `L# — Close:` entry are set, and the closure evidence is recorded.
 5. **Pull request merged** — the merge is the user's decision alone and stays separately authorized; no agent merges.
