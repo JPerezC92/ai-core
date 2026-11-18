@@ -3,7 +3,9 @@
  *
  * One behavioral concern — a fixture may delete only a directory it created,
  * and the ownership predicate rejects every other shape. Exercised against a
- * real temporary filesystem (T4) with per-test isolation (T18).
+ * real temporary filesystem (T4) with per-test isolation (T18). It also covers
+ * the suite's capability classification, which decides whether a link-creation
+ * failure means "this platform refuses" or a real fault to rethrow.
  *
  * The two refusal cases name paths that do not exist, so even a broken guard
  * could only issue a force-delete no-op; no real directory is ever a target.
@@ -13,6 +15,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
+import { isLinkCapabilityRefusal } from "#support/core-sync-parity/fixtures.ts";
 import {
 	UnsafeCleanupTargetError,
 	createTemporaryRoot,
@@ -69,5 +72,18 @@ describe("cleanup refusal", () => {
 		await expect(disposeTemporaryRoot(join(tmpdir(), "aicore-other-prefix-decoy"), ROOT_PREFIX)).rejects.toThrow(
 			UnsafeCleanupTargetError,
 		);
+	});
+});
+
+describe("capability classification", () => {
+	test("only a platform capability refusal classifies as one; anything else rethrows", () => {
+		const refusal = (code: string): Error => Object.assign(new Error(code), { code });
+
+		expect(isLinkCapabilityRefusal(refusal("EPERM"))).toBe(true);
+		expect(isLinkCapabilityRefusal(refusal("EACCES"))).toBe(true);
+		expect(isLinkCapabilityRefusal(refusal("ENOSYS"))).toBe(true);
+		expect(isLinkCapabilityRefusal(refusal("EINVAL"))).toBe(false);
+		expect(isLinkCapabilityRefusal(refusal("ENOSPC"))).toBe(false);
+		expect(isLinkCapabilityRefusal(new TypeError("malformed link argument"))).toBe(false);
 	});
 });
