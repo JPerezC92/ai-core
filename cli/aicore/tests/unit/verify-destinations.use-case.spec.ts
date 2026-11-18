@@ -1,11 +1,17 @@
 /**
- * Unit: the destination-drift refusal at the verification use case.
+ * Unit: the verification use case's currency judgement, with its ports doubled.
  *
- * One behavioral concern — a bound source whose clearance record now declares
- * another destination is reported as drift naming the source and both
+ * One behavioral concern, one group per verdict: a bound source whose clearance
+ * record now declares another destination is drift naming the source and both
  * destinations, before the reconciliation blocker is synced and before any
  * destination payload is read, so a diverged binding is never called current and
  * nothing is written (contract T2, T3; `check`'s only write is the blocker).
+ *
+ * A region destination is then judged by its core region and its frontmatter, not
+ * by its project region; a merge destination is current when the destination
+ * holds every source key; a stale pinned revision and an unreadable document are
+ * refused with their own failure class; and a pending path whose source is no
+ * longer region-bound is reported rather than reconciled.
  */
 
 import { beforeEach, describe, expect, test, vi } from "vitest";
@@ -20,6 +26,8 @@ import type {
 	SourceFiles,
 	WriteTargetGuard,
 } from "#domain/synchronization/ports.ts";
+import type { BindingsDocument } from "#domain/synchronization/bindings.ts";
+import { OTHER_REVISION } from "#support/aicore-cli.factory.ts";
 import {
 	BOUND_SOURCE,
 	RELOCATED_BOUND_DESTINATION,
@@ -174,5 +182,156 @@ describe("merge currency", () => {
 		const failure = outcome.ok ? null : outcome.failure;
 		expect(failure?.code).toBe("drift");
 		expect(failure?.message).toBe(`merge drift: G:/projects/destination/${CONFIGURED_SOURCE}`);
+	});
+});
+
+/** The region-mode source's own frontmatter, which a write refreshes into the destination. */
+const REGION_SOURCE_TEXT = "---\nversion: 2.0.0\n---\n";
+
+/** The region-mode source's core bytes, as its reader reports them. */
+const REGION_CORE = "core body\n";
+
+/** A destination marked document carrying `core` inside its core region. */
+function marked(core: string, project: string, frontmatter = ""): string {
+	return (
+		frontmatter +
+		`<!-- core:begin -->\n${core}<!-- core:end -->\n\n` +
+		`<!-- project:begin -->\n${project}<!-- project:end -->\n`
+	);
+}
+
+type RegionArrangement = {
+	/** The bindings store's load result; `null` reports a malformed document. */
+	readonly document?: BindingsDocument | null;
+	/** The clearance registry's cleared records. */
+	readonly clearance?: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
+	/** The destination document's text, as its reader reports it. */
+	readonly destinationContent?: string | null;
+	readonly sourceCore?: string;
+	readonly sourceText?: string;
+};
+
+/** The verification use case arranged over one bound source. */
+function makeRegionVerification(options: RegionArrangement = {}) {
+	const bindings = mock<BindingsStore>();
+	bindings.load.mockResolvedValue(options.document === undefined ? makeBindingsDocument() : options.document);
+
+	const clearance = mock<ClearanceStore>();
+	clearance.load.mockResolvedValue(makeClearanceLoad(options.clearance ?? { [BOUND_SOURCE]: { mode: "region" } }));
+
+	const layout = mock<FilesystemLayout>();
+	layout.join.mockImplementation((root, relative) => `${root}/${relative}`);
+	layout.isFile.mockResolvedValue(true);
+	layout.exists.mockResolvedValue(true);
+
+	const guard = mock<WriteTargetGuard>();
+	guard.refuse.mockResolvedValue(null);
+
+	const sources = mock<SourceFiles>();
+	sources.readCore.mockResolvedValue({ kind: "core", core: options.sourceCore ?? REGION_CORE });
+	sources.readText.mockResolvedValue(options.sourceText ?? REGION_SOURCE_TEXT);
+
+	const destinations = mock<DestinationFiles>();
+	destinations.readText.mockResolvedValue(
+		options.destinationContent === undefined ? marked(REGION_CORE, "") : options.destinationContent,
+	);
+
+	const useCase = new VerifyDestinations({ bindings, clearance, sources, destinations, layout, guard });
+	return { useCase, bindings, layout };
+}
+
+describe("region currency", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	test("a destination whose core region matches the source is current, whatever its project region holds", async () => {
+		const { useCase } = makeRegionVerification({
+			// The project region is the destination's own: editing it never makes the
+			// destination drift, because no write would change it.
+			destinationContent: marked(REGION_CORE, "this project's own rules\n"),
+		});
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(true);
+		expect(outcome.ok && outcome.message).toBe("current");
+	});
+
+	test("a core region that no longer matches the source is region drift", async () => {
+		const { useCase } = makeRegionVerification({
+			destinationContent: marked("superseded core\n", ""),
+		});
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(false);
+		const failure = outcome.ok ? null : outcome.failure;
+		expect(failure?.code).toBe("drift");
+		expect(failure?.message).toBe(`region drift: G:/projects/destination/${BOUND_SOURCE}`);
+	});
+
+	test("a frontmatter a write would change is frontmatter drift, distinct from a region difference", async () => {
+		const { useCase } = makeRegionVerification({
+			// The core region already matches; only the frontmatter is stale.
+			destinationContent: marked(REGION_CORE, "", "---\nversion: 1.0.0\n---\n"),
+		});
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(false);
+		const failure = outcome.ok ? null : outcome.failure;
+		expect(failure?.code).toBe("drift");
+		expect(failure?.message).toBe(`frontmatter drift: G:/projects/destination/${BOUND_SOURCE}`);
+	});
+});
+
+describe("revision and input refusals", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	test("a pinned revision that does not match the source is revision drift", async () => {
+		const { useCase } = makeRegionVerification({
+			document: makeBindingsDocument({ coreRevision: OTHER_REVISION }),
+		});
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(false);
+		const failure = outcome.ok ? null : outcome.failure;
+		expect(failure?.code).toBe("drift");
+		expect(failure?.message).toBe("revision drift: bindings revision does not match source");
+	});
+
+	test("an unreadable bindings document is refused as malformed input", async () => {
+		const { useCase, layout } = makeRegionVerification({ document: null });
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(false);
+		const failure = outcome.ok ? null : outcome.failure;
+		expect(failure?.code).toBe("invalid");
+		expect(failure?.message).toContain("invalid bindings:");
+		// The blocker is not synced for a document that could not be read.
+		expect(layout.syncBlocker).not.toHaveBeenCalled();
+	});
+
+	test("a pending path whose source is raw-bound is reported by check", async () => {
+		const { useCase } = makeRegionVerification({
+			document: makeBindingsDocument({
+				bindings: [{ source: BOUND_SOURCE, destinations: [BOUND_SOURCE], declaredMode: "raw" }],
+				pending: [BOUND_SOURCE],
+			}),
+			clearance: { [BOUND_SOURCE]: { mode: "raw" } },
+		});
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(false);
+		const failure = outcome.ok ? null : outcome.failure;
+		expect(failure?.code).toBe("drift");
+		expect(failure?.message).toContain("stale raw-bound pending paths cannot be reconciled");
+		expect(failure?.message).toContain(BOUND_SOURCE);
 	});
 });

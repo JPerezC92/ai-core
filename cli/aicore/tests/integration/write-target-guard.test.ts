@@ -8,17 +8,18 @@
  *
  * Every case is reachable without a symbolic link, because this platform cannot
  * create a file symbolic link and a case that can only skip would protect
- * nothing. The domain rule refuses a managed target that escapes the
- * destination root, one that resolves inside the source tree, and one that is
- * not a regular file — the non-link half of the safety contract the adapter
- * exists to enforce.
+ * nothing. The domain rule refuses overlapping roots, a managed target that
+ * escapes the destination root, one that resolves inside the source tree, one
+ * that is not a regular file, two declared targets that resolve to one path, and
+ * a root alias with a raw or merge destination — the non-link half of the safety
+ * contract the adapter exists to enforce.
  */
 
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
-import { MODE_REGION } from "#domain/synchronization/constants.ts";
+import { MODE_RAW, MODE_REGION } from "#domain/synchronization/constants.ts";
 import type { WriteTargetRequest } from "#domain/synchronization/ports.ts";
 import { LocalFilesystemLayout } from "#infrastructure/synchronization/local-filesystem-layout.ts";
 import { LocalWriteTargetGuard } from "#infrastructure/synchronization/write-target-guard.ts";
@@ -40,6 +41,9 @@ const PAYLOAD_RELATIVE = "docs/guide.md";
 
 /** A destination declaration whose `..` segment lands outside the destination root. */
 const ESCAPING_PAYLOAD_RELATIVE = "../outside/payload.md";
+
+/** The root runtime file's name, which the layout resolves when none is detected. */
+const ROOT_FILE = "AGENTS.md";
 
 let root: string;
 let rootPrefix: string;
@@ -121,5 +125,54 @@ describe("write-target preflight", () => {
 
 	test("a fully-inside target set earns no refusal", async () => {
 		expect(await guard.refuse(makeRequest())).toBeNull();
+	});
+});
+
+describe("root and alias refusals", () => {
+	test("overlapping source and destination roots are refused", async () => {
+		const refusal = await guard.refuse(
+			makeRequest(PAYLOAD_RELATIVE, { destinationRoot: join(sourceRoot, DESTINATION_DIRECTORY) }),
+		);
+
+		expect(refusal?.code).toBe("invalid");
+		expect(refusal?.message).toBe("invalid write target: source and destination roots overlap");
+	});
+
+	test("a second output path that resolves to the same target is refused", async () => {
+		// The bindings document and a payload are declared at one path: they are
+		// distinct declarations, so writing both would write one target twice.
+		const aliased = join(destinationRoot, PAYLOAD_RELATIVE);
+
+		const refusal = await guard.refuse(makeRequest(PAYLOAD_RELATIVE, { bindingsPath: aliased }));
+
+		expect(refusal?.code).toBe("invalid");
+		expect(refusal?.message).toBe(
+			`invalid write target: distinct write targets alias after resolution: ${aliased} and ${aliased}`,
+		);
+	});
+
+	test("an init whose raw creation would become the implicit root is refused", async () => {
+		// The supported instruction file is absent, so this init has no explicit
+		// root and a raw creation at that name would become the root itself.
+		const refusal = await guard.refuse({
+			command: "init",
+			sourceRoot,
+			destinationRoot,
+			bindingsPath: join(destinationRoot, BINDINGS_RELATIVE),
+			document: makeBindingsDocument({
+				root: null,
+				bindings: [{ source: BOUND_SOURCE, destinations: [ROOT_FILE], declaredMode: MODE_RAW }],
+			}),
+			modes: new Map([[BOUND_SOURCE, MODE_RAW]]),
+			newRawDestinations: new Set([ROOT_FILE]),
+		});
+
+		expect(refusal?.code).toBe("invalid");
+		// The aliasing root/payload pair is refused before the later
+		// planned-creation arm is reached; both refuse the same input.
+		expect(refusal?.message).toBe(
+			`invalid write target: root write target aliases non-region destination: ` +
+				join(destinationRoot, ROOT_FILE),
+		);
 	});
 });

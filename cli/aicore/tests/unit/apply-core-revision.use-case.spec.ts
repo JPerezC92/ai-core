@@ -1,14 +1,19 @@
 /**
- * Unit: the update use case's refusals that stop a run before anything is
- * written.
+ * Unit: the update use case — its refusals, and what each mode writes.
  *
- * One behavioral concern, one group per refusal: the update use case reports a
- * typed returned failure — never an exception — that names what diverged, and no
- * destination payload is read, no binding is saved and no blocker is synced. A
+ * The refusals stop a run before anything is written: the update use case reports
+ * a typed returned failure — never an exception — that names what diverged, and
+ * no destination payload is read, no binding is saved and no blocker is synced. A
  * run that asks for another editor than the destination is enrolled for never
  * reaches the write-target preflight; a source whose clearance record now
  * declares another destination is the destination drift `apply` refuses, naming
  * the source and both destinations (contract T2, T3).
+ *
+ * The remaining groups cover one mode each: a raw target is created byte-verbatim
+ * and named as created, a region target is created as a core region, and a merge
+ * target is never created while an existing one keeps its own servers and takes
+ * the retargeted index. A pending path whose source is no longer region-bound is
+ * cleared instead of reconciled.
  */
 
 import { beforeEach, describe, expect, test, vi } from "vitest";
@@ -135,6 +140,8 @@ type WritableUpdateOptions = {
 	readonly existing?: readonly string[];
 	/** The destination's `.gitignore` text; `null` means it is absent. */
 	readonly gitignore?: string | null;
+	/** The paths the document already records as outstanding. */
+	readonly pending?: readonly string[];
 };
 
 /**
@@ -148,6 +155,7 @@ function makeWritableUpdate(options: WritableUpdateOptions = {}) {
 		makeBindingsDocument({
 			editor: options.editor ?? "opencode",
 			bindings: [{ source: BOUND_SOURCE, destinations: [BOUND_SOURCE], declaredMode: "raw" }],
+			pending: options.pending ?? [],
 		}),
 	);
 
@@ -263,5 +271,188 @@ describe("the destination's ignore rule", () => {
 		await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
 
 		expect(textOf(writtenTo(destinations, GITIGNORE_PATH)[0])).toBe("dist\n.secrets/\n");
+	});
+});
+
+describe("raw mode", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	test("a declared but absent raw target is created, written verbatim and named as created", async () => {
+		const { useCase, destinations } = makeWritableUpdate({ existing: [CONFIGURATION_PATH] });
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(true);
+		expect(outcome.ok && outcome.message).toContain(`created: ${BOUND_SOURCE}`);
+		// A raw destination is the source's bytes exactly: it carries no region.
+		expect(writtenTo(destinations, PAYLOAD_PATH)).toEqual([PAYLOAD]);
+	});
+
+	test("a pending path whose source is raw-bound leaves pending instead of being reconciled", async () => {
+		const { useCase, bindings } = makeWritableUpdate({
+			existing: [CONFIGURATION_PATH, PAYLOAD_PATH],
+			pending: [BOUND_SOURCE],
+		});
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(true);
+		// A non-region destination has no region to reconcile, so `apply` clears it.
+		expect(bindings.save.mock.calls[0]?.[1].pending).toEqual([]);
+	});
+});
+
+/** The region-mode source's core bytes, as its reader reports them. */
+const REGION_CORE = "core body\n";
+
+/** The merge-mode source: the harness configuration. */
+const MERGE_SOURCE = ".opencode/opencode.jsonc";
+
+/** A source configuration whose only MCP server is the shipped qmd entry. */
+const MERGE_SOURCE_TEXT = `{
+  "mcp": {
+    "servers": {
+      "qmd": { "type": "local", "command": ["npx", "-y", "@tobilu/qmd@2.8.3", "--index", "ai-core", "mcp"] }
+    }
+  }
+}`;
+
+/** A destination configuration holding its own server and another qmd index. */
+const MERGE_DESTINATION_TEXT = `{
+  "mcp": {
+    "servers": {
+      "qmd": { "type": "local", "command": ["npx", "-y", "@tobilu/qmd@2.8.3", "--index", "old-index", "mcp"] },
+      "local-only": { "type": "local", "command": ["node", "local/server.js"] }
+    }
+  },
+  "ownKey": true
+}`;
+
+type BindingUpdateOptions = {
+	readonly mode: "region" | "merge";
+	/** Absolute paths the destination already holds. */
+	readonly existing?: readonly string[];
+	/** The source document's text, as its reader reports it. */
+	readonly sourceText?: string | null;
+	/** The destination document's text, as its reader reports it. */
+	readonly destinationText?: string | null;
+};
+
+/**
+ * The update use case arranged over one bound source in the given mode.
+ *
+ * The source mirrors to itself, every other port is doubled, and only the files
+ * a case names are on disk, so the case states just what it varies.
+ */
+function makeBindingUpdate(options: BindingUpdateOptions) {
+	const source = options.mode === "merge" ? MERGE_SOURCE : BOUND_SOURCE;
+	const destinationPath = `${SYNCHRONIZATION_DESTINATION_ROOT}/${source}`;
+
+	const bindings = mock<BindingsStore>();
+	bindings.load.mockResolvedValue(
+		makeBindingsDocument({
+			editor: "opencode",
+			bindings: [{ source, destinations: [source], declaredMode: options.mode }],
+		}),
+	);
+
+	const clearance = mock<ClearanceStore>();
+	clearance.load.mockResolvedValue(makeClearanceLoad({ [source]: { mode: options.mode } }));
+
+	const existing = new Set(options.existing ?? []);
+	const layout = mock<FilesystemLayout>();
+	layout.join.mockImplementation((root, relative) => `${root}/${relative}`);
+	layout.exists.mockImplementation(async (path) => existing.has(path));
+	layout.isFile.mockImplementation(async (path) => existing.has(path));
+	layout.parent.mockImplementation((path) => path.slice(0, path.lastIndexOf("/")));
+
+	const guard = mock<WriteTargetGuard>();
+	guard.refuse.mockResolvedValue(null);
+
+	const sources = mock<SourceFiles>();
+	sources.readCore.mockResolvedValue({ kind: "core", core: REGION_CORE });
+	sources.readText.mockResolvedValue(options.sourceText ?? null);
+
+	const destinations = mock<DestinationFiles>();
+	destinations.readText.mockResolvedValue(options.destinationText ?? null);
+
+	const useCase = new ApplyCoreRevision({ bindings, clearance, sources, destinations, layout, guard });
+	return { useCase, bindings, destinations, layout, destinationPath };
+}
+
+/** One text write's content, as it was handed to the destination port. */
+function textWrittenTo(destinations: MockProxy<DestinationFiles>, path: string): string {
+	const call = destinations.writeText.mock.calls.find(([target]) => target === path);
+	return call?.[1] ?? "";
+}
+
+describe("region mode", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	test("a declared but absent region target is created from the source and named as created", async () => {
+		const { useCase, destinations, destinationPath } = makeBindingUpdate({
+			mode: "region",
+			existing: [],
+		});
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(true);
+		expect(outcome.ok && outcome.message).toContain(`created: ${BOUND_SOURCE}`);
+		// A created destination is a core region from the source and an empty
+		// project region, never a copy of the source's own file.
+		const written = textWrittenTo(destinations, destinationPath);
+		expect(written).toContain("<!-- core:begin -->");
+		expect(written).toContain(REGION_CORE.trim());
+		expect(written).toContain("<!-- project:begin -->");
+		expect(written).toContain("<!-- project:end -->");
+	});
+});
+
+describe("merge mode", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	test("a merge destination that is absent is drift, and nothing is created or written", async () => {
+		const { useCase, destinations, layout } = makeBindingUpdate({
+			mode: "merge",
+			existing: [],
+			sourceText: MERGE_SOURCE_TEXT,
+		});
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(false);
+		const failure = outcome.ok ? null : outcome.failure;
+		expect(failure?.code).toBe("drift");
+		expect(failure?.message).toContain("(merge mode cannot create it; the destination must exist)");
+		// Only a first enrollment may create a merge target.
+		expect(destinations.writeText).not.toHaveBeenCalled();
+		expect(layout.ensureDirectory).not.toHaveBeenCalled();
+	});
+
+	test("a merge keeps a destination-only server and retargets qmd to the destination folder name", async () => {
+		const { useCase, destinations, destinationPath } = makeBindingUpdate({
+			mode: "merge",
+			existing: [`${SYNCHRONIZATION_DESTINATION_ROOT}/.opencode/opencode.jsonc`],
+			sourceText: MERGE_SOURCE_TEXT,
+			destinationText: MERGE_DESTINATION_TEXT,
+		});
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(true);
+		const written = textWrittenTo(destinations, destinationPath);
+		// The destination's own server and key survive the merge.
+		expect(written).toMatch(/"local-only"/u);
+		expect(written).toMatch(/"ownKey": true/u);
+		// The shipped index is retargeted to this destination's own folder name.
+		expect(written).toMatch(/"--index",\s*"destination"/u);
+		expect(written).not.toMatch(/"ai-core"/u);
 	});
 });

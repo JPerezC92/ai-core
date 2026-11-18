@@ -19,6 +19,7 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { LocalFilesystemLayout } from "#infrastructure/synchronization/local-filesystem-layout.ts";
 import { canCreateDirectoryLinks, canCreateSymlinks, createDirectoryLink } from "#support/core-sync-parity/fixtures.ts";
 import { createTemporaryRoot, disposeTemporaryRoot } from "#support/disposable-root.ts";
+import { makeBindingsDocument } from "#support/synchronization.factory.ts";
 
 /** Prefix that identifies a root this suite owns. */
 const ROOT_PREFIX = "aicore-cli-layout-";
@@ -90,5 +91,35 @@ describe("directory enumeration", () => {
 			expect(observed.isFile(), `${path} is not a regular file`).toBe(true);
 			expect(observed.isSymbolicLink(), `${path} is a link`).toBe(false);
 		}
+	});
+});
+
+describe("instruction root detection", () => {
+	const document = makeBindingsDocument({ root: null });
+
+	test("a destination whose instruction file has another name is not detected, and no name is guessed", async () => {
+		await writeFixture("CLAUDE.md", "# this project's instructions\n");
+
+		// Detection reads only the supported instruction file.
+		expect(await layout.detectRootFile(root)).toBeNull();
+		// With nothing to detect the root path is the supported file's own path,
+		// which the reader reports missing, so the enrollment refuses instead.
+		expect(await layout.resolveRootFile(root, document)).toBe(join(root, "AGENTS.md"));
+	});
+
+	test("a destination holding the supported instruction file detects and resolves it", async () => {
+		await writeFixture("AGENTS.md", "# shared instructions\n");
+
+		expect(await layout.detectRootFile(root)).toBe("AGENTS.md");
+		expect(await layout.resolveRootFile(root, document)).toBe(join(root, "AGENTS.md"));
+	});
+
+	test("a document recording a root resolves at the recorded path", async () => {
+		await writeFixture("AGENTS.md", "# shared instructions\n");
+		await writeFixture("docs/CLAUDE.md", "# another file\n");
+
+		expect(await layout.resolveRootFile(root, makeBindingsDocument({ root: "docs/CLAUDE.md" }))).toBe(
+			join(root, "docs", "CLAUDE.md"),
+		);
 	});
 });
