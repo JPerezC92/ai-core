@@ -19,6 +19,7 @@ import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 
 import { parseJsoncObject } from "#domain/synchronization/jsonc.ts";
+import { snapshotTree } from "#support/tree-snapshot.ts";
 import {
 	REVISION,
 	createRepresentativeFixture,
@@ -213,6 +214,20 @@ describe("updating an enrolled destination rewrites managed content and preserve
 			// A project-owned record and an unmanaged file are untouched, by bytes.
 			expect(await readFile(join(fixture.destination, PROJECT_OWNED_FILE), "utf8")).toBe(PROJECT_OWNED_CONTENT);
 			expect(await readFile(join(fixture.destination, UNMANAGED_FILE), "utf8")).toBe(UNMANAGED_CONTENT);
+
+			// Repeatability is part of this same workflow: running the identical
+			// synchronization again changes nothing on the destination.
+			const settled = await snapshotTree(fixture.destination);
+			const repeated = await invokeWithRevision(argumentsFor("apply", fixture), fixture);
+			expect(repeated.status, `second apply stderr: ${repeated.stderr}`).toBe(0);
+			expect(await snapshotTree(fixture.destination)).toEqual(settled);
+
+			// The runbook's documented post-apply state allows a drift report, and
+			// this destination owes its own project-region reconciliation, so the
+			// final check names the pending work rather than calling it current.
+			const checked = await invokeWithRevision(argumentsFor("check", fixture), fixture);
+			expect(checked.status, `check stderr: ${checked.stderr}`).toBe(1);
+			expect(checked.stderr).toMatch(/pending/i);
 		} finally {
 			await fixture.dispose();
 		}

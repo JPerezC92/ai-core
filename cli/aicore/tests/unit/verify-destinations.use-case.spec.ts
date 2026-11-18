@@ -237,7 +237,7 @@ function makeRegionVerification(options: RegionArrangement = {}) {
 	);
 
 	const useCase = new VerifyDestinations({ bindings, clearance, sources, destinations, layout, guard });
-	return { useCase, bindings, layout };
+	return { useCase, bindings, layout, sources, destinations };
 }
 
 describe("region currency", () => {
@@ -333,5 +333,54 @@ describe("revision and input refusals", () => {
 		expect(failure?.code).toBe("drift");
 		expect(failure?.message).toContain("stale raw-bound pending paths cannot be reconciled");
 		expect(failure?.message).toContain(BOUND_SOURCE);
+	});
+
+	test("a destination core marker pair that is missing, reversed or duplicated is malformed", async () => {
+		const brokenDocuments = [
+			"# A destination that carries no core marker pair at all.\n",
+			`<!-- core:end -->\nshared\n<!-- core:begin -->\n`,
+			`<!-- core:begin -->\nshared\n<!-- core:end -->\n<!-- core:begin -->\nagain\n<!-- core:end -->\n`,
+		];
+
+		for (const destinationContent of brokenDocuments) {
+			const { useCase } = makeRegionVerification({ destinationContent });
+			const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+			expect(outcome.ok, destinationContent).toBe(false);
+			const failure = outcome.ok ? null : outcome.failure;
+			expect(failure?.code).toBe("invalid");
+			expect(failure?.message).toContain("invalid destination markers");
+		}
+	});
+
+	test("an unreadable source is drift and nothing is written", async () => {
+		const { useCase, sources, layout } = makeRegionVerification();
+		sources.readText.mockResolvedValue(null);
+		sources.readCore.mockResolvedValue(null);
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(false);
+		const failure = outcome.ok ? null : outcome.failure;
+		expect(failure?.code).toBe("drift");
+		expect(failure?.message).toContain("missing source");
+		expect(layout.syncBlocker).not.toHaveBeenCalled();
+	});
+
+	test("an absent raw-bound destination is drift and nothing is written", async () => {
+		const { useCase, destinations } = makeRegionVerification({
+			document: makeBindingsDocument({
+				bindings: [{ source: BOUND_SOURCE, destinations: [BOUND_SOURCE], declaredMode: "raw" }],
+			}),
+			clearance: { [BOUND_SOURCE]: { mode: "raw" } },
+		});
+		destinations.readText.mockResolvedValue(null);
+		destinations.readBytes.mockResolvedValue(null);
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(false);
+		const failure = outcome.ok ? null : outcome.failure;
+		expect(failure?.code).toBe("drift");
+		expect(failure?.message).toContain("missing destination");
 	});
 });

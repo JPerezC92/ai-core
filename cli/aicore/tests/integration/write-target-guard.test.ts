@@ -15,7 +15,7 @@
  * contract the adapter exists to enforce.
  */
 
-import { mkdir } from "node:fs/promises";
+import { link, mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
@@ -125,6 +125,50 @@ describe("write-target preflight", () => {
 
 	test("a fully-inside target set earns no refusal", async () => {
 		expect(await guard.refuse(makeRequest())).toBeNull();
+	});
+
+	test("a target that shares the inode of a source-tree file is refused", async () => {
+		const sourceFile = join(sourceRoot, "shared-source.md");
+		const payload = join(destinationRoot, PAYLOAD_RELATIVE);
+		await writeFile(sourceFile, "# shared\n", "utf8");
+		await mkdir(join(destinationRoot, "docs"), { recursive: true });
+		// A hard link is an ordinary directory entry, not a symbolic link, so this
+		// exercises the inode-aliasing rule rather than the link rule.
+		await link(sourceFile, payload);
+
+		const refusal = await guard.refuse(makeRequest());
+
+		expect(refusal?.code).toBe("invalid");
+		expect(refusal?.message).toBe(
+			`invalid write target: destination payload write target shares a source-tree file inode: ${payload}`,
+		);
+	});
+
+	test("two declared outputs that share a filesystem inode are refused", async () => {
+		const first = join(destinationRoot, "docs/first.md");
+		const second = join(destinationRoot, "docs/second.md");
+		await mkdir(join(destinationRoot, "docs"), { recursive: true });
+		await writeFile(first, "# duplicated\n", "utf8");
+		await link(first, second);
+
+		const refusal = await guard.refuse(
+			makeRequest(PAYLOAD_RELATIVE, {
+				document: makeBindingsDocument({
+					bindings: [
+						{
+							source: BOUND_SOURCE,
+							destinations: ["docs/first.md", "docs/second.md"],
+							declaredMode: MODE_REGION,
+						},
+					],
+				}),
+			}),
+		);
+
+		expect(refusal?.code).toBe("invalid");
+		expect(refusal?.message).toBe(
+			`invalid write target: distinct write targets share a filesystem inode: ${first} and ${second}`,
+		);
 	});
 });
 

@@ -210,7 +210,9 @@ describe("synchronization preserves project-owned artifacts", () => {
 			await fixture.dispose();
 		}
 	});
+});
 
+describe("credential reference scope", () => {
 	test("the delivered OpenCode configuration names this project's own .secrets/, never its parent", async () => {
 		const fixture = await createRepresentativeFixture({ editor: "opencode" });
 		try {
