@@ -1,8 +1,11 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import type { CloseOutSnapshot } from "#scripts/incident_workflow_pkg/domain/ports.ts";
+import { ValidateDiagnosticKnowledge } from "#scripts/incident_workflow_pkg/application/validate_diagnostic_knowledge.ts";
+import type { DiagnosticKnowledgeInput } from "#scripts/incident_workflow_pkg/application/validate_diagnostic_knowledge.ts";
+import type { CloseOutSnapshot, ProblemRow } from "#scripts/incident_workflow_pkg/domain/ports.ts";
 import type { AnalysisHeader, TicketIdentification } from "#scripts/incident_workflow_pkg/domain/rules.ts";
+import { readProblemRows } from "#scripts/incident_workflow_pkg/infrastructure/records.ts";
 
 /** A fully valid, fully filled state header; override one field per case. */
 export function makeHeader(overrides: Partial<AnalysisHeader> = {}): AnalysisHeader {
@@ -221,6 +224,54 @@ export function makeRegister(...rows: Array<RegisterRow | string>): string {
 		...rendered,
 		"",
 	].join("\n");
+}
+
+/**
+ * The declared rows of a register document, as the diagnostic-knowledge check
+ * receives them: every row the register declares, valid or not.
+ */
+export function makeProblemRows(...rows: Array<RegisterRow | string>): ProblemRow[] {
+	return readProblemRows(makeRegister(...rows));
+}
+
+/** The managed baseline symptom register the diagnostic-knowledge checks read. */
+export const BASELINE_SYMPTOMS = ["| ID | Symptom |", "|---|---|", "| S-05 | Network |", ""].join("\n");
+
+/** A destination symptom register that declares no class. */
+export const EMPTY_LOCAL_SYMPTOMS = ["| ID | Symptom |", "|---|---|", ""].join("\n");
+
+/** One class a destination symptom register declares. */
+export interface SymptomRow {
+	readonly id: string;
+	readonly description: string;
+}
+
+/**
+ * A destination symptom register that declares the given classes.
+ *
+ * The register is the two-column table the diagnostic-knowledge check reads: the
+ * identifier is the first column and the description is the second.
+ */
+export function makeLocalSymptoms(rows: readonly SymptomRow[]): string {
+	return ["| ID | Symptom |", "|---|---|", ...rows.map((row) => `| ${row.id} | ${row.description} |`), ""].join("\n");
+}
+
+/**
+ * Run the diagnostic-knowledge check over the given registers.
+ *
+ * The check owns the symptom-identifier grammar, so it is the boundary that
+ * observes whether an identifier is read as a class, rejected, or read as a
+ * destination-owned class.
+ */
+export function checkDiagnosticKnowledge(overrides: Partial<DiagnosticKnowledgeInput> = {}): readonly string[] {
+	return new ValidateDiagnosticKnowledge().execute({
+		baselineSymptoms: BASELINE_SYMPTOMS,
+		localSymptoms: EMPTY_LOCAL_SYMPTOMS,
+		localProblemRows: makeProblemRows(),
+		localSymptomsPath: "incidents/diagnostics/symptoms.md",
+		localProblemsPath: "incidents/diagnostics/problems.md",
+		...overrides,
+	}).violations;
 }
 
 /** Rewrites `state.md` so the header carries a header written `minutesAgo` ago. */ export function writeFreshState(
