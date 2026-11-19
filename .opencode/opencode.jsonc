@@ -56,7 +56,33 @@
         { "action": "shell", "resource": "rg *", "effect": "allow" },
         { "action": "shell", "resource": "rg *--pre*", "effect": "deny" },
         { "action": "shell", "resource": "ls *", "effect": "allow" },
-        { "action": "shell", "resource": "wc *", "effect": "allow" }
+        { "action": "shell", "resource": "wc *", "effect": "allow" },
+        // Independent test verification. The user designated this role to
+        // execute a published pull request's test plan, and an implementer's
+        // run is never independent verification. Each form below is the exact
+        // command one published test-plan item names: the retained MCP
+        // package's suite and typecheck, the repository's three read-only
+        // whole-tree gates, and the two ODD validators over the two documents
+        // that change record governs. No wildcard, no `node *`, no
+        // interpreter, network or Git/GitHub authority is granted: the forms
+        // run committed test files and read-only checkers only, and
+        // `pnpm format` / `pnpm lint:fix` stay denied because autofix is not
+        // verification. TUI restart required.
+        { "action": "shell", "resource": "pnpm --dir mcp-servers/system-one exec vitest run", "effect": "allow" },
+        { "action": "shell", "resource": "pnpm --dir mcp-servers/system-one typecheck", "effect": "allow" },
+        { "action": "shell", "resource": "pnpm typecheck", "effect": "allow" },
+        { "action": "shell", "resource": "pnpm lint", "effect": "allow" },
+        { "action": "shell", "resource": "pnpm format:check", "effect": "allow" },
+        {
+          "action": "shell",
+          "resource": "node .agents/skills/odd-workflow/scripts/validate_feature.ts odd/tasks/2026-11-18-p7-system-one-odd-adviser-test-remediation.md",
+          "effect": "allow"
+        },
+        {
+          "action": "shell",
+          "resource": "node .agents/skills/odd-workflow/scripts/validate_feature_file.ts odd/features/architecture-contract.md",
+          "effect": "allow"
+        }
       ]
     },
     // Forge's package-manager surface. Every direct pnpm invocation is
