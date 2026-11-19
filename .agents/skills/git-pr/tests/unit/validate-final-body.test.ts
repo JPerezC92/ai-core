@@ -30,6 +30,28 @@ describe("preservation of baseline content", () => {
 		expect(validatePreservation(BODY, changed)?.code).toBe("BODY_INVALID");
 	});
 
+	it("accepts an unchanged body whose findings section is followed by the verdict line", () => {
+		const body = [
+			"## Summary",
+			"",
+			"- Adds the review preparation commands.",
+			"",
+			"## Test plan",
+			"",
+			"- [ ] Run the focused suite",
+			"- [ ] Confirm the import map resolves",
+			"",
+			"## Findings / blockers",
+			"",
+			"No findings.",
+			"",
+			"[PASS] — 0 open findings",
+			"",
+		].join("\n");
+
+		expect(validatePreservation(body, body)).toBeUndefined();
+	});
+
 	it("refuses a protected rewrite no supplied record scopes", () => {
 		const changed = BODY.replace(
 			"Adds the review preparation commands.",

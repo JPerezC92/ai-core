@@ -9,7 +9,9 @@ function normalizeCheckboxes(plan: string): string {
 }
 
 function findingRegion(content: string): string {
-	return content;
+	// The verdict line follows the findings section in a completed body; strip it before the
+	// findings parser runs, or a compliant body fails its own preservation check.
+	return content.split(/^\[(?:PASS|ADVISORY|BLOCK)\] —/m)[0] ?? "";
 }
 
 /**
