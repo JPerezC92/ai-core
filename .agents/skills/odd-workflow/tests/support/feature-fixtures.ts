@@ -194,8 +194,8 @@ export function makeCompletedFeature(
 	}
 	if (status === "closed") {
 		const verdict = options.verdict ?? "with-commit";
-		if (verdict === "with-commit") push("2026-11-19 — independent review: S1 passed at commit abc1234");
-		if (verdict === "without-commit") push("2026-11-19 — independent review: S1 passed");
+		if (verdict === "with-commit") push("S1 — independent review: passed at commit abc1234");
+		if (verdict === "without-commit") push("S1 — independent review: passed");
 		const firstFailure = options.firstFailure ?? "recorded";
 		if (firstFailure === "recorded") push("2026-11-19 — First failure: the focused case reproduced the defect");
 		if (firstFailure === "not-applicable")

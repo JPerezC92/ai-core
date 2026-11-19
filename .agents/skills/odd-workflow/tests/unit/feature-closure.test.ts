@@ -121,6 +121,34 @@ describe("ValidateFeatures.execute closure evidence", () => {
 		expect(findings.some((finding) => finding.includes("name the commit it ran against"))).toBe(true);
 	});
 
+	it("does not treat an entry outside the documented verdict shape as a verdict entry", () => {
+		const findings = findingsFor(
+			makeCompletedFeature({
+				created: CLOSURE_EVIDENCE_EFFECTIVE_FROM,
+				status: "closed",
+				verdict: "absent",
+				firstFailure: "not-applicable",
+			}).replace(
+				"- L1 — original request",
+				"- L1 — original request\n- L2 — assistant narrative: the first attempt failed and no verdict existed",
+			),
+		);
+
+		expect(findings.some((finding) => finding.includes("name the commit it ran against"))).toBe(false);
+	});
+
+	it("does not treat a hexadecimal-looking path as the commit a verdict ran against", () => {
+		const findings = findingsFor(
+			makeCompletedFeature({
+				created: CLOSURE_EVIDENCE_EFFECTIVE_FROM,
+				status: "closed",
+				verdict: "without-commit",
+			}).replace("S1 — independent review: passed", "S1 — independent review: passed at deadbeef/cafe"),
+		);
+
+		expect(findings.some((finding) => finding.includes("name the commit it ran against"))).toBe(true);
+	});
+
 	it("requires the first failure or a stated reason it cannot apply", () => {
 		const findings = findingsFor(
 			makeCompletedFeature({

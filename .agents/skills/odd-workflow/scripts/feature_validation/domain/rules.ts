@@ -312,12 +312,29 @@ function isClosurePrerequisiteEntry(entry: LogEntry): boolean {
 /** Whether an entry names the commit its evidence ran against. */
 function namesCommit(text: string): boolean {
 	for (const match of text.matchAll(HEX_TOKEN_RE)) {
+		// A token that is part of a path or a dotted name is not a commit, which is what the
+		// close procedure tells the author: a path is never a commit.
+		const before = text.slice(Math.max(0, match.index - 1), match.index);
+		const after = text.slice(match.index + match[0].length, match.index + match[0].length + 1);
+		if (/[\w./\\-]/u.test(before) || /[\w./\\-]/u.test(after)) continue;
 		if (/\d/u.test(match[0])) return true;
 	}
 	for (const span of text.matchAll(/`([^`\n]+)`/gu)) {
 		if (SINGLE_TOKEN_RE.test(span[1]!.trim())) return true;
 	}
 	return false;
+}
+
+/**
+ * Whether an entry is a closure verdict for a specific requirement.
+ *
+ * A verdict entry begins with the spec identifier it judges, which is the shape the close
+ * procedure documents. Narrative history that happens to contain a verdict word is not a
+ * verdict entry and carries no commit obligation, so accepted history is never rewritten to
+ * satisfy a rule it was not written against.
+ */
+function isSpecVerdictEntry(entry: LogEntry): boolean {
+	return /^- L\p{Nd}+\s*[—–-]\s*S\p{Nd}+/u.test(entry.text.split("\n")[0] ?? "");
 }
 
 /** The closure-evidence findings for a closed record the rules govern. */
@@ -337,7 +354,7 @@ function closureEvidenceFindings(specBlocks: readonly string[][], logLines: read
 
 	for (const entry of entries) {
 		if (isClosurePrerequisiteEntry(entry)) continue;
-		if (!VERDICT_RE.test(entry.text)) continue;
+		if (!isSpecVerdictEntry(entry)) continue;
 		if (!namesCommit(entry.text)) {
 			findings.push(
 				`closed feature needs every verdict Log entry to name the commit it ran against: ${entry.identifier}`,
