@@ -180,11 +180,10 @@ AICore's reviewed whole-suite command is `pnpm --dir cli/aicore test`, running t
 
 The AICore project's narrow read-only discovery allowance includes `rg`, `ls`, and `wc`. These commands are not test execution or a package install. No Git command is authorized: the core no-Git boundary applies to read-only Git as well as mutations, regardless of any conflicting harness allow.
 
-**Isolated-verification provisioning.** Executing the reviewed whole-suite command at an exact committed revision is this role's independent-reproduction duty, and a disposable checkout carries no installed dependencies, so that duty needs a way to materialise the project's already-approved, lockfile-pinned dependency set. The authorized forms are exactly three, one per install root recorded in `docs/tooling.md`:
+**Isolated-verification provisioning.** Executing the reviewed whole-suite command at an exact committed revision is this role's independent-reproduction duty, and a disposable checkout carries no installed dependencies, so that duty needs a way to materialise the project's already-approved, lockfile-pinned dependency set. The authorized forms are exactly two, one per install root recorded in `docs/tooling.md`:
 
 - `pnpm install --frozen-lockfile --ignore-scripts` at the checkout root, which covers the workspace members
 - `pnpm --dir mcp-servers/system-one install --frozen-lockfile --ignore-scripts`
-- `pnpm --dir .opencode/plugins/odd-adviser install --frozen-lockfile --ignore-scripts`
 
 Boundaries this role keeps inside those forms. `--frozen-lockfile` makes pnpm fail rather than write a manifest or lockfile that disagrees with the committed one, so the operation cannot become a dependency change and cannot bypass Warden 🔒 (Dependency Warden); `--ignore-scripts` executes no lifecycle script. There is no wildcard, no `pnpm add`, no update, upgrade or bare install variant among them, and the pre-existing bare `pnpm install` grant is untouched and remains limited to test-runner dependency installation under `#### Test-Runner Dependency Installation` after Warden 🔒 (Dependency Warden) APPROVE. These grants provision a checkout; they approve no dependency and authorize no manifest edit.
 

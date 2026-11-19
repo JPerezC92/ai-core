@@ -8,7 +8,13 @@ This guide provides checkout-local setup instructions for **this AICore source**
 
 **Portable analysis launchers.** `astgrep` is `uvx --from git+https://github.com/ast-grep/ast-grep-mcp@149e20d47bb7125fb0c1451feea2f48a98742034 ast-grep-server`. That MCP is still the official experimental Python server; destinations need `uv` and the Rust `ast-grep` CLI on `PATH` (`sg` is not an accepted substitute). `semgrep` is `uvx --from semgrep==1.182.1 semgrep mcp` with `SEMGREP_SEND_METRICS=off` and `OTEL_SDK_DISABLED=true`. That is the official Semgrep CLI MCP, not a Node rewrite of the engine. First `uvx` run needs network.
 
-**system-one** is this checkout's TypeScript MCP at `mcp-servers/system-one/src/mcp/stdio.ts`. It stays in the source configuration so AICore sessions load it, and merge omits it from destinations.
+**system-one** is this checkout's TypeScript MCP at `mcp-servers/system-one/src/mcp/stdio.ts`. It stays in the source configuration so AICore sessions load it, and merge omits it from destinations. It is launched exactly as registered — `node mcp-servers/system-one/src/mcp/stdio.ts`, run from the checkout root — and it serves one tool, `evaluate_odd_evidence`, over stdio.
+
+**Provisioning.** `mcp-servers/system-one` sits outside `pnpm-workspace.yaml` and owns its install root, `mcp-servers/system-one/package.json`, plus its own lockfile beside it: `pnpm --dir mcp-servers/system-one install --frozen-lockfile --ignore-scripts`. It needs Node.js `>= 24` because `stdio.ts` runs as TypeScript through Node's type stripping rather than a build step.
+
+**Configuration.** The server reads `SYSTEM_ONE_ENDPOINT` (default `http://127.0.0.1:1234`), `SYSTEM_ONE_MODEL` (default `d1-2b@q8_0`), `SYSTEM_ONE_TIMEOUT_MS` (default `15000`), `SYSTEM_ONE_PROFILE` (default the package's `profiles/odd-evidence-v4.json`), `SYSTEM_ONE_TRACE_PATH` and `SYSTEM_ONE_IMAGE_DIR`. The tracked configuration sets the first three; a blank or unusable value falls back to the documented default instead of preventing the server from starting. It expects a local LM Studio-compatible endpoint at that address.
+
+**Operational trace.** The server records one JSON line per evaluation to `output/system1/events.jsonl` and writes that exchange's image bytes content-addressed under `output/system1/images/`; both default under the gitignored `output/` and both move with `SYSTEM_ONE_TRACE_PATH` and `SYSTEM_ONE_IMAGE_DIR`. Nothing is written to stdout, which carries protocol frames; diagnostics go to stderr. There is no plugin component: AICore agents reach these directives only by calling the MCP tool, because the MCP protocol does not inject them.
 
 The `npx` servers need Node.js >= 22 and no separate provisioning step. There is no `.opencode/tooling/` Python project.
 
@@ -30,9 +36,9 @@ Keep the existing privacy controls unchanged: the `memories` server sets `MEMORI
 
 ## Lint and format
 
-One formatter and one linter cover the whole checkout, installed once at the workspace root. `mcp-servers/system-one` and `.opencode/plugins/odd-adviser` stay outside `pnpm-workspace.yaml` with their own lockfiles, but they are reached by both tools because both read files by path and resolve each file's own `tsconfig.json`.
+One formatter and one linter cover the whole checkout, installed once at the workspace root. `mcp-servers/system-one` stays outside `pnpm-workspace.yaml` with its own lockfile, but it is reached by both tools because both read files by path and resolve each file's own `tsconfig.json`.
 
-**Three installs are still required.** The root `pnpm install` never installs dependencies for the two non-workspace roots, so type-aware linting and `typecheck` over them depend on their own `node_modules` existing. Provision all three before relying on `verify`.
+**Two installs are still required.** The root `pnpm install` never installs dependencies for the non-workspace root, so type-aware linting and `typecheck` over it depend on its own `node_modules` existing. Provision both before relying on `verify`.
 
 | Concern                | Tool              | Pinned version |
 | ---------------------- | ----------------- | -------------- |
@@ -45,9 +51,9 @@ Every pin is old enough to clear pnpm's default 24-hour release-age gate, so `pn
 ```text
 pnpm format          # rewrite the tree with Biome
 pnpm format:check    # read-only: report files that are not formatted
-pnpm lint            # oxlint, type-aware, all four source trees
+pnpm lint            # oxlint, type-aware, all three source trees
 pnpm lint:fix        # oxlint with mechanical fixes
-pnpm typecheck       # tsc in all eight workspace projects plus the two non-workspace roots
+pnpm typecheck       # tsc in all eight workspace projects plus the non-workspace root
 pnpm verify          # format:check + lint + typecheck; never writes
 pnpm verify:full     # verify, then every package's test suite and the CLI end-to-end suite
 ```
@@ -62,6 +68,6 @@ pnpm verify:full     # verify, then every package's test suite and the CLI end-t
 
 **These files are not distributed.** `.editorconfig`, `biome.json` and `.oxlintrc.json` sit outside `distribution-clearance.json`, so a destination never receives them. A destination chooses its own tooling; this is intentional, not an omission.
 
-**Scope of the lint rules.** `import/no-relative-parent-imports` is enforced across all four source trees (`cli/**`, `.agents/skills/**`, `mcp-servers/system-one/**`, `.opencode/plugins/odd-adviser/**`). Every one of them resolves non-sibling imports through a `#`-prefixed Node subpath import map declared in its own `package.json`, which is the mechanism Node ESM, `tsc` and Vitest all honour without extra configuration or dependencies. `typescript/unbound-method` is disabled for test files, where `expect(port.method)` is a legitimate reference to an unbound method.
+**Scope of the lint rules.** `import/no-relative-parent-imports` is enforced across all three source trees (`cli/**`, `.agents/skills/**`, `mcp-servers/system-one/**`). Every one of them resolves non-sibling imports through a `#`-prefixed Node subpath import map declared in its own `package.json`, which is the mechanism Node ESM, `tsc` and Vitest all honour without extra configuration or dependencies. `typescript/unbound-method` is disabled for test files, where `expect(port.method)` is a legitimate reference to an unbound method.
 
 `pnpm lint` reports no errors and no warnings. Nine warnings that the adoption first surfaced — six `no-misused-spread` in the validators that iterate string code points, and three `no-base-to-string` where a value is stringified into a message — were corrected rather than suppressed or written around; the fixes changed validation behavior or message content, so they were delivered as a separate, behavior-bearing change outside the mechanical formatting slice.

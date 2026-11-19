@@ -26,7 +26,7 @@
         // Isolated-verification provisioning. A disposable checkout for an
         // exact committed revision carries no node_modules, so the reviewed
         // suite cannot run there until the approved lockfile is materialised.
-        // These three forms mirror docs/tooling.md's three install roots.
+        // These two forms mirror docs/tooling.md's two install roots.
         // `--frozen-lockfile` makes pnpm fail rather than write a manifest or
         // lockfile that disagrees with the committed one, and
         // `--ignore-scripts` executes no lifecycle script, so the operation is
@@ -38,11 +38,6 @@
         {
           "action": "shell",
           "resource": "pnpm --dir mcp-servers/system-one install --frozen-lockfile --ignore-scripts",
-          "effect": "allow"
-        },
-        {
-          "action": "shell",
-          "resource": "pnpm --dir .opencode/plugins/odd-adviser install --frozen-lockfile --ignore-scripts",
           "effect": "allow"
         },
         // Package-local CLI test suites, granted as exact commands only so the
@@ -89,12 +84,6 @@
         { "action": "shell", "resource": "pnpm typecheck", "effect": "allow" },
         { "action": "shell", "resource": "pnpm --dir cli/aicore test*", "effect": "allow" },
         { "action": "shell", "resource": "pnpm --dir cli/aicore typecheck*", "effect": "allow" },
-        {
-          "action": "shell",
-          "resource": "pnpm --dir .opencode/plugins/odd-adviser exec vitest run*",
-          "effect": "allow"
-        },
-        { "action": "shell", "resource": "pnpm --dir .opencode/plugins/odd-adviser typecheck*", "effect": "allow" },
         { "action": "shell", "resource": "pnpm --dir mcp-servers/system-one exec vitest run*", "effect": "allow" },
         { "action": "shell", "resource": "pnpm --dir mcp-servers/system-one typecheck*", "effect": "allow" },
         { "action": "shell", "resource": "pnpm --dir .agents/skills/* exec vitest run*", "effect": "allow" },
