@@ -14,6 +14,8 @@
 
 import { validateDecisionResponse } from "#domain/decision-response.ts";
 import type { DecisionChoice, ValidatedDecisionAnswer, ValidatedEvidenceAnswers } from "#domain/decision-response.ts";
+import { projectExecutionDirectives, unavailableExecutionDirectives } from "#domain/execution-directives.ts";
+import type { ExecutionDirectives } from "#domain/execution-directives.ts";
 import { createEvaluationTraceEntry, handlingForOutcome } from "#domain/evaluation-trace.ts";
 import type {
 	EvaluationTrace,
@@ -35,6 +37,10 @@ import type {
 } from "#domain/odd-evidence.ts";
 import { derivedQuestionId } from "#domain/question-profile.ts";
 
+// The delivered evaluation. Both branches carry `directives`: the success branch projects
+// them from the validated answers (including the derived visual-evidence answer), and every
+// rejection carries the fixed unavailable block. A rejection's diagnostic `reason` is never
+// part of the directives, because it can quote caller-supplied values.
 export type OddEvidenceEvaluation =
 	| {
 			readonly ok: true;
@@ -42,12 +48,14 @@ export type OddEvidenceEvaluation =
 			readonly profileId: string;
 			readonly profileVersion: number;
 			readonly answers: ValidatedEvidenceAnswers;
+			readonly directives: ExecutionDirectives;
 	  }
 	| {
 			readonly ok: false;
 			readonly evaluationId: string;
 			readonly code: OddEvidenceRejectionCode;
 			readonly reason: string;
+			readonly directives: ExecutionDirectives;
 	  };
 
 export type EvaluationTracing = {
@@ -161,6 +169,7 @@ export class EvaluateOddEvidence {
 				evaluationId,
 				code: "invalid_profile",
 				reason: loadedProfile.reason,
+				directives: unavailableExecutionDirectives(),
 			};
 		}
 		const profile = loadedProfile.profile;
@@ -189,6 +198,7 @@ export class EvaluateOddEvidence {
 				evaluationId,
 				code: validatedInput.code,
 				reason: validatedInput.reason,
+				directives: unavailableExecutionDirectives(),
 			};
 		}
 		const identity: TraceIdentity = {
@@ -242,6 +252,7 @@ export class EvaluateOddEvidence {
 				evaluationId,
 				code: validatedResponse.code,
 				reason: validatedResponse.reason,
+				directives: unavailableExecutionDirectives(),
 			};
 		}
 
@@ -261,6 +272,7 @@ export class EvaluateOddEvidence {
 			profileId: profile.profileId,
 			profileVersion: profile.version,
 			answers,
+			directives: projectExecutionDirectives(answers),
 		};
 	}
 
