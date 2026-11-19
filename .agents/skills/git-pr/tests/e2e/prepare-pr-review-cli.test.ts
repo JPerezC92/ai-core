@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import {
 	makeCompletedBody,
+	makeCreationBody,
 	makeCreationDraft,
 	makeExistingArtifact,
 	makeMalformedDraft,
@@ -60,7 +61,7 @@ describe("initialize command", () => {
 
 		expect(result.status).toBe(0);
 		expect(result.stdout).toBe('{"status": "prepared", "command": "initialize"}\n');
-		expect(readFileSync(working, "utf8")).toBe(makeCompletedBody());
+		expect(readFileSync(working, "utf8")).toBe(makeCreationBody());
 	});
 });
 

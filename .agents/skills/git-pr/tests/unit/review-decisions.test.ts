@@ -28,9 +28,59 @@ function decisions(overrides: Record<string, unknown> = {}): Record<string, unkn
 }
 
 describe("review decision parsing", () => {
+	it("refuses a supersession record the scope contract does not accept", () => {
+		const parsed = parseDecisions(decisions({ supersessions: [entry({ target: "Summary" })] }), makeMetadata());
+
+		expect(isReviewError(parsed) ? parsed.code : "").toBe("DECISIONS_INVALID");
+	});
+
+	it("refuses an authorized update that names a section outside the protected pair", () => {
+		const parsed = parseDecisions(
+			decisions({ authorized_updates: [{ section: "Open debt", instruction: "drop an entry", source: "chat" }] }),
+			makeMetadata(),
+		);
+
+		expect(isReviewError(parsed) ? parsed.code : "").toBe("DECISIONS_INVALID");
+	});
+
+	it("refuses an authorized update without a named instruction source", () => {
+		const parsed = parseDecisions(
+			decisions({
+				authorized_updates: [{ section: "Summary", instruction: "rewrite the sentence", source: "" }],
+			}),
+			makeMetadata(),
+		);
+
+		expect(isReviewError(parsed) ? parsed.code : "").toBe("DECISIONS_INVALID");
+	});
+
+	it("binds an authorized update to the section and the instruction it names", () => {
+		const parsed = parseDecisions(
+			decisions({
+				authorized_updates: [
+					{
+						section: "Summary",
+						instruction: "replace the superseded summary sentence",
+						source: "the user's instruction in the delivery conversation",
+					},
+				],
+			}),
+			makeMetadata(),
+		);
+
+		expect(isReviewError(parsed) ? [] : parsed.authorizedUpdates.map((update) => update.section)).toStrictEqual([
+			"Summary",
+		]);
+	});
+
 	it("accepts absent decisions", () => {
 		const parsed = parseDecisions(null, makeMetadata());
-		expect(isReviewError(parsed) ? {} : parsed).toEqual({ notApplicable: [], acceptance: [], debt: [] });
+		expect(isReviewError(parsed) ? {} : parsed).toEqual({
+			notApplicable: [],
+			acceptance: [],
+			debt: [],
+			authorizedUpdates: [],
+		});
 	});
 
 	it("parses supplied entries bound to the same PR and head", () => {

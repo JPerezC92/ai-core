@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { InitializeWorkingBody } from "#scripts/pr_content/application/initialize_working_body.ts";
 import {
-	makeCompletedBody,
+	makeCreationBody,
 	makeCreationDraft,
 	makeInitializePaths,
 	makeMalformedDraft,
@@ -16,8 +16,8 @@ describe("working body initialization", () => {
 
 		const outcome = new InitializeWorkingBody(read, create).execute(paths);
 
-		expect(outcome).toEqual({ body: makeCompletedBody() });
-		expect(create).toHaveBeenCalledExactlyOnceWith(paths.workingBodyPath, makeCompletedBody());
+		expect(outcome).toEqual({ body: makeCreationBody() });
+		expect(create).toHaveBeenCalledExactlyOnceWith(paths.workingBodyPath, makeCreationBody());
 	});
 
 	it("reads the supplied draft path", () => {
@@ -34,6 +34,91 @@ describe("working body initialization", () => {
 		const create = vi.fn();
 
 		const outcome = new InitializeWorkingBody(read, create).execute(makeInitializePaths());
+
+		expect("code" in outcome ? outcome.code : "").toBe("DRAFT_INVALID");
+		expect(create).not.toHaveBeenCalled();
+	});
+
+	it("refuses a draft the canonical findings parser rejects and creates nothing", () => {
+		const draft = makeCreationDraft(
+			[
+				"## Summary",
+				"",
+				"- Adds the review preparation commands.",
+				"",
+				"## Test plan",
+				"",
+				"- [ ] Run the focused suite",
+				"- [ ] Confirm the import map resolves",
+				"",
+				"## Findings / blockers",
+				"",
+				"No review findings yet.",
+				"",
+				"Explanatory prose the canonical parser rejects.",
+				"",
+			].join("\n"),
+		);
+		const create = vi.fn();
+
+		const outcome = new InitializeWorkingBody(
+			vi.fn(() => draft),
+			create,
+		).execute(makeInitializePaths());
+
+		expect("code" in outcome ? outcome.code : "").toBe("DRAFT_INVALID");
+		expect(create).not.toHaveBeenCalled();
+	});
+
+	it("refuses a draft whose test plan has fewer than two items", () => {
+		const draft = makeCreationDraft(makeCreationBody({ items: ["Only one item"] }));
+		const create = vi.fn();
+
+		const outcome = new InitializeWorkingBody(
+			vi.fn(() => draft),
+			create,
+		).execute(makeInitializePaths());
+
+		expect("code" in outcome ? outcome.code : "").toBe("DRAFT_INVALID");
+		expect(create).not.toHaveBeenCalled();
+	});
+
+	it("refuses a draft whose plan carries an item the final validator would reject", () => {
+		const body = makeCreationBody({
+			items: ["Run the focused suite", "Confirm the import map resolves", "Re-run the focused suite"],
+		}).replace("- [ ] Confirm the import map resolves", "- [x] Confirm the import map resolves");
+		const create = vi.fn();
+
+		const outcome = new InitializeWorkingBody(
+			vi.fn(() => makeCreationDraft(body)),
+			create,
+		).execute(makeInitializePaths());
+
+		expect("code" in outcome ? outcome.code : "").toBe("DRAFT_INVALID");
+		expect(create).not.toHaveBeenCalled();
+	});
+
+	it("refuses a draft whose plan repeats an item the final validator would reject", () => {
+		const body = makeCreationBody({ items: ["Run the focused suite", "Run the focused suite"] });
+		const create = vi.fn();
+
+		const outcome = new InitializeWorkingBody(
+			vi.fn(() => makeCreationDraft(body)),
+			create,
+		).execute(makeInitializePaths());
+
+		expect("code" in outcome ? outcome.code : "").toBe("DRAFT_INVALID");
+		expect(create).not.toHaveBeenCalled();
+	});
+
+	it("refuses a draft that carries a review verdict line", () => {
+		const body = `${makeCreationBody()}\n[PASS] — 0 open findings\n`;
+		const create = vi.fn();
+
+		const outcome = new InitializeWorkingBody(
+			vi.fn(() => makeCreationDraft(body)),
+			create,
+		).execute(makeInitializePaths());
 
 		expect("code" in outcome ? outcome.code : "").toBe("DRAFT_INVALID");
 		expect(create).not.toHaveBeenCalled();

@@ -17,6 +17,9 @@ const CANONICAL_ORDER = [
 	"Open debt",
 ];
 
+/** The sections whose published text may never be rewritten by a later candidate. */
+export const PROTECTED_SECTIONS = ["Summary", "Breaking changes"] as const;
+
 const REQUIRED_SECTIONS = ["Summary", "Test plan", "Findings / blockers"];
 
 function fullMatch(pattern: string, text: string): RegExpExecArray | null {
@@ -106,11 +109,40 @@ export function parseFindings(content: string): Finding[] | ReviewPreparationErr
 	}));
 }
 
+/** Check the creation-shape draft against the canonical structure before anything is created. */
+export function validateCreationBody(body: string): ReviewPreparationError | undefined {
+	const error = reviewError("DRAFT_INVALID", "creation draft must carry the canonical body sections");
+	const sections = parseSections(body);
+	if (isReviewError(sections)) return error;
+
+	const summary = sections
+		.Summary!.split(/\r\n|\n|\r/u)
+		.map((line) => line.trim())
+		.filter((line) => line.length > 0);
+	if (summary.length === 0 || summary.length > 3) return error;
+	if (summary.some((line) => !line.startsWith("- "))) return error;
+
+	const plan = sections["Test plan"]!.split(/\r\n|\n|\r/u)
+		.map((line) => line.trim())
+		.filter((line) => line.length > 0);
+	// The creation gate admits exactly the item grammar the final validator accepts,
+	// so a draft it admits is not rejected later for a structural variant.
+	const items = plan.filter((line) => line.startsWith("- [ ] "));
+	if (items.length < 2) return error;
+	if (items.length !== plan.length) return error;
+	if (new Set(items.map((line) => line.slice(6))).size !== items.length) return error;
+
+	if (body.split(/\r\n|\n|\r/u).some((line) => /^\[(?:PASS|ADVISORY|BLOCK)\] —/u.test(line))) return error;
+
+	const findings = parseFindings(sections["Findings / blockers"]!);
+	return isReviewError(findings) ? error : undefined;
+}
+
 /** Check structural correspondence only; owners establish actual evidence truth. */
 export function validateBody(
 	body: string,
 	metadata: ReviewMetadata,
-	decisions: ReviewDecisions = { notApplicable: [], acceptance: [], debt: [] },
+	decisions: ReviewDecisions = { notApplicable: [], acceptance: [], debt: [], authorizedUpdates: [] },
 ): ReviewPreparationError | undefined {
 	const error = reviewError("BODY_INVALID", "completed canonical review body required");
 	if (typeof body !== "string") return error;

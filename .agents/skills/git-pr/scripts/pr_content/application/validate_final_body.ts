@@ -29,7 +29,7 @@ export function execute(input: ValidateFinalBodyInput): PreparedBody | ReviewPre
 	const failure = validateBody(input.body, observed, supplied);
 	if (failure !== undefined) return failure;
 
-	const preserved = validatePreservation(accepted.body, input.body);
+	const preserved = validatePreservation(accepted.body, input.body, supplied);
 	if (preserved !== undefined) return preserved;
 	return { body: input.body };
 }

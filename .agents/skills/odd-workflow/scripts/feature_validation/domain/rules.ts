@@ -232,6 +232,129 @@ function specSectionBlocks(specLines: readonly string[]): string[][] {
 	return blocks;
 }
 
+/** The effective date of the closure-evidence rules, separate from the closure-consistency date. */
+export const CLOSURE_EVIDENCE_EFFECTIVE_FROM = "2026-11-19";
+
+const VERDICT_RE = /\b(?:pass|passed|passes|fail|failed|fails|unresolved|blocked|not applicable|n\/a)\b/iu;
+const FIRST_FAILURE_RE = /\bfirst fail(?:ure|ing|ed)\b/iu;
+const NO_EXECUTABLE_FAILURE_RE =
+	/\b(?:no applicable executable failure|executable failure cannot apply|no executable failure applies)\b/iu;
+const HEX_TOKEN_RE = /[0-9a-fA-F]{7,64}/gu;
+const SINGLE_TOKEN_RE = /^[0-9a-fA-F]{7,64}$/u;
+
+/** One `## Log` entry: its identifier and every line it owns. */
+type LogEntry = { readonly identifier: string; text: string };
+
+/** Whether the closure-evidence rules govern a record, by its created date. */
+function closureEvidenceApplies(lines: readonly string[]): boolean {
+	const created = lines.map((line) => CREATED_DATE_RE.exec(line.trim())?.[1]).filter((value) => value !== undefined);
+	if (created.length === 0) return false;
+	// A present but unreadable date fails closed, like the closure-consistency sibling, so a
+	// malformed record cannot escape the rule by carrying a date the parser rejects.
+	const declared = created[0]!;
+	if (!/^\d{4}-\d{2}-\d{2}$/u.test(declared)) return true;
+	return declared >= CLOSURE_EVIDENCE_EFFECTIVE_FROM;
+}
+
+/**
+ * Groups the `## Log` into entries.
+ *
+ * An entry begins at its `- L#` line and owns the indented lines after it, so a
+ * verdict or commit recorded on a continuation belongs to the entry that carries it.
+ */
+function logSectionEntries(logLines: readonly string[]): LogEntry[] {
+	const entries: LogEntry[] = [];
+	let current: LogEntry | undefined;
+	for (const line of logLines) {
+		const match = LOG_ENTRY_RE.exec(line);
+		if (match !== null) {
+			current = { identifier: `L${match[1]!}`, text: line };
+			entries.push(current);
+			continue;
+		}
+		if (current === undefined) continue;
+		if (line.trim().length === 0) continue;
+		if (/^\s/u.test(line)) {
+			current.text = `${current.text}\n${line}`;
+			continue;
+		}
+		current = undefined;
+	}
+	return entries;
+}
+
+/** The spec identifiers the `## Specs` section declares, in the order it declares them. */
+function specIdentifiers(specBlocks: readonly string[][]): string[] {
+	const identifiers: string[] = [];
+	for (const block of specBlocks) {
+		const match = /^- S(\p{Nd}+)/u.exec(block[0] ?? "");
+		if (match?.[1] !== undefined) identifiers.push(`S${match[1]}`);
+	}
+	return identifiers;
+}
+
+/** Whether an entry names a spec identifier without matching a longer number. */
+function namesSpecIdentifier(text: string, identifier: string): boolean {
+	return new RegExp(`\\b${identifier}(?![0-9])`, "u").test(text);
+}
+
+/**
+ * Whether an entry is the open-closure-prerequisite entry rather than a verdict.
+ *
+ * The close procedure requires a completed-but-active record to name its open
+ * prerequisite in a `Blocked:` entry. That entry reports a prerequisite, not an
+ * accepted result, so it carries no commit obligation and is never a verdict.
+ */
+function isClosurePrerequisiteEntry(entry: LogEntry): boolean {
+	return BLOCKED_LOG_RE.test(entry.text.split("\n")[0] ?? "");
+}
+
+/** Whether an entry names the commit its evidence ran against. */
+function namesCommit(text: string): boolean {
+	for (const match of text.matchAll(HEX_TOKEN_RE)) {
+		if (/\d/u.test(match[0])) return true;
+	}
+	for (const span of text.matchAll(/`([^`\n]+)`/gu)) {
+		if (SINGLE_TOKEN_RE.test(span[1]!.trim())) return true;
+	}
+	return false;
+}
+
+/** The closure-evidence findings for a closed record the rules govern. */
+function closureEvidenceFindings(specBlocks: readonly string[][], logLines: readonly string[]): string[] {
+	const findings: string[] = [];
+	const entries = logSectionEntries(logLines);
+
+	for (const identifier of specIdentifiers(specBlocks)) {
+		const hasVerdict = entries.some(
+			(entry) =>
+				!isClosurePrerequisiteEntry(entry) &&
+				namesSpecIdentifier(entry.text, identifier) &&
+				VERDICT_RE.test(entry.text),
+		);
+		if (!hasVerdict) findings.push(`closed feature needs a per-spec verdict for ${identifier} in its Log`);
+	}
+
+	for (const entry of entries) {
+		if (isClosurePrerequisiteEntry(entry)) continue;
+		if (!VERDICT_RE.test(entry.text)) continue;
+		if (!namesCommit(entry.text)) {
+			findings.push(
+				`closed feature needs every verdict Log entry to name the commit it ran against: ${entry.identifier}`,
+			);
+		}
+	}
+
+	const logText = logLines.join("\n");
+	if (!FIRST_FAILURE_RE.test(logText) && !NO_EXECUTABLE_FAILURE_RE.test(logText)) {
+		findings.push(
+			"closed feature needs the first failure recorded or the reason an executable failure cannot apply",
+		);
+	}
+
+	return findings;
+}
+
 export function validateFeature(text: string): string[] {
 	const findings: string[] = [];
 	const lines = splitLines(text);
@@ -354,6 +477,10 @@ export function validateFeature(text: string): string[] {
 		findings.push(
 			"active record has every task done: close the record or record the open closure prerequisite as a Log entry",
 		);
+	}
+
+	if (isClosed && closureEvidenceApplies(lines)) {
+		findings.push(...closureEvidenceFindings(specBlocks, unfencedLog));
 	}
 
 	const logIdentifiers: bigint[] = [];
