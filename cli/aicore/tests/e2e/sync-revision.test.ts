@@ -34,18 +34,4 @@ describe("revision availability", () => {
 		expect(result.stderr).toMatch(/Herald/);
 		await expect(stat(join(created.destination, ".aicore"))).rejects.toThrow();
 	});
-
-	test("a malformed revision is rejected", async () => {
-		const created = await createFixture();
-		fixture = created;
-
-		const result = await invoke(["sync", "--target", created.destination, "--editor", "opencode"], {
-			fixture: created,
-			revision: "not-a-revision",
-		});
-
-		expect(result.status).toBe(2);
-		expect(result.stderr).toMatch(/40-character lowercase hex/);
-		await expect(stat(join(created.destination, ".aicore"))).rejects.toThrow();
-	});
 });

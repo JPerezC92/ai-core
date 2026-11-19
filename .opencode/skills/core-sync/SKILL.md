@@ -5,12 +5,34 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.10.0
+  version: 2.11.0
 ---
 
 ## What I do
 
 Update the bound files of a destination from a source of truth, and keep the destination's root runtime file carrying a reconciliation blocker while region reconciliation is pending. Each destination is enrolled for one editor profile (`opencode` or `cursor`); the profile decides where that editor's agents land and which sources it receives at all, and it is declared by the source-side clearance registry — see _Editor profiles_. Each binding runs in one of three modes: `region` (the default) mirrors the source `core` region between destination markers; `raw` copies the whole source file byte-for-byte with no markers or project region; `merge` merges only the source's top-level object keys into the destination, source keys winning while destination-only keys, comments, and formatting outside replaced or inserted keys stay — except the `mcp` key, which merges by server name. The source is read-only; raw sources are read as bytes without decoding or newline normalization, and merge sources are read as JSONC text (UTF-8, no newline translation). Before mutation, write targets must be regular files: a symlinked bindings or payload/root/report target is rejected before any read or write, and an existing non-regular target is rejected. All write targets — payloads, bindings, reconciliation report, and root blocker — are resolved and preflighted against the source and destination roots. Existing output-file device/inode identities are checked against regular files under the source tree, so hard links cannot mutate source files; distinct output paths that resolve to the same target are rejected. `init` also rejects a newly created raw target that would become the implicit root runtime file. In region mode, the destination's own `project` region and the rest of the text outside the destination core markers are preserved by content, not byte-for-byte: a destination that used CRLF keeps that outside content while its line endings become LF. The leading YAML frontmatter is the exception — a region write refreshes it from the source, so a key the source defines takes the source value, a source-only key is added, and a destination-only key keeps its exact bytes, which is why `local-version` is never reset; `metadata` merges one level down. Text reads perform no newline translation, while text writes normalize `\r\n` and any lone `\r` to `\n`, so every text file core-sync writes carries LF terminators only. AICore text files are authored LF-only. Marker parsing still compares exact line content after splitting both LF and CRLF separators. Region-mode writes in `apply` are unconditional, so a region destination is rewritten and LF-normalized even when its shared region is unchanged (`init` skips the write only when the rebuilt file would be byte-identical to the current one); merge mode skips the write when the merged text already equals the current text, so an untouched CRLF destination keeps its endings; raw mode remains byte-exact.
+
+## Scope boundary
+
+Core Sync synchronizes **ordinary files and directories**. Symbolic-link and junction _synchronization_ is not a supported feature of this tool.
+
+The write-target preflight that refuses a symlinked or non-regular target is a **defensive guard against unsafe writes**. It is not symlink support, and its existence does not authorize expanding platform-specific handling: a new Windows-junction fixture, a privilege workaround, a capability-detection framework or a speculative edge-case test requires an independently established product need and explicit authorization.
+
+Existing tests and earlier implementations are **not** independent sources of new product requirements. A behaviour found in an existing test is evidence of what was once asserted, never by itself a reason to add handling for it.
+
+Ordinary-file containment and overwrite protections — the source/destination root containment checks, the source inode aliasing check, the distinct-target aliasing check, and the refusal of a non-regular target — remain in force and must not be removed.
+
+## Verification workflows
+
+End-to-end verification of this tool means proving that complete synchronization workflows work through the assembled entry point. Two workflow categories are primary.
+
+**Workflow A — initial synchronization.** Given a destination project where the managed files do not yet exist: run the tool through its assembled entry point and verify that the required managed files are created, at their expected destination paths, with their expected contents, together with the required managed directory structure.
+
+**Workflow B — update existing files.** Given a destination project that already carries managed files: make a meaningful change in the source, run the tool through its assembled entry point, and verify that the managed files are updated, that the expected contents result, and that destination-owned unmanaged content is preserved.
+
+These are two logical workflow categories, not a cap of two test cases. A workflow case may assert several files, paths, contents and effects of that one operation.
+
+Additional end-to-end workflows are added only when they protect a distinct, justified user-facing result or a real process-level guarantee that these workflows and the cheaper boundaries cannot establish. The `region`, `raw` and `merge` rules and the individual marker, schema and validation rules are exercised within complete workflows where a workflow outcome depends on them; their detailed transformations are verified at the boundary that owns each rule, not as one end-to-end scenario per rule.
 
 ## Operator boundary (HARD RULE)
 

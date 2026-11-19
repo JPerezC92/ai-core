@@ -25,7 +25,7 @@ import { YamlBindingsStore } from "#infrastructure/synchronization/bindings-stor
 import { CHECKOUT, createFixture, type Fixture } from "#support/aicore-cli.e2e-harness.ts";
 import { makeBindingsDocument } from "#support/synchronization.factory.ts";
 
-/** The module the CLI entry point is loaded from, the way the parity seam loads it. */
+/** The module the CLI entry point is loaded from for this in-process invocation. */
 const ENTRY_POINT_MODULE = new URL("../../src/main.ts", import.meta.url);
 
 /** The one cleared source this destination is bound to. */

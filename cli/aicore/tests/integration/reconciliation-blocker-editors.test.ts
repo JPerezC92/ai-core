@@ -4,8 +4,7 @@
  * One behavioral concern — the block a real destination root receives keeps
  * every shared paragraph for every enrolled editor, and leaves out only the
  * project-configuration section, which describes a file an editor's own
- * delivery does not reach. The parity corpus has no editor vocabulary and this
- * suite does not enter it.
+ * delivery does not reach.
  */
 
 import { mkdir, readFile, writeFile } from "node:fs/promises";

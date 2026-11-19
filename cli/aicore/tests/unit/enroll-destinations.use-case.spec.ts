@@ -7,12 +7,20 @@
  * restores a revoked one, its merge delivery omits the servers the clearance
  * record names, and an opt-out naming the baseline is refused before anything is
  * read or written (contract T2, T3).
+ *
+ * The remaining groups cover what an enrollment creates and how it resolves its
+ * root: a markerless destination becomes a core region plus a project region
+ * holding its prior body, a raw destination records neither a reconciliation
+ * entry nor an outstanding path, a malformed or conflicting `--bind` declaration
+ * is refused before anything is read, and a root-role source is enrolled at the
+ * explicit root path or refused by name when no instruction root is detectable.
  */
 
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { mock, type MockProxy } from "vitest-mock-extended";
 
 import { EnrollDestinations } from "#application/synchronization/enroll-destinations.ts";
+import { CORE_BEGIN, CORE_END, PROJECT_BEGIN, PROJECT_END } from "#domain/synchronization/constants.ts";
 import type {
 	BindingsStore,
 	ClearanceStore,
@@ -57,6 +65,7 @@ function makeEnrollmentArrangement(options: EnrollArrangement = {}): {
 	readonly sources: MockProxy<SourceFiles>;
 	readonly destinations: MockProxy<DestinationFiles>;
 	readonly layout: MockProxy<FilesystemLayout>;
+	readonly guard: MockProxy<WriteTargetGuard>;
 } {
 	const bindings = mock<BindingsStore>();
 	bindings.load.mockResolvedValue(options.document ?? makeBindingsDocument());
@@ -92,7 +101,7 @@ function makeEnrollmentArrangement(options: EnrollArrangement = {}): {
 		layout,
 		guard,
 	});
-	return { useCase, bindings, sources, destinations, layout };
+	return { useCase, bindings, sources, destinations, layout, guard };
 }
 
 /** The bindings document one run saved. */
@@ -313,5 +322,176 @@ describe("merge delivery", () => {
 		expect(written).toMatch(/"--index",\s*"destination"/u);
 		expect(written).toMatch(/"qmd"/u);
 		expect(savedDocument(bindings)?.bindings.map((entry) => entry.source)).toEqual([CONFIGURED_SOURCE]);
+	});
+});
+
+/** The cleared source one enrollment delivers in region mode. */
+const REGION_SOURCE_TEXT = "---\ntitle: core title\n---\n";
+
+/** The markerless destination body an enrollment must preserve. */
+const PRIOR_BODY = "this project's prior body\n";
+
+/** One text write's content, as it was handed to the destination port. */
+function textWrittenTo(destinations: MockProxy<DestinationFiles>, path: string): string {
+	const call = destinations.writeText.mock.calls.find(([target]) => target === path);
+	return call?.[1] ?? "";
+}
+
+describe("region enrollment", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	test("a markerless destination becomes a core region plus a project region holding its prior body", async () => {
+		const destinationPath = `G:/projects/destination/${BOUND_SOURCE}`;
+		const arrangement = makeEnrollmentArrangement({
+			document: makeBindingsDocument(),
+			sourceText: { [`G:/projects/ai-core/${BOUND_SOURCE}`]: REGION_SOURCE_TEXT },
+			destinationText: { [destinationPath]: PRIOR_BODY },
+		});
+		arrangement.sources.readCore.mockResolvedValue({ kind: "core", core: "core body\n" });
+
+		const outcome = await arrangement.useCase.execute(makeEnrollmentRequest());
+
+		expect(outcome.ok).toBe(true);
+		const written = textWrittenTo(arrangement.destinations, destinationPath);
+		expect(written).toContain(CORE_BEGIN);
+		expect(written).toContain("core body");
+		expect(written).toContain(PROJECT_BEGIN);
+		expect(written).toContain(PRIOR_BODY);
+		expect(written).toContain(PROJECT_END);
+		// The destination's own content moves into the project region, after the
+		// core region the source supplied.
+		expect(written.indexOf(CORE_END)).toBeLessThan(written.indexOf(PROJECT_BEGIN));
+		expect(written.indexOf(PRIOR_BODY)).toBeGreaterThan(written.indexOf(PROJECT_BEGIN));
+	});
+});
+
+describe("raw enrollment", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	test("a raw destination records no report entry and no pending entry", async () => {
+		const payload = new TextEncoder().encode("raw bytes\n");
+		const destinationPath = `G:/projects/destination/${BOUND_SOURCE}`;
+		const clearance = mock<ClearanceStore>();
+		clearance.load.mockResolvedValue(makeClearanceLoad({ [BOUND_SOURCE]: { mode: "raw" } }));
+		const arrangement = makeEnrollmentArrangement({
+			document: makeBindingsDocument({
+				bindings: [{ source: BOUND_SOURCE, destinations: [BOUND_SOURCE], declaredMode: "raw" }],
+			}),
+			clearance,
+		});
+		arrangement.sources.readBytes.mockResolvedValue(payload);
+		arrangement.destinations.readBytes.mockResolvedValue(null);
+
+		const outcome = await arrangement.useCase.execute(makeEnrollmentRequest());
+
+		expect(outcome.ok).toBe(true);
+		// The raw payload is the source's bytes exactly, so it holds no region.
+		const written = arrangement.destinations.writeBytes.mock.calls.find(([path]) => path === destinationPath)?.[1];
+		expect(written).toEqual(payload);
+		expect(arrangement.destinations.writeText).not.toHaveBeenCalled();
+		// A raw destination is not region-bound, so it earns neither an
+		// `initialized` entry nor an outstanding-path entry.
+		expect(arrangement.bindings.writeReport).not.toHaveBeenCalled();
+		expect(savedDocument(arrangement.bindings)?.pending).toEqual([]);
+	});
+});
+
+describe("init declarations", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	test("a malformed declaration is refused before any read or write", async () => {
+		const { useCase, bindings, destinations, guard } = makeEnrollmentArrangement();
+
+		const outcome = await useCase.execute(makeEnrollmentRequest({ regionDeclarations: ["no-equals-sign"] }));
+
+		expect(outcome.ok).toBe(false);
+		const failure = outcome.ok ? null : outcome.failure;
+		expect(failure?.code).toBe("invalid");
+		expect(failure?.message).toBe("invalid init binding: malformed or unsafe binding declaration: no-equals-sign");
+		expect(bindings.save).not.toHaveBeenCalled();
+		expect(bindings.writeReport).not.toHaveBeenCalled();
+		expect(destinations.writeText).not.toHaveBeenCalled();
+		expect(destinations.writeBytes).not.toHaveBeenCalled();
+		expect(guard.refuse).not.toHaveBeenCalled();
+	});
+
+	test("a declaration whose destination another source already owns fails closed", async () => {
+		const { useCase, bindings, destinations } = makeEnrollmentArrangement({
+			document: makeBindingsDocument({
+				bindings: [{ source: AGENT_SOURCE, destinations: ["shared.md"], declaredMode: "region" }],
+			}),
+		});
+
+		const outcome = await useCase.execute(
+			makeEnrollmentRequest({ regionDeclarations: ["other/source.md=shared.md"] }),
+		);
+
+		expect(outcome.ok).toBe(false);
+		const failure = outcome.ok ? null : outcome.failure;
+		expect(failure?.code).toBe("invalid");
+		expect(failure?.message).toBe("invalid init binding: destination mapping conflicts for shared.md");
+		expect(bindings.save).not.toHaveBeenCalled();
+		expect(destinations.writeText).not.toHaveBeenCalled();
+	});
+});
+
+describe("root role", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	/** The clearance registry naming the root runtime file as the root-role source. */
+	function rootClearance(): MockProxy<ClearanceStore> {
+		const clearance = mock<ClearanceStore>();
+		clearance.load.mockResolvedValue(makeClearanceLoad({ [BOUND_SOURCE]: { mode: "region", role: "root" } }));
+		return clearance;
+	}
+
+	test("a root-role source with no detectable instruction root is refused instead of guessed", async () => {
+		const { useCase, bindings, destinations, layout } = makeEnrollmentArrangement({
+			document: makeBindingsDocument({ bindings: [] }),
+			clearance: rootClearance(),
+		});
+		// Detection reads only the supported instruction file: this destination's
+		// instruction file has another name, so nothing is detected.
+		layout.detectRootFile.mockResolvedValue(null);
+
+		const outcome = await useCase.execute(makeEnrollmentRequest({ bindCleared: true }));
+
+		expect(outcome.ok).toBe(false);
+		const failure = outcome.ok ? null : outcome.failure;
+		expect(failure?.code).toBe("drift");
+		expect(failure?.message).toBe("destination instruction root not found; pass --root");
+		// The refusal names the explicit option instead of writing a guessed file.
+		expect(failure?.message).toContain("--root");
+		expect(bindings.save).not.toHaveBeenCalled();
+		expect(destinations.writeText).not.toHaveBeenCalled();
+	});
+
+	test("--root enrolls the root-role source at the named path", async () => {
+		const rootPath = "CLAUDE.md";
+		const destinationPath = `G:/projects/destination/${rootPath}`;
+		const arrangement = makeEnrollmentArrangement({
+			document: makeBindingsDocument({ bindings: [] }),
+			clearance: rootClearance(),
+		});
+		arrangement.sources.readCore.mockResolvedValue({ kind: "core", core: "root core\n" });
+		arrangement.layout.detectRootFile.mockResolvedValue(null);
+
+		const outcome = await arrangement.useCase.execute(
+			makeEnrollmentRequest({ bindCleared: true, rootOverride: rootPath }),
+		);
+
+		expect(outcome.ok).toBe(true);
+		const saved = savedDocument(arrangement.bindings);
+		expect(saved?.root).toBe(rootPath);
+		expect(saved?.bindings).toEqual([{ source: BOUND_SOURCE, destinations: [rootPath], declaredMode: "region" }]);
+		expect(textWrittenTo(arrangement.destinations, destinationPath)).toContain(CORE_BEGIN);
 	});
 });
