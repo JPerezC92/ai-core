@@ -107,7 +107,6 @@ const evaluateOddEvidence = new EvaluateOddEvidence({
 
 const serverOptions: OddEvidenceServerOptions = {
 	expectedModel: configuration.model,
-	profilePath: configuration.profilePath,
 };
 
 // The installed SDK's stdio entry owns the connection: it decides the protocol era from

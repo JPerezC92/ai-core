@@ -212,9 +212,17 @@ Running a synchronization is the _entire_ operator action for a destination: run
 
 ### System 1 execution contract
 
-This contract does not copy the per-finding action map. The plugin injects that map when findings qualify. This section and that per-turn block may occupy the same system-message priority; persistence does not establish higher priority.
+System One is an **MCP-based execution-directive provider** — not an advisor, not an advisory engine, and not an OpenCode plugin. The MCP protocol injects nothing into an agent's execution: a directive block reaches a model only because that model's turn called the tool and the result is in its context. Losing the removed plugin integration lost no automatic injection, because there never was any.
 
-When this turn's assembled context contains a `=== SYSTEM 1 | EXECUTION DIRECTIVES ===` block:
+**Invoking it.** The `system-one` MCP server (`mcp-servers/system-one/`, registered at `.opencode/opencode.jsonc` under `mcp.servers["system-one"]`) advertises one tool, `evaluate_odd_evidence`; call it with `{ text, images?, expectedModel? }`, where `text` is the turn's message and each image is `{ mimeType, base64 }`.
+
+**When a call is required — selectively, not per turn.** Call the tool before acting when the turn plausibly changes the accepted scope, contains a user-only decision, or carries attached visual evidence. An ordinary turn matching none of these needs no call; it therefore yields no block and no footer line.
+
+**What comes back.** Both branches carry `evaluationId` and `directives`; `directives` is `{ block, items }`, and each item is `{ questionId, choice, figure, action }`. Success adds `ok: true` plus `profileId`, `profileVersion` and `answers`; rejection adds `ok: false` plus a stable `code` and a fixed, bounded `reason` that never echoes supplied text. `block` is the rendered text, marked by `=== SYSTEM 1 | EXECUTION DIRECTIVES ===`, `=== SYSTEM 1 | UNAVAILABLE ===` and `=== END SYSTEM 1 ===`. An **empty** `block` means nothing is directed, so there is no block to apply.
+
+This contract does not copy the per-finding action map: the tool returns that map when findings qualify. This section and that returned block may occupy the same context priority, and the tool's output does not establish higher priority over this section.
+
+When this turn's assembled context contains a non-empty `=== SYSTEM 1 | EXECUTION DIRECTIVES ===` block returned by `evaluate_odd_evidence`:
 
 1. **Execute.** Apply each applicable System 1 directive in that block to planning and execution as default workflow guidance — not as optional commentary, and not only as something to report. Stronger evidence, actual user intent, and governing constraints take precedence. An `absent` finding never bypasses authorization or a user-only decision. No new permissions are granted. The diagnostic line in (2) does not satisfy this duty.
 
@@ -227,5 +235,9 @@ When this turn's assembled context contains a `=== SYSTEM 1 | EXECUTION DIRECTIV
 
    An override is only a genuine contradiction with stronger evidence, user intent, or a governing constraint — not an ordinary authorized action (for example agreed diagnostic cleanup).
 
-Never claim a directive was applied if its effect cannot be established. Never emit that line when no valid EXECUTION DIRECTIVES block was injected for this turn. The line is an observable clue, not proof of compliance. See `.aicore/core/knowledge/agents.md` project region `### Message presentation — System 1 footer`.
+**When the server is unavailable.** A transport failure, an unusable result, or a rejection branch yields no applicable directive. Continue under existing authority, do not infer or fabricate directives, and emit no footer line; an `=== SYSTEM 1 | UNAVAILABLE ===` block is that fixed notice, not a directive to apply.
+
+**How the flow stays observable without a plugin.** The server writes its own operational trace — one JSON line per evaluation to `output/system1/events.jsonl`, with the exchange's image bytes content-addressed under `output/system1/images`; both are gitignored and both are relocated by `SYSTEM_ONE_TRACE_PATH` and `SYSTEM_ONE_IMAGE_DIR`. One entry records the evaluation identity and time, the invoking session when the host supplied one, the profile identity and version, the model, the request (state, questions, and each image's type, size, digest and path), the response body or the bounded transport error, the outcome and handling, and the elapsed time. The trace is operational metadata: an unwritable trace path loses the record, never the evaluation.
+
+Never claim a directive was applied if its effect cannot be established. Never emit that line when no valid EXECUTION DIRECTIVES block was returned for this turn. The line is an observable clue, not proof of compliance. See `.aicore/core/knowledge/agents.md` project region `### Message presentation — System 1 footer`.
 <!-- project:end -->

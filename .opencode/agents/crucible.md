@@ -180,13 +180,24 @@ AICore's reviewed whole-suite command is `pnpm --dir cli/aicore test`, running t
 
 The AICore project's narrow read-only discovery allowance includes `rg`, `ls`, and `wc`. These commands are not test execution or a package install. No Git command is authorized: the core no-Git boundary applies to read-only Git as well as mutations, regardless of any conflicting harness allow.
 
-**Isolated-verification provisioning.** Executing the reviewed whole-suite command at an exact committed revision is this role's independent-reproduction duty, and a disposable checkout carries no installed dependencies, so that duty needs a way to materialise the project's already-approved, lockfile-pinned dependency set. The authorized forms are exactly three, one per install root recorded in `docs/tooling.md`:
+**Isolated-verification provisioning.** Executing the reviewed whole-suite command at an exact committed revision is this role's independent-reproduction duty, and a disposable checkout carries no installed dependencies, so that duty needs a way to materialise the project's already-approved, lockfile-pinned dependency set. The authorized forms are exactly two, one per install root recorded in `docs/tooling.md`:
 
 - `pnpm install --frozen-lockfile --ignore-scripts` at the checkout root, which covers the workspace members
 - `pnpm --dir mcp-servers/system-one install --frozen-lockfile --ignore-scripts`
-- `pnpm --dir .opencode/plugins/odd-adviser install --frozen-lockfile --ignore-scripts`
 
 Boundaries this role keeps inside those forms. `--frozen-lockfile` makes pnpm fail rather than write a manifest or lockfile that disagrees with the committed one, so the operation cannot become a dependency change and cannot bypass Warden 🔒 (Dependency Warden); `--ignore-scripts` executes no lifecycle script. There is no wildcard, no `pnpm add`, no update, upgrade or bare install variant among them, and the pre-existing bare `pnpm install` grant is untouched and remains limited to test-runner dependency installation under `#### Test-Runner Dependency Installation` after Warden 🔒 (Dependency Warden) APPROVE. These grants provision a checkout; they approve no dependency and authorize no manifest edit.
 
 Two limits are stated rather than enforced here. The layer matches command text only, so it cannot bind the working directory or prove which checkout is being provisioned; the assignment names the worktree, and a stale or mismatched lockfile makes `--frozen-lockfile` fail closed. And provisioning in another location reaches outside the repository, which `external_directory` already allows for this project.
+
+**Independent published-test-plan verification.** The user designated this role as the independent verifier of a published pull request's test plan, on the ground that an implementer's own run is evidence but never independent verification. Seven exact forms are authorized for that duty and nothing wider — the retained MCP package's suite and its typecheck, the repository's three read-only whole-tree gates, and the two ODD validators over the two documents the governing change record covers:
+
+- `pnpm --dir mcp-servers/system-one exec vitest run`
+- `pnpm --dir mcp-servers/system-one typecheck`
+- `pnpm typecheck`
+- `pnpm lint`
+- `pnpm format:check`
+- `node .agents/skills/odd-workflow/scripts/validate_feature.ts odd/tasks/2026-11-18-p7-system-one-odd-adviser-test-remediation.md`
+- `node .agents/skills/odd-workflow/scripts/validate_feature_file.ts odd/features/architecture-contract.md`
+
+Boundaries this role keeps inside them. There is no wildcard, no `node *`, and no interpreter, network, install or package-manager family among them, so this grant does not widen any other authority. `pnpm format` and `pnpm lint:fix` stay denied because autofix is not verification. No Git or GitHub form is granted here or anywhere for this role, and the core no-Git boundary continues to apply to read-only Git as well as mutations. Two limits are stated rather than enforced: the layer matches command text only and cannot bind the working directory, so a focused form with an appended path argument is not authorized by these entries and must not be substituted for the exact published command; and the validator forms name the two documents of one specific change record, so a later validator need requires its own exact form rather than a widened pattern.
 <!-- project:end -->

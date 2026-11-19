@@ -47,6 +47,22 @@ const evaluateOddEvidenceInputSchema = z.object({
 		.describe("Model identifier this call expects; defaults to the configured model"),
 });
 
+// The execution directives the operation derives from the validated answers. The block is
+// rendered text and each item is the directive it was rendered from.
+const executionDirectivesSchema = z.object({
+	block: z.string().describe("Rendered System 1 execution-directive block, empty when nothing is directed"),
+	items: z
+		.array(
+			z.object({
+				questionId: z.string().describe("Question whose answer produced this directive"),
+				choice: z.string().describe("Validated choice that produced this directive"),
+				figure: z.number().describe("Reported confidence or strongest probability for that answer"),
+				action: z.string().describe("Frozen action sentence for that question and choice"),
+			}),
+		)
+		.describe("Directives the block was rendered from"),
+});
+
 // The validated result union returned by the application operation. The rejection-code
 // and answer vocabularies belong to the domain, so this wire contract names the fields
 // and leaves the enumerated values at their single domain owner.
@@ -64,12 +80,14 @@ const oddEvidenceEvaluationSchema = z.union([
 		profileId: z.string().describe("Question profile identity that was evaluated"),
 		profileVersion: z.number().int().positive().describe("Question profile version"),
 		answers: z.record(z.string(), decisionAnswerSchema).describe("Validated answer per question"),
+		directives: executionDirectivesSchema,
 	}),
 	z.object({
 		ok: z.literal(false),
 		evaluationId: z.string().min(1).describe("Correlation identifier for this evaluation"),
 		code: z.string().describe("Stable rejection code owned by the evidence evaluation"),
 		reason: z.string().describe("Rejection reason"),
+		directives: executionDirectivesSchema,
 	}),
 ]);
 
@@ -81,10 +99,6 @@ export type OddEvidenceEvaluator = Pick<EvaluateOddEvidence, "execute">;
 
 export type OddEvidenceServerOptions = {
 	readonly expectedModel: string;
-	// The versioned question-profile artifact this surface evaluates against. The MCP
-	// edge never reads it: host composition loads it and injects `questionProfileSource`,
-	// and this record keeps the portable surface and its host on one configuration.
-	readonly profilePath: string;
 };
 
 export type OddEvidenceServerCollaborators =
@@ -137,9 +151,10 @@ function toToolResult(result: OddEvidenceEvaluation): CallToolResult {
 const BOUNDED_REJECTION_REASON = "Rejected before delivery; the rejection code identifies the failure class";
 
 // One projection step onto the advertised output union: the success branch keeps exactly
-// the profile identity, the evaluation identifier and the validated answers; the
-// rejection branch keeps its code and the same identifier. No supplied text, image bytes
-// or data URL can reach the payload.
+// the profile identity, the evaluation identifier, the validated answers and the directives
+// projected from them; the rejection branch keeps its code, the same identifier and the
+// fixed unavailable directives. No supplied text, image bytes or data URL can reach the
+// payload.
 function toWireEvaluation(result: OddEvidenceEvaluation): OddEvidenceEvaluation {
 	return result.ok
 		? {
@@ -148,12 +163,14 @@ function toWireEvaluation(result: OddEvidenceEvaluation): OddEvidenceEvaluation 
 				profileId: result.profileId,
 				profileVersion: result.profileVersion,
 				answers: result.answers,
+				directives: result.directives,
 			}
 		: {
 				ok: false,
 				evaluationId: result.evaluationId,
 				code: result.code,
 				reason: BOUNDED_REJECTION_REASON,
+				directives: result.directives,
 			};
 }
 
@@ -174,14 +191,14 @@ export function createOddEvidenceServer(
 ): McpServer {
 	const evaluateOddEvidence = resolveEvaluator(collaborators);
 	// Handshake identity of the portable surface, reported once when a client connects.
-	const server = new McpServer({ name: "odd-adviser", version: "0.1.0" });
+	const server = new McpServer({ name: "system-one", version: "0.1.0" });
 
 	server.registerTool(
 		ODD_EVIDENCE_TOOL_NAME,
 		{
 			title: "Evaluate ODD evidence",
 			description:
-				"Evaluate supplied text and inline images against the versioned ODD evidence question profile. The result is advisory: it never authorizes, waives a gate, or blocks an action.",
+				"Return the System 1 execution directives derived from the validated evidence answers. The directives never authorize, waive a gate or block an action; they do not grant permissions or override higher-priority requirements.",
 			inputSchema: evaluateOddEvidenceInputSchema,
 			outputSchema: oddEvidenceEvaluationSchema,
 		},
