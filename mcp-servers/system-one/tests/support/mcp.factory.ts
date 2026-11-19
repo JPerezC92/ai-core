@@ -7,6 +7,7 @@ import { randomUUID } from "node:crypto";
 
 import type { OddEvidenceEvaluation } from "#application/evaluate-odd-evidence.ts";
 import type { DecisionChoice, ValidatedDecisionAnswer } from "#domain/decision-response.ts";
+import { projectExecutionDirectives, unavailableExecutionDirectives } from "#domain/execution-directives.ts";
 import type { OddEvidenceImage } from "#domain/odd-evidence.ts";
 import {
 	MAX_ODD_EVIDENCE_IMAGE_BASE64_LENGTH,
@@ -52,18 +53,22 @@ export function createOverLengthBase64ToolInput(): EvaluateToolInput {
 }
 
 // A contract-valid evaluation result carrying the three answer IDs the delivered payload
-// keeps: the two asked questions plus the derived visual_evidence answer.
+// keeps: the two asked questions plus the derived visual_evidence answer. Its directives are
+// the projection of those answers, so the fixture mirrors the operation's result contract
+// instead of restating the frozen action text.
 export function createEvaluationResult(): OddEvidenceEvaluation {
+	const answers = {
+		scope_changed: createValidatedAnswer("present"),
+		user_only_decision: createValidatedAnswer("absent"),
+		visual_evidence: createValidatedAnswer("absent"),
+	};
 	return {
 		ok: true,
 		evaluationId: randomUUID(),
 		profileId: "odd-evidence-v1",
 		profileVersion: 1,
-		answers: {
-			scope_changed: createValidatedAnswer("present"),
-			user_only_decision: createValidatedAnswer("absent"),
-			visual_evidence: createValidatedAnswer("absent"),
-		},
+		answers,
+		directives: projectExecutionDirectives(answers),
 	};
 }
 
@@ -73,13 +78,13 @@ export function createRejectedEvaluationResult(): OddEvidenceEvaluation {
 		evaluationId: randomUUID(),
 		code: "invalid_answers",
 		reason: "The decision response did not answer every asked question",
+		directives: unavailableExecutionDirectives(),
 	};
 }
 
 export function createServerOptions(): OddEvidenceServerOptions {
 	return {
 		expectedModel: createExpectedModel(),
-		profilePath: ".opencode/plugins/odd-adviser/questions/odd-evidence-v1.json",
 	};
 }
 

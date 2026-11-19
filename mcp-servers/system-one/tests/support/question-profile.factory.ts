@@ -1,6 +1,6 @@
-// A synthetic contract fixture, not a copy of the shipped document: the validator unit test
-// needs a well-formed profile, and `profile-file-source.test.ts` is the test that reads the
-// document this package actually ships.
+// A synthetic contract fixture, not a copy of the shipped document: the loader integration
+// test writes it to a real temporary file, and `profile-file-source.test.ts` is the test
+// that reads the document this package actually ships.
 export function createQuestionProfile() {
 	return {
 		profileId: "odd-evidence-fixture",

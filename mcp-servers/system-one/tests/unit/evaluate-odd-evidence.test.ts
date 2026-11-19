@@ -6,14 +6,14 @@
 
 import { expect, test } from "vitest";
 
-import { EvaluateOddEvidence } from "./evaluate-odd-evidence.ts";
+import { EvaluateOddEvidence } from "#application/evaluate-odd-evidence.ts";
 import { answerIds } from "#domain/question-profile.ts";
 import {
 	createEvaluationTraceHandling,
 	createEvaluationTraceRecorder,
 	createSessionId,
 	createTraceImageStore,
-} from "#test/helpers/evaluation-trace.factory.ts";
+} from "#test/evaluation-trace.factory.ts";
 import {
 	createDecisionGateway,
 	createDecisionGatewayRejecting,
@@ -30,7 +30,7 @@ import {
 	createOddEvidenceProfile,
 	createQuestionProfileSource,
 	createQuestionProfileSourceWithInvalidProfile,
-} from "#test/helpers/odd-evidence.factory.ts";
+} from "#test/odd-evidence.factory.ts";
 
 const EVALUATION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -57,6 +57,43 @@ test("returns the validated answers plus the derived visual evidence answer", as
 		answers: {
 			...response.answers,
 			visual_evidence: createDerivedVisualEvidenceAnswer("present"),
+		},
+		// The directives are the frozen text for these three answers, in answer order: the two
+		// interrupt/guidance answers clear their inclusion bar, and the derived present answer
+		// maps to its one fixed action.
+		directives: {
+			block: [
+				"=== SYSTEM 1 | EXECUTION DIRECTIVES ===",
+				"scope_changed → present (0.80)",
+				"→ Potential new requirement in this message. Check existing context and authorization before expanding. Pause only work that still needs extra authorization.",
+				"user_only_decision → absent (0.80)",
+				"→ No reserved decision in this message. Continue already-authorized work. Do not ask for redundant approval. Not new permission.",
+				"visual_evidence → present (1.00)",
+				"→ Image attached. Inspect it before answering.",
+				"Execute accordingly. Deviate only when stronger evidence or governing constraints justify it.",
+				"No new permissions are granted.",
+				"=== END SYSTEM 1 ===",
+			].join("\n"),
+			items: [
+				{
+					questionId: "scope_changed",
+					choice: "present",
+					figure: 0.8,
+					action: "Potential new requirement in this message. Check existing context and authorization before expanding. Pause only work that still needs extra authorization.",
+				},
+				{
+					questionId: "user_only_decision",
+					choice: "absent",
+					figure: 0.8,
+					action: "No reserved decision in this message. Continue already-authorized work. Do not ask for redundant approval. Not new permission.",
+				},
+				{
+					questionId: "visual_evidence",
+					choice: "present",
+					figure: 1,
+					action: "Image attached. Inspect it before answering.",
+				},
+			],
 		},
 	});
 	expect(gateway.calls.length).toBe(1);
@@ -142,6 +179,17 @@ test("returns invalid_profile when the question profile is rejected", async () =
 		evaluationId: result.evaluationId,
 		code: "invalid_profile",
 		reason: "Invalid question profile metadata or question IDs",
+		// A rejected evaluation carries the fixed unavailable block and no directive, so the
+		// diagnostic reason above never reaches the delivered block.
+		directives: {
+			block: [
+				"=== SYSTEM 1 | UNAVAILABLE ===",
+				"The System 1 evidence evaluation reported an error for this request.",
+				"No new permissions are granted.",
+				"=== END SYSTEM 1 ===",
+			].join("\n"),
+			items: [],
+		},
 	});
 	expect(gateway.calls.length).toBe(0);
 });

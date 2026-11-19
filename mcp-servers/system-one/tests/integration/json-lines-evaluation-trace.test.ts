@@ -13,8 +13,8 @@ import { join } from "node:path";
 
 import { expect, test } from "vitest";
 
-import { ImageStore } from "./image-store.ts";
-import { JsonLinesEvaluationTrace } from "./json-lines-evaluation-trace.ts";
+import { ImageStore } from "#infrastructure/image-store.ts";
+import { JsonLinesEvaluationTrace } from "#infrastructure/json-lines-evaluation-trace.ts";
 import {
 	createEvaluationTraceEntry,
 	createEvaluationTraceError,
@@ -24,8 +24,8 @@ import {
 	createEvaluationTraceRequest,
 	createFailedEvaluationTraceEntry,
 	createFailedEvaluationTraceExchange,
-} from "#test/helpers/evaluation-trace.factory.ts";
-import { createDecisionResponse, createEvidence } from "#test/helpers/odd-evidence.factory.ts";
+} from "#test/evaluation-trace.factory.ts";
+import { createDecisionResponse, createEvidence } from "#test/odd-evidence.factory.ts";
 
 // Vitest reports a missing value but does not narrow it for TypeScript, so the stored item
 // is also narrowed here; a missing item still fails the case with the message below.

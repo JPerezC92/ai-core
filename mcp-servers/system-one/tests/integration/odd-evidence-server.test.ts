@@ -1,16 +1,16 @@
-// Unit test of the portable MCP surface. A built `McpServer` exposes no public handle
-// for invoking a registered tool handler directly (its registration state is private),
-// so each case connects a real SDK client to a freshly built server over the SDK's
-// in-memory linked transport pair and calls the registered `evaluate_odd_evidence` tool
-// through the protocol. The evaluation operation is doubled, so no network and no model
-// endpoint are involved.
+// Integration test of the portable MCP surface across its protocol boundary. A built
+// `McpServer` exposes no public handle for invoking a registered tool handler directly
+// (its registration state is private), so each case connects a real SDK client to a
+// freshly built server over the SDK's in-memory linked transport pair and calls the
+// registered `evaluate_odd_evidence` tool through the protocol. The evaluation operation
+// is doubled, so no network and no model endpoint are involved.
 
 import { Client } from "@modelcontextprotocol/client";
 import { InMemoryTransport } from "@modelcontextprotocol/server";
 import { expect, test } from "vitest";
 
-import { createOddEvidenceServer } from "./odd-evidence-server.ts";
-import type { OddEvidenceEvaluator } from "./odd-evidence-server.ts";
+import { createOddEvidenceServer } from "#mcp/odd-evidence-server.ts";
+import type { OddEvidenceEvaluator } from "#mcp/odd-evidence-server.ts";
 import {
 	createEvaluateToolImage,
 	createEvaluateToolInput,
@@ -20,8 +20,8 @@ import {
 	createRecordingEvaluateOddEvidence,
 	createRejectedEvaluationResult,
 	createServerOptions,
-} from "#test/helpers/mcp.factory.ts";
-import type { EvaluateToolInput } from "#test/helpers/mcp.factory.ts";
+} from "#test/mcp.factory.ts";
+import type { EvaluateToolInput } from "#test/mcp.factory.ts";
 
 // Hermetic per-call harness: one server, one linked transport pair, one client. Closing
 // both ends in `finally` keeps each case independent of every other case.
@@ -94,6 +94,7 @@ test("returns a rejection payload that forwards evaluationId", async () => {
 		evaluationId: rejected.evaluationId,
 		code: rejected.code,
 		reason: "Rejected before delivery; the rejection code identifies the failure class",
+		directives: rejected.directives,
 	});
 });
 

@@ -11,8 +11,8 @@ import { join } from "node:path";
 
 import { expect, test } from "vitest";
 
-import { createEvidenceImage } from "#test/helpers/odd-evidence.factory.ts";
-import { ImageStore } from "./image-store.ts";
+import { createEvidenceImage } from "#test/odd-evidence.factory.ts";
+import { ImageStore } from "#infrastructure/image-store.ts";
 
 function sha256Of(base64: string): string {
 	return createHash("sha256").update(Buffer.from(base64, "base64")).digest("hex");

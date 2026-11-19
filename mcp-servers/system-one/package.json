@@ -12,7 +12,7 @@
     "#domain/*": "./src/domain/*",
     "#infrastructure/*": "./src/infrastructure/*",
     "#mcp/*": "./src/mcp/*",
-    "#test/*": "./src/test/*"
+    "#test/*": "./tests/support/*"
   },
   "scripts": {
     "test": "vitest run",

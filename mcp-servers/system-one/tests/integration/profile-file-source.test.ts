@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 
 import { expect, test } from "vitest";
 
-import { ProfileFileSource, ProfileFileSourceBoundaryError } from "./profile-file-source.ts";
+import { ProfileFileSource, ProfileFileSourceBoundaryError } from "#infrastructure/profile-file-source.ts";
 
 type ProfileFilePaths = {
 	readonly profilePath: string;
