@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.7.0
+  version: 2.8.0
 ---
 
 <!-- core:begin -->
@@ -22,7 +22,7 @@ Create, read, update, and close the single authoritative feature document for a 
 - Keep that creation-date prefix unchanged afterwards. Existing undated feature documents keep their names; `.aicore/core/odd/tasks/_template.md` stays undated. The date prefix provides chronological filename sorting without changing other folders' ordering.
 - Fill the short header with `Status`, `Owner`, and `Created` and always show all four context fields: `Objective`, `Branch`, `Delivery`, and `Runner`. Fill each field with the actual value or `N/A — reason`; do not silently omit a field, and never invent a branch or runner. Existing closed feature documents are not retrofitted. `Delivery` carries the chosen strategy, authored-line forecast, and slice boundaries; `Runner` is the literal applicable command.
 - Fill `## Specs` using the specification procedure below.
-- Fill `## Tasks` with one line per task: stable ID, linked `S#`, route (`inline` or `delegated`) with the reason/trigger that decided it — responsible owner, status (`open`, `in progress`, `done`), and commit. Record the route and its trigger evidence, not the route label alone. Use `commit: pending` only while status is `open` or `in progress`; `done` requires a 7–64 character hexadecimal commit identifier. One authorized coherent work-unit commit may evidence several tasks; do not require one commit per task. High-risk units may use separate reviewable commits.
+- Fill `## Tasks` with one line per task: stable ID, linked `S#`, route (`inline` or `delegated`) with the reason/trigger that decided it — responsible owner, status (`open`, `in progress`, `done`), and commit. Record the route and its trigger evidence, not the route label alone. Use `commit: pending` only while status is `open` or `in progress`; `done` requires a 7–64 character hexadecimal commit identifier. One authorized coherent work-unit commit may evidence several tasks; do not require one commit per task. Every task names the commit that actually carries its work, and a shared reference is valid only when that commit contains each task's own work. A high-risk unit must carry its own commit, so a high-risk change is never mixed with unrelated tasks and remains revertible and reviewable alone. A commit represents one deliverable behaviour, fix, migration or documentation outcome rather than a file type, and its message states the outcome rather than listing paths.
 - Fill `## Log` with `L1` = the original request verbatim; record each later user correction as its own entry dated and quoted verbatim, and its evidence and rationale may accompany it in that entry.
 - After bootstrap, apply the workflow's `### Full feature mirror and resume`. Keep verified project/feature identity, document locator, backend ID, exact verified content revision and comparison evidence, or explicit pending recovery, compactly in the existing Log. Respect project/task backend-write restrictions; record preparation does not itself establish runtime synchronization.
 
@@ -84,6 +84,10 @@ Whether an entry is meaningful is owned by the independent semantic review in `#
 
 Forecast authored additions plus deletions, excluding generated files, and record the chosen delivery strategy and slice boundaries compactly in the existing document. Maintain a running count from work-unit commits; when the forecast OR the running count exceeds about 400 authored changed lines, apply the chosen strategy before the next commit. Keep the ~400-line task size advisory — not a hard cap, classification input, automatic review trigger, or delivery-slice boundary — separate from that feature-level strategy trigger, and add no second tracker.
 
+The budget is a review signal, never a reason to shrink evidence: never delete or compress tests, documentation, comments or blank lines to fit it. Slice by work unit instead, or report the overage. A feature of roughly 100 authored changed lines or fewer stays inline as one unit; splitting it manufactures commits without creating an independent review boundary.
+
+Every planned work unit records its rollback boundary — the exact files and behaviour revertible without unwinding unrelated work — together with the unit's own focused check and its observed result.
+
 ### Before the first write
 
 Apply `.aicore/core/knowledge/agent-workflow.md` `### ODD protocol`, including its every-task uncertainty and observable-outcome controls. Do not restate that protocol here. That protocol's `#### Step reporting and transitions` owns step reporting, the state/evidence/next-action fields, and scope-bounded continuation. Execution review after creation or material replanning follows `AGENTS.md` → Conventions → Decision-only stops; check current authority and prerequisites, not an automatic document-creation approval pause.
@@ -95,6 +99,8 @@ Read and apply `.aicore/core/knowledge/agent-workflow.md` `### Scope changes and
 ### Implement and verify
 
 Read and apply `.aicore/core/knowledge/agent-workflow.md` `### ODD protocol`, step 6, for dependency order, task acceptance checks, tests/documentation, conditional RED/GREEN/refactor, actual exceptions and existing owner/whole-suite gates; apply `.aicore/core/knowledge/agents.md` `### Safe parallel task coordination (HARD RULE)` for accepted predecessors and concurrency. Carry the actual applicable runner and evidence to workers. Step reports and continuation follow the workflow's `#### Step reporting and transitions`.
+
+A work unit ships the tests and documentation it needs. A unit that changes behaviour carries or updates the tests that verify it; a unit that changes a user-visible rule carries the documentation that explains it. Never defer that material to a later unit to keep a diff small.
 
 For findings exposing related impact or escaped coverage, read and apply the workflow's `#### Finding-triggered impact reassessment and escape tracing`. Record the trace through the existing Log and the durable source that carries its detail, not a separate tracker. This pointer grants no additional read or write scope.
 
