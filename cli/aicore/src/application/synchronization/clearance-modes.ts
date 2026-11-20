@@ -9,7 +9,9 @@
  */
 
 import type { BindingMode } from "#domain/synchronization/constants.ts";
-import { type ClearanceEntry, expandClearance } from "#domain/synchronization/clearance.ts";
+import type { SourceFacts } from "#domain/synchronization/bindings.ts";
+import { type ClearanceEntry, deliveryDeclaredFor, expandClearance } from "#domain/synchronization/clearance.ts";
+import type { BindingsDocument } from "#domain/synchronization/bindings.ts";
 import type { PathInspection } from "#domain/ports/path-inspection.ts";
 import type { EditorProfile } from "#domain/synchronization/editor-profile.ts";
 import { type SynchronizationFailure, invalid } from "#domain/synchronization/failures.ts";
@@ -74,4 +76,36 @@ export async function readClearanceModes(
 export function invalidClearance(clearancePath: string, clearance: ClearanceModes): SynchronizationFailure {
 	const detail = clearance.reason === null ? "" : `: ${clearance.reason}`;
 	return invalid(`invalid clearance file: ${clearancePath}${detail}`);
+}
+
+/**
+ * The facts the lifecycle classification needs, gathered from the two trees.
+ *
+ * Presence is a probe of the source tree; distribution and withdrawal are read
+ * from the registry for the destination's editor. None of this decides what
+ * happens to a destination — that stays in the domain's classification.
+ */
+export async function sourceFacts(
+	document: BindingsDocument,
+	clearance: ClearanceModes,
+	editor: EditorProfile,
+	sourceRoot: string,
+	layout: PathInspection,
+): Promise<SourceFacts> {
+	const cleared = new Set(clearance.modes.keys());
+	const entries = clearance.entries ?? new Map<string, ClearanceEntry>();
+	const present = new Set<string>();
+	const withdrawn = new Set<string>();
+	for (const binding of document.bindings) {
+		if ((await layout.isFile(layout.join(sourceRoot, binding.source))) !== false) {
+			present.add(binding.source);
+		}
+		if (
+			!cleared.has(binding.source) &&
+			deliveryDeclaredFor(binding.source, entries, editor) === "omitted"
+		) {
+			withdrawn.add(binding.source);
+		}
+	}
+	return { present, cleared, withdrawn };
 }

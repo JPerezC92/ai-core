@@ -7,7 +7,7 @@
 
 import type { DestinationFiles } from "#domain/synchronization/ports.ts";
 
-import { readBytesFile, readTextFile, writeBytesFile, writeTextFile } from "./local-files.ts";
+import { readBytesFile, readTextFile, removeFile, writeBytesFile, writeTextFile } from "./local-files.ts";
 
 export class LocalDestinationFiles implements DestinationFiles {
 	async readText(path: string): Promise<string | null> {
@@ -24,5 +24,9 @@ export class LocalDestinationFiles implements DestinationFiles {
 
 	async writeBytes(path: string, content: Uint8Array): Promise<void> {
 		await writeBytesFile(path, content);
+	}
+
+	async remove(path: string): Promise<void> {
+		await removeFile(path);
 	}
 }

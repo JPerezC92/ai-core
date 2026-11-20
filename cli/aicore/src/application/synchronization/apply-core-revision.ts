@@ -12,16 +12,19 @@
  * refusal cannot leave a directory or a half-applied payload behind.
  */
 
-import { CLEARANCE_FILENAME, MODE_MERGE, MODE_RAW } from "#domain/synchronization/constants.ts";
+import { CLEARANCE_FILENAME, MODE_MERGE, MODE_RAW, ROLE_ROOT } from "#domain/synchronization/constants.ts";
 import {
 	bindingModeConflict,
 	destinationDrift,
+	enrollmentCandidates,
 	nonRegionDestinations,
 	normalizePending,
 	protectedExclusionFailure,
 	unclearedSources,
+	withEnrolledSources,
 	withOptOuts,
 	withRestoredOptOuts,
+	withheldSources,
 } from "#domain/synchronization/bindings.ts";
 import { drift, failed, invalid, succeeded, type OperationOutcome } from "#domain/synchronization/failures.ts";
 import { splitFrontmatter } from "#domain/synchronization/frontmatter.ts";
@@ -29,6 +32,7 @@ import { omitMcpServersOf } from "#domain/synchronization/clearance.ts";
 import { mergeTopLevel } from "#domain/synchronization/merge.ts";
 import { editorMismatch, effectiveEditor } from "#domain/synchronization/editor-profile.ts";
 import { protectedBytes, renderInitFile, renderWithRegion, splitRegions } from "#domain/synchronization/regions.ts";
+import { missingRegionSources } from "#domain/synchronization/reconciliation.ts";
 import type {
 	BindingsStore,
 	ClearanceStore,
@@ -38,7 +42,7 @@ import type {
 	WriteTargetGuard,
 } from "#domain/synchronization/ports.ts";
 
-import { invalidClearance, readClearanceModes } from "./clearance-modes.ts";
+import { invalidClearance, readClearanceModes, sourceFacts } from "./clearance-modes.ts";
 import { ensureOpenCodeSecrets } from "./open-code-secrets.ts";
 import { projectName } from "./project-name.ts";
 import type { SynchronizationRequest } from "./requests.ts";
@@ -122,21 +126,67 @@ export class ApplyCoreRevision {
 		if (clearance.entries === null) {
 			return failed(invalidClearance(clearancePath, clearance));
 		}
-		for (const entry of current.bindings) {
+		// The domain decides which cleared sources gain bindings and which destinations
+		// are new; this operation only probes the facts it needs.
+		const facts = await sourceFacts(current, clearance, editor, request.sourceRoot, layout);
+		const rootEntry = [...clearance.entries.entries()].find(
+			([, entry]) => entry.kind === "file" && entry.role === ROLE_ROOT,
+		);
+		const rootSource = rootEntry?.[0] ?? null;
+		let rootDestination = current.root;
+		if (rootSource !== null) {
+			const existingRoot = current.bindings.find((entry) => entry.source === rootSource);
+			rootDestination = existingRoot?.destinations[0] ?? (await layout.detectRootFile(request.destinationRoot));
+			if (rootDestination === null) {
+				return failed(drift("destination instruction root not found; pass --root"));
+			}
+		}
+		const enrollment = enrollmentCandidates(current, {
+			modes: clearance.modes,
+			destinations: clearance.destinations,
+			rootSource,
+			rootDestination,
+		});
+		const existingDestinations = new Set<string>();
+		for (const candidate of enrollment.candidates) {
+			if (await layout.exists(layout.join(request.destinationRoot, candidate.destination))) {
+				existingDestinations.add(candidate.destination);
+			}
+		}
+		const enrolled = withEnrolledSources(current, enrollment, existingDestinations);
+		const withheld = withheldSources(enrolled.document, facts, clearance.entries);
+		const plan = withheld.document;
+		if (enrolled.newRawDestinations.size > 0) {
+			const createdRefusal = await guard.refuse({
+				command: "apply",
+				sourceRoot: request.sourceRoot,
+				destinationRoot: request.destinationRoot,
+				bindingsPath: request.bindingsPath,
+				document: plan,
+				modes: clearance.modes,
+				newRawDestinations: enrolled.newRawDestinations,
+			});
+			if (createdRefusal !== null) {
+				return failed(createdRefusal);
+			}
+		}
+
+		for (const entry of plan.bindings) {
 			const conflict = bindingModeConflict(entry, clearance.modes);
 			if (conflict !== null) {
 				return failed(conflict);
 			}
 		}
-		const uncleared = unclearedSources(current, new Set(clearance.modes.keys()));
+		const withheldSourcesNotDistributed = new Set(
+			[...withheld.retired, ...withheld.requiresReconciliation].map((entry) => entry.source),
+		);
+		const uncleared = unclearedSources(plan, new Set(clearance.modes.keys()), withheldSourcesNotDistributed);
 		if (uncleared.length > 0) {
 			return failed(drift(`source not cleared for distribution: ${uncleared.join(", ")}`));
 		}
-		if (clearance.entries !== null) {
-			const relocated = destinationDrift(current, clearance.entries, clearance.destinations);
-			if (relocated !== null) {
-				return failed(relocated);
-			}
+		const relocated = destinationDrift(plan, clearance.entries, clearance.destinations);
+		if (relocated !== null) {
+			return failed(relocated);
 		}
 
 		const textWrites: TextWrite[] = [];
@@ -144,7 +194,7 @@ export class ApplyCoreRevision {
 		const created: string[] = [];
 		const notes: string[] = [];
 
-		for (const entry of current.bindings) {
+		for (const entry of withheld.distributable) {
 			const mode = clearance.modes.get(entry.source);
 			const sourcePath = layout.join(request.sourceRoot, entry.source);
 
@@ -249,15 +299,24 @@ export class ApplyCoreRevision {
 			await layout.ensureDirectory(layout.parent(write.path));
 			await destinations.writeBytes(write.path, write.content);
 		}
+		// A retired source owns no destination content, so its managed copy is
+		// removed: nothing of the destination's own could be in it.
+		for (const retired of withheld.retired) {
+			for (const destination of retired.destinations) {
+				const destinationPath = layout.join(request.destinationRoot, destination);
+				await destinations.remove(destinationPath);
+				notes.push(`retired: ${destination}`);
+			}
+		}
 		await ensureOpenCodeSecrets(editor, request.destinationRoot, {
 			destinations,
 			layout,
 		});
 
-		const pending = normalizePending(current.pending, nonRegionDestinations(current, clearance.modes));
-		const pinned = { ...current, coreRevision: request.sourceRevision, pending };
+		const pending = normalizePending(plan.pending, nonRegionDestinations(plan, clearance.modes));
+		const pinned = { ...plan, coreRevision: request.sourceRevision, pending };
 		await bindings.save(request.bindingsPath, pinned);
-		await layout.syncBlocker(request.destinationRoot, pinned, pending);
+		await layout.syncBlocker(request.destinationRoot, pinned, pending, missingRegionSources(withheld.requiresReconciliation));
 
 		const parts = ["applied", ...notes];
 		if (created.length > 0) {

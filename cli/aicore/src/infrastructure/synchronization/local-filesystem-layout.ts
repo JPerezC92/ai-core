@@ -13,7 +13,7 @@ import { ROOT_CANDIDATES } from "#domain/synchronization/constants.ts";
 import { excludedFromDistribution } from "#domain/synchronization/clearance.ts";
 import type { BindingsDocument } from "#domain/synchronization/bindings.ts";
 import { effectiveEditor } from "#domain/synchronization/editor-profile.ts";
-import { syncReconciliationBlocker } from "#domain/synchronization/reconciliation.ts";
+import { syncReconciliationBlocker, type MissingRegionSource } from "#domain/synchronization/reconciliation.ts";
 import type { FilesystemLayout } from "#domain/synchronization/ports.ts";
 
 import { ensureDirectory, isMissing, readEntryKind, readTextFile, writeTextFile } from "./local-files.ts";
@@ -104,13 +104,18 @@ export class LocalFilesystemLayout implements FilesystemLayout {
 		return null;
 	}
 
-	async syncBlocker(destinationRoot: string, document: BindingsDocument, pending: readonly string[]): Promise<void> {
+	async syncBlocker(
+		destinationRoot: string,
+		document: BindingsDocument,
+		pending: readonly string[],
+		missing: readonly MissingRegionSource[],
+	): Promise<void> {
 		const rootPath = await this.resolveRootFile(destinationRoot, document);
 		const text = await readTextFile(rootPath);
 		if (text === null) {
 			return;
 		}
-		const next = syncReconciliationBlocker(text, pending, effectiveEditor(undefined, document.editor));
+		const next = syncReconciliationBlocker(text, pending, effectiveEditor(undefined, document.editor), missing);
 		if (next !== text) {
 			await writeTextFile(rootPath, next);
 		}

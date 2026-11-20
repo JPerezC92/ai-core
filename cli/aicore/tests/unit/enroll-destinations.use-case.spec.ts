@@ -32,6 +32,7 @@ import type {
 import {
 	BOUND_SOURCE,
 	RELOCATED_BOUND_DESTINATION,
+	SYNCHRONIZATION_DESTINATION_ROOT,
 	makeBindingsDocument,
 	makeClearanceLoad,
 	makeEnrollmentRequest,
@@ -56,6 +57,10 @@ type EnrollArrangement = {
 	readonly existing?: readonly string[];
 	readonly sourceText?: Readonly<Record<string, string>>;
 	readonly destinationText?: Readonly<Record<string, string>>;
+	/** Bound sources this run treats as removed from the source tree. */
+	readonly absentSources?: readonly string[];
+	/** Sources the source tree holds; defaults to the document's bindings. */
+	readonly sourceFiles?: readonly string[];
 };
 
 /** The enrollment operation, its ports doubled and arranged for one run. */
@@ -79,10 +84,27 @@ function makeEnrollmentArrangement(options: EnrollArrangement = {}): {
 	guard.refuse.mockResolvedValue(null);
 
 	const existing = new Set(options.existing ?? []);
+	const document = options.document ?? makeBindingsDocument();
+	const boundSources = new Set(document.bindings.map((entry) => entry.source));
+	const boundDestinations = new Set(document.bindings.flatMap((entry) => entry.destinations));
+	const absentSources = new Set(options.absentSources ?? []);
+	const sourceFiles = new Set(options.sourceFiles ?? [...boundSources]);
 	const layout = mock<FilesystemLayout>();
 	layout.join.mockImplementation((root, relative) => `${root}/${relative}`);
 	layout.exists.mockImplementation(async (path) => existing.has(path));
-	layout.isFile.mockImplementation(async (path) => existing.has(path));
+	// A destination this document binds answers from `existing`, so a bound
+	// destination that is not there reads as absent whatever its relative path is.
+	// Every other path answers for a source the source tree holds.
+	layout.isFile.mockImplementation(async (path) => {
+		const endsWith = (candidate: string) => path.endsWith(`/${candidate}`);
+		if ([...boundDestinations].some(endsWith)) {
+			return existing.has(path);
+		}
+		if (existing.has(path)) {
+			return true;
+		}
+		return [...sourceFiles].some(endsWith) && ![...absentSources].some(endsWith);
+	});
 	layout.parent.mockImplementation((path) => path.slice(0, path.lastIndexOf("/")));
 
 	const sources = mock<SourceFiles>();
@@ -142,6 +164,42 @@ describe("destination drift refusal", () => {
 		expect(layout.syncBlocker).not.toHaveBeenCalled();
 		expect(layout.ensureDirectory).not.toHaveBeenCalled();
 		expect(sources.readCore).not.toHaveBeenCalled();
+	});
+});
+
+describe("removed sources", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	test("a bound source the tree no longer holds is preserved and listed for reconciliation", async () => {
+		const clearance = mock<ClearanceStore>();
+		clearance.load.mockResolvedValue(makeClearanceLoad({ [SKILL_ROOT]: { mode: "region" } }));
+		const { useCase, bindings, destinations, layout } = makeEnrollmentArrangement({
+			document: makeBindingsDocument({
+				bindings: [{ source: SKILL_FILE, destinations: [SKILL_FILE], declaredMode: "region" }],
+			}),
+			clearance,
+			existing: [`${SYNCHRONIZATION_DESTINATION_ROOT}/${SKILL_FILE}`],
+			absentSources: [SKILL_FILE],
+		});
+
+		const outcome = await useCase.execute(makeEnrollmentRequest());
+
+		expect(outcome.ok).toBe(true);
+		const saved = savedDocument(bindings);
+		expect(saved?.bindings.map((entry) => entry.source)).toEqual([SKILL_FILE]);
+		expect(saved?.pending).toEqual([SKILL_FILE]);
+		expect(destinations.remove).not.toHaveBeenCalled();
+		expect(
+			destinations.writeText.mock.calls.filter(([target]) => target.endsWith(`/${SKILL_FILE}`)),
+		).toEqual([]);
+		expect(
+			destinations.writeBytes.mock.calls.filter(([target]) => target.endsWith(`/${SKILL_FILE}`)),
+		).toEqual([]);
+		expect(layout.syncBlocker.mock.calls[0]?.[3]).toEqual([
+			{ source: SKILL_FILE, destination: SKILL_FILE, reason: "missing" },
+		]);
 	});
 });
 
@@ -228,6 +286,7 @@ describe("declared opt-outs", () => {
 		const { useCase, bindings, sources, destinations } = makeEnrollmentArrangement({
 			document: makeBindingsDocument({ exclude: [], bindings: [], pending: [SKILL_FILE] }),
 			clearance,
+			sourceFiles: [SKILL_FILE],
 		});
 		sources.readBytes.mockResolvedValue(payload);
 		destinations.readBytes.mockResolvedValue(payload);
