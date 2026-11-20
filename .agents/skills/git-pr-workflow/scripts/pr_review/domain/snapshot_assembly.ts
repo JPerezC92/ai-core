@@ -1,96 +1,75 @@
-/** Reconcile supplied complete scanner snapshots to exact owner-supplied paths. */
+/** Apply the snapshot assembly rules to typed local preparation records. */
 
-import { SnapshotValidationError } from "#scripts/attribution_scan/domain/records.ts";
 import type { Snapshot } from "#scripts/attribution_scan/domain/records.ts";
-import { splitLines } from "#scripts/attribution_scan/domain/matching.ts";
 import { validateSnapshot } from "#scripts/attribution_scan/domain/validation.ts";
-import { ReviewPreparationError } from "./records.ts";
-import type { LocalInventory } from "./records.ts";
+import { ReviewPreparationError } from "#scripts/pr_review/domain/records.ts";
+import type { LocalInventory } from "#scripts/pr_review/domain/records.ts";
 
-/** The exact field set a local immutable inventory carries. */
-const INVENTORY_KEYS = ["base", "changed_files", "commit_messages", "head_sha", "pr_number", "schema"];
-
-/** The prefix a creation draft carries before its authored title. */
-const TITLE_PREFIX = "Title: ";
-
-/** Report whether a decoded value is a JSON object. */
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-/** Report whether two decoded path lists carry the same unique paths. */
-function samePaths(left: ReadonlySet<string>, right: ReadonlySet<string>): boolean {
+/** Report whether two path sets carry the same paths. */
+function samePathSet(left: ReadonlySet<string>, right: ReadonlySet<string>): boolean {
 	if (left.size !== right.size) return false;
 	for (const path of left) if (!right.has(path)) return false;
 	return true;
 }
 
-/** Extract the authored title from a creation draft, or reject the draft. */
-export function extractDraftTitle(draft: string): string | ReviewPreparationError {
-	const firstLine = splitLines(draft)[0] ?? "";
-	if (!firstLine.startsWith(TITLE_PREFIX)) {
-		return new ReviewPreparationError("DRAFT_INVALID", "creation draft must begin with a Title: line");
-	}
-	return firstLine.slice(TITLE_PREFIX.length);
-}
-
-/** Validate unknown inventory and nested content through the scanner boundary. */
-export function validateLocalInventory(value: unknown): LocalInventory | ReviewPreparationError {
-	const error = new ReviewPreparationError("SNAPSHOT_INVALID", "local immutable inventory required");
-	if (!isRecord(value)) return error;
-	const keys = Object.keys(value).sort();
-	if (keys.length !== INVENTORY_KEYS.length || !keys.every((key, index) => key === INVENTORY_KEYS[index])) {
-		return error;
-	}
-	const commits = value["commit_messages"];
-	if (
-		!Array.isArray(commits) ||
-		commits.some((commit) => !isRecord(commit) || commit["surface"] !== "commit-message")
-	) {
-		return error;
-	}
+/**
+ * Require the typed local inventory to satisfy the scanner's completeness contract.
+ *
+ * The rule applies to the typed inventory, so every caller that supplies one is held to it. The
+ * outside document's field set and element shapes are the mapping adapter's concern.
+ */
+export function requireValidLocalInventory(inventory: LocalInventory): ReviewPreparationError | undefined {
 	const validated = validateSnapshot({
-		schema: value["schema"],
-		pr_number: value["pr_number"],
-		head_sha: value["head_sha"],
-		base: value["base"],
+		schema: inventory.schema,
+		pr_number: inventory.pr_number,
+		head_sha: inventory.head_sha,
+		base: inventory.base,
 		artifacts: [
 			{ surface: "pr-title", source: "local title validation boundary", content: "" },
 			{ surface: "pr-body", source: "local body validation boundary", content: "" },
-			...commits,
+			...inventory.commit_messages,
 		],
-		changed_files: value["changed_files"],
+		changed_files: inventory.changed_files,
 	});
-	if (validated instanceof SnapshotValidationError) {
+	if (validated !== undefined) {
 		return new ReviewPreparationError("SNAPSHOT_INVALID", validated.message);
 	}
-	return {
-		schema: validated.schema,
-		pr_number: validated.pr_number,
-		head_sha: validated.head_sha,
-		base: validated.base,
-		commit_messages: validated.artifacts.slice(2),
-		changed_files: validated.changed_files,
-	};
+	return undefined;
 }
 
-/** Validate scanner shape and exact inventory, retaining deleted-file entries. */
-export function assembleSnapshot(collected: unknown, exactPaths: unknown): Snapshot | ReviewPreparationError {
-	const snapshot = validateSnapshot(collected);
-	if (snapshot instanceof SnapshotValidationError) {
-		return new ReviewPreparationError("SNAPSHOT_INVALID", snapshot.message);
+/**
+ * Require a complete scanner snapshot.
+ *
+ * The rule proves that the assembled artifacts satisfy the scanner's own completeness contract.
+ */
+export function requireCompleteSnapshot(candidate: Snapshot): ReviewPreparationError | undefined {
+	const validated = validateSnapshot(candidate);
+	if (validated !== undefined) {
+		return new ReviewPreparationError("SNAPSHOT_INVALID", validated.message);
 	}
-	if (!Array.isArray(exactPaths) || !exactPaths.every((path): path is string => typeof path === "string")) {
-		return new ReviewPreparationError("SNAPSHOT_PATHS_MISMATCH", "path inventory must be a string list");
-	}
-	const paths = snapshot.changed_files.map((entry) => entry.path);
-	const snapshotPaths = new Set(paths);
-	const exact = new Set(exactPaths);
-	if (snapshotPaths.size !== paths.length || exact.size !== exactPaths.length || !samePaths(snapshotPaths, exact)) {
+	return undefined;
+}
+
+/**
+ * Require the snapshot's changed paths to equal the exact diff inventory.
+ *
+ * Both path lists must be free of duplicates, so one repeated path cannot stand in for another.
+ */
+export function requireExactPaths(
+	snapshotPaths: readonly string[],
+	exactPaths: readonly string[],
+): ReviewPreparationError | undefined {
+	const snapshotSet = new Set(snapshotPaths);
+	const exactSet = new Set(exactPaths);
+	if (
+		snapshotSet.size !== snapshotPaths.length ||
+		exactSet.size !== exactPaths.length ||
+		!samePathSet(snapshotSet, exactSet)
+	) {
 		return new ReviewPreparationError(
 			"SNAPSHOT_PATHS_MISMATCH",
 			"snapshot paths must equal the exact diff inventory",
 		);
 	}
-	return snapshot;
+	return undefined;
 }

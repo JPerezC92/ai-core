@@ -6,8 +6,16 @@ import { CollectLocalInventory } from "#scripts/pr_review/application/collect_lo
 import { PrepareLocalSnapshot } from "#scripts/pr_review/application/prepare_local_snapshot.ts";
 import { VerifyPersistedBody } from "#scripts/pr_review/application/verify_persisted_body.ts";
 import { ReviewPreparationError } from "#scripts/pr_review/domain/records.ts";
+import { decodeCapture } from "#scripts/pr_review/infrastructure/adapters/pr_capture.ts";
+import { publicationTitle } from "#scripts/pr_review/infrastructure/adapters/prepared_receipt.ts";
+import {
+	decodeExactPaths,
+	decodeLocalInventory,
+} from "#scripts/pr_review/infrastructure/adapters/snapshot_assembly.ts";
 import { createText, readText, InputOutputFailure } from "#scripts/pr_review/infrastructure/filesystem.ts";
 import { GitBoundaryError, GitReader } from "#scripts/pr_review/infrastructure/git_reader.ts";
+import { decodeSnapshot } from "#scripts/attribution_scan/infrastructure/adapters/snapshot_document.ts";
+import { SnapshotValidationError } from "#scripts/attribution_scan/domain/records.ts";
 
 /** The commands this entry point composes. */
 const COMMAND_NAMES = ["snapshot", "prepare-snapshot", "prepare-local", "verify"] as const;
@@ -15,9 +23,9 @@ const COMMAND_NAMES = ["snapshot", "prepare-snapshot", "prepare-local", "verify"
 /** The options every command requires. */
 const COMMAND_OPTIONS = new Map<string, readonly string[]>([
 	["snapshot", ["--input", "--paths", "--output"]],
-	["prepare-snapshot", ["--draft", "--working-body", "--input", "--paths", "--output"]],
-	["prepare-local", ["--pr", "--base", "--draft", "--working-body", "--output"]],
-	["verify", ["--baseline", "--current", "--working-body"]],
+	["prepare-snapshot", ["--receipt", "--body", "--inventory", "--paths", "--output"]],
+	["prepare-local", ["--pr", "--base", "--receipt", "--body", "--output"]],
+	["verify", ["--baseline", "--current", "--body"]],
 ]);
 
 /** The name this entry point reports in its own diagnostics. */
@@ -104,6 +112,12 @@ function reportUsage(error: UsageError): number {
 	return 2;
 }
 
+/** Report one refused preparation and end the command with the refusal status. */
+function reportRefusal(error: ReviewPreparationError): number {
+	printOut(`${compactJson({ code: error.code, message: error.message })}\n`);
+	return 1;
+}
+
 export function main(argv: readonly string[]): number {
 	let parsed: { name: string; options: Map<string, string> };
 	try {
@@ -114,22 +128,29 @@ export function main(argv: readonly string[]): number {
 	}
 	const options = parsed.options;
 	try {
-		if (parsed.name === "snapshot" || parsed.name === "prepare-snapshot") {
-			const inventory = JSON.parse(readText(options.get("--input") ?? ""));
-			const paths = JSON.parse(readText(options.get("--paths") ?? ""));
-			const result =
-				parsed.name === "prepare-snapshot"
-					? new PrepareLocalSnapshot().execute(
-							readText(options.get("--draft") ?? ""),
-							readText(options.get("--working-body") ?? ""),
-							inventory,
-							paths,
-						)
-					: new AssembleReviewSnapshot().execute(inventory, paths);
-			if (result instanceof ReviewPreparationError) {
-				printOut(`${compactJson({ code: result.code, message: result.message })}\n`);
-				return 1;
+		if (parsed.name === "snapshot") {
+			const collected = decodeSnapshot(JSON.parse(readText(options.get("--input") ?? "")));
+			if (collected instanceof SnapshotValidationError) {
+				return reportRefusal(new ReviewPreparationError("SNAPSHOT_INVALID", collected.message));
 			}
+			const paths = decodeExactPaths(JSON.parse(readText(options.get("--paths") ?? "")));
+			if (paths instanceof ReviewPreparationError) return reportRefusal(paths);
+			const result = new AssembleReviewSnapshot().execute(collected, paths);
+			if (result instanceof ReviewPreparationError) return reportRefusal(result);
+			createText(options.get("--output") ?? "", `${JSON.stringify(result, null, 2)}\n`);
+		} else if (parsed.name === "prepare-snapshot") {
+			const receipt: unknown = JSON.parse(readText(options.get("--receipt") ?? ""));
+			const body = readText(options.get("--body") ?? "");
+			const inventoryValue = JSON.parse(readText(options.get("--inventory") ?? ""));
+			const pathsValue = JSON.parse(readText(options.get("--paths") ?? ""));
+			const title = publicationTitle(receipt);
+			if (title instanceof ReviewPreparationError) return reportRefusal(title);
+			const inventory = decodeLocalInventory(inventoryValue);
+			if (inventory instanceof ReviewPreparationError) return reportRefusal(inventory);
+			const exactPaths = decodeExactPaths(pathsValue);
+			if (exactPaths instanceof ReviewPreparationError) return reportRefusal(exactPaths);
+			const result = new PrepareLocalSnapshot().execute(title, body, inventory, exactPaths);
+			if (result instanceof ReviewPreparationError) return reportRefusal(result);
 			createText(options.get("--output") ?? "", `${JSON.stringify(result, null, 2)}\n`);
 		} else if (parsed.name === "prepare-local") {
 			const prValue = options.get("--pr") ?? "";
@@ -137,26 +158,23 @@ export function main(argv: readonly string[]): number {
 			if (prNumber === null) {
 				throw new UsageError(`argument --pr: a positive integer is required: ${prValue}`, parsed.name);
 			}
-			const result = new CollectLocalInventory(new GitReader(), new PrepareLocalSnapshot()).execute(
-				prNumber,
-				options.get("--base") ?? "",
-				readText(options.get("--draft") ?? ""),
-				readText(options.get("--working-body") ?? ""),
-			);
-			if (result instanceof ReviewPreparationError) {
-				printOut(`${compactJson({ code: result.code, message: result.message })}\n`);
-				return 1;
-			}
+			const receipt: unknown = JSON.parse(readText(options.get("--receipt") ?? ""));
+			const body = readText(options.get("--body") ?? "");
+			const collected = new CollectLocalInventory(new GitReader()).execute(prNumber, options.get("--base") ?? "");
+			if (collected instanceof ReviewPreparationError) return reportRefusal(collected);
+			const title = publicationTitle(receipt);
+			if (title instanceof ReviewPreparationError) return reportRefusal(title);
+			const result = new PrepareLocalSnapshot().execute(title, body, collected.inventory, collected.paths);
+			if (result instanceof ReviewPreparationError) return reportRefusal(result);
 			createText(options.get("--output") ?? "", `${JSON.stringify(result, null, 2)}\n`);
 		} else {
-			const baseline = JSON.parse(readText(options.get("--baseline") ?? ""));
-			const current = JSON.parse(readText(options.get("--current") ?? ""));
-			const candidate = readText(options.get("--working-body") ?? "");
+			const baseline = decodeCapture(JSON.parse(readText(options.get("--baseline") ?? "")));
+			if (baseline instanceof ReviewPreparationError) return reportRefusal(baseline);
+			const current = decodeCapture(JSON.parse(readText(options.get("--current") ?? "")));
+			if (current instanceof ReviewPreparationError) return reportRefusal(current);
+			const candidate = readText(options.get("--body") ?? "");
 			const outcome = new VerifyPersistedBody().execute(baseline, current, candidate);
-			if (outcome instanceof ReviewPreparationError) {
-				printOut(`${compactJson({ code: outcome.code, message: outcome.message })}\n`);
-				return 1;
-			}
+			if (outcome instanceof ReviewPreparationError) return reportRefusal(outcome);
 		}
 		printOut(`${compactJson({ status: "prepared", command: parsed.name })}\n`);
 		return 0;

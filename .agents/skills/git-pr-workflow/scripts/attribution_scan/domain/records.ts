@@ -56,10 +56,10 @@ export interface ScanResult {
 	readonly exclusions: readonly Exclusion[];
 }
 
-/** Carry decoded, not yet validated inputs into the scan operation. */
+/** Carry already-decoded typed inputs into the scan operation. */
 export interface ScanInput {
-	readonly snapshotValue: unknown;
-	readonly policyValue: unknown;
+	readonly snapshot: Snapshot;
+	readonly policy: AttributionPolicy;
 }
 
 /** Describe a rejected policy as a returned business-error value. */

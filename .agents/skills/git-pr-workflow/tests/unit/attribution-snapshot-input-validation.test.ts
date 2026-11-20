@@ -1,7 +1,6 @@
 /** The snapshot input validation the scanner operation applies to decoded JSON. */
 
 import { describe, expect, it } from "vitest";
-import { ScanAttribution } from "#scripts/attribution_scan/application/scan_attribution.ts";
 import { SnapshotValidationError } from "#scripts/attribution_scan/domain/records.ts";
 import {
 	invalidPaths,
@@ -13,11 +12,12 @@ import {
 	makeSyntheticPolicy,
 	makeUnbalancedSurfaceSnapshot,
 	makeWrongSchemaSnapshot,
+	scanDecision,
 } from "#tests/support/attribution-fixtures.ts";
 
-/** Run the scan operation over one snapshot value and a valid policy. */
+/** Run the scanner over one snapshot value and a valid policy. */
 function scan(snapshotValue: unknown): unknown {
-	return new ScanAttribution().execute({ snapshotValue, policyValue: makeSyntheticPolicy() });
+	return scanDecision(snapshotValue, makeSyntheticPolicy());
 }
 
 describe("snapshot input rejection", () => {

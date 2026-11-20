@@ -12,6 +12,20 @@ export interface LocalInventory {
 	readonly changed_files: readonly ChangedFile[];
 }
 
+/** The collected local Git inventory and the exact paths the commit range changed. */
+export interface CollectedInventory {
+	readonly inventory: LocalInventory;
+	readonly paths: readonly string[];
+}
+
+/** One value a supplied JSON capture may carry. */
+export type CaptureValue = string | number | boolean | null | CaptureValue[] | { readonly [key: string]: CaptureValue };
+
+/** One supplied pull-request capture, typed as its own field set rather than a fixed schema. */
+export interface Capture {
+	readonly fields: Readonly<Record<string, CaptureValue>>;
+}
+
 /** Return a stable rejection code and explanation without raising it. */
 export class ReviewPreparationError {
 	readonly code: string;

@@ -1,23 +1,15 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 
-import {
-	makeCompletedBody,
-	makeCreationBody,
-	makeCreationDraft,
-	makeExistingArtifact,
-	makeMalformedDraft,
-	makeMalformedMetadataJson,
-	makeMetadata,
-} from "#tests/support/review-content-fixtures.ts";
+import { makeCreationInput, makeReviewInput, TITLE } from "#tests/support/publication-fixtures.ts";
 
 const entry = resolve(dirname(fileURLToPath(import.meta.url)), "../../scripts/prepare_pr_review.ts");
 const PROGRAM = "prepare_pr_review.ts";
-const USAGE = `usage: ${PROGRAM} [-h] {initialize,validate} ...`;
+const USAGE = `usage: ${PROGRAM} [-h] --input <publication.json> --output <body.md>`;
 const roots: string[] = [];
 
 function root(): string {
@@ -42,130 +34,71 @@ function diagnostic(message: string): string {
 	return `${USAGE}\n${PROGRAM}: error: ${message}\n`;
 }
 
-/** The documented business refusal payload for one refused command. */
-function refusal(payload: { readonly code: string; readonly message: string }): string {
-	return `{"code": ${JSON.stringify(payload.code)}, "message": ${JSON.stringify(payload.message)}}\n`;
-}
-
 afterEach(() => {
 	for (const path of roots.splice(0)) rmSync(path, { recursive: true, force: true });
 });
 
-describe("initialize command", () => {
-	it("creates the working body from a creation draft", () => {
+describe("preparing one publication body", () => {
+	it("creates the canonical body and its receipt from a creation input", () => {
 		const directory = root();
-		const draft = write(join(directory, "draft.md"), makeCreationDraft());
-		const working = join(directory, "working-body.md");
+		const input = write(join(directory, "publication.json"), makeCreationInput());
+		const output = join(directory, "generated-body.md");
 
-		const result = run(["initialize", "--draft", draft, "--working-body", working]);
+		const result = run(["--input", input, "--output", output]);
 
 		expect(result.status).toBe(0);
-		expect(result.stdout).toBe('{"status": "prepared", "command": "initialize"}\n');
-		expect(readFileSync(working, "utf8")).toBe(makeCreationBody());
+		const receipt = `{"status":"prepared","title":"${TITLE}"}\n`;
+		expect(result.stdout).toBe(receipt);
+		expect(readFileSync(`${output}.receipt.json`, "utf8")).toBe(receipt);
+		expect(readFileSync(output, "utf8")).toBe(
+			[
+				"## Summary",
+				"",
+				"- Adds the review preparation commands\\.",
+				"",
+				"## Test plan",
+				"",
+				"- [ ] Run the focused suite",
+				"- [ ] Confirm the import map resolves",
+				"",
+				"## Findings / blockers",
+				"",
+				"No review findings yet.",
+				"",
+			].join("\n"),
+		);
 	});
-});
 
-describe("business refusal reporting", () => {
-	it("reports a business refusal as exit 1 with its code and message", () => {
-		const cases = [
-			{
-				name: "initialize with a malformed creation draft",
-				arrange: (directory: string) => {
-					const draft = write(join(directory, "draft.md"), makeMalformedDraft());
-					const working = join(directory, "working-body.md");
-					return {
-						args: ["initialize", "--draft", draft, "--working-body", working],
-						artifact: working,
-						payload: {
-							code: "DRAFT_INVALID",
-							message: "creation draft title wrapper and Summary required",
-						},
-					};
-				},
-			},
-			{
-				name: "validate whose supplied metadata diverges from the accepted baseline",
-				arrange: (directory: string) => {
-					const baseline = write(join(directory, "baseline.json"), JSON.stringify(makeMetadata()));
-					const current = write(
-						join(directory, "current.json"),
-						JSON.stringify(makeMetadata({ headRefOid: "def5678abc1234def5678abc1234def5678abc1" })),
-					);
-					const working = write(join(directory, "working-body.md"), makeCompletedBody());
-					return {
-						args: ["validate", "--baseline", baseline, "--current", current, "--working-body", working],
-						artifact: null,
-						payload: { code: "REMOTE_DIVERGED", message: "remote metadata differs from accepted baseline" },
-					};
-				},
-			},
-		];
-
-		for (const testCase of cases) {
-			const directory = root();
-			const { args, artifact, payload } = testCase.arrange(directory);
-
-			const result = run(args);
-
-			expect(result.status, testCase.name).toBe(1);
-			expect(result.stdout, testCase.name).toBe(refusal(payload));
-			if (artifact !== null) expect(existsSync(artifact), testCase.name).toBe(false);
-		}
-	});
-});
-
-describe("boundary failure reporting", () => {
-	it("reports a work failure as exit 2 with the documented diagnostic and unchanged artifacts", () => {
-		const cases = [
-			{
-				name: "initialize over an existing working body",
-				arrange: (directory: string) => {
-					const draft = write(join(directory, "draft.md"), makeCreationDraft());
-					const working = write(join(directory, "working-body.md"), makeExistingArtifact());
-					return { args: ["initialize", "--draft", draft, "--working-body", working], working };
-				},
-			},
-			{
-				name: "validate over a baseline that is not valid JSON",
-				arrange: (directory: string) => {
-					const baseline = write(join(directory, "baseline.json"), makeMalformedMetadataJson());
-					const current = write(join(directory, "current.json"), JSON.stringify(makeMetadata()));
-					const working = write(join(directory, "working-body.md"), makeCompletedBody());
-					return {
-						args: ["validate", "--baseline", baseline, "--current", current, "--working-body", working],
-						working,
-					};
-				},
-			},
-		];
-
-		for (const testCase of cases) {
-			const directory = root();
-			const { args, working } = testCase.arrange(directory);
-			const before = readFileSync(working, "utf8");
-
-			const result = run(args);
-
-			expect(result.status, testCase.name).toBe(2);
-			expect(result.stdout, testCase.name).toBe("");
-			expect(result.stderr, testCase.name).toContain("input/output failure:");
-			expect(readFileSync(working, "utf8"), testCase.name).toBe(before);
-		}
-	});
-});
-
-describe("validate command", () => {
-	it("accepts a fresh completed body", () => {
+	it("creates the review body with its evidence, findings and verdict", () => {
 		const directory = root();
-		const metadata = JSON.stringify(makeMetadata());
-		const baseline = write(join(directory, "baseline.json"), metadata);
-		const current = write(join(directory, "current.json"), metadata);
-		const working = write(join(directory, "working-body.md"), makeCompletedBody());
+		const input = write(join(directory, "publication.json"), makeReviewInput());
+		const output = join(directory, "review-body.md");
 
-		const result = run(["validate", "--baseline", baseline, "--current", current, "--working-body", working]);
+		const result = run(["--input", input, "--output", output]);
 
 		expect(result.status).toBe(0);
-		expect(result.stdout).toBe('{"status": "prepared", "command": "validate"}\n');
+		const body = readFileSync(output, "utf8");
+		expect(body).toContain("- [x] Run the focused suite");
+		expect(body).toContain("- [ ] Confirm the import map resolves");
+		expect(body).toContain("## Findings / blockers\n\nNo findings.");
+		expect(body).toContain("- Immutable head SHA: `abc1234def5678abc1234def5678abc1234def56`");
+		expect(body).toContain(
+			"| Run the focused suite | pnpm vitest run | All focused tests passed; exit 0\\. | Cipher |",
+		);
+		expect(body.endsWith("[PASS] — Zero open findings; every required check is verified\\.\n")).toBe(true);
+	});
+
+	it("refuses an invalid input with its code and message and creates no body", () => {
+		const directory = root();
+		const input = write(join(directory, "publication.json"), "not json");
+		const output = join(directory, "generated-body.md");
+
+		const result = run(["--input", input, "--output", output]);
+
+		expect(result.status).toBe(1);
+		expect(result.stdout).toBe('{"code": "INPUT_INVALID", "message": "valid JSON publication required"}\n');
+		expect(existsSync(output)).toBe(false);
+		expect(existsSync(`${output}.receipt.json`)).toBe(false);
 	});
 });
 
@@ -173,20 +106,22 @@ describe("command line contract", () => {
 	it("rejects invalid invocations with the usage diagnostic and no artifact", () => {
 		const directory = root();
 		const invocations = [
-			{ args: [], message: "the following arguments are required: command" },
+			{ args: [], message: "the following arguments are required: --input" },
+			{ args: ["--input", "publication.json"], message: "the following arguments are required: --output" },
+			{ args: ["--input"], message: "argument --input: expected one argument" },
+			{ args: ["--output", "body.md"], message: "the following arguments are required: --input" },
+			{ args: ["extra"], message: "unrecognized arguments: extra" },
 			{
-				args: ["publish"],
-				message: "argument command: invalid choice: 'publish' (choose from 'initialize', 'validate')",
+				args: ["--input", "publication.json", "--output", "body.md", "--decisions", "decisions.json"],
+				message: "unrecognized arguments: --decisions",
 			},
 			{
-				args: ["initialize", "--draft", "d.md"],
-				message: "the following arguments are required: --working-body",
+				args: ["--input", "publication.json", "--output", "body.md", "--baseline", "baseline.json"],
+				message: "unrecognized arguments: --baseline",
 			},
-			{ args: ["initialize", "extra"], message: "unrecognized arguments: extra" },
-			{ args: ["initialize", "--draft"], message: "argument --draft: expected one argument" },
 			{
-				args: ["initialize", "--draft", "d.md", "--working-body", "w.md", "--extra", "x"],
-				message: "unrecognized arguments: --extra",
+				args: ["--input", "publication.json", "--output", "body.md", "--previous", "prior.json"],
+				message: "unrecognized arguments: --previous",
 			},
 		];
 
@@ -198,5 +133,55 @@ describe("command line contract", () => {
 			expect(result.stderr).toBe(diagnostic(invocation.message));
 			expect(readdirSync(directory)).toEqual([]);
 		}
+	});
+
+	it("prints the usage line for a help invocation", () => {
+		const result = run(["--help"]);
+
+		expect(result.status).toBe(0);
+		expect(result.stdout).toBe(`${USAGE}\n`);
+	});
+});
+
+describe("boundary failure reporting", () => {
+	it("reports an occupied body as exit 2 and leaves the artifact unchanged", () => {
+		const directory = root();
+		const input = write(join(directory, "publication.json"), makeCreationInput());
+		const output = write(join(directory, "generated-body.md"), "existing body\n");
+
+		const result = run(["--input", input, "--output", output]);
+
+		expect(result.status).toBe(2);
+		expect(result.stdout).toBe("");
+		expect(result.stderr).toContain("input/output failure:");
+		expect(readFileSync(output, "utf8")).toBe("existing body\n");
+		expect(existsSync(`${output}.receipt.json`)).toBe(false);
+	});
+
+	it("reports an occupied receipt as exit 2 and creates no body", () => {
+		const directory = root();
+		const input = write(join(directory, "publication.json"), makeCreationInput());
+		const output = join(directory, "generated-body.md");
+		write(`${output}.receipt.json`, "previous receipt\n");
+
+		const result = run(["--input", input, "--output", output]);
+
+		expect(result.status).toBe(2);
+		expect(result.stdout).toBe("");
+		expect(result.stderr).toContain("input/output failure:");
+		expect(readFileSync(`${output}.receipt.json`, "utf8")).toBe("previous receipt\n");
+		expect(existsSync(output)).toBe(false);
+	});
+
+	it("reports a missing input as exit 2", () => {
+		const directory = root();
+		const output = join(directory, "generated-body.md");
+
+		const result = run(["--input", join(directory, "absent.json"), "--output", output]);
+
+		expect(result.status).toBe(2);
+		expect(result.stdout).toBe("");
+		expect(result.stderr).toContain("input/output failure:");
+		expect(existsSync(output)).toBe(false);
 	});
 });

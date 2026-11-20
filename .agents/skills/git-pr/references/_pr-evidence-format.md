@@ -1,8 +1,10 @@
 # PR evidence format
 
-> Canonical body format for every pull request: findings, test evidence, open debt, and the closing verdict. `git-pr` writes the initial creation draft; the designated post-review evidence writer (Inquisitor 🔎 (PR Reviewer) when the roster is installed) alone accumulates these sections in `output/pr-working-body.md` and authorizes the single publication of the completed review body. The presentation never varies per PR.
+> Canonical body format for every pull request: findings, test evidence, open debt, and the closing verdict. The body is generated from the JSON publication input by `git-pr`; no agent authors it. The designated post-review evidence writer (Inquisitor 🔎 (PR Reviewer) when the roster is installed) alone fills the review-stage sections of that input and authorizes the single publication of the generated review body. The presentation never varies per PR.
 
-The creation draft retains its `Title:` wrapper; the single working body has no wrapper. Local title/body are authoritative preparation inputs. Published evidence belongs only in the PR body, never comments/reviews or competing documents. Required scanner snapshots are machine evidence, not alternative working bodies. Initial-draft bans on ticks/results do not prohibit the designated writer's evidence-backed local review assembly. The command argument contracts, the supplied-file schemas and the publication boundary live in `.agents/skills/git-pr-workflow/references/_pr-workflow-inputs.md`.
+This file describes what the generated body looks like. The authoritative content contract is `.agents/skills/git-pr/references/_pr-publication-input.md`; the renderer produces the shape below from the validated input, and the shape is never assembled or edited by hand.
+
+The generated body carries no title wrapper: the title lives in the publication input and in the generation receipt. The publication input is the authoritative preparation source; the generated body is its artifact. Published evidence belongs only in the PR body, never comments/reviews or competing documents. Required scanner snapshots are machine evidence, not alternative bodies. The creation-stage rule that every test item is pending does not prohibit the designated writer's evidence-backed review assembly. The command argument contract lives in `.agents/skills/git-pr/SKILL.md`; the supplied-file schemas and the publication boundary live in `.agents/skills/git-pr-workflow/references/_pr-workflow-inputs.md`.
 
 ## Assembly order
 
@@ -16,7 +18,9 @@ The creation draft retains its `Title:` wrapper; the single working body has no 
 
 Each fact appears once. Summary explains why; Test plan states what will be checked; Findings records dispositions; Test evidence records observations; Open debt records authorized follow-ups; the verdict states release readiness. Never restate a table in prose.
 
-## Initial draft
+## Generated creation body
+
+The renderer emits this exact creation body from a creation-stage input:
 
 ```markdown
 ## Summary
@@ -30,7 +34,7 @@ Each fact appears once. Summary explains why; Test plan states what will be chec
 No review findings yet.
 ```
 
-`No review findings yet.` is literal. It means review has not run; it is not a finding and not a verdict. Summary keeps at most three one-line bullets; the test plan keeps at least two executable items.
+`No review findings yet.` is literal. It means review has not run; it is not a finding and not a verdict. Summary keeps at most three one-line bullets; the test plan keeps at least two executable items. Every creation-stage test item is pending, so every rendered item is an unchecked `- [ ]`.
 
 ## Findings / blockers
 
@@ -65,12 +69,12 @@ No findings.
 - Use `- [ ]` checkboxes; prose test plans are forbidden.
 - Keep at least two concrete, executable items. The section is mandatory and never empty; an empty test plan blocks the PR.
 - Each item names the exact action and its observable expected result.
-- Keep `- [ ]` until the designated writer joins the matching evidence row and tick together locally at the reviewed head. Authorize one final update of the complete joined body; local assembly alone is not verified publication. Never write `- [x]`, a result, or a claim that something ran in the initial draft.
+- Keep `- [ ]` until the designated writer joins the matching evidence row and tick together in the publication input at the reviewed head and regenerates the body from it. Authorize one final update of the complete joined body; local assembly alone is not verified publication. A checked item appears only for a passed item that carries its evidence; the generated creation body never shows a result or a claim that something ran.
 - A checked item's text is its evidence key. Never reword a checked item; rewording invalidates its row and requires re-verification.
 
 ## Test evidence
 
-Post-review only, at the current immutable head. Omit the section until at least one item is checked.
+Post-review only, at the current immutable head. The renderer omits the section until at least one item is checked.
 
 Header, in this order:
 
@@ -96,10 +100,10 @@ Rules:
 - Literal action/input is the exact command that ran. When a command consumed input, record the command and the input in that cell. When no command ran, record the exact manual action or input. Never invent a command, and never add a command field for a manual check.
 - Observed result is the human-readable verdict only: for a test run, the pass/fail summary line and the exit code where relevant. Never progress bars, per-test dots, stack traces, raw dumps, or source bodies. Full logs stay outside the body.
 - Executor is the actual person or agent that performed the check, never the body writer by default. CI records its workflow or run identifier.
-- Record literal values: the base ref, the head SHA, and the scope command with that base and head. Never write the `$BASE` token.
+- Record literal values: the base ref, the head SHA, and the scope command with that base and head. The generated body renders the base with its remote prefix as `origin/<baseRef>`, so a `baseRef` of `main` publishes `git diff "origin/main"...<head>`. Never write the `$BASE` token.
 - One current review head only. Authenticate the latest live PR head and exact diff, update the header, and reclassify every required item's evidence before the atomic row/tick join. A changed head alone, PR creation or body-only edit does not invalidate unaffected code-test evidence. Reuse sufficient task-time evidence across commits only when actual tested inputs and relevant dependencies, configuration and environment are unchanged or have an explicit proven equivalent-input mapping. Unknown equivalence fails closed; relevant changes, incomplete provenance, missing coverage or a genuinely required final combined check require an impact-scoped rerun with its stated reason. Never carry stale evidence forward or omit final combined review.
 - For reused evidence, keep the original literal command/action and consumed inputs in Literal action/input, the original observed verdict/exit status in Observed result, and actual executor plus original run identity in Executor. Include the original tested content/commit and a concise current-input applicability/equivalence proof mapping or durable proof citation in Literal action/input. Never present an old run as newly executed at the header head. Keep the existing header/columns; no extra tracker or parallel evidence section.
-- Every PR-body/prose change requires a fresh attribution scan covering the actual persisted body, through the existing authorized executor route, and final live-body reread before any gate. Immediately before the single publication, the final local working body must also be scanned over the exact bytes being uploaded, assembled by the `prepare-local` route described in `.agents/skills/git-pr-workflow/SKILL.md`; an attribution match blocks that upload. A pre-write scan is insufficient alone: it never replaces the persisted-body scan, and the pre-upload scan does not replace it either — both are required. This requirement is independent of unchanged code-test evidence and adds no command or mutation authority; preserve the exclusive single writer and atomic row/tick join. The publication requirement itself — the single write, the two mandatory scans and the failed-reread block — is owned by `.agents/skills/git-pr-workflow/SKILL.md`; this section states only its body-format consequences.
+- Every PR-body/prose change requires a fresh attribution scan covering the actual persisted body, through the existing authorized executor route, and final live-body reread before any gate. Immediately before the single publication, the final generated body must also be scanned over the exact bytes being uploaded, assembled by the `prepare-local` route described in `.agents/skills/git-pr-workflow/SKILL.md`; an attribution match blocks that upload. A pre-write scan is insufficient alone: it never replaces the persisted-body scan, and the pre-upload scan does not replace it either — both are required. This requirement is independent of unchanged code-test evidence and adds no command or mutation authority; preserve the exclusive single writer and atomic row/tick join. The publication requirement itself — the single write, the two mandatory scans and the failed-reread block — is owned by `.agents/skills/git-pr-workflow/SKILL.md`; this section states only its body-format consequences.
 - A checked item's row records a passing verdict. A failed or unresolved check stays `- [ ]` and is recorded as a finding; it never appears as a passing row.
 - Only author-evidenced N/A may exclude a required item. `manual` or `optional` alone never omits, ticks, or satisfies an item.
 
@@ -130,7 +134,7 @@ The same `[<VERDICT>] — basis` shape applies to all three tokens; an `[ADVISOR
 
 Rules:
 
-- The verdict line is absent from the initial draft. It is written only by the designated evidence writer at the atomic join, and only after any required user acceptance is documented.
+- The verdict line is absent from the generated creation body. It is recorded only by the designated evidence writer in the publication input at the atomic join, and only after any required user acceptance is documented.
 - It states release readiness. It does not replace the reviewer's gate signal to the coordinator.
 - Any new finding, changed head, or changed evidence invalidates a prior `[PASS]`; re-establish the body at the current head.
 

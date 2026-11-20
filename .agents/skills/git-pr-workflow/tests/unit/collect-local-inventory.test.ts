@@ -1,16 +1,8 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { CollectLocalInventory } from "#scripts/pr_review/application/collect_local_inventory.ts";
-import { PrepareLocalSnapshot } from "#scripts/pr_review/application/prepare_local_snapshot.ts";
 import type { GitInventoryPort } from "#scripts/pr_review/domain/ports.ts";
 import { ReviewPreparationError } from "#scripts/pr_review/domain/records.ts";
-import {
-	createBody,
-	createLocalDraft,
-	createLocalInventory,
-	createLocalSnapshot,
-	createPaths,
-	createSnapshot,
-} from "#tests/support/review-fixtures.ts";
+import { createLocalInventory, createPaths, createSnapshot } from "#tests/support/review-fixtures.ts";
 
 const HEAD_REVISION = "HEAD";
 const ANCESTOR_COMMIT = "b".repeat(40);
@@ -139,49 +131,28 @@ function createReader(defect?: InventoryDefect): RecordingReader {
 function createRequest(): {
 	prNumber: number;
 	base: string;
-	draft: string;
-	body: string;
 } {
 	const snapshot = createSnapshot();
 	return {
 		prNumber: snapshot.pr_number,
 		base: snapshot.base,
-		draft: createLocalDraft(),
-		body: createBody(),
 	};
 }
 
 /** Run the collection operation over one reader double. */
 function collect(reader: RecordingReader): unknown {
 	const request = createRequest();
-	return new CollectLocalInventory(reader, new PrepareLocalSnapshot()).execute(
-		request.prNumber,
-		request.base,
-		request.draft,
-		request.body,
-	);
+	return new CollectLocalInventory(reader).execute(request.prNumber, request.base);
 }
 
 describe("CollectLocalInventory.execute", () => {
-	it("assembles the local snapshot and retains the deleted path", () => {
+	it("collects the local inventory and retains the deleted path", () => {
 		const reader = createReader();
 		const request = createRequest();
-		const preparer = { execute: vi.fn(() => createLocalSnapshot()) };
 
-		const result = new CollectLocalInventory(reader, preparer).execute(
-			request.prNumber,
-			request.base,
-			request.draft,
-			request.body,
-		);
+		const result = new CollectLocalInventory(reader).execute(request.prNumber, request.base);
 
-		expect(result).toEqual(createLocalSnapshot());
-		expect(preparer.execute).toHaveBeenCalledWith(
-			request.draft,
-			request.body,
-			createLocalInventory(),
-			createPaths(),
-		);
+		expect(result).toEqual({ inventory: createLocalInventory(), paths: createPaths() });
 		const head = createSnapshot().head_sha;
 		expect(reader.mergeBaseArguments).toEqual([[RESOLVED_BASE_COMMIT, head]]);
 		expect(reader.commitRanges).toEqual([[ANCESTOR_COMMIT, head]]);

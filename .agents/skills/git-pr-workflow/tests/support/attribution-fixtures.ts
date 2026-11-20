@@ -7,6 +7,7 @@ import { ScanAttribution } from "#scripts/attribution_scan/application/scan_attr
 import type { AttributionPolicy, ChangedFile, ScanResult, Snapshot } from "#scripts/attribution_scan/domain/records.ts";
 import { PolicyValidationError, SnapshotValidationError } from "#scripts/attribution_scan/domain/records.ts";
 import { validatePolicy } from "#scripts/attribution_scan/domain/validation.ts";
+import { decodePolicy, decodeSnapshot } from "#scripts/attribution_scan/infrastructure/adapters/snapshot_document.ts";
 
 const skillRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -22,8 +23,8 @@ const HEAD_SHA = "a".repeat(40);
 export function loadApprovedPolicy(): AttributionPolicy {
 	const policyPath = resolve(skillRoot, "references", "_attribution-patterns.json");
 	const value: unknown = JSON.parse(readFileSync(policyPath, "utf8"));
-	const policy = validatePolicy(value);
-	if (policy instanceof PolicyValidationError) {
+	const policy = decodePolicy(value);
+	if (policy instanceof PolicyValidationError || validatePolicy(policy) !== undefined) {
 		throw new Error("the approved attribution policy must validate");
 	}
 	return policy;
@@ -132,6 +133,59 @@ export function makeCompleteSnapshot(): Snapshot {
 	return makeSnapshot(makeChangedFiles(makeChangedFile()));
 }
 
+/** Build the CLI's sorted-JSON scan output for a snapshot that carries no match. */
+export function makeCleanScanOutput(snapshot: Snapshot = makeCompleteSnapshot()): string {
+	return [
+		"{",
+		`  "base": ${JSON.stringify(snapshot.base)},`,
+		'  "exclusions": [],',
+		`  "head_sha": ${JSON.stringify(snapshot.head_sha)},`,
+		'  "matches": [],',
+		`  "pr_number": ${snapshot.pr_number}`,
+		"}",
+		"",
+	].join("\n");
+}
+
+/** Build the CLI's sorted-JSON scan output for one policy match at the snapshot's first artifact. */
+export function makeMatchedScanOutput(policy: AttributionPolicy, snapshot: Snapshot, line = 1): string {
+	const marker = policy.markers[0];
+	const identity = policy.identities[0];
+	const artifact = snapshot.artifacts[0];
+	if (marker === undefined || identity === undefined || artifact === undefined) {
+		throw new Error("the matched output needs a policy marker and identity and one artifact");
+	}
+	return [
+		"{",
+		`  "base": ${JSON.stringify(snapshot.base)},`,
+		'  "exclusions": [],',
+		`  "head_sha": ${JSON.stringify(snapshot.head_sha)},`,
+		'  "matches": [',
+		"    {",
+		`      "identity": ${JSON.stringify(identity)},`,
+		`      "line": ${line},`,
+		`      "marker": ${JSON.stringify(marker)},`,
+		'      "path": null,',
+		`      "source": ${JSON.stringify(artifact.source)},`,
+		`      "surface": ${JSON.stringify(artifact.surface)}`,
+		"    }",
+		"  ],",
+		`  "pr_number": ${snapshot.pr_number}`,
+		"}",
+		"",
+	].join("\n");
+}
+
+/** Return snapshot text that cannot be decoded as JSON. */
+export function makeUndecodableSnapshotText(): string {
+	return "{not json";
+}
+
+/** Return snapshot bytes that are not valid UTF-8. */
+export function makeInvalidUtf8SnapshotBytes(): Buffer {
+	return Buffer.from([0xff, 0xfe, 0x00]);
+}
+
 /** Build a snapshot with one selected artifact body replaced. */
 export function makeSnapshotWithArtifactContent(
 	surface: string,
@@ -231,13 +285,30 @@ export function makeInvalidPathSnapshot(path: string): Snapshot {
 export const FIXTURE_HEAD_SHA = HEAD_SHA;
 
 /**
+ * Decode the supplied documents and run the scan operation.
+ *
+ * Snapshot decoding keeps its documented precedence over policy decoding, and the operation
+ * applies the typed business rules, so the combined result matches the command line.
+ */
+export function scanDecision(
+	snapshotValue: unknown,
+	policyValue: unknown,
+): ScanResult | PolicyValidationError | SnapshotValidationError {
+	const snapshot = decodeSnapshot(snapshotValue);
+	if (snapshot instanceof SnapshotValidationError) return snapshot;
+	const policy = decodePolicy(policyValue);
+	if (policy instanceof PolicyValidationError) return policy;
+	return new ScanAttribution().execute({ snapshot, policy });
+}
+
+/**
  * Run the scan operation over one snapshot value and one policy value.
  *
  * The operation reports a rejected input as a typed business error, so a case
  * that expects a scan result fails loudly instead of asserting on the error.
  */
 export function scanAttribution(snapshotValue: unknown, policyValue: unknown): ScanResult {
-	const result = new ScanAttribution().execute({ snapshotValue, policyValue });
+	const result = scanDecision(snapshotValue, policyValue);
 	if (result instanceof PolicyValidationError || result instanceof SnapshotValidationError) {
 		throw new Error(`expected a scan result, received ${result.code}: ${result.message}`);
 	}

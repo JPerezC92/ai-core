@@ -1,133 +1,100 @@
-/** Typed review inputs, successful bodies, and returned business failures. */
+/** Typed publication records and the business failures they can carry. */
 
-export interface ReviewMetadata {
-	readonly number: number;
-	readonly headRefOid: string;
-	readonly baseRefName: string;
-	readonly headRefName: string;
-	readonly state: string;
-	readonly title: string;
-	readonly body: string;
+/** An observed result for one test-plan item. */
+export interface TestEvidence {
+	readonly action: string;
+	readonly result: string;
+	readonly executor: string;
 }
 
-export const METADATA_FIELDS = [
-	"number",
-	"headRefOid",
-	"baseRefName",
-	"headRefName",
-	"state",
-	"title",
-	"body",
-] as const;
-
-/** A stable rejection code and explanation returned as a value. */
-export interface ReviewPreparationError {
-	readonly code: string;
-	readonly message: string;
-}
-
-export interface Finding {
-	readonly id: string;
-	readonly severity: string;
-	readonly status: string;
-	readonly evidence: string;
-	readonly resolution: string;
-}
-
-/** Supplied provenance, never independently authenticated authority. */
-export interface DecisionEvidence {
-	readonly target: string;
+/**
+ * The provenance of one decision.
+ *
+ * A decision records a claim to verify; it never authenticates itself.
+ */
+export interface PublicationDecision {
 	readonly actor: string;
 	readonly date: string;
 	readonly statement: string;
 	readonly evidence: string;
+	readonly destination?: string;
+}
+
+export type TestStatus = "PENDING" | "PASSED" | "FAILED" | "NOT_APPLICABLE";
+
+/** One test-plan item and the explicit state its author recorded. */
+export interface TestPlanItem {
+	readonly text: string;
+	readonly status: TestStatus;
+	readonly evidence?: TestEvidence;
+	readonly decision?: PublicationDecision;
+}
+
+export type FindingSeverity = "BLOCK" | "ADVISORY";
+
+export type FindingStatus = "OPEN" | "IN PROGRESS" | "FIXED" | "DEFERRED" | "REJECTED";
+
+/** One review finding and the decisions that apply to it. */
+export interface PublicationFinding {
+	readonly id: string;
+	readonly severity: FindingSeverity;
+	readonly status: FindingStatus;
+	readonly evidence: string;
+	readonly resolution: string;
+	readonly acceptance?: PublicationDecision;
+	readonly deferral?: PublicationDecision;
+}
+
+/** An authorized follow-up that is not already a deferred finding. */
+export interface PublicationDebt extends PublicationDecision {
+	readonly target: string;
 	readonly destination: string;
 }
 
-/** Parsed decision records bound to supplied review metadata. */
-export interface ReviewDecisions {
-	readonly notApplicable: readonly DecisionEvidence[];
-	readonly acceptance: readonly DecisionEvidence[];
-	readonly debt: readonly DecisionEvidence[];
-	readonly authorizedUpdates: readonly AuthorizedUpdate[];
+export type VerdictKind = "PASS" | "ADVISORY" | "BLOCK";
+
+/** The review record of one pull request at one immutable head. */
+export interface ReviewRecord {
+	readonly prNumber: number;
+	readonly headSha: string;
+	readonly baseRef: string;
+	readonly findings: readonly PublicationFinding[];
+	readonly debt: readonly PublicationDebt[];
+	readonly verdict?: { readonly kind: VerdictKind; readonly basis: string };
 }
 
-/**
- * The scope of one user-authorized protected-section correction.
- *
- * This record is not proof of authorization: it carries the identifier of the user
- * instruction Herald must verify from its attributable source, and the tool uses it only
- * to bound which protected section may change. Herald verifies; the tool narrows.
- */
-export interface AuthorizedUpdate {
-	readonly section: string;
-	readonly instruction: string;
-	readonly source: string;
+/** The single structured publication input of one pull request. */
+export interface Publication {
+	readonly schemaVersion: 1;
+	readonly title: string;
+	readonly summary: readonly string[];
+	readonly breakingChanges?: { readonly description: string; readonly migration: string };
+	readonly testPlan: readonly TestPlanItem[];
+	readonly review?: ReviewRecord;
 }
 
-/** A structurally checked body; no claim about evidence truth. */
-export interface PreparedBody {
-	readonly body: string;
+/** A stable rejection code and explanation returned as a value. */
+export interface PublicationError {
+	readonly code: string;
+	readonly message: string;
 }
 
-export function reviewError(code: string, message: string): ReviewPreparationError {
+/** The receipt of one prepared publication artifact. */
+export interface PreparationReceipt {
+	readonly status: "prepared";
+	readonly title: string;
+}
+
+export function publicationError(code: string, message: string): PublicationError {
 	return { code, message };
 }
 
 /** Narrow a value to a returned business failure. */
-export function isReviewError(value: unknown): value is ReviewPreparationError {
+export function isPublicationError(value: unknown): value is PublicationError {
 	return (
 		typeof value === "object" &&
 		value !== null &&
-		typeof (value as ReviewPreparationError).code === "string" &&
-		typeof (value as ReviewPreparationError).message === "string"
+		typeof (value as PublicationError).code === "string" &&
+		typeof (value as PublicationError).message === "string"
 	);
-}
-
-function keysAre(record: Record<string, unknown>, expected: readonly string[]): boolean {
-	const keys = Object.keys(record);
-	return keys.length === expected.length && expected.every((field) => Object.hasOwn(record, field));
-}
-
-/** Validate decoded metadata without authenticating its external provenance. */
-export function parseMetadata(value: unknown): ReviewMetadata | ReviewPreparationError {
-	if (typeof value !== "object" || value === null || Array.isArray(value)) {
-		return reviewError("METADATA_INVALID", "metadata must be an object");
-	}
-	const record = value as Record<string, unknown>;
-	if (!keysAre(record, METADATA_FIELDS)) {
-		return reviewError(
-			"METADATA_INVALID",
-			`metadata must contain exactly the documented fields: ${METADATA_FIELDS.join(", ")}`,
-		);
-	}
-	if (typeof record.number !== "number" || !Number.isInteger(record.number) || record.number < 1) {
-		return reviewError("METADATA_INVALID", "positive PR number required");
-	}
-	for (const field of ["headRefOid", "baseRefName", "headRefName", "state", "title", "body"]) {
-		if (typeof record[field] !== "string") {
-			return reviewError("METADATA_INVALID", "metadata string fields required");
-		}
-	}
-	if (!/^[0-9a-fA-F]{7,64}$/.test(record.headRefOid as string)) {
-		return reviewError("METADATA_INVALID", "immutable head required");
-	}
-	const identity = ["baseRefName", "headRefName", "title"] as const;
-	if (record.state !== "OPEN" || identity.some((field) => (record[field] as string).trim() === "")) {
-		return reviewError("METADATA_INVALID", "open PR and nonempty identity required");
-	}
-	return {
-		number: record.number,
-		headRefOid: record.headRefOid as string,
-		baseRefName: record.baseRefName as string,
-		headRefName: record.headRefName as string,
-		state: record.state as string,
-		title: record.title as string,
-		body: record.body as string,
-	};
-}
-
-/** Compare two metadata records by the documented field set. */
-export function metadataMatches(left: ReviewMetadata, right: ReviewMetadata): boolean {
-	return METADATA_FIELDS.every((field) => left[field] === right[field]);
 }

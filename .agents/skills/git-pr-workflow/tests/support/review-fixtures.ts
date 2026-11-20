@@ -17,6 +17,12 @@ import { FIXTURE_HEAD_SHA, makeSyntheticPolicy } from "./attribution-fixtures.ts
 // objects for the workflow comparison and never re-declares their fields.
 export type Capture = Record<string, unknown>;
 
+/** The PR number every published metadata and review fixture carries. */
+const PUBLICATION_PR_NUMBER = 80;
+
+/** The title the creation-stage publication document carries. */
+const PUBLICATION_TITLE = "feat(review): prepare publication";
+
 /** The named defects an invalid inventory fixture may carry. */
 export type InventoryDefect = "missing" | "extra" | "duplicate";
 
@@ -47,7 +53,7 @@ export function createBody(overrides: { item?: string; head?: string } = {}): st
 /** Create owner-supplied metadata with explicit typed overrides. */
 export function createMetadata(options: { number?: number; head?: string; body?: string } = {}): Capture {
 	return {
-		number: options.number ?? 80,
+		number: options.number ?? PUBLICATION_PR_NUMBER,
 		headRefOid: options.head ?? FIXTURE_HEAD_SHA,
 		baseRefName: "main",
 		headRefName: "feat/release/body",
@@ -171,12 +177,6 @@ export function createCleanScanResult(): ScanResult {
 	};
 }
 
-/** Create an unchecked remote baseline before the canonical review join. */
-export function createInitialReviewBody(): string {
-	const prefix = createBody().split("## Test evidence", 1)[0] ?? "";
-	return prefix.replace(/- \[x\]/gu, "- [ ]").replace("No findings.", "No review findings yet.");
-}
-
 /** Reuse immutable content fixtures without requiring scanner artifact assembly. */
 export function createLocalInventory(): LocalInventory {
 	const snapshot = createSnapshot();
@@ -195,9 +195,84 @@ export function createLocalTitle(): string {
 	return "feat(release): prepare local review";
 }
 
-/** Build the local creation artifact, not a downloaded PR body. */
-export function createLocalDraft(): string {
-	return `Title: ${createLocalTitle()}\n\n---\n\n${createInitialReviewBody()}`;
+/** Create the prepared receipt a generated body is handed over with. */
+export function createPreparedReceipt(title: string): { readonly status: "prepared"; readonly title: string } {
+	return { status: "prepared", title };
+}
+
+/** Return the title the creation-stage publication document carries. */
+export function createPublicationTitle(): string {
+	return PUBLICATION_TITLE;
+}
+
+/**
+ * Create the creation-stage publication document the content skill generates a body from.
+ *
+ * The document belongs to the content skill's schema; this workflow builds it as an opaque
+ * input and never re-declares that schema.
+ */
+export function createCreationPublicationDocument(): Capture {
+	return {
+		schemaVersion: 1,
+		title: PUBLICATION_TITLE,
+		summary: ["Adds the review preparation commands."],
+		testPlan: [
+			{ text: "Run the focused suite", status: "PENDING" },
+			{ text: "Confirm the import map resolves", status: "PENDING" },
+		],
+	};
+}
+
+/**
+ * Create the review-stage publication document that completes a creation-stage document.
+ *
+ * Every scheduled item records its observed result, so the document carries the review records
+ * of one immutable head.
+ */
+export function createReviewPublicationDocument(creation: Capture = createCreationPublicationDocument()): Capture {
+	const testPlan = creation["testPlan"];
+	if (!Array.isArray(testPlan)) throw new Error("the creation document carries no test plan");
+	return {
+		...creation,
+		testPlan: testPlan.map((item) => ({
+			...(item as Capture),
+			status: "PASSED",
+			evidence: { action: "run", result: "passed", executor: "author" },
+		})),
+		review: {
+			prNumber: PUBLICATION_PR_NUMBER,
+			headSha: FIXTURE_HEAD_SHA,
+			baseRef: "main",
+			findings: [],
+			debt: [],
+			verdict: { kind: "PASS", basis: "Zero open findings; every required check is verified." },
+		},
+	};
+}
+
+/** Create a prepared receipt carrying a field the workflow must refuse. */
+export function createReceiptWithUndeclaredField(): string {
+	return JSON.stringify({ ...createPreparedReceipt("t"), bodySha256: "f".repeat(64) });
+}
+
+/** Create a path inventory that differs from the exact diff inventory. */
+export function createUnexactPathInventory(): string[] {
+	return ["src/unlisted-path"];
+}
+
+/** Return text that cannot be decoded as a publication document. */
+export function createUndecodablePublicationText(): string {
+	return "not json";
+}
+
+/**
+ * Build the generated artifact handoff this workflow consumes.
+ *
+ * The receipt carries exactly a prepared status and the generated title; it holds no byte
+ * identity of the input, the body or any earlier publication.
+ */
+export function createPublicationHandoff(): { receipt: string; body: string } {
+	return { receipt: JSON.stringify(createPreparedReceipt(createLocalTitle())), body: createBody() };
 }
 
 /** Build expected scanner input from local authored title and working body. */

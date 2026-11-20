@@ -1,25 +1,23 @@
-/** Collect local Git inventory and delegate assembly to the existing snapshot operation. */
+/** Collect the local Git inventory and the exact paths the commit range changed. */
 
-import type { Artifact, ChangedFile, Snapshot } from "#scripts/attribution_scan/domain/records.ts";
+import type { Artifact, ChangedFile } from "#scripts/attribution_scan/domain/records.ts";
 import type { GitInventoryPort } from "#scripts/pr_review/domain/ports.ts";
 import { ReviewPreparationError } from "#scripts/pr_review/domain/records.ts";
-import type { LocalInventory } from "#scripts/pr_review/domain/records.ts";
-import { PrepareLocalSnapshot } from "./prepare_local_snapshot.ts";
+import type { CollectedInventory, LocalInventory } from "#scripts/pr_review/domain/records.ts";
+import { requireValidLocalInventory } from "#scripts/pr_review/domain/snapshot_assembly.ts";
 
 /** The revision the local snapshot reads its head commit from. */
 const HEAD_REVISION = "HEAD";
 
 export class CollectLocalInventory {
 	private readonly reader: GitInventoryPort;
-	private readonly preparer: PrepareLocalSnapshot;
 
-	constructor(reader: GitInventoryPort, preparer: PrepareLocalSnapshot) {
+	constructor(reader: GitInventoryPort) {
 		this.reader = reader;
-		this.preparer = preparer;
 	}
 
-	/** Assemble the local snapshot from local prose and read-only Git inventory. */
-	execute(prNumber: number, base: string, draft: string, body: string): Snapshot | ReviewPreparationError {
+	/** Collect the immutable local inventory without assembling scanner artifacts. */
+	execute(prNumber: number, base: string): CollectedInventory | ReviewPreparationError {
 		const head = this.reader.resolveCommit(HEAD_REVISION);
 		if (head === null) {
 			return new ReviewPreparationError("GIT_REVISION_UNRESOLVED", "HEAD must resolve to a commit");
@@ -70,6 +68,8 @@ export class CollectLocalInventory {
 			commit_messages: commitMessages,
 			changed_files: changedFiles,
 		};
-		return this.preparer.execute(draft, body, inventory, [...paths]);
+		const failure = requireValidLocalInventory(inventory);
+		if (failure !== undefined) return failure;
+		return { inventory, paths: [...paths] };
 	}
 }
