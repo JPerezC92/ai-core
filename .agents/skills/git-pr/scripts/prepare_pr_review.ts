@@ -1,72 +1,59 @@
-/** Compose PR review content preparation commands from local files. */
+/** Prepare one pull-request publication body and its receipt from a JSON publication input. */
 
 import { basename } from "node:path";
 
-import { InitializeWorkingBody } from "#scripts/pr_content/application/initialize_working_body.ts";
-import { execute as validate } from "#scripts/pr_content/application/validate_final_body.ts";
-import { createText, readText } from "#scripts/pr_content/infrastructure/filesystem.ts";
+import { PreparePublication } from "#scripts/pr_content/application/prepare_publication.ts";
+import { isPublicationError } from "#scripts/pr_content/domain/records.ts";
+import { renderPublication } from "#scripts/pr_content/domain/rendering.ts";
+import { encodePreparationReceipt } from "#scripts/pr_content/infrastructure/adapters/prepared_receipt.ts";
+import {
+	createArtifact,
+	readPublicationInput,
+	reserveArtifact,
+} from "#scripts/pr_content/infrastructure/filesystem.ts";
 
-interface Command {
-	readonly kind: "initialize" | "validate";
-	readonly draft: string | null;
-	readonly baseline: string | null;
-	readonly current: string | null;
-	readonly workingBody: string;
-	readonly decisions: string | null;
+interface Options {
+	readonly input: string;
+	readonly output: string;
 }
 
-type ParseResult = { readonly ok: true; readonly command: Command } | { readonly ok: false; readonly message: string };
+type ParseResult =
+	| { readonly ok: true; readonly help: true }
+	| { readonly ok: true; readonly help: false; readonly options: Options }
+	| { readonly ok: false; readonly message: string };
 
-/** Serialize the payload with the reference's spaced JSON separators. */
+/** Serialize the payload with the documented spaced JSON separators. */
 function spacedJsonObject(entries: ReadonlyArray<readonly [string, string]>): string {
 	const body = entries.map(([key, value]) => `${JSON.stringify(key)}: ${JSON.stringify(value)}`).join(", ");
 	return `{${body}}`;
 }
 
 function usage(program: string): string {
-	return `usage: ${program} [-h] {initialize,validate} ...`;
+	return `usage: ${program} [-h] --input <publication.json> --output <body.md>`;
 }
 
 function parseCli(args: readonly string[]): ParseResult {
-	if (args.length === 0) return { ok: false, message: "the following arguments are required: command" };
-	const [command, ...rest] = args;
-	if (command !== "initialize" && command !== "validate") {
-		return {
-			ok: false,
-			message: `argument command: invalid choice: '${command}' (choose from 'initialize', 'validate')`,
-		};
-	}
-
 	const values = new Map<string, string>();
-	for (let index = 0; index < rest.length; index++) {
-		const arg = rest[index]!;
+	for (let index = 0; index < args.length; index += 1) {
+		const arg = args[index]!;
+		if (arg === "-h" || arg === "--help") return { ok: true, help: true };
 		if (!arg.startsWith("--")) return { ok: false, message: `unrecognized arguments: ${arg}` };
-		const value = rest[index + 1];
+		const value = args[index + 1];
 		if (value === undefined) return { ok: false, message: `argument ${arg}: expected one argument` };
 		values.set(arg.slice(2), value);
 		index += 1;
 	}
-
-	const required = command === "initialize" ? ["draft", "working-body"] : ["baseline", "current", "working-body"];
-	for (const field of required) {
+	for (const field of ["input", "output"]) {
 		if (!values.has(field)) return { ok: false, message: `the following arguments are required: --${field}` };
 	}
 	for (const field of values.keys()) {
-		if (![...required, "decisions"].includes(field)) {
+		if (field !== "input" && field !== "output")
 			return { ok: false, message: `unrecognized arguments: --${field}` };
-		}
 	}
-
 	return {
 		ok: true,
-		command: {
-			kind: command,
-			draft: values.get("draft") ?? null,
-			baseline: values.get("baseline") ?? null,
-			current: values.get("current") ?? null,
-			workingBody: values.get("working-body")!,
-			decisions: values.get("decisions") ?? null,
-		},
+		help: false,
+		options: { input: values.get("input")!, output: values.get("output")! },
 	};
 }
 
@@ -77,45 +64,34 @@ export function main(argv: readonly string[], program = "prepare_pr_review.ts"):
 		process.stderr.write(`${usage(program)}\n${basename(program)}: error: ${parsed.message}\n`);
 		return 2;
 	}
+	if (parsed.help) {
+		process.stdout.write(`${usage(program)}\n`);
+		return 0;
+	}
 
 	try {
-		const command = parsed.command;
-		if (command.kind === "initialize") {
-			const outcome = new InitializeWorkingBody(readText, createText).execute({
-				draftPath: command.draft!,
-				workingBodyPath: command.workingBody,
-			});
-			if ("code" in outcome) {
-				process.stdout.write(
-					`${spacedJsonObject([
-						["code", outcome.code],
-						["message", outcome.message],
-					])}\n`,
-				);
-				return 1;
-			}
-		} else {
-			const baseline: unknown = JSON.parse(readText(command.baseline!));
-			const current: unknown = JSON.parse(readText(command.current!));
-			const candidate = readText(command.workingBody);
-			const decisions: unknown = command.decisions === null ? null : JSON.parse(readText(command.decisions));
-			const outcome = validate({ baseline, current, body: candidate, decisions });
-			if ("code" in outcome) {
-				process.stdout.write(
-					`${spacedJsonObject([
-						["code", outcome.code],
-						["message", outcome.message],
-					])}\n`,
-				);
-				return 1;
-			}
+		const options = parsed.options;
+		const result = new PreparePublication(
+			readPublicationInput,
+			createArtifact,
+			reserveArtifact,
+			renderPublication,
+			encodePreparationReceipt,
+		).execute({
+			inputPath: options.input,
+			bodyPath: options.output,
+			receiptPath: `${options.output}.receipt.json`,
+		});
+		if (isPublicationError(result)) {
+			process.stdout.write(
+				`${spacedJsonObject([
+					["code", result.code],
+					["message", result.message],
+				])}\n`,
+			);
+			return 1;
 		}
-		process.stdout.write(
-			`${spacedJsonObject([
-				["status", "prepared"],
-				["command", command.kind],
-			])}\n`,
-		);
+		process.stdout.write(encodePreparationReceipt(result));
 		return 0;
 	} catch (error) {
 		process.stderr.write(`input/output failure: ${(error as Error).message}\n`);

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { AssembleReviewSnapshot } from "#scripts/pr_review/application/assemble_review_snapshot.ts";
 import { ReviewPreparationError } from "#scripts/pr_review/domain/records.ts";
+import { decodeExactPaths } from "#scripts/pr_review/infrastructure/adapters/snapshot_assembly.ts";
 import {
 	createInvalidInventory,
 	createNonStringPathList,
@@ -9,7 +10,7 @@ import {
 	createSnapshotWithoutCommits,
 } from "#tests/support/review-fixtures.ts";
 
-describe("AssembleReviewSnapshot.execute", () => {
+describe("assembling the review snapshot", () => {
 	it("preserves the deleted path of a complete snapshot", () => {
 		const collected = createSnapshot();
 
@@ -35,7 +36,7 @@ describe("AssembleReviewSnapshot.execute", () => {
 	});
 
 	it("rejects a path inventory that is not a string list", () => {
-		const result = new AssembleReviewSnapshot().execute(createSnapshot(), createNonStringPathList());
+		const result = decodeExactPaths(createNonStringPathList());
 
 		expect(result).toBeInstanceOf(ReviewPreparationError);
 		expect(result).toMatchObject({

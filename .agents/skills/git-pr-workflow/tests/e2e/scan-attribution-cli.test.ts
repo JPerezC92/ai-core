@@ -11,50 +11,18 @@ import {
 	makeAttributionLine,
 	makeChangedFile,
 	makeChangedFiles,
+	makeCleanScanOutput,
 	makeCompleteSnapshot,
 	makeFloatSchemaSnapshotText,
+	makeInvalidUtf8SnapshotBytes,
 	makeMalformedSnapshot,
+	makeMatchedScanOutput,
 	makeSnapshotWithArtifactContent,
+	makeUndecodableSnapshotText,
 } from "#tests/support/attribution-fixtures.ts";
 
 const skillRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const entryPoint = join(skillRoot, "scripts", "scan_attribution.ts");
-
-/** The head object id the approved policy fixtures carry. */
-const HEAD_SHA = "a".repeat(40);
-
-/** The scan output of a complete snapshot that carries no attribution line. */
-const CLEAN_SCAN_OUTPUT = [
-	"{",
-	'  "base": "origin/main",',
-	'  "exclusions": [],',
-	`  "head_sha": "${HEAD_SHA}",`,
-	'  "matches": [],',
-	'  "pr_number": 80',
-	"}",
-	"",
-].join("\n");
-
-/** The scan output of a snapshot whose title carries the first approved marker and identity. */
-const MATCHED_SCAN_OUTPUT = [
-	"{",
-	'  "base": "origin/main",',
-	'  "exclusions": [],',
-	`  "head_sha": "${HEAD_SHA}",`,
-	'  "matches": [',
-	"    {",
-	'      "identity": "OpenAI",',
-	'      "line": 1,',
-	'      "marker": "Co-authored-by:",',
-	'      "path": null,',
-	'      "source": "PR #80 title",',
-	'      "surface": "pr-title"',
-	"    }",
-	"  ],",
-	'  "pr_number": 80',
-	"}",
-	"",
-].join("\n");
 
 const temporaryDirectories: string[] = [];
 
@@ -104,7 +72,7 @@ describe("scan_attribution as a spawned process", () => {
 		const run = runCli(["--policy", policyPath, "--snapshot", snapshotPath], directory);
 
 		expect(run.status).toBe(0);
-		expect(run.stdout).toBe(CLEAN_SCAN_OUTPUT);
+		expect(run.stdout).toBe(makeCleanScanOutput());
 		expect(run.stderr).toBe("");
 	});
 
@@ -112,13 +80,14 @@ describe("scan_attribution as a spawned process", () => {
 		const directory = makeDirectory();
 		const policyPath = join(directory, "policy.json");
 		const snapshotPath = join(directory, "snapshot.json");
+		const snapshot = makeCompleteSnapshot();
 		writeFileSync(policyPath, JSON.stringify(loadApprovedPolicy()), "utf8");
-		writeFileSync(snapshotPath, JSON.stringify(makeCompleteSnapshot()), "utf8");
+		writeFileSync(snapshotPath, JSON.stringify(snapshot), "utf8");
 
 		const run = runCli(["--policy", policyPath, "--snapshot", snapshotPath], directory);
 
 		expect(run.status).toBe(0);
-		expect(run.stdout).toBe(CLEAN_SCAN_OUTPUT);
+		expect(run.stdout).toBe(makeCleanScanOutput(snapshot));
 		expect(run.stderr).toBe("");
 	});
 
@@ -127,23 +96,18 @@ describe("scan_attribution as a spawned process", () => {
 		const policy = loadApprovedPolicy();
 		const policyPath = join(directory, "policy.json");
 		const snapshotPath = join(directory, "snapshot.json");
-		writeFileSync(policyPath, JSON.stringify(policy), "utf8");
-		writeFileSync(
-			snapshotPath,
-			JSON.stringify(
-				makeSnapshotWithArtifactContent(
-					"pr-title",
-					makeAttributionLine(policy),
-					makeChangedFiles(makeChangedFile()),
-				),
-			),
-			"utf8",
+		const snapshot = makeSnapshotWithArtifactContent(
+			"pr-title",
+			makeAttributionLine(policy),
+			makeChangedFiles(makeChangedFile()),
 		);
+		writeFileSync(policyPath, JSON.stringify(policy), "utf8");
+		writeFileSync(snapshotPath, JSON.stringify(snapshot), "utf8");
 
 		const run = runCli(["--policy", policyPath, "--snapshot", snapshotPath], directory);
 
 		expect(run.status).toBe(1);
-		expect(run.stdout).toBe(MATCHED_SCAN_OUTPUT);
+		expect(run.stdout).toBe(makeMatchedScanOutput(policy, snapshot));
 		expect(run.stderr).toBe("");
 	});
 
@@ -178,7 +142,7 @@ describe("scan_attribution as a spawned process", () => {
 		const policyPath = join(directory, "policy.json");
 		const snapshotPath = join(directory, "snapshot.json");
 		writeFileSync(policyPath, JSON.stringify(loadApprovedPolicy()), "utf8");
-		writeFileSync(snapshotPath, Buffer.from([0xff, 0xfe, 0x00]));
+		writeFileSync(snapshotPath, makeInvalidUtf8SnapshotBytes());
 
 		const run = runCli(["--policy", policyPath, "--snapshot", snapshotPath], directory);
 
@@ -192,7 +156,7 @@ describe("scan_attribution as a spawned process", () => {
 		const policyPath = join(directory, "policy.json");
 		const snapshotPath = join(directory, "snapshot.json");
 		writeFileSync(policyPath, JSON.stringify(loadApprovedPolicy()), "utf8");
-		writeFileSync(snapshotPath, "{not json", "utf8");
+		writeFileSync(snapshotPath, makeUndecodableSnapshotText(), "utf8");
 
 		const run = runCli(["--policy", policyPath, "--snapshot", snapshotPath], directory);
 

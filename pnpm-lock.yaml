@@ -177,6 +177,10 @@ importers:
         version: 7.0.2007
 
   .agents/skills/git-pr:
+    dependencies:
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
     devDependencies:
       '@types/node':
         specifier: 24.19.2
@@ -192,6 +196,10 @@ importers:
         version: 5.1.0(@types/node@24.19.2)(vite@8.3.8(@types/node@24.19.2)(yaml@2.9.1))
 
   .agents/skills/git-pr-workflow:
+    dependencies:
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
     devDependencies:
       '@types/node':
         specifier: 24.19.2
@@ -963,6 +971,9 @@ packages:
     engines: {node: '>= 14.6'}
     hasBin: true
 
+  zod@4.6.7:
+    resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
+
 snapshots:
 
   '@biomejs/biome@2.6.8':
@@ -1408,3 +1419,5 @@ snapshots:
   why-is-node-running@3.2.1: {}
 
   yaml@2.9.1: {}
+
+  zod@4.6.7: {}

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { VerifyPersistedBody } from "#scripts/pr_review/application/verify_persisted_body.ts";
 import { PreparedBody, ReviewPreparationError } from "#scripts/pr_review/domain/records.ts";
+import { decodeCapture } from "#scripts/pr_review/infrastructure/adapters/pr_capture.ts";
 import {
 	createBody,
 	createDivergence,
@@ -8,9 +9,13 @@ import {
 	createMetadataWithUndeclaredKey,
 } from "#tests/support/review-fixtures.ts";
 
-/** Run the verification operation over one capture pair. */
+/** Decode one supplied capture pair and run the verification operation over it. */
 function verify(expected: unknown, persisted: unknown, body = createBody()): unknown {
-	return new VerifyPersistedBody().execute(expected, persisted, body);
+	const baseline = decodeCapture(expected);
+	if (baseline instanceof ReviewPreparationError) return baseline;
+	const current = decodeCapture(persisted);
+	if (current instanceof ReviewPreparationError) return current;
+	return new VerifyPersistedBody().execute(baseline, current, body);
 }
 
 describe("VerifyPersistedBody.execute", () => {

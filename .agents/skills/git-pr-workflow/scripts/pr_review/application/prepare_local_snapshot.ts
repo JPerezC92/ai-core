@@ -1,35 +1,37 @@
-/** Prepare scanner input using local authored title/body and supplied immutable data. */
+/** Prepare scanner input from the generated title, the working body and the immutable inventory. */
 
 import type { Snapshot } from "#scripts/attribution_scan/domain/records.ts";
 import { ReviewPreparationError } from "#scripts/pr_review/domain/records.ts";
-import {
-	assembleSnapshot,
-	extractDraftTitle,
-	validateLocalInventory,
-} from "#scripts/pr_review/domain/snapshot_assembly.ts";
+import type { LocalInventory } from "#scripts/pr_review/domain/records.ts";
+import { requireCompleteSnapshot, requireExactPaths } from "#scripts/pr_review/domain/snapshot_assembly.ts";
 
 export class PrepareLocalSnapshot {
 	/** Assemble local artifacts without fetching remote prose or collecting Git state. */
-	execute(draft: string, body: string, inventory: unknown, exactPaths: unknown): Snapshot | ReviewPreparationError {
-		const title = extractDraftTitle(draft);
-		if (title instanceof ReviewPreparationError) return title;
-		const validated = validateLocalInventory(inventory);
-		if (validated instanceof ReviewPreparationError) return validated;
-		if (typeof body !== "string") {
-			return new ReviewPreparationError("SNAPSHOT_INVALID", "local working body must be text");
-		}
-		const candidate = {
-			schema: validated.schema,
-			pr_number: validated.pr_number,
-			head_sha: validated.head_sha,
-			base: validated.base,
+	execute(
+		title: string,
+		body: string,
+		inventory: LocalInventory,
+		exactPaths: readonly string[],
+	): Snapshot | ReviewPreparationError {
+		const candidate: Snapshot = {
+			schema: inventory.schema,
+			pr_number: inventory.pr_number,
+			head_sha: inventory.head_sha,
+			base: inventory.base,
 			artifacts: [
-				{ surface: "pr-title", source: `PR #${validated.pr_number} title`, content: title },
-				{ surface: "pr-body", source: `PR #${validated.pr_number} body`, content: body },
-				...validated.commit_messages,
+				{ surface: "pr-title", source: `PR #${inventory.pr_number} title`, content: title },
+				{ surface: "pr-body", source: `PR #${inventory.pr_number} body`, content: body },
+				...inventory.commit_messages,
 			],
-			changed_files: validated.changed_files,
+			changed_files: inventory.changed_files,
 		};
-		return assembleSnapshot(candidate, exactPaths);
+		const invalid = requireCompleteSnapshot(candidate);
+		if (invalid !== undefined) return invalid;
+		const mismatch = requireExactPaths(
+			candidate.changed_files.map((entry) => entry.path),
+			exactPaths,
+		);
+		if (mismatch !== undefined) return mismatch;
+		return candidate;
 	}
 }

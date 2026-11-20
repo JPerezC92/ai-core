@@ -2,6 +2,7 @@
 
 import { ScanAttribution } from "#scripts/attribution_scan/application/scan_attribution.ts";
 import { PolicyValidationError, SnapshotValidationError } from "#scripts/attribution_scan/domain/records.ts";
+import { decodePolicy, decodeSnapshot } from "#scripts/attribution_scan/infrastructure/adapters/snapshot_document.ts";
 import { compactJson, isDirectExecution, printError, printOut } from "#scripts/cli_delivery.ts";
 import { readFileSync } from "node:fs";
 
@@ -124,7 +125,18 @@ export function main(argv: readonly string[]): number {
 		printOut(`${compactJson({ error: "input is not valid JSON" })}\n`);
 		return 2;
 	}
-	const result = new ScanAttribution().execute({ snapshotValue, policyValue });
+	const scan = new ScanAttribution();
+	const snapshot = decodeSnapshot(snapshotValue);
+	if (snapshot instanceof SnapshotValidationError) {
+		printOut(`${compactJson({ error: snapshot.message })}\n`);
+		return 2;
+	}
+	const policy = decodePolicy(policyValue);
+	if (policy instanceof PolicyValidationError) {
+		printOut(`${compactJson({ error: policy.message })}\n`);
+		return 2;
+	}
+	const result = scan.execute({ snapshot, policy });
 	if (result instanceof PolicyValidationError || result instanceof SnapshotValidationError) {
 		printOut(`${compactJson({ error: result.message })}\n`);
 		return 2;

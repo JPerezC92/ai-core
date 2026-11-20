@@ -1,45 +1,36 @@
-/** The local inventory contract the snapshot preparation operation applies. */
+/** The local inventory contract the preparation mapping applies. */
 
 import { describe, expect, it } from "vitest";
-import { PrepareLocalSnapshot } from "#scripts/pr_review/application/prepare_local_snapshot.ts";
 import { ReviewPreparationError } from "#scripts/pr_review/domain/records.ts";
+import { decodeLocalInventory } from "#scripts/pr_review/infrastructure/adapters/snapshot_assembly.ts";
 import {
 	createAlternateLocalInventory,
-	createAlternateLocalPaths,
-	createBody,
-	createLocalDraft,
+	createLocalInventory,
 	createLocalInventoryWithForeignCommitSurface,
-	createPaths,
 } from "#tests/support/review-fixtures.ts";
 
-describe("PrepareLocalSnapshot.execute over the local inventory input", () => {
+describe("validating the local immutable inventory", () => {
 	it("accepts the exact immutable inventory field set", () => {
 		const inventory = createAlternateLocalInventory();
 
-		const result = new PrepareLocalSnapshot().execute(
-			createLocalDraft(),
-			createBody(),
-			inventory,
-			createAlternateLocalPaths(),
-		);
+		const result = decodeLocalInventory(inventory);
 
 		expect(result).not.toBeInstanceOf(ReviewPreparationError);
-		expect(result).toMatchObject({
-			schema: inventory.schema,
-			pr_number: inventory.pr_number,
-			head_sha: inventory.head_sha,
-			base: inventory.base,
-			changed_files: inventory.changed_files,
-		});
+		expect(result).toEqual(inventory);
 	});
 
 	it("rejects a commit artifact that is not a commit message", () => {
-		const result = new PrepareLocalSnapshot().execute(
-			createLocalDraft(),
-			createBody(),
-			createLocalInventoryWithForeignCommitSurface(),
-			createPaths(),
-		);
+		const result = decodeLocalInventory(createLocalInventoryWithForeignCommitSurface());
+
+		expect(result).toBeInstanceOf(ReviewPreparationError);
+		expect(result).toMatchObject({
+			code: "SNAPSHOT_INVALID",
+			message: "local immutable inventory required",
+		});
+	});
+
+	it("rejects an inventory that carries a field outside the documented set", () => {
+		const result = decodeLocalInventory({ ...createLocalInventory(), extra: true });
 
 		expect(result).toBeInstanceOf(ReviewPreparationError);
 		expect(result).toMatchObject({

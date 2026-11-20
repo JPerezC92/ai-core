@@ -1,15 +1,24 @@
-/** The distributed skill must run from an isolated copy with no development package. */
+/** The distributed skill must run from an isolated copy with only its runtime dependency. */
 
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+	cpSync,
+	existsSync,
+	mkdirSync,
+	mkdtempSync,
+	readdirSync,
+	readFileSync,
+	realpathSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import { loadApprovedPolicy, makeCompleteSnapshot } from "#tests/support/attribution-fixtures.ts";
 import {
-	createBody,
-	createLocalDraft,
+	createPublicationHandoff,
 	createLocalInventory,
 	createLocalSnapshot,
 	createPaths,
@@ -27,18 +36,24 @@ const runtimeFiles = [
 	"scripts/pr_review/application/collect_local_inventory.ts",
 	"scripts/pr_review/application/prepare_local_snapshot.ts",
 	"scripts/pr_review/application/verify_persisted_body.ts",
+	"scripts/pr_review/infrastructure/adapters/pr_capture.ts",
+	"scripts/pr_review/infrastructure/adapters/prepared_receipt.ts",
+	"scripts/pr_review/infrastructure/adapters/snapshot_assembly.ts",
 	"scripts/pr_review/infrastructure/filesystem.ts",
 	"scripts/pr_review/infrastructure/git_reader.ts",
 	"scripts/attribution_scan/domain/records.ts",
 	"scripts/attribution_scan/domain/validation.ts",
 	"scripts/attribution_scan/domain/matching.ts",
 	"scripts/attribution_scan/application/scan_attribution.ts",
+	"scripts/attribution_scan/infrastructure/adapters/snapshot_document.ts",
 ];
 /** The copy carries the runtime modules and the ESM boundary that makes them modules. */
 const copyFiles = ["package.json", ...runtimeFiles];
+/** The only runtime package the distributed skill declares. */
+const runtimeDependency = "zod";
 const temporaryDirectories: string[] = [];
 
-function createEnvironment(): { runtime: string; fixtures: string } {
+function createEnvironment(): { runtime: string; fixtures: string; modules: string } {
 	const root = mkdtempSync(join(tmpdir(), "git-pr-workflow-isolated-e2e-"));
 	temporaryDirectories.push(root);
 	const runtime = join(root, "isolated-skill");
@@ -48,8 +63,14 @@ function createEnvironment(): { runtime: string; fixtures: string } {
 		mkdirSync(dirname(destination), { recursive: true });
 		cpSync(join(skillRoot, file), destination);
 	}
+	const modules = join(runtime, "node_modules");
+	mkdirSync(modules, { recursive: true });
+	cpSync(realpathSync(join(skillRoot, "node_modules", runtimeDependency)), join(modules, runtimeDependency), {
+		recursive: true,
+		dereference: true,
+	});
 	mkdirSync(fixtures, { recursive: true });
-	return { runtime, fixtures };
+	return { runtime, fixtures, modules };
 }
 
 /** Runs the copied entry point with the environment's Node binary and no dependency paths. */
@@ -71,8 +92,8 @@ afterEach(() => {
 });
 
 describe("the distributed skill in an isolated source-only copy", () => {
-	it("scans a snapshot with no development package present", () => {
-		const { runtime, fixtures } = createEnvironment();
+	it("scans a snapshot with only its provisioned runtime dependency present", () => {
+		const { runtime, fixtures, modules } = createEnvironment();
 		const policyPath = join(fixtures, "policy.json");
 		const snapshotPath = join(fixtures, "snapshot.json");
 		writeFileSync(policyPath, JSON.stringify(loadApprovedPolicy()), "utf8");
@@ -89,30 +110,33 @@ describe("the distributed skill in an isolated source-only copy", () => {
 		expect(run.status).toBe(0);
 		expect(JSON.parse(String(run.stdout))).toMatchObject({ matches: [], exclusions: [] });
 		expect(String(run.stderr)).toBe("");
-		expect(readdirSync(runtime).sort()).toEqual(["package.json", "scripts"]);
-		expect(existsSync(join(runtime, "node_modules"))).toBe(false);
+		expect(readdirSync(runtime).sort()).toEqual(["node_modules", "package.json", "scripts"]);
+		expect(readdirSync(modules)).toEqual([runtimeDependency]);
+		expect(existsSync(join(modules, "vitest"))).toBe(false);
+		expect(existsSync(join(modules, "typescript"))).toBe(false);
 		expect(existsSync(join(runtime, "cli", "aicore"))).toBe(false);
 	});
 
-	it("prepares a snapshot with the evidence entry point and no development package present", () => {
+	it("prepares a snapshot with the evidence entry point and only its runtime dependency", () => {
 		const { runtime, fixtures } = createEnvironment();
-		const draft = join(fixtures, "pr-draft.md");
+		const handoff = createPublicationHandoff();
+		const receipt = join(fixtures, "receipt.json");
 		const body = join(fixtures, "pr-working-body.md");
 		const inventory = join(fixtures, "inventory.json");
 		const paths = join(fixtures, "paths.json");
 		const output = join(fixtures, "snapshot.json");
-		writeFileSync(draft, createLocalDraft(), "utf8");
-		writeFileSync(body, createBody(), "utf8");
+		writeFileSync(receipt, handoff.receipt, "utf8");
+		writeFileSync(body, handoff.body, "utf8");
 		writeFileSync(inventory, JSON.stringify(createLocalInventory()), "utf8");
 		writeFileSync(paths, JSON.stringify(createPaths()), "utf8");
 
 		const run = runIsolatedNode(runtime, "prepare_pr_evidence.ts", [
 			"prepare-snapshot",
-			"--draft",
-			draft,
-			"--working-body",
+			"--receipt",
+			receipt,
+			"--body",
 			body,
-			"--input",
+			"--inventory",
 			inventory,
 			"--paths",
 			paths,

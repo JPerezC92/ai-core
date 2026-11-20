@@ -3,16 +3,16 @@ import { PrepareLocalSnapshot } from "#scripts/pr_review/application/prepare_loc
 import { ReviewPreparationError } from "#scripts/pr_review/domain/records.ts";
 import {
 	createBody,
-	createLocalDraft,
 	createLocalInventory,
 	createLocalSnapshot,
+	createLocalTitle,
 	createPaths,
 } from "#tests/support/review-fixtures.ts";
 
 describe("PrepareLocalSnapshot.execute", () => {
-	it("assembles the local title and working body over the supplied immutable content", () => {
+	it("assembles the generated title and body over the supplied immutable content", () => {
 		const result = new PrepareLocalSnapshot().execute(
-			createLocalDraft(),
+			createLocalTitle(),
 			createBody(),
 			createLocalInventory(),
 			createPaths(),
@@ -21,23 +21,8 @@ describe("PrepareLocalSnapshot.execute", () => {
 		expect(result).toEqual(createLocalSnapshot());
 	});
 
-	it("rejects a creation draft that carries no Title line", () => {
-		const result = new PrepareLocalSnapshot().execute(
-			"no title here\n",
-			"## Summary\n",
-			createLocalInventory(),
-			createPaths(),
-		);
-
-		expect(result).toBeInstanceOf(ReviewPreparationError);
-		expect(result).toMatchObject({
-			code: "DRAFT_INVALID",
-			message: "creation draft must begin with a Title: line",
-		});
-	});
-
 	it("rejects a path inventory that is not the exact diff inventory", () => {
-		const result = new PrepareLocalSnapshot().execute(createLocalDraft(), createBody(), createLocalInventory(), [
+		const result = new PrepareLocalSnapshot().execute(createLocalTitle(), createBody(), createLocalInventory(), [
 			"src/unlisted-path",
 		]);
 
@@ -45,18 +30,6 @@ describe("PrepareLocalSnapshot.execute", () => {
 		expect(result).toMatchObject({
 			code: "SNAPSHOT_PATHS_MISMATCH",
 			message: "snapshot paths must equal the exact diff inventory",
-		});
-	});
-
-	it("rejects an inventory that carries a field outside the documented set", () => {
-		const inventory = { ...createLocalInventory(), extra: true };
-
-		const result = new PrepareLocalSnapshot().execute(createLocalDraft(), "## Summary\n", inventory, createPaths());
-
-		expect(result).toBeInstanceOf(ReviewPreparationError);
-		expect(result).toMatchObject({
-			code: "SNAPSHOT_INVALID",
-			message: "local immutable inventory required",
 		});
 	});
 });
