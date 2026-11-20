@@ -13,3 +13,4 @@ The boundary between what a role's runtime says it must do and what the harness 
 - [x] R5 — Pull-request merge stays outside every agent's reach, by any mechanism including the hosting API and browser automation.
 - [x] R6 — An operation a role is not granted is satisfied by routing it to the role that owns it or by a user decision, never by widening the requester's command set.
 - [x] R7 — A granted or denied command is established by observed harness behaviour, never by reading the configuration that is supposed to produce it.
+- [x] R8 — A change to a role's permission rules or to a runtime's declared mandatory commands reaches the permission owner's static comparison, which reports each mandatory command as denied, role-scoped, reachable only through an inherited or global permission, or unverified, keeps an unresolved item as a finding that cannot support a clean verdict, and never stands in for an observed runtime result.
