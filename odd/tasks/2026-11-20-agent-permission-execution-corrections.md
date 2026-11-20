@@ -1,8 +1,9 @@
 # Agent permission and execution reliability corrections
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-20
+> **Closed:** 2026-11-20
 > **Objective:** Make legitimate agent responsibilities executable and predictable by correcting four documented contradictions between declared commands, effective permissions, and verification rules, without new infrastructure.
 > **Branch:** N/A — branch creation is not authorized in this work unit; Herald 📯 (Release Manager) owns it when delivery is authorized.
 > **Delivery:** One coherent work unit across four canonical owners, authored additions plus deletions forecast at roughly 60–110 lines including this record; below the ~400-line strategy threshold, so no slice split is applied and the work lands as one reviewable unit when delivery is authorized.
@@ -24,15 +25,15 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
 
 ## Tasks
 
-- T1 | S1, S2, S3 | inline (permission configuration is a coordinator-owned shared surface) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T2 | S4, S5 | inline (Herald's push rule is a coordinator-owned shared surface) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T3 | S6 | inline (the shared rules are a coordinator-owned normative surface) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T4 | S7, S8 | inline (the reviewer runtime is a coordinator-owned normative surface; the comparison itself is delegated to its owner) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T5 | S9 | inline (the shared shell contract is a coordinator-owned normative surface) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T6 | S1, S2, S3 | delegated (runtime behaviour is observable only from the affected role's own session) — Crucible 🔥 (Test Architect) | in progress | commit: pending
-- T7 | S4, S5 | delegated (Git permission probes belong to the sole Git executor) — Herald 📯 (Release Manager) | in progress | commit: pending
-- T8 | S7, S8 | delegated (the comparison is Warden's own duty and must be performed by its owner) — Warden 🔒 (Dependency Warden) | in progress | commit: pending
-- T9 | S6, S7, S8, S9 | delegated (independent audit of the changed documents and the comparison; S1-S5 are runtime-observed under T6 and T7, which sit outside this role's audit scope) — Sentinel 🛡️ (Quality Guardian) | in progress | commit: pending
+- T1 | S1, S2, S3 | inline (permission configuration is a coordinator-owned shared surface) — Cipher 🔓 (Lead Orchestrator) | done | commit: d817a44
+- T2 | S4, S5 | inline (Herald's push rule is a coordinator-owned shared surface) — Cipher 🔓 (Lead Orchestrator) | done | commit: d817a44
+- T3 | S6 | inline (the shared rules are a coordinator-owned normative surface) — Cipher 🔓 (Lead Orchestrator) | done | commit: d817a44
+- T4 | S7, S8 | inline (the reviewer runtime is a coordinator-owned normative surface; the comparison itself is delegated to its owner) — Cipher 🔓 (Lead Orchestrator) | done | commit: d817a44
+- T5 | S9 | inline (the shared shell contract is a coordinator-owned normative surface) — Cipher 🔓 (Lead Orchestrator) | done | commit: d817a44
+- T6 | S1, S2, S3 | delegated (runtime behaviour is observable only from the affected role's own session) — Crucible 🔥 (Test Architect) | done | commit: d817a44
+- T7 | S4, S5 | delegated (Git permission probes belong to the sole Git executor) — Herald 📯 (Release Manager) | done | commit: d817a44
+- T8 | S7, S8 | delegated (the comparison is Warden's own duty and must be performed by its owner) — Warden 🔒 (Dependency Warden) | done | commit: d817a44
+- T9 | S6, S7, S8, S9 | delegated (independent audit of the changed documents and the comparison; S1-S5 are runtime-observed under T6 and T7, which sit outside this role's audit scope) — Sentinel 🛡️ (Quality Guardian) | done | commit: d817a44
 
 ## Log
 
@@ -97,3 +98,14 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
 - L6 — 2026-11-20 — **Authorized Crucible contract correction, focused review, and its two accuracy fixes.** `.opencode/agents/crucible.md` was corrected under the user's explicit authorization without touching the permission configuration: the "not granted" paragraph was retired because its subject no longer exists, the family form is now described as authorized and as first-hand execution, the "no wildcard" sentence was translated to name the single permitted pattern, and the Git distinction was preserved in both directions — no Git or GitHub form in this role, no Git-derived review evidence taken from inside a test process, immutable-head evidence still from Herald 📯 (Release Manager), and fixture-internal Git described as a committed-test detail confined to disposable temporary repositories. A focused single-path review returned `[ADVISORY]` with no authority-widening finding and two LOW accuracy items: the family was described as "a single directory" when its argument is `.agents/skills/*`, and the fixture Git enumeration read as complete while the fixtures also write commit objects. Both were fixed exactly as the reviewer prescribed — "one directory root (`.agents/skills/`)", and an enumeration led by "repository creation, staging, `rm`, `mv`, `checkout`, object writes such as `commit` and `mktree`" — and no third review round was dispatched, per the instruction against unnecessary rounds. The reviewer's own obligation accounting found every prior restriction retained and only the retired paragraph's subject genuinely removed. Configuration conformance re-checked mechanically: the family string in the contract and the allow row at `.opencode/opencode.jsonc:67` are identical. The previously observed runtime results remain applicable because the grant was not modified and only documentation changed; `pnpm format:check` is clean over 457 files after the edit.
 
 - L7 — Blocked: this record cannot close yet. Its acceptance evidence is complete and its reviews are recorded, but closure requires every task row to be `done` with a commit reference, and no branch, commit or push is authorized in this work unit. The single open prerequisite is the delivery commit that will carry this change; the per-`S#` verdict entries this record must also carry at closure are bound to that commit, so they are produced after it exists, not before. ODD closure remains separate from the pull-request review and from the merge decision, both of which belong to the delivery phase and to the user.
+
+- L8 — S1 — pass at d817a44 — Crucible executed `pnpm --dir .agents/skills/odd-workflow exec vitest run` from its own session: 14 files, 92 tests passed, no refusal and no status line; the grant was effective without a harness reload.
+- L9 — S2 — pass at d817a44 — the same session had `pnpm format` refused with the literal `permission.rejected` payload, so the new row widened nothing outside the approved family.
+- L10 — S3 — pass at d817a44 — the `git-pr-workflow` suite executed (18 files, 76 tests) and its Git use was read at `review-fixtures.ts:261-297` and `git-reader-real-repository.test.ts:22,38`: fixture `cwd` on `mkdtemp` roots, sanitized environment, `shell: false`, ceiling directories pinned, and no project path, remote or branch reachable.
+- L11 — S4 — pass at d817a44 — Herald observed `git push origin main`, `git push origin +main` and `git push origin refs/heads/main` each refused with no prompt and no push performed; the deletion spelling was inspection-only by instruction, matched by the path-qualified deny that stands after the delete allow.
+- L12 — S5 — pass at d817a44 — Herald's rule inspection shows `git push origin fix/maintenance-mode` reaching the ordinary family allow with no later deny matching, and no push was attempted to prove it.
+- L13 — S6 — pass at d817a44 — the clause sits inside the existing risk-trigger list, the runtime enumeration now names the same routing reason as its tenth scenario, and this change's own permission and declaration edits were dispatched under that clause and returned a Warden report.
+- L14 — S7 — pass at d817a44 — Warden returned the comparison over 14 runtimes, each mandatory command carrying one of the four outcomes with its matching rule and evidence source; the Ledger forms are recorded as reachable only through the global allow, never as a refusal.
+- L15 — S8 — pass at d817a44 — Warden issued `[ADVISORY]`, named its static limits in the same report, kept the Ledger item as a finding that holds the verdict off `[PASS]`, and promoted no row to an observed outcome without a probe.
+- L16 — S9 — pass at d817a44 — the revised contract was read against five observations: a bare successful invocation reporting no status line, bare `process.exit` and `cmd /c exit` failures reporting the wrapper's `1`, and the permitted suffix reporting `3` and `42` respectively; the one-command rule and the single bounded suffix remain and no unrestricted chaining is admitted.
+- L17 — Close: first failure: the round-1 independent review returned `[FAIL]` on two findings — the runtime's own trigger count contradicted the new duty, and T9 was scoped to requirements outside that role's audit surface — and both were fixed at their owner before closure. Delivered at d817a44 across the seven authorized paths, with the closure edit carried by the follow-up commit. L7's prerequisite is satisfied by that commit, and the record's historical entries are preserved unchanged. Evidence distribution stated rather than flattened: S1-S5 rest on runtime observation by the roles that own those observations under the user's authorization, S6-S9 and the record's obligation accounting carry Sentinel's independent `[PASS]`, and no requirement is marked satisfied beyond what its own entry records. DEBT-058 remains OPEN on its independent-review-of-the-comparison criterion and on the Ledger global-only gap; no debt was retired.
