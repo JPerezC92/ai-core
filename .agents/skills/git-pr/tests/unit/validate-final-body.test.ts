@@ -29,8 +29,115 @@ describe("preservation of baseline content", () => {
 		);
 		expect(validatePreservation(BODY, changed)?.code).toBe("BODY_INVALID");
 	});
+
+	it("accepts an unchanged body whose findings section is followed by the verdict line", () => {
+		const body = [
+			"## Summary",
+			"",
+			"- Adds the review preparation commands.",
+			"",
+			"## Test plan",
+			"",
+			"- [ ] Run the focused suite",
+			"- [ ] Confirm the import map resolves",
+			"",
+			"## Findings / blockers",
+			"",
+			"No findings.",
+			"",
+			"[PASS] — 0 open findings",
+			"",
+		].join("\n");
+
+		expect(validatePreservation(body, body)).toBeUndefined();
+	});
+
+	it("refuses a protected rewrite no supplied record scopes", () => {
+		const changed = BODY.replace(
+			"Adds the review preparation commands.",
+			"Corrected after the user superseded the premise.",
+		);
+
+		expect(validatePreservation(BODY, changed)?.code).toBe("BODY_INVALID");
+	});
+
+	it("accepts a protected rewrite scoped to the section the user instruction names", () => {
+		const changed = BODY.replace(
+			"Adds the review preparation commands.",
+			"Corrected after the user superseded the premise.",
+		);
+		const decisions = {
+			notApplicable: [],
+			acceptance: [],
+			debt: [],
+			authorizedUpdates: [
+				{
+					section: "Summary",
+					instruction: "replace the superseded summary sentence",
+					source: "the user's instruction in the PR 1 delivery conversation",
+				},
+			],
+		};
+
+		expect(validatePreservation(BODY, changed, decisions)).toBeUndefined();
+	});
+
+	it("still refuses a Breaking changes rewrite when only Summary is scoped", () => {
+		const changed = makeCompletedBody({
+			summary: "Corrected after the user superseded the premise.\n",
+		}).replace("## Test plan", "## Breaking changes\n\nThe previous behavior is withdrawn.\n\n## Test plan");
+		const decisions = {
+			notApplicable: [],
+			acceptance: [],
+			debt: [],
+			authorizedUpdates: [
+				{
+					section: "Summary",
+					instruction: "replace the superseded summary sentence",
+					source: "the user's instruction in the PR 1 delivery conversation",
+				},
+			],
+		};
+
+		expect(validatePreservation(BODY, changed, decisions)?.code).toBe("BODY_INVALID");
+	});
 });
 
+const FINDING = (id: string, severity: string, status: string): string =>
+	`| ${id} | ${severity} | ${status} | \`a.ts:1\` — literal result | owner — next action |`;
+
+describe("preservation of finding identity", () => {
+	const withFindings = (rows: readonly string[]): string =>
+		makeCompletedBody({
+			findings: [
+				"| ID | Severity | Status | Evidence | Owner / resolution |",
+				"|---|---|---|---|---|",
+				...rows,
+				"",
+			].join("\n"),
+		});
+
+	it("rejects removing a finding from the baseline", () => {
+		const baseline = withFindings([FINDING("F1", "`BLOCK`", "`OPEN`"), FINDING("F2", "`ADVISORY`", "`OPEN`")]);
+		const candidate = withFindings([FINDING("F1", "`BLOCK`", "`OPEN`")]);
+
+		expect(validatePreservation(baseline, candidate)?.code).toBe("BODY_INVALID");
+	});
+
+	it("rejects changing a finding's severity", () => {
+		const baseline = withFindings([FINDING("F1", "`BLOCK`", "`OPEN`")]);
+		const candidate = withFindings([FINDING("F1", "`ADVISORY`", "`OPEN`")]);
+
+		expect(validatePreservation(baseline, candidate)?.code).toBe("BODY_INVALID");
+	});
+
+	it("accepts an appended finding and a status change on an existing one", () => {
+		const baseline = withFindings([FINDING("F1", "`BLOCK`", "`OPEN`")]);
+		const candidate = withFindings([FINDING("F1", "`BLOCK`", "`FIXED`"), FINDING("F2", "`ADVISORY`", "`OPEN`")]);
+
+		expect(validatePreservation(baseline, candidate)).toBeUndefined();
+	});
+});
 describe("final body validation", () => {
 	it("accepts a fresh matching completed body", () => {
 		const outcome = execute({ baseline: METADATA, current: METADATA, body: BODY });
@@ -75,6 +182,49 @@ describe("final body validation", () => {
 		const changed = makeCompletedBody({ summary: "Rewritten after acceptance.\n" });
 		const outcome = execute({ baseline: METADATA, current: METADATA, body: changed });
 		expect("code" in outcome ? outcome.code : "").toBe("BODY_INVALID");
+	});
+
+	it("refuses an unscoped protected rewrite through the full execute path", () => {
+		const changed = makeCompletedBody({ summary: "Corrected after the user superseded the premise.\n" });
+		const outcome = execute({
+			baseline: METADATA,
+			current: METADATA,
+			body: changed,
+			decisions: {
+				pr_number: 12,
+				head_sha: HEAD_SHA,
+				not_applicable: [],
+				acceptance: [],
+				debt: [],
+			},
+		});
+
+		expect("code" in outcome ? outcome.code : "").toBe("BODY_INVALID");
+	});
+
+	it("accepts a protected rewrite scoped by the supplied authorized update", () => {
+		const changed = makeCompletedBody({ summary: "Corrected after the user superseded the premise.\n" });
+		const outcome = execute({
+			baseline: METADATA,
+			current: METADATA,
+			body: changed,
+			decisions: {
+				pr_number: 12,
+				head_sha: HEAD_SHA,
+				not_applicable: [],
+				acceptance: [],
+				debt: [],
+				authorized_updates: [
+					{
+						section: "Summary",
+						instruction: "replace the superseded summary sentence",
+						source: "the user's instruction in the PR 1 delivery conversation",
+					},
+				],
+			},
+		});
+
+		expect("code" in outcome ? outcome.code : outcome.body).toBe(changed);
 	});
 
 	it("keeps the immutable head visible in the accepted body", () => {

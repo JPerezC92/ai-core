@@ -59,8 +59,28 @@ export function metadataWithBody(body: string): Record<string, unknown> {
 	return makeMetadata({ body });
 }
 
-/** A creation draft wrapping a completed body in the creation title wrapper. */
-export function makeCreationDraft(body: string = makeCompletedBody()): string {
+/** A creation-shape body: bullets, unchecked plan items and the literal findings placeholder. */
+export function makeCreationBody(overrides: { summary?: string; items?: string[] } = {}): string {
+	const summary = overrides.summary ?? "- Adds the review preparation commands.\n";
+	const items = overrides.items ?? ["Run the focused suite", "Confirm the import map resolves"];
+	const plan = items.map((item) => `- [ ] ${item}`).join("\n");
+	return [
+		"## Summary",
+		"",
+		summary,
+		"## Test plan",
+		"",
+		plan,
+		"",
+		"## Findings / blockers",
+		"",
+		"No review findings yet.",
+		"",
+	].join("\n");
+}
+
+/** A creation draft wrapping a creation-shape body in the creation title wrapper. */
+export function makeCreationDraft(body: string = makeCreationBody()): string {
 	return `Title: feat: review content preparation\n\n---\n\n${body}`;
 }
 

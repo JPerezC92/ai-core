@@ -161,9 +161,12 @@ export class FeatureSourceFake implements FeatureSource {
 export function makeCompletedFeature(
 	options: {
 		readonly blocked?: boolean;
+		readonly laterEntry?: boolean;
 		readonly status?: "active" | "closed";
 		readonly created?: string;
 		readonly verbatimLogHeadings?: boolean;
+		readonly verdict?: "with-commit" | "without-commit" | "absent";
+		readonly firstFailure?: "recorded" | "not-applicable" | "absent";
 	} = {},
 ): string {
 	const status = options.status ?? "active";
@@ -178,8 +181,26 @@ export function makeCompletedFeature(
 					'Do not merge."',
 				]
 			: ["- L1 — original request"];
+	let next = 2;
+	const push = (text: string): void => {
+		logEntries.push(`- L${next} — ${text}`);
+		next += 1;
+	};
 	if (options.blocked === true) {
-		logEntries.push("- L2 — 2026-11-14 — Blocked: independent acceptance is outstanding");
+		push("2026-11-14 — Blocked: independent acceptance is outstanding");
+	}
+	if (options.laterEntry === true) {
+		push("2026-11-15 — the prerequisite recorded earlier was resolved");
+	}
+	if (status === "closed") {
+		const verdict = options.verdict ?? "with-commit";
+		if (verdict === "with-commit") push("S1 — independent review: passed at commit abc1234");
+		if (verdict === "without-commit") push("S1 — independent review: passed");
+		const firstFailure = options.firstFailure ?? "recorded";
+		if (firstFailure === "recorded") push("2026-11-19 — First failure: the focused case reproduced the defect");
+		if (firstFailure === "not-applicable")
+			push("2026-11-19 — No applicable executable failure: this change is prose only");
+		push("Close: delivered");
 	}
 	const header = [`> **Status:** ${status}`, "> **Owner:** Cipher (Lead Orchestrator)", `> **Created:** ${created}`];
 	if (status === "closed") header.push("> **Closed:** 2026-11-01");
@@ -200,7 +221,6 @@ export function makeCompletedFeature(
 		"## Log",
 		"",
 		...logEntries,
-		...(status === "closed" ? ["- L3 — Close: delivered"] : []),
 		"",
 	].join("\n");
 }

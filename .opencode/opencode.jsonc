@@ -82,6 +82,24 @@
           "action": "shell",
           "resource": "node .agents/skills/odd-workflow/scripts/validate_feature_file.ts odd/features/architecture-contract.md",
           "effect": "allow"
+        },
+        // The same two validators scoped to the directories they cover, so a
+        // reviewer validating any record does not need a new grant for every
+        // record that appears. Each form is exact command text naming exactly
+        // one directory: no wildcard, and no interpreter, install, network,
+        // Git/GitHub or destructive authority. The roles' global shell deny
+        // is unchanged, and these entries do not make any other command
+        // reachable. Removal of the per-record forms above is a separate
+        // narrowing proposal and is not part of this addition.
+        {
+          "action": "shell",
+          "resource": "node .agents/skills/odd-workflow/scripts/validate_feature.ts odd/tasks",
+          "effect": "allow"
+        },
+        {
+          "action": "shell",
+          "resource": "node .agents/skills/odd-workflow/scripts/validate_feature_file.ts odd/features",
+          "effect": "allow"
         }
       ]
     },

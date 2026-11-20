@@ -49,6 +49,20 @@ export interface ReviewDecisions {
 	readonly notApplicable: readonly DecisionEvidence[];
 	readonly acceptance: readonly DecisionEvidence[];
 	readonly debt: readonly DecisionEvidence[];
+	readonly authorizedUpdates: readonly AuthorizedUpdate[];
+}
+
+/**
+ * The scope of one user-authorized protected-section correction.
+ *
+ * This record is not proof of authorization: it carries the identifier of the user
+ * instruction Herald must verify from its attributable source, and the tool uses it only
+ * to bound which protected section may change. Herald verifies; the tool narrows.
+ */
+export interface AuthorizedUpdate {
+	readonly section: string;
+	readonly instruction: string;
+	readonly source: string;
 }
 
 /** A structurally checked body; no claim about evidence truth. */

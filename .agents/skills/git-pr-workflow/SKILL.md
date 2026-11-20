@@ -17,6 +17,10 @@ metadata:
 - **Herald 📯 (Release Manager)** is the sole Git and GitHub executor: it reads the repository and GitHub state, executes `gh pr create`, executes the single `gh pr edit <number> --body-file output/pr-working-body.md` publication the writer authorizes, and returns the persisted capture. It never authors, approves, repairs or modifies review evidence.
 - **Cipher 🔓 (Lead Orchestrator)** coordinates the sequence and the handoffs, and executes no Git or GitHub command.
 
+**Preparation paths per context.** Every `output/pr-draft.md` and `output/pr-working-body.md` in this skill is the single-context default. A delivery that prepares more than one pull request supplies, for each context, its own distinct draft and working-body paths inside one preparation directory; that directory is the context's identity, and the existing exclusive-create behavior never overwrites an occupied path. Paths in the commands below substitute the context's own pair for the default.
+
+**Protected-section exceptional update.** Protected sections are immutable by default. The only admitted route is a user instruction that explicitly authorizes a specific correction: the coordinator records it as an `authorized_updates` entry naming the section, the instruction and its source, and the validator enforces that only that section changes. The entry is scope, never proof. Herald 📯 (Release Manager) verifies the named instruction against the user's own attributable statement **before** executing the update and **refuses** when that statement is inaccessible, in which case no independently verified authorization exists and the update does not proceed; a CLI flag, a decisions entry or Herald's own assertion alone is never sufficient. The ODD record logs the authorization source, the precise before/after change, the content identities and the resulting publication evidence so an independent reviewer can examine the original authorization.
+
 ## Command ownership
 
 - `.agents/skills/git-pr/scripts/prepare_pr_review.ts` owns the two content commands: `initialize` and `validate`. Their names and arguments are unchanged.
