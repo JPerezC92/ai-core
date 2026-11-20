@@ -58,13 +58,18 @@
         // form reproduces the recurring grant edit this row removes. It is also
         // the family Forge's block already grants, and it adds nothing else: no
         // `pnpm *`, no `node *`, no install, no network, and no Git or GitHub
-        // form. The `git-pr-workflow` suite spawns the `git` binary against
-        // disposable temporary repositories created by its own fixtures; that is
-        // an internal detail of a committed test, not a Git grant, because no
-        // project repository, branch, remote or pull request is reachable from
-        // it and the reviewer still holds no Git or GitHub command. TUI restart
-        // required.
-        { "action": "shell", "resource": "pnpm --dir .agents/skills/* exec vitest run*", "effect": "allow" },
+        // form. The row deliberately ends at `run` with no trailing wildcard, so
+        // an appended argument - a path, a filter, a reporter or a
+        // snapshot-update flag - matches no row and falls to this block's
+        // `shell *` deny. The leading wildcard still selects the package and
+        // spans path segments, so a traversing `--dir` value remains matchable;
+        // that limit is instructional, not enforced. The `git-pr-workflow` suite
+        // spawns the `git` binary against disposable temporary repositories
+        // created by its own fixtures; that is an internal detail of a committed
+        // test, not a Git grant, because no project repository, branch, remote or
+        // pull request is reachable from it and the reviewer still holds no Git
+        // or GitHub command. TUI restart required.
+        { "action": "shell", "resource": "pnpm --dir .agents/skills/* exec vitest run", "effect": "allow" },
         // Read-only discovery so the test architect can inspect the tree
         // with `rg`/`ls`. Use Glob/Grep for filesystem discovery. Editing,
         // network, and interpreter access stay denied. TUI restart required.
