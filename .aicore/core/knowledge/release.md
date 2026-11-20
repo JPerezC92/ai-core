@@ -6,6 +6,8 @@ Release is a distinct workflow from ODD. This file is its home. Do not copy Hera
 
 Before opening a PR, Cipher 🔓 (Lead Orchestrator) assembles and verifies one release-readiness packet: the exact test-plan actions or commands with their observed results; every applicable gate status; the open-or-closed status of each task and of the feature; excluded or unrelated paths; unverified user-only controls; and each body claim against its evidence. Missing, contradictory, or stale evidence blocks PR creation until resolved — a partially verified packet is never an acceptable substitute. This applies to every PR, including docs-only changes, and introduces no tracker, no second approval ritual, and no change to existing authorizations or gates.
 
+The governing ODD record's closure is a precondition of the packet, not an item inside it: the record is closed and its closure committed, and Herald 📯 (Release Manager) proves that from committed state before any pull-request route begins. A packet cannot substitute for that proof, and reporting readiness covers only the pull request itself — its head-bound review, its required checks and their evidence.
+
 ### Post-review finding actions
 
 After each review round, Cipher 🔓 (Lead Orchestrator) uses the canonical combined rendered chat summary or, only when eligible, compact ready message in `.aicore/core/knowledge/agents.md` `### PR review findings (adjudication)`. That owner defines finding presentation, accounting and readiness conditions; a raw findings list is not an acceptable handoff. Its fix-first rule, deferral authority, refutation evidence and loop cap remain unchanged, as do all existing gates; no tracker or additional approval step is introduced.
