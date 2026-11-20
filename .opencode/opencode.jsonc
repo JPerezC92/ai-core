@@ -50,6 +50,21 @@
         // required.
         { "action": "shell", "resource": "pnpm --dir cli/aicore test", "effect": "allow" },
         { "action": "shell", "resource": "pnpm --dir cli/aicore test:e2e", "effect": "allow" },
+        // Skill-package suites. The same independent-verification duty covers a
+        // published test plan that names one of the repository's skill packages,
+        // so the reviewer must be able to run that package's committed suite
+        // instead of relying on the implementer's output. It is one family row
+        // rather than a per-package list, because a per-package or per-record
+        // form reproduces the recurring grant edit this row removes. It is also
+        // the family Forge's block already grants, and it adds nothing else: no
+        // `pnpm *`, no `node *`, no install, no network, and no Git or GitHub
+        // form. The `git-pr-workflow` suite spawns the `git` binary against
+        // disposable temporary repositories created by its own fixtures; that is
+        // an internal detail of a committed test, not a Git grant, because no
+        // project repository, branch, remote or pull request is reachable from
+        // it and the reviewer still holds no Git or GitHub command. TUI restart
+        // required.
+        { "action": "shell", "resource": "pnpm --dir .agents/skills/* exec vitest run*", "effect": "allow" },
         // Read-only discovery so the test architect can inspect the tree
         // with `rg`/`ls`. Use Glob/Grep for filesystem discovery. Editing,
         // network, and interpreter access stay denied. TUI restart required.
@@ -258,16 +273,25 @@
         // A pull-request merge is the user's alone, so the base branch is
         // never a push or delete target and the merges endpoint stays
         // closed. These come last so last-match-wins keeps them
-        // effective against every allow above. The base-branch row names
-        // no flag position on purpose: a literal `git push origin
-        // --delete refs/heads/main` proved bypassable by interposing a
-        // flag, so any push command naming the base is denied instead.
-        // Cooperative instruction plus pattern matching, not isolation:
-        // a wrapper, alias, encoded URL or nested subprocess is not
-        // covered, and no shell pattern can be exhaustive.
+        // effective against every allow above. The rows below name the base
+        // as a refspec token rather than as a substring: the previous
+        // `git push *main*` row also denied legitimate targets such as
+        // `fix/maintenance-mode`, because `*` spans spaces and slashes. They
+        // close every spelling that names the base as a destination - a plain
+        // name (` main`), a path-qualified ref (`refs/heads/main`,
+        // `+refs/heads/main`, a remote path), a forced short name (`+main`),
+        // and a deletion (`--delete refs/heads/main`, which the delete allow
+        // above would otherwise reach) - while a `main`-containing non-base
+        // name falls through to its ordinary family allow. Colon refspecs
+        // stay closed by the earlier `git push origin *:*` rows, which cover
+        // `HEAD:main`, `:main` and `main:main`. Cooperative instruction plus
+        // pattern matching, not isolation: a wrapper, alias, encoded URL or
+        // nested subprocess is not covered, and no shell pattern can be
+        // exhaustive.
         { "action": "shell", "resource": "gh api *merge*", "effect": "deny" },
         { "action": "shell", "resource": "git push * main", "effect": "deny" },
-        { "action": "shell", "resource": "git push *main*", "effect": "deny" }
+        { "action": "shell", "resource": "git push * */main", "effect": "deny" },
+        { "action": "shell", "resource": "git push * +main", "effect": "deny" }
       ]
     },
     // Warden audit envelope: deny-all first, then the explicit audit
