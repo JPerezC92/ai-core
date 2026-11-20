@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.3.2
+  version: 1.3.3
   domain: git
 ---
 
@@ -32,8 +32,10 @@ metadata:
 
 ### Body
 
-- **Multi-package workspace**: group bullets by package or app path, and include only paths that actually changed.
+- **Multi-package workspace**: group bullets by package or app path, and include only packages that actually changed.
 - **Single repo**: flat bullets.
+- State what the change delivers and why it matters. Never make the changed-path list the body; the diff already enumerates them.
+- When the work unit declares a rollback boundary, a bullet may name it: what can be reverted without unwinding unrelated work.
 - Skip the body when the title alone is self-explanatory for a small, single-scope change.
 
 ### Breaking changes
