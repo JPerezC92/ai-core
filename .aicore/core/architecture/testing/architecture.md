@@ -81,6 +81,8 @@ Reviewed 2026-11-06 by the backend, frontend and test architecture owners plus t
 
 Reviewed 2026-11-12 by the test architecture owner, with the backend and frontend architecture owners reviewing the implementation-side boundaries these guides cite: the `T2` approved unit targets, the `T4` isolated-dependency requirement, the `T5` entry-point clause and the `T10` centralized placement were applied to both guides' file-organization, unit-test, integration-test and end-to-end sections and to their parity rows; the parser or loader unit target keeps its original scope as a narrow exception to the application-use-case unit boundary, the three levels, the reference bindings and the observable assertions are unchanged, and no `T` rule was added, removed, moved or renumbered.
 
+Reviewed 2026-11-21 by the test architecture owner: the `T2` pure rule or transformation target and its no-per-file and no-infrastructure limits were added and mapped in both guides' pyramid tables and parity rows and in the template; the parser or loader target, the three levels, the reference bindings and the observable assertions are unchanged, and no `T` rule was added, removed, moved or renumbered.
+
 ## Cross-stack parity
 
 **T28** — Every stack guide uses `stacks/_template.md` and keeps the same heading order and rule granularity:

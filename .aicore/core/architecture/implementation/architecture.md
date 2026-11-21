@@ -179,7 +179,7 @@ Interface modules live inside the infrastructure layout, isolated from the adapt
 flowchart TB
   ROOT["composition root — entry point"]
   subgraph INF["infrastructure/"]
-    IF["delivery/ — interface modules"]
+    IF["interface modules — folder per the shape's layout"]
     AD["adapters/ — outside-data mapping"]
     RP["repositories/ — persistence"]
   end

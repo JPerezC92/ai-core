@@ -49,7 +49,7 @@ No production code, test, dependency, permission or tooling change is authorized
 
 ## Historical accuracy
 
-The requirement this decision replaces was **universal for the period 2026-11-12 to 2026-11-20** and was approved as universal on 2026-11-12 by user decision D1. This record amends it **prospectively**: it does not reinterpret that decision, does not claim it was originally scoped to L3, and does not rewrite ADR 0005's decision body or its `Superseded` line. Code and reviews from that period conformed to the rule as it then stood; this decision neither retroactively validates nor invalidates them. `odd/tasks/2026-11-12-architecture-standardization.md` remains accurate for its period and is not retro-edited.
+The requirement this decision replaces was **universal from 2026-11-12 until this amendment takes effect** and was approved as universal on 2026-11-12 by user decision D1. This record amends it **prospectively**: it does not reinterpret that decision, does not claim it was originally scoped to L3, and does not rewrite ADR 0005's decision body or its `Superseded` line. Code and reviews from the period before this record is accepted conformed to the rule as it then stood; this decision neither retroactively validates nor invalidates them. `odd/tasks/2026-11-12-architecture-standardization.md` remains accurate for that period and is not retro-edited. The amended rule takes effect on this record's acceptance, which its status line records.
 
 ## Propagation
 

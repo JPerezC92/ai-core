@@ -52,7 +52,7 @@ assert isinstance(result, TaskNotFoundError)
 - Do not use `pytest.raises` to assert a returned business failure. Use it only for an expected exception at a boundary or a CLI `SystemExit` (T6, T7).
 - Do not mock the use case under test. Mock or fake its ports (T17).
 - Parser and loader unit tests mock the external library at its boundary and assert field mapping, type coercion, extraction, and the documented failure result. An empty or malformed input is a unit case when no real external service is needed.
-- A pure rule module or transformation with no external representation and no effect is exercised directly, with nothing doubled, and asserts the calculation or decision it returns for each input. This creates no per-file obligation: a production module does not earn a test by existing, a trivial utility needs no fixture, factory or harness of its own, and no pure-rule test directory is created (T2).
+- A pure rule module or transformation with no external representation and no effect is exercised directly, with nothing doubled, and asserts the calculation or decision it returns for each input (T2).
 - These tests must be compatible with the project's reviewed runner and discovery rules.
 
 ## Integration tests
