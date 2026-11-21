@@ -20,6 +20,23 @@ Read in order:
 
 Concrete libraries and aliases preserve reference-architecture choices, not destination tool bindings. The destination selects its tooling in project-owned configuration without weakening the common contract. Follow applicable documented specifics for the concerns they cover; for uncovered concerns, including partial guide coverage or a stack with no applicable guide, apply the agnostic contract and applicable shapes directly. Missing guide coverage alone never blocks implementation or review and never requires creating a guide. Do not import unrelated language/framework rules or infer approval from current code patterns. Execution choices require evidenced project-owned bindings, not an invented runner or convention. A real contradiction, missing authority, or missing evidence needed for a decision still uses the agent runtime's uncertainty route.
 
+## Architecture decision procedure
+
+Apply this sequence to implementation and review work. Steps 1–3 establish the setting, step 4 the level, steps 5–7 the placement, and steps 8–10 the checks.
+
+1. Identify whether the task belongs to an existing project or a new project.
+2. Read the project's approved architecture and the applicable AICore contracts.
+3. Identify the responsibilities, external boundaries and consumers the task involves.
+4. Evaluate the architecture's complexity and select `L1`, `L2` or `L3` under `C11` — only when the selection is not already fixed by the project's approved architecture.
+5. Select the applicable application shape.
+6. Determine whether interface responsibilities exist — any external entry edge creates one (`C12`).
+7. Place the interface code according to the chosen shape and its approved structure; an independent `interfaces/` folder exists only where `C13` authorizes one.
+8. Prevent business and transport responsibilities from mixing.
+9. Validate the dependency boundaries with focused, proportionate checks.
+10. Document any proposed deviation and request approval before changing an architectural convention.
+
+`L1`, `L2` and `L3` are alternatives, not stages: a project does not pass through every level, and step 4 is skipped when an existing project already has an approved structure. Classifying a small artifact is a working judgment and requires no record (`C11`).
+
 ## Ownership and extension
 
 Layer duties are defined under `## Content model` in this file. Runtime specs retain authority, scope, warmup/execution procedures, edit checkpoints, review gates, dependency ownership, reporting, and uncertainty handling. A document pointer does not grant execution permission.
