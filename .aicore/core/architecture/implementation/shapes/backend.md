@@ -2,11 +2,13 @@
 
 ## Applicability
 
-Backend business applications. Read `.aicore/core/architecture/implementation/architecture.md` first. Statement-layer ownership is defined in `.aicore/core/architecture/README.md` → `## Content model`.
+Backend business applications. Read `.aicore/core/architecture/implementation/architecture.md` first. Statement-layer ownership is defined in `.aicore/core/architecture/README.md` → `## Content model`. The layout and operation obligations below bind at L3 (`C11`); at L1 and L2 no layer folder and no operation form is imposed, and each obligation binds only where its responsibility exists.
 
 ## B1 — Layout and domain
 
 Use `domain/` (C8 model kinds and ports), `application/` (one file per use case), and `infrastructure/` (adapters, repositories, composition). `infrastructure/adapters/` holds the adapter and outside-record-to-domain mapping modules and `infrastructure/repositories/` holds repository adapters; a directory is created only where its responsibility exists. A stack names the concrete operation location. Entities have a read accessor per field, preserving C8 alias protection. Port results follow C9: aggregate objects for repositories, domain projections for read ports, and appropriate domain types for other capabilities.
+
+The controller and its request/response mapping carry the Interface responsibility (C12) and sit inside `infrastructure/` beside the adapters, isolated from them: a controller depends on application and domain modules and imports no repository, persistence adapter or IO helper, whatever folder they share (C13). Where C13's evidence authorizes an independent folder, it is `interfaces/` at the same level as the layer folders.
 
 ## B2 — Operation
 

@@ -9,7 +9,7 @@ Identify language, runtime, application shapes, and exclusions. Concrete librari
 
 ## Structure and dependency mapping
 
-Map each applicable shape's folders, domain, application, adapters, and composition. Explain static imports separately from runtime calls.
+Map each applicable shape's folders, domain, application, adapters, and composition. Explain static imports separately from runtime calls. Name where the Interface responsibility lives in this shape's layout and whether an authorized independent `interfaces/` folder is used (`C12`, `C13`); a guide never makes either mandatory.
 
 Map the selected B4/P4/F4 business-owned layout with concrete language paths: a compact root-only aggregate, an aggregate with children and internal role-folder growth, and a functional/record domain where applicable. Show where its repository port and boundary records live. Keep this mapping under this heading.
 
@@ -41,19 +41,22 @@ Point to the current testing contract and applicable testing guide, without dupl
 
 ## Obligation mapping
 
-| Obligation                   | Concrete mapping        | Applicability or uncovered decision                                                               |
-| ---------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------- |
-| C1 Layers/dependencies       | <section>               | <semantics>                                                                                       |
-| C2 Domain/ports              | <section>               | <semantics>                                                                                       |
-| C3 Operation                 | <section>               | <semantics>                                                                                       |
-| C4 Mapping/composition       | <section>               | <semantics>                                                                                       |
-| C5 Failures                  | <section>               | <semantics>                                                                                       |
-| C6 Serialization             | <section>               | <semantics>                                                                                       |
-| C7 Helpers                   | <section>               | <semantics>                                                                                       |
-| C8 Domain model              | <section>               | <construction, transitions, nested protection, reconstruction, events and record/function syntax> |
-| C9 Repositories/transactions | <section>               | <aggregate/projection/other ports, absence, replacement save, atomicity and event flow>           |
-| C10 Naming                   | <section>               | <native spelling of all shared roles and boundary mapping>                                        |
-| Selected shape               | <all shape obligations> | <differences>                                                                                     |
+| Obligation                   | Concrete mapping        | Applicability or uncovered decision                                                                       |
+| ---------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------- |
+| C1 Layers/dependencies       | <section>               | <semantics>                                                                                               |
+| C2 Domain/ports              | <section>               | <semantics>                                                                                               |
+| C3 Operation                 | <section>               | <semantics>                                                                                               |
+| C4 Mapping/composition       | <section>               | <semantics>                                                                                               |
+| C5 Failures                  | <section>               | <semantics>                                                                                               |
+| C6 Serialization             | <section>               | <semantics>                                                                                               |
+| C7 Helpers                   | <section>               | <semantics>                                                                                               |
+| C8 Domain model              | <section>               | <construction, transitions, nested protection, reconstruction, events and record/function syntax>         |
+| C9 Repositories/transactions | <section>               | <aggregate/projection/other ports, absence, replacement save, atomicity and event flow>                   |
+| C10 Naming                   | <section>               | <native spelling of all shared roles and boundary mapping>                                                |
+| C11 Complexity level         | <section>               | <how the guide applies L1/L2/L3, and why no language-specific achievement applies where that is the case> |
+| C12 Interface boundary       | <section>               | <where the delivery edge lives and how it stays inward-only>                                              |
+| C13 Interface placement      | <section>               | <the shape's interface location and whether an authorized `interfaces/` folder exists>                    |
+| Selected shape               | <all shape obligations> | <differences>                                                                                             |
 
 Follow `.aicore/core/architecture/README.md` → `## Content model`. Every common obligation and applicable shape obligation needs a mapping, and every row must cite its identifier. The mapping cell names the guide section that carries the achievement; the last cell states only the language-specific achievement or a language, runtime, or scope reason for N/A stating why the obligation cannot be achieved by guide content. Equal rigor does not mean identical libraries. Keep this heading order in all implementation guides. This is the non-testing template; testing guides retain their own template.
 
