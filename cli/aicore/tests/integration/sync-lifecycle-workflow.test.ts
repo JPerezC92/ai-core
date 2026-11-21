@@ -22,7 +22,11 @@ import { LocalFilesystemLayout } from "#infrastructure/synchronization/local-fil
 import { LocalSourceFiles } from "#infrastructure/synchronization/local-source-files.ts";
 import { LocalWriteTargetGuard } from "#infrastructure/synchronization/write-target-guard.ts";
 import { createTemporaryRoot, disposeTemporaryRoot } from "#support/disposable-root.ts";
-import { makeBindingsDocument, makeSynchronizationRequest } from "#support/synchronization.factory.ts";
+import {
+	makeBindingsDocument,
+	makeClearanceText,
+	makeSynchronizationRequest,
+} from "#support/synchronization.factory.ts";
 
 /** Prefix that identifies a root this suite owns. */
 const ROOT_PREFIX = "aicore-cli-sync-lifecycle-";
@@ -40,26 +44,23 @@ const LIVE_SOURCE = ".agents/skills/live-skill/SKILL.md";
 const LIVE_DESTINATION = ".agents/skills/live-skill/SKILL.md";
 
 /**
- * The registry the source tree holds.
+ * The cleared set the source tree's registry declares.
  *
  * The retired and shared sources are gone from the tree, so their directory
  * roots clear nothing for this editor; the registry still declares their
  * ownership, which is what tells a retired destination from a preserved one.
  */
-const CLEARANCE = {
-	schema: 1,
-	cleared: {
-		".agents/skills/retired-skill/": { mode: "raw" },
-		".agents/skills/shared-skill/": {
-			mode: "raw",
-			region_files: ["SKILL.md"],
-			editors: {
-				opencode: { destination: ".opencode/skills/shared-skill/" },
-				cursor: { destination: ".cursor/skills/shared-skill/" },
-			},
+const CLEARED = {
+	".agents/skills/retired-skill/": { mode: "raw" },
+	".agents/skills/shared-skill/": {
+		mode: "raw",
+		region_files: ["SKILL.md"],
+		editors: {
+			opencode: { destination: ".opencode/skills/shared-skill/" },
+			cursor: { destination: ".cursor/skills/shared-skill/" },
 		},
-		".agents/skills/live-skill/": { mode: "raw" },
 	},
+	".agents/skills/live-skill/": { mode: "raw" },
 };
 
 /** The destination's own root runtime file, which carries the blocker. */
@@ -130,7 +131,7 @@ describe("the managed-source lifecycle as one workflow", () => {
 
 		// The source tree: the registry, the two empty directories whose sources
 		// were removed, and the one source that still exists.
-		await writeUnder(sourceRoot, CLEARANCE_FILENAME, `${JSON.stringify(CLEARANCE, null, 2)}\n`);
+		await writeUnder(sourceRoot, CLEARANCE_FILENAME, makeClearanceText(CLEARED));
 		await mkdir(join(sourceRoot, ".agents", "skills", "retired-skill"), { recursive: true });
 		await mkdir(join(sourceRoot, ".agents", "skills", "shared-skill"), { recursive: true });
 		await writeUnder(sourceRoot, LIVE_SOURCE, CURRENT_LIVE_TEXT);
