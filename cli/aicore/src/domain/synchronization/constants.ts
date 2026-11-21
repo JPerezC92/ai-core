@@ -101,7 +101,7 @@ export const RECONCILE_BODY_HEAD: readonly string[] = [
 	"> 4. Never touch the core region and never move or delete the markers.",
 	"> 5. Delete that file's entry from the `pending:` list in `.aicore/core.yaml`.",
 	">",
-	"> **If this project no longer wants a listed resource.** Delete that resource's file, then delete the corresponding entry from the `pending:` list in `.aicore/core.yaml`; synchronization never deletes a destination file itself.",
+	"> **If this project no longer wants a listed resource.** Delete that resource's file, then delete the corresponding entry from the `pending:` list in `.aicore/core.yaml`; a shared region-managed or merge-managed file is never deleted by synchronization — only an exclusively Core-owned managed file is removed automatically.",
 	">",
 ];
 

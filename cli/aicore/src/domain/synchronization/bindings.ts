@@ -431,12 +431,17 @@ export type WithheldSourceOutcome = {
  * - no record covers the path: ownership cannot be established, so the
  *   destination is preserved and the reason says so;
  * - the registry withdrew the source for this editor and still declares its
- *   mode: a fully Core-owned destination is retired, a region-managed one is
- *   preserved for reconciliation;
+ *   mode: only an exclusively Core-owned (`raw`) destination is retired, while a
+ *   region-managed and a merge-managed one are preserved for reconciliation;
  * - the source still exists while the registry still delivers its path: an
  *   eligibility anomaly, preserved and reported, never deleted;
  * - the source is gone and its mode is declared: the same ownership rule
  *   applies, with the reason naming the missing source.
+ *
+ * A merge-managed file is never exclusively Core-owned: the merge replaces the
+ * values of the keys the source declares and leaves every other key, comment and
+ * formatting span as the destination owns it, so deleting it would destroy
+ * destination content.
  *
  * A preserved destination keeps its binding and joins `pending`, which is what
  * withholds a verified "current" until the destination reconciles it.
@@ -475,10 +480,13 @@ export function withheldSources(
 			continue;
 		}
 		if (facts.withdrawn.has(entry.source)) {
-			if (ownership === MODE_REGION) {
-				preserve(entry, "withdrawn");
-			} else {
+			// Only an exclusively Core-owned file may be removed. A region-managed
+			// destination owns its project region and a merge-managed one owns the
+			// keys the source does not declare, so both are preserved.
+			if (ownership === MODE_RAW) {
 				retire(entry, "withdrawn");
+			} else {
+				preserve(entry, "withdrawn");
 			}
 			continue;
 		}
@@ -486,10 +494,10 @@ export function withheldSources(
 			preserve(entry, "anomaly");
 			continue;
 		}
-		if (ownership === MODE_REGION) {
-			preserve(entry, "missing");
-		} else {
+		if (ownership === MODE_RAW) {
 			retire(entry, "missing");
+		} else {
+			preserve(entry, "missing");
 		}
 	}
 

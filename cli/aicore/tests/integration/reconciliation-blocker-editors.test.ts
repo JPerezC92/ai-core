@@ -91,7 +91,7 @@ describe("the blocker's unresolved-source section", () => {
 		);
 
 		const text = await readFile(rootFile, "utf8");
-		expect(text).toContain("CORE SYNC BLOCKED — UNRESOLVED MANAGED SOURCE");
+		expect(text).toContain("RECONCILIATION REQUIRED — UNRESOLVED MANAGED SOURCE");
 		expect(text).toContain("`shared/SKILL.md`");
 		expect(text).toContain("`AGENTS.md`");
 		expect(text).toContain("ownership cannot be established");

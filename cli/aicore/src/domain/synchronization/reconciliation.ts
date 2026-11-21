@@ -74,9 +74,9 @@ function unresolvedSourceSection(missing: readonly MissingRegionSource[]): reado
 	}
 	const reasons = new Set(missing.map((item) => item.reason));
 	const lines: string[] = [
-		"> **🚫 CORE SYNC BLOCKED — UNRESOLVED MANAGED SOURCE.**",
+		"> **🚫 RECONCILIATION REQUIRED — UNRESOLVED MANAGED SOURCE.**",
 		">",
-		"> One or more previously distributed sources can no longer be reconciled automatically. Every destination file named below is PRESERVED: it may hold project-owned content, so none of it is deleted or overwritten automatically.",
+		"> One or more previously distributed sources can no longer be reconciled automatically. Every destination file named below is PRESERVED: a shared file may hold project-owned content, so none of it is deleted or overwritten automatically.",
 		">",
 	];
 	for (const item of missing) {
@@ -87,10 +87,10 @@ function unresolvedSourceSection(missing: readonly MissingRegionSource[]): reado
 	lines.push(">");
 	if (reasons.has("missing") || reasons.has("withdrawn")) {
 		lines.push(
-			"> **Required action — the source is missing or withdrawn (region-managed):**",
+			"> **Required action — the source is missing or withdrawn:**",
 			"> 1. Investigate whether the core source file was renamed, relocated, retired, or withdrawn from this project's distribution.",
-			"> 2. Identify the correct source and destination correspondence.",
-			"> 3. Reconcile through the existing supported workflow, preserving every destination-owned region.",
+			"> 2. Identify the correct source and destination correspondence for each file listed above.",
+			"> 3. Reconcile through the existing supported workflow for that file's ownership mode, as described below.",
 			">",
 		);
 	}
@@ -104,9 +104,14 @@ function unresolvedSourceSection(missing: readonly MissingRegionSource[]): reado
 		);
 	}
 	lines.push(
-		"> In every case above: preserve the file, do not guess ownership, do not delete or relocate content automatically, and never invent a replacement path. If the correct reconciliation cannot be established confidently, STOP that reconciliation attempt and ask the user.",
+		"> **Reconcile each file by its ownership mode — the procedures differ:**",
+		"> - A **region-managed** file holds destination-owned content between its `<!-- project:begin -->` and `<!-- project:end -->` markers. Reconcile it in that region and leave the core region untouched.",
+		"> - A **merge-managed** JSON file holds destination-owned top-level keys alongside the Core-owned ones, and its own formatting and comments. Reconcile it without deleting a destination-owned key and without replacing the document with an empty or default object.",
+		"> - Use only the procedure this project already supports for that mode. Do not invent a migration, a rename or a replacement path.",
 		">",
-		"> Synchronization remains blocked until this condition is resolved, and resolving an ordinary pending region update does not resolve it.",
+		"> In every case above: preserve the file and its destination-owned content, do not guess ownership, do not delete anything silently, and never migrate destination-owned content arbitrarily. If the correct reconciliation cannot be established confidently, STOP that reconciliation attempt and ask the user.",
+		">",
+		"> This project's reconciliation remains outstanding until this condition is resolved, and resolving an ordinary pending region update does not resolve it.",
 		">",
 	);
 	return lines;

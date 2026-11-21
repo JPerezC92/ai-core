@@ -169,8 +169,8 @@ export class VerifyDestinations {
 		if (reconciling !== undefined) {
 			return failed(
 				drift(
-					`core sync blocked: ${reconciling.source} -> ${reconciling.destinations.join(", ")} ` +
-						`(${reconciling.reason})`,
+					`reconciliation required: ${reconciling.source} -> ${reconciling.destinations.join(", ")} ` +
+						`(${reconciling.reason}); the destination is not current until this project reconciles it`,
 				),
 			);
 		}

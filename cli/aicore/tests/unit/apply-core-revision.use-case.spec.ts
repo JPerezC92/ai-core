@@ -357,6 +357,56 @@ describe("source preservation", () => {
 	});
 });
 
+describe("merge-managed source preservation", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	test("a merge-managed source that no longer exists is preserved, never deleted or rewritten", async () => {
+		// A merge destination holds destination-owned keys alongside the Core-owned
+		// ones, so the file is never exclusively Core-owned and its removal would
+		// destroy destination content.
+		const source = ".opencode/opencode.jsonc";
+		const bindings = mock<BindingsStore>();
+		bindings.load.mockResolvedValue(
+			makeBindingsDocument({ bindings: [{ source, destinations: [source], declaredMode: "merge" }] }),
+		);
+		const clearance = mock<ClearanceStore>();
+		clearance.load.mockResolvedValue(makeClearanceLoad({ ".opencode/": { mode: "merge" } }));
+		const layout = mock<FilesystemLayout>();
+		layout.join.mockImplementation((root, relative) => `${root}/${relative}`);
+		layout.exists.mockResolvedValue(true);
+		// The destination still exists; the source tree no longer holds the source.
+		layout.isFile.mockImplementation(async (path) => path.startsWith(`${SYNCHRONIZATION_DESTINATION_ROOT}/`));
+		const destinations = mock<DestinationFiles>();
+		destinations.readText.mockResolvedValue(null);
+		const guard = mock<WriteTargetGuard>();
+		guard.refuse.mockResolvedValue(null);
+		const useCase = new ApplyCoreRevision({
+			bindings,
+			clearance,
+			sources: mock<SourceFiles>(),
+			destinations,
+			layout,
+			guard,
+		});
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(true);
+		// Neither the file nor its content is touched: it is neither removed nor
+		// replaced with an empty or default object.
+		expect(destinations.remove).not.toHaveBeenCalled();
+		expect(writtenTo(destinations, `${SYNCHRONIZATION_DESTINATION_ROOT}/${source}`)).toEqual([]);
+		// The binding survives and the destination is recorded as requiring
+		// reconciliation through the existing lifecycle contract.
+		const saved = bindings.save.mock.calls[0]?.[1];
+		expect(saved?.bindings.map((entry) => entry.source)).toContain(source);
+		expect(saved?.pending).toContain(source);
+		expect(layout.syncBlocker.mock.calls[0]?.[3]).toEqual([{ source, destination: source, reason: "missing" }]);
+	});
+});
+
 describe("newly cleared sources", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();

@@ -263,7 +263,7 @@ describe("unresolved managed sources", () => {
 		expect(outcome.ok).toBe(false);
 		const failure = outcome.ok ? null : outcome.failure;
 		expect(failure?.code).toBe("drift");
-		expect(failure?.message).toContain("core sync blocked");
+		expect(failure?.message).toContain("reconciliation required");
 		expect(failure?.message).toContain("withdrawn");
 		// The blocker is written before the refusal, naming the preserved pair.
 		expect(layout.syncBlocker.mock.calls[0]?.[3]).toEqual([
