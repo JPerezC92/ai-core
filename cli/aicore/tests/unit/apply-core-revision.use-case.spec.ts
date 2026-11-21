@@ -31,6 +31,7 @@ import type {
 import {
 	BOUND_SOURCE,
 	RELOCATED_BOUND_DESTINATION,
+	SOURCE_ROOT,
 	SYNCHRONIZATION_DESTINATION_ROOT,
 	makeBindingsDocument,
 	makeClearanceLoad,
@@ -166,7 +167,7 @@ function makeWritableUpdate(options: WritableUpdateOptions = {}) {
 	const layout = mock<FilesystemLayout>();
 	layout.join.mockImplementation((root, relative) => `${root}/${relative}`);
 	layout.exists.mockImplementation(async (path) => existing.has(path));
-	layout.isFile.mockImplementation(async (path) => existing.has(path));
+	layout.isFile.mockImplementation(async (path) => existing.has(path) || path.startsWith(SOURCE_ROOT));
 
 	const guard = mock<WriteTargetGuard>();
 	guard.refuse.mockResolvedValue(null);
@@ -228,6 +229,43 @@ describe("source retirement", () => {
 		expect(outcome.ok).toBe(true);
 		expect(outcome.ok && outcome.message).toContain(`retired: ${source}`);
 		expect(destinations.remove).toHaveBeenCalledWith(`${SYNCHRONIZATION_DESTINATION_ROOT}/${source}`);
+		expect(bindings.save.mock.calls[0]?.[1].bindings).toEqual([]);
+	});
+
+	test("a cleared source the tree no longer holds is retired instead of failing the run", async () => {
+		// The registry still declares the file, so clearance alone would call it
+		// distributable; distributability requires physical presence too, so the
+		// ownership rule retires it and unrelated safe updates still complete.
+		const source = ".agents/skills/x/a.ts";
+		const bindings = mock<BindingsStore>();
+		bindings.load.mockResolvedValue(
+			makeBindingsDocument({ bindings: [{ source, destinations: [source], declaredMode: "raw" }] }),
+		);
+		const clearance = mock<ClearanceStore>();
+		clearance.load.mockResolvedValue(makeClearanceLoad({ [source]: { mode: "raw" } }));
+		const layout = mock<FilesystemLayout>();
+		layout.join.mockImplementation((root, relative) => `${root}/${relative}`);
+		layout.exists.mockResolvedValue(true);
+		// The destination still exists; the source tree no longer holds the source.
+		layout.isFile.mockImplementation(async (path) => path.startsWith(`${SYNCHRONIZATION_DESTINATION_ROOT}/`));
+		const destinations = mock<DestinationFiles>();
+		destinations.readText.mockResolvedValue(null);
+		const guard = mock<WriteTargetGuard>();
+		guard.refuse.mockResolvedValue(null);
+		const useCase = new ApplyCoreRevision({
+			bindings,
+			clearance,
+			sources: mock<SourceFiles>(),
+			destinations,
+			layout,
+			guard,
+		});
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(true);
+		expect(destinations.remove).toHaveBeenCalledWith(`${SYNCHRONIZATION_DESTINATION_ROOT}/${source}`);
+		expect(writtenTo(destinations, `${SYNCHRONIZATION_DESTINATION_ROOT}/${source}`)).toEqual([]);
 		expect(bindings.save.mock.calls[0]?.[1].bindings).toEqual([]);
 	});
 
@@ -306,7 +344,7 @@ describe("source preservation", () => {
 		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
 
 		expect(outcome.ok).toBe(true);
-		expect(destinations.remove).not.toHaveBeenCalled();
+		expect(destinations.remove).not.toHaveBeenCalledWith(`${SYNCHRONIZATION_DESTINATION_ROOT}/${source}`);
 		// The preserved destination is neither rewritten nor replaced.
 		expect(writtenTo(destinations, `${SYNCHRONIZATION_DESTINATION_ROOT}/${source}`)).toEqual([]);
 		expect(destinations.writeText.mock.calls.filter(([target]) => target.endsWith(`/${source}`))).toEqual([]);
@@ -348,7 +386,7 @@ describe("source preservation", () => {
 		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
 
 		expect(outcome.ok).toBe(true);
-		expect(destinations.remove).not.toHaveBeenCalled();
+		expect(destinations.remove).not.toHaveBeenCalledWith(`${SYNCHRONIZATION_DESTINATION_ROOT}/${source}`);
 		// The preserved destination is neither rewritten nor replaced.
 		expect(writtenTo(destinations, `${SYNCHRONIZATION_DESTINATION_ROOT}/${source}`)).toEqual([]);
 		expect(destinations.writeText.mock.calls.filter(([target]) => target.endsWith(`/${source}`))).toEqual([]);
@@ -396,7 +434,7 @@ describe("merge-managed source preservation", () => {
 		expect(outcome.ok).toBe(true);
 		// Neither the file nor its content is touched: it is neither removed nor
 		// replaced with an empty or default object.
-		expect(destinations.remove).not.toHaveBeenCalled();
+		expect(destinations.remove).not.toHaveBeenCalledWith(`${SYNCHRONIZATION_DESTINATION_ROOT}/${source}`);
 		expect(writtenTo(destinations, `${SYNCHRONIZATION_DESTINATION_ROOT}/${source}`)).toEqual([]);
 		// A merge destination is delivered through the text channel, so the absence
 		// of a write there is what proves it was not rewritten.
@@ -425,7 +463,9 @@ describe("newly cleared sources", () => {
 		layout.join.mockImplementation((root, relative) => `${root}/${relative}`);
 		layout.enumerateFilesUnder.mockResolvedValue(["new.ts"]);
 		layout.exists.mockResolvedValue(false);
-		layout.isFile.mockResolvedValue(false);
+		// The enumeration reported the source, so the source tree holds it; the
+		// destination is what does not exist yet.
+		layout.isFile.mockImplementation(async (path) => path.startsWith(SOURCE_ROOT));
 		const sources = mock<SourceFiles>();
 		sources.readBytes.mockResolvedValue(PAYLOAD);
 		const destinations = mock<DestinationFiles>();
@@ -614,7 +654,7 @@ function makeBindingUpdate(options: BindingUpdateOptions) {
 	const layout = mock<FilesystemLayout>();
 	layout.join.mockImplementation((root, relative) => `${root}/${relative}`);
 	layout.exists.mockImplementation(async (path) => existing.has(path));
-	layout.isFile.mockImplementation(async (path) => existing.has(path));
+	layout.isFile.mockImplementation(async (path) => existing.has(path) || path.startsWith(SOURCE_ROOT));
 	layout.parent.mockImplementation((path) => path.slice(0, path.lastIndexOf("/")));
 
 	const guard = mock<WriteTargetGuard>();

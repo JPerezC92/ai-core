@@ -135,8 +135,6 @@ export class EnrollDestinations {
 
 		// The domain decides which cleared sources gain bindings and which destinations
 		// are new; this operation only probes the facts it needs.
-		const facts = await sourceFacts(restored, clearance, editor, request.sourceRoot, layout);
-
 		const entries = clearance.entries ?? new Map<string, ClearanceEntry>();
 		const rootEntry = [...entries.entries()].find(([, entry]) => entry.kind === "file" && entry.role === ROLE_ROOT);
 		const rootSource = rootEntry?.[0] ?? null;
@@ -166,6 +164,10 @@ export class EnrollDestinations {
 			}
 		}
 		const enrolled = withEnrolledSources(restored, enrollment, existingDestinations);
+		// Presence is probed on the document that is classified, so a source this run
+		// enrolled is asked about too: it came from a real enumeration, and the
+		// classification must see that it exists.
+		const facts = await sourceFacts(enrolled.document, clearance, editor, request.sourceRoot, layout);
 		const withheld = withheldSources(enrolled.document, facts, entries);
 		const document = withheld.document;
 		const newRawDestinations = new Set<string>([...declared.newRawDestinations, ...enrolled.newRawDestinations]);

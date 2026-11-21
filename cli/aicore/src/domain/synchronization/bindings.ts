@@ -469,7 +469,7 @@ export function withheldSources(
 	};
 
 	for (const entry of document.bindings) {
-		if (facts.cleared.has(entry.source)) {
+		if (facts.cleared.has(entry.source) && facts.present.has(entry.source)) {
 			distributable.push(entry);
 			kept.push(entry);
 			continue;

@@ -127,7 +127,6 @@ export class ApplyCoreRevision {
 		}
 		// The domain decides which cleared sources gain bindings and which destinations
 		// are new; this operation only probes the facts it needs.
-		const facts = await sourceFacts(current, clearance, editor, request.sourceRoot, layout);
 		const rootEntry = [...clearance.entries.entries()].find(
 			([, entry]) => entry.kind === "file" && entry.role === ROLE_ROOT,
 		);
@@ -153,6 +152,10 @@ export class ApplyCoreRevision {
 			}
 		}
 		const enrolled = withEnrolledSources(current, enrollment, existingDestinations);
+		// Presence is probed on the document that is classified, so a source this run
+		// enrolled is asked about too: it came from a real enumeration, and the
+		// classification must see that it exists.
+		const facts = await sourceFacts(enrolled.document, clearance, editor, request.sourceRoot, layout);
 		const withheld = withheldSources(enrolled.document, facts, clearance.entries);
 		const plan = withheld.document;
 		if (enrolled.newRawDestinations.size > 0) {

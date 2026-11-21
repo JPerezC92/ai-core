@@ -32,6 +32,7 @@ import type {
 import {
 	BOUND_SOURCE,
 	RELOCATED_BOUND_DESTINATION,
+	SOURCE_ROOT,
 	SYNCHRONIZATION_DESTINATION_ROOT,
 	makeBindingsDocument,
 	makeClearanceLoad,
@@ -94,16 +95,21 @@ function makeEnrollmentArrangement(options: EnrollArrangement = {}): {
 	layout.exists.mockImplementation(async (path) => existing.has(path));
 	// A destination this document binds answers from `existing`, so a bound
 	// destination that is not there reads as absent whatever its relative path is.
-	// Every other path answers for a source the source tree holds.
+	// Every other path answers for a source the source tree holds. A path is
+	// identified by the root it hangs from, never by its tail: a source and a
+	// destination may share a relative path, and a suffix match would confuse them.
 	layout.isFile.mockImplementation(async (path) => {
-		const endsWith = (candidate: string) => path.endsWith(`/${candidate}`);
-		if ([...boundDestinations].some(endsWith)) {
+		const under = (root: string, candidate: string) => path === `${root}/${candidate}`;
+		if ([...boundDestinations].some((candidate) => under(SYNCHRONIZATION_DESTINATION_ROOT, candidate))) {
 			return existing.has(path);
 		}
 		if (existing.has(path)) {
 			return true;
 		}
-		return [...sourceFiles].some(endsWith) && ![...absentSources].some(endsWith);
+		return (
+			[...sourceFiles].some((candidate) => under(SOURCE_ROOT, candidate)) &&
+			![...absentSources].some((candidate) => under(SOURCE_ROOT, candidate))
+		);
 	});
 	layout.parent.mockImplementation((path) => path.slice(0, path.lastIndexOf("/")));
 
@@ -535,6 +541,8 @@ describe("root role", () => {
 		const arrangement = makeEnrollmentArrangement({
 			document: makeBindingsDocument({ bindings: [] }),
 			clearance: rootClearance(),
+			// A root-role source the clearance names is a file the source tree holds.
+			sourceFiles: [BOUND_SOURCE],
 		});
 		arrangement.sources.readCore.mockResolvedValue({ kind: "core", core: "root core\n" });
 		arrangement.layout.detectRootFile.mockResolvedValue(null);
