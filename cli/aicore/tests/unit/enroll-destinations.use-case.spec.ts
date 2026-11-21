@@ -502,6 +502,51 @@ describe("init declarations", () => {
 	});
 });
 
+/** A clearance store double whose registry holds the given records. */
+function makeClearanceStore(
+	cleared: Readonly<Record<string, Readonly<Record<string, unknown>>>>,
+): MockProxy<ClearanceStore> {
+	const clearance = mock<ClearanceStore>();
+	clearance.load.mockResolvedValue(makeClearanceLoad(cleared));
+	return clearance;
+}
+
+describe("destination ownership", () => {
+	test("an enrollment that would give one destination two owners is refused before anything is written", async () => {
+		const held = ".agents/skills/held/SKILL.md";
+		const candidate = ".agents/skills/other/SKILL.md";
+		const destination = ".opencode/skills/shared/SKILL.md";
+		const arrangement = makeEnrollmentArrangement({
+			document: makeBindingsDocument({
+				bindings: [{ source: held, destinations: [destination], declaredMode: "region" }],
+			}),
+			// The candidate's record names the destination an existing binding owns.
+			clearance: makeClearanceStore({
+				[candidate]: {
+					mode: "raw",
+					editors: {
+						opencode: { destination },
+						cursor: { destination: ".cursor/other/SKILL.md" },
+					},
+				},
+			}),
+			sourceFiles: [candidate],
+		});
+
+		const outcome = await arrangement.useCase.execute(makeEnrollmentRequest({ bindCleared: true }));
+
+		expect(outcome.ok).toBe(false);
+		const failure = outcome.ok ? null : outcome.failure;
+		expect(failure?.code).toBe("invalid");
+		expect(failure?.message).toContain("conflicting destination ownership");
+		expect(arrangement.destinations.writeText).not.toHaveBeenCalled();
+		expect(arrangement.destinations.writeBytes).not.toHaveBeenCalled();
+		expect(arrangement.destinations.remove).not.toHaveBeenCalled();
+		expect(arrangement.bindings.writeReport).not.toHaveBeenCalled();
+		expect(arrangement.bindings.save).not.toHaveBeenCalled();
+	});
+});
+
 describe("root role", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
