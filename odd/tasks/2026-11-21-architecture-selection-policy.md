@@ -48,7 +48,7 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
 
 - T1 | S1, S2, S3, S4, S5, S6, S7, S8, S9, S12, S16 | inline (the agnostic contract has no delegated author; one coherent contract candidate avoids conflicting edits to the same file) — Cipher 🔓 (Lead Orchestrator) | done | commit: 0633fe2ac63bdd4491b28609698e865171503f52
 - T2 | S13, S15 | inline (shapes and guides are mappings of the contract candidate and are edited as one dependent set) — Cipher 🔓 (Lead Orchestrator) | done | commit: 2952505410621ece38062faa420e4c3bddb9705b
-- T3 | S10 | inline (one rule plus its parity mappings; the testing contract is a single owner) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
+- T3 | S10 | inline (one rule plus its parity mappings; the testing contract is a single owner) — Cipher 🔓 (Lead Orchestrator) | done | commit: 9995cca9054a59d7a035c41361914ec91ef4f573
 - T4 | S11, S14 | inline (agent instructions, decision records and durable documentation form one coordinated set) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
 - T5 | S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16 | delegated (independent architecture-owner gates: Bastion 🧱 for the common contract and the backend/scripts cells, Atrium 🏛️ for the frontend cells, Crucible 🔥 for the testing contract; no author reviews its own candidate) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
 - T6 | S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16 | delegated (independent record audit by Sentinel 🛡️ plus independent whole-feature semantic acceptance, neither of which the author performs) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
@@ -109,3 +109,5 @@ Task-row illustration: `open` → `in progress` → `done`; `commit: pending` wh
 - L7 — Work unit 1 delivered at `0633fe2ac63bdd4491b28609698e865171503f52`: complexity levels, the prospective `C3` scope, the Interface boundary rules and the three figures entered the common contract, with the navigation range and selection entry updated and the SVG verified by rendering. `biome format` and both validators pass for every changed path; two untouched records under `odd/tasks/` already failed `format:check` at the base commit and are left as found. T1 is done.
 
 - L8 — Work unit 2 delivered at `2952505410621ece38062faa420e4c3bddb9705b`: the three shapes bind their layout obligations to L3 and name where the Interface responsibility lives, and every implementation guide plus the stack template maps `C11`, `C12` and `C13`. Verified by a bounded identifier search across the mapping surfaces and by `biome format`. T2 is done.
+
+- L9 — Work unit 3 delivered at `9995cca9054a59d7a035c41361914ec91ef4f573`: `T2` gains the pure rule or transformation target with its no-per-file and no-infrastructure limits, and both testing guides and the template carry it. `T1`, `T8`, `T10` and `T21` are unchanged. T3 is done.
