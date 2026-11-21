@@ -31,31 +31,27 @@ import {
 import {
 	bindingModeConflict,
 	destinationDrift,
+	type EnrollmentPlan,
+	duplicatedDestinations,
+	enrollmentCandidates,
 	nonRegionDestinations,
 	normalizePending,
 	parseInitBindingSpec,
 	protectedExclusionFailure,
-	unclearedSources,
+	withEnrolledSources,
 	withInitDeclarations,
 	withOptOuts,
 	withRestoredOptOuts,
-	isExcludedSource,
+	withheldSources,
 } from "#domain/synchronization/bindings.ts";
-import {
-	drift,
-	failed,
-	invalid,
-	succeeded,
-	type OperationOutcome,
-	type SynchronizationFailure,
-} from "#domain/synchronization/failures.ts";
+import { drift, failed, invalid, succeeded, type OperationOutcome } from "#domain/synchronization/failures.ts";
 import { splitFrontmatter } from "#domain/synchronization/frontmatter.ts";
 import { mergeTopLevel } from "#domain/synchronization/merge.ts";
 import { hasExactCoreMarkerLines } from "#domain/synchronization/markers.ts";
 import type { ReconciliationEntry } from "#domain/synchronization/reconciliation.ts";
+import { missingRegionSources } from "#domain/synchronization/reconciliation.ts";
 import { protectedBytes, renderInitFile, renderWithRegion, splitRegions } from "#domain/synchronization/regions.ts";
 import { editorMismatch, effectiveEditor } from "#domain/synchronization/editor-profile.ts";
-import type { BindingMode } from "#domain/synchronization/constants.ts";
 import type { BindingsDocument } from "#domain/synchronization/bindings.ts";
 import { omitMcpServersOf, type ClearanceEntry } from "#domain/synchronization/clearance.ts";
 import type {
@@ -67,7 +63,7 @@ import type {
 	WriteTargetGuard,
 } from "#domain/synchronization/ports.ts";
 
-import { invalidClearance, readClearanceModes } from "./clearance-modes.ts";
+import { invalidClearance, readClearanceModes, sourceFacts } from "./clearance-modes.ts";
 import { ensureOpenCodeSecrets } from "./open-code-secrets.ts";
 import { projectName } from "./project-name.ts";
 import type { EnrollmentRequest } from "./requests.ts";
@@ -84,12 +80,6 @@ export type EnrollDestinationsDependencies = {
 
 type TextWrite = { readonly path: string; readonly content: string };
 type ByteWrite = { readonly path: string; readonly content: Uint8Array };
-
-type BulkEnrollment = {
-	readonly document: BindingsDocument;
-	readonly newRawDestinations: ReadonlySet<string>;
-	readonly newMergeDestinations: ReadonlySet<string>;
-};
 
 export class EnrollDestinations {
 	readonly #dependencies: EnrollDestinationsDependencies;
@@ -144,26 +134,45 @@ export class EnrollDestinations {
 		// leaves `pending`, so a re-enrollment and an `apply` agree on the state.
 		const restored = withRestoredOptOuts(applied, clearance.modes, clearance.destinations);
 
-		const bulk =
-			request.bindCleared && clearance.entries !== null
-				? await this.#bulkEnroll(
-						restored,
-						request,
-						clearance.entries,
-						clearance.modes,
-						clearance.destinations,
-						layout,
-					)
-				: null;
-		if (bulk !== null && "failure" in bulk) {
-			return failed(bulk.failure);
+		// The domain decides which cleared sources gain bindings and which destinations
+		// are new; this operation only probes the facts it needs.
+		const entries = clearance.entries ?? new Map<string, ClearanceEntry>();
+		const rootEntry = [...entries.entries()].find(([, entry]) => entry.kind === "file" && entry.role === ROLE_ROOT);
+		const rootSource = rootEntry?.[0] ?? null;
+		let rootDestination = restored.root;
+		if (rootSource !== null) {
+			const existingRoot = restored.bindings.find((entry) => entry.source === rootSource);
+			rootDestination =
+				existingRoot?.destinations[0] ??
+				request.rootOverride ??
+				(await layout.detectRootFile(request.destinationRoot));
+			if (rootDestination === null) {
+				return failed(drift("destination instruction root not found; pass --root"));
+			}
 		}
-		const document = bulk === null ? restored : bulk.document;
-		const newRawDestinations = new Set<string>([
-			...declared.newRawDestinations,
-			...(bulk === null ? [] : bulk.newRawDestinations),
-		]);
-		const newMergeDestinations = bulk === null ? new Set<string>() : bulk.newMergeDestinations;
+		const enrollment: EnrollmentPlan = request.bindCleared
+			? enrollmentCandidates(restored, {
+					modes: clearance.modes,
+					destinations: clearance.destinations,
+					rootSource,
+					rootDestination,
+				})
+			: { root: restored.root, candidates: [] };
+		const existingDestinations = new Set<string>();
+		for (const candidate of enrollment.candidates) {
+			if (await layout.exists(layout.join(request.destinationRoot, candidate.destination))) {
+				existingDestinations.add(candidate.destination);
+			}
+		}
+		const enrolled = withEnrolledSources(restored, enrollment, existingDestinations);
+		// Presence is probed on the document that is classified, so a source this run
+		// enrolled is asked about too: it came from a real enumeration, and the
+		// classification must see that it exists.
+		const facts = await sourceFacts(enrolled.document, clearance, editor, request.sourceRoot, layout);
+		const withheld = withheldSources(enrolled.document, facts, entries);
+		const document = withheld.document;
+		const newRawDestinations = new Set<string>([...declared.newRawDestinations, ...enrolled.newRawDestinations]);
+		const newMergeDestinations = enrolled.newMergeDestinations;
 
 		const refusal = await guard.refuse({
 			command: "init",
@@ -209,9 +218,11 @@ export class EnrollDestinations {
 				return failed(conflict);
 			}
 		}
-		const uncleared = unclearedSources(document, new Set(clearance.modes.keys()));
-		if (uncleared.length > 0) {
-			return failed(drift(`source not cleared for distribution: ${uncleared.join(", ")}`));
+		// Two live bindings cannot own one destination, and a distributable binding
+		// must not displace one awaiting reconciliation. Nothing is mutated first.
+		const duplicated = duplicatedDestinations(document);
+		if (duplicated.length > 0) {
+			return failed(invalid(`conflicting destination ownership: ${duplicated.join(", ")}`));
 		}
 		// Same refusal, at the same position, as `apply` and `check`: an already-bound
 		// source whose record now declares another destination is drift, not a state
@@ -230,7 +241,7 @@ export class EnrollDestinations {
 			document.pending,
 			nonRegionDestinations(document, clearance.modes),
 		);
-		for (const entry of document.bindings) {
+		for (const entry of withheld.distributable) {
 			const mode = clearance.modes.get(entry.source);
 			const sourcePath = layout.join(request.sourceRoot, entry.source);
 
@@ -369,6 +380,13 @@ export class EnrollDestinations {
 			await layout.ensureDirectory(layout.parent(write.path));
 			await destinations.writeBytes(write.path, write.content);
 		}
+		for (const retired of withheld.retired) {
+			for (const destination of retired.destinations) {
+				const destinationPath = layout.join(request.destinationRoot, destination);
+				await destinations.remove(destinationPath);
+				notes.push(`retired: ${destination}`);
+			}
+		}
 		await ensureOpenCodeSecrets(editor, request.destinationRoot, {
 			destinations,
 			layout,
@@ -385,78 +403,14 @@ export class EnrollDestinations {
 			editor,
 		};
 		await bindings.save(request.bindingsPath, pinned);
-		await layout.syncBlocker(request.destinationRoot, pinned, pending);
+		await layout.syncBlocker(
+			request.destinationRoot,
+			pinned,
+			pending,
+			missingRegionSources(withheld.requiresReconciliation),
+		);
 
 		return succeeded(["initialized", ...notes].join("; "));
-	}
-
-	/**
-	 * Enroll every cleared source that is not already bound and that the
-	 * destination has not opted out of.
-	 *
-	 * A directory root's expansion supplies the mode each file takes and the
-	 * destination the editor receives it at; the root-role source maps to the
-	 * destination instruction root, and destinations this run discovers absent
-	 * become the creation set. An opted-out source is neither bound nor written,
-	 * so no later enrollment reintroduces it.
-	 */
-	async #bulkEnroll(
-		document: BindingsDocument,
-		request: EnrollmentRequest,
-		entries: ReadonlyMap<string, ClearanceEntry>,
-		modes: ReadonlyMap<string, BindingMode>,
-		destinations: ReadonlyMap<string, string>,
-		layout: FilesystemLayout,
-	): Promise<BulkEnrollment | { readonly failure: SynchronizationFailure }> {
-		const bindings = document.bindings.map((entry) => ({ ...entry }));
-		const bound = new Set(bindings.map((entry) => entry.source));
-		let rootDestination = document.root;
-		let rootSource: string | null = null;
-
-		for (const [source, entry] of entries) {
-			if (entry.kind !== "file" || entry.role !== ROLE_ROOT) {
-				continue;
-			}
-			rootSource = source;
-			const existing = bindings.find((candidate) => candidate.source === source);
-			if (existing !== undefined) {
-				rootDestination = existing.destinations[0] ?? null;
-			} else if (request.rootOverride !== null) {
-				rootDestination = request.rootOverride;
-			} else {
-				rootDestination = await layout.detectRootFile(request.destinationRoot);
-			}
-			if (rootDestination === null) {
-				return { failure: drift("destination instruction root not found; pass --root") };
-			}
-		}
-
-		const newRawDestinations = new Set<string>();
-		const newMergeDestinations = new Set<string>();
-		for (const [source, mode] of modes) {
-			if (bound.has(source) || isExcludedSource(source, document.exclude)) {
-				continue;
-			}
-			const destination =
-				source === rootSource && rootDestination !== null
-					? rootDestination
-					: (destinations.get(source) ?? source);
-			bindings.push({ source, destinations: [destination], declaredMode: mode });
-			bound.add(source);
-			if (!(await layout.exists(layout.join(request.destinationRoot, destination)))) {
-				if (mode === MODE_RAW) {
-					newRawDestinations.add(destination);
-				} else if (mode === MODE_MERGE) {
-					newMergeDestinations.add(destination);
-				}
-			}
-		}
-
-		return {
-			document: { ...document, bindings, root: rootDestination },
-			newRawDestinations,
-			newMergeDestinations,
-		};
 	}
 }
 

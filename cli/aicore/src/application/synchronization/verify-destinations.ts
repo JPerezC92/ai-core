@@ -15,8 +15,8 @@ import {
 	nonRegionDestinations,
 	normalizePending,
 	protectedExclusionFailure,
-	unclearedSources,
 	withOptOuts,
+	withheldSources,
 } from "#domain/synchronization/bindings.ts";
 import { drift, failed, invalid, succeeded, type OperationOutcome } from "#domain/synchronization/failures.ts";
 import { omitMcpServersOf } from "#domain/synchronization/clearance.ts";
@@ -24,6 +24,7 @@ import { isMerged } from "#domain/synchronization/merge.ts";
 import { editorMismatch, effectiveEditor } from "#domain/synchronization/editor-profile.ts";
 import { frontmatterIsCurrent, splitFrontmatter } from "#domain/synchronization/frontmatter.ts";
 import { splitRegions } from "#domain/synchronization/regions.ts";
+import { missingRegionSources } from "#domain/synchronization/reconciliation.ts";
 import type {
 	BindingsStore,
 	ClearanceStore,
@@ -33,7 +34,7 @@ import type {
 	WriteTargetGuard,
 } from "#domain/synchronization/ports.ts";
 
-import { invalidClearance, readClearanceModes } from "./clearance-modes.ts";
+import { invalidClearance, readClearanceModes, sourceFacts } from "./clearance-modes.ts";
 import { projectName } from "./project-name.ts";
 import type { SynchronizationRequest } from "./requests.ts";
 
@@ -108,20 +109,26 @@ export class VerifyDestinations {
 				return failed(conflict);
 			}
 		}
-		const uncleared = unclearedSources(document, new Set(clearance.modes.keys()));
-		if (uncleared.length > 0) {
-			return failed(drift(`source not cleared for distribution: ${uncleared.join(", ")}`));
-		}
-		if (clearance.entries !== null) {
-			const relocated = destinationDrift(document, clearance.entries, clearance.destinations);
-			if (relocated !== null) {
-				return failed(relocated);
-			}
+
+		// A source the tree no longer holds is retired when the whole file belonged
+		// to the source, and blocked when its destination holds project-owned
+		// content. The blocker is synchronized before either answer is reported, so
+		// the destination sees the reason even though this run fails.
+		// The domain classifies every bound source; the checks below read only what it
+		// calls distributable, and the blocker carries everything it preserved.
+		const facts = await sourceFacts(document, clearance, editor, request.sourceRoot, layout);
+		const withheld = withheldSources(document, facts, clearance.entries);
+		const plan = withheld.document;
+		const nonRegion = nonRegionDestinations(plan, clearance.modes);
+
+		const relocated = destinationDrift(plan, clearance.entries, clearance.destinations);
+		if (relocated !== null) {
+			return failed(relocated);
 		}
 
 		const sourceCores = new Map<string, string>();
 		const sourceFrontmatters = new Map<string, string>();
-		for (const entry of document.bindings) {
+		for (const entry of withheld.distributable) {
 			const mode = clearance.modes.get(entry.source);
 			if (mode === MODE_RAW || mode === MODE_MERGE) {
 				continue;
@@ -139,9 +146,34 @@ export class VerifyDestinations {
 			sourceFrontmatters.set(entry.source, text === null ? "" : splitFrontmatter(text).frontmatter);
 		}
 
-		const nonRegion = nonRegionDestinations(document, clearance.modes);
-		const stalePending = document.pending.filter((path) => nonRegion.has(path));
-		await layout.syncBlocker(request.destinationRoot, document, normalizePending(document.pending, nonRegion));
+		const stalePending = plan.pending.filter((path) => nonRegion.has(path));
+		await layout.syncBlocker(
+			request.destinationRoot,
+			plan,
+			normalizePending(plan.pending, nonRegion),
+			missingRegionSources(withheld.requiresReconciliation),
+		);
+
+		// A retired source is reported, not repaired: the destination has to run the
+		// synchronization that removes the managed copy it still holds.
+		const retired = withheld.retired[0];
+		if (retired !== undefined) {
+			return failed(
+				drift(
+					`source no longer distributed: ${retired.source} (${retired.reason}); ` +
+						`run apply or init to retire ${retired.destinations.join(", ")}`,
+				),
+			);
+		}
+		const reconciling = withheld.requiresReconciliation[0];
+		if (reconciling !== undefined) {
+			return failed(
+				drift(
+					`reconciliation required: ${reconciling.source} -> ${reconciling.destinations.join(", ")} ` +
+						`(${reconciling.reason}); the destination is not current until this project reconciles it`,
+				),
+			);
+		}
 
 		if (stalePending.length > 0) {
 			return failed(
@@ -156,7 +188,7 @@ export class VerifyDestinations {
 			return failed(drift("revision drift: bindings revision does not match source"));
 		}
 
-		for (const entry of document.bindings) {
+		for (const entry of withheld.distributable) {
 			const mode = clearance.modes.get(entry.source);
 			const sourcePath = layout.join(request.sourceRoot, entry.source);
 			if (mode === MODE_RAW) {
@@ -227,7 +259,7 @@ export class VerifyDestinations {
 			}
 		}
 
-		if (document.pending.length > 0) {
+		if (plan.pending.length > 0) {
 			return failed(drift("pending changes: destination is not current"));
 		}
 		return succeeded("current");

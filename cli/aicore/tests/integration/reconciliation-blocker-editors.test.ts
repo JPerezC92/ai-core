@@ -58,7 +58,7 @@ async function syncInto(editor: EditorProfile): Promise<string> {
 	const rootFile = join(destination, ROOT_FILE);
 	await writeFile(rootFile, ROOT_TEXT, "utf8");
 
-	await layout.syncBlocker(destination, makeBindingsDocument({ editor }), ["AGENTS.md"]);
+	await layout.syncBlocker(destination, makeBindingsDocument({ editor }), ["AGENTS.md"], []);
 
 	return readFile(rootFile, "utf8");
 }
@@ -75,6 +75,30 @@ function blockLines(text: string): readonly string[] {
 		.map((line) => line.replace(/^> ?/u, "").trim())
 		.filter((line) => line !== "");
 }
+
+describe("the blocker's unresolved-source section", () => {
+	test("a resolved reason names both paths and the configuration to investigate", async () => {
+		const destination = join(root, "cursor");
+		await mkdir(destination);
+		const rootFile = join(destination, ROOT_FILE);
+		await writeFile(rootFile, ROOT_TEXT, "utf8");
+
+		await layout.syncBlocker(
+			destination,
+			makeBindingsDocument({ editor: "cursor" }),
+			["AGENTS.md"],
+			[{ source: "shared/SKILL.md", destination: "AGENTS.md", reason: "unestablished" }],
+		);
+
+		const text = await readFile(rootFile, "utf8");
+		expect(text).toContain("RECONCILIATION REQUIRED — UNRESOLVED MANAGED SOURCE");
+		expect(text).toContain("`shared/SKILL.md`");
+		expect(text).toContain("`AGENTS.md`");
+		expect(text).toContain("ownership cannot be established");
+		expect(text).toContain("STOP that reconciliation attempt and ask the user");
+		expect(text.startsWith(ROOT_TEXT)).toBe(true);
+	});
+});
 
 describe("the blocker's project-configuration section", () => {
 	test("Cursor omits it and keeps every shared paragraph", async () => {

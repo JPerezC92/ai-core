@@ -8,7 +8,7 @@
  * exception (C5).
  */
 
-import { lstat, mkdir, readFile, writeFile } from "node:fs/promises";
+import { lstat, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 
 /** Read a file as UTF-8 text without newline translation, or `null`. */
@@ -55,6 +55,11 @@ export async function writeBytesFile(path: string, content: Uint8Array): Promise
 /** Create a directory and any missing parent. */
 export async function ensureDirectory(path: string): Promise<void> {
 	await mkdir(path, { recursive: true });
+}
+
+/** Remove one file; an already-absent path is not an error. */
+export async function removeFile(path: string): Promise<void> {
+	await rm(path, { force: true });
 }
 
 /** A directory entry's own kind, read without following a link. */

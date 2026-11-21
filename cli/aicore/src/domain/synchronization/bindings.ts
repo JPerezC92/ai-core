@@ -20,6 +20,7 @@ import {
 	SCHEMA_VERSION,
 } from "./constants.ts";
 import type { ClearanceEntry } from "./clearance.ts";
+import { declaredModeFor } from "./clearance.ts";
 import { type EditorProfile, isEditorProfile } from "./editor-profile.ts";
 import { type SynchronizationFailure, drift, invalid } from "./failures.ts";
 import { isSafeRelativePath } from "./paths.ts";
@@ -382,17 +383,259 @@ export function protectedExclusionFailure(document: BindingsDocument): Synchroni
 	);
 }
 
-/** Return distinct bound sources absent from clearance, in document order. */
-export function unclearedSources(document: BindingsDocument, cleared: ReadonlySet<string>): readonly string[] {
-	const uncleared: string[] = [];
-	const seen = new Set<string>();
+/** Why a bound source is no longer distributed. */
+export type WithheldReason = "missing" | "withdrawn" | "unestablished" | "anomaly";
+
+/** One bound source that is no longer distributed. */
+export type AbsentSource = {
+	readonly source: string;
+	readonly destinations: readonly string[];
+	readonly reason: WithheldReason;
+};
+
+/**
+ * What the source tree and the clearance registry establish about the bound
+ * sources, gathered as facts so the lifecycle decision stays in this domain.
+ */
+export type SourceFacts = {
+	/** Sources the source tree still holds. */
+	readonly present: ReadonlySet<string>;
+	/** Sources the registry distributes to this destination's editor. */
+	readonly cleared: ReadonlySet<string>;
+	/** Sources the registry still covers but no longer delivers to that editor. */
+	readonly withdrawn: ReadonlySet<string>;
+};
+
+/** What each bound source's lifecycle class is, and what the document becomes. */
+export type WithheldSourceOutcome = {
+	/** The document to persist: retired bindings dropped, preserved ones kept. */
+	readonly document: BindingsDocument;
+	/** Bindings whose source is distributed: the only ones a run writes. */
+	readonly distributable: readonly BindingEntry[];
+	/** Fully Core-owned sources: their destination files are deleted by the caller. */
+	readonly retired: readonly AbsentSource[];
+	/**
+	 * Sources kept for destination reconciliation: their destinations stay and join
+	 * `pending`. The run itself still completes its unrelated safe updates.
+	 */
+	readonly requiresReconciliation: readonly AbsentSource[];
+};
+
+/**
+ * Classify every bound source and apply the lifecycle decision to the document.
+ *
+ * A cleared source is distributed. A source the registry no longer delivers is
+ * classified by the ownership the registry still declares for its path, never by
+ * a missing value:
+ *
+ * - no record covers the path: ownership cannot be established, so the
+ *   destination is preserved and the reason says so;
+ * - the registry withdrew the source for this editor and still declares its
+ *   mode: only an exclusively Core-owned (`raw`) destination is retired, while a
+ *   region-managed and a merge-managed one are preserved for reconciliation;
+ * - the source still exists while the registry still delivers its path: an
+ *   eligibility anomaly, preserved and reported, never deleted;
+ * - the source is gone and its mode is declared: the same ownership rule
+ *   applies, with the reason naming the missing source.
+ *
+ * A merge-managed file is never exclusively Core-owned: the merge replaces the
+ * values of the keys the source declares and leaves every other key, comment and
+ * formatting span as the destination owns it, so deleting it would destroy
+ * destination content.
+ *
+ * A preserved destination keeps its binding and joins `pending`, which is what
+ * withholds a verified "current" until the destination reconciles it.
+ */
+export function withheldSources(
+	document: BindingsDocument,
+	facts: SourceFacts,
+	entries: ReadonlyMap<string, ClearanceEntry>,
+): WithheldSourceOutcome {
+	const kept: BindingEntry[] = [];
+	const distributable: BindingEntry[] = [];
+	const retired: AbsentSource[] = [];
+	const requiresReconciliation: AbsentSource[] = [];
+	let pending = document.pending;
+
+	const preserve = (entry: BindingEntry, reason: WithheldReason): void => {
+		requiresReconciliation.push({ source: entry.source, destinations: entry.destinations, reason });
+		kept.push(entry);
+		for (const destination of entry.destinations) {
+			pending = pending.includes(destination) ? pending : [...pending, destination];
+		}
+	};
+	const retire = (entry: BindingEntry, reason: WithheldReason): void => {
+		retired.push({ source: entry.source, destinations: entry.destinations, reason });
+	};
+
 	for (const entry of document.bindings) {
-		if (!cleared.has(entry.source) && !seen.has(entry.source)) {
-			seen.add(entry.source);
-			uncleared.push(entry.source);
+		if (facts.cleared.has(entry.source) && facts.present.has(entry.source)) {
+			distributable.push(entry);
+			kept.push(entry);
+			continue;
+		}
+		const ownership = declaredModeFor(entry.source, entries);
+		if (ownership === null) {
+			preserve(entry, "unestablished");
+			continue;
+		}
+		if (facts.withdrawn.has(entry.source)) {
+			// Only an exclusively Core-owned file may be removed. A region-managed
+			// destination owns its project region and a merge-managed one owns the
+			// keys the source does not declare, so both are preserved.
+			if (ownership === MODE_RAW) {
+				retire(entry, "withdrawn");
+			} else {
+				preserve(entry, "withdrawn");
+			}
+			continue;
+		}
+		if (facts.present.has(entry.source)) {
+			preserve(entry, "anomaly");
+			continue;
+		}
+		if (ownership === MODE_RAW) {
+			retire(entry, "missing");
+		} else {
+			preserve(entry, "missing");
 		}
 	}
-	return uncleared;
+
+	// A destination a distributable binding claims is still in use: the obsolete
+	// binding leaves the document, but the file stays for its new owner, which
+	// then applies its own mode contract to it.
+	const liveDestinations = new Set(distributable.flatMap((entry) => entry.destinations));
+	const removals = retired
+		.map((entry) => ({
+			...entry,
+			destinations: entry.destinations.filter((destination) => !liveDestinations.has(destination)),
+		}))
+		.filter((entry) => entry.destinations.length > 0);
+
+	// A destination scheduled for physical removal has no managed file left to
+	// reconcile, so its outstanding entry goes with it. A destination a live
+	// binding claims is never in this set, so a shared destination, or one a
+	// new binding has taken over, keeps its entry.
+	const removedDestinations = new Set(removals.flatMap((entry) => entry.destinations));
+	const outstanding = pending.filter((path) => !removedDestinations.has(path));
+
+	return {
+		document: { ...document, bindings: kept, pending: outstanding },
+		distributable,
+		retired: removals,
+		requiresReconciliation,
+	};
+}
+
+/** One cleared source an enrollment would bind. */
+export type EnrollmentCandidate = {
+	readonly source: string;
+	readonly mode: BindingMode;
+	readonly destination: string;
+};
+
+/** What the domain needs to plan an enrollment. */
+export type EnrollmentFacts = {
+	/** Every source this editor's clearance expansion distributes. */
+	readonly modes: ReadonlyMap<string, BindingMode>;
+	/** The destination each source lands at. */
+	readonly destinations: ReadonlyMap<string, string>;
+	/** The root-role source, when the registry declares one. */
+	readonly rootSource: string | null;
+	/** The instruction root that source must keep, or `null` when it is unknown. */
+	readonly rootDestination: string | null;
+};
+
+/** The enrollment's decision before any destination is probed. */
+export type EnrollmentPlan = {
+	readonly root: string | null;
+	readonly candidates: readonly EnrollmentCandidate[];
+};
+
+/**
+ * Decide which cleared sources gain a binding, and where each lands.
+ *
+ * A source already bound keeps its recorded destination, an opted-out source is
+ * never bound, and the root-role source keeps the instruction root the document
+ * records. The caller supplies the probed facts; this decides the outcome.
+ */
+export function enrollmentCandidates(document: BindingsDocument, facts: EnrollmentFacts): EnrollmentPlan {
+	const bound = new Set(document.bindings.map((entry) => entry.source));
+	const root = facts.rootSource === null ? document.root : facts.rootDestination;
+	const candidates: EnrollmentCandidate[] = [];
+	for (const [source, mode] of facts.modes) {
+		if (bound.has(source) || isExcludedSource(source, document.exclude)) {
+			continue;
+		}
+		const destination =
+			source === facts.rootSource && root !== null ? root : (facts.destinations.get(source) ?? source);
+		candidates.push({ source, mode, destination });
+	}
+	return { root, candidates };
+}
+
+/** What an enrollment produced, and which destinations it creates. */
+export type EnrollmentOutcome = {
+	readonly document: BindingsDocument;
+	readonly newRawDestinations: ReadonlySet<string>;
+	readonly newMergeDestinations: ReadonlySet<string>;
+};
+
+/**
+ * Apply an enrollment plan, classifying each new destination by its mode.
+ *
+ * `existingDestinations` is the probed fact the caller supplies: a destination
+ * that is not there yet is the creation set the write-target preflight checks.
+ */
+export function withEnrolledSources(
+	document: BindingsDocument,
+	plan: EnrollmentPlan,
+	existingDestinations: ReadonlySet<string>,
+): EnrollmentOutcome {
+	const bindings = document.bindings.map((entry) => ({ ...entry }));
+	const newRawDestinations = new Set<string>();
+	const newMergeDestinations = new Set<string>();
+	for (const candidate of plan.candidates) {
+		bindings.push({
+			source: candidate.source,
+			destinations: [candidate.destination],
+			declaredMode: candidate.mode,
+		});
+		if (existingDestinations.has(candidate.destination)) {
+			continue;
+		}
+		if (candidate.mode === MODE_RAW) {
+			newRawDestinations.add(candidate.destination);
+		} else if (candidate.mode === MODE_MERGE) {
+			newMergeDestinations.add(candidate.destination);
+		}
+	}
+	return { document: { ...document, bindings, root: plan.root }, newRawDestinations, newMergeDestinations };
+}
+
+/**
+ * Return the destinations more than one live binding claims.
+ *
+ * A destination belongs to one source. A document naming it twice cannot say
+ * which source owns it, and the persisted document would be rejected by
+ * {@link parseBindingsDocument} on the next read, so the run is refused before
+ * any filesystem mutation rather than persisting it.
+ */
+export function duplicatedDestinations(document: BindingsDocument): readonly string[] {
+	const seen = new Set<string>();
+	const duplicated: string[] = [];
+	for (const entry of document.bindings) {
+		for (const destination of entry.destinations) {
+			if (!seen.has(destination)) {
+				seen.add(destination);
+				continue;
+			}
+			if (!duplicated.includes(destination)) {
+				duplicated.push(destination);
+			}
+		}
+	}
+	return duplicated;
 }
 
 /**

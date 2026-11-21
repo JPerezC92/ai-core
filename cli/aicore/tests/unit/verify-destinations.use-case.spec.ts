@@ -240,6 +240,38 @@ function makeRegionVerification(options: RegionArrangement = {}) {
 	return { useCase, bindings, layout, sources, destinations };
 }
 
+describe("unresolved managed sources", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	test("a region-managed source withdrawn from distribution blocks and is reported by name", async () => {
+		const { useCase, layout } = makeRegionVerification({
+			clearance: {
+				[BOUND_SOURCE]: {
+					mode: "region",
+					editors: {
+						opencode: { omitted: true },
+						cursor: { destination: BOUND_SOURCE },
+					},
+				},
+			},
+		});
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({}));
+
+		expect(outcome.ok).toBe(false);
+		const failure = outcome.ok ? null : outcome.failure;
+		expect(failure?.code).toBe("drift");
+		expect(failure?.message).toContain("reconciliation required");
+		expect(failure?.message).toContain("withdrawn");
+		// The blocker is written before the refusal, naming the preserved pair.
+		expect(layout.syncBlocker.mock.calls[0]?.[3]).toEqual([
+			{ source: BOUND_SOURCE, destination: BOUND_SOURCE, reason: "withdrawn" },
+		]);
+	});
+});
+
 describe("region currency", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();

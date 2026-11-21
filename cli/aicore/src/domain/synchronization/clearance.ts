@@ -171,6 +171,70 @@ export function expandClearance(
 	return { modes, destinations };
 }
 
+/** The registry record covering one path, with a root's relative path when it is one. */
+function coveringRecord(
+	source: string,
+	entries: ReadonlyMap<string, ClearanceEntry>,
+): { readonly record: ClearanceEntry; readonly relative: string | null } | null {
+	for (const [path, record] of entries) {
+		if (record.kind === "file") {
+			if (path === source) {
+				return { record, relative: null };
+			}
+			continue;
+		}
+		if (!source.startsWith(path) || source.length === path.length) {
+			continue;
+		}
+		const relative = source.slice(path.length);
+		if (relative.split("/").includes("..")) {
+			continue;
+		}
+		return { record, relative };
+	}
+	return null;
+}
+
+/**
+ * The mode the registry declares for one source path, whether or not the source
+ * tree still holds that file.
+ *
+ * Expansion answers only for files it enumerated, so it cannot classify a source
+ * that was deleted upstream. This lookup answers for the path itself: a file row
+ * answers directly, and a directory root answers with its `region_files`
+ * membership or its default mode. A path no record covers has no declared mode.
+ */
+export function declaredModeFor(source: string, entries: ReadonlyMap<string, ClearanceEntry>): BindingMode | null {
+	const covering = coveringRecord(source, entries);
+	if (covering === null) {
+		return null;
+	}
+	if (covering.record.kind === "file") {
+		return covering.record.mode;
+	}
+	return covering.record.regionFiles.includes(covering.relative ?? "") ? MODE_REGION : covering.record.mode;
+}
+
+/**
+ * Whether the registry still covers a path, and whether it still delivers it to
+ * this editor.
+ *
+ * `null` means no record covers the path at all, which is unresolved rather than
+ * either answer: an absent record is not a withdrawal.
+ */
+export function deliveryDeclaredFor(
+	source: string,
+	entries: ReadonlyMap<string, ClearanceEntry>,
+	editor: EditorProfile,
+): "delivered" | "omitted" | null {
+	const covering = coveringRecord(source, entries);
+	if (covering === null) {
+		return null;
+	}
+	const declared = covering.record.editors?.get(editor);
+	return declared?.kind === "omitted" ? "omitted" : "delivered";
+}
+
 function readRecord(path: string, rawRecord: unknown): ClearanceRecord | string {
 	if (!isSafeRelativePath(path)) {
 		return `cleared path is not a safe relative path: ${path}`;

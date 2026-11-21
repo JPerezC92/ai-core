@@ -11,7 +11,7 @@ import type { BindingMode, CommandName } from "./constants.ts";
 import type { BindingsDocument } from "./bindings.ts";
 import type { ClearanceEntry } from "./clearance.ts";
 import type { SynchronizationFailure } from "./failures.ts";
-import type { ReconciliationEntry } from "./reconciliation.ts";
+import type { ReconciliationEntry, MissingRegionSource } from "./reconciliation.ts";
 import type { SourceCoreRead } from "./regions.ts";
 
 /** The clearance registry, read from the source root. */
@@ -55,6 +55,8 @@ export interface DestinationFiles {
 	writeText(path: string, content: string): Promise<void>;
 	/** Write bytes exactly as given. */
 	writeBytes(path: string, content: Uint8Array): Promise<void>;
+	/** Remove one managed file; an already-absent path is not an error. */
+	remove(path: string): Promise<void>;
 }
 
 /** Path and layout questions about the two roots. */
@@ -82,8 +84,13 @@ export interface FilesystemLayout {
 	resolveRootFile(destinationRoot: string, document: BindingsDocument): Promise<string>;
 	/** The destination instruction root present on disk, or `null`. */
 	detectRootFile(destinationRoot: string): Promise<string | null>;
-	/** Bring the root runtime file's blocker in line with `pending`, worded for the document's editor. */
-	syncBlocker(destinationRoot: string, document: BindingsDocument, pending: readonly string[]): Promise<void>;
+	/** Bring the root runtime file's blocker in line with `pending` and any missing region-managed source. */
+	syncBlocker(
+		destinationRoot: string,
+		document: BindingsDocument,
+		pending: readonly string[],
+		missing: readonly MissingRegionSource[],
+	): Promise<void>;
 }
 
 /** Everything the write-target preflight needs to know about a command. */
