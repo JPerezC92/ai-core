@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  architecture-boundaries.svg — the L3 structure of the AICore architecture contract.
+
+  Illustrative of C1, C11, C12 and C13. The rule text governs; this figure states no rule.
+  It depicts architectural RESPONSIBILITY only. No directory name appears here: physical
+  placement is drawn in the Mermaid deployment diagrams beside it.
+
+  Scope: L3 only. L1 and L2 impose no layer directories and are not represented here.
+
+  Geometry: two sibling outer boundaries at one radius, never nested one inside the other,
+  so the figure cannot imply that either depends on the other. Infrastructure is solid and
+  mandatory; Interfaces is dashed and is an optional directory for a responsibility that
+  exists at every level.
+
+  Dependencies: solid arrows are required, dashed arrows are permitted but not required.
+  Infrastructure's required dependency points at Domain, not at Application, so the figure
+  never states that an adapter must import the application layer.
+
+  Editable by hand: text is real text, every boundary is its own named group, colours are
+  neutral so the figure survives greyscale, and mandatory/optional is carried by the label
+  and the dash pattern as well as by tone. No external font, image, script or data URI is
+  referenced.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 780" width="900" height="780" role="img" aria-labelledby="ab-title ab-desc">
+  <title id="ab-title">L3 Clean Architecture boundaries: Domain at the centre, Application surrounding it, and two independent outer boundaries for Infrastructure and Interfaces</title>
+  <desc id="ab-desc">Concentric L3 structure. Domain sits at the centre. Application surrounds Domain. Outside Application, Infrastructure and Interfaces sit at the same radius as two sibling boundaries: Infrastructure is mandatory and drawn solid, Interfaces is an optional directory and drawn dashed. Neither outer boundary depends on the other. Solid arrows mark required dependencies pointing inward, from Interfaces to Application, from Application to Domain, and from Infrastructure to Domain. A dashed arrow marks the permitted but not required Infrastructure-to-Application dependency. This figure depicts architectural responsibility, not directory placement, and does not represent L1 or L2.</desc>
+
+  <defs>
+    <marker id="arrow-required" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#111827"/>
+    </marker>
+    <marker id="arrow-permitted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280"/>
+    </marker>
+  </defs>
+
+  <g id="scope-label" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+    <text x="36" y="42" font-size="17" font-weight="600" fill="#111827">L3 — Clean Architecture only</text>
+    <text x="36" y="64" font-size="12.5" fill="#4b5563">L1 and L2 impose no layer directories and are not represented here.</text>
+  </g>
+
+  <g id="interfaces-boundary">
+    <path
+      d="M 221.5 538.6 A 290 290 0 0 0 678.5 538.6 L 634.4 504.1 A 234 234 0 0 1 265.6 504.1 Z"
+      fill="#f3f4f6"
+      stroke="#9ca3af"
+      stroke-width="2.4"
+      stroke-dasharray="16 9"
+      stroke-linejoin="round"/>
+  </g>
+
+  <g id="infrastructure-boundary">
+    <path
+      d="M 678.5 181.4 A 290 290 0 0 0 221.5 181.4 L 265.6 215.9 A 234 234 0 0 1 634.4 215.9 Z"
+      fill="#f3f4f6"
+      stroke="#9ca3af"
+      stroke-width="2.4"
+      stroke-linejoin="round"/>
+  </g>
+
+  <g id="application-boundary">
+    <circle cx="450" cy="360" r="145" fill="#fafafa" stroke="#d1d5db" stroke-width="52"/>
+  </g>
+
+  <g id="domain-core">
+    <circle cx="450" cy="360" r="88" fill="#e5e7eb" stroke="#374151" stroke-width="2.5"/>
+  </g>
+
+  <g id="dependency-arrows" fill="none" stroke-linecap="round">
+    <path d="M 299.7 574.6 L 351.9 500.1" stroke="#111827" stroke-width="2.6" marker-end="url(#arrow-required)"/>
+    <path d="M 625.3 165.3 L 564.4 232.9" stroke="#6b7280" stroke-width="2.6" stroke-dasharray="8 6" marker-end="url(#arrow-permitted)"/>
+    <path d="M 299.7 145.4 L 395.5 282.2" stroke="#111827" stroke-width="2.6" marker-end="url(#arrow-required)"/>
+    <path d="M 569 360 L 545 360" stroke="#111827" stroke-width="2.6" marker-end="url(#arrow-required)"/>
+  </g>
+
+  <g id="boundary-labels" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="15" fill="#111827" text-anchor="middle">
+    <text x="450" y="103">Infrastructure — mandatory</text>
+    <text x="450" y="627">Interfaces — optional directory</text>
+    <text x="450" y="220">Application</text>
+    <text x="450" y="366">Domain</text>
+  </g>
+
+  <g id="legend" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12.5" fill="#4b5563">
+    <text x="36" y="712">solid arrow = required dependency · dashed arrow = permitted, not required</text>
+    <text x="36" y="732">the two outer boundaries are independent: neither depends on the other</text>
+    <text x="36" y="752">Interface responsibility exists at every level; only its own directory is optional</text>
+  </g>
+</svg>

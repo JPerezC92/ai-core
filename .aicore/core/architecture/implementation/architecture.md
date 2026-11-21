@@ -6,7 +6,7 @@ Statement-layer ownership is defined in `.aicore/core/architecture/README.md` �
 
 ## C1 — Layers and dependencies
 
-The same layers apply across languages: domain, application, infrastructure; static dependencies point inward, infrastructure → application → domain. A language or library is never a layer and cannot suspend this contract. Shape-specific folders bind these responsibilities without renaming the layers. The application imports only domain types and ports, never frameworks or concrete adapters. Runtime effects through injected domain ports are allowed: a runtime call graph is not the static-import graph.
+The same layers apply across languages: domain, application, infrastructure; static dependencies point inward, infrastructure → application → domain. A language or library is never a layer and cannot suspend this contract. Shape-specific folders bind these responsibilities without renaming the layers. The application imports only domain types and ports, never frameworks or concrete adapters. Runtime effects through injected domain ports are allowed: a runtime call graph is not the static-import graph. These obligations bind where a project's selected complexity level requires the layers (`C11`); at L1 and L2 no layer, folder or inward-dependency obligation arises, and the responsibilities this contract names bind only where they exist.
 
 ## C2 — Domain and ports
 
@@ -16,11 +16,13 @@ Entity representation and state changes follow C8; data-only records and functio
 
 ## C3 — Application operation
 
-Each use case is one named business operation exposing a single `execute()`. It depends on injected domain ports, not concrete IO.
+**At L3 (`C11`).** Each application operation is one named business operation exposing a single `execute()`, depends on injected domain ports rather than concrete IO, and is a class in every language: a standalone function never stands in for an L3 operation, however small it is. The class receives its required collaborators through constructor injection. One operation per module or file; its name states a business outcome, and `Service`, `Manager`, `Helper`, `Processor`, and `Util` are not operation names. A composition root or CLI router may wire several operations but must not re-declare an operation class. Enduring invariants and legal transitions belong in the domain, and application-specific orchestration may stay in the operation.
 
-Every use case is a class in every language: a standalone function never stands in for a use-case class, however small the operation is. The class exposes one `execute()` and receives its required collaborators through constructor injection. Class-first does not license abstraction for its own sake: add no base class, interface, inheritance hierarchy, forwarding service layer or pass-through wrapper without a real polymorphic or behavioural need, and a helper, utility or other module-level function that is not an application operation stays a function. Presentation-layer components, hooks and general-purpose utilities are not use cases and are not made classes by this rule.
+**At L1 and L2 (`C11`).** No operation form is imposed. A named business operation may be a function, a module, or a class chosen for the code's own clarity, and it acquires no class, `execute()`, constructor-injection, one-per-file, naming or composition-root obligation from the L3 rule. A level is never applied recursively: within an L3 project, pure helpers, local functions, a one-off auxiliary script and a small utility module remain ordinary code (`C7`) and carry no layer folder or operation class.
 
-One operation per module or file; its name states a business outcome, and `Service`, `Manager`, `Helper`, `Processor`, and `Util` are not use-case names. A composition root or CLI router may wire several operations but must not re-declare a use-case class. Policy belongs here or in domain, never in adapters or presentation. Data-only boundary/result records and functional domain modules are valid representations; enduring invariants and legal transitions belong in the domain, application-specific orchestration may stay in the use case, and adapters hold no business policy. A data-only record is anemic only when it claims to be the domain model while allowing public mutation and its rules are enforced elsewhere.
+**At every level, wherever the responsibility exists.** Class-first never licenses abstraction for its own sake: add no base class, interface, inheritance hierarchy, forwarding service layer or pass-through wrapper without a real polymorphic or behavioural need, and a helper, utility or other module-level function that is not an application operation stays a function. Presentation components, hooks and general-purpose utilities are not application operations and are not made classes by this rule. Business policy belongs to the operation or the domain, never to an adapter, a presentation component or an interface handler (`C4`, `C12`); adapters hold no business policy.
+
+**Domain-model classification, at every level where a domain exists.** Data-only boundary and result records and functional domain modules remain valid representations. A data-only record is anemic only when it claims to be the domain model while allowing public mutation and its rules are enforced elsewhere.
 
 ## C4 — Mapping and composition
 
@@ -99,6 +101,128 @@ Use a business concept plus its actual role, with one shared vocabulary. Classes
 | query          | A concept-specific read capability port                                                        |
 
 Pure functions/modules use the predicate or business calculation they express, without fabricated entity/service roles. Apply roles only to artifacts actually needed; do not create unused requests, wrappers or records to fill a naming table. Boundary records do not become domain-owned because they mention a domain concept: rows/models stay in infrastructure, request/response shapes at delivery. Each maps explicitly to/from domain data under C4–C6, never passing as the domain entity itself.
+
+## C11 — Architecture complexity level
+
+A project selects one level. The level decides whether a layout is mandated; it never removes a responsibility that exists.
+
+- **L1 — Simple.** One focused responsibility, with no rule that more than one entry point must obey and no boundary that must be protected from the rest of the code. No `domain/`, `application/` or `infrastructure/` layout is required or implied. Functions and modules are the normal representation. No port, adapter, repository, container, base class or wrapper without a demonstrated need. A script that reads inputs, transforms them and writes results is an L1 artifact however many file, process or network operations it performs, and needs no application class, port, repository or injection to be compliant.
+- **L2 — Modular.** Several cooperating responsibilities. Modules are named for their responsibilities and split only for a practical reason. No layer tree is manufactured. A dependency rule binds only the directions the modules actually have.
+- **L3 — Clean Architecture.** `C1`–`C10` bind in full, including the canonical layer layout and the L3 operation form of `C3`. The Interface boundary of `C12` may additionally be extracted under `C13`.
+
+**Universal obligations — bind at every level, in proportion to whether the responsibility exists.** The separation of an external entry edge from the work it triggers (`C12`); one mapping step at any boundary and no business rule in boundary code (`C4`); expected business failures returned as values and unexpected exceptions left as exceptions (`C5`); no transport serialization inside a business rule or operation (`C6`); pure helpers need no wrapper (`C7`); `C10`'s naming roles for the artifacts that actually exist.
+
+**Selection is evidence-based, not scored.** No count of lines, files, business operations, external effects, dependencies, transports or tests selects a level, and no project type automatically selects L3. The deciding question is one: does a boundary need protecting from the rest of the code? Any single one of the following is sufficient on its own, at any project size, when it is material:
+
+- a business rule that must hold across more than one entry point;
+- a capability that must be replaceable behind a contract;
+- a coordination or atomicity requirement that must be enforced in one place across more than one effect;
+- an external boundary whose failure must be classified rather than leaked;
+- a delivery channel expected to change independently of the rules;
+- a published contract whose consumers must not depend on transport or storage.
+
+None of them justifies L1 or L2 in a project of any size. Where the evidence is genuine but marginal, choose the lower level and record the reason: upgrading is a separately authorized change, never automatic.
+
+**Granularity.** The level is selected for the project and governs its principal boundaries. It is not applied recursively: within an L3 project, pure helpers, local functions, a one-off auxiliary script and a small utility module remain ordinary code and carry no layer folders or operation classes (`C7`). A level decided for a repository never forces a new folder onto a component whose responsibility does not exist.
+
+**Independence, recording and boundaries.** The level is independent of application shape and language. Architecture classification is a working judgment, not a documentation obligation. A project-level architecture record is required only when the project makes a real project-level architectural decision — selecting L3, authorizing an interface extraction under `C13`, or changing an existing approved architecture. An L1 script or utility needs no new document, record, approval step or review gate; its classification is recorded only where the project already keeps such notes, and its absence is never a defect. Existing approved project architectures are preserved: changing one is a separately authorized change with its own record, and this rule mandates no migration and adds no enforcement tooling.
+
+## C12 — Interface boundary
+
+**Existence.** The Interface boundary is the set of responsibilities that translate between an external interaction channel and the work the program performs. It exists in every project with an external entry edge — a script's argv and exit status, an HTTP route, an MCP tool, a CLI command, a UI event, a game-input frame. At L1 it is usually the entry file itself. Its existence never implies a folder.
+
+**Owns.** Channel input parsing and channel-specific validation; one mapping step between channel payloads and the parameters the program's work receives (`C4`); delegating that work; binding its outcome — a returned result or a returned business error — to the channel's response or error mechanism; channel-specific serialization (`C6`); channel metadata such as session or auth identifiers, read without a business rule.
+
+**Delegation, not implementation.** A handler delegates the business behavior it triggers and never implements it. It may invoke one operation or several, and may sequence them when each is independently complete; what it must not do is hold the decision. A sequence whose ordering, conditions or error handling constitutes a business rule is itself business behavior and belongs in an operation at L3 or in a named function or module at L1 and L2 — never inlined in the handler. Repeating coordination logic that an operation already owns is the same defect as reimplementing its rule.
+
+**Dependencies are architectural, not technological.** This contract governs dependencies between the components of the architecture. It does not prohibit external libraries. A component may use the third-party libraries its own technology requires, provided their use does not breach an architectural boundary.
+
+**At L3.** A handler's architectural dependencies point inward and only inward: it imports application and domain modules, never a persistence adapter, repository implementation or infrastructure IO helper of this project. It may use the transport framework, SDK, schema validator, serializer or other library its channel requires; those are technical dependencies, not edges into the architecture. Where it needs a capability the project owns, it reaches it through an application operation. An infrastructure adapter is symmetric: it may use external clients, drivers, storage libraries and infrastructure-owned utilities of this project, and depends inward on application and domain modules, never on an interface module. Neither may use a technical library to implement business behavior: invoking a driver or SDK directly to decide an outcome is the same defect as holding the rule.
+
+**At L1 and L2.** A handler may orchestrate external effects directly — read a file, call a service, write output — using whatever libraries the work needs, because no application layer exists to delegate to. The obligation that survives is the separation of the decision from the effect: the rule that decides the outcome lives in a function or module the handler calls, not fused into the effect code, so the decision can be read and verified without the effect. No boundary inversion, port, adapter or injection container is required by this rule, and no additional file, class or wrapper is required for a trivial script.
+
+**Composition.** Constructing a collaborator that crosses an architectural boundary happens only at the designated composition root. An adapter or a handler may construct its own technical helpers; it does not construct the project's concrete adapters, repositories or operations.
+
+**At every level.** Business policy does not live in interface code; a framework request or response object does not enter domain or application code (`C2`); a transport payload is not serialized inside a business rule or operation (`C6`); no level justifies mixing the two.
+
+## C13 — Interface placement and extraction
+
+**Placement is shape-owned.** The shape names where the Interface responsibility lives in that shape's layout. Physical extraction means moving those modules into an independent folder at the same level as the layer folders. It is optional, separately authorized and never automatic. The absence of such a folder is never a defect.
+
+**Canonical name.** When an independent Interface folder is explicitly authorized, it is named `interfaces/` and holds channel-specific modules beneath it (`http/`, `mcp/`, `cli/`). A project that already carries an approved differently-named interface folder — a project-specific `delivery/` or a channel-named `mcp/` — keeps it: renaming it is a migration, not a conformance requirement.
+
+**At L3, independence precedes extraction.** While interface modules and infrastructure adapters share the infrastructure layout, they remain independent boundaries: interface modules depend inward on application and domain modules, adapters depend inward on application and domain modules, and neither imports the other. Co-location never licenses an interface module to reach a persistence adapter, and extraction is never required to obtain that independence.
+
+**After extraction.** Interface modules and infrastructure adapters are sibling outer boundaries, each depending inward independently: each may depend on application and domain modules, and neither imports the other. The composition root depends on both. Technical libraries remain permitted on both sides under `C12`.
+
+**Invariant.** Extraction changes no application operation, domain type or port: the same signatures and the same inward imports, at a different path. A change that redesigns domain or application in order to extract is not an extraction; it is a separate redesign requiring its own authorization and evidence, and the original extraction may not be used as its pretext.
+
+**Evidence required.** Extraction is considered only on an evidenced maintenance or dependency-boundary problem: a `C12` violation the co-located layout keeps inviting; transport mapping that has become the principal change surface and no longer keeps one mapping step; channel validation or serialization that cannot be reasoned about in isolation; an interface that needs an independent release or test boundary its location prevents; several handlers accumulating shared transport-specific behavior with no owner. No count of channels or files is evidence, and none of these is an automatic trigger. Without such evidence the interface stays where the shape puts it.
+
+**Authorization.** No agent creates, renames or migrates an interface folder without an authorized change.
+
+## Diagrams
+
+`.aicore/core/architecture/implementation/architecture-boundaries.svg` is the L3 structure; the two figures below are its physical deployments. All three are illustrative and carry no rule the sections above do not state.
+
+![L3 architecture boundaries: Domain at the centre, Application surrounding it, and two sibling outer boundaries — Infrastructure mandatory, Interfaces an optional directory](./architecture-boundaries.svg)
+
+**Scope.** The circular figure depicts L3 only (`C11`). L1 and L2 impose no layer folders, and the figure is not their layout. It shows architectural responsibility, never directory placement: no folder name appears in it.
+
+**Reading the dependencies.** A solid arrow is a required dependency and a dashed arrow is permitted but not required. Infrastructure's required dependency points at Domain; the Infrastructure-to-Application edge is permitted only, because an adapter implements a domain port without importing the application layer. The two outer boundaries are siblings and carry no dependency between them in either direction.
+
+### Three-layer deployment
+
+Interface modules live inside the infrastructure layout, isolated from the adapters that share it.
+
+```mermaid
+flowchart TB
+  ROOT["composition root — entry point"]
+  subgraph INF["infrastructure/"]
+    IF["delivery/ — interface modules"]
+    AD["adapters/ — outside-data mapping"]
+    RP["repositories/ — persistence"]
+  end
+  AP["application/ — operations"]
+  DO["domain/ — types, ports, rules"]
+  ROOT --> IF
+  ROOT --> AD
+  ROOT --> RP
+  ROOT --> AP
+  IF --> AP
+  IF -.-> DO
+  AD --> DO
+  AD -.-> AP
+  RP --> DO
+  AP --> DO
+```
+
+`IF` carries the Interface responsibility of `C12`; its folder name belongs to the shape. Solid edges are required and dotted edges are permitted. `IF` shares a parent folder with `AD` and `RP` and imports nothing from either (`C13`).
+
+### Extracted-interface deployment
+
+```mermaid
+flowchart TB
+  ROOT["composition root — entry point"]
+  subgraph OUT["outer boundaries — independent"]
+    IF["interfaces/ — http · mcp · cli"]
+    INF["infrastructure/ — adapters · repositories"]
+  end
+  AP["application/ — operations"]
+  DO["domain/ — types, ports, rules"]
+  ROOT --> IF
+  ROOT --> INF
+  ROOT --> AP
+  IF --> AP
+  IF -.-> DO
+  INF --> DO
+  INF -.-> AP
+  AP --> DO
+```
+
+No edge connects `IF` and `INF` in either direction: they are sibling outer boundaries that each depend inward (`C13`).
+
+**When to consult them.** Choose or review a project structure against the circular figure; place or move interface code against the matching deployment figure. A figure never overrides the rule text, and an existing project's approved structure is not redrawn to match one.
 
 ## Testing and execution
 
