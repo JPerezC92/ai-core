@@ -232,6 +232,54 @@ describe("source retirement", () => {
 		expect(bindings.save.mock.calls[0]?.[1].bindings).toEqual([]);
 	});
 
+	test("a retired source takes its own pending entry with it and leaves a shared one alone", async () => {
+		const retired = ".agents/skills/old/SKILL.md";
+		const shared = ".agents/skills/unknown/SKILL.md";
+		const retiredDestination = ".opencode/skills/old.md";
+		const sharedDestination = ".opencode/skills/shared.md";
+		const bindings = mock<BindingsStore>();
+		bindings.load.mockResolvedValue(
+			makeBindingsDocument({
+				bindings: [
+					{ source: retired, destinations: [retiredDestination], declaredMode: "raw" },
+					{ source: shared, destinations: [sharedDestination], declaredMode: "region" },
+				],
+				// Both destinations are outstanding from an earlier run.
+				pending: [retiredDestination, sharedDestination],
+			}),
+		);
+		const clearance = mock<ClearanceStore>();
+		// The retired source's ownership is established as raw; the shared source
+		// has no record at all, so it stays preserved for reconciliation.
+		clearance.load.mockResolvedValue(makeClearanceLoad({ [retired]: { mode: "raw" } }));
+		const layout = mock<FilesystemLayout>();
+		layout.join.mockImplementation((root, relative) => `${root}/${relative}`);
+		layout.exists.mockResolvedValue(true);
+		// The source tree holds neither source; both destinations exist.
+		layout.isFile.mockImplementation(async (path) => path.startsWith(`${SYNCHRONIZATION_DESTINATION_ROOT}/`));
+		const destinations = mock<DestinationFiles>();
+		destinations.readText.mockResolvedValue(null);
+		const guard = mock<WriteTargetGuard>();
+		guard.refuse.mockResolvedValue(null);
+		const useCase = new ApplyCoreRevision({
+			bindings,
+			clearance,
+			sources: mock<SourceFiles>(),
+			destinations,
+			layout,
+			guard,
+		});
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(true);
+		expect(destinations.remove).toHaveBeenCalledWith(`${SYNCHRONIZATION_DESTINATION_ROOT}/${retiredDestination}`);
+		// The removed destination leaves `pending`; the preserved one stays.
+		const saved = bindings.save.mock.calls[0]?.[1];
+		expect(saved?.pending).toEqual([sharedDestination]);
+		expect(saved?.bindings.map((entry) => entry.source)).toEqual([shared]);
+	});
+
 	test("a cleared source the tree no longer holds is retired instead of failing the run", async () => {
 		// The registry still declares the file, so clearance alone would call it
 		// distributable; distributability requires physical presence too, so the

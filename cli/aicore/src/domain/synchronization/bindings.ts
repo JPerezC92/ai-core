@@ -512,8 +512,15 @@ export function withheldSources(
 		}))
 		.filter((entry) => entry.destinations.length > 0);
 
+	// A destination scheduled for physical removal has no managed file left to
+	// reconcile, so its outstanding entry goes with it. A destination a live
+	// binding claims is never in this set, so a shared destination, or one a
+	// new binding has taken over, keeps its entry.
+	const removedDestinations = new Set(removals.flatMap((entry) => entry.destinations));
+	const outstanding = pending.filter((path) => !removedDestinations.has(path));
+
 	return {
-		document: { ...document, bindings: kept, pending },
+		document: { ...document, bindings: kept, pending: outstanding },
 		distributable,
 		retired: removals,
 		requiresReconciliation,
