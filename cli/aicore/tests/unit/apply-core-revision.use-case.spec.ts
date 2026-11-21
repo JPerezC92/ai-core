@@ -448,6 +448,148 @@ describe("merge-managed source preservation", () => {
 	});
 });
 
+describe("destination ownership", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	test("a retired raw source and a distributable region source share a destination without deleting it", async () => {
+		const retired = ".agents/skills/old/SKILL.md";
+		const live = ".agents/skills/new/SKILL.md";
+		const destination = ".opencode/skills/shared/SKILL.md";
+		const destinationPath = `${SYNCHRONIZATION_DESTINATION_ROOT}/${destination}`;
+		const bindings = mock<BindingsStore>();
+		bindings.load.mockResolvedValue(
+			makeBindingsDocument({
+				bindings: [
+					{ source: retired, destinations: [destination], declaredMode: "raw" },
+					{ source: live, destinations: [destination], declaredMode: "region" },
+				],
+			}),
+		);
+		const clearance = mock<ClearanceStore>();
+		clearance.load.mockResolvedValue(makeClearanceLoad({ [retired]: { mode: "raw" }, [live]: { mode: "region" } }));
+		const layout = mock<FilesystemLayout>();
+		layout.join.mockImplementation((root, relative) => `${root}/${relative}`);
+		layout.exists.mockResolvedValue(true);
+		// The retired source is gone; the live source and the destination exist.
+		layout.isFile.mockImplementation(
+			async (path) =>
+				path === `${SOURCE_ROOT}/${live}` || path.startsWith(`${SYNCHRONIZATION_DESTINATION_ROOT}/`),
+		);
+		const sources = mock<SourceFiles>();
+		sources.readCore.mockResolvedValue({ kind: "core", core: "new core\n" });
+		sources.readText.mockResolvedValue("");
+		const destinations = mock<DestinationFiles>();
+		destinations.readText.mockResolvedValue(
+			"<!-- core:begin -->\nstale core\n<!-- core:end -->\n\n<!-- project:begin -->\nowned\n<!-- project:end -->\n",
+		);
+		const guard = mock<WriteTargetGuard>();
+		guard.refuse.mockResolvedValue(null);
+		const useCase = new ApplyCoreRevision({ bindings, clearance, sources, destinations, layout, guard });
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(true);
+		// The destination is still in use, so it is never removed.
+		expect(destinations.remove).not.toHaveBeenCalledWith(destinationPath);
+		// The live source's mode contract applies to the file that stayed.
+		expect(destinations.writeText.mock.calls.filter(([target]) => target === destinationPath)).toHaveLength(1);
+		const written = destinations.writeText.mock.calls.find(([target]) => target === destinationPath)?.[1] ?? "";
+		expect(written).toContain("new core");
+		expect(written).toContain("owned");
+		// The obsolete binding is gone and the document carries only the live one.
+		expect(bindings.save.mock.calls[0]?.[1].bindings.map((entry) => entry.source)).toEqual([live]);
+	});
+
+	test("a retired raw source and a distributable merge source share a destination and keep its own keys", async () => {
+		const retired = ".agents/skills/old/config.jsonc";
+		const live = ".opencode/opencode.jsonc";
+		const destinationPath = `${SYNCHRONIZATION_DESTINATION_ROOT}/${live}`;
+		const bindings = mock<BindingsStore>();
+		bindings.load.mockResolvedValue(
+			makeBindingsDocument({
+				bindings: [
+					{ source: retired, destinations: [live], declaredMode: "raw" },
+					{ source: live, destinations: [live], declaredMode: "merge" },
+				],
+			}),
+		);
+		const clearance = mock<ClearanceStore>();
+		clearance.load.mockResolvedValue(makeClearanceLoad({ [retired]: { mode: "raw" }, [live]: { mode: "merge" } }));
+		const layout = mock<FilesystemLayout>();
+		layout.join.mockImplementation((root, relative) => `${root}/${relative}`);
+		layout.exists.mockResolvedValue(true);
+		// The retired source is gone; the live source and the destination exist.
+		layout.isFile.mockImplementation(
+			async (path) =>
+				path === `${SOURCE_ROOT}/${live}` || path.startsWith(`${SYNCHRONIZATION_DESTINATION_ROOT}/`),
+		);
+		const sources = mock<SourceFiles>();
+		sources.readText.mockImplementation(async (path) =>
+			path === `${SOURCE_ROOT}/${live}` ? MERGE_SOURCE_TEXT : "",
+		);
+		const destinations = mock<DestinationFiles>();
+		destinations.readText.mockImplementation(async (path) =>
+			path === destinationPath ? MERGE_DESTINATION_TEXT : null,
+		);
+		const guard = mock<WriteTargetGuard>();
+		guard.refuse.mockResolvedValue(null);
+		const useCase = new ApplyCoreRevision({ bindings, clearance, sources, destinations, layout, guard });
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(true);
+		// The merge cannot create its destination, so the file has to survive.
+		expect(destinations.remove).not.toHaveBeenCalledWith(destinationPath);
+		const written = textWrittenTo(destinations, destinationPath);
+		// Destination-owned configuration survives; the shipped index is retargeted.
+		expect(written).toMatch(/"local-only"/u);
+		expect(written).toMatch(/"ownKey": true/u);
+		expect(written).toMatch(/"--index",\s*"destination"/u);
+		// The obsolete binding is gone; only the valid binding remains.
+		expect(bindings.save.mock.calls[0]?.[1].bindings.map((entry) => entry.source)).toEqual([live]);
+	});
+
+	test("two live bindings claiming one destination are refused before anything is mutated", async () => {
+		const first = ".agents/skills/a/SKILL.md";
+		const second = ".agents/skills/b/SKILL.md";
+		const destination = ".opencode/skills/shared/SKILL.md";
+		const bindings = mock<BindingsStore>();
+		bindings.load.mockResolvedValue(
+			makeBindingsDocument({
+				bindings: [
+					{ source: first, destinations: [destination], declaredMode: "raw" },
+					{ source: second, destinations: [destination], declaredMode: "raw" },
+				],
+			}),
+		);
+		const clearance = mock<ClearanceStore>();
+		clearance.load.mockResolvedValue(makeClearanceLoad({ [first]: { mode: "raw" }, [second]: { mode: "raw" } }));
+		const layout = mock<FilesystemLayout>();
+		layout.join.mockImplementation((root, relative) => `${root}/${relative}`);
+		layout.exists.mockResolvedValue(true);
+		layout.isFile.mockImplementation(async (path) => path.startsWith(SOURCE_ROOT));
+		const sources = mock<SourceFiles>();
+		sources.readBytes.mockResolvedValue(new TextEncoder().encode("payload\n"));
+		const destinations = mock<DestinationFiles>();
+		const guard = mock<WriteTargetGuard>();
+		guard.refuse.mockResolvedValue(null);
+		const useCase = new ApplyCoreRevision({ bindings, clearance, sources, destinations, layout, guard });
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(false);
+		const failure = outcome.ok ? null : outcome.failure;
+		expect(failure?.code).toBe("invalid");
+		expect(failure?.message).toContain("conflicting destination ownership");
+		expect(destinations.writeText).not.toHaveBeenCalled();
+		expect(destinations.writeBytes).not.toHaveBeenCalled();
+		expect(destinations.remove).not.toHaveBeenCalled();
+		expect(bindings.save).not.toHaveBeenCalled();
+	});
+});
+
 describe("newly cleared sources", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();

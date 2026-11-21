@@ -501,7 +501,23 @@ export function withheldSources(
 		}
 	}
 
-	return { document: { ...document, bindings: kept, pending }, distributable, retired, requiresReconciliation };
+	// A destination a distributable binding claims is still in use: the obsolete
+	// binding leaves the document, but the file stays for its new owner, which
+	// then applies its own mode contract to it.
+	const liveDestinations = new Set(distributable.flatMap((entry) => entry.destinations));
+	const removals = retired
+		.map((entry) => ({
+			...entry,
+			destinations: entry.destinations.filter((destination) => !liveDestinations.has(destination)),
+		}))
+		.filter((entry) => entry.destinations.length > 0);
+
+	return {
+		document: { ...document, bindings: kept, pending },
+		distributable,
+		retired: removals,
+		requiresReconciliation,
+	};
 }
 
 /** One cleared source an enrollment would bind. */
@@ -588,6 +604,31 @@ export function withEnrolledSources(
 		}
 	}
 	return { document: { ...document, bindings, root: plan.root }, newRawDestinations, newMergeDestinations };
+}
+
+/**
+ * Return the destinations more than one live binding claims.
+ *
+ * A destination belongs to one source. A document naming it twice cannot say
+ * which source owns it, and the persisted document would be rejected by
+ * {@link parseBindingsDocument} on the next read, so the run is refused before
+ * any filesystem mutation rather than persisting it.
+ */
+export function duplicatedDestinations(document: BindingsDocument): readonly string[] {
+	const seen = new Set<string>();
+	const duplicated: string[] = [];
+	for (const entry of document.bindings) {
+		for (const destination of entry.destinations) {
+			if (!seen.has(destination)) {
+				seen.add(destination);
+				continue;
+			}
+			if (!duplicated.includes(destination)) {
+				duplicated.push(destination);
+			}
+		}
+	}
+	return duplicated;
 }
 
 /**

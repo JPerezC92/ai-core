@@ -16,6 +16,7 @@ import { CLEARANCE_FILENAME, MODE_MERGE, MODE_RAW, ROLE_ROOT } from "#domain/syn
 import {
 	bindingModeConflict,
 	destinationDrift,
+	duplicatedDestinations,
 	enrollmentCandidates,
 	nonRegionDestinations,
 	normalizePending,
@@ -178,6 +179,12 @@ export class ApplyCoreRevision {
 			if (conflict !== null) {
 				return failed(conflict);
 			}
+		}
+		// Two live bindings cannot own one destination, and a distributable binding
+		// must not displace one awaiting reconciliation. Nothing is mutated first.
+		const duplicated = duplicatedDestinations(plan);
+		if (duplicated.length > 0) {
+			return failed(invalid(`conflicting destination ownership: ${duplicated.join(", ")}`));
 		}
 		const relocated = destinationDrift(plan, clearance.entries, clearance.destinations);
 		if (relocated !== null) {

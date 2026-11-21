@@ -32,6 +32,7 @@ import {
 	bindingModeConflict,
 	destinationDrift,
 	type EnrollmentPlan,
+	duplicatedDestinations,
 	enrollmentCandidates,
 	nonRegionDestinations,
 	normalizePending,
@@ -216,6 +217,12 @@ export class EnrollDestinations {
 			if (conflict !== null) {
 				return failed(conflict);
 			}
+		}
+		// Two live bindings cannot own one destination, and a distributable binding
+		// must not displace one awaiting reconciliation. Nothing is mutated first.
+		const duplicated = duplicatedDestinations(document);
+		if (duplicated.length > 0) {
+			return failed(invalid(`conflicting destination ownership: ${duplicated.join(", ")}`));
 		}
 		// Same refusal, at the same position, as `apply` and `check`: an already-bound
 		// source whose record now declares another destination is drift, not a state
