@@ -43,14 +43,7 @@ import {
 	withRestoredOptOuts,
 	withheldSources,
 } from "#domain/synchronization/bindings.ts";
-import {
-	drift,
-	failed,
-	invalid,
-	succeeded,
-	type OperationOutcome,
-	type SynchronizationFailure,
-} from "#domain/synchronization/failures.ts";
+import { drift, failed, invalid, succeeded, type OperationOutcome } from "#domain/synchronization/failures.ts";
 import { splitFrontmatter } from "#domain/synchronization/frontmatter.ts";
 import { mergeTopLevel } from "#domain/synchronization/merge.ts";
 import { hasExactCoreMarkerLines } from "#domain/synchronization/markers.ts";
@@ -58,7 +51,6 @@ import type { ReconciliationEntry } from "#domain/synchronization/reconciliation
 import { missingRegionSources } from "#domain/synchronization/reconciliation.ts";
 import { protectedBytes, renderInitFile, renderWithRegion, splitRegions } from "#domain/synchronization/regions.ts";
 import { editorMismatch, effectiveEditor } from "#domain/synchronization/editor-profile.ts";
-import type { BindingMode } from "#domain/synchronization/constants.ts";
 import type { BindingsDocument } from "#domain/synchronization/bindings.ts";
 import { omitMcpServersOf, type ClearanceEntry } from "#domain/synchronization/clearance.ts";
 import type {
@@ -146,9 +138,7 @@ export class EnrollDestinations {
 		const facts = await sourceFacts(restored, clearance, editor, request.sourceRoot, layout);
 
 		const entries = clearance.entries ?? new Map<string, ClearanceEntry>();
-		const rootEntry = [...entries.entries()].find(
-			([, entry]) => entry.kind === "file" && entry.role === ROLE_ROOT,
-		);
+		const rootEntry = [...entries.entries()].find(([, entry]) => entry.kind === "file" && entry.role === ROLE_ROOT);
 		const rootSource = rootEntry?.[0] ?? null;
 		let rootDestination = restored.root;
 		if (rootSource !== null) {
@@ -178,10 +168,7 @@ export class EnrollDestinations {
 		const enrolled = withEnrolledSources(restored, enrollment, existingDestinations);
 		const withheld = withheldSources(enrolled.document, facts, entries);
 		const document = withheld.document;
-		const newRawDestinations = new Set<string>([
-			...declared.newRawDestinations,
-			...enrolled.newRawDestinations,
-		]);
+		const newRawDestinations = new Set<string>([...declared.newRawDestinations, ...enrolled.newRawDestinations]);
 		const newMergeDestinations = enrolled.newMergeDestinations;
 
 		const refusal = await guard.refuse({
@@ -407,7 +394,12 @@ export class EnrollDestinations {
 			editor,
 		};
 		await bindings.save(request.bindingsPath, pinned);
-		await layout.syncBlocker(request.destinationRoot, pinned, pending, missingRegionSources(withheld.requiresReconciliation));
+		await layout.syncBlocker(
+			request.destinationRoot,
+			pinned,
+			pending,
+			missingRegionSources(withheld.requiresReconciliation),
+		);
 
 		return succeeded(["initialized", ...notes].join("; "));
 	}

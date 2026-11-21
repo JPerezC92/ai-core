@@ -308,7 +308,12 @@ export class ApplyCoreRevision {
 		const pending = normalizePending(plan.pending, nonRegionDestinations(plan, clearance.modes));
 		const pinned = { ...plan, coreRevision: request.sourceRevision, pending };
 		await bindings.save(request.bindingsPath, pinned);
-		await layout.syncBlocker(request.destinationRoot, pinned, pending, missingRegionSources(withheld.requiresReconciliation));
+		await layout.syncBlocker(
+			request.destinationRoot,
+			pinned,
+			pending,
+			missingRegionSources(withheld.requiresReconciliation),
+		);
 
 		const parts = ["applied", ...notes];
 		if (created.length > 0) {

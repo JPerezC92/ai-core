@@ -309,9 +309,7 @@ describe("source preservation", () => {
 		expect(destinations.remove).not.toHaveBeenCalled();
 		// The preserved destination is neither rewritten nor replaced.
 		expect(writtenTo(destinations, `${SYNCHRONIZATION_DESTINATION_ROOT}/${source}`)).toEqual([]);
-		expect(
-			destinations.writeText.mock.calls.filter(([target]) => target.endsWith(`/${source}`)),
-		).toEqual([]);
+		expect(destinations.writeText.mock.calls.filter(([target]) => target.endsWith(`/${source}`))).toEqual([]);
 		const saved = bindings.save.mock.calls[0]?.[1];
 		expect(saved?.bindings.map((entry) => entry.source)).toContain(source);
 		expect(saved?.pending).toContain(source);
@@ -353,13 +351,9 @@ describe("source preservation", () => {
 		expect(destinations.remove).not.toHaveBeenCalled();
 		// The preserved destination is neither rewritten nor replaced.
 		expect(writtenTo(destinations, `${SYNCHRONIZATION_DESTINATION_ROOT}/${source}`)).toEqual([]);
-		expect(
-			destinations.writeText.mock.calls.filter(([target]) => target.endsWith(`/${source}`)),
-		).toEqual([]);
+		expect(destinations.writeText.mock.calls.filter(([target]) => target.endsWith(`/${source}`))).toEqual([]);
 		expect(bindings.save.mock.calls[0]?.[1].pending).toContain(source);
-		expect(layout.syncBlocker.mock.calls[0]?.[3]).toEqual([
-			{ source, destination: source, reason: "anomaly" },
-		]);
+		expect(layout.syncBlocker.mock.calls[0]?.[3]).toEqual([{ source, destination: source, reason: "anomaly" }]);
 	});
 });
 

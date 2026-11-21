@@ -83,9 +83,12 @@ describe("the blocker's unresolved-source section", () => {
 		const rootFile = join(destination, ROOT_FILE);
 		await writeFile(rootFile, ROOT_TEXT, "utf8");
 
-		await layout.syncBlocker(destination, makeBindingsDocument({ editor: "cursor" }), ["AGENTS.md"], [
-			{ source: "shared/SKILL.md", destination: "AGENTS.md", reason: "unestablished" },
-		]);
+		await layout.syncBlocker(
+			destination,
+			makeBindingsDocument({ editor: "cursor" }),
+			["AGENTS.md"],
+			[{ source: "shared/SKILL.md", destination: "AGENTS.md", reason: "unestablished" }],
+		);
 
 		const text = await readFile(rootFile, "utf8");
 		expect(text).toContain("CORE SYNC BLOCKED — UNRESOLVED MANAGED SOURCE");

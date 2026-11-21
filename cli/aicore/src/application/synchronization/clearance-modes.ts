@@ -100,10 +100,7 @@ export async function sourceFacts(
 		if ((await layout.isFile(layout.join(sourceRoot, binding.source))) !== false) {
 			present.add(binding.source);
 		}
-		if (
-			!cleared.has(binding.source) &&
-			deliveryDeclaredFor(binding.source, entries, editor) === "omitted"
-		) {
+		if (!cleared.has(binding.source) && deliveryDeclaredFor(binding.source, entries, editor) === "omitted") {
 			withdrawn.add(binding.source);
 		}
 	}

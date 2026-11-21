@@ -191,12 +191,8 @@ describe("removed sources", () => {
 		expect(saved?.bindings.map((entry) => entry.source)).toEqual([SKILL_FILE]);
 		expect(saved?.pending).toEqual([SKILL_FILE]);
 		expect(destinations.remove).not.toHaveBeenCalled();
-		expect(
-			destinations.writeText.mock.calls.filter(([target]) => target.endsWith(`/${SKILL_FILE}`)),
-		).toEqual([]);
-		expect(
-			destinations.writeBytes.mock.calls.filter(([target]) => target.endsWith(`/${SKILL_FILE}`)),
-		).toEqual([]);
+		expect(destinations.writeText.mock.calls.filter(([target]) => target.endsWith(`/${SKILL_FILE}`))).toEqual([]);
+		expect(destinations.writeBytes.mock.calls.filter(([target]) => target.endsWith(`/${SKILL_FILE}`))).toEqual([]);
 		expect(layout.syncBlocker.mock.calls[0]?.[3]).toEqual([
 			{ source: SKILL_FILE, destination: SKILL_FILE, reason: "missing" },
 		]);

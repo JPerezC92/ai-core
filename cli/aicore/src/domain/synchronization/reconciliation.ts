@@ -80,7 +80,9 @@ function unresolvedSourceSection(missing: readonly MissingRegionSource[]): reado
 		">",
 	];
 	for (const item of missing) {
-		lines.push(`> - Source: \`${item.source}\` → Destination: \`${item.destination}\` — ${REASON_PHRASE[item.reason]}`);
+		lines.push(
+			`> - Source: \`${item.source}\` → Destination: \`${item.destination}\` — ${REASON_PHRASE[item.reason]}`,
+		);
 	}
 	lines.push(">");
 	if (reasons.has("missing") || reasons.has("withdrawn")) {

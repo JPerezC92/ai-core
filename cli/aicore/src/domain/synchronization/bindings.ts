@@ -494,7 +494,6 @@ export function withheldSources(
 	}
 
 	return { document: { ...document, bindings: kept, pending }, distributable, retired, requiresReconciliation };
-
 }
 
 /** One cleared source an enrollment would bind. */
@@ -538,9 +537,7 @@ export function enrollmentCandidates(document: BindingsDocument, facts: Enrollme
 			continue;
 		}
 		const destination =
-			source === facts.rootSource && root !== null
-				? root
-				: (facts.destinations.get(source) ?? source);
+			source === facts.rootSource && root !== null ? root : (facts.destinations.get(source) ?? source);
 		candidates.push({ source, mode, destination });
 	}
 	return { root, candidates };

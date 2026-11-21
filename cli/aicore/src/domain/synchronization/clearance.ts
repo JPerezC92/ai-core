@@ -204,10 +204,7 @@ function coveringRecord(
  * answers directly, and a directory root answers with its `region_files`
  * membership or its default mode. A path no record covers has no declared mode.
  */
-export function declaredModeFor(
-	source: string,
-	entries: ReadonlyMap<string, ClearanceEntry>,
-): BindingMode | null {
+export function declaredModeFor(source: string, entries: ReadonlyMap<string, ClearanceEntry>): BindingMode | null {
 	const covering = coveringRecord(source, entries);
 	if (covering === null) {
 		return null;
