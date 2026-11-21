@@ -398,6 +398,9 @@ describe("merge-managed source preservation", () => {
 		// replaced with an empty or default object.
 		expect(destinations.remove).not.toHaveBeenCalled();
 		expect(writtenTo(destinations, `${SYNCHRONIZATION_DESTINATION_ROOT}/${source}`)).toEqual([]);
+		// A merge destination is delivered through the text channel, so the absence
+		// of a write there is what proves it was not rewritten.
+		expect(destinations.writeText.mock.calls.filter(([target]) => target.endsWith(`/${source}`))).toEqual([]);
 		// The binding survives and the destination is recorded as requiring
 		// reconciliation through the existing lifecycle contract.
 		const saved = bindings.save.mock.calls[0]?.[1];
