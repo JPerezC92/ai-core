@@ -15,7 +15,6 @@ import {
 	nonRegionDestinations,
 	normalizePending,
 	protectedExclusionFailure,
-	unclearedSources,
 	withOptOuts,
 	withheldSources,
 } from "#domain/synchronization/bindings.ts";
@@ -122,14 +121,6 @@ export class VerifyDestinations {
 		const plan = withheld.document;
 		const nonRegion = nonRegionDestinations(plan, clearance.modes);
 
-		const uncleared = unclearedSources(
-			plan,
-			new Set(clearance.modes.keys()),
-			new Set([...withheld.retired, ...withheld.requiresReconciliation].map((entry) => entry.source)),
-		);
-		if (uncleared.length > 0) {
-			return failed(drift(`source not cleared for distribution: ${uncleared.join(", ")}`));
-		}
 		const relocated = destinationDrift(plan, clearance.entries, clearance.destinations);
 		if (relocated !== null) {
 			return failed(relocated);

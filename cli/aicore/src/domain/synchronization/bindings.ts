@@ -585,27 +585,6 @@ export function withEnrolledSources(
 	return { document: { ...document, bindings, root: plan.root }, newRawDestinations, newMergeDestinations };
 }
 
-/** Return distinct bound sources absent from clearance, in document order. */
-export function unclearedSources(
-	document: BindingsDocument,
-	cleared: ReadonlySet<string>,
-	absent: ReadonlySet<string> = new Set(),
-): readonly string[] {
-	const uncleared: string[] = [];
-	const seen = new Set<string>();
-	for (const entry of document.bindings) {
-		if (cleared.has(entry.source) || absent.has(entry.source)) {
-			continue;
-		}
-		if (!seen.has(entry.source)) {
-			seen.add(entry.source);
-			uncleared.push(entry.source);
-		}
-	}
-	return uncleared;
-}
-
-
 /**
  * Return the drift a bound source earns when clearance declares another
  * destination than the bindings record.

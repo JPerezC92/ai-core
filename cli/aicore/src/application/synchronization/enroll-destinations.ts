@@ -37,7 +37,6 @@ import {
 	normalizePending,
 	parseInitBindingSpec,
 	protectedExclusionFailure,
-	unclearedSources,
 	withEnrolledSources,
 	withInitDeclarations,
 	withOptOuts,
@@ -228,14 +227,6 @@ export class EnrollDestinations {
 			if (conflict !== null) {
 				return failed(conflict);
 			}
-		}
-		const uncleared = unclearedSources(
-			document,
-			new Set(clearance.modes.keys()),
-			new Set([...withheld.retired, ...withheld.requiresReconciliation].map((entry) => entry.source)),
-		);
-		if (uncleared.length > 0) {
-			return failed(drift(`source not cleared for distribution: ${uncleared.join(", ")}`));
 		}
 		// Same refusal, at the same position, as `apply` and `check`: an already-bound
 		// source whose record now declares another destination is drift, not a state

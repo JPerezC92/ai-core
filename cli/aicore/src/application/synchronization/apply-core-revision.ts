@@ -20,7 +20,6 @@ import {
 	nonRegionDestinations,
 	normalizePending,
 	protectedExclusionFailure,
-	unclearedSources,
 	withEnrolledSources,
 	withOptOuts,
 	withRestoredOptOuts,
@@ -176,13 +175,6 @@ export class ApplyCoreRevision {
 			if (conflict !== null) {
 				return failed(conflict);
 			}
-		}
-		const withheldSourcesNotDistributed = new Set(
-			[...withheld.retired, ...withheld.requiresReconciliation].map((entry) => entry.source),
-		);
-		const uncleared = unclearedSources(plan, new Set(clearance.modes.keys()), withheldSourcesNotDistributed);
-		if (uncleared.length > 0) {
-			return failed(drift(`source not cleared for distribution: ${uncleared.join(", ")}`));
 		}
 		const relocated = destinationDrift(plan, clearance.entries, clearance.destinations);
 		if (relocated !== null) {
