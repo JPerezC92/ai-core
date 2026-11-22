@@ -1,7 +1,6 @@
 # Architecture selection policy and Interface boundary
 
-> **Status:** closed
-> **Closed:** 2026-11-21
+> **Status:** active
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-21
 > **Objective:** Add an evidence-based L1/L2/L3 complexity-selection policy, an optional Interface responsibility boundary, and a prospective L3 scope for the class-first operation rule, to the shared architecture contract and its mapped owners.
@@ -47,12 +46,12 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
 
 ## Tasks
 
-- T1 | S1, S2, S3, S4, S5, S6, S7, S8, S9, S12 | inline (the agnostic contract has no delegated author; one coherent contract candidate avoids conflicting edits to the same file) — Cipher 🔓 (Lead Orchestrator) | done | commit: 0633fe2ac63bdd4491b28609698e865171503f52
+- T1 | S1, S2, S3, S4, S5, S6, S7, S8, S9, S12 | inline (the agnostic contract has no delegated author; one coherent contract candidate avoids conflicting edits to the same file) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
 - T2 | S13, S15 | inline (shapes and guides are mappings of the contract candidate and are edited as one dependent set) — Cipher 🔓 (Lead Orchestrator) | done | commit: 2952505410621ece38062faa420e4c3bddb9705b
 - T3 | S10 | inline (one rule plus its parity mappings; the testing contract is a single owner) — Cipher 🔓 (Lead Orchestrator) | done | commit: 9995cca9054a59d7a035c41361914ec91ef4f573
 - T4 | S11, S14 | inline (agent instructions, decision records and durable documentation form one coordinated set) — Cipher 🔓 (Lead Orchestrator) | done | commit: de1966e9fea24dba91500fa7c39563d3c78b887b
-- T5 | S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16 | delegated (independent architecture-owner gates: Bastion 🧱 for the common contract and the backend/scripts cells, Atrium 🏛️ for the frontend cells, Crucible 🔥 for the testing contract; no author reviews its own candidate) — Cipher 🔓 (Lead Orchestrator) | done | commit: a70503f62f16de4563e2a79f3a176e0e153545f1
-- T6 | S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16 | delegated (independent record audit by Sentinel 🛡️ plus independent whole-feature semantic acceptance, neither of which the author performs) — Cipher 🔓 (Lead Orchestrator) | done | commit: 6c739cd74db759fa60792e428f80d7e1b9defb8d
+- T5 | S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16 | delegated (independent architecture-owner gates: Bastion 🧱 for the common contract and the backend/scripts cells, Atrium 🏛️ for the frontend cells, Crucible 🔥 for the testing contract; no author reviews its own candidate) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
+- T6 | S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16 | delegated (independent record audit by Sentinel 🛡️ plus independent whole-feature semantic acceptance, neither of which the author performs) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
 - T7 | S15 | delegated (sole Git executor: the work-unit commits on the feature branch — the four work units, the contract-completion commit and the gate-remediation commits; publication of the pull request is the post-closure lifecycle stage and is not part of this task's completion condition) — Herald 📯 (Release Manager) | done | commit: 3f5a005af8a8990633e3b76df0f03edb7948d97d
 - T8 | S16 | inline (retrospective attribution correction: the ten-step procedure was delivered in the contract-completion commit and this row records that delivery, adding no implementation work) — Cipher 🔓 (Lead Orchestrator) | done | commit: 9a383c2f73ba0fe1fe9f33971f77c1d56cc64308
 
@@ -143,4 +142,4 @@ Task-row illustration: `open` → `in progress` → `done`; `commit: pending` wh
 - L30 — S15 — pass — the delivered set is the approved 23 paths, enumerated by ADR 0010's propagation table plus the record, with no out-of-inventory path in the reviewed content; re-accepted at `6c739cd`.
 - L31 — S16 — pass — `architecture/README.md` states the ten steps in their requested order and records that `L1`, `L2` and `L3` are alternatives rather than stages; re-accepted at `6c739cd`.
 - L32 — First-failure statement: no applicable executable failure — the delivered set is documentation, so verification was independent documentary review by the architecture owners and the record auditor plus the two record validators and the formatter, and no runnable test governs it.
-- L33 — Close: 2026-11-21 — T1–T8 are `done` against `0633fe2`, `2952505`, `9995cca`, `de1966e`, `a70503f`, `6c739cd`, `3f5a005` and `9a383c2`; the three architecture-owner gates returned `[PASS]` at `a70503f`, the record auditor returned `[PASS]` at `906be32`, and the independent whole-feature semantic acceptance returned `ACCEPTANCE: PASS` with all sixteen Specs passing at `6c739cd`. Verification: both record validators exit 0, `biome format` is clean on every changed path, and the two `format:check` failures are pre-existing at the base revision, proven by identical blob identities rather than assumed. The durable feature file records `R1` and `R18`–`R26` ticked against those gates with `R17` left unticked, so its status remains `partial` by its own ticks. Closing is not delivery: push, pull-request publication, review and merge remain separately authorized, and the merge is the user's decision alone. ADR 0010 remains `Proposed` until the user accepts it.
+- L33 — Reopened for pull-request review finding F1 at head `8fdb3c05d2bf86c5e858b2d39e57a27826a78a3d`: `C12` and `C13` stated that an infrastructure adapter "depends inward on application and domain modules", which contradicted the `## Diagrams` caption's "permitted only" description of the Infrastructure-to-Application edge and S12's prohibition on implying that an adapter must import Application. Work unit and rollback boundary: the two adapter sentences in `implementation/architecture.md`, revertible alone and changing nothing else; the reopening authorizes no work beyond that finding.
