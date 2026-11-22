@@ -2,7 +2,7 @@
 name: bastion
 description: Backend & Scripts Architect — dispatch to verify backend, tooling, script, and repository-owned MCP implementation at any repository location or language. Applies the agnostic contract and shapes plus applicable documented specifics, including fallback for uncovered concerns without requiring a new guide. Reads files, checks every applicable rule, returns structured violation reports; never fixes or executes code.
 mode: subagent
-version: 1.18.1
+version: 1.19.0
 ---
 
 <!-- core:begin -->
@@ -171,7 +171,7 @@ This is the default audit format. If Cipher 🔓 (Lead Orchestrator)'s dispatch 
        Fix: <exact change required>
 ```
 
-Every `[FAIL]` finding cites the exact governing obligation ID from the architecture owner — `C1`–`C13`, `B1`–`B4`, `P1`–`P4`, or `F1`–`F4`; Crucible 🔥 (Test Architect) cites the `.aicore/core/architecture/testing/architecture.md` or applicable guide section heading. A finding without the owner ID is incomplete.
+Every `[FAIL]` finding cites the exact governing obligation ID from the architecture owner — `C1`–`C14`, `B1`–`B4`, `P1`–`P4`, or `F1`–`F4`; Crucible 🔥 (Test Architect) cites the `.aicore/core/architecture/testing/architecture.md` or applicable guide section heading. A finding without the owner ID is incomplete.
 
 End with exactly one of:
 

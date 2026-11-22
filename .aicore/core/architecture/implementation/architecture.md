@@ -161,6 +161,52 @@ None of them justifies L1 or L2 in a project of any size. Where the evidence is 
 
 **Authorization.** No agent creates, renames or migrates an interface folder without an authorized change.
 
+## C14 — External output contracts
+
+Every published external interface carries a contract its consumer can rely on: the producer and the consumer agree on the payload, not only on an envelope. Each channel's rules below state the contract that channel owns. A channel that publishes no contract — an internal event, a UI callback, an engine message — uses types appropriate to its consumers and inherits no HTTP-shaped envelope. These obligations bind wherever a published output contract exists, at every complexity level, and never require an additional layer, wrapper class, service, dependency-injection mechanism or directory.
+
+### HTTP JSON APIs
+
+**Default envelope.** A new project-owned REST API that returns JSON uses JSend: `success` for a successful response, `fail` for a documented request failure, `error` for a server-side processing failure. The envelope is a transport representation owned by the Interface boundary (`C12`); the payload it carries is the endpoint's own contract. JSend does not supersede HTTP: the response carries the appropriate HTTP status.
+
+**Success.** `status` is `success` and `data` carries the endpoint's payload. `data` may be `null` where the endpoint succeeds with no payload and still returns JSON. The response adds no metadata the endpoint contract does not require.
+
+**Expected failures.** A rejected input, an invalid business precondition or another documented request failure returns `fail` with the appropriate 4xx status. `data.code` is a documented, stable string identifier, taken from the stable domain error identifier where one exists and mapped at the HTTP boundary (`C4`). `data.details` is optional and follows the endpoint's documented schema when present. A failed request is never returned as an HTTP 200 success, and an identifier is never invented at the transport edge.
+
+**Processing errors.** A server-side processing failure returns `error` with the appropriate 5xx status, a safe documented client-facing `message`, and the same stable `data.code` requirement. A stack trace, a database internal, a secret or any other implementation detail never reaches the public response, and logging or diagnostic correlation stays separate from the public message. This `data.code` is a profile convention of this contract, not a field the JSend specification requires, and it is distinct from JSend's optional numeric top-level `code`.
+
+**Exceptions.** A bodyless response — HTTP 204, a HEAD response, 304 — carries no envelope. A file download, a binary response, a server-sent event and any other streaming format keep their own shape. GraphQL, gRPC, a third-party API and any other protocol keep their applicable contract. An approved alternative such as RFC 9457 stays valid inside its declared scope, and one API contract never mixes competing error envelopes. A failure is classified by its actual semantics: no 4xx status mechanically denotes one business error.
+
+**Schemas.** A newly published REST JSON API operation intended for consumption by another application defines its request schema when it has an input payload, its success response schema including the envelope and the payload, its documented error response schemas with their HTTP statuses, the required and optional properties with their types, its stable machine-readable error codes, and the relevant pagination or versioning conventions. The contract is published with OpenAPI or an established equivalent the project already uses. No global payload schema is shared by unrelated operations, and this rule introduces no generator, framework or dependency.
+
+### Command-line interfaces
+
+A CLI uses native command-line semantics and never an HTTP envelope. Exit code `0` means success and a nonzero exit code means failure; `stdout` carries the primary successful output and `stderr` carries errors and diagnostics. A progress message or log never corrupts a machine-readable `stdout` stream, and a CLI that takes part in a pipeline keeps predictable stream behavior. This rule imposes no global exit-code numbers: an additional exit code is documented when a consumer depends on it.
+
+A CLI may offer `--json` for automation and need not. When it does, successful `stdout` is one valid JSON document following a documented command-specific schema, with no log or progress text interleaved and no mandatory envelope. A failure exits nonzero, leaves `stdout` free of partial success data, and writes a structured diagnostic to `stderr`: one JSON object whose `error` object holds a stable documented `code` and a `message`. A command whose documented streaming behavior is a record stream uses that representation, such as JSON Lines, and is never mislabeled a single JSON document.
+
+### MCP implementations
+
+An MCP implementation follows its negotiated protocol version and native tool-result semantics; no envelope is added around it. A tool that returns structured data uses `structuredContent` where it serves its consumers, and the structured output conforms to the declared `outputSchema` whenever one is provided. The result's outer fields conform to the negotiated protocol version, the required `content` behavior and any applicable backward-compatibility representation are preserved, and a version-dependent field is required only where the negotiated version requires it. A declared `outputSchema` is honored, and no artificial schema is required for a tool whose output needs no structured result.
+
+A protocol-level JSON-RPC error and an error raised while a tool executes stay distinct: the latter is carried by the tool result's error semantics, such as `isError: true`, and is never presented as a successful result because a handler caught an exception. An ordinary absence is not automatically a protocol error; the tool's published behavior decides whether absence is a result or an execution failure. A stdio MCP server keeps `stdout` reserved for protocol messages.
+
+### Frontends and other channels
+
+A frontend consumes the API's published contract. When that contract uses JSend, the HTTP client or the mapping boundary that already exists interprets `status` and `data`, and the application validates or types the payload by its established approach; the transport representation is translated into the frontend's own data and error model where that model applies. A component, a Hook and an application operation never receive or return an envelope, and one boundary parses the envelope rather than each component repeating it. `F2` and `F3` stand unchanged; at L1 and L2 a simple API-client function may do the mapping without a new directory, wrapper class or application layer. An existing frontend keeps its current consumption of a published API.
+
+An internal game operation, a UI event, a state change and an engine callback are not an HTTP API and inherit no HTTP, CLI or MCP convention: they use explicit types or schemas appropriate to their consumers. A game that publishes an HTTP API, a CLI or an MCP tool follows the contract of that external interface.
+
+### Compatibility, ownership and verification
+
+A producer and its consumer agree on the payload contract: the output shape, the required and optional values, the field types and semantics, the error identifiers, the relevant protocol statuses, and the versioning and compatibility expectations where they apply. An envelope alone never establishes compatibility.
+
+A published response format is stable. It is never changed incompatibly without explicit authorization and a migration plan: no field is renamed or removed, no required field changes to an incompatible type, no successful response becomes a new envelope, no error-code semantics change, no CLI output stream or exit code a consumer relies on changes, and no MCP tool-result schema changes unexpectedly.
+
+The architectural ownership of the contract stays where it is. Domain and application remain independent of protocol-specific serialization (`C6`), the Interface boundary owns the external response translation (`C4`, `C12`), an infrastructure adapter maps its own external representation without taking over channel serialization, and L1 and L2 inherit no Clean Architecture structure to satisfy an output-format rule.
+
+A newly introduced or intentionally changed external interface is verified at its own boundary: an HTTP interface by its status code, envelope, payload schema and error mapping; a CLI by its exit code, `stdout`/`stderr` separation and documented JSON output; an MCP tool by its tool-result shape, declared output schema and error classification; a frontend by its compatibility with the published API schema. The verification uses the existing testing infrastructure and the applicable test contracts; this rule introduces no framework, validator, test package, synthetic environment or per-file test.
+
 ## Diagrams
 
 `architecture-boundaries.svg` is the L3 structure; the two figures below are its physical deployments. All three are illustrative and carry no rule the sections above do not state.

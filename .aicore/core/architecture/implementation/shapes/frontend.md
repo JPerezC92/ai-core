@@ -10,7 +10,7 @@ Use `modules/{feature}/domain/`, `services/`, `hooks/`, and `components/`. Domai
 
 ## F2 — Operation and adapter
 
-The application operation is bound in `modules/{feature}/hooks/` and depends only on domain types and an injected domain port. The service in `services/` is the outside-data adapter: single parsing step, no business logic. It returns domain data or documented business failures mapped to typed domain error values; it NEVER throws those business failures. Unrelated transport, parsing, boundary, and programming exceptions remain exceptions and may propagate unchanged to the presentation boundary, never converted into domain errors.
+The application operation is bound in `modules/{feature}/hooks/` and depends only on domain types and an injected domain port. The service in `services/` is the outside-data adapter: single parsing step, no business logic. It returns domain data or documented business failures mapped to typed domain error values; it NEVER throws those business failures. Unrelated transport, parsing, boundary, and programming exceptions remain exceptions and may propagate unchanged to the presentation boundary, never converted into domain errors. The service consumes the API's published contract (C14).
 
 ## F3 — Composition and presentation
 
