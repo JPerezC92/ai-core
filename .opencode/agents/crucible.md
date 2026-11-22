@@ -140,7 +140,7 @@ This is the default audit format. If Cipher 🔓 (Lead Orchestrator)'s dispatch 
        Fix: <exact change required>
 ```
 
-Every `[FAIL]` finding cites the exact governing obligation ID from the architecture owner — `C1`–`C10`, `B1`–`B4`, `P1`–`P4`, or `F1`–`F4`; Crucible 🔥 (Test Architect) cites the `.aicore/core/architecture/testing/architecture.md` or applicable guide section heading. A finding without the owner ID is incomplete.
+Every `[FAIL]` finding cites the exact governing obligation ID from the architecture owner — `C1`–`C13`, `B1`–`B4`, `P1`–`P4`, or `F1`–`F4`; Crucible 🔥 (Test Architect) cites the `.aicore/core/architecture/testing/architecture.md` or applicable guide section heading. A finding without the owner ID is incomplete.
 
 End with exactly one of:
 

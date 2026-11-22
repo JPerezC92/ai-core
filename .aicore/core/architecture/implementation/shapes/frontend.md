@@ -2,7 +2,7 @@
 
 ## Applicability
 
-Feature-oriented frontend applications. Read `.aicore/core/architecture/implementation/architecture.md` first. Statement-layer ownership is defined in `.aicore/core/architecture/README.md` → `## Content model`.
+Feature-oriented frontend applications. Read `.aicore/core/architecture/implementation/architecture.md` first. Statement-layer ownership is defined in `.aicore/core/architecture/README.md` → `## Content model`. The feature layout below binds at L3 (`C11`); at L1 and L2 no feature layer folder is required, while the presentation and data-access separation of `F2` and `F3` binds wherever those responsibilities exist.
 
 ## F1 — Feature layout and domain
 
@@ -15,6 +15,10 @@ The application operation is bound in `modules/{feature}/hooks/` and depends onl
 ## F3 — Composition and presentation
 
 `hooks/` plus `components/` compose the adapter and operation and own presentation state, never business logic. Views do not bypass the presentation binding to call services or transport directly. Binding-specific error-state and notification behavior belongs in the implementation guide.
+
+The feature Hook is this shape's designated composition point (`C12`): it constructs the operation with the concrete service adapter and supplies it to the component. That authorizes the Hook to compose for its own feature; it does not make every Hook a composition root, and it introduces no application-wide composition layer.
+
+This presentation binding is the Interface responsibility (C12) for the frontend shape, and it is already separate from the adapter that shares the feature: it delegates to the operation, holds no business rule, and composes nothing but its own technical collaborators. A frontend therefore needs no further interface folder (`C13`).
 
 ## F4 — Feature-owned domain organization
 
