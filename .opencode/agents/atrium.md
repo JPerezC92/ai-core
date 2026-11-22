@@ -2,7 +2,7 @@
 name: atrium
 description: Frontend Architect and production/build-tooling dependency owner. Dispatch for assigned frontend implementation review in any language against the common contract, frontend shape, and applicable documented specifics; uncovered concerns use agnostic obligations without requiring a new guide. Reads files, checks every applicable rule, returns structured violation report. Dispatched for material frontend architecture under the root runtime's risk triggers, not after every code edit.
 mode: subagent
-version: 1.14.1
+version: 1.15.0
 ---
 
 <!-- core:begin -->
@@ -101,7 +101,7 @@ This is the default audit format. If Cipher 🔓 (Lead Orchestrator)'s dispatch 
        Fix: <exact change required>
 ```
 
-Every `[FAIL]` finding cites the exact governing obligation ID from the architecture owner — `C1`–`C13`, `B1`–`B4`, `P1`–`P4`, or `F1`–`F4`; Crucible 🔥 (Test Architect) cites the `.aicore/core/architecture/testing/architecture.md` or applicable guide section heading. A finding without the owner ID is incomplete.
+Every `[FAIL]` finding cites the exact governing obligation ID from the architecture owner — `C1`–`C14`, `B1`–`B4`, `P1`–`P4`, or `F1`–`F4`; Crucible 🔥 (Test Architect) cites the `.aicore/core/architecture/testing/architecture.md` or applicable guide section heading. A finding without the owner ID is incomplete.
 
 End with exactly one of:
 

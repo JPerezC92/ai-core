@@ -7,7 +7,7 @@ These documents describe intended architecture, not verified implementation conf
 Read in order:
 
 0. Before applying a layer, operation or folder obligation, select the project's complexity level (`C11`). L1 and L2 impose no layer folders and no operation class, and every obligation binds only where its responsibility exists. An existing project keeps its approved architecture; nothing here authorizes a migration.
-1. `.aicore/core/architecture/implementation/architecture.md` — complexity levels, common layers, dependencies, ports, operations, the Interface boundary, mapping/composition, failures, serialization, helper semantics, and the diagrams.
+1. `.aicore/core/architecture/implementation/architecture.md` — complexity levels, common layers, dependencies, ports, operations, the Interface boundary, mapping/composition, failures, serialization, helper semantics, external output contracts, and the diagrams.
 2. Applicable shapes: `.aicore/core/architecture/implementation/shapes/frontend.md`, `.aicore/core/architecture/implementation/shapes/backend.md`, `.aicore/core/architecture/implementation/shapes/scripts.md`. Python backend tooling may select both backend and scripts; a language name is not a shape.
 3. Applicable concrete implementation guide below; it maps rather than replaces the common/shape contract.
 4. `.aicore/core/architecture/testing/architecture.md`, then its selected testing guide under `.aicore/core/architecture/testing/stacks/`. Testing design has its own authority and template; do not infer test rules from implementation examples.
@@ -41,7 +41,7 @@ Apply this sequence to implementation and review work. Steps 1–3 establish the
 
 Layer duties are defined under `## Content model` in this file. Runtime specs retain authority, scope, warmup/execution procedures, edit checkpoints, review gates, dependency ownership, reporting, and uncertainty handling. A document pointer does not grant execution permission.
 
-Copy `.aicore/core/architecture/implementation/stacks/_template.md` before writing another implementation guide. Keep its heading order and map every C1–C13 obligation and selected shape obligation; explain applicability and language/runtime differences. Unsupported choices remain explicit open decisions, not invented equivalents or unexplained N/A. Proposed guides are not claims of reviewed documentation or implementation conformance.
+Copy `.aicore/core/architecture/implementation/stacks/_template.md` before writing another implementation guide. Keep its heading order and map every C1–C14 obligation and selected shape obligation; explain applicability and language/runtime differences. Unsupported choices remain explicit open decisions, not invented equivalents or unexplained N/A. Proposed guides are not claims of reviewed documentation or implementation conformance.
 
 Never edit a distributed architecture file. A destination may document a different stack in its own guide, copied from `.aicore/core/architecture/implementation/stacks/_template.md` or `.aicore/core/architecture/testing/stacks/_template.md`; an unbound path survives every sync. Guide authoring is an optional documentation extension, not a prerequisite for applying the agnostic fallback.
 
@@ -49,7 +49,7 @@ Never edit a distributed architecture file. A destination may document a differe
 
 Every architecture rule and obligation lives in exactly one of those three layers; `## Contract boundaries` states constraints on the documents themselves and the templates state authoring duties, so both are cited by section rather than by rule identifier.
 
-1. **Agnostic contract** — `.aicore/core/architecture/implementation/architecture.md` (`C1`–`C13`) and `.aicore/core/architecture/testing/architecture.md` (`T` rules). Each normative rule in a `C`, `B`, `F`, `P`, or `T` owner carries a stable identifier. A rule is stated here once, completely, and is never restated below.
+1. **Agnostic contract** — `.aicore/core/architecture/implementation/architecture.md` (`C1`–`C14`) and `.aicore/core/architecture/testing/architecture.md` (`T` rules). Each normative rule in a `C`, `B`, `F`, `P`, or `T` owner carries a stable identifier. A rule is stated here once, completely, and is never restated below.
 2. **Shape** — `.aicore/core/architecture/implementation/shapes/frontend.md`, `backend.md`, and `scripts.md` (`F`, `B`, and `P` obligations). A shape obligation carries an identifier and specializes the common contract for one application shape. A shape may add responsibility, layout, and boundary detail; it does not restate a `C` rule.
 3. **Language guide** — `.aicore/core/architecture/implementation/stacks/` and `.aicore/core/architecture/testing/stacks/`. A guide states only how its language achieves a cited obligation, and cites that identifier in the body and in its mapping or parity table. A guide never restates a contract requirement as prose.
 
@@ -58,7 +58,7 @@ Two contract families are peers, each with its own contract, optional shapes, an
     .aicore/core/architecture/
       README.md                 navigation and this model
       implementation/           implementation family
-        architecture.md         common contract (C1-C13)
+        architecture.md         common contract (C1-C14)
         shapes/                 application-shape obligations (F, B, P)
         stacks/                 implementation guides
       testing/                  testing family
