@@ -153,7 +153,7 @@ None of them justifies L1 or L2 in a project of any size. Where the evidence is 
 
 **At L3, independence precedes extraction.** While interface modules and infrastructure adapters share the infrastructure layout, they remain independent boundaries: interface modules depend inward on application and domain modules, adapters depend inward on domain modules and may depend on application modules only where a port requires it, and neither imports the other. Co-location never licenses an interface module to reach a persistence adapter, and extraction is never required to obtain that independence.
 
-**After extraction.** Interface modules and infrastructure adapters are sibling outer boundaries, each depending inward independently: interface modules depend inward on application and domain modules, adapters depend inward on domain modules and may depend on application modules only where a port requires it, and neither imports the other. The composition root depends on both. Technical libraries remain permitted on both sides under `C12`.
+**After extraction.** Interface modules and infrastructure adapters are sibling outer boundaries, each depending inward independently: interface modules depend inward on application and domain modules, adapters depend inward on domain modules and may depend on application modules only where a port requires it, and neither imports the other. The composition point depends on both. Technical libraries remain permitted on both sides under `C12`.
 
 **Invariant.** Extraction changes no application operation, domain type or port: the same signatures and the same inward imports, at a different path. A change that redesigns domain or application in order to extract is not an extraction; it is a separate redesign requiring its own authorization and evidence, and the original extraction may not be used as its pretext.
 
@@ -192,14 +192,16 @@ None of them justifies L1 or L2 in a project of any size. Where the evidence is 
 
 Cross-boundary construction happens only at the composition point the applicable shape designates (`C12`). For a backend or a script that is the entry module and its wiring; for the frontend shape it is the feature Hook, which constructs the operation with its concrete service adapter (`F3`). Everywhere else receives ready collaborators. No additional composition layer exists.
 
-### The four shapes at a glance
+### Common application kinds at a glance
 
-| Shape      | The Interface responsibility lives in                                            |
-| ---------- | -------------------------------------------------------------------------------- |
-| HTTP API   | The controller and its request/response mapping (_backend_ shape)                |
-| MCP server | The tool registration, schema validation and result projection (_scripts_ shape) |
-| CLI        | Argument parsing, command dispatch and exit status (_scripts_ shape)             |
-| Frontend   | The feature Hook and component binding (`F3`)                                    |
+The Interface responsibility of `C12` is present in each, because each has an external entry edge. The application _shape_ that governs layout is a separate choice: HTTP APIs use the backend shape, MCP servers and CLIs use the scripts shape, and a frontend uses the frontend shape.
+
+| Application kind | The Interface responsibility lives in                                            |
+| ---------------- | -------------------------------------------------------------------------------- |
+| HTTP API         | The controller and its request/response mapping (_backend_ shape)                |
+| MCP server       | The tool registration, schema validation and result projection (_scripts_ shape) |
+| CLI              | Argument parsing, command dispatch and exit status (_scripts_ shape)             |
+| Frontend         | The feature Hook and component binding (`F3`)                                    |
 
 ### Why L1 and L2 do not inherit this
 
