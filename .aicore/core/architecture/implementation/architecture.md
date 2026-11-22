@@ -153,7 +153,7 @@ None of them justifies L1 or L2 in a project of any size. Where the evidence is 
 
 **At L3, independence precedes extraction.** While interface modules and infrastructure adapters share the infrastructure layout, they remain independent boundaries: interface modules depend inward on application and domain modules, adapters depend inward on domain modules and may depend on application modules only where a port requires it, and neither imports the other. Co-location never licenses an interface module to reach a persistence adapter, and extraction is never required to obtain that independence.
 
-**After extraction.** Interface modules and infrastructure adapters are sibling outer boundaries, each depending inward independently: each may depend on application and domain modules, and neither imports the other. The composition root depends on both. Technical libraries remain permitted on both sides under `C12`.
+**After extraction.** Interface modules and infrastructure adapters are sibling outer boundaries, each depending inward independently: interface modules depend inward on application and domain modules, adapters depend inward on domain modules and may depend on application modules only where a port requires it, and neither imports the other. The composition root depends on both. Technical libraries remain permitted on both sides under `C12`.
 
 **Invariant.** Extraction changes no application operation, domain type or port: the same signatures and the same inward imports, at a different path. A change that redesigns domain or application in order to extract is not an extraction; it is a separate redesign requiring its own authorization and evidence, and the original extraction may not be used as its pretext.
 
