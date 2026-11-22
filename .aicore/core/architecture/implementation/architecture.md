@@ -205,7 +205,7 @@ The Interface responsibility of `C12` is present in each, because each has an ex
 
 ### Why L1 and L2 do not inherit this
 
-The layer folders, the operation class and the separate interface responsibility belong to L3 (`C11`). At L1 and L2 a script or module keeps its own organization, and the obligations that survive are the ones whose responsibility exists: the separation of an external entry edge from the work it triggers (`C12`) and a single mapping step at any boundary (`C4`). Neither level is a stage on the way to L3.
+Only L3 mandates the layer folders and the formal operation class (`C11`). The Interface responsibility is not L3-only: it exists at every level that has an external entry edge (`C12`), and only its own directory is optional and separately authorized (`C13`). At L1 and L2 an entry point may keep input parsing, coordination and output formatting together, provided the business decision stays distinguishable from the external effect (`C12`); a single mapping step still applies at any boundary (`C4`). The three levels are alternative selections, never stages: a project does not pass through them in order.
 
 ### Interface code inside Infrastructure
 
