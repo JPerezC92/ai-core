@@ -1,129 +1,115 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
-  architecture-boundaries.svg — the L3 structure of the AICore architecture contract.
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 925" width="100%" role="img" aria-labelledby="diagram-title diagram-description">
+  <!--
+    AICore architecture boundaries — documentation illustration.
+    Scope: L3 only. Illustrates C1, C2, C3, C4, C9, C11, C12, C13.
+    The normative Markdown contracts govern when the figure and text differ.
+    Colored concentric boundaries express responsibilities, NOT directory hierarchy.
+    Infrastructure and Interfaces are sibling outer boundaries, never dependencies
+    of each other. The footer lists allowed inward directions; no arrow is drawn,
+    because an arrow invites an import that no rule requires. Formal dependency
+    edges live in the Mermaid deployment diagrams in implementation/architecture.md.
+  -->
+  <title id="diagram-title">AICore L3 Clean Architecture boundaries</title>
+  <desc id="diagram-description">Domain is central, surrounded by Application. Infrastructure and the optionally separated Interfaces responsibility are shown as independent sibling outer arcs at the same radius, so neither contains or depends on the other. Four explanatory panels list each boundary's purpose, examples, and exclusions. A note lists the allowed inward dependency directions and states that no dependency is mandatory for every module. Interface modules and infrastructure adapters never depend on each other. L1 and L2 are outside the scope of this diagram, and the rings show architectural responsibility rather than directory hierarchy.</desc>
 
-  Illustrative of C1, C2, C3, C4, C9, C11, C12 and C13. The normative Markdown contracts
-  govern whenever this figure and the text differ; the figure states no rule of its own.
+  <rect width="1180" height="925" rx="20" fill="#F7F9FC"/>
+  <rect x="1" y="1" width="1178" height="923" rx="19" fill="none" stroke="#E3E8F1" stroke-width="2"/>
 
-  Scope: L3 only. L1 and L2 impose no layer directories and are not represented here.
-
-  Geometry: the concentric rings are architectural RESPONSIBILITY, not folder structure.
-  Infrastructure and Interfaces are two sibling outer arcs at the same radius — neither
-  contains the other and neither depends on the other.
-
-  Dependencies: this figure deliberately draws no per-module arrows, because an arrow
-  invites an agent to add an import that no rule requires. The allowed inward directions
-  are listed as text in the footer, and the formal dependency edges are drawn in the
-  Mermaid deployment diagrams beside this file in Markdown.
-
-  Editable by hand: real text elements, semantic group ids, a viewBox for scaling, no
-  external font, script, raster image, embedded data or generator. Mandatory and optional
-  are carried by words and stroke style as well as by colour.
--->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 880" width="100%" role="img" aria-labelledby="ab-title ab-desc">
-  <title id="ab-title">AICore L3 Clean Architecture boundaries</title>
-  <desc id="ab-desc">Domain sits at the centre, surrounded by Application. Infrastructure and Interfaces are drawn as two independent sibling outer arcs at the same radius, so neither contains or depends on the other. Four panels describe what each boundary owns, two or three examples, and what must not live there. A footer lists the allowed inward dependency directions and states that no dependency is mandatory for every module. L1 and L2 are outside this figure's scope, and the rings show architectural responsibility rather than folder structure.</desc>
-
-  <rect width="1000" height="880" rx="18" fill="#F7F9FC"/>
-  <rect x="1" y="1" width="998" height="878" rx="17" fill="none" stroke="#E3E8F1" stroke-width="2"/>
-
-  <g id="header" font-family="Arial, Helvetica, sans-serif">
-    <rect x="32" y="26" width="96" height="28" rx="14" fill="#E9E2F8"/>
-    <text x="80" y="45" fill="#5B3F91" font-size="13" font-weight="700" text-anchor="middle">L3 ONLY</text>
-    <text x="142" y="50" fill="#182437" font-size="26" font-weight="700">Clean Architecture boundaries</text>
-    <text x="32" y="80" fill="#46586E" font-size="15.5">Three required layers · Interfaces is a responsibility; its own directory is optional</text>
-    <text x="32" y="100" fill="#46586E" font-size="14.5">Rings show architectural responsibility, not folder structure.</text>
-    <line x1="32" x2="968" y1="118" y2="118" stroke="#E1E7F0" stroke-width="2"/>
+  <g id="header">
+    <rect x="40" y="34" width="111" height="29" rx="14.5" fill="#E9E2F8"/>
+    <text x="95.5" y="53.5" fill="#62449A" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle">L3 ONLY</text>
+    <text x="166" y="59" fill="#182437" font-family="Arial, Helvetica, sans-serif" font-size="29" font-weight="700">Clean Architecture boundaries</text>
+    <text x="41" y="91" fill="#5D6B7E" font-family="Arial, Helvetica, sans-serif" font-size="16.5">Three required layers · Interfaces is a responsibility; its own directory is optional</text>
+    <line x1="40" x2="1140" y1="113" y2="113" stroke="#E1E7F0" stroke-width="2"/>
   </g>
 
-  <g id="architecture-rings" font-family="Arial, Helvetica, sans-serif">
-    <!-- Two arcs on one circle: sibling outer boundaries, never nested. -->
-    <g id="infrastructure-arc">
-      <path d="M 80.5 300 A 190 190 0 0 1 409.5 300" fill="none" stroke="#D3E6FB" stroke-width="50" stroke-linecap="butt"/>
-      <path d="M 80.5 300 A 190 190 0 0 1 409.5 300" fill="none" stroke="#2B6EAE" stroke-width="2.4"/>
-      <rect x="125" y="120" width="240" height="56" rx="14" fill="#D3E6FB"/>
-      <text x="245" y="143" fill="#1D4368" font-size="19" font-weight="700" text-anchor="middle">INFRASTRUCTURE</text>
-      <text x="245" y="164" fill="#1D4368" font-size="14" text-anchor="middle">required in L3</text>
+  <g id="architecture-circles">
+    <!-- Same radius, separate arcs: neither outer responsibility contains the other. -->
+    <g id="infrastructure-boundary">
+      <path d="M 95.1 289.1 A 215 215 0 0 1 484.9 289.1" fill="none" stroke="#D3E6FB" stroke-width="53" stroke-linecap="butt"/>
+      <path d="M 95.1 289.1 A 215 215 0 0 1 484.9 289.1" fill="none" stroke="#307AC6" stroke-width="2.4"/>
+      <rect x="171" y="130" width="238" height="58" rx="16" fill="#D3E6FB"/>
+      <text x="290" y="154" fill="#204B7A" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" text-anchor="middle">INFRASTRUCTURE</text>
+      <text x="290" y="176" fill="#204B7A" font-family="Arial, Helvetica, sans-serif" font-size="14.5" text-anchor="middle">required in L3</text>
     </g>
-
-    <g id="interfaces-arc">
-      <path d="M 80.5 490 A 190 190 0 0 0 409.5 490" fill="none" stroke="#E5DAF6" stroke-width="50" stroke-linecap="butt"/>
-      <path d="M 80.5 490 A 190 190 0 0 0 409.5 490" fill="none" stroke="#7B4BAE" stroke-width="2.5" stroke-dasharray="10 7"/>
-      <rect x="145" y="620" width="200" height="56" rx="14" fill="#E5DAF6"/>
-      <text x="245" y="643" fill="#5C3888" font-size="19" font-weight="700" text-anchor="middle">INTERFACES</text>
-      <text x="245" y="664" fill="#5C3888" font-size="14" text-anchor="middle">directory optional</text>
+    <g id="interfaces-boundary">
+      <path d="M 484.9 470.9 A 215 215 0 0 1 95.1 470.9" fill="none" stroke="#E5DAF6" stroke-width="53" stroke-linecap="butt"/>
+      <path d="M 484.9 470.9 A 215 215 0 0 1 95.1 470.9" fill="none" stroke="#8754BD" stroke-width="2.5" stroke-dasharray="10 7"/>
+      <rect x="196" y="558" width="188" height="62" rx="16" fill="#E5DAF6"/>
+      <text x="290" y="584" fill="#673F98" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" text-anchor="middle">INTERFACES</text>
+      <text x="290" y="607" fill="#673F98" font-family="Arial, Helvetica, sans-serif" font-size="14.5" text-anchor="middle">directory optional</text>
     </g>
-
-    <g id="application-ring">
-      <circle cx="245" cy="395" r="145" fill="#E3F3EC" stroke="#2F8F6E" stroke-width="2.4"/>
-      <text x="245" y="274" fill="#14664C" font-size="19" font-weight="700" text-anchor="middle">APPLICATION</text>
-      <text x="245" y="295" fill="#1F6E55" font-size="14" text-anchor="middle">use cases and orchestration</text>
+    <g id="application-boundary">
+      <circle cx="290" cy="380" r="160" fill="#E3F3EC" stroke="#3BA17D" stroke-width="2.5"/>
+      <text x="290" y="253" fill="#176F54" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" text-anchor="middle">APPLICATION</text>
+      <text x="290" y="276" fill="#307A63" font-family="Arial, Helvetica, sans-serif" font-size="14.5" text-anchor="middle">use cases and orchestration</text>
     </g>
-
     <g id="domain-core">
-      <circle cx="245" cy="395" r="88" fill="#FFF0D9" stroke="#B47F33" stroke-width="2.4"/>
-      <text x="245" y="390" fill="#6E4A14" font-size="22" font-weight="700" text-anchor="middle">DOMAIN</text>
-      <text x="245" y="412" fill="#7C551D" font-size="14.5" text-anchor="middle">business rules</text>
-      <text x="245" y="432" fill="#7C551D" font-size="14.5" text-anchor="middle">invariants · ports</text>
+      <circle cx="290" cy="380" r="99" fill="#FFF0D9" stroke="#C48B3D" stroke-width="2.5"/>
+      <text x="290" y="366" fill="#80561C" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" text-anchor="middle">DOMAIN</text>
+      <text x="290" y="393" fill="#7A5220" font-family="Arial, Helvetica, sans-serif" font-size="15.5" text-anchor="middle">business rules</text>
+      <text x="290" y="414" fill="#7A5220" font-family="Arial, Helvetica, sans-serif" font-size="15.5" text-anchor="middle">invariants · ports</text>
+    </g>
+    <g id="boundary-legend" font-family="Arial, Helvetica, sans-serif" font-size="14.5" fill="#4C5C70">
+      <line x1="83" y1="650" x2="113" y2="650" stroke="#307AC6" stroke-width="5"/>
+      <text x="124" y="655">required layer</text>
+      <line x1="273" y1="650" x2="303" y2="650" stroke="#8754BD" stroke-width="4" stroke-dasharray="7 5"/>
+      <text x="314" y="655">optional directory</text>
     </g>
   </g>
 
   <g id="responsibility-panels" font-family="Arial, Helvetica, sans-serif">
-    <text x="500" y="143" fill="#172337" font-size="20" font-weight="700">Responsibilities by boundary</text>
-    <text x="500" y="163" fill="#4C5C70" font-size="14.5">Examples are illustrative; the C-rules in Markdown govern.</text>
+    <text x="574" y="149" fill="#172337" font-size="21" font-weight="700">Responsibilities by boundary</text>
+    <text x="574" y="171" fill="#4C5C70" font-size="15">Examples are illustrative. The C-rules in Markdown remain authoritative.</text>
 
     <g id="panel-domain">
-      <rect x="500" y="176" width="468" height="106" rx="12" fill="#FFFFFF" stroke="#E3E8F1" stroke-width="1.5"/>
-      <rect x="500" y="176" width="6" height="106" rx="3" fill="#B47F33"/>
-      <text x="520" y="200" fill="#6E4A14" font-size="19" font-weight="700">Domain</text>
-      <text x="948" y="200" text-anchor="end" fill="#4C5C70" font-size="14" font-weight="700">C2 · C9</text>
-      <text x="520" y="224" fill="#2F4055" font-size="16.5">Owns: business meaning, invariants and the domain's ports.</text>
-      <text x="520" y="246" fill="#2F4055" font-size="16.5">Examples: entities · value objects · domain errors · ports.</text>
-      <text x="520" y="268" fill="#A03D2E" font-size="15.5">Not here: transport payloads, drivers or persistence IO.</text>
+      <rect x="570" y="186" width="574" height="120" rx="13" fill="#FFFFFF" stroke="#E3E8F1" stroke-width="1.5"/>
+      <rect x="570" y="186" width="7" height="120" rx="3" fill="#D39B44"/>
+      <text x="593" y="213" fill="#80561C" font-size="21" font-weight="700">Domain</text>
+      <text x="1123" y="212" text-anchor="end" fill="#5A6675" font-size="14" font-weight="700">C2 · C9</text>
+      <text x="593" y="239" fill="#2F4055" font-size="17">Owns: business meaning, invariants and the domain's ports.</text>
+      <text x="593" y="263" fill="#2F4055" font-size="17">Examples: entities · value objects · domain errors · ports.</text>
+      <text x="593" y="287" fill="#96382A" font-size="16">Not here: transport payloads, drivers, persistence IO.</text>
     </g>
-
     <g id="panel-application">
-      <rect x="500" y="294" width="468" height="106" rx="12" fill="#FFFFFF" stroke="#E3E8F1" stroke-width="1.5"/>
-      <rect x="500" y="294" width="6" height="106" rx="3" fill="#2F8F6E"/>
-      <text x="520" y="318" fill="#14664C" font-size="19" font-weight="700">Application</text>
-      <text x="948" y="318" text-anchor="end" fill="#4C5C70" font-size="14" font-weight="700">C3 · C11</text>
-      <text x="520" y="342" fill="#2F4055" font-size="16.5">Owns: business operations and their coordination.</text>
-      <text x="520" y="364" fill="#2F4055" font-size="16.5">Examples: execute() use cases · orchestration · transactions.</text>
-      <text x="520" y="386" fill="#A03D2E" font-size="15.5">Not here: framework DTOs, transport serialization, queries.</text>
+      <rect x="570" y="322" width="574" height="120" rx="13" fill="#FFFFFF" stroke="#E3E8F1" stroke-width="1.5"/>
+      <rect x="570" y="322" width="7" height="120" rx="3" fill="#3BA17D"/>
+      <text x="593" y="349" fill="#176F54" font-size="21" font-weight="700">Application</text>
+      <text x="1123" y="348" text-anchor="end" fill="#5A6675" font-size="14" font-weight="700">C3 · C11</text>
+      <text x="593" y="375" fill="#2F4055" font-size="17">Owns: business operations and coordination.</text>
+      <text x="593" y="399" fill="#2F4055" font-size="17">Examples: execute() use cases · orchestration · transactions.</text>
+      <text x="593" y="423" fill="#96382A" font-size="16">Not here: framework DTOs, transport serialization.</text>
     </g>
-
     <g id="panel-infrastructure">
-      <rect x="500" y="412" width="468" height="106" rx="12" fill="#FFFFFF" stroke="#E3E8F1" stroke-width="1.5"/>
-      <rect x="500" y="412" width="6" height="106" rx="3" fill="#2B6EAE"/>
-      <text x="520" y="436" fill="#1D4368" font-size="19" font-weight="700">Infrastructure</text>
-      <text x="948" y="436" text-anchor="end" fill="#4C5C70" font-size="14" font-weight="700">C4 · C9</text>
-      <text x="520" y="460" fill="#2F4055" font-size="16.5">Owns: implementations of the capabilities the domain declares.</text>
-      <text x="520" y="482" fill="#2F4055" font-size="16.5">Examples: repositories · drivers · external API and IO adapters.</text>
-      <text x="520" y="504" fill="#A03D2E" font-size="15.5">Not here: business decisions, imports from Interfaces.</text>
+      <rect x="570" y="458" width="574" height="120" rx="13" fill="#FFFFFF" stroke="#E3E8F1" stroke-width="1.5"/>
+      <rect x="570" y="458" width="7" height="120" rx="3" fill="#307AC6"/>
+      <text x="593" y="485" fill="#204B7A" font-size="21" font-weight="700">Infrastructure</text>
+      <text x="1123" y="484" text-anchor="end" fill="#5A6675" font-size="14" font-weight="700">C4 · C9</text>
+      <text x="593" y="511" fill="#2F4055" font-size="17">Owns: implementations of external capabilities.</text>
+      <text x="593" y="535" fill="#2F4055" font-size="17">Examples: repositories · drivers · API/IO adapters.</text>
+      <text x="593" y="559" fill="#96382A" font-size="16">Not here: business decisions, imports from Interfaces.</text>
     </g>
-
     <g id="panel-interfaces">
-      <rect x="500" y="530" width="468" height="106" rx="12" fill="#FFFFFF" stroke="#E3E8F1" stroke-width="1.5"/>
-      <rect x="500" y="530" width="6" height="106" rx="3" fill="#7B4BAE"/>
-      <text x="520" y="554" fill="#5C3888" font-size="19" font-weight="700">Interfaces</text>
-      <text x="948" y="554" text-anchor="end" fill="#4C5C70" font-size="14" font-weight="700">C12 · C13</text>
-      <text x="520" y="578" fill="#2F4055" font-size="16.5">Owns: translating an external channel to and from an operation.</text>
-      <text x="520" y="600" fill="#2F4055" font-size="16.5">Examples: HTTP routes · MCP tools · CLI · UI events.</text>
-      <text x="520" y="622" fill="#A03D2E" font-size="15.5">Not here: business policy, direct persistence at L3.</text>
+      <rect x="570" y="594" width="574" height="120" rx="13" fill="#FFFFFF" stroke="#E3E8F1" stroke-width="1.5"/>
+      <rect x="570" y="594" width="7" height="120" rx="3" fill="#8754BD"/>
+      <text x="593" y="621" fill="#673F98" font-size="21" font-weight="700">Interfaces</text>
+      <text x="1123" y="620" text-anchor="end" fill="#5A6675" font-size="14" font-weight="700">C12 · C13</text>
+      <text x="593" y="647" fill="#2F4055" font-size="17">Owns: translating external requests and responses.</text>
+      <text x="593" y="671" fill="#2F4055" font-size="17">Examples: HTTP routes · MCP tools · CLI · UI events.</text>
+      <text x="593" y="695" fill="#96382A" font-size="16">Not here: business policy, direct persistence at L3.</text>
     </g>
   </g>
 
   <g id="dependency-note" font-family="Arial, Helvetica, sans-serif">
-    <rect x="32" y="692" width="936" height="146" rx="14" fill="#ECF2F8" stroke="#D5E0ED" stroke-width="1.5"/>
-    <text x="52" y="718" fill="#1B3149" font-size="16.5" font-weight="700">Allowed inward architectural dependencies</text>
-    <text x="52" y="742" fill="#34495F" font-size="15.5">Application → Domain</text>
-    <text x="52" y="764" fill="#34495F" font-size="15.5">Interfaces → Application / Domain</text>
-    <text x="52" y="786" fill="#34495F" font-size="15.5">Infrastructure → Domain; Application only where its port requires it</text>
-    <text x="52" y="810" fill="#1B3149" font-size="15.5" font-weight="700">No dependency is mandatory for every module. The two outer boundaries never depend on one another.</text>
-    <text x="52" y="830" fill="#34495F" font-size="15">An L3 interface may sit inside infrastructure/ and import no repository, persistence adapter or IO helper (C13).</text>
+    <rect x="40" y="726" width="1100" height="130" rx="15" fill="#ECF2F8" stroke="#D5E0ED" stroke-width="1.5"/>
+    <text x="62" y="754" fill="#1E3552" font-size="18" font-weight="700">Allowed inward architectural dependencies</text>
+    <text x="62" y="780" fill="#34495F" font-size="16.5">Application → Domain</text>
+    <text x="62" y="803" fill="#34495F" font-size="16.5">Interfaces → Application / Domain</text>
+    <text x="62" y="826" fill="#34495F" font-size="16.5">Infrastructure → Domain; Application only where its port requires it</text>
+    <text x="62" y="848" fill="#1E3552" font-size="16.5" font-weight="700">No dependency is mandatory for every module. Interfaces and Infrastructure do not depend on one another.</text>
   </g>
-
   <g id="footer-note" font-family="Arial, Helvetica, sans-serif">
-    <text x="33" y="862" fill="#4C5C70" font-size="15">L1 and L2 impose no layer directories. Formal dependency edges are drawn in the Mermaid deployment diagrams.</text>
+    <text x="41" y="882" fill="#4C5C70" font-size="16">An L3 interface may sit inside infrastructure/ and import no repository, persistence adapter or IO helper (C13).</text>
+    <text x="41" y="906" fill="#4C5C70" font-size="16">L1/L2: no mandatory layer directories. Formal dependency edges are drawn in the Mermaid diagrams in the Markdown.</text>
   </g>
 </svg>
