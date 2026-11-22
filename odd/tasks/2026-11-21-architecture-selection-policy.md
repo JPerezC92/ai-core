@@ -47,7 +47,7 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
 ## Tasks
 
 - T1 | S1, S2, S3, S4, S5, S6, S7, S8, S9, S12 | inline (the agnostic contract has no delegated author; one coherent contract candidate avoids conflicting edits to the same file) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T2 | S13, S15 | inline (shapes and guides are mappings of the contract candidate and are edited as one dependent set) — Cipher 🔓 (Lead Orchestrator) | done | commit: 2952505410621ece38062faa420e4c3bddb9705b
+- T2 | S13, S15 | inline (shapes and guides are mappings of the contract candidate and are edited as one dependent set) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
 - T3 | S10 | inline (one rule plus its parity mappings; the testing contract is a single owner) — Cipher 🔓 (Lead Orchestrator) | done | commit: 9995cca9054a59d7a035c41361914ec91ef4f573
 - T4 | S11, S14 | inline (agent instructions, decision records and durable documentation form one coordinated set) — Cipher 🔓 (Lead Orchestrator) | done | commit: de1966e9fea24dba91500fa7c39563d3c78b887b
 - T5 | S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16 | delegated (independent architecture-owner gates: Bastion 🧱 for the common contract and the backend/scripts cells, Atrium 🏛️ for the frontend cells, Crucible 🔥 for the testing contract; no author reviews its own candidate) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
