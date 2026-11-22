@@ -1,7 +1,8 @@
 # ADR 0010 — Architecture selection and the Interface boundary
 
-- **Status:** Proposed — propagation is delivered in the same work unit; promotion to `Accepted` awaits explicit user acceptance
+- **Status:** Accepted
 - **Date:** 2026-11-21
+- **Accepted:** 2026-11-22 — explicit user approval, verbatim: "I explicitly approve **ADR 0010 — Architecture Selection and the Interface Boundary**."; the approval is recorded in `odd/tasks/2026-11-21-architecture-selection-policy.md` L48. Propagation evidence: the owner text named under `## Propagation` was delivered in the same delivery as this decision — pull request #210, squash commit `a31613ed231b19a9463b69afb1cffde7f946c440` — and not in a follow-up task, and was independently verified on that content by Bastion 🧱 (Backend & Scripts Architect) on the common contract, the backend and scripts shapes and the implementation guides, by Atrium 🏛️ (Frontend Architect) on the frontend shape and its guides, by Crucible 🔥 (Test Architect) on the testing contract and testing guides, and by Sentinel 🛡️ (Quality Guardian) on this record; the verdicts and the commits they ran against are recorded in `odd/tasks/2026-11-21-architecture-selection-policy.md` L11 and L47. This record stayed `Proposed` until this acceptance; its decision body, alternatives, consequences, historical-accuracy section and `### C3 obligation accounting` are unchanged. Acceptance changes no decision substance and establishes no implementation conformance.
 
 ## Context
 
