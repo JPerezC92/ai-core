@@ -16,6 +16,8 @@ The application operation is bound in `modules/{feature}/hooks/` and depends onl
 
 `hooks/` plus `components/` compose the adapter and operation and own presentation state, never business logic. Views do not bypass the presentation binding to call services or transport directly. Binding-specific error-state and notification behavior belongs in the implementation guide.
 
+The feature Hook is this shape's designated composition point (`C12`): it constructs the operation with the concrete service adapter and supplies it to the component. That authorizes the Hook to compose for its own feature; it does not make every Hook a composition root, and it introduces no application-wide composition layer.
+
 This presentation binding is the Interface responsibility (C12) for the frontend shape, and it is already separate from the adapter that shares the feature: it delegates to the operation, holds no business rule, and composes nothing but its own technical collaborators. A frontend therefore needs no further interface folder (`C13`).
 
 ## F4 — Feature-owned domain organization

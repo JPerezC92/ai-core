@@ -6,7 +6,7 @@ Statement-layer ownership is defined in `.aicore/core/architecture/README.md` �
 
 ## C1 — Layers and dependencies
 
-The same layers apply across languages: domain, application, infrastructure; static dependencies point inward, infrastructure → application → domain. A language or library is never a layer and cannot suspend this contract. Shape-specific folders bind these responsibilities without renaming the layers. The application imports only domain types and ports, never frameworks or concrete adapters. Runtime effects through injected domain ports are allowed: a runtime call graph is not the static-import graph. These obligations bind where a project's selected complexity level requires the layers (`C11`); at L1 and L2 no layer, folder or inward-dependency obligation arises, and the responsibilities this contract names bind only where they exist.
+The same layers apply across languages: domain, application, infrastructure; static dependencies point inward, infrastructure → application → domain. A language or library is never a layer and cannot suspend this contract. Shape-specific folders bind these responsibilities without renaming the layers. The application imports only domain types and ports, never frameworks or concrete adapters. Runtime effects through injected domain ports are allowed: a runtime call graph is not the static-import graph. The inward notation states the permitted direction of a dependency, never that every module imports from the next layer: a module imports only what its own responsibility needs, and an adapter that implements a domain port imports no application code. These obligations bind where a project's selected complexity level requires the layers (`C11`); at L1 and L2 no layer, folder or inward-dependency obligation arises, and the responsibilities this contract names bind only where they exist.
 
 ## C2 — Domain and ports
 
@@ -28,7 +28,7 @@ Entity representation and state changes follow C8; data-only records and functio
 
 Adapters map outside data to domain data through a single mapping/parsing step and contain no business rules. Composition supplies concrete adapters to use cases only at the edge.
 
-The split between domain and infrastructure is decided by who owns the rule, not by the fact that data changes shape. A transformation that is itself a business rule — the rule that decides the outcome — belongs in the domain; application-specific orchestration that applies such a rule stays in the use case (C3). A transformation between an external representation and domain data — a persistence record, a transport payload, a third-party response — belongs at the infrastructure boundary that owns that representation. Neither side hosts the other's rule, and infrastructure-specific mapping never enters a domain entity.
+The split between domain and infrastructure is decided by who owns the rule, not by the fact that data changes shape. A transformation that is itself a business rule — the rule that decides the outcome — belongs in the domain; application-specific orchestration that applies such a rule stays in the use case (C3). A transformation between an external representation and domain data — a persistence record, a third-party response, a transport payload — belongs at the boundary that owns that representation: an infrastructure adapter for persisted or third-party data, and the Interface boundary of `C12` for a channel payload, which owns it whether that boundary currently sits inside the infrastructure layout or in an authorized `interfaces/` folder. Neither side hosts the other's rule, and infrastructure-specific mapping never enters a domain entity.
 
 ## C5 — Failures
 
@@ -141,7 +141,7 @@ None of them justifies L1 or L2 in a project of any size. Where the evidence is 
 
 **At L1 and L2.** A handler may orchestrate external effects directly — read a file, call a service, write output — using whatever libraries the work needs, because no application layer exists to delegate to. The obligation that survives is the separation of the decision from the effect: the rule that decides the outcome lives in a function or module the handler calls, not fused into the effect code, so the decision can be read and verified without the effect. No boundary inversion, port, adapter or injection container is required by this rule, and no additional file, class or wrapper is required for a trivial script.
 
-**Composition.** Constructing a collaborator that crosses an architectural boundary happens only at the designated composition root. An adapter or a handler may construct its own technical helpers; it does not construct the project's concrete adapters, repositories or operations.
+**Composition.** Constructing a collaborator that crosses an architectural boundary happens only at the composition point the applicable shape designates. A backend or script entry module is one such point, and the frontend shape designates its feature Hook (`F3`); no other module constructs the project's concrete adapters, repositories or operations. An adapter or a handler may construct its own technical helpers.
 
 **At every level.** Business policy does not live in interface code; a framework request or response object does not enter domain or application code (`C2`); a transport payload is not serialized inside a business rule or operation (`C6`); no level justifies mixing the two.
 
@@ -163,13 +163,57 @@ None of them justifies L1 or L2 in a project of any size. Where the evidence is 
 
 ## Diagrams
 
-`.aicore/core/architecture/implementation/architecture-boundaries.svg` is the L3 structure; the two figures below are its physical deployments. All three are illustrative and carry no rule the sections above do not state.
+`architecture-boundaries.svg` is the L3 structure; the two figures below are its physical deployments. All three are illustrative and carry no rule the sections above do not state.
 
-![L3 architecture boundaries: Domain at the centre, Application surrounding it, and two sibling outer boundaries — Infrastructure mandatory, Interfaces an optional directory](./architecture-boundaries.svg)
+![L3 architecture boundaries: Domain at the centre, Application surrounding it, Infrastructure and Interfaces as two independent outer arcs, with responsibility panels](./architecture-boundaries.svg)
 
-**Scope.** The circular figure depicts L3 only (`C11`). L1 and L2 impose no layer folders, and the figure is not their layout. It shows architectural responsibility, never directory placement: no folder name appears in it.
+**Scope.** The circular figure depicts L3 only (`C11`). L1 and L2 impose no layer folders, and the figure is not their layout. Its rings show architectural responsibility, never folder structure.
 
-**Reading the dependencies.** A solid arrow is a required dependency and a dashed arrow is permitted but not required. Infrastructure's required dependency points at Domain; the Infrastructure-to-Application edge is permitted only, because an adapter implements a domain port without importing the application layer. The two outer boundaries are siblings and carry no dependency between them in either direction.
+**Reading the dependencies.** Every edge states a permitted inward direction. No edge obliges a module to add an import: a module imports only what its own responsibility needs. A solid edge marks an import that exists whenever that responsibility is present and exercised; a dotted edge marks a direction that is permitted but never required.
+
+### What each boundary owns
+
+| Boundary                    | Owns                                                                            | Never holds                                      |
+| --------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Domain (`C2`, `C8`)         | Business meaning, invariants, legal transitions, ports, domain errors           | Transport payloads, drivers, persistence IO      |
+| Application (`C3`)          | Business operations, orchestration, transaction scope across ports              | Framework DTOs, transport serialization, queries |
+| Infrastructure (`C4`, `C9`) | Implementations of the capabilities the domain declares                         | Business decisions, imports of interface modules |
+| Interfaces (`C12`)          | Channel parsing, one mapping step, delegation, result binding and serialization | Business policy, direct persistence at L3        |
+
+### What must never be mixed
+
+- A business rule in a handler, controller or adapter (`C3`, `C4`).
+- A framework request or response object inside domain or application code (`C2`).
+- Transport serialization inside an operation (`C6`).
+- Direct persistence access from a handler when an operation exists to own it (`C12`).
+- An infrastructure adapter importing an interface module, or the reverse (`C13`).
+
+### Where composition happens
+
+Cross-boundary construction happens only at the composition point the applicable shape designates (`C12`). For a backend or a script that is the entry module and its wiring; for the frontend shape it is the feature Hook, which constructs the operation with its concrete service adapter (`F3`). Everywhere else receives ready collaborators. No additional composition layer exists.
+
+### The four shapes at a glance
+
+| Shape      | The Interface responsibility lives in                                            |
+| ---------- | -------------------------------------------------------------------------------- |
+| HTTP API   | The controller and its request/response mapping (_backend_ shape)                |
+| MCP server | The tool registration, schema validation and result projection (_scripts_ shape) |
+| CLI        | Argument parsing, command dispatch and exit status (_scripts_ shape)             |
+| Frontend   | The feature Hook and component binding (`F3`)                                    |
+
+### Why L1 and L2 do not inherit this
+
+The layer folders, the operation class and the separate interface responsibility belong to L3 (`C11`). At L1 and L2 a script or module keeps its own organization, and the obligations that survive are the ones whose responsibility exists: the separation of an external entry edge from the work it triggers (`C12`) and a single mapping step at any boundary (`C4`). Neither level is a stage on the way to L3.
+
+### Interface code inside Infrastructure
+
+Before an authorized extraction, interface modules live inside the infrastructure layout and remain a separate responsibility: they import application and domain modules only, never a persistence adapter, repository implementation, external client or IO helper that shares that layout (`C13`). Sharing a parent folder licenses no import in either direction.
+
+### What changes when an interface is extracted
+
+**Changes:** the folder — modules move to `interfaces/` at the same level as the layer folders, and it becomes a sibling outer boundary.
+
+**Does not change:** operation signatures, domain types, ports, the imports each module is allowed, and the rule that no dependency runs between interface modules and infrastructure adapters (`C13`). Extraction is never a pretext for redesigning domain or application.
 
 ### Three-layer deployment
 
@@ -177,7 +221,7 @@ Interface modules live inside the infrastructure layout, isolated from the adapt
 
 ```mermaid
 flowchart TB
-  ROOT["composition root — entry point"]
+  ROOT["composition point — entry module"]
   subgraph INF["infrastructure/"]
     IF["interface modules — folder per the shape's layout"]
     AD["adapters/ — outside-data mapping"]
@@ -197,13 +241,13 @@ flowchart TB
   AP --> DO
 ```
 
-`IF` carries the Interface responsibility of `C12`; its folder name belongs to the shape. Solid edges are required and dotted edges are permitted. `IF` shares a parent folder with `AD` and `RP` and imports nothing from either (`C13`).
+`IF` carries the Interface responsibility of `C12`; its folder name belongs to the shape. A solid edge is an import present whenever that responsibility is exercised; a dotted edge is a permitted direction that may be absent. `IF` shares a parent folder with `AD` and `RP` and imports nothing from either (`C13`).
 
 ### Extracted-interface deployment
 
 ```mermaid
 flowchart TB
-  ROOT["composition root — entry point"]
+  ROOT["composition point — entry module"]
   subgraph OUT["outer boundaries — independent"]
     IF["interfaces/ — http · mcp · cli"]
     INF["infrastructure/ — adapters · repositories"]
@@ -220,7 +264,7 @@ flowchart TB
   AP --> DO
 ```
 
-No edge connects `IF` and `INF` in either direction: they are sibling outer boundaries that each depend inward (`C13`).
+No edge connects `IF` and `INF` in either direction: they are sibling outer boundaries that each depend inward (`C13`). The permitted set is identical to the three-layer figure, which is what makes the extraction a move rather than a redesign.
 
 **When to consult them.** Choose or review a project structure against the circular figure; place or move interface code against the matching deployment figure. A figure never overrides the rule text, and an existing project's approved structure is not redrawn to match one.
 
