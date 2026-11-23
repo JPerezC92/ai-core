@@ -1,6 +1,12 @@
 /**
  * Use case: splice each source core into its destinations and pin the revision.
  *
+ * This coordinator holds the update's own request handling, its validation gates
+ * in their original order, the read preflight, execution of the validated
+ * envelope and the result message. The effective document is determined by
+ * `PlanSynchronizationDocument`, the payload changes by `PlanUpdateChanges`,
+ * and the mutations by `PrepareSynchronizationExecution`.
+ *
  * A region destination's core region is replaced and its frontmatter identity
  * keys are refreshed from the source; an unrefreshable frontmatter keeps its
  * text and is named in the result message. A declared but absent region or raw
@@ -17,26 +23,17 @@
  * performs when their content changes.
  */
 
-import { CLEARANCE_FILENAME, MODE_MERGE, MODE_RAW, ROLE_ROOT } from "#domain/synchronization/constants.ts";
+import { CLEARANCE_FILENAME } from "#domain/synchronization/constants.ts";
 import {
 	bindingModeConflict,
 	destinationDrift,
 	duplicatedDestinations,
-	enrollmentCandidates,
-	nonRegionDestinations,
-	normalizePending,
 	protectedExclusionFailure,
-	withEnrolledSources,
 	withOptOuts,
 	withRestoredOptOuts,
-	withheldSources,
 } from "#domain/synchronization/bindings.ts";
 import { drift, failed, invalid, succeeded, type OperationOutcome } from "#domain/synchronization/failures.ts";
-import { splitFrontmatter } from "#domain/synchronization/frontmatter.ts";
-import { omitMcpServersOf } from "#domain/synchronization/clearance.ts";
-import { mergeTopLevel } from "#domain/synchronization/merge.ts";
 import { editorMismatch, effectiveEditor } from "#domain/synchronization/editor-profile.ts";
-import { protectedBytes, renderInitFile, renderWithRegion, splitRegions } from "#domain/synchronization/regions.ts";
 import { missingRegionSources } from "#domain/synchronization/reconciliation.ts";
 import type { BindingsDocument } from "#domain/synchronization/bindings.ts";
 import type {
@@ -44,38 +41,27 @@ import type {
 	ClearanceStore,
 	DestinationFiles,
 	FilesystemLayout,
-	PlannedMutation,
-	PlannedPayload,
 	PlannedRead,
-	SourceFiles,
 	WriteTargetGuard,
 } from "#domain/synchronization/ports.ts";
 
-import { invalidClearance, readClearanceModes, sourceFacts } from "./clearance-modes.ts";
-import { ensureOpenCodeSecrets, planOpenCodeSecretWrites, prepareOpenCodeSecrets } from "./open-code-secrets.ts";
-import { projectName } from "./project-name.ts";
+import { invalidClearance, readClearanceModes } from "./clearance-modes.ts";
+import { PlanSynchronizationDocument } from "./plan-synchronization-document.ts";
+import { ensureOpenCodeSecrets } from "./open-code-secrets.ts";
+import { PlanUpdateChanges } from "./plan-update-changes.ts";
+import { PrepareSynchronizationExecution } from "./prepare-synchronization-execution.ts";
 import type { SynchronizationRequest } from "./requests.ts";
 
 /** Collaborators the update needs. */
 export type ApplyCoreRevisionDependencies = {
 	readonly bindings: BindingsStore;
 	readonly clearance: ClearanceStore;
-	readonly sources: SourceFiles;
 	readonly destinations: DestinationFiles;
 	readonly layout: FilesystemLayout;
 	readonly guard: WriteTargetGuard;
-};
-
-/** One pending text write. */
-type TextWrite = {
-	readonly path: string;
-	readonly content: string;
-};
-
-/** One pending byte write. */
-type ByteWrite = {
-	readonly path: string;
-	readonly content: Uint8Array;
+	readonly determineDocument: PlanSynchronizationDocument;
+	readonly planChanges: PlanUpdateChanges;
+	readonly prepareExecution: PrepareSynchronizationExecution;
 };
 
 export class ApplyCoreRevision {
@@ -86,7 +72,16 @@ export class ApplyCoreRevision {
 	}
 
 	async execute(request: SynchronizationRequest): Promise<OperationOutcome> {
-		const { bindings, clearance: clearanceStore, sources, destinations, layout, guard } = this.#dependencies;
+		const {
+			bindings,
+			clearance: clearanceStore,
+			destinations,
+			layout,
+			guard,
+			determineDocument,
+			planChanges,
+			prepareExecution,
+		} = this.#dependencies;
 
 		const document = await bindings.load(request.bindingsPath);
 		if (document === null) {
@@ -122,39 +117,20 @@ export class ApplyCoreRevision {
 		if (clearance.entries === null) {
 			return failed(invalidClearance(clearancePath, clearance));
 		}
-		// The domain decides which cleared sources gain bindings and which destinations
-		// are new; this operation only probes the facts it needs.
-		const rootEntry = [...clearance.entries.entries()].find(
-			([, entry]) => entry.kind === "file" && entry.role === ROLE_ROOT,
-		);
-		const rootSource = rootEntry?.[0] ?? null;
-		let rootDestination = current.root;
-		if (rootSource !== null) {
-			const existingRoot = current.bindings.find((entry) => entry.source === rootSource);
-			rootDestination = existingRoot?.destinations[0] ?? (await layout.detectRootFile(request.destinationRoot));
-			if (rootDestination === null) {
-				return failed(drift("destination instruction root not found; pass --root"));
-			}
-		}
-		const enrollment = enrollmentCandidates(current, {
-			modes: clearance.modes,
-			destinations: clearance.destinations,
-			rootSource,
-			rootDestination,
+
+		const determination = await determineDocument.execute({
+			document: current,
+			clearance,
+			editor,
+			sourceRoot: request.sourceRoot,
+			destinationRoot: request.destinationRoot,
+			intent: { kind: "update" },
 		});
-		const existingDestinations = new Set<string>();
-		for (const candidate of enrollment.candidates) {
-			if (await layout.exists(layout.join(request.destinationRoot, candidate.destination))) {
-				existingDestinations.add(candidate.destination);
-			}
+		if (!determination.ok) {
+			return failed(determination.failure);
 		}
-		const enrolled = withEnrolledSources(current, enrollment, existingDestinations);
-		// Presence is probed on the document that is classified, so a source this run
-		// enrolled is asked about too: it came from a real enumeration, and the
-		// classification must see that it exists.
-		const facts = await sourceFacts(enrolled.document, clearance, editor, request.sourceRoot, layout);
-		const withheld = withheldSources(enrolled.document, facts, clearance.entries);
-		const plan = withheld.document;
+		const determined = determination.value;
+		const effective = determined.document;
 
 		// Every path this run reads is cleared before it is read: the effective
 		// document the run acts on is guarded before any payload read.
@@ -163,17 +139,17 @@ export class ApplyCoreRevision {
 			sourceRoot: request.sourceRoot,
 			destinationRoot: request.destinationRoot,
 			bindingsPath: request.bindingsPath,
-			document: plan,
+			document: effective,
 			modes: clearance.modes,
-			newRawDestinations: enrolled.newRawDestinations,
+			newRawDestinations: determined.newRawDestinations,
 			phase: "read",
-			readPaths: await destinationReadPaths(plan, request.destinationRoot, layout),
+			readPaths: await destinationReadPaths(effective, request.destinationRoot, layout),
 		});
 		if (readRefusal !== null) {
 			return failed(readRefusal);
 		}
 
-		for (const entry of plan.bindings) {
+		for (const entry of effective.bindings) {
 			const conflict = bindingModeConflict(entry, clearance.modes);
 			if (conflict !== null) {
 				return failed(conflict);
@@ -181,211 +157,62 @@ export class ApplyCoreRevision {
 		}
 		// Two live bindings cannot own one destination, and a distributable binding
 		// must not displace one awaiting reconciliation. Nothing is mutated first.
-		const duplicated = duplicatedDestinations(plan);
+		const duplicated = duplicatedDestinations(effective);
 		if (duplicated.length > 0) {
 			return failed(invalid(`conflicting destination ownership: ${duplicated.join(", ")}`));
 		}
-		const relocated = destinationDrift(plan, clearance.entries, clearance.destinations);
+		const relocated = destinationDrift(effective, clearance.entries, clearance.destinations);
 		if (relocated !== null) {
 			return failed(relocated);
 		}
 
-		const textWrites: TextWrite[] = [];
-		const byteWrites: ByteWrite[] = [];
-		const created: string[] = [];
-		const notes: string[] = [];
-
-		for (const entry of withheld.distributable) {
-			const mode = clearance.modes.get(entry.source);
-			const sourcePath = layout.join(request.sourceRoot, entry.source);
-
-			if (mode === MODE_RAW) {
-				const sourceBytes = await sources.readBytes(sourcePath);
-				if (sourceBytes === null) {
-					return failed(drift(`missing source: ${sourcePath}`));
-				}
-				for (const destination of entry.destinations) {
-					const destinationPath = layout.join(request.destinationRoot, destination);
-					if (!(await layout.isFile(destinationPath))) {
-						if (await layout.exists(destinationPath)) {
-							return failed(drift(`missing destination: ${destinationPath}`));
-						}
-						created.push(destination);
-					}
-					byteWrites.push({ path: destinationPath, content: sourceBytes });
-				}
-				continue;
-			}
-
-			if (mode === MODE_MERGE) {
-				const sourceText = await sources.readText(sourcePath);
-				if (sourceText === null) {
-					return failed(drift(`missing source: ${sourcePath}`));
-				}
-				for (const destination of entry.destinations) {
-					const destinationPath = layout.join(request.destinationRoot, destination);
-					if (!(await layout.isFile(destinationPath))) {
-						return failed(
-							drift(
-								`missing destination: ${destinationPath} ` +
-									"(merge mode cannot create it; the destination must exist)",
-							),
-						);
-					}
-					const destinationText = await destinations.readText(destinationPath);
-					if (destinationText === null) {
-						return failed(drift(`missing destination: ${destinationPath}`));
-					}
-					const mergedText = mergeTopLevel(
-						sourceText,
-						destinationText,
-						projectName(request.destinationRoot),
-						omitMcpServersOf(clearance.entries?.get(entry.source)),
-					);
-					if (mergedText === null) {
-						return failed(invalid(`invalid JSONC: ${destinationPath}`));
-					}
-					if (mergedText !== destinationText) {
-						textWrites.push({ path: destinationPath, content: mergedText });
-					}
-				}
-				continue;
-			}
-
-			const read = await sources.readCore(sourcePath);
-			if (read === null) {
-				return failed(drift(`missing source: ${sourcePath}`));
-			}
-			if (read.kind === "malformed") {
-				return failed(invalid(`invalid source markers: ${sourcePath}`));
-			}
-			const sourceText = await sources.readText(sourcePath);
-			const sourceFrontmatter = sourceText === null ? "" : splitFrontmatter(sourceText).frontmatter;
-
-			for (const destination of entry.destinations) {
-				const destinationPath = layout.join(request.destinationRoot, destination);
-				if (!(await layout.isFile(destinationPath))) {
-					if (await layout.exists(destinationPath)) {
-						return failed(drift(`missing destination: ${destinationPath}`));
-					}
-					textWrites.push({
-						path: destinationPath,
-						content: renderInitFile("", read.core, sourceFrontmatter).text,
-					});
-					created.push(destination);
-					continue;
-				}
-				const destinationContent = await destinations.readText(destinationPath);
-				const split = destinationContent === null ? null : splitRegions(destinationContent);
-				if (split === null) {
-					return failed(invalid(`invalid destination markers: ${destinationPath}`));
-				}
-				const rendered = renderWithRegion(split, read.core, sourceFrontmatter);
-				if (rendered.skipped !== "") {
-					notes.push(`frontmatter not refreshed: ${destinationPath} (${rendered.skipped})`);
-				}
-				const newSplit = splitRegions(rendered.text);
-				if (newSplit === null || protectedBytes(newSplit) !== protectedBytes(split)) {
-					return failed(invalid(`outside-marker mismatch: ${destinationPath}`));
-				}
-				textWrites.push({ path: destinationPath, content: rendered.text });
-			}
-		}
-
-		// The pending effects, in the order the run applies them: the content a
-		// later projection reads is the content the earlier write leaves behind.
-		const payload: PlannedPayload[] = [
-			...textWrites.map((write) => ({ kind: "text-write" as const, path: write.path, content: write.content })),
-			...byteWrites.map((write) => ({ kind: "byte-write" as const, path: write.path, content: write.content })),
-		];
-		const retiredPaths: string[] = [];
-		for (const retired of withheld.retired) {
-			for (const destination of retired.destinations) {
-				retiredPaths.push(layout.join(request.destinationRoot, destination));
-			}
-		}
-		payload.push(...retiredPaths.map((path) => ({ kind: "file-delete" as const, path })));
-
-		const pending = normalizePending(plan.pending, nonRegionDestinations(plan, clearance.modes));
-		const pinned = { ...plan, coreRevision: request.sourceRevision, pending };
-
-		// The secret setup reads the ignore file only when it has to plan its
-		// rule, so that read is cleared on its own.
-		const preparation = await prepareOpenCodeSecrets(editor, request.destinationRoot, payload, layout);
-		if (preparation.readsIgnore) {
-			const ignoreRefusal = await guard.refuse({
-				command: "apply",
-				sourceRoot: request.sourceRoot,
-				destinationRoot: request.destinationRoot,
-				bindingsPath: request.bindingsPath,
-				document: plan,
-				modes: clearance.modes,
-				newRawDestinations: enrolled.newRawDestinations,
-				phase: "read",
-				readPaths: [{ path: preparation.paths.gitignore, owner: "secret" }],
-			});
-			if (ignoreRefusal !== null) {
-				return failed(ignoreRefusal);
-			}
-		}
-		const secretMutations = await planOpenCodeSecretWrites(editor, preparation, payload, {
-			destinations,
-			layout,
+		const planned = await planChanges.execute({
+			document: effective,
+			request,
+			clearance,
+			distributable: determined.distributable,
+			retired: determined.retired,
 		});
+		if (!planned.ok) {
+			return failed(planned.failure);
+		}
+		const plan = planned.plan;
 
-		// The root runtime file's blocker is a write of its own, and the
-		// projection says whether this run performs one.
-		const blocker =
-			(await layout.planBlocker(
-				request.destinationRoot,
-				pinned,
-				pending,
-				missingRegionSources(withheld.requiresReconciliation),
-				payload,
-			)) ?? null;
+		const pinned = { ...effective, coreRevision: request.sourceRevision, pending: plan.pending };
 
-		const mutations: PlannedMutation[] = [
-			...textWrites.map((write) => ({
-				path: write.path,
-				kind: "file-write" as const,
-				owner: "payload" as const,
-			})),
-			...byteWrites.map((write) => ({
-				path: write.path,
-				kind: "file-write" as const,
-				owner: "payload" as const,
-			})),
-			...retiredPaths.map((path) => ({ path, kind: "file-delete" as const, owner: "payload" as const })),
-			{ path: request.bindingsPath, kind: "file-write", owner: "bindings" },
-			...(blocker === null ? [] : [{ path: blocker.path, kind: "file-write" as const, owner: "root" as const }]),
-			...secretMutations,
-		];
-		const mutationRefusal = await guard.refuse({
+		// The secret setup, the root blocker and the complete mutation set are
+		// prepared and validated before the first mutation.
+		const preparation = await prepareExecution.execute({
 			command: "apply",
 			sourceRoot: request.sourceRoot,
 			destinationRoot: request.destinationRoot,
 			bindingsPath: request.bindingsPath,
-			document: plan,
+			document: effective,
+			pinned,
+			pending: plan.pending,
+			missingRegions: missingRegionSources(determined.requiresReconciliation),
 			modes: clearance.modes,
-			newRawDestinations: enrolled.newRawDestinations,
-			phase: "mutations",
-			mutations,
+			newRawDestinations: determined.newRawDestinations,
+			editor,
+			plan,
+			writesReconciliationReport: false,
 		});
-		if (mutationRefusal !== null) {
-			return failed(mutationRefusal);
+		if (!preparation.ok) {
+			return failed(preparation.failure);
 		}
 
-		for (const write of textWrites) {
+		const notes = [...plan.notes];
+		for (const write of plan.textWrites) {
 			await layout.ensureDirectory(layout.parent(write.path));
 			await destinations.writeText(write.path, write.content);
 		}
-		for (const write of byteWrites) {
+		for (const write of plan.byteWrites) {
 			await layout.ensureDirectory(layout.parent(write.path));
 			await destinations.writeBytes(write.path, write.content);
 		}
 		// A retired source owns no destination content, so its managed copy is
 		// removed: nothing of the destination's own could be in it.
-		for (const retired of withheld.retired) {
+		for (const retired of determined.retired) {
 			for (const destination of retired.destinations) {
 				await destinations.remove(layout.join(request.destinationRoot, destination));
 				notes.push(`retired: ${destination}`);
@@ -400,13 +227,13 @@ export class ApplyCoreRevision {
 		await layout.syncBlocker(
 			request.destinationRoot,
 			pinned,
-			pending,
-			missingRegionSources(withheld.requiresReconciliation),
+			plan.pending,
+			missingRegionSources(determined.requiresReconciliation),
 		);
 
 		const parts = ["applied", ...notes];
-		if (created.length > 0) {
-			parts.push(`created: ${created.join(", ")}`);
+		if (plan.created.length > 0) {
+			parts.push(`created: ${plan.created.join(", ")}`);
 		}
 		return succeeded(parts.join("; "));
 	}

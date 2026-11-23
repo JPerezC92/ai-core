@@ -19,7 +19,13 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { mock, type MockProxy } from "vitest-mock-extended";
 
-import { EnrollDestinations } from "#application/synchronization/enroll-destinations.ts";
+import {
+	EnrollDestinations,
+	type EnrollDestinationsDependencies,
+} from "#application/synchronization/enroll-destinations.ts";
+import { PlanSynchronizationDocument } from "#application/synchronization/plan-synchronization-document.ts";
+import { PlanEnrollmentChanges } from "#application/synchronization/plan-enrollment-changes.ts";
+import { PrepareSynchronizationExecution } from "#application/synchronization/prepare-synchronization-execution.ts";
 import { CORE_BEGIN, CORE_END, PROJECT_BEGIN, PROJECT_END } from "#domain/synchronization/constants.ts";
 import type {
 	BindingsStore,
@@ -121,15 +127,45 @@ function makeEnrollmentArrangement(options: EnrollArrangement = {}): {
 	const destinationText = options.destinationText ?? {};
 	destinations.readText.mockImplementation(async (path) => destinationText[path] ?? null);
 
-	const useCase = new EnrollDestinations({
-		bindings,
-		clearance,
-		sources,
-		destinations,
-		layout,
-		guard,
-	});
+	const useCase = new EnrollDestinations(
+		makeDependencies({ bindings, clearance, sources, destinations, layout, guard }),
+	);
 	return { useCase, bindings, sources, destinations, layout, guard };
+}
+
+/**
+ * The coordinator's dependency object: the case's doubled ports and the real
+ * application operations.
+ *
+ * The cases keep observing the assembled enrollment behavior over doubled ports;
+ * each operation's own rules have their own focused spec.
+ */
+function makeDependencies(ports: {
+	readonly bindings: MockProxy<BindingsStore>;
+	readonly clearance: MockProxy<ClearanceStore>;
+	readonly sources: MockProxy<SourceFiles>;
+	readonly destinations: MockProxy<DestinationFiles>;
+	readonly layout: MockProxy<FilesystemLayout>;
+	readonly guard: MockProxy<WriteTargetGuard>;
+}): EnrollDestinationsDependencies {
+	return {
+		bindings: ports.bindings,
+		clearance: ports.clearance,
+		destinations: ports.destinations,
+		layout: ports.layout,
+		guard: ports.guard,
+		determineDocument: new PlanSynchronizationDocument({ layout: ports.layout }),
+		planChanges: new PlanEnrollmentChanges({
+			sources: ports.sources,
+			destinations: ports.destinations,
+			layout: ports.layout,
+		}),
+		prepareExecution: new PrepareSynchronizationExecution({
+			destinations: ports.destinations,
+			layout: ports.layout,
+			guard: ports.guard,
+		}),
+	};
 }
 
 /** The bindings document one run saved. */

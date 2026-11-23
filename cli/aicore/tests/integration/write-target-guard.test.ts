@@ -30,7 +30,11 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { mock } from "vitest-mock-extended";
 
 import { ApplyCoreRevision } from "#application/synchronization/apply-core-revision.ts";
+import { PlanSynchronizationDocument } from "#application/synchronization/plan-synchronization-document.ts";
 import { EnrollDestinations } from "#application/synchronization/enroll-destinations.ts";
+import { PlanEnrollmentChanges } from "#application/synchronization/plan-enrollment-changes.ts";
+import { PlanUpdateChanges } from "#application/synchronization/plan-update-changes.ts";
+import { PrepareSynchronizationExecution } from "#application/synchronization/prepare-synchronization-execution.ts";
 import { MODE_RAW, MODE_REGION } from "#domain/synchronization/constants.ts";
 import type { BindingsStore, ClearanceStore, WriteTargetRequest } from "#domain/synchronization/ports.ts";
 import { LocalDestinationFiles } from "#infrastructure/synchronization/local-destination-files.ts";
@@ -109,6 +113,53 @@ function makeRequest(
 	};
 }
 
+/**
+ * The update coordinator over this case's document stores and real adapters.
+ *
+ * The coordinator's own collaborators are the application operations, so the
+ * case keeps observing the assembled update behavior over the real filesystem.
+ */
+function makeApplyRevision(
+	bindings: BindingsStore,
+	clearance: ClearanceStore,
+	layout: LocalFilesystemLayout,
+): ApplyCoreRevision {
+	const sources = new LocalSourceFiles();
+	const destinations = new LocalDestinationFiles();
+	const guard = new LocalWriteTargetGuard(layout);
+	return new ApplyCoreRevision({
+		bindings,
+		clearance,
+		destinations,
+		layout,
+		guard,
+		determineDocument: new PlanSynchronizationDocument({ layout }),
+		planChanges: new PlanUpdateChanges({ sources, destinations, layout }),
+		prepareExecution: new PrepareSynchronizationExecution({ destinations, layout, guard }),
+	});
+}
+
+/** The enrollment coordinator over this case's document stores and real adapters. */
+function makeEnrollment(
+	bindings: BindingsStore,
+	clearance: ClearanceStore,
+	layout: LocalFilesystemLayout,
+): EnrollDestinations {
+	const sources = new LocalSourceFiles();
+	const destinations = new LocalDestinationFiles();
+	const guard = new LocalWriteTargetGuard(layout);
+	return new EnrollDestinations({
+		bindings,
+		clearance,
+		destinations,
+		layout,
+		guard,
+		determineDocument: new PlanSynchronizationDocument({ layout }),
+		planChanges: new PlanEnrollmentChanges({ sources, destinations, layout }),
+		prepareExecution: new PrepareSynchronizationExecution({ destinations, layout, guard }),
+	});
+}
+
 describe("write-target preflight", () => {
 	test("an unchanged raw enrollment is not refused merely because its destination aliases its source", async () => {
 		const payload = "payload.txt";
@@ -124,14 +175,7 @@ describe("write-target preflight", () => {
 		const clearance = mock<ClearanceStore>();
 		clearance.load.mockResolvedValue(makeClearanceLoad({ [payload]: { mode: "raw" } }));
 		const layout = new LocalFilesystemLayout();
-		const useCase = new EnrollDestinations({
-			bindings,
-			clearance,
-			layout,
-			guard: new LocalWriteTargetGuard(layout),
-			sources: new LocalSourceFiles(),
-			destinations: new LocalDestinationFiles(),
-		});
+		const useCase = makeEnrollment(bindings, clearance, layout);
 
 		const outcome = await useCase.execute(
 			makeEnrollmentRequest({
@@ -157,14 +201,7 @@ describe("write-target preflight", () => {
 		const clearance = mock<ClearanceStore>();
 		clearance.load.mockResolvedValue(makeClearanceLoad({}));
 		const layout = new LocalFilesystemLayout();
-		const useCase = new ApplyCoreRevision({
-			bindings,
-			clearance,
-			layout,
-			guard: new LocalWriteTargetGuard(layout),
-			sources: new LocalSourceFiles(),
-			destinations: new LocalDestinationFiles(),
-		});
+		const useCase = makeApplyRevision(bindings, clearance, layout);
 
 		const outcome = await useCase.execute(
 			makeSynchronizationRequest({
@@ -192,14 +229,7 @@ describe("write-target preflight", () => {
 		const clearance = mock<ClearanceStore>();
 		clearance.load.mockResolvedValue(makeClearanceLoad({ [retired]: { mode: "raw" } }));
 		const layout = new LocalFilesystemLayout();
-		const useCase = new ApplyCoreRevision({
-			bindings,
-			clearance,
-			layout,
-			guard: new LocalWriteTargetGuard(layout),
-			sources: new LocalSourceFiles(),
-			destinations: new LocalDestinationFiles(),
-		});
+		const useCase = makeApplyRevision(bindings, clearance, layout);
 
 		const outcome = await useCase.execute(
 			makeSynchronizationRequest({
@@ -231,14 +261,7 @@ describe("write-target preflight", () => {
 		const clearance = mock<ClearanceStore>();
 		clearance.load.mockResolvedValue(makeClearanceLoad({ [configuration]: { mode: "raw" } }));
 		const layout = new LocalFilesystemLayout();
-		const useCase = new ApplyCoreRevision({
-			bindings,
-			clearance,
-			layout,
-			guard: new LocalWriteTargetGuard(layout),
-			sources: new LocalSourceFiles(),
-			destinations: new LocalDestinationFiles(),
-		});
+		const useCase = makeApplyRevision(bindings, clearance, layout);
 
 		const outcome = await useCase.execute(
 			makeSynchronizationRequest({
@@ -269,14 +292,7 @@ describe("write-target preflight", () => {
 		const clearance = mock<ClearanceStore>();
 		clearance.load.mockResolvedValue(makeClearanceLoad({}));
 		const layout = new LocalFilesystemLayout();
-		const useCase = new ApplyCoreRevision({
-			bindings,
-			clearance,
-			layout,
-			guard: new LocalWriteTargetGuard(layout),
-			sources: new LocalSourceFiles(),
-			destinations: new LocalDestinationFiles(),
-		});
+		const useCase = makeApplyRevision(bindings, clearance, layout);
 
 		const outcome = await useCase.execute(
 			makeSynchronizationRequest({
@@ -304,14 +320,7 @@ describe("write-target preflight", () => {
 		const clearance = mock<ClearanceStore>();
 		clearance.load.mockResolvedValue(makeClearanceLoad({}));
 		const layout = new LocalFilesystemLayout();
-		const useCase = new ApplyCoreRevision({
-			bindings,
-			clearance,
-			layout,
-			guard: new LocalWriteTargetGuard(layout),
-			sources: new LocalSourceFiles(),
-			destinations: new LocalDestinationFiles(),
-		});
+		const useCase = makeApplyRevision(bindings, clearance, layout);
 
 		// The preflight does not refuse: the secret parent already exists, so the
 		// directory creation is never performed. The credential write is what
@@ -353,14 +362,7 @@ describe("write-target preflight", () => {
 		const clearance = mock<ClearanceStore>();
 		clearance.load.mockResolvedValue(makeClearanceLoad({}));
 		const layout = new LocalFilesystemLayout();
-		const useCase = new ApplyCoreRevision({
-			bindings,
-			clearance,
-			layout,
-			guard: new LocalWriteTargetGuard(layout),
-			sources: new LocalSourceFiles(),
-			destinations: new LocalDestinationFiles(),
-		});
+		const useCase = makeApplyRevision(bindings, clearance, layout);
 
 		const outcome = await useCase.execute(
 			makeSynchronizationRequest({
@@ -486,14 +488,7 @@ describe("reads over a directory and the secret setup's writes", () => {
 		const clearance = mock<ClearanceStore>();
 		clearance.load.mockResolvedValue(makeClearanceLoad({ [BOUND_SOURCE]: { mode: "raw" } }));
 		const layout = new LocalFilesystemLayout();
-		const useCase = new ApplyCoreRevision({
-			bindings,
-			clearance,
-			layout,
-			guard: new LocalWriteTargetGuard(layout),
-			sources: new LocalSourceFiles(),
-			destinations: new LocalDestinationFiles(),
-		});
+		const useCase = makeApplyRevision(bindings, clearance, layout);
 
 		const outcome = await useCase.execute(
 			makeSynchronizationRequest({
@@ -528,14 +523,7 @@ describe("reads over a directory and the secret setup's writes", () => {
 		const clearance = mock<ClearanceStore>();
 		clearance.load.mockResolvedValue(makeClearanceLoad({ [BOUND_SOURCE]: { mode: "region" } }));
 		const layout = new LocalFilesystemLayout();
-		const useCase = new ApplyCoreRevision({
-			bindings,
-			clearance,
-			layout,
-			guard: new LocalWriteTargetGuard(layout),
-			sources: new LocalSourceFiles(),
-			destinations: new LocalDestinationFiles(),
-		});
+		const useCase = makeApplyRevision(bindings, clearance, layout);
 
 		const outcome = await useCase.execute(
 			makeSynchronizationRequest({
@@ -741,14 +729,7 @@ describe("a managed path reached through a symlinked ancestor", () => {
 		const clearance = mock<ClearanceStore>();
 		clearance.load.mockResolvedValue(makeClearanceLoad({ [BOUND_SOURCE]: { mode: "region" } }));
 		const layout = new LocalFilesystemLayout();
-		const useCase = new ApplyCoreRevision({
-			bindings,
-			clearance,
-			layout,
-			guard: new LocalWriteTargetGuard(layout),
-			sources: new LocalSourceFiles(),
-			destinations: new LocalDestinationFiles(),
-		});
+		const useCase = makeApplyRevision(bindings, clearance, layout);
 
 		const outcome = await useCase.execute(
 			makeSynchronizationRequest({
@@ -780,14 +761,7 @@ describe("a managed path reached through a symlinked ancestor", () => {
 		const clearance = mock<ClearanceStore>();
 		clearance.load.mockResolvedValue(makeClearanceLoad({ [BOUND_SOURCE]: { mode: "region" } }));
 		const layout = new LocalFilesystemLayout();
-		const useCase = new ApplyCoreRevision({
-			bindings,
-			clearance,
-			layout,
-			guard: new LocalWriteTargetGuard(layout),
-			sources: new LocalSourceFiles(),
-			destinations: new LocalDestinationFiles(),
-		});
+		const useCase = makeApplyRevision(bindings, clearance, layout);
 
 		const outcome = await useCase.execute(
 			makeSynchronizationRequest({
@@ -814,14 +788,7 @@ describe("a managed path reached through a symlinked ancestor", () => {
 		const clearance = mock<ClearanceStore>();
 		clearance.load.mockResolvedValue(makeClearanceLoad({ [BOUND_SOURCE]: { mode: "region" } }));
 		const layout = new LocalFilesystemLayout();
-		const useCase = new EnrollDestinations({
-			bindings,
-			clearance,
-			layout,
-			guard: new LocalWriteTargetGuard(layout),
-			sources: new LocalSourceFiles(),
-			destinations: new LocalDestinationFiles(),
-		});
+		const useCase = makeEnrollment(bindings, clearance, layout);
 
 		const outcome = await useCase.execute(
 			makeEnrollmentRequest({

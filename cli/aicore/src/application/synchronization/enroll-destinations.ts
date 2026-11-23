@@ -1,6 +1,12 @@
 /**
  * Use case: enroll markerless destinations and refresh already-marked ones.
  *
+ * This coordinator holds the enrollment's own request handling, its declaration
+ * gates in their original order, the read preflight, execution of the validated
+ * envelope and the result message. The effective document is determined by
+ * `PlanSynchronizationDocument`, the payload changes by
+ * `PlanEnrollmentChanges`, and the mutations by `PrepareSynchronizationExecution`.
+ *
  * Enrollment is the only command that creates a merge target, and only when this
  * run newly binds it and it is absent: every later `init`, and `apply`, report a
  * missing merge destination as drift. A created or recreated region target takes
@@ -24,72 +30,48 @@
  * when their content changes.
  */
 
-import {
-	ACTION_INITIALIZED,
-	ACTION_REFRESHED,
-	CLEARANCE_FILENAME,
-	MODE_MERGE,
-	MODE_RAW,
-	MODE_REGION,
-	RECONCILIATION_DIRECTORY,
-	RECONCILIATION_FILENAME,
-	ROLE_ROOT,
-} from "#domain/synchronization/constants.ts";
+import { CLEARANCE_FILENAME, MODE_RAW, MODE_REGION } from "#domain/synchronization/constants.ts";
 import {
 	bindingModeConflict,
 	destinationDrift,
-	type EnrollmentPlan,
 	duplicatedDestinations,
-	enrollmentCandidates,
-	nonRegionDestinations,
-	normalizePending,
 	parseInitBindingSpec,
 	protectedExclusionFailure,
-	withEnrolledSources,
 	withInitDeclarations,
 	withOptOuts,
 	withRestoredOptOuts,
-	withheldSources,
 } from "#domain/synchronization/bindings.ts";
 import { drift, failed, invalid, succeeded, type OperationOutcome } from "#domain/synchronization/failures.ts";
-import { splitFrontmatter } from "#domain/synchronization/frontmatter.ts";
-import { mergeTopLevel } from "#domain/synchronization/merge.ts";
-import { hasExactCoreMarkerLines } from "#domain/synchronization/markers.ts";
-import type { ReconciliationEntry } from "#domain/synchronization/reconciliation.ts";
-import { missingRegionSources } from "#domain/synchronization/reconciliation.ts";
-import { protectedBytes, renderInitFile, renderWithRegion, splitRegions } from "#domain/synchronization/regions.ts";
 import { editorMismatch, effectiveEditor } from "#domain/synchronization/editor-profile.ts";
+import { missingRegionSources } from "#domain/synchronization/reconciliation.ts";
 import type { BindingsDocument } from "#domain/synchronization/bindings.ts";
-import { omitMcpServersOf, type ClearanceEntry } from "#domain/synchronization/clearance.ts";
 import type {
 	BindingsStore,
 	ClearanceStore,
 	DestinationFiles,
 	FilesystemLayout,
-	PlannedMutation,
-	PlannedPayload,
 	PlannedRead,
-	SourceFiles,
 	WriteTargetGuard,
 } from "#domain/synchronization/ports.ts";
 
-import { invalidClearance, readClearanceModes, sourceFacts } from "./clearance-modes.ts";
-import { ensureOpenCodeSecrets, planOpenCodeSecretWrites, prepareOpenCodeSecrets } from "./open-code-secrets.ts";
-import { projectName } from "./project-name.ts";
+import { invalidClearance, readClearanceModes } from "./clearance-modes.ts";
+import { PlanSynchronizationDocument } from "./plan-synchronization-document.ts";
+import { ensureOpenCodeSecrets } from "./open-code-secrets.ts";
+import { PlanEnrollmentChanges } from "./plan-enrollment-changes.ts";
+import { PrepareSynchronizationExecution } from "./prepare-synchronization-execution.ts";
 import type { EnrollmentRequest } from "./requests.ts";
 
 /** Collaborators enrollment needs. */
 export type EnrollDestinationsDependencies = {
 	readonly bindings: BindingsStore;
 	readonly clearance: ClearanceStore;
-	readonly sources: SourceFiles;
 	readonly destinations: DestinationFiles;
 	readonly layout: FilesystemLayout;
 	readonly guard: WriteTargetGuard;
+	readonly determineDocument: PlanSynchronizationDocument;
+	readonly planChanges: PlanEnrollmentChanges;
+	readonly prepareExecution: PrepareSynchronizationExecution;
 };
-
-type TextWrite = { readonly path: string; readonly content: string };
-type ByteWrite = { readonly path: string; readonly content: Uint8Array };
 
 export class EnrollDestinations {
 	readonly #dependencies: EnrollDestinationsDependencies;
@@ -99,7 +81,16 @@ export class EnrollDestinations {
 	}
 
 	async execute(request: EnrollmentRequest): Promise<OperationOutcome> {
-		const { bindings, clearance: clearanceStore, sources, destinations, layout, guard } = this.#dependencies;
+		const {
+			bindings,
+			clearance: clearanceStore,
+			destinations,
+			layout,
+			guard,
+			determineDocument,
+			planChanges,
+			prepareExecution,
+		} = this.#dependencies;
 
 		const loaded = await bindings.load(request.bindingsPath);
 		if (loaded === null && !request.bindCleared) {
@@ -144,45 +135,24 @@ export class EnrollDestinations {
 		// leaves `pending`, so a re-enrollment and an `apply` agree on the state.
 		const restored = withRestoredOptOuts(applied, clearance.modes, clearance.destinations);
 
-		// The domain decides which cleared sources gain bindings and which destinations
-		// are new; this operation only probes the facts it needs.
-		const entries = clearance.entries ?? new Map<string, ClearanceEntry>();
-		const rootEntry = [...entries.entries()].find(([, entry]) => entry.kind === "file" && entry.role === ROLE_ROOT);
-		const rootSource = rootEntry?.[0] ?? null;
-		let rootDestination = restored.root;
-		if (rootSource !== null) {
-			const existingRoot = restored.bindings.find((entry) => entry.source === rootSource);
-			rootDestination =
-				existingRoot?.destinations[0] ??
-				request.rootOverride ??
-				(await layout.detectRootFile(request.destinationRoot));
-			if (rootDestination === null) {
-				return failed(drift("destination instruction root not found; pass --root"));
-			}
+		const determination = await determineDocument.execute({
+			document: restored,
+			clearance,
+			editor,
+			sourceRoot: request.sourceRoot,
+			destinationRoot: request.destinationRoot,
+			intent: {
+				kind: "enroll",
+				rootOverride: request.rootOverride,
+				enrollUnseen: request.bindCleared,
+			},
+		});
+		if (!determination.ok) {
+			return failed(determination.failure);
 		}
-		const enrollment: EnrollmentPlan = request.bindCleared
-			? enrollmentCandidates(restored, {
-					modes: clearance.modes,
-					destinations: clearance.destinations,
-					rootSource,
-					rootDestination,
-				})
-			: { root: restored.root, candidates: [] };
-		const existingDestinations = new Set<string>();
-		for (const candidate of enrollment.candidates) {
-			if (await layout.exists(layout.join(request.destinationRoot, candidate.destination))) {
-				existingDestinations.add(candidate.destination);
-			}
-		}
-		const enrolled = withEnrolledSources(restored, enrollment, existingDestinations);
-		// Presence is probed on the document that is classified, so a source this run
-		// enrolled is asked about too: it came from a real enumeration, and the
-		// classification must see that it exists.
-		const facts = await sourceFacts(enrolled.document, clearance, editor, request.sourceRoot, layout);
-		const withheld = withheldSources(enrolled.document, facts, entries);
-		const document = withheld.document;
-		const newRawDestinations = new Set<string>([...declared.newRawDestinations, ...enrolled.newRawDestinations]);
-		const newMergeDestinations = enrolled.newMergeDestinations;
+		const determined = determination.value;
+		const effective = determined.document;
+		const newRawDestinations = new Set<string>([...declared.newRawDestinations, ...determined.newRawDestinations]);
 
 		// Every path this run reads is cleared before it is read: the effective
 		// document the run acts on is guarded before any payload read.
@@ -191,11 +161,11 @@ export class EnrollDestinations {
 			sourceRoot: request.sourceRoot,
 			destinationRoot: request.destinationRoot,
 			bindingsPath: request.bindingsPath,
-			document,
+			document: effective,
 			modes: clearance.modes,
 			newRawDestinations,
 			phase: "read",
-			readPaths: await destinationReadPaths(document, request.destinationRoot, layout),
+			readPaths: await destinationReadPaths(effective, request.destinationRoot, layout),
 		});
 		if (readRefusal !== null) {
 			return failed(readRefusal);
@@ -226,7 +196,7 @@ export class EnrollDestinations {
 				);
 			}
 		}
-		for (const entry of document.bindings) {
+		for (const entry of effective.bindings) {
 			const conflict = bindingModeConflict(entry, clearance.modes);
 			if (conflict !== null) {
 				return failed(conflict);
@@ -234,7 +204,7 @@ export class EnrollDestinations {
 		}
 		// Two live bindings cannot own one destination, and a distributable binding
 		// must not displace one awaiting reconciliation. Nothing is mutated first.
-		const duplicated = duplicatedDestinations(document);
+		const duplicated = duplicatedDestinations(effective);
 		if (duplicated.length > 0) {
 			return failed(invalid(`conflicting destination ownership: ${duplicated.join(", ")}`));
 		}
@@ -242,258 +212,62 @@ export class EnrollDestinations {
 		// source whose record now declares another destination is drift, not a state
 		// enrollment silently delivers. Nothing is written, because the changed
 		// destination is the destination owner's migration.
-		const relocated = destinationDrift(document, clearance.entries, clearance.destinations);
+		const relocated = destinationDrift(effective, clearance.entries, clearance.destinations);
 		if (relocated !== null) {
 			return failed(relocated);
 		}
 
-		const textWrites: TextWrite[] = [];
-		const byteWrites: ByteWrite[] = [];
-		const reportEntries: ReconciliationEntry[] = [];
-		const notes: string[] = [];
-		let pending: readonly string[] = normalizePending(
-			document.pending,
-			nonRegionDestinations(document, clearance.modes),
-		);
-		for (const entry of withheld.distributable) {
-			const mode = clearance.modes.get(entry.source);
-			const sourcePath = layout.join(request.sourceRoot, entry.source);
-
-			if (mode === MODE_RAW) {
-				const sourceBytes = await sources.readBytes(sourcePath);
-				if (sourceBytes === null) {
-					return failed(drift(`missing source: ${sourcePath}`));
-				}
-				for (const destination of entry.destinations) {
-					const destinationPath = layout.join(request.destinationRoot, destination);
-					const destinationBytes = await destinations.readBytes(destinationPath);
-					if (destinationBytes === null) {
-						if (await layout.exists(destinationPath)) {
-							return failed(drift(`missing destination: ${destinationPath}`));
-						}
-						byteWrites.push({ path: destinationPath, content: sourceBytes });
-						continue;
-					}
-					if (equalBytes(destinationBytes, sourceBytes)) {
-						continue;
-					}
-					byteWrites.push({ path: destinationPath, content: sourceBytes });
-				}
-				continue;
-			}
-
-			if (mode === MODE_MERGE) {
-				const sourceText = await sources.readText(sourcePath);
-				if (sourceText === null) {
-					return failed(drift(`missing source: ${sourcePath}`));
-				}
-				for (const destination of entry.destinations) {
-					const destinationPath = layout.join(request.destinationRoot, destination);
-					const destinationText = await destinations.readText(destinationPath);
-					if (destinationText === null) {
-						if (!newMergeDestinations.has(destination) || (await layout.exists(destinationPath))) {
-							return failed(
-								drift(
-									`missing destination: ${destinationPath} ` +
-										"(merge mode cannot create it; the destination must exist)",
-								),
-							);
-						}
-						const created = mergeTopLevel(
-							sourceText,
-							"{}",
-							projectName(request.destinationRoot),
-							omitMcpServersOf(clearance.entries.get(entry.source)),
-						);
-						if (created === null) {
-							return failed(invalid(`invalid JSONC: ${sourcePath}`));
-						}
-						textWrites.push({ path: destinationPath, content: created });
-						continue;
-					}
-					const mergedText = mergeTopLevel(
-						sourceText,
-						destinationText,
-						projectName(request.destinationRoot),
-						omitMcpServersOf(clearance.entries.get(entry.source)),
-					);
-					if (mergedText === null) {
-						return failed(invalid(`invalid JSONC: ${destinationPath}`));
-					}
-					if (mergedText !== destinationText) {
-						textWrites.push({ path: destinationPath, content: mergedText });
-					}
-				}
-				continue;
-			}
-
-			const read = await sources.readCore(sourcePath);
-			if (read === null) {
-				return failed(drift(`missing source: ${sourcePath}`));
-			}
-			if (read.kind === "malformed") {
-				return failed(invalid(`invalid source markers: ${sourcePath}`));
-			}
-			const sourceText = await sources.readText(sourcePath);
-			const sourceFrontmatter = sourceText === null ? "" : splitFrontmatter(sourceText).frontmatter;
-
-			for (const destination of entry.destinations) {
-				const destinationPath = layout.join(request.destinationRoot, destination);
-				const destinationContent = await destinations.readText(destinationPath);
-				if (destinationContent === null) {
-					if (await layout.exists(destinationPath)) {
-						return failed(drift(`missing destination: ${destinationPath}`));
-					}
-					textWrites.push({
-						path: destinationPath,
-						content: renderInitFile("", read.core, sourceFrontmatter).text,
-					});
-					reportEntries.push({ destination, source: entry.source, action: ACTION_INITIALIZED });
-					pending = appendOnce(pending, destination);
-					continue;
-				}
-				const split = splitRegions(destinationContent);
-				if (split === null) {
-					if (hasExactCoreMarkerLines(destinationContent)) {
-						return failed(invalid(`invalid destination markers: ${destinationPath}`));
-					}
-					const rendered = renderInitFile(destinationContent, read.core, sourceFrontmatter);
-					if (rendered.skipped !== "") {
-						notes.push(`frontmatter not refreshed: ${destinationPath} (${rendered.skipped})`);
-					}
-					textWrites.push({ path: destinationPath, content: rendered.text });
-					reportEntries.push({ destination, source: entry.source, action: ACTION_INITIALIZED });
-					pending = appendOnce(pending, destination);
-					continue;
-				}
-				const rendered = renderWithRegion(split, read.core, sourceFrontmatter);
-				if (rendered.skipped !== "") {
-					notes.push(`frontmatter not refreshed: ${destinationPath} (${rendered.skipped})`);
-				}
-				const newSplit = splitRegions(rendered.text);
-				if (newSplit === null || protectedBytes(newSplit) !== protectedBytes(split)) {
-					return failed(invalid(`outside-marker mismatch: ${destinationPath}`));
-				}
-				if (rendered.text === destinationContent) {
-					continue;
-				}
-				textWrites.push({ path: destinationPath, content: rendered.text });
-				if (newSplit.region === split.region) {
-					continue;
-				}
-				reportEntries.push({ destination, source: entry.source, action: ACTION_REFRESHED });
-				pending = appendOnce(pending, destination);
-			}
+		const planned = await planChanges.execute({
+			document: effective,
+			request,
+			clearance,
+			distributable: determined.distributable,
+			retired: determined.retired,
+			newMergeDestinations: determined.newMergeDestinations,
+		});
+		if (!planned.ok) {
+			return failed(planned.failure);
 		}
-
-		// The pending effects, in the order the run applies them: the content a
-		// later projection reads is the content the earlier write leaves behind.
-		const payload: PlannedPayload[] = [
-			...textWrites.map((write) => ({ kind: "text-write" as const, path: write.path, content: write.content })),
-			...byteWrites.map((write) => ({ kind: "byte-write" as const, path: write.path, content: write.content })),
-		];
-		const retiredPaths: string[] = [];
-		for (const retired of withheld.retired) {
-			for (const destination of retired.destinations) {
-				retiredPaths.push(layout.join(request.destinationRoot, destination));
-			}
-		}
-		payload.push(...retiredPaths.map((path) => ({ kind: "file-delete" as const, path })));
+		const plan = planned.plan;
 
 		const pinned: BindingsDocument = {
-			...document,
+			...effective,
 			coreRevision: request.sourceRevision,
-			pending,
+			pending: plan.pending,
 			editor,
 		};
 
-		// The secret setup reads the ignore file only when it has to plan its
-		// rule, so that read is cleared on its own.
-		const preparation = await prepareOpenCodeSecrets(editor, request.destinationRoot, payload, layout);
-		if (preparation.readsIgnore) {
-			const ignoreRefusal = await guard.refuse({
-				command: "init",
-				sourceRoot: request.sourceRoot,
-				destinationRoot: request.destinationRoot,
-				bindingsPath: request.bindingsPath,
-				document,
-				modes: clearance.modes,
-				newRawDestinations,
-				phase: "read",
-				readPaths: [{ path: preparation.paths.gitignore, owner: "secret" }],
-			});
-			if (ignoreRefusal !== null) {
-				return failed(ignoreRefusal);
-			}
-		}
-		const secretMutations = await planOpenCodeSecretWrites(editor, preparation, payload, {
-			destinations,
-			layout,
-		});
-
-		// The root runtime file's blocker is a write of its own, and the
-		// projection says whether this run performs one.
-		const blocker =
-			(await layout.planBlocker(
-				request.destinationRoot,
-				pinned,
-				pending,
-				missingRegionSources(withheld.requiresReconciliation),
-				payload,
-			)) ?? null;
-
-		const mutations: PlannedMutation[] = [
-			...textWrites.map((write) => ({
-				path: write.path,
-				kind: "file-write" as const,
-				owner: "payload" as const,
-			})),
-			...byteWrites.map((write) => ({
-				path: write.path,
-				kind: "file-write" as const,
-				owner: "payload" as const,
-			})),
-			...retiredPaths.map((path) => ({ path, kind: "file-delete" as const, owner: "payload" as const })),
-			{ path: request.bindingsPath, kind: "file-write", owner: "bindings" },
-			...(reportEntries.length > 0
-				? [
-						{
-							path: layout.join(
-								layout.parent(request.bindingsPath),
-								`${RECONCILIATION_DIRECTORY}/${RECONCILIATION_FILENAME}`,
-							),
-							kind: "file-write" as const,
-							owner: "report" as const,
-						},
-					]
-				: []),
-			...(blocker === null ? [] : [{ path: blocker.path, kind: "file-write" as const, owner: "root" as const }]),
-			...secretMutations,
-		];
-		const mutationRefusal = await guard.refuse({
+		// The secret setup, the root blocker, the report and the complete mutation
+		// set are prepared and validated before the first mutation.
+		const preparation = await prepareExecution.execute({
 			command: "init",
 			sourceRoot: request.sourceRoot,
 			destinationRoot: request.destinationRoot,
 			bindingsPath: request.bindingsPath,
-			document,
+			document: effective,
+			pinned,
+			pending: plan.pending,
+			missingRegions: missingRegionSources(determined.requiresReconciliation),
 			modes: clearance.modes,
 			newRawDestinations,
-			phase: "mutations",
-			mutations,
+			editor,
+			plan,
+			writesReconciliationReport: plan.reportEntries.length > 0,
 		});
-		if (mutationRefusal !== null) {
-			return failed(mutationRefusal);
+		if (!preparation.ok) {
+			return failed(preparation.failure);
 		}
 
-		for (const write of textWrites) {
+		const notes = [...plan.notes];
+		for (const write of plan.textWrites) {
 			await layout.ensureDirectory(layout.parent(write.path));
 			await destinations.writeText(write.path, write.content);
 		}
-		for (const write of byteWrites) {
+		for (const write of plan.byteWrites) {
 			await layout.ensureDirectory(layout.parent(write.path));
 			await destinations.writeBytes(write.path, write.content);
 		}
-		for (const retired of withheld.retired) {
+		for (const retired of determined.retired) {
 			for (const destination of retired.destinations) {
 				await destinations.remove(layout.join(request.destinationRoot, destination));
 				notes.push(`retired: ${destination}`);
@@ -504,16 +278,16 @@ export class EnrollDestinations {
 			layout,
 		});
 
-		if (reportEntries.length > 0) {
-			await bindings.writeReport(request.bindingsPath, reportEntries, request.sourceRevision);
+		if (plan.reportEntries.length > 0) {
+			await bindings.writeReport(request.bindingsPath, plan.reportEntries, request.sourceRevision);
 		}
 
 		await bindings.save(request.bindingsPath, pinned);
 		await layout.syncBlocker(
 			request.destinationRoot,
 			pinned,
-			pending,
-			missingRegionSources(withheld.requiresReconciliation),
+			plan.pending,
+			missingRegionSources(determined.requiresReconciliation),
 		);
 
 		return succeeded(["initialized", ...notes].join("; "));
@@ -540,15 +314,4 @@ async function destinationReadPaths(
 		}
 	}
 	return paths;
-}
-
-function appendOnce(pending: readonly string[], path: string): readonly string[] {
-	return pending.includes(path) ? pending : [...pending, path];
-}
-
-function equalBytes(left: Uint8Array, right: Uint8Array): boolean {
-	if (left.length !== right.length) {
-		return false;
-	}
-	return left.every((byte, index) => byte === right[index]);
 }

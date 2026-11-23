@@ -29,7 +29,11 @@ import { RunAdvancedCommand, type AdvancedCommandDependencies } from "#applicati
 import { ReconcileDestination } from "#application/reconcile-destination.ts";
 import { SynchronizeDestination } from "#application/synchronize-destination.ts";
 import { ApplyCoreRevision } from "#application/synchronization/apply-core-revision.ts";
+import { PlanSynchronizationDocument } from "#application/synchronization/plan-synchronization-document.ts";
 import { EnrollDestinations } from "#application/synchronization/enroll-destinations.ts";
+import { PlanEnrollmentChanges } from "#application/synchronization/plan-enrollment-changes.ts";
+import { PlanUpdateChanges } from "#application/synchronization/plan-update-changes.ts";
+import { PrepareSynchronizationExecution } from "#application/synchronization/prepare-synchronization-execution.ts";
 import { VerifyDestinations } from "#application/synchronization/verify-destinations.ts";
 import { toCommandArguments } from "#delivery/command-arguments.ts";
 import {
@@ -146,10 +150,45 @@ function createSynchronizationOperations(): AdvancedCommandDependencies {
 		guard: new LocalWriteTargetGuard(layout),
 	};
 
+	// The four application operations are composed here, at the composition root,
+	// and injected into the coordinators through their dependency objects.
+	const determineDocument = new PlanSynchronizationDocument({ layout });
+	const prepareExecution = new PrepareSynchronizationExecution({
+		destinations: dependencies.destinations,
+		layout,
+		guard: dependencies.guard,
+	});
+
 	return {
 		check: new VerifyDestinations(dependencies),
-		apply: new ApplyCoreRevision(dependencies),
-		enroll: new EnrollDestinations(dependencies),
+		apply: new ApplyCoreRevision({
+			bindings: dependencies.bindings,
+			clearance: dependencies.clearance,
+			destinations: dependencies.destinations,
+			layout,
+			guard: dependencies.guard,
+			determineDocument,
+			planChanges: new PlanUpdateChanges({
+				sources: dependencies.sources,
+				destinations: dependencies.destinations,
+				layout,
+			}),
+			prepareExecution,
+		}),
+		enroll: new EnrollDestinations({
+			bindings: dependencies.bindings,
+			clearance: dependencies.clearance,
+			destinations: dependencies.destinations,
+			layout,
+			guard: dependencies.guard,
+			determineDocument,
+			planChanges: new PlanEnrollmentChanges({
+				sources: dependencies.sources,
+				destinations: dependencies.destinations,
+				layout,
+			}),
+			prepareExecution,
+		}),
 	};
 }
 

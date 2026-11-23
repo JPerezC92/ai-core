@@ -19,7 +19,13 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { mock, type MockProxy } from "vitest-mock-extended";
 
-import { ApplyCoreRevision } from "#application/synchronization/apply-core-revision.ts";
+import {
+	ApplyCoreRevision,
+	type ApplyCoreRevisionDependencies,
+} from "#application/synchronization/apply-core-revision.ts";
+import { PlanSynchronizationDocument } from "#application/synchronization/plan-synchronization-document.ts";
+import { PlanUpdateChanges } from "#application/synchronization/plan-update-changes.ts";
+import { PrepareSynchronizationExecution } from "#application/synchronization/prepare-synchronization-execution.ts";
 import type {
 	BindingsStore,
 	ClearanceStore,
@@ -61,7 +67,40 @@ function makeUpdate(overrides: Partial<UpdatePorts> = {}): UpdatePorts & { reado
 		layout: overrides.layout ?? mock<FilesystemLayout>(),
 		guard: overrides.guard ?? mock<WriteTargetGuard>(),
 	};
-	return { ...ports, useCase: new ApplyCoreRevision(ports) };
+	return { ...ports, useCase: makeUseCase(ports) };
+}
+
+/**
+ * The coordinator over one case's doubled ports.
+ *
+ * The coordinator's own collaborators are the four application operations, so
+ * the cases keep observing the assembled update behavior over doubled ports;
+ * each operation's own rules have their own focused spec.
+ */
+function makeUseCase(ports: UpdatePorts): ApplyCoreRevision {
+	return new ApplyCoreRevision(makeDependencies(ports));
+}
+
+/** The coordinator's dependency object: doubled ports and the real operations. */
+function makeDependencies(ports: UpdatePorts): ApplyCoreRevisionDependencies {
+	return {
+		bindings: ports.bindings,
+		clearance: ports.clearance,
+		destinations: ports.destinations,
+		layout: ports.layout,
+		guard: ports.guard,
+		determineDocument: new PlanSynchronizationDocument({ layout: ports.layout }),
+		planChanges: new PlanUpdateChanges({
+			sources: ports.sources,
+			destinations: ports.destinations,
+			layout: ports.layout,
+		}),
+		prepareExecution: new PrepareSynchronizationExecution({
+			destinations: ports.destinations,
+			layout: ports.layout,
+			guard: ports.guard,
+		}),
+	};
 }
 
 describe("enrolled-editor refusal", () => {
@@ -179,7 +218,7 @@ function makeWritableUpdate(options: WritableUpdateOptions = {}) {
 	const destinations = mock<DestinationFiles>();
 	destinations.readText.mockImplementation(async (path) => (path === GITIGNORE_PATH ? gitignore : null));
 
-	const useCase = new ApplyCoreRevision({ bindings, clearance, sources, destinations, layout, guard });
+	const useCase = makeUseCase({ bindings, clearance, sources, destinations, layout, guard });
 	return { useCase, bindings, destinations, layout, guard };
 }
 
@@ -214,7 +253,7 @@ describe("source retirement", () => {
 		guard.refuse.mockResolvedValueOnce(null).mockResolvedValueOnce({ code: "invalid", message: "unsafe deletion" });
 		const destinations = mock<DestinationFiles>();
 		destinations.readText.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({
+		const useCase = makeUseCase({
 			bindings,
 			clearance,
 			sources: mock<SourceFiles>(),
@@ -254,7 +293,7 @@ describe("source retirement", () => {
 		destinations.readText.mockResolvedValue(null);
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({
+		const useCase = makeUseCase({
 			bindings,
 			clearance,
 			sources: mock<SourceFiles>(),
@@ -300,7 +339,7 @@ describe("source retirement", () => {
 		destinations.readText.mockResolvedValue(null);
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({
+		const useCase = makeUseCase({
 			bindings,
 			clearance,
 			sources: mock<SourceFiles>(),
@@ -341,7 +380,7 @@ describe("source retirement", () => {
 		destinations.readText.mockResolvedValue(null);
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({
+		const useCase = makeUseCase({
 			bindings,
 			clearance,
 			sources: mock<SourceFiles>(),
@@ -382,7 +421,7 @@ describe("source retirement", () => {
 		destinations.readText.mockResolvedValue(null);
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({
+		const useCase = makeUseCase({
 			bindings,
 			clearance,
 			sources: mock<SourceFiles>(),
@@ -421,7 +460,7 @@ describe("source preservation", () => {
 		destinations.readText.mockResolvedValue(null);
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({
+		const useCase = makeUseCase({
 			bindings,
 			clearance,
 			sources: mock<SourceFiles>(),
@@ -463,7 +502,7 @@ describe("source preservation", () => {
 		destinations.readText.mockResolvedValue(null);
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({
+		const useCase = makeUseCase({
 			bindings,
 			clearance,
 			sources: mock<SourceFiles>(),
@@ -509,7 +548,7 @@ describe("merge-managed source preservation", () => {
 		destinations.readText.mockResolvedValue(null);
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({
+		const useCase = makeUseCase({
 			bindings,
 			clearance,
 			sources: mock<SourceFiles>(),
@@ -575,7 +614,7 @@ describe("destination ownership", () => {
 		);
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({ bindings, clearance, sources, destinations, layout, guard });
+		const useCase = makeUseCase({ bindings, clearance, sources, destinations, layout, guard });
 
 		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
 
@@ -624,7 +663,7 @@ describe("destination ownership", () => {
 		);
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({ bindings, clearance, sources, destinations, layout, guard });
+		const useCase = makeUseCase({ bindings, clearance, sources, destinations, layout, guard });
 
 		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
 
@@ -668,7 +707,7 @@ describe("destination ownership", () => {
 		const destinations = mock<DestinationFiles>();
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({ bindings, clearance, sources, destinations, layout, guard });
+		const useCase = makeUseCase({ bindings, clearance, sources, destinations, layout, guard });
 
 		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
 
@@ -712,7 +751,7 @@ describe("destination ownership", () => {
 		destinations.readText.mockResolvedValue(null);
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({ bindings, clearance, sources, destinations, layout, guard });
+		const useCase = makeUseCase({ bindings, clearance, sources, destinations, layout, guard });
 
 		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
 
@@ -747,7 +786,7 @@ describe("destination ownership", () => {
 		const destinations = mock<DestinationFiles>();
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({ bindings, clearance, sources, destinations, layout, guard });
+		const useCase = makeUseCase({ bindings, clearance, sources, destinations, layout, guard });
 
 		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
 
@@ -785,7 +824,7 @@ describe("newly cleared sources", () => {
 		const destinations = mock<DestinationFiles>();
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({ bindings, clearance, sources, destinations, layout, guard });
+		const useCase = makeUseCase({ bindings, clearance, sources, destinations, layout, guard });
 
 		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
 
@@ -1052,7 +1091,7 @@ function makeBindingUpdate(options: BindingUpdateOptions) {
 	const destinations = mock<DestinationFiles>();
 	destinations.readText.mockResolvedValue(options.destinationText ?? null);
 
-	const useCase = new ApplyCoreRevision({ bindings, clearance, sources, destinations, layout, guard });
+	const useCase = makeUseCase({ bindings, clearance, sources, destinations, layout, guard });
 	return { useCase, bindings, destinations, layout, guard, destinationPath };
 }
 
