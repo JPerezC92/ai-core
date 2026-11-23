@@ -2,9 +2,9 @@
  * Infrastructure: observing every write target before a command mutates anything.
  *
  * Synchronization distributes ordinary files and directories; a symbolic link is
- * never an artifact. A managed write path that contains a link is refused
- * before the destination is modified: the link itself, or a path that resolves
- * through one into the source tree or out of the destination root.
+ * never an artifact. A managed write target that is a link is refused before the
+ * destination is modified, and so is a path that resolves through one into the
+ * source tree or out of the destination root.
  *
  * This adapter collects the facts — whether a path is a symlink, whether it is a
  * regular file, its resolved location, and its device/inode identity — and hands
@@ -25,15 +25,23 @@ import {
 	ROOT_CANDIDATES,
 } from "#domain/synchronization/constants.ts";
 import { type SynchronizationFailure, invalid } from "#domain/synchronization/failures.ts";
-import type { FilesystemLayout, WriteTargetGuard, WriteTargetRequest } from "#domain/synchronization/ports.ts";
+import type {
+	FilesystemLayout,
+	PlannedRead,
+	WriteTargetGuard,
+	WriteTargetRequest,
+} from "#domain/synchronization/ports.ts";
 import {
 	type FileIdentity,
+	pathIdentity,
+	refuseReadTargets,
 	refuseWriteTargets,
 	type NonRegionDestinationObservation,
 	type PlannedRawCreation,
 	type WriteTargetFacts,
 	type WriteTargetKind,
 	type WriteTargetObservation,
+	writeTargetKind,
 } from "#domain/synchronization/write-targets.ts";
 
 import { isFileSystemError, isMissing } from "./local-files.ts";
@@ -67,8 +75,14 @@ export class LocalWriteTargetGuard implements WriteTargetGuard {
 	async #refuse(request: WriteTargetRequest): Promise<SynchronizationFailure | null> {
 		const sourceRoot = await realPathOf(request.sourceRoot);
 		const destinationRoot = await realPathOf(request.destinationRoot);
-		const rootPath = await this.#layout.resolveRootFile(request.destinationRoot, request.document);
+		if (request.phase === "read") {
+			return await this.#refuseReads(request, sourceRoot, destinationRoot);
+		}
+		if (request.phase === "mutations") {
+			return await this.#refuseMutations(request, sourceRoot, destinationRoot);
+		}
 
+		const rootPath = await this.#layout.resolveRootFile(request.destinationRoot, request.document);
 		const targets: WriteTargetObservation[] = [await observe("root", rootPath)];
 		if (request.command === "apply" || request.command === "init") {
 			for (const entry of request.document.bindings) {
@@ -101,6 +115,66 @@ export class LocalWriteTargetGuard implements WriteTargetGuard {
 			plannedRawCreations: await plannedRawCreations(request.destinationRoot, request.newRawDestinations),
 		};
 		return refuseWriteTargets(facts);
+	}
+
+	/**
+	 * Collect the facts of every path whose contents are about to be read, and
+	 * let the domain rule decide.
+	 *
+	 * The adapter observes and does not decide: which paths are safe to read is
+	 * the domain's rule, and the diagnostics it produces are the domain's.
+	 */
+	async #refuseReads(
+		request: WriteTargetRequest,
+		sourceRoot: string,
+		destinationRoot: string,
+	): Promise<SynchronizationFailure | null> {
+		const rootPath = await this.#layout.resolveRootFile(request.destinationRoot, request.document);
+		const reads: readonly PlannedRead[] = [{ path: rootPath, owner: "root" }, ...(request.readPaths ?? [])];
+		const observed: WriteTargetObservation[] = [];
+		for (const read of reads) {
+			observed.push(await observe(writeTargetKind(read.owner), read.path));
+		}
+		return refuseReadTargets({ sourceRoot, destinationRoot, reads: observed });
+	}
+
+	/**
+	 * Validate the complete set of mutations before the first one happens.
+	 *
+	 * Each mutation carries the owner of the path it changes, so the rule knows
+	 * which paths are the same target and which are two owners colliding. The
+	 * destination's root runtime file is observed first, as the phase-less
+	 * branch observes it: a binding that owns the instruction root aliases it,
+	 * and that alias is refused before anything is written.
+	 */
+	async #refuseMutations(
+		request: WriteTargetRequest,
+		sourceRoot: string,
+		destinationRoot: string,
+	): Promise<SynchronizationFailure | null> {
+		const rootPath = await this.#layout.resolveRootFile(request.destinationRoot, request.document);
+		const targets: WriteTargetObservation[] = [await observe("root", rootPath)];
+		for (const mutation of request.mutations ?? []) {
+			const kind = writeTargetKind(mutation.owner);
+			const observed = await observe(kind, mutation.path);
+			targets.push({
+				...observed,
+				directoryTarget: mutation.kind === "directory-create",
+			});
+		}
+		return refuseWriteTargets({
+			command: request.command,
+			sourceRoot,
+			destinationRoot,
+			sourceFileIdentities: await sourceFileIdentities(request.sourceRoot),
+			targets,
+			nonRegionDestinations: await this.#nonRegionDestinations(request),
+			implicitRoot:
+				request.command === "init" && request.document.root === null
+					? await observeImplicitRoot(request.destinationRoot)
+					: null,
+			plannedRawCreations: await plannedRawCreations(request.destinationRoot, request.newRawDestinations),
+		});
 	}
 
 	async #nonRegionDestinations(request: WriteTargetRequest): Promise<readonly NonRegionDestinationObservation[]> {
@@ -139,10 +213,11 @@ async function observe(kind: WriteTargetKind, path: string): Promise<WriteTarget
 		kind,
 		path,
 		resolvedPath: await realPathOf(path),
-		lexicalPath: resolve(path),
+		lexicalPath: pathIdentity(path),
 		symbolicLink: link?.isSymbolicLink() ?? false,
 		exists: observed !== null,
 		regularFile: observed?.isFile() ?? false,
+		directory: observed?.isDirectory() ?? false,
 		identity: identityOf(observed),
 	};
 }

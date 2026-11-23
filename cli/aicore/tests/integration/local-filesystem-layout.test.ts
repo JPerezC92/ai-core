@@ -1,22 +1,34 @@
 /**
- * Integration: the layout adapter's directory enumeration across its real
- * boundary.
+ * Integration: the layout adapter across its real filesystem boundary.
  *
- * The enumeration defines what a cleared directory root puts in a distribution
- * set, so it is exercised against a real isolated filesystem in a disposable
- * root (contract T4, T18). Every assertion reads entry metadata with `lstat`, so
- * a delivered entry is proven to be a regular file rather than the target of a
+ * Three concerns live here, all exercised against a real isolated filesystem in
+ * a disposable root (contract T4, T18).
+ *
+ * The directory enumeration defines what a cleared directory root puts in a
+ * distribution set. Every assertion reads entry metadata with `lstat`, so a
+ * delivered entry is proven to be a regular file rather than the target of a
  * link. The one assertion over the checkout's own skill root states a property
  * that holds whether or not that root's dependencies are installed, so it never
  * depends on the operator's install state.
+ *
+ * The instruction-root detection resolves the destination's root runtime file:
+ * a supported instruction file is detected, another name is never guessed, and
+ * a recorded root is resolved at the recorded path.
+ *
+ * The post-payload blocker planning decides what the reconciliation blocker
+ * write should contain, given the pending payload writes: the planned content
+ * is compared against the content the executor's own writes leave behind, so a
+ * projection that disagrees with the execution cannot pass unnoticed.
  */
 
-import { lstat, mkdir, symlink, writeFile } from "node:fs/promises";
+import { lstat, mkdir, readFile, symlink, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 import { LocalFilesystemLayout } from "#infrastructure/synchronization/local-filesystem-layout.ts";
+import { removeFile, writeBytesFile, writeTextFile } from "#infrastructure/synchronization/local-files.ts";
+import { syncReconciliationBlocker } from "#domain/synchronization/reconciliation.ts";
 import { createTemporaryRoot, disposeTemporaryRoot } from "#support/disposable-root.ts";
 import { makeBindingsDocument } from "#support/synchronization.factory.ts";
 
@@ -167,5 +179,110 @@ describe("instruction root detection", () => {
 		expect(await layout.resolveRootFile(root, makeBindingsDocument({ root: "docs/CLAUDE.md" }))).toBe(
 			join(root, "docs", "CLAUDE.md"),
 		);
+	});
+});
+
+describe("post-payload blocker planning", () => {
+	const document = makeBindingsDocument({ root: null });
+	const pending = ["example.md"];
+	const body = "# instructions\n";
+	const expected = (text: string) => syncReconciliationBlocker(text, pending, "opencode", []);
+
+	test("plans against a newly created implicit root without creating it", async () => {
+		const path = join(root, "AGENTS.md");
+		const result = await layout.planBlocker(
+			root,
+			document,
+			pending,
+			[],
+			[{ kind: "text-write", path, content: "# instructions\r\n" }],
+		);
+		expect(result).toEqual({ path, content: expected(body) });
+		await expect(lstat(path)).rejects.toMatchObject({ code: "ENOENT" });
+	});
+
+	test("selects the explicit root even when AGENTS exists", async () => {
+		await writeFixture("AGENTS.md", "# other\n");
+		await writeFixture("custom.md", body);
+		const path = join(root, "custom.md");
+		const result = await layout.planBlocker(root, makeBindingsDocument({ root: "custom.md" }), pending, [], []);
+		expect(result).toEqual({ path, content: expected(body) });
+		expect(await readFile(path, "utf8")).toBe(body);
+	});
+
+	test("reads existing root content and plans a blocker mutation", async () => {
+		await writeFixture("AGENTS.md", body);
+		const path = join(root, "AGENTS.md");
+		expect(await layout.planBlocker(root, document, pending, [], [])).toEqual({ path, content: expected(body) });
+		expect(await readFile(path, "utf8")).toBe(body);
+	});
+
+	test("omits a blocker write when content is already current", async () => {
+		await writeFixture("AGENTS.md", expected(body));
+		expect(await layout.planBlocker(root, document, pending, [], [])).toBeNull();
+	});
+
+	test("does not plan a blocker on a retired implicit root", async () => {
+		await writeFixture("AGENTS.md", body);
+		const path = join(root, "AGENTS.md");
+		expect(await layout.planBlocker(root, document, pending, [], [{ kind: "file-delete", path }])).toBeNull();
+		expect(await readFile(path, "utf8")).toBe(body);
+	});
+
+	test("uses the last ordered byte write as the root's effective UTF-8 content", async () => {
+		await writeFixture("AGENTS.md", "# old\n");
+		const path = join(root, "AGENTS.md");
+		const result = await layout.planBlocker(
+			root,
+			document,
+			pending,
+			[],
+			[
+				{ kind: "file-delete", path },
+				{ kind: "byte-write", path, content: new TextEncoder().encode(body) },
+			],
+		);
+		expect(result).toEqual({ path, content: expected(body) });
+	});
+
+	test("projection agrees with execution after ordered payload writes", async () => {
+		const path = join(root, "AGENTS.md");
+		await writeFixture("AGENTS.md", "# prior\n");
+		const bytes = new TextEncoder().encode("# bytes\r\n");
+		const projected = await layout.planBlocker(
+			root,
+			document,
+			pending,
+			[],
+			[
+				{ kind: "file-delete", path },
+				{ kind: "byte-write", path, content: bytes },
+				{ kind: "text-write", path, content: "# final\r\nline\r" },
+			],
+		);
+		expect(await readFile(path, "utf8")).toBe("# prior\n");
+		await removeFile(path);
+		await writeBytesFile(path, bytes);
+		await writeTextFile(path, "# final\r\nline\r");
+		await layout.syncBlocker(root, document, pending, []);
+		expect(projected).toEqual({ path, content: await readFile(path, "utf8") });
+	});
+
+	test("a byte-written file with a byte order mark projects what its own read produces", async () => {
+		const path = join(root, "AGENTS.md");
+		const bytes = new Uint8Array([0xef, 0xbb, 0xbf, ...new TextEncoder().encode("# bytes\n")]);
+		const projected = await layout.planBlocker(
+			root,
+			document,
+			pending,
+			[],
+			[{ kind: "byte-write", path, content: bytes }],
+		);
+		await writeBytesFile(path, bytes);
+		await layout.syncBlocker(root, document, pending, []);
+		// The projection keeps the byte order mark, exactly as the read that
+		// follows the write produces it.
+		expect(projected).toEqual({ path, content: await readFile(path, "utf8") });
+		expect(projected?.content.startsWith("﻿")).toBe(true);
 	});
 });

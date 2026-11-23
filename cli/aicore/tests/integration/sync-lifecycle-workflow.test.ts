@@ -14,6 +14,9 @@ import { dirname, join } from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 import { ApplyCoreRevision } from "#application/synchronization/apply-core-revision.ts";
+import { PlanSynchronizationDocument } from "#application/synchronization/plan-synchronization-document.ts";
+import { PlanUpdateChanges } from "#application/synchronization/plan-update-changes.ts";
+import { PrepareSynchronizationExecution } from "#application/synchronization/prepare-synchronization-execution.ts";
 import { CLEARANCE_FILENAME, RECONCILE_BEGIN, RECONCILE_END } from "#domain/synchronization/constants.ts";
 import { YamlBindingsStore } from "#infrastructure/synchronization/bindings-store.ts";
 import { JsonClearanceStore } from "#infrastructure/synchronization/clearance-store.ts";
@@ -169,13 +172,18 @@ describe("the managed-source lifecycle as one workflow", () => {
 	test("one apply retires the Core-owned destination, preserves the shared region destination and still delivers the unrelated change", async () => {
 		const layout = new LocalFilesystemLayout();
 		const bindings = new YamlBindingsStore();
+		const sources = new LocalSourceFiles();
+		const destinations = new LocalDestinationFiles();
+		const guard = new LocalWriteTargetGuard(layout);
 		const useCase = new ApplyCoreRevision({
 			bindings,
 			clearance: new JsonClearanceStore(),
-			sources: new LocalSourceFiles(),
-			destinations: new LocalDestinationFiles(),
+			destinations,
 			layout,
-			guard: new LocalWriteTargetGuard(layout),
+			guard,
+			determineDocument: new PlanSynchronizationDocument({ layout }),
+			planChanges: new PlanUpdateChanges({ sources, destinations, layout }),
+			prepareExecution: new PrepareSynchronizationExecution({ destinations, layout, guard }),
 		});
 
 		const outcome = await useCase.execute(

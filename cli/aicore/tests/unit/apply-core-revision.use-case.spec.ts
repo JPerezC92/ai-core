@@ -19,7 +19,13 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { mock, type MockProxy } from "vitest-mock-extended";
 
-import { ApplyCoreRevision } from "#application/synchronization/apply-core-revision.ts";
+import {
+	ApplyCoreRevision,
+	type ApplyCoreRevisionDependencies,
+} from "#application/synchronization/apply-core-revision.ts";
+import { PlanSynchronizationDocument } from "#application/synchronization/plan-synchronization-document.ts";
+import { PlanUpdateChanges } from "#application/synchronization/plan-update-changes.ts";
+import { PrepareSynchronizationExecution } from "#application/synchronization/prepare-synchronization-execution.ts";
 import type {
 	BindingsStore,
 	ClearanceStore,
@@ -61,7 +67,40 @@ function makeUpdate(overrides: Partial<UpdatePorts> = {}): UpdatePorts & { reado
 		layout: overrides.layout ?? mock<FilesystemLayout>(),
 		guard: overrides.guard ?? mock<WriteTargetGuard>(),
 	};
-	return { ...ports, useCase: new ApplyCoreRevision(ports) };
+	return { ...ports, useCase: makeUseCase(ports) };
+}
+
+/**
+ * The coordinator over one case's doubled ports.
+ *
+ * The coordinator's own collaborators are the four application operations, so
+ * the cases keep observing the assembled update behavior over doubled ports;
+ * each operation's own rules have their own focused spec.
+ */
+function makeUseCase(ports: UpdatePorts): ApplyCoreRevision {
+	return new ApplyCoreRevision(makeDependencies(ports));
+}
+
+/** The coordinator's dependency object: doubled ports and the real operations. */
+function makeDependencies(ports: UpdatePorts): ApplyCoreRevisionDependencies {
+	return {
+		bindings: ports.bindings,
+		clearance: ports.clearance,
+		destinations: ports.destinations,
+		layout: ports.layout,
+		guard: ports.guard,
+		determineDocument: new PlanSynchronizationDocument({ layout: ports.layout }),
+		planChanges: new PlanUpdateChanges({
+			sources: ports.sources,
+			destinations: ports.destinations,
+			layout: ports.layout,
+		}),
+		prepareExecution: new PrepareSynchronizationExecution({
+			destinations: ports.destinations,
+			layout: ports.layout,
+			guard: ports.guard,
+		}),
+	};
 }
 
 describe("enrolled-editor refusal", () => {
@@ -179,8 +218,8 @@ function makeWritableUpdate(options: WritableUpdateOptions = {}) {
 	const destinations = mock<DestinationFiles>();
 	destinations.readText.mockImplementation(async (path) => (path === GITIGNORE_PATH ? gitignore : null));
 
-	const useCase = new ApplyCoreRevision({ bindings, clearance, sources, destinations, layout, guard });
-	return { useCase, bindings, destinations, layout };
+	const useCase = makeUseCase({ bindings, clearance, sources, destinations, layout, guard });
+	return { useCase, bindings, destinations, layout, guard };
 }
 
 /** Every byte payload written to one destination path. */
@@ -198,6 +237,38 @@ describe("source retirement", () => {
 		vi.clearAllMocks();
 	});
 
+	test("a preflight refusal prevents deletion of a retired raw destination", async () => {
+		const source = ".agents/skills/x/a.ts";
+		const bindings = mock<BindingsStore>();
+		bindings.load.mockResolvedValue(
+			makeBindingsDocument({ bindings: [{ source, destinations: [source], declaredMode: "raw" }] }),
+		);
+		const clearance = mock<ClearanceStore>();
+		clearance.load.mockResolvedValue(makeClearanceLoad({ [source]: { mode: "raw" } }));
+		const layout = mock<FilesystemLayout>();
+		layout.join.mockImplementation((root, relative) => `${root}/${relative}`);
+		layout.exists.mockResolvedValue(true);
+		layout.isFile.mockImplementation(async (path) => path.startsWith(`${SYNCHRONIZATION_DESTINATION_ROOT}/`));
+		const guard = mock<WriteTargetGuard>();
+		guard.refuse.mockResolvedValueOnce(null).mockResolvedValueOnce({ code: "invalid", message: "unsafe deletion" });
+		const destinations = mock<DestinationFiles>();
+		destinations.readText.mockResolvedValue(null);
+		const useCase = makeUseCase({
+			bindings,
+			clearance,
+			sources: mock<SourceFiles>(),
+			destinations,
+			layout,
+			guard,
+		});
+
+		const outcome = await useCase.execute(makeSynchronizationRequest());
+
+		expect(outcome.ok).toBe(false);
+		expect(destinations.remove).not.toHaveBeenCalled();
+		expect(bindings.save).not.toHaveBeenCalled();
+	});
+
 	test("a fully Core-owned source that no longer exists retires its destination and its binding", async () => {
 		const source = ".agents/skills/x/a.ts";
 		const bindings = mock<BindingsStore>();
@@ -205,6 +276,13 @@ describe("source retirement", () => {
 			makeBindingsDocument({ bindings: [{ source, destinations: [source], declaredMode: "raw" }] }),
 		);
 		const clearance = mock<ClearanceStore>();
+		// The registry record is a directory root, not the file itself: a root
+		// covers the files under it, so this record clears `.agents/skills/x/a.ts`.
+		// The observable is the same retirement the exact-entry case "a cleared
+		// source the tree no longer holds is retired instead of failing the run"
+		// observes; what differs is the granularity of the record that cleared the
+		// source — a root covers a tree, an exact entry names one file — and the
+		// retirement rule must hold for either granularity.
 		clearance.load.mockResolvedValue(makeClearanceLoad({ ".agents/skills/x/": { mode: "raw" } }));
 		const layout = mock<FilesystemLayout>();
 		layout.join.mockImplementation((root, relative) => `${root}/${relative}`);
@@ -215,7 +293,7 @@ describe("source retirement", () => {
 		destinations.readText.mockResolvedValue(null);
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({
+		const useCase = makeUseCase({
 			bindings,
 			clearance,
 			sources: mock<SourceFiles>(),
@@ -261,7 +339,7 @@ describe("source retirement", () => {
 		destinations.readText.mockResolvedValue(null);
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({
+		const useCase = makeUseCase({
 			bindings,
 			clearance,
 			sources: mock<SourceFiles>(),
@@ -284,6 +362,8 @@ describe("source retirement", () => {
 		// The registry still declares the file, so clearance alone would call it
 		// distributable; distributability requires physical presence too, so the
 		// ownership rule retires it and unrelated safe updates still complete.
+		// The registry names the file itself, the exact-entry granularity the
+		// directory-root case above does not use.
 		const source = ".agents/skills/x/a.ts";
 		const bindings = mock<BindingsStore>();
 		bindings.load.mockResolvedValue(
@@ -300,7 +380,7 @@ describe("source retirement", () => {
 		destinations.readText.mockResolvedValue(null);
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({
+		const useCase = makeUseCase({
 			bindings,
 			clearance,
 			sources: mock<SourceFiles>(),
@@ -341,7 +421,7 @@ describe("source retirement", () => {
 		destinations.readText.mockResolvedValue(null);
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({
+		const useCase = makeUseCase({
 			bindings,
 			clearance,
 			sources: mock<SourceFiles>(),
@@ -380,7 +460,7 @@ describe("source preservation", () => {
 		destinations.readText.mockResolvedValue(null);
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({
+		const useCase = makeUseCase({
 			bindings,
 			clearance,
 			sources: mock<SourceFiles>(),
@@ -422,7 +502,7 @@ describe("source preservation", () => {
 		destinations.readText.mockResolvedValue(null);
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({
+		const useCase = makeUseCase({
 			bindings,
 			clearance,
 			sources: mock<SourceFiles>(),
@@ -468,7 +548,7 @@ describe("merge-managed source preservation", () => {
 		destinations.readText.mockResolvedValue(null);
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({
+		const useCase = makeUseCase({
 			bindings,
 			clearance,
 			sources: mock<SourceFiles>(),
@@ -534,7 +614,7 @@ describe("destination ownership", () => {
 		);
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({ bindings, clearance, sources, destinations, layout, guard });
+		const useCase = makeUseCase({ bindings, clearance, sources, destinations, layout, guard });
 
 		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
 
@@ -583,7 +663,7 @@ describe("destination ownership", () => {
 		);
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({ bindings, clearance, sources, destinations, layout, guard });
+		const useCase = makeUseCase({ bindings, clearance, sources, destinations, layout, guard });
 
 		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
 
@@ -627,7 +707,7 @@ describe("destination ownership", () => {
 		const destinations = mock<DestinationFiles>();
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({ bindings, clearance, sources, destinations, layout, guard });
+		const useCase = makeUseCase({ bindings, clearance, sources, destinations, layout, guard });
 
 		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
 
@@ -671,7 +751,7 @@ describe("destination ownership", () => {
 		destinations.readText.mockResolvedValue(null);
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({ bindings, clearance, sources, destinations, layout, guard });
+		const useCase = makeUseCase({ bindings, clearance, sources, destinations, layout, guard });
 
 		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
 
@@ -706,7 +786,7 @@ describe("destination ownership", () => {
 		const destinations = mock<DestinationFiles>();
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({ bindings, clearance, sources, destinations, layout, guard });
+		const useCase = makeUseCase({ bindings, clearance, sources, destinations, layout, guard });
 
 		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
 
@@ -744,7 +824,7 @@ describe("newly cleared sources", () => {
 		const destinations = mock<DestinationFiles>();
 		const guard = mock<WriteTargetGuard>();
 		guard.refuse.mockResolvedValue(null);
-		const useCase = new ApplyCoreRevision({ bindings, clearance, sources, destinations, layout, guard });
+		const useCase = makeUseCase({ bindings, clearance, sources, destinations, layout, guard });
 
 		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
 
@@ -757,6 +837,23 @@ describe("newly cleared sources", () => {
 describe("OpenCode secret material", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+	});
+
+	test("a final preflight refusal stops all writes before secret setup", async () => {
+		const { useCase, bindings, destinations, layout, guard } = makeWritableUpdate();
+		guard.refuse.mockResolvedValueOnce(null).mockResolvedValueOnce({
+			code: "invalid",
+			message: "invalid write target: unsafe secret mutation",
+		});
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(false);
+		expect(destinations.writeBytes).not.toHaveBeenCalled();
+		expect(destinations.writeText).not.toHaveBeenCalled();
+		expect(destinations.remove).not.toHaveBeenCalled();
+		expect(layout.ensureDirectory).not.toHaveBeenCalled();
+		expect(bindings.save).not.toHaveBeenCalled();
 	});
 
 	test("an OpenCode run creates the secret directory, an empty credential file and the ignore rule", async () => {
@@ -781,6 +878,8 @@ describe("OpenCode secret material", () => {
 
 		expect(outcome.ok).toBe(true);
 		expect(writtenTo(destinations, SECRET_PATH)).toEqual([]);
+		expect(destinations.readText).not.toHaveBeenCalledWith(SECRET_PATH);
+		expect(destinations.readBytes).not.toHaveBeenCalledWith(SECRET_PATH);
 	});
 
 	test("a cursor run writes no secret material at all", async () => {
@@ -794,11 +893,41 @@ describe("OpenCode secret material", () => {
 		expect(writtenTo(destinations, SECRET_PATH)).toEqual([]);
 		expect(writtenTo(destinations, GITIGNORE_PATH)).toEqual([]);
 	});
+
+	test("a destination that gets no secret setup never reads the ignore file", async () => {
+		const cursor = makeWritableUpdate({ editor: "cursor" });
+
+		await cursor.useCase.execute(makeSynchronizationRequest({ editor: "cursor" }));
+
+		expect(cursor.destinations.readText).not.toHaveBeenCalledWith(GITIGNORE_PATH);
+
+		// A destination without the OpenCode configuration has no secret setup
+		// either, so its ignore file is not read either.
+		const withoutConfiguration = makeWritableUpdate({ existing: [] });
+
+		await withoutConfiguration.useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(withoutConfiguration.destinations.readText).not.toHaveBeenCalledWith(GITIGNORE_PATH);
+	});
 });
 
 describe("the destination's ignore rule", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+	});
+
+	test("a rejected ignore-file path is not read during planning", async () => {
+		const { useCase, destinations, bindings, guard } = makeWritableUpdate();
+		guard.refuse
+			.mockResolvedValueOnce(null)
+			.mockResolvedValueOnce({ code: "invalid", message: "unsafe ignore path" });
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(false);
+		expect(destinations.readText).not.toHaveBeenCalledWith(GITIGNORE_PATH);
+		expect(destinations.writeBytes).not.toHaveBeenCalled();
+		expect(bindings.save).not.toHaveBeenCalled();
 	});
 
 	test("an effective .secrets/ rule among other rules is left alone", async () => {
@@ -850,6 +979,18 @@ describe("raw mode", () => {
 		expect(outcome.ok && outcome.message).toContain(`created: ${BOUND_SOURCE}`);
 		// A raw destination is the source's bytes exactly: it carries no region.
 		expect(writtenTo(destinations, PAYLOAD_PATH)).toEqual([PAYLOAD]);
+	});
+
+	test("an existing raw target is written again, even when it holds the source's bytes", async () => {
+		const { useCase, destinations } = makeWritableUpdate({ existing: [CONFIGURATION_PATH, PAYLOAD_PATH] });
+
+		const outcome = await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		expect(outcome.ok).toBe(true);
+		// The run never reads a raw destination, so the write is queued whatever
+		// the destination already holds. The write itself is this coordinator's
+		// observable; the bytes are the planner's own contract, asserted there.
+		expect(writtenTo(destinations, PAYLOAD_PATH)).toHaveLength(1);
 	});
 
 	test("a pending path whose source is raw-bound leaves pending instead of being reconciled", async () => {
@@ -940,8 +1081,8 @@ function makeBindingUpdate(options: BindingUpdateOptions) {
 	const destinations = mock<DestinationFiles>();
 	destinations.readText.mockResolvedValue(options.destinationText ?? null);
 
-	const useCase = new ApplyCoreRevision({ bindings, clearance, sources, destinations, layout, guard });
-	return { useCase, bindings, destinations, layout, destinationPath };
+	const useCase = makeUseCase({ bindings, clearance, sources, destinations, layout, guard });
+	return { useCase, bindings, destinations, layout, guard, destinationPath };
 }
 
 /** One text write's content, as it was handed to the destination port. */
@@ -980,6 +1121,23 @@ describe("merge mode", () => {
 		vi.clearAllMocks();
 	});
 
+	test("a destination the run reads is cleared as the payload's own read", async () => {
+		const destinationPath = `${SYNCHRONIZATION_DESTINATION_ROOT}/${MERGE_SOURCE}`;
+		const { useCase, guard } = makeBindingUpdate({
+			mode: "merge",
+			existing: [destinationPath],
+			sourceText: "{}",
+			destinationText: "{}",
+		});
+
+		await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
+
+		const payloadRead = guard.refuse.mock.calls
+			.flatMap(([request]) => request.readPaths ?? [])
+			.find((read) => read.path === destinationPath);
+		expect(payloadRead).toEqual({ path: destinationPath, owner: "payload" });
+	});
+
 	test("a merge destination that is absent is drift, and nothing is created or written", async () => {
 		const { useCase, destinations, layout } = makeBindingUpdate({
 			mode: "merge",
@@ -992,8 +1150,8 @@ describe("merge mode", () => {
 		expect(outcome.ok).toBe(false);
 		const failure = outcome.ok ? null : outcome.failure;
 		expect(failure?.code).toBe("drift");
-		expect(failure?.message).toContain("(merge mode cannot create it; the destination must exist)");
-		// Only a first enrollment may create a merge target.
+		// Only a first enrollment may create a merge target; the exact diagnostic
+		// text is the planner's own contract, asserted there.
 		expect(destinations.writeText).not.toHaveBeenCalled();
 		expect(layout.ensureDirectory).not.toHaveBeenCalled();
 	});
