@@ -5,51 +5,38 @@
  * bytes differ, a markerless region destination is initialized and recorded for
  * reconciliation, an unchanged region destination is not refreshed, and a merge
  * destination is created only when this run newly bound it. The ports are
- * doubled (contract T2, T3, T15).
+ * doubled and the clearance expansion comes from the shared factory through the
+ * real reader (contract T2, T3, T15).
  */
 
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { mock, type MockProxy } from "vitest-mock-extended";
 
-import type { ClearanceModes } from "#application/synchronization/clearance-modes.ts";
+import { readClearanceModes, type ClearanceModes } from "#application/synchronization/clearance-modes.ts";
 import {
 	PlanEnrollmentChanges,
 	type EnrollmentChangeRequest,
 } from "#application/synchronization/plan-enrollment-changes.ts";
-import { ACTION_INITIALIZED, type BindingMode } from "#domain/synchronization/constants.ts";
-import { parseClearanceDocument, type ClearanceEntry } from "#domain/synchronization/clearance.ts";
+import { ACTION_INITIALIZED } from "#domain/synchronization/constants.ts";
 import type { BindingsDocument } from "#domain/synchronization/bindings.ts";
-import type { DestinationFiles, FilesystemLayout, SourceFiles } from "#domain/synchronization/ports.ts";
+import type { ClearanceStore, DestinationFiles, FilesystemLayout, SourceFiles } from "#domain/synchronization/ports.ts";
 import {
 	BOUND_SOURCE,
+	SOURCE_ROOT,
 	SYNCHRONIZATION_DESTINATION_ROOT,
 	makeBindingsDocument,
-	makeClearanceText,
+	makeClearanceLoad,
 	makeSynchronizationRequest,
 } from "#support/synchronization.factory.ts";
 
-/** The expanded clearance one run acts on, from the factory's registry text. */
-function makeClearance(cleared: Readonly<Record<string, Readonly<Record<string, unknown>>>>): ClearanceModes {
-	const parsed = parseClearanceDocument(JSON.parse(makeClearanceText(cleared)));
-	if (!parsed.ok) {
-		throw new Error(`factory clearance text is unreadable: ${parsed.reason}`);
-	}
-	const modes = new Map<string, BindingMode>();
-	const destinations = new Map<string, string>();
-	for (const [key, entry] of parsed.entries) {
-		if (entry.kind !== "file") {
-			continue;
-		}
-		modes.set(key, entry.mode);
-		destinations.set(key, key);
-	}
-	return {
-		modes,
-		destinations,
-		entries: parsed.entries as ReadonlyMap<string, ClearanceEntry>,
-		exists: true,
-		reason: null,
-	};
+/** The expanded clearance one run acts on, read from the factory's registry. */
+async function makeClearance(
+	cleared: Readonly<Record<string, Readonly<Record<string, unknown>>>>,
+	layout: MockProxy<FilesystemLayout>,
+): Promise<ClearanceModes> {
+	const clearance = mock<ClearanceStore>();
+	clearance.load.mockResolvedValue(makeClearanceLoad(cleared));
+	return readClearanceModes(clearance, layout, SOURCE_ROOT, "opencode");
 }
 
 /** An enrollment-plan request over one document and clearance. */
@@ -91,13 +78,13 @@ describe("raw mode", () => {
 	});
 
 	test("a raw destination that already holds the source's bytes is not written again", async () => {
-		const { planner, sources, destinations } = makePlanner();
+		const { planner, sources, destinations, layout } = makePlanner();
 		const payload = new TextEncoder().encode("payload\n");
 		sources.readBytes.mockResolvedValue(payload);
 		destinations.readBytes.mockResolvedValue(payload);
 
 		const outcome = await planner.execute(
-			makeRequest(makeBindingsDocument(), makeClearance({ [BOUND_SOURCE]: { mode: "raw" } })),
+			makeRequest(makeBindingsDocument(), await makeClearance({ [BOUND_SOURCE]: { mode: "raw" } }, layout)),
 		);
 
 		expect(outcome.ok).toBe(true);
@@ -106,12 +93,12 @@ describe("raw mode", () => {
 	});
 
 	test("a raw destination whose bytes differ is rewritten without a report entry", async () => {
-		const { planner, sources, destinations } = makePlanner();
+		const { planner, sources, destinations, layout } = makePlanner();
 		sources.readBytes.mockResolvedValue(new TextEncoder().encode("payload\n"));
 		destinations.readBytes.mockResolvedValue(new TextEncoder().encode("stale\n"));
 
 		const outcome = await planner.execute(
-			makeRequest(makeBindingsDocument(), makeClearance({ [BOUND_SOURCE]: { mode: "raw" } })),
+			makeRequest(makeBindingsDocument(), await makeClearance({ [BOUND_SOURCE]: { mode: "raw" } }, layout)),
 		);
 
 		expect(outcome.ok).toBe(true);
@@ -127,14 +114,14 @@ describe("region mode", () => {
 	});
 
 	test("a markerless destination is initialized and recorded for reconciliation", async () => {
-		const { planner, sources, destinations } = makePlanner();
+		const { planner, sources, destinations, layout } = makePlanner();
 		sources.readCore.mockResolvedValue({ kind: "core", core: "core body\n" });
 		sources.readText.mockResolvedValue("");
 		destinations.readText.mockResolvedValue("this project's prior body\n");
 		const document = makeBindingsDocument({ pending: [BOUND_SOURCE] });
 
 		const outcome = await planner.execute(
-			makeRequest(document, makeClearance({ [BOUND_SOURCE]: { mode: "region" } })),
+			makeRequest(document, await makeClearance({ [BOUND_SOURCE]: { mode: "region" } }, layout)),
 		);
 
 		expect(outcome.ok).toBe(true);
@@ -147,7 +134,7 @@ describe("region mode", () => {
 	});
 
 	test("an unchanged region destination is not refreshed", async () => {
-		const { planner, sources, destinations } = makePlanner();
+		const { planner, sources, destinations, layout } = makePlanner();
 		sources.readCore.mockResolvedValue({ kind: "core", core: "core body\n" });
 		sources.readText.mockResolvedValue("");
 		destinations.readText.mockResolvedValue(
@@ -155,7 +142,7 @@ describe("region mode", () => {
 		);
 
 		const outcome = await planner.execute(
-			makeRequest(makeBindingsDocument(), makeClearance({ [BOUND_SOURCE]: { mode: "region" } })),
+			makeRequest(makeBindingsDocument(), await makeClearance({ [BOUND_SOURCE]: { mode: "region" } }, layout)),
 		);
 
 		expect(outcome.ok).toBe(true);
@@ -178,7 +165,7 @@ describe("merge mode", () => {
 		const outcome = await planner.execute(
 			makeRequest(
 				makeBindingsDocument(),
-				makeClearance({ [BOUND_SOURCE]: { mode: "merge" } }),
+				await makeClearance({ [BOUND_SOURCE]: { mode: "merge" } }, layout),
 				new Set([BOUND_SOURCE]),
 			),
 		);
@@ -196,7 +183,7 @@ describe("merge mode", () => {
 		layout.exists.mockResolvedValue(false);
 
 		const outcome = await planner.execute(
-			makeRequest(makeBindingsDocument(), makeClearance({ [BOUND_SOURCE]: { mode: "merge" } })),
+			makeRequest(makeBindingsDocument(), await makeClearance({ [BOUND_SOURCE]: { mode: "merge" } }, layout)),
 		);
 
 		expect(outcome.ok).toBe(false);

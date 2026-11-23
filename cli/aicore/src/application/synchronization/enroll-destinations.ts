@@ -50,7 +50,6 @@ import type {
 	ClearanceStore,
 	DestinationFiles,
 	FilesystemLayout,
-	PlannedRead,
 	WriteTargetGuard,
 } from "#domain/synchronization/ports.ts";
 
@@ -58,7 +57,7 @@ import { invalidClearance, readClearanceModes } from "./clearance-modes.ts";
 import { PlanSynchronizationDocument } from "./plan-synchronization-document.ts";
 import { ensureOpenCodeSecrets } from "./open-code-secrets.ts";
 import { PlanEnrollmentChanges } from "./plan-enrollment-changes.ts";
-import { PrepareSynchronizationExecution } from "./prepare-synchronization-execution.ts";
+import { destinationReadPaths, PrepareSynchronizationExecution } from "./prepare-synchronization-execution.ts";
 import type { EnrollmentRequest } from "./requests.ts";
 
 /** Collaborators enrollment needs. */
@@ -267,11 +266,9 @@ export class EnrollDestinations {
 			await layout.ensureDirectory(layout.parent(write.path));
 			await destinations.writeBytes(write.path, write.content);
 		}
-		for (const retired of determined.retired) {
-			for (const destination of retired.destinations) {
-				await destinations.remove(layout.join(request.destinationRoot, destination));
-				notes.push(`retired: ${destination}`);
-			}
+		for (const deletion of plan.deletions) {
+			await destinations.remove(deletion.path);
+			notes.push(`retired: ${deletion.destination}`);
 		}
 		await ensureOpenCodeSecrets(editor, request.destinationRoot, {
 			destinations,
@@ -292,26 +289,4 @@ export class EnrollDestinations {
 
 		return succeeded(["initialized", ...notes].join("; "));
 	}
-}
-
-/**
- * The destination paths whose contents this run reads before it writes.
- *
- * Every bound destination is cleared, whatever its mode and whatever it is on
- * disk: a destination that is a directory is an unsafe write target, not a
- * missing file, and the read preflight is where that class is refused. Each
- * read carries the owner of the path it reads.
- */
-async function destinationReadPaths(
-	document: BindingsDocument,
-	destinationRoot: string,
-	layout: FilesystemLayout,
-): Promise<readonly PlannedRead[]> {
-	const paths: PlannedRead[] = [];
-	for (const entry of document.bindings) {
-		for (const destination of entry.destinations) {
-			paths.push({ path: layout.join(destinationRoot, destination), owner: "payload" });
-		}
-	}
-	return paths;
 }

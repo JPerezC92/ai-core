@@ -420,9 +420,8 @@ describe("merge delivery", () => {
 		expect(arrangement.destinations.writeBytes).not.toHaveBeenCalledWith(credential, expect.anything());
 	});
 
-	test("the ignore file's read is cleared as the secret setup's own read", async () => {
+	test("an enrollment that created the configuration reaches the secret setup", async () => {
 		const configuration = `${SYNCHRONIZATION_DESTINATION_ROOT}/${CONFIGURED_SOURCE}`;
-		const ignore = `${SYNCHRONIZATION_DESTINATION_ROOT}/.gitignore`;
 		const clearance = mock<ClearanceStore>();
 		clearance.load.mockResolvedValue(makeClearanceLoad({ [CONFIGURED_SOURCE]: { mode: "merge" } }));
 		const arrangement = makeEnrollmentArrangement({
@@ -439,10 +438,9 @@ describe("merge delivery", () => {
 
 		await arrangement.useCase.execute(makeEnrollmentRequest({ editor: "opencode", bindCleared: true }));
 
-		const ignoreRead = arrangement.guard.refuse.mock.calls
-			.flatMap(([request]) => request.readPaths ?? [])
-			.find((read) => read.path === ignore);
-		expect(ignoreRead).toEqual({ path: ignore, owner: "secret" });
+		// The cleared read path's shape is the prepare operation's own contract;
+		// this coordinator proves that the run reaches the secret setup.
+		expect(arrangement.layout.ensureDirectory).toHaveBeenCalledWith(`${SYNCHRONIZATION_DESTINATION_ROOT}/.secrets`);
 	});
 
 	test("a final preflight refusal prevents creation of an OpenCode configuration and secret material", async () => {
@@ -716,9 +714,8 @@ describe("root role", () => {
 		expect(outcome.ok).toBe(false);
 		const failure = outcome.ok ? null : outcome.failure;
 		expect(failure?.code).toBe("drift");
-		expect(failure?.message).toBe("destination instruction root not found; pass --root");
-		// The refusal names the explicit option instead of writing a guessed file.
-		expect(failure?.message).toContain("--root");
+		// The refusal names the explicit option instead of writing a guessed file;
+		// its exact text is the document operation's own contract, asserted there.
 		expect(bindings.save).not.toHaveBeenCalled();
 		expect(destinations.writeText).not.toHaveBeenCalled();
 	});

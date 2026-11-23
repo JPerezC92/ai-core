@@ -1,11 +1,12 @@
 /**
- * Unit: the execution preparation — what a run writes beyond its payload.
+ * Unit: the execution preparation — validation only, no write.
  *
  * One behavioral concern per group: the secret setup's ignore read is cleared
- * before it is read, the complete mutation envelope carries each path's owner,
- * the root blocker is projected as its own write, and the reconciliation report
- * is included only when the run writes one. The ports are doubled (contract
- * T2, T3, T15).
+ * only when it will be read, an unsafe mutation refuses the run before anything
+ * is written, the root blocker is projected as its own write, and the
+ * reconciliation report is included only when the run writes one. The operation
+ * returns a success or a refusal; the mutation set and each path's owner are
+ * observed through the guard it validates them with (contract T2, T3, T15).
  */
 
 import { beforeEach, describe, expect, test, vi } from "vitest";
@@ -17,7 +18,13 @@ import {
 	type SynchronizationPayloadPlan,
 } from "#application/synchronization/prepare-synchronization-execution.ts";
 import type { BindingsDocument } from "#domain/synchronization/bindings.ts";
-import type { DestinationFiles, FilesystemLayout, WriteTargetGuard } from "#domain/synchronization/ports.ts";
+import type {
+	DestinationFiles,
+	FilesystemLayout,
+	PlannedMutation,
+	WriteTargetGuard,
+	WriteTargetRequest,
+} from "#domain/synchronization/ports.ts";
 import {
 	SYNCHRONIZATION_BINDINGS_PATH,
 	SYNCHRONIZATION_DESTINATION_ROOT,
@@ -39,6 +46,11 @@ function makeConfigurationPlan(): SynchronizationPayloadPlan {
 		deletions: [],
 		payload: [{ kind: "text-write", path: CONFIGURATION_PATH, content: "{}\n" }],
 	};
+}
+
+/** A payload plan with no effects at all. */
+function makeEmptyPlan(): SynchronizationPayloadPlan {
+	return { textWrites: [], byteWrites: [], deletions: [], payload: [] };
 }
 
 /** The preparation input over one document and payload plan. */
@@ -89,23 +101,43 @@ function makePreparation(options: Partial<PreparationPorts> = {}): PreparationPo
 	return { ...ports, preparation: new PrepareSynchronizationExecution(ports) };
 }
 
+/** The guard request of one phase, as the operation validated it. */
+function guardRequest(guard: MockProxy<WriteTargetGuard>, phase: "read" | "mutations"): WriteTargetRequest | undefined {
+	return guard.refuse.mock.calls.find(([request]) => request.phase === phase)?.[0];
+}
+
+/** The paths and owners of one validated mutation set. */
+function mutationOwners(guard: MockProxy<WriteTargetGuard>): readonly PlannedMutation[] {
+	return guardRequest(guard, "mutations")?.mutations ?? [];
+}
+
 describe("secret preparation", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
-	test("the ignore read is cleared before the secret planner reads it", async () => {
-		const { preparation, layout } = makePreparation();
+	test("the ignore read is cleared only when the secret setup will read it", async () => {
+		const withConfiguration = makePreparation();
 
-		const outcome = await preparation.execute(makeInput(makeConfigurationPlan()));
+		const prepared = await withConfiguration.preparation.execute(makeInput(makeConfigurationPlan()));
 
-		expect(outcome.ok).toBe(true);
-		const value = outcome.ok ? outcome.value : null;
-		expect(value?.clearedReadPaths).toEqual([{ path: GITIGNORE_PATH, owner: "secret" }]);
-		// The ignore rule, the directory and the absent credential are all planned.
-		const secrets = value?.secretMutations.map((mutation) => mutation.path) ?? [];
-		expect(secrets).toEqual([GITIGNORE_PATH, SECRETS_DIRECTORY, SECRET_PATH]);
-		expect(layout.ensureDirectory).not.toHaveBeenCalled();
+		expect(prepared.ok).toBe(true);
+		expect(guardRequest(withConfiguration.guard, "read")?.readPaths).toEqual([
+			{ path: GITIGNORE_PATH, owner: "secret" },
+		]);
+		// The ignore rule, the directory and the absent credential are all validated.
+		expect(mutationOwners(withConfiguration.guard).map((mutation) => mutation.path)).toEqual([
+			CONFIGURATION_PATH,
+			SYNCHRONIZATION_BINDINGS_PATH,
+			GITIGNORE_PATH,
+			SECRETS_DIRECTORY,
+			SECRET_PATH,
+		]);
+
+		// A destination with no OpenCode configuration reads no ignore file.
+		const withoutConfiguration = makePreparation();
+		await withoutConfiguration.preparation.execute(makeInput(makeEmptyPlan()));
+		expect(guardRequest(withoutConfiguration.guard, "read")).toBeUndefined();
 	});
 });
 
@@ -114,28 +146,27 @@ describe("mutation envelope", () => {
 		vi.clearAllMocks();
 	});
 
-	test("an unsafe mutation stops the run before the mutation phase", async () => {
-		const { preparation, guard } = makePreparation();
+	test("an unsafe mutation stops the run before anything is written", async () => {
+		const { preparation, destinations, layout, guard } = makePreparation();
 		guard.refuse.mockResolvedValueOnce({ code: "invalid", message: "unsafe write target" });
 
 		const outcome = await preparation.execute(makeInput(makeConfigurationPlan()));
 
 		expect(outcome.ok).toBe(false);
-		expect(guard.refuse).toHaveBeenCalledTimes(1);
+		expect(destinations.writeText).not.toHaveBeenCalled();
+		expect(destinations.writeBytes).not.toHaveBeenCalled();
+		expect(destinations.remove).not.toHaveBeenCalled();
+		expect(layout.ensureDirectory).not.toHaveBeenCalled();
 	});
 
-	test("the root blocker is projected as its own write", async () => {
-		const { preparation, layout } = makePreparation();
+	test("the root blocker is projected as its own validated write", async () => {
+		const { preparation, layout, guard } = makePreparation();
 		layout.planBlocker.mockResolvedValue({ path: ROOT_PATH, content: "blocker\n" });
 
-		const outcome = await preparation.execute(
-			makeInput({ textWrites: [], byteWrites: [], deletions: [], payload: [] }),
-		);
+		const outcome = await preparation.execute(makeInput(makeEmptyPlan()));
 
 		expect(outcome.ok).toBe(true);
-		const value = outcome.ok ? outcome.value : null;
-		expect(value?.blocker).toEqual({ path: ROOT_PATH, content: "blocker\n" });
-		expect(value?.mutations).toContainEqual({ path: ROOT_PATH, kind: "file-write", owner: "root" });
+		expect(mutationOwners(guard)).toContainEqual({ path: ROOT_PATH, kind: "file-write", owner: "root" });
 	});
 });
 
@@ -144,24 +175,21 @@ describe("reconciliation report", () => {
 		vi.clearAllMocks();
 	});
 
-	test("a run that writes a report includes its path; one that does not omits it", async () => {
+	test("a run that writes a report validates its path; one that does not omits it", async () => {
 		const withReport = makePreparation();
 		const reported = await withReport.preparation.execute(
-			makeInput(
-				{ textWrites: [], byteWrites: [], deletions: [], payload: [] },
-				{ writesReconciliationReport: true },
-			),
+			makeInput(makeEmptyPlan(), { writesReconciliationReport: true }),
 		);
-		expect(reported.ok && reported.value.mutations).toContainEqual({
+		expect(reported.ok).toBe(true);
+		expect(mutationOwners(withReport.guard)).toContainEqual({
 			path: REPORT_PATH,
 			kind: "file-write",
 			owner: "report",
 		});
 
 		const withoutReport = makePreparation();
-		const plain = await withoutReport.preparation.execute(
-			makeInput({ textWrites: [], byteWrites: [], deletions: [], payload: [] }),
-		);
-		expect(plain.ok && plain.value.mutations.map((mutation) => mutation.owner)).toEqual(["bindings"]);
+		const plain = await withoutReport.preparation.execute(makeInput(makeEmptyPlan()));
+		expect(plain.ok).toBe(true);
+		expect(mutationOwners(withoutReport.guard).map((mutation) => mutation.owner)).toEqual(["bindings"]);
 	});
 });

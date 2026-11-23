@@ -36,24 +36,18 @@ import type { ClearanceModes } from "./clearance-modes.ts";
 import { projectName } from "./project-name.ts";
 import type { SynchronizationRequest } from "./requests.ts";
 
-/** One pending text write. */
-export type PlannedTextWrite = {
+/** One managed deletion: its absolute path, and the destination it was bound to. */
+type PlannedDeletion = {
 	readonly path: string;
-	readonly content: string;
-};
-
-/** One pending byte write. */
-export type PlannedByteWrite = {
-	readonly path: string;
-	readonly content: Uint8Array;
+	readonly destination: string;
 };
 
 /** What one enrollment writes, and the state it leaves behind. */
 export type EnrollmentChangePlan = {
-	readonly textWrites: readonly PlannedTextWrite[];
-	readonly byteWrites: readonly PlannedByteWrite[];
-	/** The absolute paths whose managed files this run removes. */
-	readonly deletions: readonly string[];
+	readonly textWrites: readonly { readonly path: string; readonly content: string }[];
+	readonly byteWrites: readonly { readonly path: string; readonly content: Uint8Array }[];
+	/** The managed deletions this run performs. */
+	readonly deletions: readonly PlannedDeletion[];
 	/** The reconciliation report entries this run records. */
 	readonly reportEntries: readonly ReconciliationEntry[];
 	readonly notes: readonly string[];
@@ -97,8 +91,8 @@ export class PlanEnrollmentChanges {
 		const { sources, destinations, layout } = this.#dependencies;
 		const { document, request, clearance, distributable, retired, newMergeDestinations } = input;
 
-		const textWrites: PlannedTextWrite[] = [];
-		const byteWrites: PlannedByteWrite[] = [];
+		const textWrites: { path: string; content: string }[] = [];
+		const byteWrites: { path: string; content: Uint8Array }[] = [];
 		const reportEntries: ReconciliationEntry[] = [];
 		const notes: string[] = [];
 		let pending = normalizePending(document.pending, nonRegionDestinations(document, clearance.modes));
@@ -235,10 +229,10 @@ export class PlanEnrollmentChanges {
 			}
 		}
 
-		const deletions: string[] = [];
+		const deletions: PlannedDeletion[] = [];
 		for (const entry of retired) {
 			for (const destination of entry.destinations) {
-				deletions.push(layout.join(request.destinationRoot, destination));
+				deletions.push({ path: layout.join(request.destinationRoot, destination), destination });
 			}
 		}
 
@@ -247,7 +241,7 @@ export class PlanEnrollmentChanges {
 		const payload: PlannedPayload[] = [
 			...textWrites.map((write) => ({ kind: "text-write" as const, path: write.path, content: write.content })),
 			...byteWrites.map((write) => ({ kind: "byte-write" as const, path: write.path, content: write.content })),
-			...deletions.map((path) => ({ kind: "file-delete" as const, path })),
+			...deletions.map((deletion) => ({ kind: "file-delete" as const, path: deletion.path })),
 		];
 
 		return {

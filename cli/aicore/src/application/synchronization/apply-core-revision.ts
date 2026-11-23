@@ -35,13 +35,11 @@ import {
 import { drift, failed, invalid, succeeded, type OperationOutcome } from "#domain/synchronization/failures.ts";
 import { editorMismatch, effectiveEditor } from "#domain/synchronization/editor-profile.ts";
 import { missingRegionSources } from "#domain/synchronization/reconciliation.ts";
-import type { BindingsDocument } from "#domain/synchronization/bindings.ts";
 import type {
 	BindingsStore,
 	ClearanceStore,
 	DestinationFiles,
 	FilesystemLayout,
-	PlannedRead,
 	WriteTargetGuard,
 } from "#domain/synchronization/ports.ts";
 
@@ -49,7 +47,7 @@ import { invalidClearance, readClearanceModes } from "./clearance-modes.ts";
 import { PlanSynchronizationDocument } from "./plan-synchronization-document.ts";
 import { ensureOpenCodeSecrets } from "./open-code-secrets.ts";
 import { PlanUpdateChanges } from "./plan-update-changes.ts";
-import { PrepareSynchronizationExecution } from "./prepare-synchronization-execution.ts";
+import { destinationReadPaths, PrepareSynchronizationExecution } from "./prepare-synchronization-execution.ts";
 import type { SynchronizationRequest } from "./requests.ts";
 
 /** Collaborators the update needs. */
@@ -211,12 +209,11 @@ export class ApplyCoreRevision {
 			await destinations.writeBytes(write.path, write.content);
 		}
 		// A retired source owns no destination content, so its managed copy is
-		// removed: nothing of the destination's own could be in it.
-		for (const retired of determined.retired) {
-			for (const destination of retired.destinations) {
-				await destinations.remove(layout.join(request.destinationRoot, destination));
-				notes.push(`retired: ${destination}`);
-			}
+		// removed: nothing of the destination's own could be in it. The planner's
+		// deletion set is the same set the preflight validated.
+		for (const deletion of plan.deletions) {
+			await destinations.remove(deletion.path);
+			notes.push(`retired: ${deletion.destination}`);
 		}
 		await ensureOpenCodeSecrets(editor, request.destinationRoot, {
 			destinations,
@@ -237,26 +234,4 @@ export class ApplyCoreRevision {
 		}
 		return succeeded(parts.join("; "));
 	}
-}
-
-/**
- * The destination paths whose contents this run reads before it writes.
- *
- * Every bound destination is cleared, whatever its mode and whatever it is on
- * disk: a destination that is a directory is an unsafe write target, not a
- * missing file, and the read preflight is where that class is refused. Each
- * read carries the owner of the path it reads.
- */
-async function destinationReadPaths(
-	document: BindingsDocument,
-	destinationRoot: string,
-	layout: FilesystemLayout,
-): Promise<readonly PlannedRead[]> {
-	const paths: PlannedRead[] = [];
-	for (const entry of document.bindings) {
-		for (const destination of entry.destinations) {
-			paths.push({ path: layout.join(destinationRoot, destination), owner: "payload" });
-		}
-	}
-	return paths;
 }

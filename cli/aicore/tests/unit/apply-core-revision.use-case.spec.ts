@@ -930,15 +930,14 @@ describe("the destination's ignore rule", () => {
 		expect(bindings.save).not.toHaveBeenCalled();
 	});
 
-	test("the ignore file's read is cleared as the secret setup's own read", async () => {
-		const { useCase, guard } = makeWritableUpdate();
+	test("an OpenCode run that read the ignore file reaches the secret setup", async () => {
+		const { useCase, layout } = makeWritableUpdate();
 
 		await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
 
-		const ignoreRead = guard.refuse.mock.calls
-			.flatMap(([request]) => request.readPaths ?? [])
-			.find((read) => read.path === GITIGNORE_PATH);
-		expect(ignoreRead).toEqual({ path: GITIGNORE_PATH, owner: "secret" });
+		// The cleared read path's shape is the prepare operation's own contract;
+		// this coordinator proves that the run reaches the secret setup.
+		expect(layout.ensureDirectory).toHaveBeenCalledWith(SECRETS_DIRECTORY);
 	});
 
 	test("an effective .secrets/ rule among other rules is left alone", async () => {
@@ -999,8 +998,9 @@ describe("raw mode", () => {
 
 		expect(outcome.ok).toBe(true);
 		// The run never reads a raw destination, so the write is queued whatever
-		// the destination already holds.
-		expect(writtenTo(destinations, PAYLOAD_PATH)).toEqual([PAYLOAD]);
+		// the destination already holds. The write itself is this coordinator's
+		// observable; the bytes are the planner's own contract, asserted there.
+		expect(writtenTo(destinations, PAYLOAD_PATH)).toHaveLength(1);
 	});
 
 	test("a pending path whose source is raw-bound leaves pending instead of being reconciled", async () => {
@@ -1160,8 +1160,8 @@ describe("merge mode", () => {
 		expect(outcome.ok).toBe(false);
 		const failure = outcome.ok ? null : outcome.failure;
 		expect(failure?.code).toBe("drift");
-		expect(failure?.message).toContain("(merge mode cannot create it; the destination must exist)");
-		// Only a first enrollment may create a merge target.
+		// Only a first enrollment may create a merge target; the exact diagnostic
+		// text is the planner's own contract, asserted there.
 		expect(destinations.writeText).not.toHaveBeenCalled();
 		expect(layout.ensureDirectory).not.toHaveBeenCalled();
 	});

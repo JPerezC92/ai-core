@@ -4,48 +4,34 @@
  * One behavioral concern per group: a raw write is queued even when its bytes
  * match, a merge destination is never created, malformed destination markers are
  * refused, and the ordered payload is built from the writes exactly once. The
- * ports are doubled (contract T2, T3, T15).
+ * ports are doubled and the clearance expansion comes from the shared factory
+ * through the real reader (contract T2, T3, T15).
  */
 
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { mock, type MockProxy } from "vitest-mock-extended";
 
-import type { ClearanceModes } from "#application/synchronization/clearance-modes.ts";
+import { readClearanceModes, type ClearanceModes } from "#application/synchronization/clearance-modes.ts";
 import { PlanUpdateChanges, type UpdateChangeRequest } from "#application/synchronization/plan-update-changes.ts";
-import type { BindingMode } from "#domain/synchronization/constants.ts";
-import { parseClearanceDocument, type ClearanceEntry } from "#domain/synchronization/clearance.ts";
 import type { BindingsDocument } from "#domain/synchronization/bindings.ts";
-import type { DestinationFiles, FilesystemLayout, SourceFiles } from "#domain/synchronization/ports.ts";
+import type { ClearanceStore, DestinationFiles, FilesystemLayout, SourceFiles } from "#domain/synchronization/ports.ts";
 import {
 	BOUND_SOURCE,
+	SOURCE_ROOT,
 	SYNCHRONIZATION_DESTINATION_ROOT,
 	makeBindingsDocument,
-	makeClearanceText,
+	makeClearanceLoad,
 	makeSynchronizationRequest,
 } from "#support/synchronization.factory.ts";
 
-/** The expanded clearance one run acts on, from the factory's registry text. */
-function makeClearance(cleared: Readonly<Record<string, Readonly<Record<string, unknown>>>>): ClearanceModes {
-	const parsed = parseClearanceDocument(JSON.parse(makeClearanceText(cleared)));
-	if (!parsed.ok) {
-		throw new Error(`factory clearance text is unreadable: ${parsed.reason}`);
-	}
-	const modes = new Map<string, BindingMode>();
-	const destinations = new Map<string, string>();
-	for (const [key, entry] of parsed.entries) {
-		if (entry.kind !== "file") {
-			continue;
-		}
-		modes.set(key, entry.mode);
-		destinations.set(key, key);
-	}
-	return {
-		modes,
-		destinations,
-		entries: parsed.entries as ReadonlyMap<string, ClearanceEntry>,
-		exists: true,
-		reason: null,
-	};
+/** The expanded clearance one run acts on, read from the factory's registry. */
+async function makeClearance(
+	cleared: Readonly<Record<string, Readonly<Record<string, unknown>>>>,
+	layout: MockProxy<FilesystemLayout>,
+): Promise<ClearanceModes> {
+	const clearance = mock<ClearanceStore>();
+	clearance.load.mockResolvedValue(makeClearanceLoad(cleared));
+	return readClearanceModes(clearance, layout, SOURCE_ROOT, "opencode");
 }
 
 /** An update-plan request over one document and clearance. */
@@ -90,7 +76,7 @@ describe("raw mode", () => {
 		layout.exists.mockResolvedValue(true);
 
 		const outcome = await planner.execute(
-			makeRequest(makeBindingsDocument(), makeClearance({ [BOUND_SOURCE]: { mode: "raw" } })),
+			makeRequest(makeBindingsDocument(), await makeClearance({ [BOUND_SOURCE]: { mode: "raw" } }, layout)),
 		);
 
 		expect(outcome.ok).toBe(true);
@@ -112,7 +98,7 @@ describe("raw mode", () => {
 		layout.exists.mockResolvedValue(false);
 
 		const outcome = await planner.execute(
-			makeRequest(makeBindingsDocument(), makeClearance({ [BOUND_SOURCE]: { mode: "raw" } })),
+			makeRequest(makeBindingsDocument(), await makeClearance({ [BOUND_SOURCE]: { mode: "raw" } }, layout)),
 		);
 
 		expect(outcome.ok).toBe(true);
@@ -132,7 +118,7 @@ describe("merge mode", () => {
 		layout.exists.mockResolvedValue(false);
 
 		const outcome = await planner.execute(
-			makeRequest(makeBindingsDocument(), makeClearance({ [BOUND_SOURCE]: { mode: "merge" } })),
+			makeRequest(makeBindingsDocument(), await makeClearance({ [BOUND_SOURCE]: { mode: "merge" } }, layout)),
 		);
 
 		expect(outcome.ok).toBe(false);
@@ -155,7 +141,7 @@ describe("region mode", () => {
 		layout.isFile.mockResolvedValue(true);
 
 		const outcome = await planner.execute(
-			makeRequest(makeBindingsDocument(), makeClearance({ [BOUND_SOURCE]: { mode: "region" } })),
+			makeRequest(makeBindingsDocument(), await makeClearance({ [BOUND_SOURCE]: { mode: "region" } }, layout)),
 		);
 
 		expect(outcome.ok).toBe(false);
@@ -172,15 +158,15 @@ describe("retired paths", () => {
 		vi.clearAllMocks();
 	});
 
-	test("a retired destination is a payload deletion after the writes", async () => {
+	test("a retired destination is a payload deletion carrying its own path and destination", async () => {
 		const source = ".agents/skills/old/SKILL.md";
-		const { planner } = makePlanner();
+		const { planner, layout } = makePlanner();
 		const document = makeBindingsDocument({ bindings: [] });
 
 		const outcome = await planner.execute({
 			document,
 			request: makeSynchronizationRequest(),
-			clearance: makeClearance({}),
+			clearance: await makeClearance({}, layout),
 			distributable: [],
 			retired: [{ source, destinations: [source], reason: "missing" }],
 		});
@@ -189,6 +175,8 @@ describe("retired paths", () => {
 		expect(outcome.ok && outcome.plan.payload).toEqual([
 			{ kind: "file-delete", path: `${SYNCHRONIZATION_DESTINATION_ROOT}/${source}` },
 		]);
-		expect(outcome.ok && outcome.plan.deletions).toEqual([`${SYNCHRONIZATION_DESTINATION_ROOT}/${source}`]);
+		expect(outcome.ok && outcome.plan.deletions).toEqual([
+			{ path: `${SYNCHRONIZATION_DESTINATION_ROOT}/${source}`, destination: source },
+		]);
 	});
 });

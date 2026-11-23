@@ -4,54 +4,37 @@
  * One behavioral concern per group: the instruction root is resolved or refused,
  * an enrollment binds the cleared sources the run asks for, a preserved source
  * leaves its destination outstanding, and the determination never finalizes the
- * document. The layout is doubled; every document comes from the shared factory
- * (contract T2, T3, T15).
+ * document. The layout is doubled and the clearance expansion comes from the
+ * shared factory through the real reader (contract T2, T3, T15).
  */
 
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { mock, type MockProxy } from "vitest-mock-extended";
 
+import { readClearanceModes, type ClearanceModes } from "#application/synchronization/clearance-modes.ts";
 import {
 	PlanSynchronizationDocument,
 	type DocumentDeterminationInput,
 	type SynchronizationIntent,
 } from "#application/synchronization/plan-synchronization-document.ts";
-import type { ClearanceModes } from "#application/synchronization/clearance-modes.ts";
-import type { BindingMode } from "#domain/synchronization/constants.ts";
-import type { ClearanceEntry } from "#domain/synchronization/clearance.ts";
-import { parseClearanceDocument } from "#domain/synchronization/clearance.ts";
 import type { BindingsDocument } from "#domain/synchronization/bindings.ts";
-import type { FilesystemLayout } from "#domain/synchronization/ports.ts";
+import type { ClearanceStore, FilesystemLayout } from "#domain/synchronization/ports.ts";
 import {
 	BOUND_SOURCE,
 	SOURCE_ROOT,
 	SYNCHRONIZATION_DESTINATION_ROOT,
 	makeBindingsDocument,
-	makeClearanceText,
+	makeClearanceLoad,
 } from "#support/synchronization.factory.ts";
 
-/** The expanded clearance one run acts on, from the factory's registry text. */
-function makeClearance(cleared: Readonly<Record<string, Readonly<Record<string, unknown>>>>): ClearanceModes {
-	const parsed = parseClearanceDocument(JSON.parse(makeClearanceText(cleared)));
-	if (!parsed.ok) {
-		throw new Error(`factory clearance text is unreadable: ${parsed.reason}`);
-	}
-	const modes = new Map<string, BindingMode>();
-	const destinations = new Map<string, string>();
-	for (const [key, entry] of parsed.entries) {
-		if (entry.kind !== "file") {
-			continue;
-		}
-		modes.set(key, entry.mode);
-		destinations.set(key, key);
-	}
-	return {
-		modes,
-		destinations,
-		entries: parsed.entries as ReadonlyMap<string, ClearanceEntry>,
-		exists: true,
-		reason: null,
-	};
+/** The expanded clearance one run acts on, read from the factory's registry. */
+async function makeClearance(
+	cleared: Readonly<Record<string, Readonly<Record<string, unknown>>>>,
+	layout: MockProxy<FilesystemLayout>,
+): Promise<ClearanceModes> {
+	const clearance = mock<ClearanceStore>();
+	clearance.load.mockResolvedValue(makeClearanceLoad(cleared));
+	return readClearanceModes(clearance, layout, SOURCE_ROOT, "opencode");
 }
 
 /** A determination input over the given document, clearance and intent. */
@@ -90,7 +73,7 @@ describe("instruction root resolution", () => {
 	test("a root-role source with no detectable instruction root is refused instead of guessed", async () => {
 		const { operation, layout } = makeOperation();
 		layout.detectRootFile.mockResolvedValue(null);
-		const clearance = makeClearance({ [BOUND_SOURCE]: { mode: "region", role: "root" } });
+		const clearance = await makeClearance({ [BOUND_SOURCE]: { mode: "region", role: "root" } }, layout);
 
 		const outcome = await operation.execute(makeInput(makeBindingsDocument({ bindings: [] }), clearance, UPDATE));
 
@@ -103,7 +86,7 @@ describe("instruction root resolution", () => {
 	test("an enrollment places the root-role source at the explicit override", async () => {
 		const { operation, layout } = makeOperation();
 		layout.isFile.mockResolvedValue(true);
-		const clearance = makeClearance({ [BOUND_SOURCE]: { mode: "region", role: "root" } });
+		const clearance = await makeClearance({ [BOUND_SOURCE]: { mode: "region", role: "root" } }, layout);
 
 		const outcome = await operation.execute(
 			makeInput(makeBindingsDocument({ bindings: [] }), clearance, {
@@ -129,7 +112,7 @@ describe("enrollment", () => {
 		const { operation, layout } = makeOperation();
 		layout.exists.mockResolvedValue(false);
 		layout.isFile.mockResolvedValue(true);
-		const clearance = makeClearance({ [BOUND_SOURCE]: { mode: "raw" } });
+		const clearance = await makeClearance({ [BOUND_SOURCE]: { mode: "raw" } }, layout);
 
 		const outcome = await operation.execute(makeInput(makeBindingsDocument({ bindings: [] }), clearance, UPDATE));
 
@@ -143,7 +126,7 @@ describe("enrollment", () => {
 	test("an enrollment that is not asked to bind cleared sources enrolls nothing", async () => {
 		const { operation, layout } = makeOperation();
 		layout.isFile.mockResolvedValue(true);
-		const clearance = makeClearance({ [BOUND_SOURCE]: { mode: "raw" } });
+		const clearance = await makeClearance({ [BOUND_SOURCE]: { mode: "raw" } }, layout);
 
 		const outcome = await operation.execute(
 			makeInput(makeBindingsDocument({ bindings: [] }), clearance, {
@@ -171,7 +154,7 @@ describe("lifecycle classification", () => {
 			bindings: [{ source: BOUND_SOURCE, destinations: [BOUND_SOURCE], declaredMode: "raw" }],
 		});
 
-		const outcome = await operation.execute(makeInput(document, makeClearance({}), UPDATE));
+		const outcome = await operation.execute(makeInput(document, await makeClearance({}, layout), UPDATE));
 
 		expect(outcome.ok).toBe(true);
 		const value = outcome.ok ? outcome.value : null;
