@@ -12,11 +12,12 @@ Read in order:
 3. Applicable concrete implementation guide below; it maps rather than replaces the common/shape contract.
 4. `.aicore/core/architecture/testing/architecture.md`, then its selected testing guide under `.aicore/core/architecture/testing/stacks/`. Testing design has its own authority and template; do not infer test rules from implementation examples.
 
-| Implementation guide                                                   | Shape                             | Documentation status                              |
-| ---------------------------------------------------------------------- | --------------------------------- | ------------------------------------------------- |
-| `.aicore/core/architecture/implementation/stacks/typescript/react.md`  | Frontend                          | reference                                         |
-| `.aicore/core/architecture/implementation/stacks/typescript/nestjs.md` | Backend                           | reference                                         |
-| `.aicore/core/architecture/implementation/stacks/python.md`            | Scripts; backend where applicable | reference; framework selections remain unselected |
+| Implementation guide                                                    | Shape                             | Documentation status                              |
+| ----------------------------------------------------------------------- | --------------------------------- | ------------------------------------------------- |
+| `.aicore/core/architecture/implementation/stacks/typescript/react.md`   | Frontend                          | reference                                         |
+| `.aicore/core/architecture/implementation/stacks/typescript/nestjs.md`  | Backend                           | reference                                         |
+| `.aicore/core/architecture/implementation/stacks/typescript/scripts.md` | Scripts                           | proposed                                          |
+| `.aicore/core/architecture/implementation/stacks/python.md`             | Scripts; backend where applicable | reference; framework selections remain unselected |
 
 Concrete libraries and aliases preserve reference-architecture choices, not destination tool bindings. The destination selects its tooling in project-owned configuration without weakening the common contract. Follow applicable documented specifics for the concerns they cover; for uncovered concerns, including partial guide coverage or a stack with no applicable guide, apply the agnostic contract and applicable shapes directly. Missing guide coverage alone never blocks implementation or review and never requires creating a guide. Do not import unrelated language/framework rules or infer approval from current code patterns. Execution choices require evidenced project-owned bindings, not an invented runner or convention. A real contradiction, missing authority, or missing evidence needed for a decision still uses the agent runtime's uncertainty route.
 
