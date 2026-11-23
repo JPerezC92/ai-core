@@ -1,7 +1,6 @@
 # Core Sync mutation safety
 
-> **Status:** closed
-> **Closed:** 2026-11-23
+> **Status:** active
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-23
 > **Objective:** Preflight effective synchronization mutations without changing valid safe behavior.
@@ -22,9 +21,9 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
 
 ## Tasks
 
-- T1 | S1, S2, S3, S4, S5, S6 | delegated (security-sensitive implementation and focused tests) — Forge 🔨 (Implementer) | done | commit: 363f5442f2b0153111692b6d9b6c2907469cddb5
-- T2 | S1, S2, S3, S4, S5, S6 | delegated (independent material security and architecture review) — Bastion 🧱 (Backend & Scripts Architect) | done | commit: 363f5442f2b0153111692b6d9b6c2907469cddb5
-- T3 | S1, S2, S3, S4, S5, S6 | inline (independent acceptance and durable requirement reconciliation) — Cipher 🔓 (Lead Orchestrator) | done | commit: 363f5442f2b0153111692b6d9b6c2907469cddb5
+- T1 | S1, S2, S3, S4, S5, S6 | delegated (security-sensitive implementation and focused tests) — Forge 🔨 (Implementer) | in progress | commit: pending
+- T2 | S1, S2, S3, S4, S5, S6 | delegated (independent material security and architecture review) — Bastion 🧱 (Backend & Scripts Architect) | in progress | commit: pending
+- T3 | S1, S2, S3, S4, S5, S6 | inline (independent acceptance and durable requirement reconciliation) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
 
 ## Log
 
@@ -155,5 +154,74 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
 - L18 — S4 — passed: the OpenCode secret setup plans its writes from the post-synchronization state, including a configuration this same run creates, an existing credential is never read and never overwritten, and Cursor writes no secret material; the evidence ran against `363f5442f2b0153111692b6d9b6c2907469cddb5`.
 - L19 — S5 — passed: only an eligible retired raw destination is removed, while a region-managed and a merge-managed destination stay destination-owned and preserved; the evidence ran against `363f5442f2b0153111692b6d9b6c2907469cddb5`.
 - L20 — S6 — passed: the domain rule stays in the domain, the filesystem facts stay in infrastructure and the orchestration stays in the application, no new layer or framework was introduced, the existing root resolver and the existing blocker transformation are reused, and the independent architecture and security review returned [PASS] with zero open findings against `363f5442f2b0153111692b6d9b6c2907469cddb5`.
-- L21 — Close: the delivered bytes are committed at `363f5442f2b0153111692b6d9b6c2907469cddb5` on `feat/odd/core-sync-mutation-safety`; the independent architecture and security review and the independent test-architecture review both returned [PASS] with zero open findings against those bytes, the whole package and end-to-end suites pass, and the items recorded at L9 and L14 are routed to their owners rather than closed here.
+- L21 — 2026-11-23 — First delivery round closed: the delivered bytes were committed at `363f5442f2b0153111692b6d9b6c2907469cddb5` on `feat/odd/core-sync-mutation-safety`; the independent architecture and security review and the independent test-architecture review both returned [PASS] with zero open findings against those bytes, the whole package and end-to-end suites pass, and the items recorded at L9 and L14 are routed to their owners rather than closed here. This entry is superseded by the release-readiness assessment at L24, which reopened the record for the corrections at L23.
 - L22 — 2026-11-23 — Full-feature mirror refreshed after closure, superseding the pending state at L12. The complete closed record is stored as memory note `qSJXO3sGrot3` in the project `github.com-personal/JPerezC92/ai-core`, tagged `feature-mirror`, `core-sync-mutation-safety` and `odd`, with the identity line carrying the locator, the branch, the work-unit commit, the closure commit, the source SHA-256 `6879342B77009C75AF0E1ECE3B2A1B8710ABD211140799B112ADCF7AAA04FF34` and the source byte count 24615. Comparison method and limits: a fresh exact-identity search returned the stored payload and it was read back in full — the header, all six specifications, all three task rows and every Log entry L1 through L21, ending with the Close entry — and that payload was compared against the repository file section by section and entry by entry. The backend appends its own tag suffix to the stored text and exposes neither a byte length nor a checksum for the payload, so exact byte-equality with the file is not proven and is not claimed; the file's own SHA-256 is recorded above as the content identity. This mirror is a recovery copy subordinate to the repository file, which remains authoritative.
+- L23 — 2026-11-23 — User correction, verbatim: "# Unit A — Correct Release Blockers B1 and B2
+
+  The release-readiness assessment identified two blockers that must be corrected before Unit A can be considered ready for PR review.
+
+  I authorize **minimal corrections to B1 and B2 only**, within the existing Unit A scope.
+
+  ## B1 — Remove the Unauthorized Symlink Restriction
+
+  ARCH-002 was never intended to introduce new symlink functionality, new filesystem capabilities, or additional restrictions beyond the documented contract.
+
+  Correct the newly introduced ancestor-symlink refusal in `write-target-guard.ts`.
+
+  Requirements:
+  - Restore the previously supported behavior for paths whose symlinked ancestors resolve safely within the destination root.
+  - Preserve all existing documented symlink, containment, source-tree, inode-alias, and target-type restrictions.
+  - Do not introduce symlink creation, management, resolution features, or new filesystem abstractions.
+  - Do not weaken protections that existed before Unit A.
+  - Ensure `check`, `apply`, and `init` enforce consistent existing safety rules.
+  - Preserve the documented refusal behavior and CLI contracts.
+
+  **This is a compatibility correction, not authorization to expand symlink support.**
+
+  ## B2 — Restore Architectural Ownership
+
+  The read-phase guard currently makes safety decisions in infrastructure that belong to the domain.
+
+  Correct this responsibility violation.
+
+  Requirements:
+  - Infrastructure collects filesystem facts.
+  - Domain evaluates safety rules and produces the corresponding decisions and diagnostics.
+  - Application coordinates the existing operations.
+  - Reuse the existing domain rule module in `write-targets.ts`.
+  - Remove duplicated decisions from `write-target-guard.ts`.
+  - Preserve existing error classification, refusal semantics, and observable outputs.
+  - Do not introduce new layers, frameworks, port families, or unnecessary abstractions.
+
+  Follow AICore's existing C11 complexity policy.
+
+  ## Strict Scope
+  - Correct only B1 and B2.
+  - Preserve all existing intended functionality.
+  - Do not change raw synchronization or retirement semantics.
+  - Do not modify credential policies or introduce path-specific magic strings.
+  - Do not resolve R22 as part of these corrections.
+  - Do not change ARCH-003 or Units B–E.
+  - Do not perform unrelated refactoring.
+  - Do not expand the approved production scope without explicit authorization.
+
+  ## Verification
+
+  Add or adjust focused regression tests demonstrating:
+  1. Existing safe symlink-ancestor layouts remain accepted.
+  2. Existing unsafe symlink and path-alias cases remain refused.
+  3. `check`, `apply`, and `init` remain consistent with the documented safety rules.
+  4. Read-phase decisions are owned by the domain, not duplicated in infrastructure.
+  5. Existing valid synchronization behavior remains unchanged.
+  6. The full ARCH-002 safety correction remains effective.
+
+  Run the relevant focused tests, typecheck, lint, and applicable isolated filesystem safety tests.
+
+  Use disposable fixtures only.
+
+  Obtain a fresh independent architecture/security review against the final committed bytes. The previous PASS does not automatically cover these corrections.
+
+  Follow the existing ODD workflow. Herald remains the exclusive executor of Git/GitHub operations.
+
+  Do not push, create a PR, or merge without separate authorization." The corrections stay inside the authorized production and test paths; the record reopens for them, and T11 and R22 are not authorization for any change.
+- L24 — 2026-11-23 — Release-readiness assessment outcome and the reopening reason. The assessment read-only verified the branch scope against its base — exactly twelve paths across the three commits, a clean tree, ARCH-003 and Units B–E untouched, and the seven production hashes identical to the values bound to the independent [PASS] — and confirmed that the format-gate failures are pre-existing and that R22 remains explicitly unresolved. It raised two blockers. B1: the read and mutation phases refuse any path carrying a symbolic-link component, including an ancestor whose resolution stays inside the destination root; no governing rule requires that class — the Core Sync contract, the durable R11 requirement and the domain rule's own header all name the target-level link and the resolved-path classes only — and the pre-existing phase-less branch still used by `check` does not apply it, so `check` and `apply` disagreed on the same layout. B2: the read phase decides three refusals and authors their diagnostics inside the infrastructure adapter, contradicting the ownership stated by both the domain rule module and the adapter's own header. Both were recorded by the reviewers as notes rather than as cleared findings, and an independent [PASS] does not resolve a separately documented policy exception, so the record reopens for the corrections authorized at L23.

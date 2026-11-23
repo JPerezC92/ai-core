@@ -2,9 +2,9 @@
  * Infrastructure: observing every write target before a command mutates anything.
  *
  * Synchronization distributes ordinary files and directories; a symbolic link is
- * never an artifact. A managed write path that contains a link is refused
- * before the destination is modified: the link itself, or a path that resolves
- * through one into the source tree or out of the destination root.
+ * never an artifact. A managed write target that is a link is refused before the
+ * destination is modified, and so is a path that resolves through one into the
+ * source tree or out of the destination root.
  *
  * This adapter collects the facts — whether a path is a symlink, whether it is a
  * regular file, its resolved location, and its device/inode identity — and hands
@@ -14,7 +14,7 @@
 
 import type { BigIntStats } from "node:fs";
 import { lstat, readdir, realpath, stat } from "node:fs/promises";
-import { basename, dirname, join, relative, resolve, sep } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 
 import {
 	type BindingMode,
@@ -33,10 +33,9 @@ import type {
 } from "#domain/synchronization/ports.ts";
 import {
 	type FileIdentity,
-	isWithin,
 	pathIdentity,
+	refuseReadTargets,
 	refuseWriteTargets,
-	type MutationOwner,
 	type NonRegionDestinationObservation,
 	type PlannedRawCreation,
 	type WriteTargetFacts,
@@ -119,44 +118,24 @@ export class LocalWriteTargetGuard implements WriteTargetGuard {
 	}
 
 	/**
-	 * Validate every path whose contents are about to be read.
+	 * Collect the facts of every path whose contents are about to be read, and
+	 * let the domain rule decide.
 	 *
-	 * A read follows links, so the path is checked before it is read: no
-	 * component may be a link, the resolved path must stay inside the
-	 * destination root, and an existing path must be a regular file. The
-	 * write-only refusals — a target sharing a source file's inode, a target
-	 * aliasing a destination — are not applied here: a destination that is
-	 * only read stays readable.
-	 *
-	 * Each read carries the owner of the path it reads. One owner is
-	 * tolerated over a directory: the secret setup's ignore file, whose read
-	 * classifies a directory as absent and whose write is the operation that
-	 * reports the filesystem's refusal. Every other owner still refuses a
-	 * directory before the read happens.
+	 * The adapter observes and does not decide: which paths are safe to read is
+	 * the domain's rule, and the diagnostics it produces are the domain's.
 	 */
 	async #refuseReads(
 		request: WriteTargetRequest,
 		sourceRoot: string,
 		destinationRoot: string,
 	): Promise<SynchronizationFailure | null> {
-		if (isWithin(sourceRoot, destinationRoot) || isWithin(destinationRoot, sourceRoot)) {
-			return invalid("invalid write target: source and destination roots overlap");
-		}
 		const rootPath = await this.#layout.resolveRootFile(request.destinationRoot, request.document);
 		const reads: readonly PlannedRead[] = [{ path: rootPath, owner: "root" }, ...(request.readPaths ?? [])];
+		const observed: WriteTargetObservation[] = [];
 		for (const read of reads) {
-			const observed = await observe(writeTargetKind(read.owner), read.path);
-			if (await hasLinkInPath(read.path, request.destinationRoot)) {
-				return invalid(`invalid write target: read path contains a symbolic link: ${read.path}`);
-			}
-			if (!isWithin(observed.resolvedPath, destinationRoot)) {
-				return invalid(`invalid write target: read path escapes destination root: ${read.path}`);
-			}
-			if (observed.exists && !observed.regularFile && !toleratesDirectory(read.owner, observed)) {
-				return invalid(`invalid write target: read path is not a regular file: ${read.path}`);
-			}
+			observed.push(await observe(writeTargetKind(read.owner), read.path));
 		}
-		return null;
+		return refuseReadTargets({ sourceRoot, destinationRoot, reads: observed });
 	}
 
 	/**
@@ -180,7 +159,6 @@ export class LocalWriteTargetGuard implements WriteTargetGuard {
 			const observed = await observe(kind, mutation.path);
 			targets.push({
 				...observed,
-				symbolicLink: await hasLinkInPath(mutation.path, request.destinationRoot),
 				directoryTarget: mutation.kind === "directory-create",
 			});
 		}
@@ -220,37 +198,6 @@ export class LocalWriteTargetGuard implements WriteTargetGuard {
 		}
 		return observations;
 	}
-}
-
-/**
- * Return whether a read of a path that exists as a directory is tolerated.
- *
- * Only the secret setup's own read is: the ignore file's read classifies a
- * directory as absent, and the write that follows raises the filesystem's
- * refusal. Every other owner refuses a directory before the read happens.
- */
-function toleratesDirectory(owner: MutationOwner, observed: WriteTargetObservation): boolean {
-	return owner === "secret" && observed.directory;
-}
-
-/** Inspect each lexical component without reading file contents. */
-async function hasLinkInPath(path: string, destinationRoot: string): Promise<boolean> {
-	const absolute = resolve(path);
-	const root = resolve(destinationRoot);
-	const within = isWithin(absolute, root);
-	const start = within ? root : resolve(absolute, "..");
-	const components = within ? relative(root, absolute).split(sep).filter(Boolean) : [basename(absolute)];
-	let current = start;
-	if ((await lstatOrNull(current))?.isSymbolicLink()) {
-		return true;
-	}
-	for (const component of components) {
-		current = join(current, component);
-		if ((await lstatOrNull(current))?.isSymbolicLink()) {
-			return true;
-		}
-	}
-	return false;
 }
 
 /**

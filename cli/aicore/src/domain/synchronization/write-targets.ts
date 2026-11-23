@@ -2,9 +2,9 @@
  * The write-target preflight rule (pure).
  *
  * Synchronization distributes ordinary files and directories; a symbolic link is
- * never an artifact. A managed write path that contains a link is refused
- * before the destination is modified: the link itself, or a path that resolves
- * through one into the source tree or out of the destination root.
+ * never an artifact. A managed write target that is a link is refused before the
+ * destination is modified, and so is a path that resolves through one into the
+ * source tree or out of the destination root.
  *
  * Nothing is written until every target a command could write is proven safe: a
  * symlink, a non-regular file, a target that resolves inside the source tree, a
@@ -115,6 +115,54 @@ export type WriteTargetFacts = {
 	readonly implicitRoot: ImplicitRootObservation | null;
 	readonly plannedRawCreations: readonly PlannedRawCreation[];
 };
+
+/** Everything the read rule needs, already observed. */
+export type ReadTargetFacts = {
+	readonly sourceRoot: string;
+	readonly destinationRoot: string;
+	readonly reads: readonly WriteTargetObservation[];
+};
+
+/**
+ * Return the refusal these read paths earn, or `null` when safe.
+ *
+ * The read rule belongs here: the adapter observes the facts — whether the
+ * target is a link, where it resolves, and what kind of entry it is — and this
+ * module decides. A read follows links, so the path is checked before it is
+ * read: the target itself may not be a link, the resolved path must stay
+ * inside the destination root, and an existing path must be a regular file.
+ *
+ * The write-only refusal classes do not apply here: a destination that is only
+ * read stays readable, whatever inode it shares or what it aliases.
+ */
+export function refuseReadTargets(facts: ReadTargetFacts): SynchronizationFailure | null {
+	if (isWithin(facts.sourceRoot, facts.destinationRoot) || isWithin(facts.destinationRoot, facts.sourceRoot)) {
+		return refuse("source and destination roots overlap");
+	}
+	for (const target of facts.reads) {
+		if (target.symbolicLink) {
+			return refuse(`${target.kind} write target is a symbolic link: ${target.path}`);
+		}
+		if (!isWithin(target.resolvedPath, facts.destinationRoot)) {
+			return refuse(`read path escapes destination root: ${target.path}`);
+		}
+		if (target.exists && !target.regularFile && !toleratesDirectoryRead(target)) {
+			return refuse(`read path is not a regular file: ${target.path}`);
+		}
+	}
+	return null;
+}
+
+/**
+ * Return whether this read may read a path that exists as a directory.
+ *
+ * Only the secret setup's own read is: the ignore file's read classifies a
+ * directory as absent, and the write that follows raises the filesystem's
+ * refusal. Every other owner refuses a directory before the read happens.
+ */
+function toleratesDirectoryRead(target: WriteTargetObservation): boolean {
+	return target.kind === "secret" && target.directory;
+}
 
 /**
  * Return the refusal this command's write targets earn, or `null` when safe.

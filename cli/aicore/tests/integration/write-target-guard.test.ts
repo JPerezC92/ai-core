@@ -24,7 +24,7 @@
  * destination's own files is covered and not only its own diagnostics.
  */
 
-import { link, mkdir, readFile, symlink, writeFile } from "node:fs/promises";
+import { link, lstat, mkdir, readFile, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { mock } from "vitest-mock-extended";
@@ -626,6 +626,215 @@ describe("reads over a directory and the secret setup's writes", () => {
 
 		expect(refusal?.code).toBe("invalid");
 		expect(refusal?.message).toBe(`invalid write target: directory write target is not a directory: ${secrets}`);
+	});
+});
+
+describe("a managed path reached through a symlinked ancestor", () => {
+	/** The directory inside the destination root a junction may point at. */
+	const INSIDE_RELATIVE = "real";
+	/** The junction's own name inside the destination root. */
+	const LINK_RELATIVE = "linked";
+	/** The managed destination reached through that junction. */
+	const LINKED_PAYLOAD_RELATIVE = `${LINK_RELATIVE}/payload.md`;
+
+	/**
+	 * Create a directory junction.
+	 *
+	 * A junction is the platform's directory link: it needs no elevated
+	 * privilege on Windows, and on POSIX it is the same non-regular entry the
+	 * distribution rule skips.
+	 */
+	async function createJunction(target: string, path: string): Promise<void> {
+		await symlink(target, path, "junction");
+	}
+
+	/**
+	 * The three shapes the commands run: the phase-less shape `check` runs,
+	 * and the read and mutation phases `apply` and `init` run.
+	 */
+	function shapesFor(payload: string): readonly WriteTargetRequest[] {
+		const path = join(destinationRoot, payload);
+		return [
+			makeRequest(payload),
+			makeRequest(payload, { phase: "read", readPaths: [{ path, owner: "payload" }] }),
+			makeRequest(payload, {
+				phase: "mutations",
+				mutations: [{ path, kind: "file-write", owner: "payload" }],
+			}),
+		];
+	}
+
+	test("a managed path whose ancestor link resolves inside the destination root is accepted", async () => {
+		await mkdir(join(destinationRoot, INSIDE_RELATIVE), { recursive: true });
+		await createJunction(join(destinationRoot, INSIDE_RELATIVE), join(destinationRoot, LINK_RELATIVE));
+
+		// The pre-change preflight accepted this layout, and every command's
+		// shape agrees on it.
+		for (const shape of shapesFor(LINKED_PAYLOAD_RELATIVE)) {
+			expect(await guard.refuse(shape), shape.phase ?? "check").toBeNull();
+		}
+	});
+
+	test("a managed target that is itself a symbolic link is refused", async () => {
+		const linkedTarget = "linked-target";
+		await mkdir(join(destinationRoot, INSIDE_RELATIVE), { recursive: true });
+		await createJunction(join(destinationRoot, INSIDE_RELATIVE), join(destinationRoot, linkedTarget));
+		expect((await lstat(join(destinationRoot, linkedTarget))).isSymbolicLink()).toBe(true);
+
+		for (const shape of shapesFor(linkedTarget)) {
+			const refusal = await guard.refuse(shape);
+			expect(refusal?.code, shape.phase ?? "check").toBe("invalid");
+			expect(refusal?.message, shape.phase ?? "check").toBe(
+				`invalid write target: destination payload write target is a symbolic link: ` +
+					`${join(destinationRoot, linkedTarget)}`,
+			);
+		}
+	});
+
+	test("a managed path whose ancestor link resolves outside the destination root is refused", async () => {
+		const outside = join(root, "outside");
+		await mkdir(outside, { recursive: true });
+		await createJunction(outside, join(destinationRoot, LINK_RELATIVE));
+
+		const path = join(destinationRoot, LINKED_PAYLOAD_RELATIVE);
+		// The read phase keeps its published diagnostic, byte for byte.
+		const readRefusal = await guard.refuse(
+			makeRequest(LINKED_PAYLOAD_RELATIVE, {
+				phase: "read",
+				readPaths: [{ path, owner: "payload" }],
+			}),
+		);
+		expect(readRefusal?.code).toBe("invalid");
+		expect(readRefusal?.message).toBe(`invalid write target: read path escapes destination root: ${path}`);
+
+		// The write shapes refuse the same layout as an escaping write target.
+		for (const shape of shapesFor(LINKED_PAYLOAD_RELATIVE).filter((request) => request.phase !== "read")) {
+			const refusal = await guard.refuse(shape);
+			expect(refusal?.code, shape.phase ?? "check").toBe("invalid");
+			expect(refusal?.message, shape.phase ?? "check").toBe(
+				`invalid write target: destination payload write target escapes destination root: ${path}`,
+			);
+		}
+	});
+
+	test("a managed path whose ancestor link resolves into the source tree is refused", async () => {
+		await createJunction(sourceRoot, join(destinationRoot, LINK_RELATIVE));
+
+		for (const shape of shapesFor(LINKED_PAYLOAD_RELATIVE)) {
+			const refusal = await guard.refuse(shape);
+			expect(refusal?.code, shape.phase ?? "check").toBe("invalid");
+		}
+	});
+
+	test("an update whose destination is reached through an inside link completes", async () => {
+		await mkdir(join(destinationRoot, INSIDE_RELATIVE), { recursive: true });
+		await createJunction(join(destinationRoot, INSIDE_RELATIVE), join(destinationRoot, LINK_RELATIVE));
+		await writeFile(join(sourceRoot, BOUND_SOURCE), "# the source\n");
+		const bindings = mock<BindingsStore>();
+		bindings.load.mockResolvedValue(
+			makeBindingsDocument({
+				bindings: [
+					{ source: BOUND_SOURCE, destinations: [LINKED_PAYLOAD_RELATIVE], declaredMode: MODE_REGION },
+				],
+			}),
+		);
+		const clearance = mock<ClearanceStore>();
+		clearance.load.mockResolvedValue(makeClearanceLoad({ [BOUND_SOURCE]: { mode: "region" } }));
+		const layout = new LocalFilesystemLayout();
+		const useCase = new ApplyCoreRevision({
+			bindings,
+			clearance,
+			layout,
+			guard: new LocalWriteTargetGuard(layout),
+			sources: new LocalSourceFiles(),
+			destinations: new LocalDestinationFiles(),
+		});
+
+		const outcome = await useCase.execute(
+			makeSynchronizationRequest({
+				sourceRoot,
+				destinationRoot,
+				bindingsPath: join(destinationRoot, BINDINGS_RELATIVE),
+			}),
+		);
+
+		expect(outcome.ok).toBe(true);
+		// The payload lands in the directory the junction points at.
+		expect(await readFile(join(destinationRoot, INSIDE_RELATIVE, "payload.md"), "utf8")).toContain("core:begin");
+		expect(bindings.save).toHaveBeenCalled();
+	});
+
+	test("an update whose destination is reached through an outside link is refused before any write", async () => {
+		const outside = join(root, "outside");
+		await mkdir(outside, { recursive: true });
+		await createJunction(outside, join(destinationRoot, LINK_RELATIVE));
+		await writeFile(join(sourceRoot, BOUND_SOURCE), "# the source\n");
+		const bindings = mock<BindingsStore>();
+		bindings.load.mockResolvedValue(
+			makeBindingsDocument({
+				bindings: [
+					{ source: BOUND_SOURCE, destinations: [LINKED_PAYLOAD_RELATIVE], declaredMode: MODE_REGION },
+				],
+			}),
+		);
+		const clearance = mock<ClearanceStore>();
+		clearance.load.mockResolvedValue(makeClearanceLoad({ [BOUND_SOURCE]: { mode: "region" } }));
+		const layout = new LocalFilesystemLayout();
+		const useCase = new ApplyCoreRevision({
+			bindings,
+			clearance,
+			layout,
+			guard: new LocalWriteTargetGuard(layout),
+			sources: new LocalSourceFiles(),
+			destinations: new LocalDestinationFiles(),
+		});
+
+		const outcome = await useCase.execute(
+			makeSynchronizationRequest({
+				sourceRoot,
+				destinationRoot,
+				bindingsPath: join(destinationRoot, BINDINGS_RELATIVE),
+			}),
+		);
+
+		expect(outcome.ok).toBe(false);
+		const failure = outcome.ok ? null : outcome.failure;
+		expect(failure?.code).toBe("invalid");
+		// Nothing was written: the refusal came before the first mutation.
+		expect(bindings.save).not.toHaveBeenCalled();
+		await expect(readFile(join(outside, "payload.md"))).rejects.toMatchObject({ code: "ENOENT" });
+	});
+
+	test("an enrollment whose destination is reached through an inside link completes", async () => {
+		await mkdir(join(destinationRoot, INSIDE_RELATIVE), { recursive: true });
+		await createJunction(join(destinationRoot, INSIDE_RELATIVE), join(destinationRoot, LINK_RELATIVE));
+		await writeFile(join(sourceRoot, BOUND_SOURCE), "# the source\n");
+		const bindings = mock<BindingsStore>();
+		bindings.load.mockResolvedValue(makeBindingsDocument({ bindings: [] }));
+		const clearance = mock<ClearanceStore>();
+		clearance.load.mockResolvedValue(makeClearanceLoad({ [BOUND_SOURCE]: { mode: "region" } }));
+		const layout = new LocalFilesystemLayout();
+		const useCase = new EnrollDestinations({
+			bindings,
+			clearance,
+			layout,
+			guard: new LocalWriteTargetGuard(layout),
+			sources: new LocalSourceFiles(),
+			destinations: new LocalDestinationFiles(),
+		});
+
+		const outcome = await useCase.execute(
+			makeEnrollmentRequest({
+				editor: "opencode",
+				sourceRoot,
+				destinationRoot,
+				bindingsPath: join(destinationRoot, BINDINGS_RELATIVE),
+				bindCleared: true,
+			}),
+		);
+
+		expect(outcome.ok).toBe(true);
+		expect(bindings.save).toHaveBeenCalled();
 	});
 });
 
