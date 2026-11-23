@@ -7,7 +7,7 @@ How TypeScript modules in this repository and in destination projects name their
 ## Requirements
 
 - [x] R1 — Every intra-package source specifier names its target with its TypeScript source extension, for both relative and aliased references, and parent-directory traversal is not used.
-- [x] R2 — A package resolves its own cross-directory references through one declared alias mechanism, so a specifier's target never depends on the importing file's directory depth.
+- [x] R2 — A package declares one alias mechanism for its cross-directory references, keeps parent-directory traversal out of its specifiers, and does not let a relative specifier's target depend on the importing file's depth beyond descending into its own child directories.
 - [x] R3 — A package consumed by another package is addressed only through its declared public entry points, never through its internal source or build paths and never through a compiler-only alias.
 - [x] R4 — Each production mode states the mechanism its own pipeline resolves, distinguishing direct execution, bundling and compiled output instead of imposing one configuration everywhere.
 - [x] R5 — A directly executed package runs its own TypeScript sources without a build step and without an additional alias loader.
