@@ -71,3 +71,45 @@ pnpm verify:full     # verify, then every package's test suite and the CLI end-t
 **Scope of the lint rules.** `import/no-relative-parent-imports` is enforced across all three source trees (`cli/**`, `.agents/skills/**`, `mcp-servers/system-one/**`). Every one of them resolves non-sibling imports through a `#`-prefixed Node subpath import map declared in its own `package.json`, which is the mechanism Node ESM, `tsc` and Vitest all honour without extra configuration or dependencies. `typescript/unbound-method` is disabled for test files, where `expect(port.method)` is a legitimate reference to an unbound method.
 
 `pnpm lint` reports no errors and no warnings. Nine warnings that the adoption first surfaced — six `no-misused-spread` in the validators that iterate string code points, and three `no-base-to-string` where a value is stringified into a message — were corrected rather than suppressed or written around; the fixes changed validation behavior or message content, so they were delivered as a separate, behavior-bearing change outside the mechanical formatting slice.
+
+## TypeScript module resolution and imports
+
+This section is AICore's own binding for how TypeScript modules name their targets. The architecture obligation it serves lives in `.aicore/core/architecture/` and is distributed; this document is not, so the concrete mechanism recorded here stays project-owned and no destination inherits it. Three source trees are covered: `cli/aicore`, `.agents/skills/*`, and `mcp-servers/system-one`.
+
+### Specifier scope
+
+Three kinds of specifier are never conflated.
+
+1. **Internal references** name a module of the same package: a relative sibling specifier, or a `#` alias declared in that package's own `imports` map. They are private — no other package can name them.
+2. **Declared external dependencies** are Node.js built-in modules, third-party packages and other workspace packages. They are named by the dependency identity the manifest declares and resolved through that dependency's own published entry points. They are never routed through the importing package's `#` map, and a filesystem path into another package's tree is not a dependency.
+3. **The package's public surface** is exactly what its `exports` field publishes. Adding a public entry point is an `exports` change, never an alias change.
+
+### Source extensions
+
+Every specifier that names a project file carries that file's source extension — `.ts`, `.tsx`, `.mts` or `.cts` — on relative and aliased references alike. Parent-directory traversal (`../`) is not used. AICore's current trees are uniform under this rule: 107 relative and 798 aliased specifiers across 302 files, all carrying `.ts`, with no `../` and no extensionless reference.
+
+Each project keeps `module` and `moduleResolution` at `NodeNext`, `noEmit` and `allowImportingTsExtensions` while it executes TypeScript directly. No project declares `paths` or `baseUrl`.
+
+### One alias mechanism per package
+
+A package declares its cross-directory aliases in its own `package.json#imports`, keyed with `#`. AICore uses the extensionless-key form, where the extension arrives in the specifier: `"#domain/*": "./src/domain/*"` resolves `#domain/constants.ts` to `./src/domain/constants.ts`. A second form, where the key carries the `.ts` trailer and the specifier does not, is equally valid internally but mixing both in one package is not.
+
+Directly executed packages point those maps at their sources. A compiled package points them at its build output with the trailer form, `"#domain/*.ts": "./dist/domain/*.js"`, because a compiled target must not receive the source extension.
+
+### Production modes
+
+**Direct execution.** A package runs `node <path>.ts` with no build step and no additional loader. Type stripping requires the extension to be present somewhere the runtime can see it, which the specifier or the map target supplies. `.tsx` is not executable this way: Node rejects the extension outright, so JSX belongs only to bundled code.
+
+**Bundled application.** A bundler erases the imports it consumes, so `.ts` and `.tsx` specifiers are both usable, and a type check runs separately with `noEmit`. Native `#` maps are usable where the bundler resolves them without a further resolver; a bundler that needs alias configuration must receive it, and a project alias declared only in `tsconfig` is resolved by nothing else.
+
+**Compiled package.** Emitted JavaScript keeps `#` specifiers verbatim and rewrites relative `.ts` specifiers to `.js`, which is what `rewriteRelativeImportExtensions` provides; `allowImportingTsExtensions` is not needed there. Source-side type checking still resolves `#` specifiers through the map: with `rootDir` and `outDir` corresponding to the source and output layout, the compiler maps a compiled target back to its source file rather than requiring a build first. Emitted declarations keep both `#` and relative `.ts` specifiers and resolve against their sibling declaration files, so a published package does not need to ship its sources.
+
+### Alias permission
+
+A TypeScript `paths` alias is permitted only where the selected build or runtime pipeline actually resolves it. A passing type check alone does not establish that: Node resolves `imports` and `exports`, not `paths`, and a bundler resolves `paths` only when its own configuration mirrors them. AICore's three trees therefore use no `paths` alias at all, and no cross-package dependency may be expressed as one.
+
+### What is mechanically enforced
+
+`tsc` under `NodeNext` is the real check: it validates each `imports` map, rejects an extensionless or wrongly extended specifier, and refuses a package specifier that the dependency's `exports` does not publish. `import/no-relative-parent-imports` adds the `../` prohibition only; no lint rule can express the sibling-versus-alias split, so that part of this standard is a convention the reviewer enforces, not a check the toolchain performs.
+
+A monorepo task orchestrator is not a module resolver and adds no requirement here: package boundaries, declared dependencies and `exports` are what make a workspace resolvable. Cache and ignore-file configuration are operational concerns of whichever orchestrator a project selects, not part of this standard.
