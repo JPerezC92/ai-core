@@ -86,13 +86,13 @@ Three kinds of specifier are never conflated.
 
 ### Source extensions
 
-Every specifier that names a project file carries that file's source extension — `.ts`, `.tsx`, `.mts` or `.cts` — on relative and aliased references alike. Parent-directory traversal (`../`) is not used. AICore's current trees are uniform under this rule: 107 relative and 798 aliased specifiers across 302 files, all carrying `.ts`, with no `../` and no extensionless reference.
+Every specifier that names a project file carries that file's source extension — `.ts`, `.tsx`, `.mts` or `.cts` — on relative and aliased references alike. Parent-directory traversal (`../`) is not used; a relative specifier may stay in the importing module's directory or descend into a child directory of that directory, and `cli/aicore/src/infrastructure/reconciliation-reader.ts`, `cli/aicore/src/domain/outcomes.ts` and `.agents/skills/incident-workflow/scripts/init_local_registers.ts` use that child-directory form for nine specifiers, which are accepted as compliant rather than pending migration. AICore's current trees are uniform under the remaining rules: 107 relative and 798 aliased specifiers across 302 files, all carrying `.ts`, with no `../` and no extensionless reference.
 
 Each project keeps `module` and `moduleResolution` at `NodeNext`, `noEmit` and `allowImportingTsExtensions` while it executes TypeScript directly. No project declares `paths` or `baseUrl`.
 
 ### One alias mechanism per package
 
-A package declares its cross-directory aliases in its own `package.json#imports`, keyed with `#`. AICore uses the extensionless-key form, where the extension arrives in the specifier: `"#domain/*": "./src/domain/*"` resolves `#domain/constants.ts` to `./src/domain/constants.ts`. A second form, where the key carries the `.ts` trailer and the specifier does not, is equally valid internally but mixing both in one package is not.
+A package that declares aliases declares them in its own `package.json#imports`, keyed with `#`; the alias is preferred where it makes a cross-directory or cross-layer reference clearer, and a child-directory relative specifier remains valid where a module uses it instead. AICore uses the extensionless-key form, where the extension arrives in the specifier: `"#domain/*": "./src/domain/*"` resolves `#domain/constants.ts` to `./src/domain/constants.ts`. A second form, where the key carries the `.ts` trailer and the specifier does not, is equally valid internally but mixing both in one package is not.
 
 Directly executed packages point those maps at their sources. A compiled package points them at its build output with the trailer form, `"#domain/*.ts": "./dist/domain/*.js"`, because a compiled target must not receive the source extension.
 
