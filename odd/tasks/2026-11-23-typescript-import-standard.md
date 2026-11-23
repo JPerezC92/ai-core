@@ -1,6 +1,7 @@
 # TypeScript import standard documentation
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-11-23
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-23
 > **Objective:** Document the accepted TypeScript module-resolution and import standard as the AICore-specific binding and as distributable architecture guidance, without changing source, behaviour, build configuration or dependencies.
@@ -79,3 +80,16 @@
 - L7 — WU2 delivered in `179a04b`: the new scripts guide, the aligned backend and frontend import paragraphs with their mapping cells, and the navigation row. Repository-wide `pnpm lint` and `pnpm typecheck` are clean, and no Turborepo dependency, workspace member or task file exists anywhere in the repository.
 - L8 — Round 1 independent acceptance at `179a04b` returned findings from three acceptors. Bastion 🧱 found a mapping cell naming a section that does not exist and an unsupported coverage claim on the script-organization row; Atrium 🏛️ found a frontend citation asserting an applicability the cited guide disclaims, and an identifier attached to a fact that identifier does not state; Sentinel 🛡️ found two over-broad specifications, a missing specification for the unrelated-contract prohibition, and absent per-unit focused checks. All were adjudicated real, in scope and mechanically fixable, and are corrected in the remediation commit that carries this entry.
 - L9 — Blocked: the open closure prerequisite is independent semantic acceptance of the remediation round, which must return at the remediation commit before the closure edit is written and committed.
+- L10 — S1 — pass at `be6d69f`: Bastion 🧱 confirmed the AICore-specific standard states the source-extension rule, the native package-alias binding with its map shapes per production mode, and the enforcement surface.
+- L11 — S2 — pass at `be6d69f`: all four verified conventions are present and non-contradictory, with the measured import counts re-derived against the tree at that commit.
+- L12 — S3 — pass at `be6d69f`: the new guide follows the template's heading order and every common and scripts-shape obligation row names a section that exists.
+- L13 — S4 — pass at `be6d69f`: the backend import paragraph keeps its own alias mechanism, treats a workspace package as a declared dependency and no longer lists it among aliases, and its dependency row names that section.
+- L14 — S5 — pass at `be6d69f`: the frontend paragraph retains its project aliases, conditions alias use on the bundler resolving them, admits native aliases only unaided, and treats a workspace package as a declared dependency.
+- L15 — S6 — pass at `be6d69f`: the architecture navigation table lists the new guide with its shape and status, and the named path resolves.
+- L16 — S7 — pass at `be6d69f`: every alias permission is conditioned on a pipeline that actually resolves it, and no document attributes runtime verification to the integration probe.
+- L17 — S8 — pass at `be6d69f`: no cache or ignore-file configuration is presented as a resolution rule in any changed document.
+- L18 — S9 — pass at `be6d69f`: the branch diff against `8e031a6` names seven documentation and record paths only, with no source, configuration, dependency or entry-point file.
+- L19 — S10 — pass at `be6d69f`: the accepted-debt register entry for DEBT-049 is unchanged, still open and still carrying its resolution criteria.
+- L20 — S11 — pass at `be6d69f`: no Turborepo dependency, workspace member or task file exists in the repository.
+- L21 — S12 — pass at `be6d69f`: the only architecture documents the branch changes are the new scripts guide, the two aligned TypeScript guides and the navigation file.
+- L22 — Close: closed on 2026-11-23 at `be6d69f` after three independent acceptors returned zero open findings in round 2: Bastion 🧱 for the scripts guide, backend alignment, navigation and the AICore-specific standard; Atrium 🏛️ for the frontend alignment; Sentinel 🛡️ for both records. The first failure was the round-1 acceptance at `179a04b`, returning six findings that L8 records and the remediation commit cleared. The L9 prerequisite is satisfied by L10–L21. Durable feature file `odd/features/typescript-module-resolution.md` carries the requirement set this change established; its ticks are set by the verification recorded here, except R6, whose observable applies only to a compiled package and this repository currently ships none, so it stays unticked. Full feature mirror remains pending recovery per L5. Delivery evidence and the pull-request identity are recorded outside this record.
