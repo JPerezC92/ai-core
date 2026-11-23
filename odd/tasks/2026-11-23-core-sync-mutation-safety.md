@@ -1,6 +1,7 @@
 # Core Sync mutation safety
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-11-23
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-23
 > **Objective:** Preflight effective synchronization mutations without changing valid safe behavior.
@@ -21,9 +22,9 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
 
 ## Tasks
 
-- T1 | S1, S2, S3, S4, S5, S6 | delegated (security-sensitive implementation and focused tests) — Forge 🔨 (Implementer) | open | commit: pending
-- T2 | S1, S2, S3, S4, S5, S6 | delegated (independent material security and architecture review) — Bastion 🧱 (Backend & Scripts Architect) | open | commit: pending
-- T3 | S1, S2, S3, S4, S5, S6 | inline (independent acceptance and durable requirement reconciliation) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
+- T1 | S1, S2, S3, S4, S5, S6 | delegated (security-sensitive implementation and focused tests) — Forge 🔨 (Implementer) | done | commit: 363f5442f2b0153111692b6d9b6c2907469cddb5
+- T2 | S1, S2, S3, S4, S5, S6 | delegated (independent material security and architecture review) — Bastion 🧱 (Backend & Scripts Architect) | done | commit: 363f5442f2b0153111692b6d9b6c2907469cddb5
+- T3 | S1, S2, S3, S4, S5, S6 | inline (independent acceptance and durable requirement reconciliation) — Cipher 🔓 (Lead Orchestrator) | done | commit: 363f5442f2b0153111692b6d9b6c2907469cddb5
 
 ## Log
 
@@ -148,3 +149,10 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
 - L12 — 2026-11-23 — Full-feature mirror. Pending recovery, not synchronized: the memory backend has no exact feature-key upsert, no explicit read-scope selection and no compare-and-swap, so no byte-verified mirror of this record exists and none is claimed. The authoritative file is complete in the repository.
 - L13 — 2026-11-23 — Test-architecture review, outcome and pointer. The independent test-architecture reviewer returned [FAIL] on round 1 with one T15 violation — six re-stated destination and source root literals in the enrollment unit spec — and seven advisories; the violation and the mechanical advisories were corrected in this work unit, one advisory's proposed deletion was retained with a stated distinct observable instead of being deleted, round 2 returned [ADVISORY] with every finding closed plus one new low advisory about an inaccurate header clause, and round 3 returned [PASS] with zero open findings. The reviewer corrected the coordinator's own disposition wording: the retained case is a read-phase call asserting the read refusal text, the guard-boundary proof of the payload-owned read rule and the payload side of the owner-contrast pair, while the mutation-phase text is pinned by a separate case. The reviewed modules' level placement, mocking library, factory sourcing, hermeticity and observable-outcome positioning conform to the contract and the TypeScript guide, and the package's test distribution remains unit 102, integration 81 and end to end 26.
 - L14 — 2026-11-23 — Items routed outside this change. The literal one-concern-per-module reading of T11 remains unmet by the two multi-concern integration modules, which now disclose their concerns in-file; if that literal reading is adopted, the deviation needs the user's recorded acceptance. The same re-stated root-literal pattern this change fixed in the enrollment spec survives in three other unit specs and in the CLI test-support factory, and the engine's filesystem-error set still omits EEXIST; both are outside this authorization and are reported for their owners. The repository format check fails only on two pre-existing 2026-11-20 records that this change never touched.
+- L15 — S1 — passed: every actual mutation — payload writes, eligible retired-raw deletions, the bindings save, the conditional report, the root blocker write and the conditional secret file or directory — is validated before the first mutation, an unsafe plan is refused with nothing written, and untouched paths are excluded; the evidence ran against the committed candidate `363f5442f2b0153111692b6d9b6c2907469cddb5` through the guard integration cases and the assembled-operation refusal cases.
+- L16 — S2 — passed: the read preflight clears every path whose contents are read before it is read — the payload destinations, the root file and the ignore file — refusing a link, an escape from the destination root or a non-regular managed destination, and the ignore file is read only when the read preflight cleared it; the evidence ran against `363f5442f2b0153111692b6d9b6c2907469cddb5`.
+- L17 — S3 — passed: valid, safe operations keep their previous results — generated contents, deletion behavior, the published exit contract, ownership rules and credential handling — proven by the whole package suite and the end-to-end suite against `363f5442f2b0153111692b6d9b6c2907469cddb5`, including the pinned write-failure case that must still surface as a write-time failure at the drift exit status.
+- L18 — S4 — passed: the OpenCode secret setup plans its writes from the post-synchronization state, including a configuration this same run creates, an existing credential is never read and never overwritten, and Cursor writes no secret material; the evidence ran against `363f5442f2b0153111692b6d9b6c2907469cddb5`.
+- L19 — S5 — passed: only an eligible retired raw destination is removed, while a region-managed and a merge-managed destination stay destination-owned and preserved; the evidence ran against `363f5442f2b0153111692b6d9b6c2907469cddb5`.
+- L20 — S6 — passed: the domain rule stays in the domain, the filesystem facts stay in infrastructure and the orchestration stays in the application, no new layer or framework was introduced, the existing root resolver and the existing blocker transformation are reused, and the independent architecture and security review returned [PASS] with zero open findings against `363f5442f2b0153111692b6d9b6c2907469cddb5`.
+- L21 — Close: the delivered bytes are committed at `363f5442f2b0153111692b6d9b6c2907469cddb5` on `feat/odd/core-sync-mutation-safety`; the independent architecture and security review and the independent test-architecture review both returned [PASS] with zero open findings against those bytes, the whole package and end-to-end suites pass, and the items recorded at L9 and L14 are routed to their owners rather than closed here.
