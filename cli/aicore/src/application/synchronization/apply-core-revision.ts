@@ -3,9 +3,9 @@
  *
  * This coordinator holds the update's own request handling, its validation gates
  * in their original order, the read preflight, execution of the validated
- * envelope and the result message. The effective document is determined by
+ * mutation set and the result message. The effective document is determined by
  * `PlanSynchronizationDocument`, the payload changes by `PlanUpdateChanges`,
- * and the mutations by `PrepareSynchronizationExecution`.
+ * and the set is validated by `PrepareSynchronizationExecution`.
  *
  * A region destination's core region is replaced and its frontmatter identity
  * keys are refreshed from the source; an unrefreshable frontmatter keeps its

@@ -3,9 +3,10 @@
  *
  * This coordinator holds the enrollment's own request handling, its declaration
  * gates in their original order, the read preflight, execution of the validated
- * envelope and the result message. The effective document is determined by
+ * mutation set and the result message. The effective document is determined by
  * `PlanSynchronizationDocument`, the payload changes by
- * `PlanEnrollmentChanges`, and the mutations by `PrepareSynchronizationExecution`.
+ * `PlanEnrollmentChanges`, and the set is validated by
+ * `PrepareSynchronizationExecution`.
  *
  * Enrollment is the only command that creates a merge target, and only when this
  * run newly binds it and it is absent: every later `init`, and `apply`, report a

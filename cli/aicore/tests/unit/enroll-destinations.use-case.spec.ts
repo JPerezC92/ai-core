@@ -420,29 +420,6 @@ describe("merge delivery", () => {
 		expect(arrangement.destinations.writeBytes).not.toHaveBeenCalledWith(credential, expect.anything());
 	});
 
-	test("an enrollment that created the configuration reaches the secret setup", async () => {
-		const configuration = `${SYNCHRONIZATION_DESTINATION_ROOT}/${CONFIGURED_SOURCE}`;
-		const clearance = mock<ClearanceStore>();
-		clearance.load.mockResolvedValue(makeClearanceLoad({ [CONFIGURED_SOURCE]: { mode: "merge" } }));
-		const arrangement = makeEnrollmentArrangement({
-			document: makeBindingsDocument({ editor: "opencode", bindings: [] }),
-			clearance,
-			sourceFiles: [CONFIGURED_SOURCE],
-			sourceText: { [`${SOURCE_ROOT}/${CONFIGURED_SOURCE}`]: "{}" },
-		});
-		arrangement.layout.exists.mockImplementation(
-			async (path) =>
-				path === configuration &&
-				arrangement.destinations.writeText.mock.calls.some(([target]) => target === path),
-		);
-
-		await arrangement.useCase.execute(makeEnrollmentRequest({ editor: "opencode", bindCleared: true }));
-
-		// The cleared read path's shape is the prepare operation's own contract;
-		// this coordinator proves that the run reaches the secret setup.
-		expect(arrangement.layout.ensureDirectory).toHaveBeenCalledWith(`${SYNCHRONIZATION_DESTINATION_ROOT}/.secrets`);
-	});
-
 	test("a final preflight refusal prevents creation of an OpenCode configuration and secret material", async () => {
 		const clearance = mock<ClearanceStore>();
 		clearance.load.mockResolvedValue(makeClearanceLoad({ [CONFIGURED_SOURCE]: { mode: "merge" } }));

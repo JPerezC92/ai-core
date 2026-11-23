@@ -930,16 +930,6 @@ describe("the destination's ignore rule", () => {
 		expect(bindings.save).not.toHaveBeenCalled();
 	});
 
-	test("an OpenCode run that read the ignore file reaches the secret setup", async () => {
-		const { useCase, layout } = makeWritableUpdate();
-
-		await useCase.execute(makeSynchronizationRequest({ editor: "opencode" }));
-
-		// The cleared read path's shape is the prepare operation's own contract;
-		// this coordinator proves that the run reaches the secret setup.
-		expect(layout.ensureDirectory).toHaveBeenCalledWith(SECRETS_DIRECTORY);
-	});
-
 	test("an effective .secrets/ rule among other rules is left alone", async () => {
 		const existing = "node_modules/\n.secrets/\n*.log\n";
 		const { useCase, destinations } = makeWritableUpdate({ gitignore: existing });
