@@ -13,6 +13,7 @@ import type { ClearanceEntry } from "./clearance.ts";
 import type { SynchronizationFailure } from "./failures.ts";
 import type { ReconciliationEntry, MissingRegionSource } from "./reconciliation.ts";
 import type { SourceCoreRead } from "./regions.ts";
+import type { MutationOwner } from "./write-targets.ts";
 
 /** The clearance registry, read from the source root. */
 export type ClearanceLoad = {
@@ -59,6 +60,12 @@ export interface DestinationFiles {
 	remove(path: string): Promise<void>;
 }
 
+/** Ordered payload effects used to project the root before any mutation. */
+export type PlannedPayload =
+	| { readonly kind: "text-write"; readonly path: string; readonly content: string }
+	| { readonly kind: "byte-write"; readonly path: string; readonly content: Uint8Array }
+	| { readonly kind: "file-delete"; readonly path: string };
+
 /** Path and layout questions about the two roots. */
 export interface FilesystemLayout {
 	exists(path: string): Promise<boolean>;
@@ -84,6 +91,14 @@ export interface FilesystemLayout {
 	resolveRootFile(destinationRoot: string, document: BindingsDocument): Promise<string>;
 	/** The destination instruction root present on disk, or `null`. */
 	detectRootFile(destinationRoot: string): Promise<string | null>;
+	/** Caller must validate root paths for safe reads before invoking this projection. */
+	planBlocker(
+		destinationRoot: string,
+		document: BindingsDocument,
+		pending: readonly string[],
+		missing: readonly MissingRegionSource[],
+		payload: readonly PlannedPayload[],
+	): Promise<{ readonly path: string; readonly content: string } | null>;
 	/** Bring the root runtime file's blocker in line with `pending` and any missing region-managed source. */
 	syncBlocker(
 		destinationRoot: string,
@@ -92,6 +107,34 @@ export interface FilesystemLayout {
 		missing: readonly MissingRegionSource[],
 	): Promise<void>;
 }
+
+/** One path whose contents a command reads, with the owner of that path. */
+export type PlannedRead = {
+	readonly path: string;
+	/**
+	 * The owner of the read path.
+	 *
+	 * The owner is what the read phase tolerates: the secret setup's own ignore
+	 * file may be a directory, because the write that follows it is the
+	 * operation that reports the filesystem's refusal. Every other owner still
+	 * refuses a directory before the read happens.
+	 */
+	readonly owner: MutationOwner;
+};
+
+/** One effective filesystem mutation to validate before it is performed. */
+export type PlannedMutation = {
+	readonly path: string;
+	readonly kind: "file-write" | "file-delete" | "directory-create";
+	/**
+	 * The owner of the changed path.
+	 *
+	 * Two mutations of the same owner may resolve to one path — the root
+	 * runtime file is both a payload destination and the file the blocker is
+	 * written into — while two different owners may not.
+	 */
+	readonly owner: MutationOwner;
+};
 
 /** Everything the write-target preflight needs to know about a command. */
 export type WriteTargetRequest = {
@@ -102,6 +145,12 @@ export type WriteTargetRequest = {
 	readonly document: BindingsDocument;
 	readonly modes: ReadonlyMap<string, BindingMode>;
 	readonly newRawDestinations: ReadonlySet<string>;
+	/** The preflight phase: the reads to validate, or the mutations to validate. */
+	readonly phase?: "read" | "mutations";
+	/** The paths whose contents are read, validated before they are read. */
+	readonly readPaths?: readonly PlannedRead[];
+	/** The effective mutations, validated before the first mutation happens. */
+	readonly mutations?: readonly PlannedMutation[];
 };
 
 export interface WriteTargetGuard {

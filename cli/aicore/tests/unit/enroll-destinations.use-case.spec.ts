@@ -76,7 +76,7 @@ function makeEnrollmentArrangement(options: EnrollArrangement = {}): {
 	const bindings = mock<BindingsStore>();
 	bindings.load.mockResolvedValue(options.document ?? makeBindingsDocument());
 
-	const clearance = options.clearance ?? (mock<ClearanceStore>() as MockProxy<ClearanceStore>);
+	const clearance: MockProxy<ClearanceStore> = options.clearance ?? mock<ClearanceStore>();
 	if (options.clearance === undefined) {
 		clearance.load.mockResolvedValue(makeClearanceLoad({ [BOUND_SOURCE]: { mode: "region" } }));
 	}
@@ -349,6 +349,92 @@ describe("merge delivery", () => {
 		vi.clearAllMocks();
 	});
 
+	test("a newly created OpenCode configuration enables secret setup without reading an existing credential", async () => {
+		const configuration = `${SYNCHRONIZATION_DESTINATION_ROOT}/${CONFIGURED_SOURCE}`;
+		const credential = `${SYNCHRONIZATION_DESTINATION_ROOT}/.secrets/context7-api-key`;
+		const ignore = `${SYNCHRONIZATION_DESTINATION_ROOT}/.gitignore`;
+		const clearance = mock<ClearanceStore>();
+		clearance.load.mockResolvedValue(makeClearanceLoad({ [CONFIGURED_SOURCE]: { mode: "merge" } }));
+		const arrangement = makeEnrollmentArrangement({
+			document: makeBindingsDocument({ editor: "opencode", bindings: [] }),
+			clearance,
+			sourceFiles: [CONFIGURED_SOURCE],
+			sourceText: { [`${SOURCE_ROOT}/${CONFIGURED_SOURCE}`]: "{}" },
+		});
+		arrangement.layout.exists.mockImplementation(
+			async (path) =>
+				path === credential ||
+				(path === configuration &&
+					arrangement.destinations.writeText.mock.calls.some(([target]) => target === path)),
+		);
+
+		const outcome = await arrangement.useCase.execute(
+			makeEnrollmentRequest({ editor: "opencode", bindCleared: true }),
+		);
+
+		expect(outcome.ok).toBe(true);
+		expect(arrangement.destinations.writeText).toHaveBeenCalledWith(configuration, expect.any(String));
+		expect(arrangement.destinations.writeBytes).toHaveBeenCalledWith(
+			ignore,
+			new TextEncoder().encode(".secrets/\n"),
+		);
+		expect(arrangement.layout.ensureDirectory).toHaveBeenCalledWith(`${SYNCHRONIZATION_DESTINATION_ROOT}/.secrets`);
+		expect(arrangement.destinations.readText).not.toHaveBeenCalledWith(credential);
+		expect(arrangement.destinations.readBytes).not.toHaveBeenCalledWith(credential);
+		expect(arrangement.destinations.writeBytes).not.toHaveBeenCalledWith(credential, expect.anything());
+	});
+
+	test("the ignore file's read is cleared as the secret setup's own read", async () => {
+		const configuration = `${SYNCHRONIZATION_DESTINATION_ROOT}/${CONFIGURED_SOURCE}`;
+		const ignore = `${SYNCHRONIZATION_DESTINATION_ROOT}/.gitignore`;
+		const clearance = mock<ClearanceStore>();
+		clearance.load.mockResolvedValue(makeClearanceLoad({ [CONFIGURED_SOURCE]: { mode: "merge" } }));
+		const arrangement = makeEnrollmentArrangement({
+			document: makeBindingsDocument({ editor: "opencode", bindings: [] }),
+			clearance,
+			sourceFiles: [CONFIGURED_SOURCE],
+			sourceText: { [`${SOURCE_ROOT}/${CONFIGURED_SOURCE}`]: "{}" },
+		});
+		arrangement.layout.exists.mockImplementation(
+			async (path) =>
+				path === configuration &&
+				arrangement.destinations.writeText.mock.calls.some(([target]) => target === path),
+		);
+
+		await arrangement.useCase.execute(makeEnrollmentRequest({ editor: "opencode", bindCleared: true }));
+
+		const ignoreRead = arrangement.guard.refuse.mock.calls
+			.flatMap(([request]) => request.readPaths ?? [])
+			.find((read) => read.path === ignore);
+		expect(ignoreRead).toEqual({ path: ignore, owner: "secret" });
+	});
+
+	test("a final preflight refusal prevents creation of an OpenCode configuration and secret material", async () => {
+		const clearance = mock<ClearanceStore>();
+		clearance.load.mockResolvedValue(makeClearanceLoad({ [CONFIGURED_SOURCE]: { mode: "merge" } }));
+		const arrangement = makeEnrollmentArrangement({
+			document: makeBindingsDocument({ editor: "opencode", bindings: [] }),
+			clearance,
+			sourceFiles: [CONFIGURED_SOURCE],
+			sourceText: { [`${SOURCE_ROOT}/${CONFIGURED_SOURCE}`]: "{}" },
+		});
+		arrangement.guard.refuse.mockResolvedValueOnce(null).mockResolvedValueOnce({
+			code: "invalid",
+			message: "invalid write target: unsafe secret mutation",
+		});
+
+		const outcome = await arrangement.useCase.execute(
+			makeEnrollmentRequest({ editor: "opencode", bindCleared: true }),
+		);
+
+		expect(outcome.ok).toBe(false);
+		expect(arrangement.destinations.writeText).not.toHaveBeenCalled();
+		expect(arrangement.destinations.writeBytes).not.toHaveBeenCalled();
+		expect(arrangement.destinations.remove).not.toHaveBeenCalled();
+		expect(arrangement.layout.ensureDirectory).not.toHaveBeenCalled();
+		expect(arrangement.bindings.save).not.toHaveBeenCalled();
+	});
+
 	test("the merged configuration omits the named server and retargets qmd to this destination", async () => {
 		const sourceText = `{
   "mcp": {
@@ -362,14 +448,14 @@ describe("merge delivery", () => {
 		clearance.load.mockResolvedValue(
 			makeClearanceLoad({ [CONFIGURED_SOURCE]: { mode: "merge", omit_mcp_servers: ["system-one"] } }),
 		);
-		const destinationPath = `G:/projects/destination/${CONFIGURED_SOURCE}`;
+		const destinationPath = `${SYNCHRONIZATION_DESTINATION_ROOT}/${CONFIGURED_SOURCE}`;
 		const { useCase, destinations, bindings } = makeEnrollmentArrangement({
 			document: makeBindingsDocument({
 				editor: "opencode",
 				bindings: [{ source: CONFIGURED_SOURCE, destinations: [CONFIGURED_SOURCE], declaredMode: "merge" }],
 			}),
 			clearance,
-			sourceText: { [`G:/projects/ai-core/${CONFIGURED_SOURCE}`]: sourceText },
+			sourceText: { [`${SOURCE_ROOT}/${CONFIGURED_SOURCE}`]: sourceText },
 			destinationText: { [destinationPath]: "{}" },
 		});
 
@@ -404,10 +490,10 @@ describe("region enrollment", () => {
 	});
 
 	test("a markerless destination becomes a core region plus a project region holding its prior body", async () => {
-		const destinationPath = `G:/projects/destination/${BOUND_SOURCE}`;
+		const destinationPath = `${SYNCHRONIZATION_DESTINATION_ROOT}/${BOUND_SOURCE}`;
 		const arrangement = makeEnrollmentArrangement({
 			document: makeBindingsDocument(),
-			sourceText: { [`G:/projects/ai-core/${BOUND_SOURCE}`]: REGION_SOURCE_TEXT },
+			sourceText: { [`${SOURCE_ROOT}/${BOUND_SOURCE}`]: REGION_SOURCE_TEXT },
 			destinationText: { [destinationPath]: PRIOR_BODY },
 		});
 		arrangement.sources.readCore.mockResolvedValue({ kind: "core", core: "core body\n" });
@@ -435,7 +521,7 @@ describe("raw enrollment", () => {
 
 	test("a raw destination records no report entry and no pending entry", async () => {
 		const payload = new TextEncoder().encode("raw bytes\n");
-		const destinationPath = `G:/projects/destination/${BOUND_SOURCE}`;
+		const destinationPath = `${SYNCHRONIZATION_DESTINATION_ROOT}/${BOUND_SOURCE}`;
 		const clearance = mock<ClearanceStore>();
 		clearance.load.mockResolvedValue(makeClearanceLoad({ [BOUND_SOURCE]: { mode: "raw" } }));
 		const arrangement = makeEnrollmentArrangement({
@@ -458,6 +544,27 @@ describe("raw enrollment", () => {
 		// `initialized` entry nor an outstanding-path entry.
 		expect(arrangement.bindings.writeReport).not.toHaveBeenCalled();
 		expect(savedDocument(arrangement.bindings)?.pending).toEqual([]);
+	});
+
+	test("a raw destination that already holds the source's bytes is not written again", async () => {
+		const payload = new TextEncoder().encode("raw bytes\n");
+		const clearance = mock<ClearanceStore>();
+		clearance.load.mockResolvedValue(makeClearanceLoad({ [BOUND_SOURCE]: { mode: "raw" } }));
+		const arrangement = makeEnrollmentArrangement({
+			document: makeBindingsDocument({
+				bindings: [{ source: BOUND_SOURCE, destinations: [BOUND_SOURCE], declaredMode: "raw" }],
+			}),
+			clearance,
+		});
+		arrangement.sources.readBytes.mockResolvedValue(payload);
+		// The destination already holds the source's bytes, so the run has
+		// nothing to deliver and skips the write.
+		arrangement.destinations.readBytes.mockResolvedValue(payload);
+
+		const outcome = await arrangement.useCase.execute(makeEnrollmentRequest());
+
+		expect(outcome.ok).toBe(true);
+		expect(arrangement.destinations.writeBytes).not.toHaveBeenCalled();
 	});
 });
 
@@ -582,7 +689,7 @@ describe("root role", () => {
 
 	test("--root enrolls the root-role source at the named path", async () => {
 		const rootPath = "CLAUDE.md";
-		const destinationPath = `G:/projects/destination/${rootPath}`;
+		const destinationPath = `${SYNCHRONIZATION_DESTINATION_ROOT}/${rootPath}`;
 		const arrangement = makeEnrollmentArrangement({
 			document: makeBindingsDocument({ bindings: [] }),
 			clearance: rootClearance(),

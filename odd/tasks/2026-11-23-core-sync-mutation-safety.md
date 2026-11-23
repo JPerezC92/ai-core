@@ -1,0 +1,150 @@
+# Core Sync mutation safety
+
+> **Status:** active
+> **Owner:** Cipher 🔓 (Lead Orchestrator)
+> **Created:** 2026-11-23
+> **Objective:** Preflight effective synchronization mutations without changing valid safe behavior.
+> **Branch:** `feat/odd/core-sync-mutation-safety`, created by Herald 📯 (Release Manager) from `c6fe1de8c8c22f5ef4ad85669d21b78b63f2040b`.
+> **Delivery:** One security-sensitive work unit over twelve paths — seven production files, four test files and this record — delivered as a single focused commit. The authored change is 1,584 additions and 92 deletions across the eleven tracked files plus this 150-line record, so it exceeds the ~400-line strategy trigger; the single-unit commit is the deliberate choice because the preflight mechanism, its planners and the two callers are one inseparable correction, no slice of them is independently deliverable, and the independent review covered the combined candidate. Rollback boundary: those twelve paths; the affected durable requirements are unchanged.
+> **Runner:** `pnpm --dir cli/aicore test` and `pnpm --dir cli/aicore test:e2e` for applicable safe disposable fixtures; `pnpm --dir cli/aicore typecheck`.
+
+Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) before creating or maintaining this record. Its creation, delivery, change and closure procedures are canonical; this template illustrates their layout, not another policy definition.
+
+## Specs
+
+- S1 — Actual unsafe synchronization mutations are refused before mutation. Exact requirement: "Only introduce refusals for actual mutations that violate the existing documented safety contract." Acceptance: run a disposable unsafe mutation scenario and observe refusal before any mutation.
+- S2 — Early preflight prevents unsafe reads. Exact requirement: "Preserve the existing early preflight. The new mutation planning must not introduce unsafe reads or follow unvalidated symlinks, including when inspecting `.gitignore` to determine whether a write is necessary." Acceptance: exercise an unsafe ignore-file path in an isolated fixture and observe refusal before its contents are read.
+- S3 — Safe operations retain behavior and ownership. Exact requirement: "Preserve all existing intended functionality, synchronization semantics, ownership rules, public contracts, and observable behavior for valid, safe operations." Acceptance: compare authorized safe examples before and after the change and observe identical outcomes.
+- S4 — Post-synchronization OpenCode conditional mutations are planned without disturbing untouched credentials. Exact requirement: "Preserve the existing OpenCode/Cursor behavior, credential protection, and raw/region/merge retirement semantics." Acceptance: exercise a planned OpenCode configuration creation and an existing credential in isolated fixtures and observe required secret setup without reading or overwriting the credential.
+- S5 — Retirement respects ownership. Exact requirement: "Preserve the rule that retired raw destinations may be removed, while region and merge destinations are not retired as Core-owned files." Acceptance: exercise retirement for each mode in disposable fixtures and observe only eligible raw destinations removed.
+- S6 — Existing architectural boundaries are retained. Exact requirement: "Reuse the existing domain/application/infrastructure boundaries and comply with AICore's C11 complexity policy." Acceptance: inspect the candidate imports and responsibilities and observe no new architectural layer or unrelated functionality.
+
+## Tasks
+
+- T1 | S1, S2, S3, S4, S5, S6 | delegated (security-sensitive implementation and focused tests) — Forge 🔨 (Implementer) | open | commit: pending
+- T2 | S1, S2, S3, S4, S5, S6 | delegated (independent material security and architecture review) — Bastion 🧱 (Backend & Scripts Architect) | open | commit: pending
+- T3 | S1, S2, S3, S4, S5, S6 | inline (independent acceptance and durable requirement reconciliation) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
+
+## Log
+
+- L1 — 2026-11-23 — Original request, verbatim: "I authorize implementation of **Unit A (ARCH-002) only**, according to the final approved design.
+
+  The authorization includes the six expected production files, the three expected test files, the required ODD records, focused disposable-fixture tests, and independent architecture/security review.
+
+  **Non-negotiable constraints:**
+  1. Preserve all existing intended functionality, synchronization semantics, ownership rules, public contracts, and observable behavior for valid, safe operations.
+  2. Only introduce refusals for actual mutations that violate the existing documented safety contract.
+  3. Preserve the existing early preflight. The new mutation planning must not introduce unsafe reads or follow unvalidated symlinks, including when inspecting `.gitignore` to determine whether a write is necessary.
+  4. Reuse the existing domain/application/infrastructure boundaries and comply with AICore's C11 complexity policy.
+  5. Do not introduce new architectural layers, frameworks, unrelated refactoring, or functionality.
+  6. Preserve the existing OpenCode/Cursor behavior, credential protection, and raw/region/merge retirement semantics.
+  7. Use isolated, disposable fixtures. Do not execute filesystem safety tests against real destination projects.
+  8. Follow the established ODD workflow and obtain the required independent review before declaring completion.
+  9. Herald remains the exclusive executor for Git/GitHub operations. Follow the repository's existing approval gates.
+  10. If the required production-file scope materially expands or a functional change becomes necessary, stop and request explicit authorization.
+
+  ARCH-003 and Units B–E remain unauthorized. Do not modify their behavior as part of Unit A.
+
+  After implementation, report:
+  - Exact files changed.
+  - Architectural compliance evidence.
+  - Functional-equivalence test results.
+  - Safety regression test results.
+  - Independent reviewer findings and their resolution.
+  - Remaining risks or limitations.
+  - Final completion status.
+
+  Do not declare the work complete unless the required verification and review have passed."
+- L2 — 2026-11-23 — Prior accepted design requires planning conditional secret writes against the post-synchronization configuration and excluding untouched destination-owned paths; early preflight must precede any unsafe read. Full feature mirror pending recovery; no readback established. Durable requirements affected: `odd/features/core-synchronization.md` R10, R11, R12, R18, R22 and `odd/features/core-sync-source-lifecycle.md` R1, R3, R4, R8, R9, R10; re-verification pending.
+- L3 — 2026-11-23 — Scope amendment, verbatim: "I authorize the proposed minimal Unit A scope amendment.
+
+  The additional authorized files are:
+  - `cli/aicore/src/infrastructure/synchronization/local-filesystem-layout.ts`
+  - `cli/aicore/tests/integration/local-filesystem-layout.test.ts`
+
+  This authorization extends the existing Unit A implementation scope only.
+
+  **Non-negotiable requirements:**
+  1. Preserve all existing Core Sync functionality, root-selection semantics, blocker content, synchronization behavior, and public contracts for valid, safe operations.
+  2. Keep root selection and filesystem operations owned by the existing infrastructure adapter.
+  3. Reuse the existing domain-owned `syncReconciliationBlocker()` transformation. Do not duplicate root-selection or blocker-generation logic in application services.
+  4. Provide the minimum mechanism necessary to determine the effective post-payload root-blocker mutation before the first filesystem mutation.
+  5. Preserve explicit `document.root` behavior and the existing `AGENTS.md` detection rules.
+  6. Preserve the existing early safety preflight. Planning must not introduce unsafe filesystem reads, including reads through unvalidated symlinks or aliases.
+  7. Exclude genuine no-op operations from mutation-only refusals. Do not introduce new refusals for untouched destination-owned content.
+  8. Do not introduce new architectural layers, generic filesystem planning frameworks, unnecessary abstractions, or unrelated refactoring. Follow AICore's C11 complexity policy.
+  9. Add focused disposable-fixture tests covering root creation, explicit root selection, existing root content, unchanged blocker content, actual blocker mutations, and relevant filesystem safety cases.
+  10. Continue the previously authorized Unit A implementation, functional-equivalence verification, ODD workflow, and independent architecture/security review.
+
+  The original six production files and previously authorized tests remain in scope.
+
+  **ARCH-003 and Units B–E remain unauthorized.**
+
+  If additional production files become necessary, or functional behavior must change beyond the existing documented safety refusals, stop and request explicit authorization before expanding the scope.
+
+  Do not stop after implementing the root-blocker adjustment. Complete the remaining authorized Unit A work and report its final verification status.
+
+  Only declare **FINALIZED** after implementation, focused tests, functional-equivalence verification, and independent review have passed." Root owner is `local-filesystem-layout.ts:84–120`; domain transformation is `reconciliation.ts:146–170`. Replanned rollback boundary adds the two named paths; tests and independent review remain pending, mirror remains pending.
+- L4 — 2026-11-23 — Correction, verbatim: "Before proceeding, distinguish between:
+  - An operation that will not perform a filesystem mutation.
+  - An operation that performs a filesystem write even if its resulting content is unchanged.
+
+  In particular, inspect the existing difference between `ApplyCoreRevision` and `EnrollDestinations` for raw destinations.
+
+  Do not change either command's existing write semantics merely to simplify the preflight.
+
+  A planned write remains subject to the safety contract even when its bytes match the current file."
+  The user further directs a verified root-blocker projection vertical slice before guard integration; preserve the existing architecture and all previously authorized Unit A constraints. Mirror recovery and tests remain pending.
+- L5 — 2026-11-23 — User correction, verbatim: "Do not implement a credential-path-specific refusal yet.
+
+  I am concerned that this approach may introduce magic strings, duplicate path knowledge, and change existing Core Sync functionality.
+
+  **The objective remains implementation correction, not functional modification.**
+
+  Before proceeding, distinguish these existing contracts:
+  1. Generic path validation and filesystem write safety.
+  2. Raw-binding synchronization semantics.
+  3. OpenCode-specific secret initialization and preservation.
+
+  The existing `ensureOpenCodeSecrets()` behavior must preserve existing credential files. However, do not automatically assume that its specific protection rule applies to every raw binding in the synchronization domain.
+
+  ### Architecture requirements
+  - Do not hardcode `.secrets/context7-api-key` checks in generic domain validators, guards, or synchronization use cases.
+  - Do not introduce a new reserved-path policy without explicit authorization.
+  - Keep path-specific knowledge within its existing owning component.
+  - Reuse existing named constants where appropriate.
+  - Do not duplicate path definitions across layers.
+  - Keep the generic write-target guard focused on filesystem safety and actual planned mutations.
+  - Preserve the existing raw synchronization contract unless a separately authorized policy explicitly changes it.
+  - Follow AICore's C11 complexity policy. Do not introduce additional abstraction layers merely to eliminate string literals.
+
+  ### Required analysis
+
+  Determine whether the existing no-read/no-overwrite guarantee is scoped to OpenCode secret initialization or is an authoritative global restriction on all Core Sync operations.
+
+  Cite the exact governing documentation and implementation.
+
+  Explain whether a raw binding to this path is currently permitted intentionally, merely technically accepted, or explicitly prohibited by another existing contract.
+
+  If there is no global restriction, do not invent one as part of ARCH-002.
+
+  If the contracts genuinely conflict, present the smallest policy decision required, its compatibility impact, and its proper architectural owner.
+
+  ### Unit A
+
+  Continue implementing the already authorized generic mutation-preflight correction wherever this conflict does not affect the work.
+
+  Do not introduce credential-specific refusals until the governing contract is established and any necessary functional change receives explicit approval.
+
+  Do not change ARCH-003 or Units B–E.
+
+  Do not declare Unit A complete until all required safety and functional-equivalence verification passes." The helper's own no-read/no-overwrite behavior is evidenced in `open-code-secrets.ts:1–9,68–96`; generic raw enrollment reads and may overwrite a destination in `enroll-destinations.ts:248–267`. R22 in `odd/features/core-synchronization.md:30` states secret contents are never distributed or overwritten without defining conflicting raw-binding disposition. No intentional permission or explicit exclusion is established; policy remains unresolved and no reserved-path change is authorized. Generic preflight remains in scope.
+- L6 — 2026-11-23 — Implementation and verification, outcome and pointer. The effective-mutation preflight is connected: both operations build the ordered payload and deletion effects, clear the paths they read before reading them, project the post-payload root blocker and the OpenCode secret writes, and validate the complete actual mutation set before the first mutation; the root-blocker projection, the secret planner and the guard's read and mutation phases are no longer disconnected. Verification observed by the coordinator on this candidate: `pnpm --dir cli/aicore test` 24 files, 189 passed and 1 skipped; `pnpm --dir cli/aicore test:e2e` 17 files, 26 passed; `pnpm --dir cli/aicore typecheck` exit 0; `pnpm lint` exit 0; the Biome format check clean over the changed paths. The whole-package and end-to-end suites are the equivalence evidence for safe operations: the pre-existing exit contract, generated contents, deletion behavior, ownership rules and credential handling are unchanged. Detail lives in the committed diff and the test suites.
+- L7 — 2026-11-23 — Independent review round 1, outcome and pointer. The independent architecture and security reviewer returned [FAIL] with five findings against the eleven reviewed paths: the mutations phase no longer observed the resolved root file, so the root/non-region alias refusal stopped running; the read preflight covered only file-typed destinations, so a directory at a managed destination drifted instead of being refused; the ignore file was read without being cleared when the destination receives no secret setup; the planner and the executor disagreed about the secrets directory, so a creation that would never be performed was refused; and the last-pending-effect rule existed twice across layers. All five were corrected in this work unit, together with the exit-2 diagnostic wording for a directory-create target. The reviewer also refuted one of its own premises in round 2: the byte-decoding difference it reported does not exist, because `TextDecoder` with `ignoreBOM: true` keeps a BOM exactly as the executor's read does, so that correction changed where the rule lives and nothing else. Detail lives in the reviewer's findings and the committed diff.
+- L8 — 2026-11-23 — Independent review round 2, outcome and pointer. The same reviewer returned [PASS] with all five findings closed, no new rule violation and no dead or unreachable code; it confirmed every actual mutation is validated before the first mutation, untouched paths are excluded, reads are cleared first, one path identity is used across the projections, apply still queues an equal-byte raw write while enrollment still skips it, the credential file is never read or overwritten, Cursor still writes no secret material, and a directory occupying the ignore file still surfaces as a write-time failure at exit 1 rather than an unsafe write target at exit 2. Two information notes are recorded without action: the read preflight now refuses a managed destination whose path contains a symbolic link, including a linked parent that resolves inside the destination root, which the previous preflight allowed — a tightening that conforms to R11 and to the domain rule's own wording and is disclosed here as a compatibility note; and the exit-2 diagnostic for a non-regular managed destination now reads "read path is not a regular file" instead of "destination payload write target is not a regular file", the same exit class with no published text pinned. The reviewer could not hash the snapshot; the coordinator hashed the reviewed paths before and after each round and the values matched.
+- L9 — 2026-11-23 — Pre-existing gap outside this authorization, and the unresolved requirement tension. The engine's filesystem-error set omits `EEXIST`, so a `.secrets` path occupied by a regular file surfaces as an unhandled exception at exit 1 instead of the "core-sync I/O error" rendering; the independent review confirmed this behavior is pre-existing and unchanged by this work, and it belongs to the error-classification area this authorization excludes, so it is reported rather than changed. Separately, R22's clause that secret contents are never distributed or overwritten does not define the disposition of a raw binding that targets the credential path; that tension is pre-existing, is neither introduced nor resolved by this work, and no reserved-path policy was added. This change does not claim R22 fully satisfied.
+- L10 — 2026-11-23 — Durable requirement reconciliation. The affected durable files were read and are unchanged by this work: `odd/features/core-synchronization.md` R11, R12, R18 and R22 and `odd/features/core-sync-source-lifecycle.md` R1, R3, R8, R9 and R10 keep their ticks. No requirement was added, reworded or retired, so no durable file carries a change. R11, R12, R18 and the lifecycle requirements are re-verified by the suites above; R22's affected clauses — the secret directory created when missing, an existing credential keeping its exact contents and never being read, a missing credential created empty, and an effective ignore rule — are re-verified, while the clause's interaction with a raw binding that targets the credential path remains unresolved and is not claimed satisfied here. That question belongs to the Core Sync contract and needs the user's ruling.
+- L11 — 2026-11-23 — First failure and its resolution. The first failure this change produced was the end-to-end case that reports a write-time filesystem failure: the new preflight reclassified a directory occupying the ignore file as an unsafe write target, so the run exited 2 instead of the documented drift exit 1 with the I/O diagnostic. It was reproduced against the pre-change expectation, corrected by keeping the write-time classification for that path while retaining every other refusal, and the case passes. The independent review then found the remaining regressions listed at L7, each reproduced before its correction.
+- L12 — 2026-11-23 — Full-feature mirror. Pending recovery, not synchronized: the memory backend has no exact feature-key upsert, no explicit read-scope selection and no compare-and-swap, so no byte-verified mirror of this record exists and none is claimed. The authoritative file is complete in the repository.
+- L13 — 2026-11-23 — Test-architecture review, outcome and pointer. The independent test-architecture reviewer returned [FAIL] on round 1 with one T15 violation — six re-stated destination and source root literals in the enrollment unit spec — and seven advisories; the violation and the mechanical advisories were corrected in this work unit, one advisory's proposed deletion was retained with a stated distinct observable instead of being deleted, round 2 returned [ADVISORY] with every finding closed plus one new low advisory about an inaccurate header clause, and round 3 returned [PASS] with zero open findings. The reviewer corrected the coordinator's own disposition wording: the retained case is a read-phase call asserting the read refusal text, the guard-boundary proof of the payload-owned read rule and the payload side of the owner-contrast pair, while the mutation-phase text is pinned by a separate case. The reviewed modules' level placement, mocking library, factory sourcing, hermeticity and observable-outcome positioning conform to the contract and the TypeScript guide, and the package's test distribution remains unit 102, integration 81 and end to end 26.
+- L14 — 2026-11-23 — Items routed outside this change. The literal one-concern-per-module reading of T11 remains unmet by the two multi-concern integration modules, which now disclose their concerns in-file; if that literal reading is adopted, the deviation needs the user's recorded acceptance. The same re-stated root-literal pattern this change fixed in the enrollment spec survives in three other unit specs and in the CLI test-support factory, and the engine's filesystem-error set still omits EEXIST; both are outside this authorization and are reported for their owners. The repository format check fails only on two pre-existing 2026-11-20 records that this change never touched.

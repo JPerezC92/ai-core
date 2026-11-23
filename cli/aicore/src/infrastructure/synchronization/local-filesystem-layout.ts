@@ -14,12 +14,13 @@ import { excludedFromDistribution } from "#domain/synchronization/clearance.ts";
 import type { BindingsDocument } from "#domain/synchronization/bindings.ts";
 import { effectiveEditor } from "#domain/synchronization/editor-profile.ts";
 import { syncReconciliationBlocker, type MissingRegionSource } from "#domain/synchronization/reconciliation.ts";
-import type { FilesystemLayout } from "#domain/synchronization/ports.ts";
+import type { FilesystemLayout, PlannedPayload } from "#domain/synchronization/ports.ts";
+import { projectedPayloadText } from "#domain/synchronization/write-targets.ts";
 
 import { ensureDirectory, isMissing, readEntryKind, readTextFile, writeTextFile } from "./local-files.ts";
 
 /** A path's kind, as the preflight and the readers need to know it. */
-export type PathKind = "absent" | "file" | "other";
+type PathKind = "absent" | "file" | "other";
 
 export class LocalFilesystemLayout implements FilesystemLayout {
 	async exists(path: string): Promise<boolean> {
@@ -104,6 +105,27 @@ export class LocalFilesystemLayout implements FilesystemLayout {
 		return null;
 	}
 
+	async planBlocker(
+		destinationRoot: string,
+		document: BindingsDocument,
+		pending: readonly string[],
+		missing: readonly MissingRegionSource[],
+		payload: readonly PlannedPayload[],
+	): Promise<{ readonly path: string; readonly content: string } | null> {
+		// The caller's read preflight must cover the root and its ancestors before
+		// resolution or reading; this method never validates filesystem traversal.
+		const rootPath = await this.resolveRootFile(destinationRoot, document);
+		// The shared projection rule decides what the pending writes leave behind,
+		// so the planned blocker and the executed blocker agree on the content.
+		const projected = projectedPayloadText(rootPath, payload);
+		const text = projected === undefined ? await readTextFile(rootPath) : projected;
+		if (text === null) {
+			return null;
+		}
+		const next = syncReconciliationBlocker(text, pending, effectiveEditor(undefined, document.editor), missing);
+		return next === text ? null : { path: rootPath, content: next };
+	}
+
 	async syncBlocker(
 		destinationRoot: string,
 		document: BindingsDocument,
@@ -123,7 +145,7 @@ export class LocalFilesystemLayout implements FilesystemLayout {
 }
 
 /** Read a path's kind: absent, a regular file, or something else. */
-export async function readKind(path: string): Promise<PathKind> {
+async function readKind(path: string): Promise<PathKind> {
 	try {
 		const observed = await stat(path);
 		return observed.isFile() ? "file" : "other";

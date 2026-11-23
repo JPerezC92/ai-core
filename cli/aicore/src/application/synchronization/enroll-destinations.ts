@@ -17,6 +17,11 @@
  * A source the destination excludes is never bound and never written here, and
  * dropping a binding it held lists that destination in `pending` without
  * deleting the file.
+ *
+ * The run reads and writes through two preflights. The read preflight clears
+ * every path whose contents the run reads; the mutation preflight clears the
+ * complete set of writes the run performs, including the ones it only performs
+ * when their content changes.
  */
 
 import {
@@ -26,6 +31,8 @@ import {
 	MODE_MERGE,
 	MODE_RAW,
 	MODE_REGION,
+	RECONCILIATION_DIRECTORY,
+	RECONCILIATION_FILENAME,
 	ROLE_ROOT,
 } from "#domain/synchronization/constants.ts";
 import {
@@ -59,12 +66,15 @@ import type {
 	ClearanceStore,
 	DestinationFiles,
 	FilesystemLayout,
+	PlannedMutation,
+	PlannedPayload,
+	PlannedRead,
 	SourceFiles,
 	WriteTargetGuard,
 } from "#domain/synchronization/ports.ts";
 
 import { invalidClearance, readClearanceModes, sourceFacts } from "./clearance-modes.ts";
-import { ensureOpenCodeSecrets } from "./open-code-secrets.ts";
+import { ensureOpenCodeSecrets, planOpenCodeSecretWrites, prepareOpenCodeSecrets } from "./open-code-secrets.ts";
 import { projectName } from "./project-name.ts";
 import type { EnrollmentRequest } from "./requests.ts";
 
@@ -174,7 +184,9 @@ export class EnrollDestinations {
 		const newRawDestinations = new Set<string>([...declared.newRawDestinations, ...enrolled.newRawDestinations]);
 		const newMergeDestinations = enrolled.newMergeDestinations;
 
-		const refusal = await guard.refuse({
+		// Every path this run reads is cleared before it is read: the effective
+		// document the run acts on is guarded before any payload read.
+		const readRefusal = await guard.refuse({
 			command: "init",
 			sourceRoot: request.sourceRoot,
 			destinationRoot: request.destinationRoot,
@@ -182,9 +194,11 @@ export class EnrollDestinations {
 			document,
 			modes: clearance.modes,
 			newRawDestinations,
+			phase: "read",
+			readPaths: await destinationReadPaths(document, request.destinationRoot, layout),
 		});
-		if (refusal !== null) {
-			return failed(refusal);
+		if (readRefusal !== null) {
+			return failed(readRefusal);
 		}
 
 		const clearancePath = layout.join(request.sourceRoot, CLEARANCE_FILENAME);
@@ -372,6 +386,105 @@ export class EnrollDestinations {
 			}
 		}
 
+		// The pending effects, in the order the run applies them: the content a
+		// later projection reads is the content the earlier write leaves behind.
+		const payload: PlannedPayload[] = [
+			...textWrites.map((write) => ({ kind: "text-write" as const, path: write.path, content: write.content })),
+			...byteWrites.map((write) => ({ kind: "byte-write" as const, path: write.path, content: write.content })),
+		];
+		const retiredPaths: string[] = [];
+		for (const retired of withheld.retired) {
+			for (const destination of retired.destinations) {
+				retiredPaths.push(layout.join(request.destinationRoot, destination));
+			}
+		}
+		payload.push(...retiredPaths.map((path) => ({ kind: "file-delete" as const, path })));
+
+		const pinned: BindingsDocument = {
+			...document,
+			coreRevision: request.sourceRevision,
+			pending,
+			editor,
+		};
+
+		// The secret setup reads the ignore file only when it has to plan its
+		// rule, so that read is cleared on its own.
+		const preparation = await prepareOpenCodeSecrets(editor, request.destinationRoot, payload, layout);
+		if (preparation.readsIgnore) {
+			const ignoreRefusal = await guard.refuse({
+				command: "init",
+				sourceRoot: request.sourceRoot,
+				destinationRoot: request.destinationRoot,
+				bindingsPath: request.bindingsPath,
+				document,
+				modes: clearance.modes,
+				newRawDestinations,
+				phase: "read",
+				readPaths: [{ path: preparation.paths.gitignore, owner: "secret" }],
+			});
+			if (ignoreRefusal !== null) {
+				return failed(ignoreRefusal);
+			}
+		}
+		const secretMutations = await planOpenCodeSecretWrites(editor, preparation, payload, {
+			destinations,
+			layout,
+		});
+
+		// The root runtime file's blocker is a write of its own, and the
+		// projection says whether this run performs one.
+		const blocker =
+			(await layout.planBlocker(
+				request.destinationRoot,
+				pinned,
+				pending,
+				missingRegionSources(withheld.requiresReconciliation),
+				payload,
+			)) ?? null;
+
+		const mutations: PlannedMutation[] = [
+			...textWrites.map((write) => ({
+				path: write.path,
+				kind: "file-write" as const,
+				owner: "payload" as const,
+			})),
+			...byteWrites.map((write) => ({
+				path: write.path,
+				kind: "file-write" as const,
+				owner: "payload" as const,
+			})),
+			...retiredPaths.map((path) => ({ path, kind: "file-delete" as const, owner: "payload" as const })),
+			{ path: request.bindingsPath, kind: "file-write", owner: "bindings" },
+			...(reportEntries.length > 0
+				? [
+						{
+							path: layout.join(
+								layout.parent(request.bindingsPath),
+								`${RECONCILIATION_DIRECTORY}/${RECONCILIATION_FILENAME}`,
+							),
+							kind: "file-write" as const,
+							owner: "report" as const,
+						},
+					]
+				: []),
+			...(blocker === null ? [] : [{ path: blocker.path, kind: "file-write" as const, owner: "root" as const }]),
+			...secretMutations,
+		];
+		const mutationRefusal = await guard.refuse({
+			command: "init",
+			sourceRoot: request.sourceRoot,
+			destinationRoot: request.destinationRoot,
+			bindingsPath: request.bindingsPath,
+			document,
+			modes: clearance.modes,
+			newRawDestinations,
+			phase: "mutations",
+			mutations,
+		});
+		if (mutationRefusal !== null) {
+			return failed(mutationRefusal);
+		}
+
 		for (const write of textWrites) {
 			await layout.ensureDirectory(layout.parent(write.path));
 			await destinations.writeText(write.path, write.content);
@@ -382,8 +495,7 @@ export class EnrollDestinations {
 		}
 		for (const retired of withheld.retired) {
 			for (const destination of retired.destinations) {
-				const destinationPath = layout.join(request.destinationRoot, destination);
-				await destinations.remove(destinationPath);
+				await destinations.remove(layout.join(request.destinationRoot, destination));
 				notes.push(`retired: ${destination}`);
 			}
 		}
@@ -396,12 +508,6 @@ export class EnrollDestinations {
 			await bindings.writeReport(request.bindingsPath, reportEntries, request.sourceRevision);
 		}
 
-		const pinned: BindingsDocument = {
-			...document,
-			coreRevision: request.sourceRevision,
-			pending,
-			editor,
-		};
 		await bindings.save(request.bindingsPath, pinned);
 		await layout.syncBlocker(
 			request.destinationRoot,
@@ -412,6 +518,28 @@ export class EnrollDestinations {
 
 		return succeeded(["initialized", ...notes].join("; "));
 	}
+}
+
+/**
+ * The destination paths whose contents this run reads before it writes.
+ *
+ * Every bound destination is cleared, whatever its mode and whatever it is on
+ * disk: a destination that is a directory is an unsafe write target, not a
+ * missing file, and the read preflight is where that class is refused. Each
+ * read carries the owner of the path it reads.
+ */
+async function destinationReadPaths(
+	document: BindingsDocument,
+	destinationRoot: string,
+	layout: FilesystemLayout,
+): Promise<readonly PlannedRead[]> {
+	const paths: PlannedRead[] = [];
+	for (const entry of document.bindings) {
+		for (const destination of entry.destinations) {
+			paths.push({ path: layout.join(destinationRoot, destination), owner: "payload" });
+		}
+	}
+	return paths;
 }
 
 function appendOnce(pending: readonly string[], path: string): readonly string[] {
