@@ -1,13 +1,13 @@
 # AICore
 
-A reusable, agnostic **agentic orchestration core** for [OpenCode](https://opencode.ai): a lead-orchestrator runtime, a role-separated specialist roster, a skill library, shared evidence rules, and an ODD feature-document lifecycle. Another project adopts it **atomically** — one AICore revision for the complete applicable unit set — and customizes it there; the core itself stays neutral.
+A reusable, agnostic **agentic orchestration core** for [OpenCode](https://opencode.ai): a primary execution runtime, a single release-manager role for Git, a skill library, shared evidence rules, and an ODD feature-document lifecycle. Another project adopts it **atomically** — one AICore revision for the complete applicable unit set — and customizes it there; the core itself stays neutral.
 
 ## Find the owner for your task
 
 | Task                                               | Start here                                                                                                                                                                                                                                                                                      |
 | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Act on a request                                   | [AGENTS.md](AGENTS.md) is the lead runtime; [.aicore/core/knowledge/agent-workflow.md](.aicore/core/knowledge/agent-workflow.md) is the single workflow router, including ODD classification and task-specific reads.                                                                           |
-| Check evidence, coordination or safety obligations | [.aicore/core/knowledge/agents.md](.aicore/core/knowledge/agents.md); runtime authority and risk-triggered specialist review, plus edit, release and PR gates, remain in [AGENTS.md](AGENTS.md) and the assigned specialist runtime.                                                            |
+| Check evidence, coordination or safety obligations | [.aicore/core/knowledge/agents.md](.aicore/core/knowledge/agents.md); runtime authority, the verification policy and the release gates remain in [AGENTS.md](AGENTS.md) and [.aicore/core/knowledge/release.md](.aicore/core/knowledge/release.md).                                             |
 | Work on a feature                                  | `odd/tasks/<YYYY-MM-DD>-<feature-name>.md`, created from [.aicore/core/odd/tasks/_template.md](.aicore/core/odd/tasks/_template.md) through `.agents/skills/odd-workflow/SKILL.md`; Specs, Tasks and Log are the single feature record.                                                         |
 | Select architecture or testing definitions         | [.aicore/core/architecture/README.md](.aicore/core/architecture/README.md); [.aicore/core/architecture/testing/architecture.md](.aicore/core/architecture/testing/architecture.md) owns testing. Runtimes own procedures and gates; documentation acceptance is not implementation conformance. |
 | Reuse research or read explanatory documentation   | [docs/README.md](docs/README.md) → [research catalog](docs/research/README.md). Research and history are evidence, not execution authority.                                                                                                                                                     |
@@ -20,25 +20,16 @@ The safety policy and role-specific permissions live in [.opencode/opencode.json
 
 ## Roster
 
-| Agent                                    | Team          |
-| ---------------------------------------- | ------------- |
-| Cipher 🔓 (Lead Orchestrator)            | cross-cutting |
-| Vault 🔐 (Catalog Steward)               | cross-cutting |
-| Investigator 🔍 (Incident Investigator)  | incident      |
-| Ledger 📒 (Record Keeper)                | incident      |
-| Quill 🪶 (Note Drafter)                  | incident      |
-| Scribe ✍️ (Docs & Problems Manager)      | incident      |
-| Atrium 🏛️ (Frontend Architect)           | dev           |
-| Bastion 🧱 (Backend & Scripts Architect) | dev           |
-| Crucible 🔥 (Test Architect)             | dev           |
-| Forge 🔨 (Implementer)                   | dev           |
-| Herald 📯 (Release Manager)              | dev           |
-| Inquisitor 🔎 (PR Reviewer)              | dev           |
-| Lumen ✨ (Visual Director)               | dev           |
-| Sentinel 🛡️ (Quality Guardian)           | dev           |
-| Warden 🔒 (Dependency Warden)            | dev           |
+Two agents exist. Implementation, verification and closure are performed directly by the primary agent; specialist procedures live in skills, not in roles.
+
+| Agent                         | Role                                       | Team          |
+| ----------------------------- | ------------------------------------------ | ------------- |
+| Cipher 🔓 (Lead Orchestrator) | Primary execution and implementation agent | cross-cutting |
+| Herald 📯 (Release Manager)   | Sole Git and GitHub executor               | dev           |
 
 Runtime specs live at `.opencode/agents/<name>.md` and reach a Cursor destination as `.cursor/agents/<name>.md` (Cipher's runtime spec is the root `AGENTS.md` by design). Each spec carries its own authority, workflow and manner: specialists in a `#### Working manner` H4, the root in `#### Voice and working manner`. Persona-bearing manner sits inside the runtime that owns the role, while conduct shared by every role lives in the root. There is no separate profile tier and no persona reference line.
+
+**Review is a skill, not a role.** `code-review`, `dependency-review` and `visual-review` carry the rubrics that previously belonged to specialist agents. They are loaded on demand, they grant no separate context and no permission isolation, and applying one in the authoring context is self-review. An independent review is available on explicit user request, is never a delivery prerequisite, and its absence is never a finding.
 
 ## Repository map
 
@@ -46,7 +37,7 @@ Runtime specs live at `.opencode/agents/<name>.md` and reach a Cursor destinatio
 AGENTS.md                     Lead runtime: mandatory core + source-project bindings/reuse guide
 .opencode/opencode.jsonc      OpenCode V2 config: agent/model bindings, permission model, MCP servers
 .agents/skills/               Shared skills: SKILL.md, references/ and scripts/ (including nested tests)
-.opencode/agents/             Specialist runtimes: authority, procedures, scope, gates, reporting and own-role manner
+.opencode/agents/             The retained agent runtime: its authority, procedures, scope, gates, reporting and own-role manner
 .opencode/skills/core-sync/   Source-local skill contract (SKILL.md); never distributed — the engine lives in cli/aicore/
 cli/aicore/                    Source-local synchronization CLI and engine (TypeScript); never distributed
 .aicore/core/knowledge/agent-workflow.md   Shared ODD workflow and task router
@@ -116,6 +107,8 @@ The detailed adoption instructions below are retained alongside the runtime's re
 
 **Ownership on sync.** Region mode delivers the source `core` region and preserves destination `project` bytes. Raw mode copies the whole file. Merge mode (the harness config) replaces source-owned top-level keys while destination-only JSONC keys survive; the `mcp` key merges by server name so extra destination MCP servers survive and a same-named server is core-wins. Core `permissions` are restored on every sync — that is the synchronization contract, not a runtime security guarantee. Per-agent model selection is destination-owned agent frontmatter and survives repeat synchronization.
 
+**Retired agent definitions.** A previous revision distributed fourteen specialist agent runtimes under `.opencode/agents/` (`.cursor/agents/` for a Cursor destination); thirteen were retired. That root is region-mode, so a destination's copies of the retired files are **preserved, never deleted automatically**: each becomes a `pending` entry and `check` exits non-zero until the destination itself preserves any `project`-region content it wants to keep, deletes the obsolete file, and removes the matching `pending:` entry. The step-by-step reconciliation is [AGENTS.md → Reuse guide](AGENTS.md) step 6.
+
 **Durable opt-outs.** A destination lists unwanted cleared sources under `exclude:` in its `.aicore/core.yaml`. Excluded sources are never bound and never re-enrolled, including by `init --bind-cleared`. Adding an exclusion after the files are already installed does not delete them: the destination is listed under `pending` until its owner deletes the files. Core Sync automatically deletes only exclusively Core-owned managed files (`MODE_RAW`) when their sources are retired; shared `MODE_REGION` and `MODE_MERGE` files, and destination-owned files, are preserved. `AGENTS.md` and `.opencode/opencode.jsonc` cannot be excluded.
 
 **Secrets (OpenCode only).** The shipped Context7 header uses `{file:../.secrets/context7-api-key}` (relative to `.opencode/`, so the project's own `.secrets/`). OpenCode enrollment creates `.secrets/` when missing, an empty `context7-api-key` placeholder when missing, and an effective `.gitignore` rule `.secrets/`; it never copies credential contents from the source. Cursor enrollment creates none of those.
@@ -134,7 +127,7 @@ Clone AICore, then remove only source-local state so the fresh project starts cl
 
 - **Environment** — the repository root carries no Python project. The workspace needs Node ≥ 24 and `pnpm` (pinned to `pnpm@12.14.0` by the root `package.json`): the synchronization CLI under `cli/aicore/` is TypeScript and runs through `pnpm --dir cli/aicore …`, and every first-party test suite runs under Vitest from the package that owns it.
 - **MCP tooling** — [Portable setup](docs/tooling.md) provisions the two explicitly permitted, separately locked Python tooling environments and documents the `npx` servers. They are the repository's only Python environments.
-- **Tests** — the reviewed whole-suite command is `pnpm --dir cli/aicore test`, executed by Forge 🔨 (Implementer) for routine runs and reproduced independently by Crucible 🔥 (Test Architect) only on a testing-architecture risk trigger under `.opencode/agents/crucible.md`; this page is not execution authorization or a test result. Scope is the TypeScript suites that own their own behavior: `pnpm --dir cli/aicore test` and `test:e2e` for the synchronization CLI, and the migrated skills' Vitest suites in `.agents/skills/<skill>/tests/{unit,integration,e2e}` with shared fixtures, each skill carrying its own strict `tsconfig.json` checked by `pnpm typecheck`. The repository root keeps no test package of its own.
+- **Tests** — the reviewed whole-suite command is `pnpm --dir cli/aicore test`. The implementing agent runs it for its own slice; an independent review of the evidence is available on request and is never a delivery prerequisite. This page is not execution authorization or a test result. Scope is the TypeScript suites that own their own behavior: `pnpm --dir cli/aicore test` and `test:e2e` for the synchronization CLI, and the migrated skills' Vitest suites in `.agents/skills/<skill>/tests/{unit,integration,e2e}` with shared fixtures, each skill carrying its own strict `tsconfig.json` checked by `pnpm typecheck`. The repository root keeps no test package of its own.
 - **Authoring** — use the `op-skill-creator` and `op-agent-creator` skills to scaffold skills/agents, and `op-model` to change agent models deterministically.
 - **Config changes** — the OpenCode TUI must be restarted after any `.opencode/opencode.jsonc` permission change; active sessions do not reload it. AICore's `.opencode/opencode.jsonc` targets the OpenCode V2 config definition, which is the project's only OpenCode configuration.
 - **Workflow and runtime changes** — read `.aicore/core/knowledge/agent-workflow.md` before acting; it owns classification, feature timing and the task router, with shared-resource rules in `.aicore/core/knowledge/agents.md`. Synced spec versions follow `AGENTS.md` → Reuse guide, including destination-local version markers; local history and feature Log never replace that policy. Restart OpenCode after accepting runtime or skill changes; the active session does not hot-reload them.

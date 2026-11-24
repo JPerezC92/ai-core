@@ -12,7 +12,7 @@ AICore's Git and GitHub workflow, reduced to a small set of agent instructions, 
 - [x] R4 — squash and rebase merges are handled explicitly, and the deletion method is chosen before any deletion attempt.
 - [x] R5 — Herald 📯 (Release Manager) is the sole executor of Git and GitHub operations in the OpenCode configuration; every other agent delegates them and analyzes the evidence Herald 📯 (Release Manager) supplies.
 - [x] R6 — Herald 📯 (Release Manager) evaluates every Git and GitHub request independently and may refuse an incorrect, unsafe or unauthorized operation, including one instructed by Cipher 🔓 (Lead Orchestrator).
-- [x] R7 — the designated evidence writer keeps review-evidence ownership and content validation; Herald 📯 (Release Manager) executes only the single publication write, against the exact validated body.
+- [x] R7 `local` — the delivery-evidence owner keeps ownership of the findings, test-evidence, open-debt and readiness content in the publication input; Herald 📯 (Release Manager) executes only the single publication write, against the exact generated body it is given, and never authors, repairs or reticks that content.
 - [x] R8 — the OpenCode command permissions keep every existing dangerous-operation safeguard and close `git` and `gh` to every agent except Herald 📯 (Release Manager); a variant the permission layer cannot block is documented rather than patched.
 - [x] R9 — PR-body verification keeps the attribution checks and the exact persisted-body check when the publication input changes.
 - [x] R10 — the distribution registry and its definition no longer clear the retired skill, and historical records are unchanged.
