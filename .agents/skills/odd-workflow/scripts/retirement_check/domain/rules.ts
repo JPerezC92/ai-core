@@ -58,9 +58,12 @@ export function evaluateRetirement(text: string, asOfDate: string): RetirementDe
 	// eligible for deletion.
 	const lines = structure.unfencedLines;
 
-	// Header metadata sits at column zero. An indented copy is quoted content — an indented
-	// code block is not part of the fenced projection — so it cannot state closure.
-	const headerLines = lines.filter((line) => HEADER_AT_COLUMN_ZERO.test(line));
+	// Header metadata sits at column zero in the record's own header region — every line before
+	// the first second-level heading. An indented copy is quoted content, and a column-zero copy
+	// inside Specs, Tasks or the Log is body text, so neither can state closure.
+	const firstHeading = lines.findIndex((line) => line.startsWith("## "));
+	const preamble = firstHeading < 0 ? lines : lines.slice(0, firstHeading);
+	const headerLines = preamble.filter((line) => HEADER_AT_COLUMN_ZERO.test(line));
 
 	const statusValues = headerLines
 		.map((line) => STATUS_ANY_RE.exec(line))

@@ -132,6 +132,18 @@ export function sortFeatureReferences(references: readonly string[], policy: Pat
 	return [...references].sort((left, right) => comparePath(left, right, policy));
 }
 
+/**
+ * The record's header region: every line before the first second-level heading.
+ *
+ * Header metadata belongs here. A quotation inside Specs, Tasks or the Log is document body, so
+ * it can never state the record's status, dates, disposition or replacement, and it can never
+ * make the record retirement-eligible.
+ */
+function headerRegion(lines: readonly string[]): string[] {
+	const end = lines.findIndex((line) => line.startsWith("## "));
+	return end < 0 ? [...lines] : lines.slice(0, end);
+}
+
 export function section(lines: readonly string[], heading: string): string[] {
 	const start = lines.findIndex((line) => line.trim() === heading);
 	if (start < 0) return [];
@@ -309,6 +321,8 @@ export function validateFeature(text: string): string[] {
 	const fenceStructure = readFenceStructure(splitLines(text));
 	const lines = fenceStructure.unfencedLines;
 	const log = section(lines, "## Log");
+	// Header metadata is read only from the record's own header region.
+	const header = headerRegion(lines);
 
 	for (const fence of fenceStructure.unclosed) {
 		findings.push(
@@ -329,22 +343,22 @@ export function validateFeature(text: string): string[] {
 	}
 
 	const headerFields = new Set<string>();
-	for (const line of lines) {
+	for (const line of header) {
 		const match = HEADER_RE.exec(line);
 		if (match?.[1] !== undefined) headerFields.add(match[1]);
 	}
 	for (const field of ["Status", "Owner", "Created"]) {
 		if (!headerFields.has(field)) findings.push(`header must include ${field}`);
 	}
-	if (lines.some((line) => line.trim() === "> **Created:** date")) {
+	if (header.some((line) => line.trim() === "> **Created:** date")) {
 		findings.push("Created must be a real date, not the template placeholder");
 	}
-	const createdFields = lines.filter((line) => line.trim().startsWith("> **Created:**")).length;
+	const createdFields = header.filter((line) => line.trim().startsWith("> **Created:**")).length;
 	if (createdFields !== 1) {
 		findings.push(`header must include exactly one Created line; found ${createdFields}`);
 	}
 
-	const statusLines = lines.filter((line) => line.trim().startsWith("> **Status:**"));
+	const statusLines = header.filter((line) => line.trim().startsWith("> **Status:**"));
 	if (statusLines.length !== 1) {
 		findings.push("header must include exactly one Status line");
 	} else if (!STATUS_RE.test(statusLines[0]!)) {
@@ -354,12 +368,12 @@ export function validateFeature(text: string): string[] {
 		findings.push("Status must be active or closed");
 	}
 
-	const isClosed = lines.some((line) => STATUS_CLOSED_RE.test(line));
-	if (isClosed && !lines.some((line) => CLOSED_RE.test(line.trim()))) {
+	const isClosed = header.some((line) => STATUS_CLOSED_RE.test(line));
+	if (isClosed && !header.some((line) => CLOSED_RE.test(line.trim()))) {
 		findings.push("closed feature needs a Closed date");
 	}
 
-	const closedLine = lines.map((line) => line.trim()).find((line) => line.startsWith("> **Closed:**"));
+	const closedLine = header.map((line) => line.trim()).find((line) => line.startsWith("> **Closed:**"));
 	const closedValue = CLOSED_DATE_VALUE_RE.exec(closedLine ?? "")?.[1];
 	// A closed record whose closure date is absent or is not a real calendar date is treated as
 	// in scope, so a shaped but impossible value such as `2026-02-31` cannot escape the
@@ -369,7 +383,7 @@ export function validateFeature(text: string): string[] {
 		(closedValue === undefined ||
 			parseCalendarDay(closedValue) === null ||
 			closedValue >= DISPOSITION_EFFECTIVE_FROM);
-	const dispositionLines = lines.map((line) => line.trim()).filter((line) => line.startsWith("> **Disposition:**"));
+	const dispositionLines = header.map((line) => line.trim()).filter((line) => line.startsWith("> **Disposition:**"));
 	let disposition: string | undefined;
 	if (dispositionApplies) {
 		if (dispositionLines.length !== 1) {
@@ -383,7 +397,7 @@ export function validateFeature(text: string): string[] {
 			}
 		}
 		if (disposition === "superseded") {
-			const hasReplacement = lines.some((line) => SUPERSEDED_BY_RE.test(line.trim()));
+			const hasReplacement = header.some((line) => SUPERSEDED_BY_RE.test(line.trim()));
 			const hasObsolescenceExplanation = log.some(
 				(line) => CLOSE_LOG_RE.test(line) && OBSOLESCENCE_RE.test(line),
 			);
