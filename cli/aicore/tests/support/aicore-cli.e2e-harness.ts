@@ -68,8 +68,7 @@ export async function createFixture(
 export const REPRESENTATIVE_FILES = [
 	"AGENTS.md",
 	".opencode/opencode.jsonc",
-	".opencode/agents/forge.md",
-	".opencode/agents/lumen.md",
+	".opencode/agents/herald.md",
 	".agents/skills/op-model/SKILL.md",
 	".agents/skills/git-commit/SKILL.md",
 	".agents/skills/incident-workflow/references/local-symptoms-template.md",
@@ -83,7 +82,7 @@ export const REPRESENTATIVE_FILES = [
 ] as const;
 
 /** Agent documents the representative source actually ships. */
-export const REPRESENTATIVE_AGENT_FILES = ["forge.md", "lumen.md"] as const;
+export const REPRESENTATIVE_AGENT_FILES = ["herald.md"] as const;
 
 const REPRESENTATIVE_CLEARED: Readonly<Record<string, Readonly<Record<string, unknown>>>> = {
 	"AGENTS.md": { mode: "region", role: "root" },

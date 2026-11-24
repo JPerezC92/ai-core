@@ -32,7 +32,7 @@ const SOURCE_CONFIG = join(CHECKOUT, ".opencode", "opencode.jsonc");
 const DESTINATION_CONFIG = join(".opencode", "opencode.jsonc");
 
 /** The distributed agent whose destination frontmatter carries a model. */
-const AGENT_PATH = join(".opencode", "agents", "forge.md");
+const AGENT_PATH = join(".opencode", "agents", "herald.md");
 
 /** A model selector the source does not define for any agent. */
 const MODEL_LINE = 'model: "destination/own-model"';

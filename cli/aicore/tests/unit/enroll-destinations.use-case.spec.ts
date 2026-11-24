@@ -56,7 +56,7 @@ const SKILL_FILE = `${SKILL_ROOT}SKILL.md`;
 const CONFIGURED_SOURCE = ".opencode/opencode.jsonc";
 
 /** One agent document, a cleared source a destination may opt out of. */
-const AGENT_SOURCE = ".opencode/agents/forge.md";
+const AGENT_SOURCE = ".opencode/agents/herald.md";
 
 type EnrollArrangement = {
 	readonly document?: ReturnType<typeof makeBindingsDocument>;
