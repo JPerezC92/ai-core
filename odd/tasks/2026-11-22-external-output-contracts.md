@@ -218,7 +218,7 @@ Task-row illustration: `open` → `in progress` → `done`; `commit: pending` wh
   >   }
   > }
   > ```> The error code must be stable and documented.  > Existing CLI consumers and output formats remain unchanged unless migration is explicitly authorized.  > JSON Lines or another streaming representation may be used when the command's documented streaming behavior requires it; do not mislabel such output as a single JSON document.  > ## 4. Normative contract — MCP
-```
+  > ```
 
   > MCP implementations MUST follow their negotiated protocol version and native tool-result semantics.  > Do not apply JSend as an additional universal wrapper.  > ### 4.1 Successful tool execution
 

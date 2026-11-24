@@ -1,6 +1,7 @@
 /** Pure durable feature-file rules, status derivation, and path ordering. */
 
 import { basename, normalize, parse, sep } from "node:path";
+import { readFenceStructure } from "#scripts/markdown/fences.ts";
 import { FeatureFileAssessment, FeatureRequirement } from "./records.ts";
 import type { FeatureStatus } from "./records.ts";
 
@@ -20,7 +21,6 @@ const REQUIREMENT_RE = /^- \[(?<tick>[x ])\] R(?<number>\p{Nd}+) (?:`(?<mark>[^`
 const STATE_FIELD_RE = /(?:\*\*|__)?[ \t]*State[ \t]*(?:\*\*|__)?[ \t]*:/u;
 const PLACEHOLDER_RE = /<[^>]+>/u;
 const CODE_SPAN_RE = /`[^`]*`/gu;
-const FENCED_BLOCK_RE = /```[\s\S]*?```/gu;
 // Deliberate: the validator must treat every Unicode line terminator as a break.
 // oxlint-disable-next-line no-control-regex
 const LINE_BREAK_RE = /\r\n|[\n\r\v\f\x1c-\x1e\x85\u2028\u2029]/u;
@@ -293,10 +293,17 @@ function supersededFindings(lines: readonly string[]): string[] {
 	return findings;
 }
 
-function placeholderFindings(text: string): string[] {
-	return splitLines(text.replace(FENCED_BLOCK_RE, ""))
+function placeholderFindings(unfencedLines: readonly string[]): string[] {
+	return unfencedLines
 		.filter((line) => PLACEHOLDER_RE.test(stripCode(line)))
 		.map((line) => `feature-file-unfilled-placeholder: unfilled placeholder: ${line.trim()}`);
+}
+
+function fenceFindings(unclosed: readonly { line: number; marker: string; length: number }[]): string[] {
+	return unclosed.map(
+		(fence) =>
+			`feature-file-unclosed-fence: unclosed code fence opened at line ${fence.line} with ${fence.length} ${fence.marker === "`" ? "backtick" : "tilde"} character(s); add the closing fence`,
+	);
 }
 
 function guidanceFindings(lines: readonly string[]): string[] {
@@ -326,7 +333,11 @@ function derivationFindings(text: string): string[] {
 
 function findings(text: string): string[] {
 	const lines = splitLines(text);
+	// One fence interpretation feeds the placeholder rule and the closure rule below, so a
+	// placeholder or a fence-like line inside a fenced block is never read as structure.
+	const fenceStructure = readFenceStructure(lines);
 	return [
+		...fenceFindings(fenceStructure.unclosed),
 		...titleFindings(lines),
 		...descriptionFindings(lines),
 		...statusFindings(lines),
@@ -336,7 +347,7 @@ function findings(text: string): string[] {
 		...markFindings(text),
 		...derivationFindings(text),
 		...supersededFindings(lines),
-		...placeholderFindings(text),
+		...placeholderFindings(fenceStructure.unfencedLines),
 		...guidanceFindings(lines),
 	];
 }

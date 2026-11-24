@@ -1,6 +1,7 @@
 /** Pure feature-document rules, path ordering, and an injected path-comparison policy. */
 
 import { basename, normalize, parse, sep } from "node:path";
+import { readFenceStructure } from "#scripts/markdown/fences.ts";
 
 const REQUIRED_HEADINGS = ["## Specs", "## Tasks", "## Log"] as const;
 const SPEC_RE = /^- (?:\*\*)?S\p{Nd}+ — .+(?:\*\*)?$/u;
@@ -59,7 +60,6 @@ function parseCalendarDay(value: string): number | null {
 }
 const PLACEHOLDER_RE = /<[^>]+>/u;
 const CODE_SPAN_RE = /`[^`]*`/gu;
-const FENCED_BLOCK_RE = /```[\s\S]*?```/gu;
 // Deliberate: the validator must treat every Unicode line terminator as a break.
 // oxlint-disable-next-line no-control-regex
 const LINE_BREAK_RE = /\r\n|[\n\r\v\f\x1c-\x1e\x85\u2028\u2029]/u;
@@ -303,6 +303,17 @@ function closureEvidenceFindings(logLines: readonly string[]): string[] {
 export function validateFeature(text: string): string[] {
 	const findings: string[] = [];
 	const lines = splitLines(text);
+	// One fence interpretation feeds every consumer below: the unfenced projection is the
+	// document with fenced lines removed, so quoted code can never be read as structure.
+	const fenceStructure = readFenceStructure(lines);
+	const unfencedLines = fenceStructure.unfencedLines;
+	const unfencedLog = section(unfencedLines, "## Log");
+
+	for (const fence of fenceStructure.unclosed) {
+		findings.push(
+			`unclosed Markdown code fence opened at line ${fence.line} with ${fence.length} ${fence.marker === "`" ? "backtick" : "tilde"} character(s); add the closing fence`,
+		);
+	}
 
 	const headings = lines.filter((line) => line.startsWith("## ")).map((line) => line.trim());
 	for (const heading of REQUIRED_HEADINGS) {
@@ -370,7 +381,7 @@ export function validateFeature(text: string): string[] {
 		}
 		if (disposition === "superseded") {
 			const hasReplacement = lines.some((line) => SUPERSEDED_BY_RE.test(line.trim()));
-			const hasObsolescenceExplanation = log.some(
+			const hasObsolescenceExplanation = unfencedLog.some(
 				(line) => CLOSE_LOG_RE.test(line) && OBSOLESCENCE_RE.test(line),
 			);
 			if (!hasReplacement && !hasObsolescenceExplanation) {
@@ -387,7 +398,7 @@ export function validateFeature(text: string): string[] {
 	}
 	const claimsCompletion = disposition === undefined || disposition === "completed";
 
-	const hasCloseEntry = log.some((line) => CLOSE_LOG_RE.test(line));
+	const hasCloseEntry = unfencedLog.some((line) => CLOSE_LOG_RE.test(line));
 	if (isClosed && !hasCloseEntry) {
 		findings.push("closed feature needs a Log 'Close:' entry");
 	}
@@ -446,9 +457,6 @@ export function validateFeature(text: string): string[] {
 	}
 
 	if (!log.some((line) => LOG_RE.test(line))) findings.push("Log needs an L1 entry");
-
-	const unfencedLines = splitLines(text.replace(FENCED_BLOCK_RE, ""));
-	const unfencedLog = section(unfencedLines, "## Log");
 
 	const taskStatuses = taskEntries
 		.map((line) => TASK_RE.exec(line)?.groups?.status)

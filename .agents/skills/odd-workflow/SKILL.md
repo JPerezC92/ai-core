@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 3.0.0
+  version: 3.1.0
 ---
 
 <!-- core:begin -->
@@ -37,7 +37,7 @@ Create, read, update, and close the single authoritative feature document for a 
 - A tick asserts that the requirement currently holds. A change re-verifies only the requirements it affects: when verification confirms the requirement, the tick stands; when a regression is established, the tick is removed and the failure and its cause are recorded in the change's own record; when verification could not be completed and the change demonstrably could have affected the requirement, the tick is removed and the uncertainty and its reason are recorded in the change's own record. Only the change that delivers or re-verifies a requirement may set its tick.
 - A requirement carries a mark only when the feature adopts a standard that already exists, recording where this repository departs from it: `upstream` unchanged, `upstream · local detail` sharpened here, `upstream · narrowed` relaxed here, `local` added here, `local · conflicts` contradicting the standard. A feature explicit from this repository carries no mark.
 - Every change reads the affected durable file and records what it changed in it: which requirements it added, reworded or retired, and the verification outcome for each affected requirement. Requirements the change did not affect are left alone and are not re-verified.
-- Validate the file with the skill's validator, pointed at the file or the directory that holds the feature's files: `node .agents/skills/odd-workflow/scripts/validate_feature_file.ts <feature-file-or-directory>`. It reports the derived status. The script is **mechanical anatomy only**; exit 0 proves the shape, the requirement lines, the ticks and the placeholders. It does not prove that a requirement holds or that the feature is complete — the completion judgement in `### Close` owns that. The record's own validation stays in `### Validate`.
+- Validate the file with the skill's validator, pointed at the file or the directory that holds the feature's files: `node .agents/skills/odd-workflow/scripts/validate_feature_file.ts <feature-file-or-directory>`. It reports the derived status. The script is **mechanical anatomy only**; exit 0 proves the shape, the requirement lines, the ticks, the placeholders and that every code fence closes explicitly. It does not prove that a requirement holds or that the feature is complete — the completion judgement in `### Close` owns that. The record's own validation stays in `### Validate`.
 - The mark vocabulary and the filling rules live in the template's `## Guidance` section, and each requirement's upstream source and local owner live where that requirement cites them. This skill owns the mechanics, not that analysis.
 
 ### Write meaningful specifications
@@ -225,7 +225,7 @@ Apply `.aicore/core/knowledge/release.md` before opening any PR and after every 
 
 The validator runs natively on Node.js `>=24.12.0` with no runtime dependency, no build step and no bundle; a destination runs it as it stands, with nothing installed.
 
-Run `node .agents/skills/odd-workflow/scripts/validate_feature.ts odd/tasks` before closing. The script is **mechanical anatomy only**; exit 0 proves the headings, `S#`/`T#`/`L1`, the Log's `L#` identifiers ascend with `L1` first, task status, 7-64 character hexadecimal commit references, placeholders, the closure-consistency precondition, and — for a record created on or after `2026-11-19` — the first-failure evidence stated in `### Close`. A present but unreadable `Created` date fails closed. It does not prove verbatim fidelity, that a spec is meaningful, that a runner applies or ran, that a task is complete, or that the evidence is true — the completion judgement in `### Close` owns that.
+Run `node .agents/skills/odd-workflow/scripts/validate_feature.ts odd/tasks` before closing. The script is **mechanical anatomy only**; exit 0 proves the headings, `S#`/`T#`/`L1`, the Log's `L#` identifiers ascend with `L1` first, task status, 7-64 character hexadecimal commit references, placeholders, the closure-consistency precondition, and — for a record created on or after `2026-11-19` — the first-failure evidence stated in `### Close`. A present but unreadable `Created` date fails closed. It also proves the record's fenced structure: every code fence closes explicitly, a fence that only ends because its containing block ended still counts as unclosed, and the Close entry, the Log identifiers and a superseded record's obsolescence explanation are read only from text outside fenced blocks, so quoted content can neither satisfy a presence requirement nor trigger a diagnostic. It does not prove verbatim fidelity, that a spec is meaningful, that a runner applies or ran, that a task is complete, or that the evidence is true — the completion judgement in `### Close` owns that.
 
 Alongside the two validators, the retirement check `node .agents/skills/odd-workflow/scripts/retirement_check.ts <tasks-directory>` is a read-only report: it lists the records that satisfy the routine eligibility gate and the reason each excluded record is excluded, and it deletes nothing.
 
