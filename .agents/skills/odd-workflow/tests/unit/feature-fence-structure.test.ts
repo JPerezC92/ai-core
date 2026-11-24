@@ -126,6 +126,34 @@ describe("validateFeature structural interpretation of fenced content", () => {
 describe("validateFeature fence authoring contract", () => {
 	const CONTRACT = "fence delimiter must start at column 0";
 
+	it("keeps a prefixed delimiter inside a legal block opaque and unreported", () => {
+		// The reviewed reproduction: a column-zero block quoting an indented sample. Nothing inside
+		// the block is read, so the contract must not fire on it.
+		const text = makeFeatureWithLog({
+			created: "2026-11-25",
+			log: [
+				"- L1 — a",
+				"````markdown",
+				"Log entry quoting a code sample:",
+				"",
+				"    ```",
+				"    indented code sample",
+				"    ```",
+				"````",
+				"- L2 — b",
+			],
+		});
+		expect(validateFeature(text)).toStrictEqual([]);
+	});
+
+	it("reports a delimiter written after a list marker on the effective date", () => {
+		const text = makeFeatureWithLog({
+			created: "2026-11-25",
+			log: ["- L1 — a", "- ```markdown", "- L2 — quoted", "- ```"],
+		});
+		expect(validateFeature(text).filter((finding) => finding.startsWith(CONTRACT)).length).toBe(2);
+	});
+
 	it("rejects an indented delimiter in a record created on the effective date", () => {
 		const text = makeFeatureWithLog({
 			created: "2026-11-25",

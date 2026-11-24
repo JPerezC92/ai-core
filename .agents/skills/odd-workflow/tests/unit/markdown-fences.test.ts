@@ -54,6 +54,15 @@ describe("readFenceStructure opaque content", () => {
 		expect(visibleEntries(lines)).toStrictEqual(["- L1 — a"]);
 	});
 
+	it("keeps delimiter-shaped content with a container prefix opaque", () => {
+		// A prefixed delimiter inside a column-zero block is content: it neither closes the block
+		// nor is it reported as a misplaced delimiter, and the whole block stays opaque.
+		const lines = ["````markdown", "> ````", "- L2 — kept", "    ```", "````", "- L3 — a"];
+		expect(unclosedLines(lines)).toStrictEqual([]);
+		expect(visibleEntries(lines)).toStrictEqual(["- L3 — a"]);
+		expect(readFenceStructure(lines).delimiterLines).toStrictEqual([1, 5]);
+	});
+
 	it("keeps a delimiter longer than the content's own runs open until its own closer", () => {
 		expect(unclosedLines(["`````", "````", "```", "`````"])).toStrictEqual([]);
 		expect(unclosedLines(["`````", "````", "```"])).toStrictEqual([1]);
@@ -79,21 +88,28 @@ describe("misplacedDelimiter", () => {
 		expect(misplacedDelimiter("~~~~")).toBe(false);
 	});
 
-	it("reports a delimiter after indentation or a block-quote marker", () => {
+	it("reports a delimiter after indentation, a block-quote marker or a list marker", () => {
 		expect(misplacedDelimiter("  ```text")).toBe(true);
 		expect(misplacedDelimiter("     ```")).toBe(true);
 		expect(misplacedDelimiter("> ```")).toBe(true);
 		expect(misplacedDelimiter("  > ```")).toBe(true);
+		expect(misplacedDelimiter("- ```markdown")).toBe(true);
+		expect(misplacedDelimiter("1. ```json")).toBe(true);
 	});
 
 	it("does not report ordinary content that mentions a delimiter later in the line", () => {
 		expect(misplacedDelimiter("the fence is ``` inline")).toBe(false);
 		expect(misplacedDelimiter("- L1 — a ``` b")).toBe(false);
+		expect(misplacedDelimiter("- ```text``` is how you write it")).toBe(false);
 	});
 
-	it("keeps legacy indented delimiters opaque so historical quotations stay unread", () => {
-		// A legacy record quotes a tree inside an indented fence; its content must not reach the
-		// record rules even though the contract now forbids this authoring shape.
+	it("keeps a legacy list-item delimiter opaque and reports it", () => {
+		const lines = ["- ```markdown", "- L2 — Close: quoted", "- ```", "- L3 — a"];
+		expect(unclosedLines(lines)).toStrictEqual([]);
+		expect(visibleEntries(lines)).toStrictEqual(["- L3 — a"]);
+	});
+
+	it("keeps a legacy indented delimiter opaque so a historical quotation stays unread", () => {
 		const lines = ["1. Add this permission:", "", "     ```json", "     <DATE>", "     ```", "- L2 — b"];
 		expect(unclosedLines(lines)).toStrictEqual([]);
 		expect(readFenceStructure(lines).unfencedLines[3]).toBe("");
