@@ -50,6 +50,15 @@
     ".agents/skills/git-branch-name/": {
       "mode": "raw"
     },
+    ".agents/skills/code-review/": {
+      "mode": "raw"
+    },
+    ".agents/skills/dependency-review/": {
+      "mode": "raw"
+    },
+    ".agents/skills/visual-review/": {
+      "mode": "raw"
+    },
     ".agents/skills/git-commit/": {
       "mode": "raw"
     },
