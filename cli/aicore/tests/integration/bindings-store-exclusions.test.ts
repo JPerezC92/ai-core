@@ -35,7 +35,7 @@ const ROOT_PREFIX = "aicore-cli-bindings-exclusions-";
 const SKILL_ROOT = ".agents/skills/op-model/";
 
 /** One agent document, cleared by the `.opencode/agents/` directory root. */
-const AGENT_SOURCE = ".opencode/agents/forge.md";
+const AGENT_SOURCE = ".opencode/agents/herald.md";
 
 let root: string;
 let rootPrefix: string;
@@ -150,8 +150,8 @@ describe("the persisted document's schema", () => {
 		const text = await readFile(bindingsPath, "utf8");
 		expect(text).toMatch(/^schema: 1$/m);
 		expect(text).toContain(`core_revision: "${REVISION}"`);
-		expect(text).toMatch(/^- source: \.opencode\/agents\/forge\.md$/m);
-		expect(text).toMatch(/^  - \.opencode\/agents\/forge\.md$/m);
+		expect(text).toMatch(/^- source: \.opencode\/agents\/herald\.md$/m);
+		expect(text).toMatch(/^  - \.opencode\/agents\/herald\.md$/m);
 		expect(text).toMatch(/^pending: \[\]$/m);
 
 		// Reading the file back yields the document it was written from.
@@ -182,7 +182,7 @@ describe("the persisted document's schema", () => {
 			bindingsText({ source: "../escape.md" }),
 			bindingsText({ source: "C:/absolute.md" }),
 			bindingsText({ destination: "/absolute.md" }),
-			bindingsText({ source: ".opencode\\agents\\forge.md" }),
+			bindingsText({ source: ".opencode\\agents\\herald.md" }),
 		];
 		for (const text of unsafe) {
 			await writeFile(bindingsPath, text, "utf8");

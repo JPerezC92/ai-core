@@ -1,15 +1,17 @@
 # Agent workforce
 
-The set of agents that holds the project's specialist and independent-verification responsibilities: which roles exist, what each one independently assures, and who authors and reviews their runtime specifications.
+The set of agents that holds the project's execution responsibilities: which roles exist, what each one assures, and where specialist knowledge lives when it is not a role.
 
 **Status:** achieved
 
 ## Requirements
 
-- [x] R1 — Every agent in the roster carries a runtime specification under `.opencode/agents/` whose frontmatter declares a SemVer `version`.
-- [x] R2 — The roster holds no role whose responsibilities duplicate another's; a role that stops supplying unique assurance is removed rather than retained as an optional duplicate.
-- [x] R3 — Cipher 🔓 (Lead Orchestrator) authors runtime specifications through the agent-authoring skill, and an independent reviewer audits every agent-document change before it is accepted.
-- [x] R4 — Roster additions and removals are a user decision; no agent adds or removes a team member on its own authority.
-- [x] R5 — Ordinary research, evidence reuse and runtime-spec authoring are coordinator responsibilities, so no specialist is dispatched merely because a role exists.
-- [x] R6 — Warden's independent assurance for a package proposal is scoped to that package and its resolved graph; it does not depend on repository-wide inventory completion, and an inventory finding that bears on the candidate is evaluated inside that candidate's own gate while an unrelated finding stays with its owner.
-- [x] R7 — Warden's dependency assurance ends in a stated verdict it can reach: an unchanged recorded input reuses its accepted evidence instead of triggering a fresh repository-wide inspection, missing optional provenance evidence is distinguished from a finding, and a documented user acknowledgment of a non-blocking advisory permits the authorized continuation while remaining an acknowledged advisory.
+- [x] R1 `local` — every agent in the roster carries a runtime specification whose frontmatter declares a SemVer `version`.
+- [x] R2 `local` — the roster holds no role whose responsibilities duplicate another's, and a role that stops supplying unique assurance is removed rather than retained as an optional duplicate.
+- [x] R3 `local` — the primary agent performs implementation, verification and closure directly, and no separate authoring or accepting role is required for that work to proceed.
+- [x] R4 `local` — specialist procedural knowledge that is not architectural authority lives in an on-demand skill rather than in a role, and no skill is presented as an independent reviewer, as a separate execution context, or as permission isolation.
+- [x] R5 `local` — roster additions and removals are a user decision.
+- [x] R6 `upstream` — work is performed inline by default, and delegation happens only for a named reason rather than because a role exists.
+- [x] R7 `local · conflicts` — an independent review is available when the user requests one and may be recommended when a declared high-risk change justifies it, but it is never a delivery prerequisite, its absence is never a finding or a pending check, and no stand-in verdict is created when it does not run. Divergence: the upstream standard couples a named high-risk change to an automatic independent verifier.
+- [x] R8 `local` — the exclusive Git and GitHub execution boundary is held by one role, enforced in configuration, and merging a pull request is never an agent operation.
+- [x] R9 `local` — a dependency-surface change is reviewed against integrity, approved source, licence, advisories and install-time execution before installation, and that review never authorizes the installation itself.

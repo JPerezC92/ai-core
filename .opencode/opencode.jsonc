@@ -16,144 +16,48 @@
         // Herald-owned; removal is manual because the built-in
         // worktree_remove tool bypasses this build's policy layer.
         { "action": "opencode_session_move", "resource": "*", "effect": "allow" },
-        { "action": "opencode_session_rename", "resource": "*", "effect": "allow" }
+        { "action": "opencode_session_rename", "resource": "*", "effect": "allow" },
+        // Dependency authority. Acquiring, installing or changing a package prompts the
+        // user at execution time: no verb is silently allowed and none is permanently
+        // blocked, so an authorized install always has a route. Every other command the
+        // project documents - pnpm lint, format:check, typecheck, verify, verify:full,
+        // format, lint:fix, test:cli, test:cli:e2e, the per-package suites, and the Core
+        // Sync lifecycle - falls through to the global shell allow untouched.
+        //
+        // This block names no project-specific command text, so it stays portable when
+        // this configuration is merged into a destination project: a destination's own
+        // scripts are never narrowed by an AICore allowlist it did not ask for.
+        //
+        // A trailing wildcard is deliberate here: `*` spans spaces, so the
+        // `--dir <path> <verb>` spelling is caught too - including the documented System
+        // One install root, which a bare verb row would miss. As everywhere in this file,
+        // this is cooperative text matching, not a sandbox: a wrapper or an alternate
+        // executable is outside the matched resource.
+        { "action": "shell", "resource": "pnpm install", "effect": "ask" },
+        { "action": "shell", "resource": "pnpm install *", "effect": "ask" },
+        { "action": "shell", "resource": "pnpm * install", "effect": "ask" },
+        { "action": "shell", "resource": "pnpm * install *", "effect": "ask" },
+        { "action": "shell", "resource": "pnpm add", "effect": "ask" },
+        { "action": "shell", "resource": "pnpm add *", "effect": "ask" },
+        { "action": "shell", "resource": "pnpm * add", "effect": "ask" },
+        { "action": "shell", "resource": "pnpm * add *", "effect": "ask" },
+        { "action": "shell", "resource": "pnpm remove", "effect": "ask" },
+        { "action": "shell", "resource": "pnpm remove *", "effect": "ask" },
+        { "action": "shell", "resource": "pnpm * remove", "effect": "ask" },
+        { "action": "shell", "resource": "pnpm * remove *", "effect": "ask" },
+        { "action": "shell", "resource": "pnpm update", "effect": "ask" },
+        { "action": "shell", "resource": "pnpm update *", "effect": "ask" },
+        { "action": "shell", "resource": "pnpm * update", "effect": "ask" },
+        { "action": "shell", "resource": "pnpm * update *", "effect": "ask" },
+        { "action": "shell", "resource": "pnpm upgrade", "effect": "ask" },
+        { "action": "shell", "resource": "pnpm upgrade *", "effect": "ask" },
+        { "action": "shell", "resource": "pnpm * upgrade", "effect": "ask" },
+        { "action": "shell", "resource": "pnpm * upgrade *", "effect": "ask" },
+        { "action": "shell", "resource": "pnpm dlx *", "effect": "ask" },
+        { "action": "shell", "resource": "pnpm * dlx *", "effect": "ask" }
       ]
     },
-    "crucible": {
-      "permissions": [
-        { "action": "shell", "resource": "*", "effect": "deny" },
-        { "action": "shell", "resource": "pnpm install", "effect": "allow" },
-        // Isolated-verification provisioning. A disposable checkout for an
-        // exact committed revision carries no node_modules, so the reviewed
-        // suite cannot run there until the approved lockfile is materialised.
-        // These two forms mirror docs/tooling.md's two install roots.
-        // `--frozen-lockfile` makes pnpm fail rather than write a manifest or
-        // lockfile that disagrees with the committed one, and
-        // `--ignore-scripts` executes no lifecycle script, so the operation is
-        // reproduced from evidence Warden already gated and cannot become an
-        // approval path. No wildcard, no `pnpm add`, no update or upgrade
-        // form. The working directory is constrained by the assignment, not
-        // by this layer, which matches command text only.
-        { "action": "shell", "resource": "pnpm install --frozen-lockfile --ignore-scripts", "effect": "allow" },
-        {
-          "action": "shell",
-          "resource": "pnpm --dir mcp-servers/system-one install --frozen-lockfile --ignore-scripts",
-          "effect": "allow"
-        },
-        // Package-local CLI test suites, granted as exact commands only so the
-        // test architect can observe the committed suite directly instead of
-        // relying on coordinator-supplied results. The root `test:cli` and
-        // `test:cli:e2e` scripts delegate to exactly these two commands.
-        // Nothing wider is granted: no `pnpm *`, no `node *`, no unrestricted
-        // shell. Both scripts run the package's committed test files
-        // through Vitest and spawn no Git or GitHub command. TUI restart
-        // required.
-        { "action": "shell", "resource": "pnpm --dir cli/aicore test", "effect": "allow" },
-        { "action": "shell", "resource": "pnpm --dir cli/aicore test:e2e", "effect": "allow" },
-        // Skill-package suites. The same independent-verification duty covers a
-        // published test plan that names one of the repository's skill packages,
-        // so the reviewer must be able to run that package's committed suite
-        // instead of relying on the implementer's output. It is one family row
-        // rather than a per-package list, because a per-package or per-record
-        // form reproduces the recurring grant edit this row removes. It is also
-        // the family Forge's block already grants, and it adds nothing else: no
-        // `pnpm *`, no `node *`, no install, no network, and no Git or GitHub
-        // form. The row deliberately ends at `run` with no trailing wildcard, so
-        // an appended argument - a path, a filter, a reporter or a
-        // snapshot-update flag - matches no row and falls to this block's
-        // `shell *` deny. The leading wildcard still selects the package and
-        // spans path segments, so a traversing `--dir` value remains matchable;
-        // that limit is instructional, not enforced. The `git-pr-workflow` suite
-        // spawns the `git` binary against disposable temporary repositories
-        // created by its own fixtures; that is an internal detail of a committed
-        // test, not a Git grant, because no project repository, branch, remote or
-        // pull request is reachable from it and the reviewer still holds no Git
-        // or GitHub command. TUI restart required.
-        { "action": "shell", "resource": "pnpm --dir .agents/skills/* exec vitest run", "effect": "allow" },
-        // Read-only discovery so the test architect can inspect the tree
-        // with `rg`/`ls`. Use Glob/Grep for filesystem discovery. Editing,
-        // network, and interpreter access stay denied. TUI restart required.
-        { "action": "shell", "resource": "rg *", "effect": "allow" },
-        { "action": "shell", "resource": "rg *--pre*", "effect": "deny" },
-        { "action": "shell", "resource": "ls *", "effect": "allow" },
-        { "action": "shell", "resource": "wc *", "effect": "allow" },
-        // Independent test verification. The user designated this role to
-        // execute a published pull request's test plan, and an implementer's
-        // run is never independent verification. Each form below is the exact
-        // command one published test-plan item names: the retained MCP
-        // package's suite and typecheck, the repository's three read-only
-        // whole-tree gates, and the two ODD validators over the two documents
-        // that change record governs. No wildcard, no `node *`, no
-        // interpreter, network or Git/GitHub authority is granted: the forms
-        // run committed test files and read-only checkers only, and
-        // `pnpm format` / `pnpm lint:fix` stay denied because autofix is not
-        // verification. TUI restart required.
-        { "action": "shell", "resource": "pnpm --dir mcp-servers/system-one exec vitest run", "effect": "allow" },
-        { "action": "shell", "resource": "pnpm --dir mcp-servers/system-one typecheck", "effect": "allow" },
-        { "action": "shell", "resource": "pnpm typecheck", "effect": "allow" },
-        { "action": "shell", "resource": "pnpm lint", "effect": "allow" },
-        { "action": "shell", "resource": "pnpm format:check", "effect": "allow" },
-        {
-          "action": "shell",
-          "resource": "node .agents/skills/odd-workflow/scripts/validate_feature.ts odd/tasks/2026-11-18-p7-system-one-odd-adviser-test-remediation.md",
-          "effect": "allow"
-        },
-        {
-          "action": "shell",
-          "resource": "node .agents/skills/odd-workflow/scripts/validate_feature_file.ts odd/features/architecture-contract.md",
-          "effect": "allow"
-        },
-        // The same two validators scoped to the directories they cover, so a
-        // reviewer validating any record does not need a new grant for every
-        // record that appears. Each form is exact command text naming exactly
-        // one directory: no wildcard, and no interpreter, install, network,
-        // Git/GitHub or destructive authority. The roles' global shell deny
-        // is unchanged, and these entries do not make any other command
-        // reachable. Removal of the per-record forms above is a separate
-        // narrowing proposal and is not part of this addition.
-        {
-          "action": "shell",
-          "resource": "node .agents/skills/odd-workflow/scripts/validate_feature.ts odd/tasks",
-          "effect": "allow"
-        },
-        {
-          "action": "shell",
-          "resource": "node .agents/skills/odd-workflow/scripts/validate_feature_file.ts odd/features",
-          "effect": "allow"
-        }
-      ]
-    },
-    // Forge's package-manager surface. Every direct pnpm invocation is
-    // denied except the forms re-allowed below: the script-disabled
-    // lockfile-only preparation command, and the reviewed testing and
-    // typechecking forms this project already runs. This is defence in
-    // depth for the package manager only. It does not narrow the agent's
-    // other shell authority, it does not constrain the working directory
-    // of a command, and a wrapper or an alternative executable is outside
-    // the matched resource.
-    "forge": {
-      "permissions": [
-        { "action": "shell", "resource": "pnpm *", "effect": "deny" },
-        { "action": "shell", "resource": "pnpm install --lockfile-only --ignore-scripts", "effect": "allow" },
-        // The repository's own read-only whole-tree gates. The 2026-11-16
-        // tooling adoption added these root scripts after this block was
-        // written, so the role that implements a slice could not run the
-        // formatter check, the linter or the typechecker over it. Each form
-        // is read-only and reaches only a checker; `pnpm format` and
-        // `pnpm lint:fix` stay denied because Forge's autofix authority is
-        // the formatter and linter invoked directly, and `pnpm verify` is
-        // omitted because it only composes these three.
-        { "action": "shell", "resource": "pnpm lint", "effect": "allow" },
-        { "action": "shell", "resource": "pnpm format:check", "effect": "allow" },
-        { "action": "shell", "resource": "pnpm typecheck", "effect": "allow" },
-        { "action": "shell", "resource": "pnpm --dir cli/aicore test*", "effect": "allow" },
-        { "action": "shell", "resource": "pnpm --dir cli/aicore typecheck*", "effect": "allow" },
-        { "action": "shell", "resource": "pnpm --dir mcp-servers/system-one exec vitest run*", "effect": "allow" },
-        { "action": "shell", "resource": "pnpm --dir mcp-servers/system-one typecheck*", "effect": "allow" },
-        { "action": "shell", "resource": "pnpm --dir .agents/skills/* exec vitest run*", "effect": "allow" },
-        { "action": "shell", "resource": "pnpm --dir .agents/skills/* typecheck*", "effect": "allow" }
-      ]
-    },
+
     // Herald is the sole Git and GitHub executor: the broad allows are
     // followed by the narrow rules so a command-family allow never widens a
     // dangerous shape, and the global `git *` / `gh *` denies close the
@@ -297,48 +201,6 @@
         { "action": "shell", "resource": "git push * main", "effect": "deny" },
         { "action": "shell", "resource": "git push * */main", "effect": "deny" },
         { "action": "shell", "resource": "git push * +main", "effect": "deny" }
-      ]
-    },
-    // Warden audit envelope: deny-all first, then the explicit audit
-    // commands. Agent rules load last, so this closes the global shell
-    // allow. An out-of-envelope need returns BLOCKED to Cipher instead of
-    // expanding the audit.
-    "warden": {
-      "permissions": [
-        { "action": "shell", "resource": "*", "effect": "deny" },
-        { "action": "shell", "resource": "pnpm audit --json", "effect": "allow" },
-        { "action": "shell", "resource": "pnpm outdated --json", "effect": "allow" },
-        // Candidate registry metadata. The Default Audit Gate and the
-        // per-task warmup require the changed candidate's registry
-        // metadata document — declared license, published integrity
-        // digest and any published attestation — and no other
-        // authorized command reaches it. Read-only, exact `--json`
-        // form, never an install or mutation, never a blanket
-        // registry-research allowance.
-        { "action": "shell", "resource": "pnpm info * --json", "effect": "allow" },
-        // The allow above is a plain name-or-version spec plus `--json`.
-        // The matched value spans spaces, so a flag that redirects the
-        // metadata source or relocates pnpm's config root would otherwise
-        // be reachable and could answer the approved-source control from a
-        // registry the project never approved. These denies come after the
-        // allow so last-match-wins keeps the retrieval narrow, and none can
-        // match the plain `<spec> --json` form. As everywhere else in this
-        // file, this is cooperative matching, not a sandbox: an unlisted
-        // spelling through a wrapper or another executable is outside it.
-        { "action": "shell", "resource": "pnpm info *--registry*", "effect": "deny" },
-        { "action": "shell", "resource": "pnpm info *:registry*", "effect": "deny" },
-        { "action": "shell", "resource": "pnpm info *--config*", "effect": "deny" },
-        { "action": "shell", "resource": "pnpm info *--dir*", "effect": "deny" },
-        { "action": "shell", "resource": "pnpm info * -C *", "effect": "deny" },
-        // The effective registry, read offline. The lockfile records
-        // each artifact's integrity digest but not the registry that
-        // resolved it, so this is the only way to discharge the
-        // approved-source control for a candidate.
-        { "action": "shell", "resource": "pnpm config get registry", "effect": "allow" },
-        { "action": "shell", "resource": "uv audit*", "effect": "allow" },
-        { "action": "shell", "resource": "uv lock --check*", "effect": "allow" },
-        { "action": "shell", "resource": "uv tree --frozen*", "effect": "allow" },
-        { "action": "shell", "resource": "uv pip check*", "effect": "allow" }
       ]
     }
   },

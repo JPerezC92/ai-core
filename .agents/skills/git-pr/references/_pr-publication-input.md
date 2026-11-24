@@ -96,14 +96,14 @@ A deferred finding generates its own debt entry. `debt` therefore holds only fol
 
 ## Ownership
 
-| Area                                                    | Writer                                                                                                 |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `title`, `summary`, `breakingChanges`, test item `text` | The content owner that drafts the pull request.                                                        |
-| Test item `status`, `evidence`, `decision`              | The designated review evidence writer, from the named executor's result and the author's own decision. |
-| `review` identity, findings, decisions, debt, verdict   | The designated review evidence writer.                                                                 |
-| Publication and the GitHub write                        | Herald 📯 (Release Manager), which executes and never authors.                                         |
+| Area                                                    | Writer                                                                                          |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `title`, `summary`, `breakingChanges`, test item `text` | The agent that prepared the change.                                                             |
+| Test item `status`, `evidence`, `decision`              | The same agent, from the named executor's result and its own decision.                          |
+| `review` findings, decisions, debt, readiness statement | The same agent. An independently requested review's findings join here with their dispositions. |
+| Publication and the GitHub write                        | Herald 📯 (Release Manager), which executes and never authors.                                  |
 
-A review update never rewrites the authored fields, and it replaces the current state of the review record rather than accumulating a second copy of it.
+A later evidence update never rewrites the authored fields, and it replaces the current state of the evidence record rather than accumulating a second copy of it. The `review` object and its `verdict` are **optional**: a delivery with no requested independent review carries no verdict, and the generated body then ends without a verdict line.
 
 ## Examples
 
@@ -159,7 +159,7 @@ Review update input, with one passed item, one author-evidenced not-applicable i
         "severity": "ADVISORY",
         "status": "FIXED",
         "evidence": "Focused regression test passes on the reviewed inputs.",
-        "resolution": "Input validation corrected; independently verified by the reviewer."
+        "resolution": "Input validation corrected and the fix confirmed against the failing case."
       }
     ],
     "debt": [],

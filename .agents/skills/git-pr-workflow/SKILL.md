@@ -13,11 +13,12 @@ metadata:
 
 ## Ownership
 
-- The **designated evidence writer** (Inquisitor 🔎 (PR Reviewer) when the roster is installed) owns every findings record, test-evidence record, test-item status, open-debt entry and the verdict in the publication input, and the generated body it produces; it authors and validates them and never delegates that authorship.
-- The **content owner** (the agent that drafts the pull request) owns the title, the summary, the breaking changes and the test-plan item text in that same publication input; a review update never rewrites those authored fields.
-- **Herald 📯 (Release Manager)** is the sole Git and GitHub executor: it reads the repository and GitHub state, executes `gh pr create`, executes the single `gh pr edit <number> --body-file <generated body>` publication the writer authorizes, and returns the persisted capture. It never authors, approves, repairs or modifies review evidence.
-- **Cipher 🔓 (Lead Orchestrator)** coordinates the sequence and the handoffs, and executes no Git or GitHub command.
+- The **delivery evidence owner** — the agent that prepared the change — owns every findings record, test-evidence record, test-item status, open-debt entry and the readiness statement in the publication input, and the generated body it produces; it authors and validates them and never delegates that authorship.
+- The **content owner** is that same agent for its own delivery: it owns the title, the summary, the breaking changes and the test-plan item text in that same publication input; a later evidence update never rewrites those authored fields.
+- **Herald 📯 (Release Manager)** is the sole Git and GitHub executor: it reads the repository and GitHub state, executes `gh pr create`, executes the single `gh pr edit <number> --body-file <generated body>` publication the evidence owner authorizes, and returns the persisted capture. It never authors, approves, repairs or modifies delivery evidence.
+- **Cipher 🔓 (Lead Orchestrator)** prepares the evidence and the generated body, and executes no Git or GitHub command.
 - **The user** is the final reviewer of a published pull request and the only person authorized to merge it. No agent performs that review on the user's behalf, and no agent merges a pull request by any mechanism.
+- **An independent review is optional.** When the user requested one, its findings and verdict join the publication input as evidence with their dispositions. When none was requested, the input carries no verdict and the body ends without a verdict line; nothing stands in for it.
 
 **Preparation paths per context.** Every `output/pr-publication.json` and generated-body path in this skill is the single-context default. A delivery that prepares more than one pull request supplies, for each context, its own distinct publication-input and body paths inside one preparation directory; that directory is the context's identity, and the existing exclusive-create behavior never overwrites an occupied path. Paths in the commands below substitute the context's own pair for the default.
 

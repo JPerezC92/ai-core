@@ -165,7 +165,6 @@ export function makeCompletedFeature(
 		readonly status?: "active" | "closed";
 		readonly created?: string;
 		readonly verbatimLogHeadings?: boolean;
-		readonly verdict?: "with-commit" | "without-commit" | "absent";
 		readonly firstFailure?: "recorded" | "not-applicable" | "absent";
 	} = {},
 ): string {
@@ -187,15 +186,12 @@ export function makeCompletedFeature(
 		next += 1;
 	};
 	if (options.blocked === true) {
-		push("2026-11-14 — Blocked: independent acceptance is outstanding");
+		push("2026-11-14 — Blocked: the required end-to-end check is outstanding");
 	}
 	if (options.laterEntry === true) {
 		push("2026-11-15 — the prerequisite recorded earlier was resolved");
 	}
 	if (status === "closed") {
-		const verdict = options.verdict ?? "with-commit";
-		if (verdict === "with-commit") push("S1 — independent review: passed at commit abc1234");
-		if (verdict === "without-commit") push("S1 — independent review: passed");
 		const firstFailure = options.firstFailure ?? "recorded";
 		if (firstFailure === "recorded") push("2026-11-19 — First failure: the focused case reproduced the defect");
 		if (firstFailure === "not-applicable")

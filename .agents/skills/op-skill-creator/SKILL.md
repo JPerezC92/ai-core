@@ -59,7 +59,7 @@ This section is the single format authority for a generated skill. Do not create
 - No unfilled `{...}` placeholders; total under 5,000 words and `SKILL.md` under 500 lines — the whole file, not the body alone; static blocks over roughly 30 lines extracted to a named reference artifact with a read-pointer. Those ceilings are this catalog's **local** policy values, not portable requirements.
 - `compatibility` present at the value the project's catalog convention declares when it declares one; otherwise the supplied or existing value is preserved rather than replaced or invented.
 - Every project command names its defined binding rather than a fixed runner.
-- Naming and pattern-registry updates are handed to the catalog owner with the audit; cross-references are not left stale. That audit is a completion-gate input under `## Rules`, not a follow-up that can remain pending after a completion claim.
+- Naming and pattern-registry updates are checked against the project's catalog conventions before completion is claimed; cross-references are not left stale. Apply `references/_quality-checklist.md` — it is the single authoring-quality checklist, and applying it is the author's own check, not a separate audit gate.
 - After writing, re-run these checks against the target and against every edited reference file. If the skill does not load afterwards, check the cause before changing anything else: the file is named `SKILL.md`, the frontmatter carries `name` and `description`, the name is unique, and the project's skill or permission configuration has not disabled it.
 
 ## Portable, runtime and local layers
@@ -80,14 +80,14 @@ A local convention is reported as local, never as a portable or runtime requirem
 - Offer source cleanup separately: delete, move to `_deprecated/`, or keep the old source as-is. Delete/archive requires explicit prior confirmation; declined cleanup leaves the source intact and does not prevent an otherwise approved copy. Neither the operation nor target approval implies cleanup approval.
 - Copy required helpers and update target references for the approved paths. Search the project's inventories, `odd/tasks/` feature records, knowledge files, agent specs, and any legacy plan or story surface that actually exists for the old name or path; update the approved matches, preserving intentional source references when keeping the source. Record an empty result instead of skipping the search.
 - Re-read the target, verify its required helpers and all target references, and re-read each edited reference before any approved source cleanup. Helpers may move only as part of explicitly confirmed cleanup after target verification; keep-source leaves the original skill and support tree intact.
-- List all changed paths from observed outcomes. For a previewed operation (rename, prefix or migration) compare them against the approved preview; for a plain in-place modify, report the actual changed set directly. The preview is never the result; report what actually changed, including a recorded empty result. That report is not a completion claim; completion is the independent gate in `## Rules`.
+- List all changed paths from observed outcomes. For a previewed operation (rename, prefix or migration) compare them against the approved preview; for a plain in-place modify, report the actual changed set directly. The preview is never the result; report what actually changed, including a recorded empty result.
 
 ## Rules
 
 - Write only the skill path plus, for a confirmed rename or migration, the previewed set of files.
 - No fabricated metadata, no invented history, no new tool, runner, shell or argument authority.
 - A missing required input, conflicting authoritative behavior, or unresolved migration choice stops the operation and reports it; it is never guessed.
-- No completion claim before a reviewer who authored neither the change nor its evidence returns zero open findings after comparing the actual request, Specs, delivered content, accounting and evidence. The catalog-owner audit is part of that gate. A pending audit is not completion. Small or read-only work has no feature Specs; do not invent them.
+- No completion claim before the author has verified the delivered skill against the actual request, this skill's pre-write checks and `references/_quality-checklist.md`, with zero open findings. An independent review may be requested by the user and is never required. Small or read-only work has no feature Specs; do not invent them.
 
 ## Optional Markdown text integrity
 

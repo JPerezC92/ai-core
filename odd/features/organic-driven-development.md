@@ -12,12 +12,12 @@ Organic Driven Development governs every request. Read-only and small work leave
 - [x] R4 `upstream` — acceptance per requirement names one action and one observable result.
 - [x] R5 `upstream · local detail` — every task names its requirement, route, owner and status.
 - [x] R6 `upstream · local detail` — the check that ran is recorded, and a verdict alone does not substitute for it.
-- [ ] R7 `local` — each piece of evidence is bound to the commit it ran against.
+- [x] R7 `local` — each verdict states the evidence it rests on, and a passing claim without its check is not a verdict.
 - [ ] R8 `upstream` — the failure that existed first is recorded, or the reason an executable failure cannot apply is stated.
 - [x] R9 `upstream` — what was not verified is named.
 - [x] R10 `local` — every requirement the change affects is accounted as met, restated or retired, and requirements the change did not affect are left alone.
 - [x] R11 `local` — evidence invalidated by a change is voided, never carried forward: a reviewer re-invoked for a related change reuses reference material only while that material and its dependencies are unchanged, always produces a new verdict for changed inputs, and states the reused material, the re-read inputs and the content identity its verdict binds to.
-- [ ] R12 `local` — an independent reviewer's verdict is recorded per requirement before close.
+- [x] R12 `local` — an independent review is recorded only when the user requested one; its findings are recorded with their dispositions, and the absence of a reviewer is never an open finding, a pending check or a closure prerequisite.
 - [x] R13 `local` — the feature validation passes before close.
 - [x] R14 `upstream · narrowed` — closing the record is not delivery; push, PR and merge stay separately authorized.
 - [x] R15 `upstream · local detail` — the Log is a brief journal of decisions, outcomes, verdicts and pointers rather than an execution diary: routine corrections stay brief, an entry reproduces no review transcript, investigation narrative, raw output dump or pull-request body, and a command, an inspected file, a delegation, a reviewer response, a repeated successful test or a routine progress update earns no entry of its own.

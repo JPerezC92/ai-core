@@ -31,10 +31,10 @@ const EXCLUDED_SKILL_ROOT = ".agents/skills/op-model/";
 const EXCLUDED_SKILL_FILE = `${EXCLUDED_SKILL_ROOT}SKILL.md`;
 
 /** An optional agent document, cleared by the `.opencode/agents/` root. */
-const EXCLUDED_AGENT = ".opencode/agents/forge.md";
+const EXCLUDED_FILE = ".agents/skills/incident-workflow/references/local-symptoms-template.md";
 
-/** An agent document the destination keeps. */
-const KEPT_AGENT = ".opencode/agents/lumen.md";
+/** A file under the same directory root that the destination keeps. */
+const KEPT_FILE = ".agents/skills/incident-workflow/references/local-problems-template.md";
 
 /** A skill file the destination keeps. */
 const KEPT_SKILL_FILE = ".agents/skills/git-commit/SKILL.md";
@@ -185,33 +185,33 @@ describe("durable destination opt-outs", () => {
 		const created = await createRepresentativeFixture();
 		fixture = created;
 		const { destination } = created;
-		await seedBindings(destination, freshBindings([EXCLUDED_SKILL_ROOT, EXCLUDED_AGENT]));
+		await seedBindings(destination, freshBindings([EXCLUDED_SKILL_ROOT, EXCLUDED_FILE]));
 
 		const first = await enroll(created);
 		expect(first.status).toBe(0);
 		expect(first.stdout).toMatch(/initialized/);
 
 		await expect(stat(join(destination, EXCLUDED_SKILL_ROOT.slice(0, -1)))).rejects.toThrow();
-		await expect(stat(join(destination, EXCLUDED_AGENT))).rejects.toThrow();
-		expect((await stat(join(destination, KEPT_AGENT))).isFile()).toBe(true);
+		await expect(stat(join(destination, EXCLUDED_FILE))).rejects.toThrow();
+		expect((await stat(join(destination, KEPT_FILE))).isFile()).toBe(true);
 		expect((await stat(join(destination, KEPT_SKILL_FILE))).isFile()).toBe(true);
 
 		const enrolled = await readBindings(destination);
 		const sources = boundSources(enrolled);
-		expect(sources).not.toContain(EXCLUDED_AGENT);
+		expect(sources).not.toContain(EXCLUDED_FILE);
 		expect(sources.some((source) => source.startsWith(EXCLUDED_SKILL_ROOT))).toBe(false);
-		expect(sources).toContain(KEPT_AGENT);
+		expect(sources).toContain(KEPT_FILE);
 		expect(sources).toContain(KEPT_SKILL_FILE);
 		expect(enrolled).toMatch(/^exclude:$/m);
-		expect(enrolled).toMatch(new RegExp(`^- ${EXCLUDED_AGENT}$`, "m"));
+		expect(enrolled).toMatch(new RegExp(`^- ${EXCLUDED_FILE}$`, "m"));
 		expect(enrolled).toMatch(new RegExp(`^- ${EXCLUDED_SKILL_ROOT}$`, "m"));
 
 		const second = await enroll(created);
 		expect(second.status).toBe(0);
 		await expect(stat(join(destination, EXCLUDED_SKILL_ROOT.slice(0, -1)))).rejects.toThrow();
-		await expect(stat(join(destination, EXCLUDED_AGENT))).rejects.toThrow();
+		await expect(stat(join(destination, EXCLUDED_FILE))).rejects.toThrow();
 		const reEnrolled = await readBindings(destination);
-		expect(boundSources(reEnrolled)).not.toContain(EXCLUDED_AGENT);
+		expect(boundSources(reEnrolled)).not.toContain(EXCLUDED_FILE);
 		expect(boundSources(reEnrolled).some((source) => source.startsWith(EXCLUDED_SKILL_ROOT))).toBe(false);
 	});
 
@@ -222,11 +222,11 @@ describe("durable destination opt-outs", () => {
 
 		const enrolledRun = await enroll(created);
 		expect(enrolledRun.stdout).toMatch(/initialized/);
-		expect((await stat(join(destination, EXCLUDED_AGENT))).isFile()).toBe(true);
-		expect(boundSources(await readBindings(destination))).toContain(EXCLUDED_AGENT);
+		expect((await stat(join(destination, EXCLUDED_FILE))).isFile()).toBe(true);
+		expect(boundSources(await readBindings(destination))).toContain(EXCLUDED_FILE);
 
 		let bindings = await readBindings(destination);
-		await writeFile(bindingsPathOf(destination), withExclusion(bindings, EXCLUDED_AGENT), "utf8");
+		await writeFile(bindingsPathOf(destination), withExclusion(bindings, EXCLUDED_FILE), "utf8");
 
 		const optedOut = await apply(created);
 		expect(optedOut.status).toBe(0);
@@ -236,17 +236,17 @@ describe("durable destination opt-outs", () => {
 		expect(outstanding.stderr).toMatch(/pending changes/);
 
 		bindings = await readBindings(destination);
-		expect(boundSources(bindings)).not.toContain(EXCLUDED_AGENT);
-		expect((await stat(join(destination, EXCLUDED_AGENT))).isFile()).toBe(true);
-		expect(pendingPaths(bindings)).toContain(EXCLUDED_AGENT);
+		expect(boundSources(bindings)).not.toContain(EXCLUDED_FILE);
+		expect((await stat(join(destination, EXCLUDED_FILE))).isFile()).toBe(true);
+		expect(pendingPaths(bindings)).toContain(EXCLUDED_FILE);
 
-		await rm(join(destination, EXCLUDED_AGENT));
+		await rm(join(destination, EXCLUDED_FILE));
 		await writeFile(bindingsPathOf(destination), clearPending(bindings), "utf8");
 
 		const reconciled = await check(created);
 		expect(reconciled.status).toBe(0);
 		expect(reconciled.stdout).toMatch(/current/);
-		await expect(stat(join(destination, EXCLUDED_AGENT))).rejects.toThrow();
+		await expect(stat(join(destination, EXCLUDED_FILE))).rejects.toThrow();
 	});
 
 	test("revoking an opt-out delivers the source again, and dropping the declaration does not restore anything by itself", async () => {
@@ -257,10 +257,10 @@ describe("durable destination opt-outs", () => {
 		expect((await enroll(created)).status).toBe(0);
 		let bindings = await readBindings(destination);
 
-		await writeFile(bindingsPathOf(destination), withExclusion(bindings, EXCLUDED_AGENT), "utf8");
+		await writeFile(bindingsPathOf(destination), withExclusion(bindings, EXCLUDED_FILE), "utf8");
 		expect((await apply(created)).status).toBe(0);
-		expect(boundSources(await readBindings(destination))).not.toContain(EXCLUDED_AGENT);
-		expect((await stat(join(destination, EXCLUDED_AGENT))).isFile()).toBe(true);
+		expect(boundSources(await readBindings(destination))).not.toContain(EXCLUDED_FILE);
+		expect((await stat(join(destination, EXCLUDED_FILE))).isFile()).toBe(true);
 
 		bindings = await readBindings(destination);
 		await writeFile(bindingsPathOf(destination), withoutExclusionKey(bindings), "utf8");
@@ -268,8 +268,8 @@ describe("durable destination opt-outs", () => {
 		expect(restored.status).toBe(0);
 		expect(restored.stdout).toMatch(/applied/);
 		bindings = await readBindings(destination);
-		expect(boundSources(bindings)).toContain(EXCLUDED_AGENT);
-		expect((await stat(join(destination, EXCLUDED_AGENT))).isFile()).toBe(true);
+		expect(boundSources(bindings)).toContain(EXCLUDED_FILE);
+		expect((await stat(join(destination, EXCLUDED_FILE))).isFile()).toBe(true);
 
 		await writeFile(bindingsPathOf(destination), withExclusion(bindings, EXCLUDED_SKILL_ROOT), "utf8");
 		expect((await apply(created)).status).toBe(0);

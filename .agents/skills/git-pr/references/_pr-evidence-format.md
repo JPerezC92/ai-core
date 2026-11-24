@@ -1,10 +1,10 @@
 # PR evidence format
 
-> Canonical body format for every pull request: findings, test evidence, open debt, and the closing verdict. The body is generated from the JSON publication input by `git-pr`; no agent authors it. The designated post-review evidence writer (Inquisitor 🔎 (PR Reviewer) when the roster is installed) alone fills the review-stage sections of that input and authorizes the single publication of the generated review body. The presentation never varies per PR.
+> Canonical body format for every pull request: findings, test evidence, open debt, and the optional closing verdict. The body is generated from the JSON publication input by `git-pr`; no agent authors it. The agent that prepared the change fills the evidence-stage sections of that input and authorizes the single publication of the generated body. The presentation never varies per PR.
 
 This file describes what the generated body looks like. The authoritative content contract is `.agents/skills/git-pr/references/_pr-publication-input.md`; the renderer produces the shape below from the validated input, and the shape is never assembled or edited by hand.
 
-The generated body carries no title wrapper: the title lives in the publication input and in the generation receipt. The publication input is the authoritative preparation source; the generated body is its artifact. Published evidence belongs only in the PR body, never comments/reviews or competing documents. Required scanner snapshots are machine evidence, not alternative bodies. The creation-stage rule that every test item is pending does not prohibit the designated writer's evidence-backed review assembly. The command argument contract lives in `.agents/skills/git-pr/SKILL.md`; the supplied-file schemas and the publication boundary live in `.agents/skills/git-pr-workflow/references/_pr-workflow-inputs.md`.
+The generated body carries no title wrapper: the title lives in the publication input and in the generation receipt. The publication input is the authoritative preparation source; the generated body is its artifact. Published evidence belongs only in the PR body, never comments/reviews or competing documents. Required scanner snapshots are machine evidence, not alternative bodies. The creation-stage rule that every test item is pending does not prohibit the preparing agent's later evidence-backed assembly. The command argument contract lives in `.agents/skills/git-pr/SKILL.md`; the supplied-file schemas and the publication boundary live in `.agents/skills/git-pr-workflow/references/_pr-workflow-inputs.md`.
 
 ## Assembly order
 
@@ -34,7 +34,7 @@ The renderer emits this exact creation body from a creation-stage input:
 No review findings yet.
 ```
 
-`No review findings yet.` is literal. It means review has not run; it is not a finding and not a verdict. Summary keeps at most three one-line bullets; the test plan keeps at least two executable items. Every creation-stage test item is pending, so every rendered item is an unchecked `- [ ]`.
+`No review findings yet.` is literal. It means no findings have been recorded yet; it is not a finding and not a verdict. Summary keeps at most three one-line bullets; the test plan keeps at least two executable items. Every creation-stage test item is pending, so every rendered item is an unchecked `- [ ]`.
 
 ## Findings / blockers
 
@@ -51,7 +51,7 @@ Rules:
 - Status is exactly `OPEN`, `IN PROGRESS`, `FIXED`, `DEFERRED`, or `REJECTED`. No other status exists; `IGNORE` is never a disposition.
 - `OPEN`, `IN PROGRESS`, and `DEFERRED` are open. Any open row prevents `[PASS]`, regardless of severity.
 - `OPEN` and `IN PROGRESS` name the owner and the next concrete action; no finding row is ownerless.
-- `FIXED` names the remediation and the party that verified it, and its Evidence names the verified fix evidence, not only the original finding location. Fixed rows stay visible; never delete, hide, collapse, or downgrade a row.
+- `FIXED` names the remediation and the evidence that confirms it, and its Evidence names the verified fix evidence, not only the original finding location. Fixed rows stay visible; never delete, hide, collapse, or downgrade a row.
 - `DEFERRED` requires explicit user authority and names its destination in Owner / resolution; the same finding is listed under Open debt.
 - `REJECTED` means not a defect and requires a mechanically decidable refutation; a judgment-dependent false finding goes to the user, not `REJECTED`. Keep the short literal refutation result in Evidence; the review round summary keeps the full literal output.
 - A finding persists across rounds with its status until `FIXED` or `REJECTED`. A new finding invalidates a prior `[PASS]`.
@@ -69,7 +69,7 @@ No findings.
 - Use `- [ ]` checkboxes; prose test plans are forbidden.
 - Keep at least two concrete, executable items. The section is mandatory and never empty; an empty test plan blocks the PR.
 - Each item names the exact action and its observable expected result.
-- Keep `- [ ]` until the designated writer joins the matching evidence row and tick together in the publication input at the reviewed head and regenerates the body from it. Authorize one final update of the complete joined body; local assembly alone is not verified publication. A checked item appears only for a passed item that carries its evidence; the generated creation body never shows a result or a claim that something ran.
+- Keep `- [ ]` until the matching evidence row and tick are joined together in the publication input at the current head and the body is regenerated from it. A checked item appears only for a passed item that carries its evidence; the generated creation body never shows a result or a claim that something ran.
 - A checked item's text is its evidence key. Never reword a checked item; rewording invalidates its row and requires re-verification.
 
 ## Test evidence
@@ -120,7 +120,7 @@ Every entry names its destination and the authority that permitted deferral. Ope
 
 ## Verdict
 
-The completed body ends with exactly one line:
+The completed body ends with exactly one line when a verdict is recorded:
 
 ```text
 [PASS] — one-sentence basis
@@ -128,14 +128,17 @@ The completed body ends with exactly one line:
 
 The same `[<VERDICT>] — basis` shape applies to all three tokens; an `[ADVISORY]` line also names the accepting user and date.
 
+**The verdict line is optional.** It states delivery readiness and the evidence it rests on, and it is present only when the publication input carries a `review.verdict`. A delivery with no requested independent review carries none, and its body simply ends without this line — that is a valid published body, not a missing field.
+
 - `[PASS]` — zero open findings: `No findings.`, or every finding row is `FIXED` or `REJECTED`; every required (non-N/A) test-plan item is checked with a passing row; no required verification is unresolved.
 - `[ADVISORY]` — every open finding is nonblocking `ADVISORY` severity (including a `DEFERRED` row the user accepted for release), the user's documented acceptance is named in the line, and all required verification is resolved.
 - `[BLOCK]` — any open `BLOCK` severity finding; any unresolved required verification; any missing, invalid, or stale evidence; any unchecked required item; or an open nonblocking finding whose required user acceptance is not yet documented (the body is not release-ready until then).
 
 Rules:
 
-- The verdict line is absent from the generated creation body. It is recorded only by the designated evidence writer in the publication input at the atomic join, and only after any required user acceptance is documented.
-- It states release readiness. It does not replace the reviewer's gate signal to the coordinator.
+- The verdict line is absent from the generated creation body. It is recorded in the publication input before the body is generated from it, and only after any required user acceptance is documented.
+- Its basis states the evidence it rests on and whether an independent review ran. An author's self-review is described as self-review, never as independent verification.
+- **An absent verdict never permits readiness.** Readiness is decided by the required checks, the test-plan item states and the finding rows. A missing verdict is not evidence of success and never conceals a failed or unresolved required check.
 - Any new finding, changed head, or changed evidence invalidates a prior `[PASS]`; re-establish the body at the current head.
 
 ## Readability

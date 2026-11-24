@@ -101,32 +101,33 @@ describe("ValidateFeatures.execute closure consistency", () => {
 });
 
 describe("ValidateFeatures.execute closure evidence", () => {
-	it("requires a per-spec verdict entry in the Log", () => {
-		const findings = findingsFor(
-			makeCompletedFeature({ created: CLOSURE_EVIDENCE_EFFECTIVE_FROM, status: "closed", verdict: "absent" }),
-		);
-
-		expect(findings).toContain("closed feature needs a per-spec verdict for S1 in its Log");
+	it("accepts a closed record that carries no reviewer verdict", () => {
+		expect(
+			findingsFor(makeCompletedFeature({ created: CLOSURE_EVIDENCE_EFFECTIVE_FROM, status: "closed" })),
+		).toStrictEqual([]);
 	});
 
-	it("requires every verdict entry to name the commit it ran against", () => {
+	it("does not require a per-spec verdict entry in the Log", () => {
+		const findings = findingsFor(
+			makeCompletedFeature({ created: CLOSURE_EVIDENCE_EFFECTIVE_FROM, status: "closed" }),
+		);
+
+		expect(findings.some((finding) => finding.includes("per-spec verdict"))).toBe(false);
+	});
+
+	it("does not require a verdict entry to name a commit", () => {
+		const findings = findingsFor(
+			makeCompletedFeature({ created: CLOSURE_EVIDENCE_EFFECTIVE_FROM, status: "closed" }),
+		);
+
+		expect(findings.some((finding) => finding.includes("name the commit it ran against"))).toBe(false);
+	});
+
+	it("does not treat a narrative verdict word as a finding obligation", () => {
 		const findings = findingsFor(
 			makeCompletedFeature({
 				created: CLOSURE_EVIDENCE_EFFECTIVE_FROM,
 				status: "closed",
-				verdict: "without-commit",
-			}),
-		);
-
-		expect(findings.some((finding) => finding.includes("name the commit it ran against"))).toBe(true);
-	});
-
-	it("does not treat an entry outside the documented verdict shape as a verdict entry", () => {
-		const findings = findingsFor(
-			makeCompletedFeature({
-				created: CLOSURE_EVIDENCE_EFFECTIVE_FROM,
-				status: "closed",
-				verdict: "absent",
 				firstFailure: "not-applicable",
 			}).replace(
 				"- L1 — original request",
@@ -135,18 +136,6 @@ describe("ValidateFeatures.execute closure evidence", () => {
 		);
 
 		expect(findings.some((finding) => finding.includes("name the commit it ran against"))).toBe(false);
-	});
-
-	it("does not treat a hexadecimal-looking path as the commit a verdict ran against", () => {
-		const findings = findingsFor(
-			makeCompletedFeature({
-				created: CLOSURE_EVIDENCE_EFFECTIVE_FROM,
-				status: "closed",
-				verdict: "without-commit",
-			}).replace("S1 — independent review: passed", "S1 — independent review: passed at deadbeef/cafe"),
-		);
-
-		expect(findings.some((finding) => finding.includes("name the commit it ran against"))).toBe(true);
 	});
 
 	it("requires the first failure or a stated reason it cannot apply", () => {
@@ -186,7 +175,6 @@ describe("ValidateFeatures.execute closure evidence", () => {
 			makeCompletedFeature({
 				created: dayBefore(CLOSURE_EVIDENCE_EFFECTIVE_FROM),
 				status: "closed",
-				verdict: "absent",
 				firstFailure: "absent",
 			}),
 		);
@@ -194,7 +182,7 @@ describe("ValidateFeatures.execute closure evidence", () => {
 		expect(findings).toStrictEqual([]);
 	});
 
-	it("does not treat an open-closure-prerequisite entry as a verdict needing a commit", () => {
+	it("accepts an active record that names its open closure prerequisite", () => {
 		expect(
 			resultsFor(
 				makeCompletedFeature({
@@ -204,18 +192,5 @@ describe("ValidateFeatures.execute closure evidence", () => {
 				}),
 			),
 		).toStrictEqual([new ValidFeature(REFERENCE)]);
-	});
-
-	it("does not let a prerequisite entry satisfy the per-spec verdict requirement", () => {
-		const findings = findingsFor(
-			makeCompletedFeature({
-				created: CLOSURE_EVIDENCE_EFFECTIVE_FROM,
-				status: "closed",
-				blocked: true,
-				verdict: "absent",
-			}),
-		);
-
-		expect(findings).toContain("closed feature needs a per-spec verdict for S1 in its Log");
 	});
 });
