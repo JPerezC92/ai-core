@@ -11,6 +11,42 @@ function visibleEntries(lines: readonly string[]): string[] {
 	return readFenceStructure(lines).unfencedLines.filter((line) => /^- L\d/u.test(line));
 }
 
+describe("readFenceStructure list markers that are not containers", () => {
+	it("treats a marker four columns from the container as indented code, not a fence", () => {
+		// Reported by external review: four columns past its container is an indented code
+		// block, so the marker and the fence-like text are literal.
+		expect(unclosedLines(["    - ```"])).toStrictEqual([]);
+		expect(unclosedLines(["    - ```", "    - inside"])).toStrictEqual([]);
+		const lines = ["    - ```"];
+		expect(readFenceStructure(lines).unfencedLines).toStrictEqual(["    - ```"]);
+	});
+
+	it("treats five or more columns after a marker as an indented code block inside the item", () => {
+		// Reported by external review: the item's first block is indented code, so the fence
+		// never opens and the trailing padding stays content indentation.
+		expect(unclosedLines(["-     ```"])).toStrictEqual([]);
+		expect(unclosedLines(["-      ```"])).toStrictEqual([]);
+		const lines = ["-     ```"];
+		expect(readFenceStructure(lines).unfencedLines).toStrictEqual(["-     ```"]);
+	});
+
+	it("still reads a fence whose marker padding is one to four columns", () => {
+		expect(unclosedLines(["-    ```", "     x", "     ```"])).toStrictEqual([]);
+		expect(unclosedLines(["-\t```", "\t x", "\t ```"])).toStrictEqual([]);
+	});
+
+	it("reads quote and list markers that appear together on one line", () => {
+		expect(unclosedLines(["> - ```", ">   x", ">   ```", "- L1 — b"])).toStrictEqual([]);
+		expect(unclosedLines(["- > ```", "  > x", "  > ```", "- L1 — b"])).toStrictEqual([]);
+	});
+
+	it("reads a fence inside a nested item at that item's own content column", () => {
+		const lines = ["- a", "  - ```text", "    x", "    ```", "- L1 — b"];
+		expect(unclosedLines(lines)).toStrictEqual([]);
+		expect(visibleEntries(lines)).toStrictEqual(["- L1 — b"]);
+	});
+});
+
 describe("readFenceStructure container geometry", () => {
 	it("treats fence-like lines inside a top-level indented code block as code, not fences", () => {
 		const lines = [

@@ -11,6 +11,106 @@ function fenceFindings(text: string): string[] {
 	return validateFeature(text).filter((finding) => finding.startsWith("unclosed Markdown code fence"));
 }
 
+describe("validateFeature structural interpretation of fenced content", () => {
+	const FENCED = (lines: readonly string[]): string[] => ["```text", ...lines, "```"];
+
+	it("does not report a duplicate required heading for a fenced example", () => {
+		const text = makeFeatureWithLog({
+			log: ["- L1 — a", "", ...FENCED(["## Tasks", "## Log", "## Specs"]), "- L2 — b"],
+		});
+		expect(validateFeature(text)).toStrictEqual([]);
+	});
+
+	it("does not accept a fenced Status line as the record's status", () => {
+		const text = makeFeatureWithLog({ log: ["- L1 — a", "", ...FENCED(["> **Status:** closed"])] });
+		expect(validateFeature(text)).toStrictEqual([]);
+	});
+
+	it("requires a genuine L1 entry when only a fenced one exists", () => {
+		const text = makeFeatureWithLog({ log: ["- L2 — a", "", ...FENCED(["- L1 — quoted"])] });
+		expect(validateFeature(text)).toContain("Log needs an L1 entry");
+	});
+
+	it("accepts a genuine L1 entry that follows a fenced example", () => {
+		const text = makeFeatureWithLog({ log: ["", ...FENCED(["- L1 — quoted"]), "- L1 — genuine"] });
+		expect(validateFeature(text)).toStrictEqual([]);
+	});
+
+	it("does not accept a fenced Tasks entry as the record's task", () => {
+		const text = makeFeatureWithLog({ log: ["- L1 — a"] }).replace(
+			"- T1 | S1 | route | open | commit: pending",
+			"```text\n- T1 | S1 | route | done | commit: abc1234\n```",
+		);
+		expect(validateFeature(text)).toContain(
+			"Tasks needs at least one '- T# | S# | ... | status | commit: ...' entry",
+		);
+	});
+
+	it("does not accept a fenced Specs entry as the record's spec", () => {
+		const text = makeFeatureWithLog({ log: ["- L1 — a"] });
+		const fenced = text.replace("- S1 — A requirement.", "```text\n- S1 — quoted\n```");
+		expect(validateFeature(fenced)).toContain("Specs needs at least one '- S# — ...' entry");
+	});
+
+	it("does not accept a fenced user authorization as cancellation evidence", () => {
+		const text = [
+			"# Sample feature",
+			"",
+			"> **Status:** closed",
+			"> **Owner:** Cipher (Lead Orchestrator)",
+			"> **Created:** 2026-11-24",
+			"> **Closed:** 2026-11-24",
+			"> **Disposition:** cancelled",
+			"",
+			"## Specs",
+			"",
+			"- S1 — A requirement.",
+			"",
+			"## Tasks",
+			"",
+			"- T1 | S1 | route | done | commit: abc1234",
+			"",
+			"## Log",
+			"",
+			"- L1 — a",
+			"```text",
+			"user authorized this cancellation",
+			"```",
+			"",
+		].join("\n");
+		expect(validateFeature(text)).toContain(
+			"cancelled feature needs a Log entry recording explicit user authorization for the cancellation",
+		);
+	});
+
+	it("accepts genuine user authorization recorded outside a fence", () => {
+		const text = [
+			"# Sample feature",
+			"",
+			"> **Status:** closed",
+			"> **Owner:** Cipher (Lead Orchestrator)",
+			"> **Created:** 2026-11-24",
+			"> **Closed:** 2026-11-24",
+			"> **Disposition:** cancelled",
+			"",
+			"## Specs",
+			"",
+			"- S1 — A requirement.",
+			"",
+			"## Tasks",
+			"",
+			"- T1 | S1 | route | done | commit: abc1234",
+			"",
+			"## Log",
+			"",
+			"- L1 — the user authorized this cancellation",
+			"- L2 — Close: cancelled on that authorization",
+			"",
+		].join("\n");
+		expect(validateFeature(text)).toStrictEqual([]);
+	});
+});
+
 describe("validateFeature fenced Close entries", () => {
 	it("accepts a closed record carrying a genuine Close entry", () => {
 		expect(validateFeature(makeFeatureWithLog({ status: "closed", log: CLOSED_WITH_GENUINE_CLOSE }))).toStrictEqual(

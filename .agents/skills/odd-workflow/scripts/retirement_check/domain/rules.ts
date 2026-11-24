@@ -6,6 +6,7 @@
  * not depend on the host time zone or on the current clock.
  */
 
+import { readFenceStructure } from "#scripts/markdown/fences.ts";
 import { splitLines } from "#scripts/feature_validation/domain/rules.ts";
 import { REQUIRED_COMPLETE_DAYS } from "#scripts/retirement_check/domain/records.ts";
 import type { RetirementDecision } from "#scripts/retirement_check/domain/records.ts";
@@ -44,14 +45,29 @@ export function calendarDaysBetween(fromMs: number, toMs: number): number {
  * record whose closure date is not a real calendar date are never candidates.
  */
 export function evaluateRetirement(text: string, asOfDate: string): RetirementDecision {
-	const lines = splitLines(text);
+	const structure = readFenceStructure(splitLines(text));
+	// A document whose fence never closes has no trustworthy structure, so it is never a
+	// deletion candidate: the code after the opening fence may be prose the reader cannot see.
+	if (structure.unclosed.length > 0) {
+		return { kind: "excluded", reason: "unbalanced code fence" };
+	}
+	// Only text outside fenced blocks states closure: a quoted example cannot make a record
+	// eligible for deletion.
+	const lines = structure.unfencedLines;
 
 	if (!lines.some((line) => STATUS_CLOSED_RE.test(line.trim()))) {
 		return { kind: "excluded", reason: "status is not closed" };
 	}
 
-	const closedField = lines.map((line) => CLOSED_DATE_RE.exec(line.trim())).find((match) => match !== null);
-	const closedOn = closedField?.[1]?.trim() ?? "";
+	const closedValues = lines
+		.map((line) => CLOSED_DATE_RE.exec(line.trim()))
+		.filter((match) => match !== null)
+		.map((match) => match[1]?.trim() ?? "");
+	const distinct = [...new Set(closedValues)];
+	if (distinct.length > 1) {
+		return { kind: "excluded", reason: "ambiguous closure metadata" };
+	}
+	const closedOn = distinct[0] ?? "";
 	if (closedOn.length === 0) {
 		return { kind: "excluded", reason: "no recorded closure date" };
 	}

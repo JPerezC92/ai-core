@@ -332,10 +332,11 @@ function derivationFindings(text: string): string[] {
 }
 
 function findings(text: string): string[] {
-	const lines = splitLines(text);
-	// One fence interpretation feeds the placeholder rule and the closure rule below, so a
-	// placeholder or a fence-like line inside a fenced block is never read as structure.
-	const fenceStructure = readFenceStructure(lines);
+	// One structural view serves every rule below: fenced content is removed before any
+	// heading, status, requirement, placeholder or guidance rule reads the document, so a
+	// quoted example can never stand in for durable structure.
+	const fenceStructure = readFenceStructure(splitLines(text));
+	const lines = fenceStructure.unfencedLines;
 	return [
 		...fenceFindings(fenceStructure.unclosed),
 		...titleFindings(lines),
@@ -347,7 +348,7 @@ function findings(text: string): string[] {
 		...markFindings(text),
 		...derivationFindings(text),
 		...supersededFindings(lines),
-		...placeholderFindings(fenceStructure.unfencedLines),
+		...placeholderFindings(lines),
 		...guidanceFindings(lines),
 	];
 }

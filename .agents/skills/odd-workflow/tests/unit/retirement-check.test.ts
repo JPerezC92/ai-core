@@ -18,6 +18,70 @@ function decisionFor(text: string, asOfDate: string): RetirementDecision {
 	return result.decision;
 }
 
+describe("CheckRetirements.execute fenced content", () => {
+	/** A record whose quoted example sits in a balanced fence inside the Log. */
+	function withQuotedExample(record: string, example: readonly string[]): string {
+		return record.replace(
+			"- L1 — original request",
+			["- L1 — original request", "", "```text", ...example, "```"].join("\n"),
+		);
+	}
+
+	it("excludes an active record carrying quoted closed metadata", () => {
+		const text = withQuotedExample(makeTaskRecord({ status: "active", closedOn: null }), [
+			"> **Status:** closed",
+			"> **Closed:** 2026-01-01",
+		]);
+		expect(decisionFor(text, AS_OF)).toStrictEqual({ kind: "excluded", reason: "status is not closed" });
+	});
+
+	it("excludes a closed record whose only closure date is fenced", () => {
+		const record = makeTaskRecord({ closedOn: null });
+		const text = record.replace(
+			"- L1 — original request",
+			["- L1 — original request", "", "```text", "> **Closed:** 2026-01-01", "```"].join("\n"),
+		);
+		expect(decisionFor(text, AS_OF)).toStrictEqual({ kind: "excluded", reason: "no recorded closure date" });
+	});
+
+	it("lets genuine closed metadata govern over a conflicting fenced example", () => {
+		const text = withQuotedExample(makeTaskRecord({ closedOn: "2026-11-01" }), ["> **Closed:** 2026-01-01"]);
+		// The genuine date governs: 2026-11-01 to 2026-11-14 is 13 complete days, not the
+		// much older fenced date, so the quoted example cannot shorten the retention period.
+		expect(decisionFor(text, AS_OF)).toStrictEqual({
+			kind: "candidate",
+			closedOn: "2026-11-01",
+			ageDays: 13,
+		});
+	});
+
+	it("excludes ambiguous closure metadata instead of choosing one", () => {
+		const first = makeTaskRecord({ closedOn: "2026-11-01" });
+		const text = first.replace(
+			"> **Closed:** 2026-11-01",
+			["> **Closed:** 2026-11-01", "> **Closed:** 2026-10-01"].join("\n"),
+		);
+		expect(decisionFor(text, AS_OF)).toStrictEqual({ kind: "excluded", reason: "ambiguous closure metadata" });
+	});
+
+	it("excludes an otherwise eligible record whose fence never closes", () => {
+		const record = makeTaskRecord({ closedOn: "2026-11-01" });
+		const text = record.replace(
+			"- L1 — original request",
+			["- L1 — original request", "", "```text", "quoted"].join("\n"),
+		);
+		expect(decisionFor(text, "2026-12-31")).toStrictEqual({ kind: "excluded", reason: "unbalanced code fence" });
+	});
+
+	it("keeps the calendar arithmetic for a valid closed record", () => {
+		expect(decisionFor(makeTaskRecord({ closedOn: "2026-11-01" }), "2026-11-08")).toStrictEqual({
+			kind: "candidate",
+			closedOn: "2026-11-01",
+			ageDays: 7,
+		});
+	});
+});
+
 describe("CheckRetirements.execute", () => {
 	it("reads the recorded closure date as its UTC midnight", () => {
 		expect(decisionFor(makeTaskRecord({ closedOn: "2026-11-01" }), "2026-11-01")).toStrictEqual({

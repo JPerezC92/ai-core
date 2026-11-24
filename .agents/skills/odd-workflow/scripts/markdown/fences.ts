@@ -2,14 +2,14 @@
  * Reads a document's fenced-block structure once, so every consumer that must tell code
  * from structure reads the same interpretation.
  *
- * The reader models the two things a fenced block depends on and a regular expression
- * cannot express: the container a line sits in (block-quote markers and list-item content
- * columns), and whether a fence was closed explicitly. Indentation is measured relative to
- * the containing block, so a fence inside a list item is a fence while a fence-like line
- * inside an indented code block is not.
+ * The reader models the containers a fenced block depends on — block-quote levels and
+ * list-item content columns — and whether a fence was closed explicitly. Indentation is
+ * measured relative to the containing block at each step, so a marker indented four or more
+ * columns past its container is indented code rather than a container, a fence inside a list
+ * item is a fence, and fence-like text inside an indented code block is not.
  *
  * It is deliberately not a Markdown parser. It decides fence delimiters, HTML-comment spans
- * and container columns — exactly what the validators need — and interprets no other
+ * and container geometry — exactly what the validators need — and interprets no other
  * Markdown construct.
  */
 
@@ -32,38 +32,45 @@ export type FenceStructure = {
 	readonly unfencedLines: readonly string[];
 };
 
+/** A list item opened by one line: its content column and the quote level it sits at. */
+type OpenedItem = {
+	readonly column: number;
+	readonly quoteDepth: number;
+};
+
+type LineShape = {
+	/** The line from the end of its container prefix, with no quote or list marker left. */
+	readonly rest: string;
+	readonly quoteDepth: number;
+	/** List items this line opens, outermost first. */
+	readonly openedItems: readonly OpenedItem[];
+	/** The line's content, with its container prefixes and leading whitespace removed. */
+	readonly body: string;
+	/** The column at which `body` begins. */
+	readonly bodyColumn: number;
+	/** Columns of the line's own leading whitespace, before any container prefix. */
+	readonly lineColumn: number;
+	/** True when the line opens at least one list item, so its markers are structure. */
+	readonly opensListItem: boolean;
+};
+
 type OpenFence = {
 	readonly line: number;
 	readonly marker: "`" | "~";
 	readonly length: number;
 	readonly quoteDepth: number;
 	readonly containerColumn: number;
-};
-
-type LineShape = {
-	/** The line from the container's content column, with every leading block-quote marker removed. */
-	readonly rest: string;
-	/** How many block-quote markers were removed. */
-	readonly quoteDepth: number;
-	/** Columns occupied by the line's leading spaces and tabs. */
-	readonly indentColumns: number;
-	/** The line's content, with leading whitespace (and a list marker, when present) removed. */
-	readonly body: string;
-	/** The column at which `body` begins. */
+	/** The column at which the opening line's own content begins, in its quote's space. */
 	readonly bodyColumn: number;
-	/** True when the line opens a list item, so its own content column is its body column. */
-	readonly startsListItem: boolean;
-	/** The content column of a list item this line opens, otherwise undefined. */
-	readonly itemContentColumn: number | undefined;
 };
 
-const BLOCKQUOTE_PREFIX = /^ {0,3}>[ \t]?/u;
-const LIST_ITEM_MARKER = /^(?:[-*+]|\d{1,9}[.)])([ \t]+)/u;
+const QUOTE_MARKER = /^ {0,3}>[ \t]?/u;
+const LIST_MARKER = /^( {0,3})(?:[-*+]|\d{1,9}[.)])([ \t]+)/u;
 const DELIMITER = /^(`{3,}|~{3,})(.*)$/u;
 const LEADING_WHITESPACE = /^[ \t]*/u;
 const COMMENT_OPEN = "<!--";
 const COMMENT_CLOSE = "-->";
-/** A fenced block opens only within this many columns of its container's content. */
+/** A container or fenced block opens only within this many columns of its container's content. */
 const MAX_OPENER_INDENT = 3;
 
 /** Counts the columns a run of spaces and tabs occupies, starting at `startColumn`, with four-column tab stops. */
@@ -96,44 +103,80 @@ function columnsOfLeadingWhitespace(text: string, limit: number): { readonly ind
 	return { index, columns };
 }
 
-function shapeOf(line: string, containerColumn: number): LineShape {
-	// A block quote inside a list item carries that item's indentation, so its markers are
-	// matched from the container's content column rather than from the line's absolute start.
-	const prefix = columnsOfLeadingWhitespace(line, containerColumn);
-	let rest = line.slice(prefix.index);
+/**
+ * Reads one line's container prefix.
+ *
+ * The walk starts at the containing block's content column and then consumes, in the order
+ * they appear, every block-quote marker and every list marker. A marker more than three
+ * columns past its container is indented code, not a container, so it stops the walk — which
+ * is what makes `    - ``` ` and `-     ``` ` literal code rather than a container opening a
+ * fence.
+ */
+function shapeOf(line: string, baseContainerColumn: number): LineShape {
+	// Block-quote markers are read first and each one resets the column origin, because a
+	// quote opens a new content space; the containing item's column is then consumed in that
+	// space. This is what lets `> - ``` ` and `- > ``` ` both resolve.
+	let cursor = 0;
+	let column = 0;
 	let quoteDepth = 0;
 	for (;;) {
-		const marker = BLOCKQUOTE_PREFIX.exec(rest);
-		if (marker === null) break;
-		rest = rest.slice(marker[0].length);
+		const quote = QUOTE_MARKER.exec(line.slice(cursor));
+		if (quote === null) break;
 		quoteDepth += 1;
+		cursor += quote[0].length;
+		column = 0;
 	}
-	const indentation = leadingWhitespace(rest);
-	const indentColumns = prefix.columns + countColumns(indentation, prefix.columns);
-	const content = rest.slice(indentation.length);
-	const item = LIST_ITEM_MARKER.exec(content);
-	if (item === null) {
-		return {
-			rest,
-			quoteDepth,
-			indentColumns,
-			body: content,
-			bodyColumn: indentColumns,
-			startsListItem: false,
-			itemContentColumn: undefined,
-		};
+	const afterQuotes = line.slice(cursor);
+	const lineColumn = countColumns(leadingWhitespace(afterQuotes));
+	const base = columnsOfLeadingWhitespace(afterQuotes, baseContainerColumn);
+	cursor += base.index;
+	column = base.columns;
+	const openedItems: OpenedItem[] = [];
+
+	for (;;) {
+		const remaining = line.slice(cursor);
+
+		const quote = QUOTE_MARKER.exec(remaining);
+		if (quote !== null) {
+			quoteDepth += 1;
+			cursor += quote[0].length;
+			column = 0;
+			continue;
+		}
+
+		const item = LIST_MARKER.exec(remaining);
+		if (item === null) break;
+		const markerIndent = item[1]!.length;
+		const markerWidth = item[0].length - item[1]!.length - item[2]!.length;
+		const markerColumn = column + markerIndent;
+		const padding = countColumns(item[2]!, markerColumn + markerWidth);
+		if (padding >= 5) {
+			// Five or more columns after the marker means the item's first block is an indented
+			// code block: the content column is the marker's end plus one, and the remaining
+			// padding stays as that block's own indentation.
+			openedItems.push({ column: markerColumn + markerWidth + 1, quoteDepth });
+			cursor += markerIndent + markerWidth;
+			column = markerColumn + markerWidth;
+			break;
+		}
+		const contentColumn = markerColumn + markerWidth + padding;
+		openedItems.push({ column: contentColumn, quoteDepth });
+		cursor += item[0].length;
+		column = contentColumn;
 	}
-	const markerWidth = item[0].length - item[1]!.length;
-	const padding = countColumns(item[1]!, indentColumns + markerWidth);
-	const itemContentColumn = indentColumns + markerWidth + (padding >= 5 ? 1 : padding);
+
+	const remaining = line.slice(cursor);
+	const indentation = leadingWhitespace(remaining);
+	const bodyColumn = column + countColumns(indentation, column);
+
 	return {
-		rest,
+		rest: remaining.slice(indentation.length),
 		quoteDepth,
-		indentColumns,
-		body: content.slice(item[0].length),
-		bodyColumn: itemContentColumn,
-		startsListItem: true,
-		itemContentColumn,
+		openedItems,
+		body: remaining.slice(indentation.length),
+		bodyColumn,
+		lineColumn,
+		opensListItem: openedItems.length > 0,
 	};
 }
 
@@ -142,17 +185,30 @@ export function readFenceStructure(lines: readonly string[]): FenceStructure {
 	const unfencedLines: string[] = [];
 	/**
 	 * The list items currently open, outermost first. Each entry carries its content column
-	 * and the block-quote depth it belongs to, because a list inside a block quote ends with
-	 * that block quote and must not keep constraining a fence outside it.
+	 * and the quote level it belongs to, because a list inside a block quote ends with that
+	 * block quote and must not keep constraining a fence outside it.
 	 */
-	const containers: { readonly column: number; readonly quoteDepth: number }[] = [];
+	const containers: OpenedItem[] = [];
 	let open: OpenFence | null = null;
 	let inComment = false;
 
 	const innermostColumn = (): number => (containers.length > 0 ? containers[containers.length - 1]!.column : 0);
-	/** Drops every open list item that lived inside a block quote this line has left. */
-	const closeDeeperQuotes = (quoteDepth: number): void => {
-		while (containers.length > 0 && containers[containers.length - 1]!.quoteDepth > quoteDepth) containers.pop();
+	/**
+	 * Drops every container this line has left.
+	 *
+	 * A container ends when the line sits in a shallower block quote than the one it was
+	 * opened in, or — at the same quote level — when the line is less indented than that
+	 * item's content column. A deeper quote is content inside the item, so it ends nothing.
+	 */
+	const dropEndedContainers = (shape: LineShape): void => {
+		for (;;) {
+			const tail = containers[containers.length - 1];
+			if (tail === undefined) return;
+			const quoteClosed = tail.quoteDepth > shape.quoteDepth;
+			const lessIndented = tail.quoteDepth === shape.quoteDepth && tail.column > shape.lineColumn;
+			if (!quoteClosed && !lessIndented) return;
+			containers.pop();
+		}
 	};
 
 	for (let index = 0; index < lines.length; index += 1) {
@@ -170,30 +226,34 @@ export function readFenceStructure(lines: readonly string[]): FenceStructure {
 				break;
 			}
 
+			// A fenced block or an HTML comment is literal content, so its lines never push the
+			// containers it appears to open: a list marker there is text, not structure. The
+			// containers it has left are still dropped, so a fence ends with the block holding it.
+			dropEndedContainers(shape);
+
 			if (open !== null) {
+				const current = open;
 				const leftContainer =
-					shape.quoteDepth < open.quoteDepth ||
-					(shape.quoteDepth === open.quoteDepth && shape.indentColumns < open.containerColumn);
+					shape.quoteDepth < current.quoteDepth || innermostColumn() < current.containerColumn;
 				if (leftContainer) {
 					// The containing block ended before any closing marker, so the fence was
 					// terminated implicitly. AICore requires an explicit closer, so this is
 					// still unclosed; the current line is then read in its own context.
-					unclosed.push({ line: open.line, marker: open.marker, length: open.length });
+					unclosed.push({ line: current.line, marker: current.marker, length: current.length });
 					open = null;
 					pending = true;
 					continue;
 				}
 				// Inside a fence every line is literal, so a closer must be a fence line in the
 				// opener's own container: a list marker there is content, never a delimiter.
-				const literalContent = shape.rest.slice(leadingWhitespace(shape.rest).length);
-				const delimiter = shape.startsListItem ? null : DELIMITER.exec(literalContent);
+				const delimiter = shape.opensListItem ? null : DELIMITER.exec(shape.rest);
 				const closes =
 					delimiter !== null &&
-					shape.quoteDepth === open.quoteDepth &&
-					delimiter[1]![0] === open.marker &&
-					delimiter[1]!.length >= open.length &&
+					shape.quoteDepth === current.quoteDepth &&
+					delimiter[1]![0] === current.marker &&
+					delimiter[1]!.length >= current.length &&
 					delimiter[2]!.trim().length === 0 &&
-					shape.indentColumns - open.containerColumn <= MAX_OPENER_INDENT;
+					shape.bodyColumn - current.bodyColumn <= MAX_OPENER_INDENT;
 				unfencedLines.push("");
 				if (closes) open = null;
 				emitted = true;
@@ -207,20 +267,7 @@ export function readFenceStructure(lines: readonly string[]): FenceStructure {
 				break;
 			}
 
-			// A fenced block or an HTML comment is literal content, so its lines never move
-			// the container state: a list marker there is text, not structure.
-			closeDeeperQuotes(shape.quoteDepth);
-			if (shape.startsListItem) {
-				const itemContentColumn = shape.itemContentColumn!;
-				while (containers.length > 0 && containers[containers.length - 1]!.column >= itemContentColumn) {
-					containers.pop();
-				}
-				containers.push({ column: itemContentColumn, quoteDepth: shape.quoteDepth });
-			} else {
-				while (containers.length > 0 && shape.indentColumns < containers[containers.length - 1]!.column) {
-					containers.pop();
-				}
-			}
+			for (const item of shape.openedItems) containers.push(item);
 			const contentColumn = innermostColumn();
 
 			if (shape.body.startsWith(COMMENT_OPEN) && shape.bodyColumn - contentColumn <= MAX_OPENER_INDENT) {
@@ -246,6 +293,7 @@ export function readFenceStructure(lines: readonly string[]): FenceStructure {
 						length: delimiter[1]!.length,
 						quoteDepth: shape.quoteDepth,
 						containerColumn: contentColumn,
+						bodyColumn: shape.bodyColumn,
 					};
 					unfencedLines.push("");
 					emitted = true;

@@ -302,15 +302,13 @@ function closureEvidenceFindings(logLines: readonly string[]): string[] {
 
 export function validateFeature(text: string): string[] {
 	const findings: string[] = [];
-	const lines = splitLines(text);
-	// One fence interpretation feeds the consumers that must tell code from structure: the
-	// unfenced projection is the document with fenced lines removed, so quoted code cannot
-	// supply a Close entry, an ordered Log identifier or an obsolescence explanation. The
-	// heading-count, status, task, L1-presence and cancellation-authorization checks keep
-	// their pre-existing raw-line contract.
-	const fenceStructure = readFenceStructure(lines);
-	const unfencedLines = fenceStructure.unfencedLines;
-	const unfencedLog = section(unfencedLines, "## Log");
+	// One structural view serves every rule below: the unfenced projection is the document with
+	// fenced lines removed, so a quoted example can never stand in for record structure — not a
+	// heading or section boundary, not header metadata, not a Specs, Tasks or Log entry, not a
+	// Close entry, an identifier, a cancellation authorization or a placeholder.
+	const fenceStructure = readFenceStructure(splitLines(text));
+	const lines = fenceStructure.unfencedLines;
+	const log = section(lines, "## Log");
 
 	for (const fence of fenceStructure.unclosed) {
 		findings.push(
@@ -346,7 +344,6 @@ export function validateFeature(text: string): string[] {
 		findings.push(`header must include exactly one Created line; found ${createdFields}`);
 	}
 
-	const log = section(lines, "## Log");
 	const statusLines = lines.map((line) => line.trim()).filter((line) => line.startsWith("> **Status:**"));
 	if (statusLines.length !== 1) {
 		findings.push("header must include exactly one Status line");
@@ -384,7 +381,7 @@ export function validateFeature(text: string): string[] {
 		}
 		if (disposition === "superseded") {
 			const hasReplacement = lines.some((line) => SUPERSEDED_BY_RE.test(line.trim()));
-			const hasObsolescenceExplanation = unfencedLog.some(
+			const hasObsolescenceExplanation = log.some(
 				(line) => CLOSE_LOG_RE.test(line) && OBSOLESCENCE_RE.test(line),
 			);
 			if (!hasReplacement && !hasObsolescenceExplanation) {
@@ -401,7 +398,7 @@ export function validateFeature(text: string): string[] {
 	}
 	const claimsCompletion = disposition === undefined || disposition === "completed";
 
-	const hasCloseEntry = unfencedLog.some((line) => CLOSE_LOG_RE.test(line));
+	const hasCloseEntry = log.some((line) => CLOSE_LOG_RE.test(line));
 	if (isClosed && !hasCloseEntry) {
 		findings.push("closed feature needs a Log 'Close:' entry");
 	}
@@ -470,7 +467,7 @@ export function validateFeature(text: string): string[] {
 		taskEntries.length > 0 &&
 		taskStatuses.length === taskEntries.length &&
 		taskStatuses.every((status) => status === "done") &&
-		!namesOpenClosurePrerequisite(unfencedLog)
+		!namesOpenClosurePrerequisite(log)
 	) {
 		findings.push(
 			"active record has every task done: close the record or record the open closure prerequisite as a Log entry",
@@ -478,11 +475,11 @@ export function validateFeature(text: string): string[] {
 	}
 
 	if (isClosed && claimsCompletion && closureEvidenceApplies(lines)) {
-		findings.push(...closureEvidenceFindings(unfencedLog));
+		findings.push(...closureEvidenceFindings(log));
 	}
 
 	const logIdentifiers: bigint[] = [];
-	for (const line of unfencedLog) {
+	for (const line of log) {
 		const match = LOG_ENTRY_RE.exec(line);
 		const digits = match?.[1];
 		if (digits === undefined) continue;
@@ -520,7 +517,7 @@ export function validateFeature(text: string): string[] {
 		findings.push(`first Log entry must be L1: L${logIdentifiers[0]}`);
 	}
 
-	for (const line of unfencedLines) {
+	for (const line of lines) {
 		if (PLACEHOLDER_RE.test(stripCode(line))) {
 			findings.push(`unfilled placeholder: ${line.trim()}`);
 		}
