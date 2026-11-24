@@ -47,6 +47,55 @@ describe("readFenceStructure list markers that are not containers", () => {
 	});
 });
 
+describe("readFenceStructure container frames", () => {
+	it("measures indentation from the innermost container, not from an enclosing one", () => {
+		// F30: four columns inside the block quote is indented code, even though those columns
+		// are only two past the enclosing list item's content column.
+		const shape = ["- >     ~~~"];
+		expect(unclosedLines(shape)).toStrictEqual([]);
+		expect(readFenceStructure(shape).unfencedLines).toStrictEqual(["- >     ~~~"]);
+		// Three columns inside the quote is a fence, so the boundary is pinned, not incidental.
+		expect(unclosedLines(["- >    ~~~"])).toStrictEqual([1]);
+	});
+
+	it("does not let a later container close a fence opened in an earlier one", () => {
+		// F31: both lines are at quote depth one, but line two's quote is a different container
+		// from the one inside the list item, so it neither closes line one nor stays open alone.
+		expect(unclosedLines(["- > ~~~", "> ~~~"])).toStrictEqual([1, 2]);
+		expect(unclosedLines(["- > ~~~", "~~~"])).toStrictEqual([1, 2]);
+	});
+
+	it("ends an HTML comment with the container that opened it", () => {
+		// F32: the block quote ends at line two, so the comment ends with it.
+		const lines = ["> <!--", "## Log", "- L1 — Genuine entry"];
+		expect(readFenceStructure(lines).unfencedLines).toStrictEqual(["", "## Log", "- L1 — Genuine entry"]);
+		const inItem = ["- <!--", "## Log", "- L1 — a"];
+		expect(readFenceStructure(inItem).unfencedLines).toStrictEqual(["", "## Log", "- L1 — a"]);
+	});
+
+	it("keeps a top-level comment open until its own closer", () => {
+		const lines = ["<!--", "hidden", "-->", "## Log"];
+		expect(readFenceStructure(lines).unfencedLines).toStrictEqual(["", "", "", "## Log"]);
+	});
+
+	it("measures a tab after a container marker to the next tab stop", () => {
+		// A tab immediately after `- ` advances to the next four-column stop, so the item's
+		// content column is four and a fence there is at its container's own column.
+		expect(unclosedLines(["-\t```", "\t x", "\t ```"])).toStrictEqual([]);
+		// The same tab inside a block quote is measured from the quote's content column, not
+		// from the absolute start of the line.
+		expect(unclosedLines(["> -\t```", "> \t x", "> \t ```"])).toStrictEqual([]);
+		// Three columns past the tab-derived content column is a closer; four is content.
+		expect(unclosedLines(["-\t```", "\t\t x", "\t\t\t```"])).toStrictEqual([1]);
+	});
+
+	it("keeps containers open across blank lines", () => {
+		const lines = ["- a", "", "  ```", "  x", "  ```", "", "- L1 — b"];
+		expect(unclosedLines(lines)).toStrictEqual([]);
+		expect(visibleEntries(lines)).toStrictEqual(["- L1 — b"]);
+	});
+});
+
 describe("readFenceStructure closer and break handling", () => {
 	it("rejects a closer indented past the opener's container as content", () => {
 		// The opener sits five columns past its container, so the container is column zero and a
