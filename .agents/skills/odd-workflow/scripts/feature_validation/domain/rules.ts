@@ -1,7 +1,7 @@
 /** Pure feature-document rules, path ordering, and an injected path-comparison policy. */
 
 import { basename, normalize, parse, sep } from "node:path";
-import { readFenceStructure } from "#scripts/markdown/fences.ts";
+import { misplacedDelimiter, readFenceStructure } from "#scripts/markdown/fences.ts";
 
 const REQUIRED_HEADINGS = ["## Specs", "## Tasks", "## Log"] as const;
 const SPEC_RE = /^- (?:\*\*)?S\p{Nd}+ — .+(?:\*\*)?$/u;
@@ -214,6 +214,19 @@ export function quoteDiagnosticValue(value: string): string {
 }
 
 /**
+ * Whether a prospective rule applies, by the record's declared creation date.
+ *
+ * A record with no readable creation date is in scope, so a new record cannot escape the rule by
+ * omitting the field.
+ */
+function createdOnOrAfter(lines: readonly string[], effectiveFrom: string): boolean {
+	const header = headerRegion(lines);
+	const created = header.map((line) => CREATED_DATE_RE.exec(line.trim())).filter((match) => match !== null);
+	if (created.length !== 1) return true;
+	return created[0]![1]! >= effectiveFrom;
+}
+
+/**
  * Whether the completed-but-active rule applies to a record.
  *
  * The rule is prospective, so a record created before the effective date is exempt
@@ -222,11 +235,7 @@ export function quoteDiagnosticValue(value: string): string {
  * the field.
  */
 function closureConsistencyApplies(lines: readonly string[]): boolean {
-	const headerEnd = lines.findIndex((line) => line.startsWith("## "));
-	const header = headerEnd < 0 ? lines : lines.slice(0, headerEnd);
-	const created = header.map((line) => CREATED_DATE_RE.exec(line.trim())).filter((match) => match !== null);
-	if (created.length !== 1) return true;
-	return created[0]![1]! >= CLOSURE_CONSISTENCY_EFFECTIVE_FROM;
+	return createdOnOrAfter(lines, CLOSURE_CONSISTENCY_EFFECTIVE_FROM);
 }
 
 /**
@@ -312,13 +321,23 @@ function closureEvidenceFindings(logLines: readonly string[]): string[] {
 	return findings;
 }
 
+/**
+ * The date from which a fence delimiter must start at column zero.
+ *
+ * The ODD record format is controlled: verbatim content is a fenced block opened at column zero
+ * with a delimiter longer than any run inside it. Records created before this date use indented
+ * and quoted fences in historical quotations, so they are read as text and never rewritten.
+ */
+export const FENCE_CONTRACT_EFFECTIVE_FROM = "2026-11-25";
+
 export function validateFeature(text: string): string[] {
 	const findings: string[] = [];
+	const rawLines = splitLines(text);
 	// One structural view serves every rule below: the unfenced projection is the document with
 	// fenced lines removed, so a quoted example can never stand in for record structure — not a
 	// heading or section boundary, not header metadata, not a Specs, Tasks or Log entry, not a
 	// Close entry, an identifier, a cancellation authorization or a placeholder.
-	const fenceStructure = readFenceStructure(splitLines(text));
+	const fenceStructure = readFenceStructure(rawLines);
 	const lines = fenceStructure.unfencedLines;
 	const log = section(lines, "## Log");
 	// Header metadata is read only from the record's own header region.
@@ -328,6 +347,16 @@ export function validateFeature(text: string): string[] {
 		findings.push(
 			`unclosed Markdown code fence opened at line ${fence.line} with ${fence.length} ${fence.marker === "`" ? "backtick" : "tilde"} character(s); add the closing fence`,
 		);
+	}
+
+	// The authoring contract places a delimiter at column zero. Reporting a misplaced one keeps
+	// this reader small: the contract removes the ambiguity instead of the reader resolving it.
+	// Only lines the reader treated as delimiters are checked, so content stays opaque.
+	if (createdOnOrAfter(lines, FENCE_CONTRACT_EFFECTIVE_FROM)) {
+		for (const lineNumber of fenceStructure.delimiterLines) {
+			const line = rawLines[lineNumber - 1] ?? "";
+			if (misplacedDelimiter(line)) findings.push(`fence delimiter must start at column 0: ${line.trim()}`);
+		}
 	}
 
 	const headings = lines.filter((line) => line.startsWith("## ")).map((line) => line.trim());

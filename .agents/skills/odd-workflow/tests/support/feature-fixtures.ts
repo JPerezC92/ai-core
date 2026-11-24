@@ -233,11 +233,16 @@ export function makeFeatureWithLog(options: {
 	readonly taskStatus?: "open" | "done";
 	readonly log: readonly string[];
 	readonly specsBeforeLog?: readonly string[];
+	readonly created?: string;
 }): string {
 	const status = options.status ?? "active";
 	const taskStatus = options.taskStatus ?? (status === "closed" ? "done" : "open");
 	const commit = taskStatus === "done" ? "abc1234" : "pending";
-	const header = ["> **Status:** " + status, "> **Owner:** Cipher (Lead Orchestrator)", "> **Created:** 2026-11-14"];
+	const header = [
+		"> **Status:** " + status,
+		"> **Owner:** Cipher (Lead Orchestrator)",
+		`> **Created:** ${options.created ?? "2026-11-14"}`,
+	];
 	if (status === "closed") header.push("> **Closed:** 2026-11-01");
 	return [
 		"# Sample feature",

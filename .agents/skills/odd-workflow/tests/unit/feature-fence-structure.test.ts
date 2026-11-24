@@ -123,6 +123,54 @@ describe("validateFeature structural interpretation of fenced content", () => {
 	});
 });
 
+describe("validateFeature fence authoring contract", () => {
+	const CONTRACT = "fence delimiter must start at column 0";
+
+	it("rejects an indented delimiter in a record created on the effective date", () => {
+		const text = makeFeatureWithLog({
+			created: "2026-11-25",
+			log: ["- L1 — a", "", "  ```text", "  inside", "  ```", "- L2 — b"],
+		});
+		expect(validateFeature(text).filter((finding) => finding.startsWith(CONTRACT)).length).toBe(2);
+	});
+
+	it("rejects a quoted delimiter in a record created after the effective date", () => {
+		const text = makeFeatureWithLog({
+			created: "2026-12-01",
+			log: ["- L1 — a", "", "> ```text", "> inside", "> ```"],
+		});
+		expect(validateFeature(text)).toContain(`${CONTRACT}: > \`\`\`text`);
+	});
+
+	it("accepts a column-zero block in a record created after the effective date", () => {
+		const text = makeFeatureWithLog({
+			created: "2026-11-25",
+			log: ["- L1 — a", "````text", "```", "  indented content", "````", "- L2 — b"],
+		});
+		expect(validateFeature(text)).toStrictEqual([]);
+	});
+
+	it("does not apply the contract to a record created before the effective date", () => {
+		const text = makeFeatureWithLog({
+			created: "2026-11-24",
+			log: ["- L1 — a", "", "  ```text", "  inside", "  ```"],
+		});
+		expect(validateFeature(text)).toStrictEqual([]);
+	});
+
+	it("still detects malformed delimiters in a record that meets the contract", () => {
+		// The contract prevents the ambiguous shape; it does not replace delimiter detection.
+		const text = makeFeatureWithLog({
+			created: "2026-11-25",
+			taskStatus: "open",
+			log: ["- L1 — a", "````", "root = true", "```»", "- L2 — b"],
+		});
+		expect(fenceFindings(text)).toStrictEqual([
+			"unclosed Markdown code fence opened at line 18 with 4 backtick character(s); add the closing fence",
+		]);
+	});
+});
+
 describe("validateFeature fenced Close entries", () => {
 	it("accepts a closed record carrying a genuine Close entry", () => {
 		expect(validateFeature(makeFeatureWithLog({ status: "closed", log: CLOSED_WITH_GENUINE_CLOSE }))).toStrictEqual(
@@ -302,15 +350,12 @@ describe("validateFeature unbalanced fences", () => {
 		]);
 	});
 
-	it("accepts balanced fences in every supported container", () => {
+	it("accepts a balanced block whose content holds arbitrary delimiters", () => {
 		const cases = [
 			["```text", "inside", "```"],
 			["````text", "```", "inside", "````"],
-			["  ```text", "  inside", "  ```"],
-			["  1. step", "", "     ```json", "     { }", "     ```"],
-			["  > ```text", "  > inside", "  > ```"],
-			["<!--", "```", "-->"],
-			["A top-level paragraph.", "", "    indented code", "    ```"],
+			["~~~~", "~~~", "inside", "~~~~"],
+			["```", "## Log", "- L2 — Close: quoted", "<!--", "```"],
 		];
 		for (const block of cases) {
 			const text = makeFeatureWithLog({ log: ["- L1 — a", ...block, "- L2 — b"] });

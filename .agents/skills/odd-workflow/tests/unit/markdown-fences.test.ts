@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readFenceStructure } from "#scripts/markdown/fences.ts";
+import { misplacedDelimiter, readFenceStructure } from "#scripts/markdown/fences.ts";
 
 /** The 1-based line numbers of every fence the reader reports as unclosed. */
 function unclosedLines(lines: readonly string[]): number[] {
@@ -11,357 +11,55 @@ function visibleEntries(lines: readonly string[]): string[] {
 	return readFenceStructure(lines).unfencedLines.filter((line) => /^- L\d/u.test(line));
 }
 
-describe("readFenceStructure list markers that are not containers", () => {
-	it("treats a marker four columns from the container as indented code, not a fence", () => {
-		// Reported by external review: four columns past its container is an indented code
-		// block, so the marker and the fence-like text are literal.
-		expect(unclosedLines(["    - ```"])).toStrictEqual([]);
-		expect(unclosedLines(["    - ```", "    - inside"])).toStrictEqual([]);
-		const lines = ["    - ```"];
-		expect(readFenceStructure(lines).unfencedLines).toStrictEqual(["    - ```"]);
-	});
-
-	it("treats five or more columns after a marker as an indented code block inside the item", () => {
-		// Reported by external review: the item's first block is indented code, so the fence
-		// never opens and the trailing padding stays content indentation.
-		expect(unclosedLines(["-     ```"])).toStrictEqual([]);
-		expect(unclosedLines(["-      ```"])).toStrictEqual([]);
-		const lines = ["-     ```"];
-		expect(readFenceStructure(lines).unfencedLines).toStrictEqual(["-     ```"]);
-	});
-
-	it("still reads a fence whose marker padding is one to four columns", () => {
-		expect(unclosedLines(["-    ```", "     x", "     ```"])).toStrictEqual([]);
-		expect(unclosedLines(["-\t```", "\t x", "\t ```"])).toStrictEqual([]);
-	});
-
-	it("reads quote and list markers that appear together on one line", () => {
-		expect(unclosedLines(["> - ```", ">   x", ">   ```", "- L1 — b"])).toStrictEqual([]);
-		expect(unclosedLines(["- > ```", "  > x", "  > ```", "- L1 — b"])).toStrictEqual([]);
-	});
-
-	it("reads a fence inside a nested item at that item's own content column", () => {
-		const lines = ["- a", "  - ```text", "    x", "    ```", "- L1 — b"];
-		expect(unclosedLines(lines)).toStrictEqual([]);
-		expect(visibleEntries(lines)).toStrictEqual(["- L1 — b"]);
-	});
-});
-
-describe("readFenceStructure container frames", () => {
-	it("measures indentation from the innermost container, not from an enclosing one", () => {
-		// F30: four columns inside the block quote is indented code, even though those columns
-		// are only two past the enclosing list item's content column.
-		const shape = ["- >     ~~~"];
-		expect(unclosedLines(shape)).toStrictEqual([]);
-		expect(readFenceStructure(shape).unfencedLines).toStrictEqual(["- >     ~~~"]);
-		// Three columns inside the quote is a fence, so the boundary is pinned, not incidental.
-		expect(unclosedLines(["- >    ~~~"])).toStrictEqual([1]);
-	});
-
-	it("does not let a later container close a fence opened in an earlier one", () => {
-		// F31: both lines are at quote depth one, but line two's quote is a different container
-		// from the one inside the list item, so it neither closes line one nor stays open alone.
-		expect(unclosedLines(["- > ~~~", "> ~~~"])).toStrictEqual([1, 2]);
-		expect(unclosedLines(["- > ~~~", "~~~"])).toStrictEqual([1, 2]);
-	});
-
-	it("ends an HTML comment with the container that opened it", () => {
-		// F32: the block quote ends at line two, so the comment ends with it.
-		const lines = ["> <!--", "## Log", "- L1 — Genuine entry"];
-		expect(readFenceStructure(lines).unfencedLines).toStrictEqual(["", "## Log", "- L1 — Genuine entry"]);
-		const inItem = ["- <!--", "## Log", "- L1 — a"];
-		expect(readFenceStructure(inItem).unfencedLines).toStrictEqual(["", "## Log", "- L1 — a"]);
-	});
-
-	it("keeps a top-level comment open until its own closer", () => {
-		const lines = ["<!--", "hidden", "-->", "## Log"];
-		expect(readFenceStructure(lines).unfencedLines).toStrictEqual(["", "", "", "## Log"]);
-	});
-
-	it("measures a tab after a container marker to the next tab stop", () => {
-		// A tab immediately after `- ` advances to the next four-column stop, so the item's
-		// content column is four and a fence there is at its container's own column.
-		expect(unclosedLines(["-\t```", "\t x", "\t ```"])).toStrictEqual([]);
-		// The same tab inside a block quote is measured from the quote's content column, not
-		// from the absolute start of the line.
-		expect(unclosedLines(["> -\t```", "> \t x", "> \t ```"])).toStrictEqual([]);
-		// Three columns past the tab-derived content column is a closer; four is content.
-		expect(unclosedLines(["-\t```", "\t\t x", "\t\t\t```"])).toStrictEqual([1]);
-	});
-
-	it("keeps containers open across blank lines", () => {
-		const lines = ["- a", "", "  ```", "  x", "  ```", "", "- L1 — b"];
-		expect(unclosedLines(lines)).toStrictEqual([]);
-		expect(visibleEntries(lines)).toStrictEqual(["- L1 — b"]);
-	});
-});
-
-describe("readFenceStructure closer and break handling", () => {
-	it("rejects a closer indented past the opener's container as content", () => {
-		// The opener sits five columns past its container, so the container is column zero and a
-		// closer eight columns in is indented code: the fence stays open and its content is
-		// hidden rather than leaking into the document view.
-		const lines = ["- L1 — a", "     ```text", "        ```", "     - L2 — Close: quoted", "     tail"];
-		expect(unclosedLines(lines)).toStrictEqual([2]);
-	});
-
-	it("accepts a closer three columns past the container and rejects four", () => {
-		// The item's content column is two, so five columns is three past it — a closer — and
-		// six columns is four past it, which is indented code.
-		expect(unclosedLines(["- L1 — a", "     ```text", "     x", "     ```"])).toStrictEqual([]);
-		expect(unclosedLines(["- L1 — a", "     ```text", "     x", "      ```"])).toStrictEqual([2]);
-	});
-
-	it("does not treat a thematic break as a list item", () => {
-		// `* * *` opens no container, so the fence that follows is a top-level fence at two
-		// columns and the column-zero line closes it.
-		const lines = ["* * *", "  ```", "  x", "```", "- L1 — b"];
-		expect(unclosedLines(lines)).toStrictEqual([]);
-		expect(visibleEntries(lines)).toStrictEqual(["- L1 — b"]);
-	});
-
-	it("does not treat dash and underscore thematic breaks as list items", () => {
-		expect(unclosedLines(["- - -", "  ```", "  x", "```", "- L1 — b"])).toStrictEqual([]);
-		expect(unclosedLines(["___", "  ```", "  x", "```", "- L1 — b"])).toStrictEqual([]);
-	});
-});
-
-describe("readFenceStructure container geometry", () => {
-	it("treats fence-like lines inside a top-level indented code block as code, not fences", () => {
-		const lines = [
-			"Top-level paragraph at column zero.",
-			"",
-			"    a four-space indented code sample",
-			"    ```",
-			"    - L9 — inside code",
-			"    ~~~",
-			"",
-			"- L1 — a",
-			"- L2 — b",
-		];
-		expect(unclosedLines(lines)).toStrictEqual([]);
-		expect(visibleEntries(lines)).toStrictEqual(["- L1 — a", "- L2 — b"]);
-	});
-
-	it("reads a fence inside an unordered list item at its content column", () => {
-		const lines = ["- L1 — a", "", "  ```text", "  - L9 — inside", "  ```", "- L2 — b"];
-		expect(unclosedLines(lines)).toStrictEqual([]);
-		expect(visibleEntries(lines)).toStrictEqual(["- L1 — a", "- L2 — b"]);
-	});
-
-	it("reads a fence inside an ordered list item indented five columns", () => {
-		const lines = [
-			"- L1 — a",
-			"",
-			"  1. Approve this:",
-			"",
-			"     ```json",
-			'     { "effect": "allow" }',
-			"     ```",
-			"",
-			"  2. Then continue.",
-			"- L2 — b",
-		];
-		expect(unclosedLines(lines)).toStrictEqual([]);
-		expect(visibleEntries(lines)).toStrictEqual(["- L1 — a", "- L2 — b"]);
-	});
-
-	it("reads a fence that begins on the list marker's own line", () => {
-		const lines = ["- ```text", "  - L9 — inside", "  ```", "- L2 — b"];
-		expect(unclosedLines(lines)).toStrictEqual([]);
-		expect(visibleEntries(lines)).toStrictEqual(["- L2 — b"]);
-	});
-
-	it("reads a fence inside nested list and blockquote containers", () => {
-		const lines = [
-			"- L1 — a",
-			"  - nested",
-			"",
-			"    > quote",
-			"    > ```text",
-			"    > - L9 — inside",
-			"    > ```",
-			"",
-			"- L2 — b",
-		];
-		expect(unclosedLines(lines)).toStrictEqual([]);
-		expect(visibleEntries(lines)).toStrictEqual(["- L1 — a", "- L2 — b"]);
-		// The block-quote markers at the nested container's column must be consumed, so the
-		// three quoted lines are code rather than document text.
-		expect(readFenceStructure(lines).unfencedLines.slice(3, 7)).toStrictEqual(["    > quote", "", "", ""]);
-	});
-
-	it("rejects an unbalanced fence inside a blockquote nested in a list item", () => {
-		// A quote marker past column 3 is a quote relative to its container, not literal text.
-		const lines = ["- L1 — a", "    > ```text", "    > swallowed", "- L2 — b"];
-		expect(unclosedLines(lines)).toStrictEqual([2]);
-		expect(visibleEntries(lines)).toStrictEqual(["- L1 — a", "- L2 — b"]);
-	});
-
-	it("accepts a balanced fence inside a blockquote nested in a list item", () => {
-		const lines = ["- L1 — a", "    > ```text", "    > inside", "    > ```", "- L2 — b"];
-		expect(unclosedLines(lines)).toStrictEqual([]);
-		expect(visibleEntries(lines)).toStrictEqual(["- L1 — a", "- L2 — b"]);
-	});
-
-	it("closes a fence only when the closer is within three columns of the opener's container", () => {
-		// A fence-like line four columns past the opener's container is indented code, so it
-		// is content and the fence stays open; three columns past it is still a closer.
-		expect(unclosedLines(["- a", "  ```", "  x", "      ```", "- L1 — b"])).toStrictEqual([2]);
-		expect(unclosedLines(["- a", "  ```", "  x", "     ```", "- L1 — b"])).toStrictEqual([]);
-		expect(unclosedLines(["- a", "  ```", "  x", "    ```", "- L1 — b"])).toStrictEqual([]);
-		expect(unclosedLines(["- a", "  ```", "  x", "   ```", "- L1 — b"])).toStrictEqual([]);
-	});
-
-	it("does not keep a list container alive past the end of its blockquote", () => {
-		// The block quote ends at line 2, so the fence that follows is top level: both its
-		// delimiters and its content are read at absolute indentation, not the list's column.
-		const lines = ["> - a", "  ```", "code", "  ```", "- L1 — b"];
-		expect(unclosedLines(lines)).toStrictEqual([]);
-		expect(visibleEntries(lines)).toStrictEqual(["- L1 — b"]);
-	});
-
-	it("treats a fence-like line 4+ columns past its container as content, not a closer", () => {
-		expect(unclosedLines(["```text", "    ```", "```", "- L1 — a"])).toStrictEqual([]);
-	});
-
-	it("keeps sibling list items independent across container transitions", () => {
-		const lines = ["- a", "  ```text", "  one", "  ```", "- b", "  ```text", "  two", "  ```", "- L1 — c"];
-		expect(unclosedLines(lines)).toStrictEqual([]);
-		expect(visibleEntries(lines)).toStrictEqual(["- L1 — c"]);
-	});
-
-	it("reads a tab-indented fence inside a list item and not a tab-indented code block", () => {
-		expect(unclosedLines(["- L1 — a", "", "  \t```text", "  \tinside", "  \t```", "- L2 — b"])).toStrictEqual([]);
-		expect(unclosedLines(["Top-level text.", "", "\t```", "\tinside", "", "- L1 — a"])).toStrictEqual([]);
-	});
-});
-
 describe("readFenceStructure delimiters", () => {
-	it("accepts backtick and tilde fences", () => {
+	it("pairs a backtick block and a tilde block", () => {
 		expect(unclosedLines(["```text", "inside", "```"])).toStrictEqual([]);
 		expect(unclosedLines(["~~~text", "inside", "~~~"])).toStrictEqual([]);
-		expect(unclosedLines(["~~~text", "inside"])).toStrictEqual([1]);
 	});
 
-	it("requires a closing marker at least as long as the opening one", () => {
+	it("reports a delimiter that is never closed", () => {
+		expect(unclosedLines(["```text", "inside"])).toStrictEqual([1]);
+		expect(unclosedLines(["~~~text", "- L1 — swallowed"])).toStrictEqual([1]);
+	});
+
+	it("requires a closer at least as long as the opener and of the same character", () => {
 		expect(unclosedLines(["````text", "inside", "```"])).toStrictEqual([1]);
 		expect(unclosedLines(["````text", "inside", "````"])).toStrictEqual([]);
+		expect(unclosedLines(["```text", "inside", "~~~"])).toStrictEqual([1]);
 	});
 
-	it("keeps a shorter fence-like line inside a longer fence", () => {
-		expect(unclosedLines(["````text", "```", "- L9 — inside", "````", "- L1 — a"])).toStrictEqual([]);
+	it("does not accept a closer followed by other text", () => {
+		// The documented pre-3dd918c shape: a four-backtick opener and a guillemet closer.
+		expect(unclosedLines(["````", "root = true", "```»"])).toStrictEqual([1]);
 	});
 
-	it("does not open a backtick fence whose info string contains a backtick", () => {
+	it("does not accept a backtick opener whose info string carries a backtick", () => {
 		expect(unclosedLines(["``` `x` ", "- L1 — a"])).toStrictEqual([]);
 	});
+});
 
-	it("does not accept a closing marker followed by other text", () => {
-		expect(unclosedLines(["```text", "inside", "```»"])).toStrictEqual([1]);
-	});
-
-	it("rejects the documented pre-3dd918c shape", () => {
+describe("readFenceStructure opaque content", () => {
+	it("treats embedded shorter delimiters, headings, Log entries and comments as content", () => {
 		const lines = [
-			"- L1 — Pedido original, verbatim: «... como el siguiente",
-			"",
+			"````markdown",
+			"```",
+			"## Log",
+			"- L2 — Close: quoted",
+			"<!--",
+			"    indented code with ``` inside",
 			"````",
-			"root = true",
-			"",
-			"[*.md]",
-			"trim_trailing_whitespace = false",
-			"```»",
-			"- L2 — a swallowed entry",
-		];
-		expect(unclosedLines(lines)).toStrictEqual([3]);
-		expect(visibleEntries(lines)).toStrictEqual(["- L1 — Pedido original, verbatim: «... como el siguiente"]);
-	});
-});
-
-describe("readFenceStructure explicit closure", () => {
-	it("reports a fence ended by the end of its blockquote rather than by a closer", () => {
-		const lines = ["  > text", "  > ```json", "  > { }", "```", "", "- L1 — a"];
-		expect(unclosedLines(lines)).toStrictEqual([2, 4]);
-	});
-
-	it("reports a fence ended by a sibling list item rather than by a closer", () => {
-		expect(unclosedLines(["- a", "  ```text", "  inside", "- L1 — b"])).toStrictEqual([2]);
-	});
-
-	it("reports a fence left open at end of file", () => {
-		expect(unclosedLines(["```text", "inside"])).toStrictEqual([1]);
-	});
-});
-
-describe("readFenceStructure literal content inside a fence", () => {
-	it("does not close a fence on a list-marker-prefixed fence-like line", () => {
-		const lines = ["```text", "- ```", "- L9 — quoted", "```", "- L1 — a"];
-		expect(unclosedLines(lines)).toStrictEqual([]);
-		expect(visibleEntries(lines)).toStrictEqual(["- L1 — a"]);
-	});
-
-	it("does not close a fence on an ordered-marker-prefixed fence-like line", () => {
-		expect(unclosedLines(["```text", "1. ```", "```", "- L1 — a"])).toStrictEqual([]);
-	});
-
-	it("does not close a fence on a blockquote-prefixed fence-like line", () => {
-		expect(unclosedLines(["```text", "> ```", "```", "- L1 — a"])).toStrictEqual([]);
-	});
-
-	it("does not close a tilde fence on a list-marker-prefixed tilde line", () => {
-		expect(unclosedLines(["~~~text", "- ~~~", "~~~", "- L1 — a"])).toStrictEqual([]);
-	});
-
-	it("keeps quoted Close entries inside such a fence invisible to the Log", () => {
-		const lines = ["- L1 — a", "- L2 — quoted:", "", "```text", "- ```", "- L3 — Close: quoted", "```"];
-		expect(visibleEntries(lines)).toStrictEqual(["- L1 — a", "- L2 — quoted:"]);
-	});
-});
-
-describe("readFenceStructure HTML comments", () => {
-	it("ignores fence-like text inside an HTML comment", () => {
-		const lines = ["<!--", "```", "-->", "- L1 — a"];
-		expect(unclosedLines(lines)).toStrictEqual([]);
-		expect(visibleEntries(lines)).toStrictEqual(["- L1 — a"]);
-	});
-
-	it("treats comment markers inside a fence as literal code", () => {
-		const lines = ["```html", "<!--", "-->", "```", "- L1 — a"];
-		expect(unclosedLines(lines)).toStrictEqual([]);
-		expect(visibleEntries(lines)).toStrictEqual(["- L1 — a"]);
-	});
-
-	it("keeps an inline comment that closes on its own line as document text", () => {
-		expect(visibleEntries(["<!-- a note -->", "- L1 — a"])).toStrictEqual(["- L1 — a"]);
-	});
-
-	it("does not treat an indented comment marker as an HTML comment", () => {
-		// Four columns past its container is an indented code block, so the marker is text
-		// and it must not swallow the entries that follow.
-		const lines = ["Top-level text.", "", "    <!--", "", "- L1 — a", "- L2 — b"];
-		expect(unclosedLines(lines)).toStrictEqual([]);
-		expect(visibleEntries(lines)).toStrictEqual(["- L1 — a", "- L2 — b"]);
-	});
-
-	it("does not treat an indented closed comment marker as an HTML block", () => {
-		const lines = ["Top-level text.", "", "    <!-- note -->", "", "- L1 — a"];
-		expect(readFenceStructure(lines).unfencedLines).toStrictEqual([
-			"Top-level text.",
-			"",
-			"    <!-- note -->",
-			"",
 			"- L1 — a",
-		]);
-	});
-});
-
-describe("readFenceStructure projection", () => {
-	it("returns one entry per input line so positions keep their line numbers", () => {
-		const lines = ["a", "```", "b", "```", "c"];
-		expect(readFenceStructure(lines).unfencedLines).toStrictEqual(["a", "", "", "", "c"]);
+		];
+		expect(unclosedLines(lines)).toStrictEqual([]);
+		expect(visibleEntries(lines)).toStrictEqual(["- L1 — a"]);
 	});
 
-	it("preserves every unfenced line byte for byte", () => {
+	it("keeps a delimiter longer than the content's own runs open until its own closer", () => {
+		expect(unclosedLines(["`````", "````", "```", "`````"])).toStrictEqual([]);
+		expect(unclosedLines(["`````", "````", "```"])).toStrictEqual([1]);
+	});
+
+	it("projects one entry per line and preserves unfenced bytes", () => {
 		const lines = ["# Title", "", "- L1 — a", "  trailing  ", "```", "code", "```"];
 		expect(readFenceStructure(lines).unfencedLines).toStrictEqual([
 			"# Title",
@@ -372,5 +70,32 @@ describe("readFenceStructure projection", () => {
 			"",
 			"",
 		]);
+	});
+});
+
+describe("misplacedDelimiter", () => {
+	it("accepts a delimiter at column zero", () => {
+		expect(misplacedDelimiter("```text")).toBe(false);
+		expect(misplacedDelimiter("~~~~")).toBe(false);
+	});
+
+	it("reports a delimiter after indentation or a block-quote marker", () => {
+		expect(misplacedDelimiter("  ```text")).toBe(true);
+		expect(misplacedDelimiter("     ```")).toBe(true);
+		expect(misplacedDelimiter("> ```")).toBe(true);
+		expect(misplacedDelimiter("  > ```")).toBe(true);
+	});
+
+	it("does not report ordinary content that mentions a delimiter later in the line", () => {
+		expect(misplacedDelimiter("the fence is ``` inline")).toBe(false);
+		expect(misplacedDelimiter("- L1 — a ``` b")).toBe(false);
+	});
+
+	it("keeps legacy indented delimiters opaque so historical quotations stay unread", () => {
+		// A legacy record quotes a tree inside an indented fence; its content must not reach the
+		// record rules even though the contract now forbids this authoring shape.
+		const lines = ["1. Add this permission:", "", "     ```json", "     <DATE>", "     ```", "- L2 — b"];
+		expect(unclosedLines(lines)).toStrictEqual([]);
+		expect(readFenceStructure(lines).unfencedLines[3]).toBe("");
 	});
 });
