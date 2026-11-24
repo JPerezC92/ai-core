@@ -1,6 +1,8 @@
 # debt-050-oxlint-warnings
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-11-24
+> **Disposition:** cancelled
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-16
 > **Objective:** Resolver los nueve warnings type-aware de Oxlint que mantenían incumplido R8, mediante correcciones reales y mínimas, marcar R8 y retirar DEBT-050 en un único commit atómico.
@@ -223,3 +225,5 @@
 - L8 — Pruebas de regresión añadidas, nueve casos: `cli/aicore/tests/unit/clearance.role-message.spec.ts` (primitivos, mapping, lista), `.agents/skills/incident-workflow/tests/unit/state-header-scalars.test.ts` (escalares aceptados, mapping y lista rechazados, `Date` nombrado, lista legítima intacta) y un caso de cola astral en `.agents/skills/op-skill-creator/tests/unit/scan.test.ts`. Se verificó que los casos de rechazo fallan contra el código anterior, es decir que discriminan.
 - L9 — Revisión independiente en dos rondas sobre el diff funcional. Primera ronda `[ADVISORY]` con dos hallazgos: el diagnóstico llamaba «mapping» a cualquier objeto, y yo había arrastrado el conteo de archivos lintados sin re-medirlo. El primero se corrigió con un descriptor que nombra el tipo real, y el segundo se resolvió midiendo: 320 archivos. Su lectura de la librería era correcta en el fondo pero su ejemplo era impreciso, así que medí el parser en vez de aceptarlo: con YAML 1.1, `2099-01-01T00:00` es string y `2099-01-01T00:00:00Z` es `Date`. Segunda ronda **[PASS]**, cero hallazgos abiertos.
 - L10 — Verificación final y cierre de la deuda. `pnpm lint` no emite nada (cero errores, cero warnings) sobre 320 archivos. R8 se marcó tras re-verificar sus dos conjunciones sin tocar su texto: toda regla activa pasa, y la convención de import aplica solo donde cada paquete ya la usa, porque los cuatro árboles usan subpath maps desde DEBT-051. La feature durable queda en `achieved` (10 de 10) por derivación de sus propias casillas. DEBT-050 se retira del registro abierto con su evidencia preservada aquí. No se cierra el registro de la adopción de tooling: su aceptación semántica de conjunto sigue pendiente y su entrega no está autorizada.
+
+- L11 — Close: 2026-11-24 — The user authorized cancellation of the remaining historical verification and administrative closure work, verbatim: "I approve the four proposed closure entries and their cancelled dispositions." PR #192 delivered the corrections; that implementation is not cancelled or reverted. The recorded component checks and historical review remain as recorded. The later `pnpm verify:full` did not pass because of the two documented pre-existing formatting failures; the user accepted that S7 limitation. This closure does not claim literal S7 success or a new whole-record acceptance. PR #192 F2 remains an accepted ADVISORY.

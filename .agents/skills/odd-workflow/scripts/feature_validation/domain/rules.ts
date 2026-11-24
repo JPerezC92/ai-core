@@ -26,6 +26,37 @@ const STATUS_RE = /^> \*\*Status:\*\* (active|closed)$/u;
 const STATUS_CLOSED_RE = /^> \*\*Status:\*\* closed$/u;
 const CLOSED_RE = /^> \*\*Closed:\*\* \S+/u;
 const CLOSE_LOG_RE = /^- L\p{Nd}+ — Close: .+$/u;
+const CLOSED_DATE_VALUE_RE = /^> \*\*Closed:\*\* (\d{4}-\d{2}-\d{2})$/u;
+
+/**
+ * The prospective date from which a closed record states its closure disposition.
+ *
+ * A record closed before it keeps the pre-disposition shape, so accepted history is never
+ * rewritten to satisfy a rule it was not written against.
+ */
+export const DISPOSITION_EFFECTIVE_FROM = "2026-11-24";
+const DISPOSITION_RE = /^> \*\*Disposition:\*\* (completed|cancelled|superseded)$/u;
+const SUPERSEDED_BY_RE = /^> \*\*Superseded-by:\*\* \S/u;
+const OBSOLESCENCE_RE = /\bobsolet\w*/iu;
+const CANCELLATION_AUTHORIZATION_RE = /user[-\s]authori[sz]/iu;
+
+/**
+ * Parses a `YYYY-MM-DD` value to its UTC midnight, or `null` when it is not a real calendar date.
+ *
+ * A shaped but impossible value such as `2026-02-31` is not a readable closure date, so it must
+ * not be treated as one: doing so would let a record escape a date-gated obligation.
+ */
+function parseCalendarDay(value: string): number | null {
+	const year = Number(value.slice(0, 4));
+	const month = Number(value.slice(5, 7));
+	const day = Number(value.slice(8, 10));
+	const time = Date.UTC(year, month - 1, day);
+	const parsed = new Date(time);
+	if (parsed.getUTCFullYear() !== year || parsed.getUTCMonth() !== month - 1 || parsed.getUTCDate() !== day) {
+		return null;
+	}
+	return time;
+}
 const PLACEHOLDER_RE = /<[^>]+>/u;
 const CODE_SPAN_RE = /`[^`]*`/gu;
 const FENCED_BLOCK_RE = /```[\s\S]*?```/gu;
@@ -417,6 +448,48 @@ export function validateFeature(text: string): string[] {
 		findings.push("closed feature needs a Closed date");
 	}
 
+	const closedLine = lines.map((line) => line.trim()).find((line) => line.startsWith("> **Closed:**"));
+	const closedValue = CLOSED_DATE_VALUE_RE.exec(closedLine ?? "")?.[1];
+	// A closed record whose closure date is absent or is not a real calendar date is treated as
+	// in scope, so a shaped but impossible value such as `2026-02-31` cannot escape the
+	// disposition obligation either.
+	const dispositionApplies =
+		isClosed &&
+		(closedValue === undefined ||
+			parseCalendarDay(closedValue) === null ||
+			closedValue >= DISPOSITION_EFFECTIVE_FROM);
+	const dispositionLines = lines.map((line) => line.trim()).filter((line) => line.startsWith("> **Disposition:**"));
+	let disposition: string | undefined;
+	if (dispositionApplies) {
+		if (dispositionLines.length !== 1) {
+			findings.push("closed feature needs exactly one Disposition line: completed, cancelled or superseded");
+		} else {
+			const match = DISPOSITION_RE.exec(dispositionLines[0] ?? "");
+			if (match === null) {
+				findings.push("Disposition must be completed, cancelled or superseded");
+			} else {
+				disposition = match[1];
+			}
+		}
+		if (disposition === "superseded") {
+			const hasReplacement = lines.some((line) => SUPERSEDED_BY_RE.test(line.trim()));
+			const hasObsolescenceExplanation = log.some(
+				(line) => CLOSE_LOG_RE.test(line) && OBSOLESCENCE_RE.test(line),
+			);
+			if (!hasReplacement && !hasObsolescenceExplanation) {
+				findings.push(
+					"superseded feature needs a Superseded-by delivery reference or a Close entry explaining why its requirements are obsolete",
+				);
+			}
+		}
+		if (disposition === "cancelled" && !CANCELLATION_AUTHORIZATION_RE.test(log.join("\n"))) {
+			findings.push(
+				"cancelled feature needs a Log entry recording explicit user authorization for the cancellation",
+			);
+		}
+	}
+	const claimsCompletion = disposition === undefined || disposition === "completed";
+
 	const hasCloseEntry = log.some((line) => CLOSE_LOG_RE.test(line));
 	if (isClosed && !hasCloseEntry) {
 		findings.push("closed feature needs a Log 'Close:' entry");
@@ -465,7 +538,7 @@ export function validateFeature(text: string): string[] {
 				`task commit must be 'pending' or a 7-64 character hexadecimal commit identifier: ${line.trim()}`,
 			);
 		}
-		if (isClosed) {
+		if (isClosed && claimsCompletion) {
 			if (status !== "done") findings.push(`closed feature has a ${status} task: ${line.trim()}`);
 			if (status !== "done" && !hasCommitReference) {
 				findings.push(
@@ -496,7 +569,7 @@ export function validateFeature(text: string): string[] {
 		);
 	}
 
-	if (isClosed && closureEvidenceApplies(lines)) {
+	if (isClosed && claimsCompletion && closureEvidenceApplies(lines)) {
 		findings.push(...closureEvidenceFindings(specBlocks, unfencedLog));
 	}
 
@@ -505,6 +578,10 @@ export function validateFeature(text: string): string[] {
 		const match = LOG_ENTRY_RE.exec(line);
 		const digits = match?.[1];
 		if (digits === undefined) continue;
+		if (/[^\u0030-\u0039]/u.test(digits)) {
+			findings.push(`Log entry identifier must use ASCII digits: ${line.trim()}`);
+			continue;
+		}
 		if (Array.from(digits).length > MAX_LOG_IDENTIFIER_DIGITS) {
 			findings.push(`Log entry identifier is not a valid L number: ${line.trim()}`);
 			continue;

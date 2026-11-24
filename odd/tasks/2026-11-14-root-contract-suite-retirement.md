@@ -1,6 +1,8 @@
 # Root contract-suite retirement
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-11-24
+> **Disposition:** completed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-14
 > **Objective:** Retire the redundant root `tests/` workspace, its hardcoded registries and duplicated helpers, and the obsolete first-party Python artifacts, while leaving synchronization semantics and the CLI's own coverage unchanged.
@@ -125,3 +127,4 @@
 - L9 — 2026-11-14 — Delivery. Pull request #187 (`https://github.com/JPerezC92/ai-core/pull/187`) carries the work on `chore/tests/retire-contract-suite`; creation head `bd4737bbbd0f2b35072c04a3b4f26d47e4c60403`, state open and unmerged. Merge authority remains the user's. Evidence: the PR body and the verification returns summarized at L6.
 - L10 — 2026-11-14 — Blocked: the independent semantic review of the delivered candidate, and the user's merge decision, are the open closure prerequisites; this record stays active until both exist. Scheduled closure owner is Cipher 🔓 (Lead Orchestrator), and the verdict is published in the pull-request body at its reviewed head.
 - L11 — Blocked: the merge prerequisite named at L10 is discharged — PR #187 carried this change and merged — so the open closure prerequisite is now only the recorded independent semantic review of the delivered candidate together with this record's closure entry, neither of which is recorded here. The prerequisite is named rather than assumed, and the record stays active until it exists.
+- L12 — Close: 2026-11-24 — The prerequisite named at L11 is discharged. Independent semantic acceptance over the delivered content at the squash commit `25f40c0` (PR #187) was obtained from Bastion 🧱 (Backend & Scripts Architect) as the content authority for code and scripts: `[PASS]` with `S1`–`S6` each verified, including the `S3`–`S5` requirements the first pass had left unverified and that a focused reading then settled (markerless and malformed source handling with its integration cases, no suite outside the CLI asserting repository documents, and no surviving in-repo Python manifest or cache). L1–L11 are unchanged by this closure.

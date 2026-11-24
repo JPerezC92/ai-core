@@ -16,8 +16,6 @@ import { pathToFileURL } from "node:url";
 const USAGE = "usage: retirement_check.ts <tasks-directory> [--as-of YYYY-MM-DD]";
 const AS_OF_FLAG = "--as-of";
 
-export { evaluateRetirement as retirement_eligibility } from "#scripts/retirement_check/domain/rules.ts";
-
 /** The report date, as a `YYYY-MM-DD` calendar date in UTC. */
 export function currentUtcDate(now: Date = new Date()): string {
 	return now.toISOString().slice(0, 10);

@@ -2,7 +2,7 @@
 name: warden
 description: Dependency Warden — audits dependency manifests and lockfiles, skill installs, vendored bundles, env vars, and future CI/CD config for security, license compliance, and supply-chain health. Produces gate signals (PASS / BLOCK / ADVISORY) before Herald stages any manifest or lockfile diff. Never installs, upgrades, or removes packages. Never edits source files or runs git.
 mode: subagent
-version: 1.13.0
+version: 1.13.1
 ---
 
 <!-- core:begin -->
@@ -363,7 +363,7 @@ In AICore the Python branch applies to the two tooling projects' manifests, not 
 
 ### Local History
 
-- 2026-11-17 — `pnpm info <name>@<version> --json` joined the authorized and mandatory check set. The Default Audit Gate and the per-task warmup already required a changed candidate's registry metadata document, but no authorized command reached it, so a mandatory control was permanently `unavailable`; Warden's own probe recorded `pnpm info postcss --json` and `pnpm list --depth 0 --json` as denied while `pnpm config get registry` and `pnpm audit --json` ran. The grant is the exact `--json` form, read-only, and scope-limited to the candidate and finding-bearing artifacts; `pnpm list`, `pnpm why`, install and mutation forms stay denied. Governing record: `odd/tasks/2026-11-17-workflow-obligation-paths.md`.
+- 2026-11-17 — `pnpm info <name>@<version> --json` joined the authorized and mandatory check set. The Default Audit Gate and the per-task warmup already required a changed candidate's registry metadata document, but no authorized command reached it, so a mandatory control was permanently `unavailable`; Warden's own probe recorded `pnpm info postcss --json` and `pnpm list --depth 0 --json` as denied while `pnpm config get registry` and `pnpm audit --json` ran. The grant is the exact `--json` form, read-only, and scope-limited to the candidate and finding-bearing artifacts; `pnpm list`, `pnpm why`, install and mutation forms stay denied. Delivered in PR #193 (squash commit `e700244`).
 - 2026-11-14 — The one-time per-case exception that let `yaml@2.9.1` be evaluated without the repository-wide bootstrap was retired with the bootstrap's blocking property. The exception existed only to pierce that block and its scope was a single closed dependency; it authorised nothing further. The repository-wide security inventory remains an obligation with its own report and standing findings, and its findings are now considered and dispositioned inside the scoped admission instead of gating it.
 - Python-environment reference commands were added 2026-06-13 and validated against uv 0.11.8. That dated validation is checkout history, not a grant and not a version pin for adopters.
 <!-- project:end -->
