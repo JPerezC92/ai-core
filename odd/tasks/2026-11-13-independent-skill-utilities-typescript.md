@@ -1,6 +1,8 @@
 # Independent skill utilities TypeScript migration
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-11-24
+> **Disposition:** cancelled
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-13
 > **Objective:** Migrate the six authorized independent skill utilities to TypeScript-authored, independently copyable source one skill at a time, beginning with odd-workflow.
@@ -611,3 +613,5 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
   Inquisitor verified at that head: naming consistency, every documented Node entry point existing, application operations as classes with constructor injection, the role-bucket naming resolved by `domain/problem.ts`, no `.py`/`.pyc`/`.pyo`/`__pycache__` under the six skills, self-contained per-skill `tsconfig.json` files, and all five PR test-plan items against the coordinator's recorded evidence. Its stated limitations: no Git grant, so changed-file confinement and the PR body were taken from the Herald packet; per-skill `package.json` files declare no `test` script, which is an INFO note because the suites run through the CLI package's reviewed configurations.
   Publication is not yet complete. Outstanding before the evidence body can be published: the mandatory attribution scans over the persisted PR body and over the exact bytes of the working body, Herald's live capture of the persisted body at the head, and the user's own merge decision, which no agent may take. This entry records the corrections and the round; it does not claim a published evidence body or a passing gate.
 - L36 — Blocked: this change record cannot be closed on the evidence it carries. Its six task rows are `done` with commit references, but the Log ends at the publication stage: it records Inquisitor 🔎 (PR Reviewer) returning `[BLOCK]` with two findings that were corrected, states that the attribution scans, the persisted-body capture and the user's merge decision were still outstanding, and carries neither a recorded final verdict at the published head nor a `Close:` entry. PR #183 merged as the six-skill migration delivery, so the merge prerequisite is discharged; what remains is the recorded final independent acceptance at the published head together with this record's closure entry. The prerequisite is named here rather than assumed, and the record stays active until it exists.
+
+- L37 — Close: 2026-11-24 — The user authorized cancellation of the remaining historical verification and administrative closure work. PR #183 delivered the migration; that implementation is not cancelled or reverted. The Python baseline remains recoverable, but independent Python-to-TypeScript parity execution evidence was not recovered; the PR Summary is self-attestation, and S3 was never independently verified. The user previously accepted that residual risk. This closure does not claim S3 passed or historical semantic acceptance.
