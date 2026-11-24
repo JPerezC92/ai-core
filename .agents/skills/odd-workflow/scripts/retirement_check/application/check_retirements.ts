@@ -1,6 +1,6 @@
 /** Report retirement candidates for the selected task records through an injected source port. */
 
-import { isTemplateReference } from "#scripts/feature_validation/domain/rules.ts";
+import { isTemplateReference, validateFeature } from "#scripts/feature_validation/domain/rules.ts";
 import type { RetirementSource } from "#scripts/retirement_check/domain/ports.ts";
 import { NoTaskRecordsError, RetirementReport } from "#scripts/retirement_check/domain/records.ts";
 import type { RetirementResult } from "#scripts/retirement_check/domain/records.ts";
@@ -33,6 +33,21 @@ export class CheckRetirements {
 				});
 				continue;
 			}
+
+			// Eligibility runs in a fixed order, and the first stage that fails excludes the
+			// record. A record that does not pass the feature validation its own contract states
+			// is never a deletion candidate, whatever its metadata appears to say: its structure
+			// is not trustworthy enough to delete evidence on. The rules live in the validator,
+			// so they are reused rather than restated here.
+			const findings = validateFeature(text);
+			if (findings.length > 0) {
+				yield new RetirementReport(reference, {
+					kind: "excluded",
+					reason: `does not pass feature validation: ${findings[0]!}`,
+				});
+				continue;
+			}
+
 			yield new RetirementReport(reference, evaluateRetirement(text, asOfDate));
 		}
 	}

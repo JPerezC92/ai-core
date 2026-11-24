@@ -11,6 +11,7 @@ export type TaskRecordOptions = {
 	readonly closedOn?: string | null;
 	readonly taskStatus?: "open" | "in progress" | "done";
 	readonly closeEntry?: boolean;
+	readonly disposition?: string | null;
 };
 
 /** A task record assembled from the fields the retention rules read. */
@@ -19,6 +20,7 @@ export function makeTaskRecord(options: TaskRecordOptions = {}): string {
 	const closedOn = options.closedOn === undefined ? "2026-11-01" : options.closedOn;
 	const taskStatus = options.taskStatus ?? "done";
 	const closeEntry = options.closeEntry ?? true;
+	const disposition = options.disposition === undefined ? "completed" : options.disposition;
 
 	const lines = [
 		"# Sample record",
@@ -28,6 +30,7 @@ export function makeTaskRecord(options: TaskRecordOptions = {}): string {
 		"> **Created:** 2026-10-23",
 	];
 	if (closedOn !== null) lines.push(`> **Closed:** ${closedOn}`);
+	if (status === "closed" && disposition !== null) lines.push(`> **Disposition:** ${disposition}`);
 	lines.push(
 		"",
 		"## Specs",
