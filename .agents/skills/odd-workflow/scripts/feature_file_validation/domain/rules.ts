@@ -255,7 +255,14 @@ function numberingFindings(lines: readonly string[]): string[] {
 	return [];
 }
 
-export function readRequirements(lines: readonly string[]): FeatureRequirement[] {
+/**
+ * The requirement entries the projection states.
+ *
+ * It takes the fence-aware projection, never raw text: a caller that passes raw lines would
+ * silently count a fenced requirement, so the projection is computed here where it cannot be
+ * mixed up with the raw document.
+ */
+function readRequirements(lines: readonly string[]): FeatureRequirement[] {
 	const requirements: FeatureRequirement[] = [];
 	for (const line of requirementLines(lines)) {
 		const groups = REQUIREMENT_RE.exec(line)?.groups;

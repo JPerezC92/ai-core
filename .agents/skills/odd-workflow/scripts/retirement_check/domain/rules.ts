@@ -41,11 +41,11 @@ export function calendarDaysBetween(fromMs: number, toMs: number): number {
 /**
  * Decides whether one record is a deletion candidate as of `asOfDate`.
  *
- * The policy has exactly two conditions: the status is `closed`, and at least
- * `REQUIRED_COMPLETE_DAYS` complete calendar days have passed since the recorded
- * closure date. Nothing else is an eligibility criterion. An unreadable record, a
- * record whose status is not `closed`, a record with no recorded closure date and a
- * record whose closure date is not a real calendar date are never candidates.
+ * Eligibility is the status `closed` plus at least `REQUIRED_COMPLETE_DAYS` complete calendar
+ * days since the recorded closure date. Status and closure date are read only from
+ * column-zero header lines and only from text outside fenced blocks, so a quoted example can
+ * neither state closure nor shorten the retention period. A record that an unclosed fence,
+ * ambiguous metadata or a non-calendar date makes untrustworthy is never a candidate.
  */
 export function evaluateRetirement(text: string, asOfDate: string): RetirementDecision {
 	const structure = readFenceStructure(splitLines(text));
@@ -63,18 +63,18 @@ export function evaluateRetirement(text: string, asOfDate: string): RetirementDe
 	const headerLines = lines.filter((line) => HEADER_AT_COLUMN_ZERO.test(line));
 
 	const statusValues = headerLines
-		.map((line) => STATUS_ANY_RE.exec(line.trim()))
+		.map((line) => STATUS_ANY_RE.exec(line))
 		.filter((match) => match !== null)
 		.map((match) => match[1]?.trim() ?? "");
 	if (statusValues.length > 1) {
 		return { kind: "excluded", reason: "ambiguous closure metadata" };
 	}
-	if (!headerLines.some((line) => STATUS_CLOSED_RE.test(line.trim()))) {
+	if (!headerLines.some((line) => STATUS_CLOSED_RE.test(line))) {
 		return { kind: "excluded", reason: "status is not closed" };
 	}
 
 	const closedValues = headerLines
-		.map((line) => CLOSED_DATE_RE.exec(line.trim()))
+		.map((line) => CLOSED_DATE_RE.exec(line))
 		.filter((match) => match !== null)
 		.map((match) => match[1]?.trim() ?? "");
 	const distinct = [...new Set(closedValues)];

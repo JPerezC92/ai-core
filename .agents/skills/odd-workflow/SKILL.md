@@ -159,9 +159,9 @@ A closed task record is deleted once it is eligible. Retirement is part of the n
 
 **When it runs.** Run the check in the closure work unit: before the closure commit is made and before any pull request is published. Deletions then ride the same delivery as the change that closes the work, already-accepted delivery evidence is never modified afterwards, and an authorized local-only delivery retires eligible records exactly as a released one does.
 
-**Eligibility — exactly two conditions.** A record is eligible when its status is exactly `closed` and at least seven complete calendar days have passed since its recorded `> **Closed:**` date. That date field is the only source; no timestamp is recorded and none is required. Nothing else is an eligibility condition.
+**Eligibility — two calendar conditions, read from the record's structure.** A record is eligible when its status is exactly `closed` and at least seven complete calendar days have passed since its recorded `> **Closed:**` date. That date field is the only source; no timestamp is recorded and none is required. Status and closure date are read only from header lines that begin at column zero and only from text outside fenced blocks, so a quoted example — fenced or indented — can neither state closure nor shorten the retention period.
 
-**Never deleted.** A record whose status is not `closed`; a record younger than seven complete calendar days; a record with no recorded closure date or with a closure date that is not a real calendar date; and a record that cannot be read.
+**Never deleted.** A record whose status is not `closed`; a record younger than seven complete calendar days; a record with no recorded closure date or with a closure date that is not a real calendar date; a record whose closure metadata is ambiguous, meaning more than one status line or more than one distinct closure date; a record whose code fence never closes, because its structure cannot be trusted; and a record that cannot be read.
 
 **Running the check.** `node .agents/skills/odd-workflow/scripts/retirement_check.ts odd/tasks`, optionally with `--as-of YYYY-MM-DD` for a deterministic report. It is a read-only report: it names every eligible record and the reason each excluded record is excluded, and it deletes nothing.
 

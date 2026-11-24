@@ -6,7 +6,7 @@ import {
 	ValidFeatureFile,
 } from "#scripts/feature_file_validation/domain/records.ts";
 import type { PathComparisonPolicy } from "#scripts/feature_file_validation/domain/rules.ts";
-import { validateFeatureFile } from "#scripts/feature_file_validation/domain/rules.ts";
+import { assessFeatureFile, validateFeatureFile } from "#scripts/feature_file_validation/domain/rules.ts";
 import {
 	FeatureFileSourceFake,
 	featureFileApostropheFixture,
@@ -119,6 +119,44 @@ describe("durable feature-file validation of fenced content", () => {
 			["- [x] R1 — the requirement remains true.", "```text", "- [ ] R2 — a quoted example", "```"].join("\n"),
 		);
 		expect(validateFeatureFile(text)).toStrictEqual([]);
+		// The derived status itself, not only the findings, must ignore the fenced line.
+		expect(assessFeatureFile(text).status).toBe("achieved");
+	});
+
+	it("reports no derived status when no genuine requirement exists", () => {
+		const text = [
+			"# Sample feature",
+			"",
+			"The feature states what it is in one paragraph.",
+			"",
+			"**Status:** not started",
+			"",
+			"## Requirements",
+			"",
+			"```text",
+			"- [x] R1 — a quoted example",
+			"```",
+			"",
+		].join("\n");
+		expect(assessFeatureFile(text).status).toBeNull();
+		expect(validateFeatureFile(text)).toContain(
+			"feature-file-requirements: '## Requirements' needs at least one '- [ ] R<n> — <requirement>' line",
+		);
+	});
+
+	it("reports a genuine placeholder and ignores a fenced one", () => {
+		const fenced = achieved().replace(
+			"- [x] R1 — the requirement remains true.",
+			["- [x] R1 — the requirement remains true.", "```text", "<placeholder>", "```"].join("\n"),
+		);
+		expect(validateFeatureFile(fenced)).toStrictEqual([]);
+		const genuine = achieved().replace(
+			"- [x] R1 — the requirement remains true.",
+			["- [x] R1 — the requirement remains true.", "<placeholder>"].join("\n"),
+		);
+		expect(validateFeatureFile(genuine)).toStrictEqual([
+			"feature-file-unfilled-placeholder: unfilled placeholder: <placeholder>",
+		]);
 	});
 
 	it("does not let a fenced requirement satisfy the requirement obligation", () => {
