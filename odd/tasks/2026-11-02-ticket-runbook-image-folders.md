@@ -1,6 +1,7 @@
 # Ticket-runbook image folders
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-11-24
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-02
 > **Objective:** Separate downloaded ticket images from response-used images, and keep each response's images in its own folder so they cannot be mixed.
@@ -32,3 +33,4 @@
 - L7 — 2026-11-02 — User authorization verbatim: "approved, still take care in the implementation u may encounter missed things in the scope analysis"
 - L8 — 2026-11-02 — Slice A+B implemented on `feat/ticket-runbook/separate-image-folders`. T1 Vault 🔐 (Catalog Steward) and T3 Marshal 🎖️ (HR Director) instruction contract accepted. T2 Forge 🔨 (Implementer): RED `uv run --frozen --group dev pytest .opencode/skills/ticket-runbook/scripts -q` exit 1, 3 failed, 126 passed (flat citation, downloads citation, unused downloads leftovers); GREEN same command exit 0, 129 passed. Bastion 🧱 (Backend & Scripts Architect) [PASS] zero findings. Crucible 🔥 (Test Architect) architecture [PASS]; suite execution `Permission denied: shell` (S-07). Sentinel 🛡️ (Quality Guardian) [PASS] on Quill 🪶 (Note Drafter), Ledger 📒 (Record Keeper), and this record (mechanical roster naming). No missed live `screenshots/<filename>` consumer outside this Log and a contrast phrase in Quill 🪶 (Note Drafter).
 - L9 — Blocked: this change record cannot be closed on the evidence it carries. Its three task rows are `done` against commit `1e36ff8d2723849b5995bc93da757568026e800b`, but no independent semantic acceptance verdict for the delivered work and no `Close:` entry are recorded here, so the closure evidence the `### Close` procedure requires is missing; the specialist gates recorded at L8 are not a whole-change acceptance. The open prerequisite is the recorded independent acceptance of the delivered work and this record's closure entry. It is named here rather than assumed, and the record stays active until it exists.
+- L10 — Close: 2026-11-24 — The prerequisite named at L9 is discharged. Independent semantic acceptance over the delivered content at the squash commit `10cbbf9` (PR #153) was obtained from Sentinel 🛡️ (Quality Guardian) as the content authority for the agent documents and record surfaces: `[PASS]` with `S1`–`S4` each verified and none unverified, reading the surface as it now stands under the `incident-workflow` rename rather than assuming the original skill name. Every task row was already `done` with a hexadecimal commit reference before this entry; L1–L9 are unchanged by this closure.

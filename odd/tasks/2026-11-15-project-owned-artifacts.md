@@ -1,6 +1,7 @@
 # Project-owned artifact architecture
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-11-24
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-15
 > **Objective:** Preserve project-owned records while separating them from managed infrastructure.
@@ -25,11 +26,11 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
 
 ## Tasks
 
-- T1 | S1 | inline (coordinator-owned preservation inventory) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
+- T1 | S1 | inline (coordinator-owned preservation inventory) — Cipher 🔓 (Lead Orchestrator) | done | commit: 6e6d19b
 - T2 | S2, S3, S9 | delegated (record relocation and live contract updates) — Forge 🔨 (Implementer) | done | commit: b233484af917ceb8220dc67143ef5bef6945b97d
 - T3 | S4, S5, S6, S7 | delegated (incident and diagnostic behavior) — Forge 🔨 (Implementer) | done | commit: 5346998
 - T4 | S8, S10 | delegated (isolated synchronization verification) — Forge 🔨 (Implementer) | done | commit: 5346998
-- T5 | S1, S2, S3, S4, S5, S6, S7, S8, S9, S10 | delegated (independent integrated acceptance) — Sentinel 🛡️ (Quality Guardian) | open | commit: pending
+- T5 | S1, S2, S3, S4, S5, S6, S7, S8, S9, S10 | delegated (independent integrated acceptance) — Sentinel 🛡️ (Quality Guardian) | done | commit: 6e6d19b
 
 ## Log
 
@@ -337,3 +338,4 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
 - L10 — 2026-11-15 — Review findings B2 and A3 closed with executable evidence. **B2:** `cli/aicore/tests/e2e/sync-project-owned-artifacts.test.ts` enrolls a disposable destination with the real `init --bind-cleared`, plants destination-owned ODD records, two diagnostic registers and an incident case, then runs the real `apply` twice and asserts byte-identical preservation after each run, that the destination's bindings record no `odd/` or `incidents/` source, and that managed payloads (the ODD skill and the managed `_template.md`) still arrive. Observed: `pnpm --dir cli/aicore test:e2e` → 10 files, 19 passed, including both new cases; no real destination repository was touched. **A3:** `InitializeLocalRegisters` is now the only creating operation, and `tests/integration/register-initialization.test.ts` records six observed results — creation of both missing registers from their templates, an existing register kept byte-for-byte, both existing registers untouched, a duplicated local id reported as `KNOWLEDGE-3` without repair, a baseline-form id reported as `KNOWLEDGE-7` without repair, and a read-only validation creating nothing. Observed: incident skill 114 passed; `typecheck` exit 0. Regression at this candidate: `pnpm --dir cli/aicore test` 150 passed, 4 skipped; `pnpm --dir cli/aicore typecheck` exit 0; ODD validators `ok`. T5 independent acceptance remains open pending review at the delivered head.
 - L11 — 2026-11-15 — Review findings A4, A5 and A6 closed. **A4:** the end-to-end test now invokes the real `check` command after the two `apply` runs and asserts an accepted status plus unchanged project records; its own comment records why enrollment leaves reconciliation pending. **A5:** the sixth initialization case now calls the read-only validation and asserts both reported violations and that no file or directory was created, instead of asserting a seed map. **A6:** `scripts/init_local_registers.ts` is the runnable entry point, composing `InitializeLocalRegisters` over the real filesystem with `usage: init_local_registers.ts <repo-root>`, exit 1 on a reported defect; `SKILL.md` step 0 names it. Observed at this candidate: incident skill 114 passed, `typecheck` exit 0, `init_local_registers.ts --help` printed its usage line, and the target e2e file passed both cases. L10's earlier "six observed results" wording is corrected by this entry: five were asserted and the sixth is now genuinely observed.
 - L12 — 2026-11-15 — Review finding A7 closed. `init_local_registers.ts` resolved its ports inconsistently: the repo-relative register paths were joined with the repo root while the shipped template paths were already absolute, so a joined absolute segment was not reset and the create path failed. The script now resolves a port path against the repo root only when it is relative, and the new `tests/e2e/init-registers-cli.test.ts` runs the real entry point over three disposable roots: creation of both registers, a second run keeping an authored register byte-identical, and a malformed register reported with exit 1 and left untouched. Observed at this candidate: incident skill 117 passed, `typecheck` exit 0.
+- L13 — Close: 2026-11-24 — `T5`'s open integrated acceptance is discharged. PR #191 merged as `6e6d19b`; independent semantic acceptance at that squash commit was obtained from Sentinel 🛡️ (Quality Guardian) as the content authority for records and agent documents: `[PASS]` with `S1`–`S10` verified and none unverified, reading the relocated root `odd/` records with managed templates still under `.aicore/core/odd/`, the `LOCAL:S-xx` complete-token parsing, the fail-closed duplicate/unknown-reference reporting, the create-only register initialization, the synchronization-preservation end-to-end case, and the managed-versus-project-owned mapping in `README.md`. `T1` and `T5` now name the squash commit. L1–L12 are unchanged by this closure.

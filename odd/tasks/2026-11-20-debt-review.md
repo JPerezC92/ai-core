@@ -1,6 +1,7 @@
 # Debt review
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-11-24
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-20
 > **Objective:** Review open debts against current evidence, remove obsolete entries when justified, cancel the unwanted deletion-control proposal, and identify easy fixes.
@@ -22,13 +23,13 @@
 
 ## Tasks
 
-- T1 | S1, S3 | delegated (independent review of multiple current debt subjects) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T2 | S2 | inline (user-directed register cancellation with preserved evidence) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T3 | S4 | delegated (validator behavior and focused tests) — Forge 🔨 (Implementer) | in progress | commit: pending
-- T4 | S5 | delegated (independent architecture and evidence assessment) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T5 | S6 | delegated (Git and PR ownership) — Herald 📯 (Release Manager) | in progress | commit: pending
-- T6 | S7 | inline (explicit user cancellation with preserved evidence) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T7 | S8, S9 | inline (user-directed cancellation and future-debt registration) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
+- T1 | S1, S3 | delegated (independent review of multiple current debt subjects) — Cipher 🔓 (Lead Orchestrator) | done | commit: af9dc60
+- T2 | S2 | inline (user-directed register cancellation with preserved evidence) — Cipher 🔓 (Lead Orchestrator) | done | commit: af9dc60
+- T3 | S4 | delegated (validator behavior and focused tests) — Forge 🔨 (Implementer) | done | commit: af9dc60
+- T4 | S5 | delegated (independent architecture and evidence assessment) — Cipher 🔓 (Lead Orchestrator) | done | commit: af9dc60
+- T5 | S6 | delegated (Git and PR ownership) — Herald 📯 (Release Manager) | done | commit: af9dc60
+- T6 | S7 | inline (explicit user cancellation with preserved evidence) — Cipher 🔓 (Lead Orchestrator) | done | commit: af9dc60
+- T7 | S8, S9 | inline (user-directed cancellation and future-debt registration) — Cipher 🔓 (Lead Orchestrator) | done | commit: af9dc60
 
 ## Log
 
@@ -621,3 +622,13 @@
 - L23 — The original conversation was retrieved through the local OpenCode session export for `ses_e065d5348ffespLdGNSjTNLvys`. The messages behind the former summaries at L5, L9 and L12 are respectively `msg_1f9b12db6001qHC8dju2QAm5CE`, `msg_1f9bb817c001AOSoO7hocp8WcL` and `msg_1f9bf7651001tnaRC0IVOlDQkG`; their recorded creation times are respectively `1795190500815`, `1795191177622` and `1795191436909` milliseconds since Unix epoch. These identities do not replace verbatim preservation in this record.
 - L24 — L5, L9 and L12 were replaced with the verbatim source text of those three messages and now carry their source identity and creation time. The L12 source message is itself truncated in the authoritative record, ending mid-item at "Confirmation that DEBT-061"; that truncation is preserved rather than repaired, and no missing wording is supplied. `node .agents/skills/odd-workflow/scripts/validate_feature.ts odd/tasks/2026-11-20-debt-review.md` reports `ok` after the replacement. No debt disposition changes.
 - L25 — Record-hygiene closure and current register observation. The verbatim-preservation concern left open at L21 is resolved by L23–L24. The register was read after the cancellations: DEBT-042, DEBT-059 and DEBT-061 entries are absent; DEBT-064 is present and open; DEBT-054, DEBT-055 and DEBT-056 remain open; the next-ID counter reads `DEBT-065`. That observation is the acceptance evidence for S7 and the basis for S1's superseded disposition, and it asserts no technical resolution. **Full-feature mirror — pending recovery, not synchronized.** Project `github.com-personal/JPerezC92/ai-core`, feature `debt-review`, locator `odd/tasks/2026-11-20-debt-review.md`; no stored copy exists, so no backend ID or verified mirror revision was established and the record's own post-commit content revision is not yet pinned. The authoritative file is complete in the repository. No mirror write was attempted for this record: the backend binding exposes no exact feature-key upsert, explicit read-scope selection or compare-and-swap, and this change established no evidence that a payload of this size round-trips byte-completely through that surface, so a write could not be read back and verified. Missing evidence: byte-exact payload fidelity and a verifiable identity for any stored copy. Next bounded recovery action: store and read back the record once that fidelity is established. Until then this remains pending recovery and is not reported as synchronized.
+- L26 — S1 — pass at `af9dc60`: the register at the delivered commit carried no evidence-based obsolete retirement; the one candidate was superseded by the explicit user cancellation recorded at L20.
+- L27 — S2 — pass at `af9dc60`: the unwanted proposed deletion-control debt is absent from the register and its decision and unmet criteria are preserved in this record.
+- L28 — S3 — pass at `af9dc60`: the easy-fix audit results and their remaining conditions are recorded at L13 and L17.
+- L29 — S4 — pass at `af9dc60`: no bounded reliable fix was shipped; DEBT-054 remains open with its specific blocker documented in the register.
+- L30 — S5 — pass at `af9dc60`: DEBT-055 and DEBT-056 were both present and open at the delivered commit; a later user-authorized cancellation removed them, which does not retroactively fail this requirement.
+- L31 — S6 — pass at `af9dc60`: one pull request targeted `main` and no agent merged it; the user is the merge authority.
+- L32 — S7 — pass at `af9dc60`: DEBT-059 is absent from the register as an intentional cancellation, with its unmet criteria preserved.
+- L33 — S8 — pass at `af9dc60`: DEBT-042 is absent from the register as an intentional cancellation, not a technical resolution, with its unmet ruling criterion preserved.
+- L34 — S9 — pass at `af9dc60`: the requested future-review entry was registered as an open debt without implementing its proposal or changing workflow policy.
+- L35 — Close: 2026-11-24 — The delivery is PR #207, merged as `af9dc60`, with head `8f81f4c`. Independent semantic acceptance at that squash commit was obtained from Sentinel 🛡️ (Quality Guardian) as the content authority for records, rules and agent documents: `[PASS]` with `S1`–`S9` each carrying a verdict above and none unverified. No applicable executable failure applies: the change altered only the accepted-debt register and agent documentation, so its acceptance is a documentary semantic review rather than an executable contract, and no test-first control could be observed for it. Task rows now name the squash commit; L1–L25 are unchanged, and their earlier `Blocked:` prerequisite is discharged by this closure.
