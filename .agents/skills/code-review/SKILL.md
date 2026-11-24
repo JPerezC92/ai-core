@@ -1,41 +1,49 @@
 ---
 name: code-review
-description: Reviews a named change candidate against correctness, cross-file consistency, scope, dead code and public-API alignment, and returns findings with dispositions. Use when the user requests an independent review, or when a declared high-risk item makes self-review insufficient.
+description: Reviews a change candidate against correctness, cross-file consistency, scope, dead code and public-API alignment, and returns findings with dispositions. Use for the primary agent's own self-review of a change it authored, including an ordinary request to review, verify, check or confirm the work, and for a review in a separate context only when the user explicitly authorized one.
 license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 1.0.0
+  version: 1.1.0
 ---
 
 ## Mandatory core
 
 ### What I do
 
-Provide one review rubric for a change candidate, and one procedure for running it in a context that did not author the change. The rubric is knowledge; **the fresh context is what supplies independence**. Applying this skill in the authoring context is self-review and must be described as such.
+Provide one review rubric for a change candidate, applied in one of two modes. **Mode A — self-review** is the default and normal route: the agent that authored the change applies the rubric directly, fixes what it evidences, and continues. **Mode B — independent review** is a separate reasoning context that applies the same rubric read-only, and it exists only when the user explicitly authorized that review. The rubric is the technical standard in both modes; **the fresh context is what supplies independence**, so only Mode B has it. Mode A is self-review, and it is never described as independent verification.
 
-### When to run a review
+### Choose the mode
 
-Three cases, and only these three:
+**Mode A — primary-agent self-review. Default, and required whenever applicable work is about to be declared done.** It is also what an ordinary request to review the changes, verify the implementation, check for bugs or make sure everything is correct selects; such a request authorizes Mode A and nothing else.
 
-1. **Self-review (always, cheap).** The author reads their own diff against `### Rubric` before declaring the work done. Report it as self-review.
-2. **Requested independent review.** The user asks for one. Dispatch a fresh context — OpenCode's built-in `general` subagent is sufficient and needs no agent document — with a self-contained mission: the exact candidate identity, the diff or changed-file list, this skill's path, and the evidence the reviewer must judge.
-3. **Recommended on declared risk.** A work unit whose record declares a high-risk item may be recommended for one. Recommendation, not gate; no review is created without the user's decision.
+1. Apply `## Rubric` to the actual candidate.
+2. Obtain the candidate and any Git-derived evidence through Herald 📯 (Release Manager). A read-only Git fact is not a separate context and creates no reviewer.
+3. Fix every evidenced defect that is in scope, local and reversible under `.aicore/core/knowledge/agents.md` `### Finding disposition`; report the ones it cannot fix.
+4. Rerun the checks the correction invalidated.
+5. Report the result as self-review, and continue the authorized task.
+
+Loading this skill is observational; it revokes none of the authority the author already held. Mode A needs no reviewer packet, verdict artifact, acceptance report, sign-off or handoff — it uses the task's existing evidence and reporting procedure — and it stays proportionate to the change.
+
+**Mode B — explicitly authorized independent review.** Available only after the user authorized that review. Nothing else authorizes it: not a high-risk item, a large, complex or security-sensitive change, a completed work unit, a failed or corrected check, a remediation, ODD closure, pull-request preparation, an uncertain self-assessment, or a general request to ensure quality. A recommendation is not authorization.
+
+An authorization covers the candidate and review scope it names. When a correction changes that candidate, preserve the earlier verdict with the candidate it actually judged, correct and verify the defect directly, update the delivery evidence truthfully, and dispatch a further review only where the user authorized further review.
 
 An independent review is never a delivery prerequisite. Its absence is not a pending check, a missing acceptance or a blocker.
 
-### What a reviewer must receive
+### What an independent reviewer must receive — Mode B
 
 - The **exact candidate identity**: commit SHA or immutable head, and the literal diff command or the diff content.
 - The **changed-file list** reconciled against that diff.
 - The **governing requirements** it is judged against, by reference.
 - The **evidence already produced**: commands, exit codes, observed results. A reviewer analyzes supplied evidence; it does not re-run another agent's execution.
 
-A reviewer never runs a Git or GitHub command. Git-derived input comes from Herald 📯 (Release Manager). The reviewer is read-only on source.
+A reviewer never executes a Git or GitHub command; Git-derived input comes from Herald 📯 (Release Manager). The reviewer is read-only on source, and it acquires no implementation ownership.
 
 ### Rubric
 
-Check every applicable item and report only what you can evidence.
+Check every applicable item and report only what you can evidence. The rubric is shared: both modes apply every item below, and neither adds a criterion the other lacks.
 
 **Correctness and consistency**
 
@@ -64,7 +72,7 @@ Check every applicable item and report only what you can evidence.
 
 Testing-architecture conformance is owned by `.aicore/core/architecture/testing/architecture.md`; implementation architecture by `.aicore/core/architecture/README.md` and the selected guides. Read the owner text rather than re-deriving a rule. The dependency surface has its own procedure in the `dependency-review` skill; visual and accessibility concerns in `visual-review`.
 
-### Report format
+### Report format — Mode B output
 
 Lead with the verdict, then numbered findings. Each finding carries: the file and location, the governing rule or requirement it violates, the concrete fix, and a severity of `BLOCK` (the delivery is not ready) or `ADVISORY` (worth fixing, does not withhold readiness).
 
@@ -75,14 +83,16 @@ Lead with the verdict, then numbered findings. Each finding carries: the file an
 
 `[PASS]` means zero open findings of any severity. An observation that requires no action is an INFO note, not a finding. Never report a finding you cannot point at.
 
+Mode A reports under the task's existing evidence procedure and may use the same severity vocabulary; it produces no separate verdict artifact, because its outcome is the corrected candidate and the checks that were rerun.
+
 ### How findings are disposed
 
-Findings return to the coordinator, which applies `.aicore/core/knowledge/agents.md` `### Finding disposition`: fix-first when in scope and safe, otherwise a reported decision. The reviewer does not fix source, does not re-review its own remediation, and does not become a gate.
+Both modes feed one rule, `.aicore/core/knowledge/agents.md` `### Finding disposition`: fix-first when in scope and safe, otherwise a reported decision. In Mode A the author applies it directly and continues. In Mode B the findings return to Cipher 🔓 (Lead Orchestrator), which applies it; the reviewer does not fix source, does not re-review its own remediation, and does not become a gate.
 
 ### Hard limits
 
-- Read-only on all source, tests, records and configuration.
-- No Git or GitHub command of any kind.
-- No new acceptance mechanism, sign-off sheet, or approval step — the verdict is input, not authority.
-- Never describe this rubric as an independent reviewer. Applying it in the authoring context is self-review.
+- Mode B is read-only on all source, tests, records and configuration. Mode A edits only within the authority the task already granted, and only in-scope defects.
+- No Git or GitHub command in either mode. Git-derived input comes from Herald 📯 (Release Manager).
+- No new acceptance mechanism, sign-off sheet or approval step — a verdict is input, not authority.
+- Never present this rubric as an independent reviewer. Applying it in the authoring context is self-review.
 - Do not claim that a dispatched review is permission-isolated: a fresh context shares the runtime's permission envelope.
