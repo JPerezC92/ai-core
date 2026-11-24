@@ -154,6 +154,8 @@ These checks observe documentary structure only: they prove that the shape exist
 
 A closed task record is deleted once it is eligible. Retirement is part of the normal authorized Git workflow: it is never a background service and never an agent's own initiative, and it requires no per-record approval.
 
+**When it runs.** Run the check in the closure work unit: before the closure commit is made and before any pull request is published. Deletions then ride the same review as the change that closes the work, already-accepted delivery evidence is never modified afterwards, and an authorized local-only delivery retires eligible records exactly as a released one does.
+
 **Eligibility — exactly two conditions.** A record is eligible when its status is exactly `closed` and at least seven complete calendar days have passed since its recorded `> **Closed:**` date. That date field is the only source; no timestamp is recorded and none is required. Nothing else is an eligibility condition.
 
 **Never deleted.** A record whose status is not `closed`; a record younger than seven complete calendar days; a record with no recorded closure date or with a closure date that is not a real calendar date; and a record that cannot be read.
@@ -189,7 +191,7 @@ A change reaches completion in stages. Each stage has one owner and its own prec
 3. **Verification complete** — the applicable checks and owner gates have run against the delivered content and are recorded with their verdict. These are inputs to acceptance, never a substitute for it.
 4. **Independent semantic acceptance** — the reviewer `### Close` requires evaluates the committed implementation at a pinned commit against the record's own `S#` requirements and returns an explicit verdict naming that commit. Inquisitor 🔎 (PR Reviewer) is not this acceptor.
 5. **Record closed** — `Status: closed`, the `> **Closed:**` date, the final `L# — Close:` entry and the closure evidence are set.
-6. **Closure committed** — Herald 📯 (Release Manager) commits the closure edit on the feature branch. **Pull-request management may not begin before this stage is satisfied.**
+6. **Closure committed** — Herald 📯 (Release Manager) commits the closure edit on the feature branch, together with the retention deletions this stage performs per `### Retire a task record`. **Pull-request management may not begin before this stage is satisfied.**
 7. **Pull request published** — Herald 📯 (Release Manager) has published exactly the authorized pull request against its base, and its head is fixed.
 8. **Pull request reviewed and ready** — Inquisitor 🔎 (PR Reviewer) returns a passing verdict at the immutable head, every required check passes, and readiness is reported only then.
 9. **Pull request merged** — the merge is the user's decision alone and stays separately authorized; no agent merges.
