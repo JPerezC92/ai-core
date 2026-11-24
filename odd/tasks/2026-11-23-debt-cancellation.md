@@ -1,12 +1,13 @@
 # Debt register cancellation of twelve open entries
 
-> **Status:** active
+> **Status:** closed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-23
 > **Objective:** Cancel twelve user-selected open accepted-debt entries by explicit user decision, preserving each decision, its unmet resolution criteria and their supporting evidence before the entries leave the register.
 > **Branch:** `docs/debt/cancel-open-entries`
 > **Delivery:** One local work-unit commit on that branch; forecast roughly 210 authored additions plus deletions, dominated by this record and the twelve-entry deletion block, below the ~400-line strategy trigger, so no slicing is needed. Rollback boundary: this record, `odd/features/accepted-debt-register.md` and `.aicore/core/knowledge/debt.md` revert together with no effect on any other path.
 > **Runner:** `node .agents/skills/odd-workflow/scripts/validate_feature.ts odd/tasks`; `node .agents/skills/odd-workflow/scripts/validate_feature_file.ts odd/features/accepted-debt-register.md`
+> **Closed:** 2026-11-23
 
 ## Specs
 
@@ -17,11 +18,11 @@
 
 ## Tasks
 
-- T1 | S1 | inline (bounded mechanical edit of one register file) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T2 | S2, S4 | inline (record authorship owned by the coordinator) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T3 | S3 | inline (single-line counter verification) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T4 | S1, S2, S3, S4 | delegated (independent semantic acceptance of a records change; Sentinel 🛡️ is the authority for records and rules) — Sentinel 🛡️ (Quality Guardian) | open | commit: pending
-- T5 | S1, S2, S3, S4 | delegated (Git execution ownership) — Herald 📯 (Release Manager) | open | commit: pending
+- T1 | S1 | inline (bounded mechanical edit of one register file) — Cipher 🔓 (Lead Orchestrator) | done | commit: fb780e1
+- T2 | S2, S4 | inline (record authorship owned by the coordinator) — Cipher 🔓 (Lead Orchestrator) | done | commit: fb780e1
+- T3 | S3 | inline (single-line counter verification) — Cipher 🔓 (Lead Orchestrator) | done | commit: fb780e1
+- T4 | S1, S2, S3, S4 | delegated (independent semantic acceptance of a records change; Sentinel 🛡️ is the authority for records and rules) — Sentinel 🛡️ (Quality Guardian); [PASS] with zero open findings at `486b941`, round 2, after its two round-1 LOW findings were corrected and separately verified closed | done | commit: 486b941
+- T5 | S1, S2, S3, S4 | delegated (Git execution ownership) — Herald 📯 (Release Manager) | done | commit: fb780e1
 
 ## Log
 
@@ -55,3 +56,8 @@
 - L16 — Verification. `8cd5b70` entry headings were the pre-removal baseline; after the edit the register carries no cancelled heading, DEBT-052 and DEBT-054 remain, `### Rules` is byte-unchanged and the counter still reads `DEBT-065`. Recorded as the coordinator's mechanical check; independent semantic acceptance is T4.
 - L17 — Durable feature file. `odd/features/accepted-debt-register.md` is created by this change as the feature's first durable file; it carries the register's enduring obligations and no history. Requirements R1–R5 were checked against the post-edit register by T1–T3: R1 and R5 confirmed on the two remaining open entries, each of which still carries the five required fields and its originating context; R3 and R4 confirmed by this cancellation; R2 was not exercised by this change and stays unticked, which is why the file's derived status is `partial`.
 - L18 — Feature mirror: pending recovery. No backend copy of this record was written, so no synchronization is claimed. The project's mirror adoption is itself recorded as unverified in `AGENTS.md` project extensions, and no exact-key upsert or compare-and-swap is available, so a full-document write and independent readback could not be established here. The repository record remains authoritative; recovery is a bounded follow-up write-and-readback when a verified backend round trip is available.
+- L19 — S1 — pass — no cancelled identifier remains as a register heading and DEBT-052 with DEBT-054 are intact, confirmed by Sentinel at `486b941`.
+- L20 — S2 — pass — twelve one-per-debt cancellation entries preserve the decision, the unmet criteria and an evidence pointer, with no cancellation presented as resolution, confirmed by Sentinel at `486b941`.
+- L21 — S3 — pass — the recorded next-ID value is unchanged at `DEBT-065` with no retired identifier reused, confirmed by Sentinel at `486b941`.
+- L22 — S4 — pass — the register's `### Rules` section, including the user-directed cancellation, resolution-evidence and ID-allocation rules, is unchanged, confirmed by Sentinel at `486b941`.
+- L23 — Close: delivered in `fb780e1` and corrected in `486b941`. Independent semantic acceptance is Sentinel's `[PASS]` at `486b941` with zero open findings after its two round-1 LOW findings were fixed and re-reviewed; the round-1 findings and their closure are recorded in the reviewer's two verdicts, and L17–L18 carry the corrections. Mechanical validation: `validate_feature.ts odd/tasks` reported every record `ok`, `validate_feature_file.ts odd/features/accepted-debt-register.md` reported `ok — status: partial`. No applicable executable failure exists for this change: it deletes register entries and authors record text, with no code, test, runtime or configuration behaviour to reproduce, so the verification is the mechanical validators plus the independent semantic review. Nothing is deferred: the twelve cancellations are complete, and the two debts the user did not select stay open as they were.
