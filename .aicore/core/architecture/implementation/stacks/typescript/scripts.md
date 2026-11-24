@@ -69,7 +69,7 @@ Three kinds of specifier are never conflated.
 | Bundled          | `./x.ts`, `./x.tsx`            | map targets source; bundler must resolve | bundler output                    |
 | Compiled         | `./x.ts` rewritten to `./x.js` | map key carries `.ts`; targets output    | JavaScript, declarations and maps |
 
-Three consequences follow. A directly executed package needs no build step and no additional loader, and `.tsx` is not executable that way at all, so JSX belongs only to bundled code. A bundled package may use `.tsx` and may use native aliases only where its bundler resolves them without a further resolver. A compiled package enables `rewriteRelativeImportExtensions` so relative `.ts` specifiers become `.js` while `#` specifiers stay verbatim; it does not need `allowImportingTsExtensions`, and its emitted declarations keep both forms and resolve against their sibling declaration files, so the package does not have to ship sources.
+Three consequences follow. A directly executed package needs no build step and no additional loader, and `.tsx` is not executable that way at all, so JSX belongs only to bundled code. A bundled package may use `.tsx` and may use native aliases where the selected bundler resolves them, either through its own support for the manifest map or through alias resolution it is explicitly configured with and that has been validated. A compiled package enables `rewriteRelativeImportExtensions` so relative `.ts` specifiers become `.js` while `#` specifiers stay verbatim; it does not need `allowImportingTsExtensions`, and its emitted declarations keep both forms and resolve against their sibling declaration files, so the package does not have to ship sources.
 
 ### Alias permission
 
