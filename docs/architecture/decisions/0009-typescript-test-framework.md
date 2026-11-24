@@ -1,7 +1,8 @@
 # ADR 0009 — TypeScript test framework convention
 
-- **Status:** Proposed — pending review and explicit approval
+- **Status:** Accepted
 - **Date:** 2026-11-12
+- **Accepted:** 2026-11-24 — explicit user approval, verbatim: "ADR 0009: ACCEPT." Propagation: **no normative change**, per `## Propagation` below — the TypeScript testing guide already enforces the rule, and the repository binding lives in this repository's own package configuration. The migration evidence and the independent owner check are recorded in `odd/tasks/2026-11-12-typescript-vitest-migration.md` L10 and L12.
 
 ## Context
 
