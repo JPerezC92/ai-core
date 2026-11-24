@@ -137,4 +137,10 @@ describe("ValidateFeatures.execute closure disposition", () => {
 			"closed feature needs exactly one Disposition line: completed, cancelled or superseded",
 		]);
 	});
+
+	it("requires a disposition from a closed record whose closure date is not a real calendar date", () => {
+		expect(findingsFor(closedRecord({ closed: "2026-02-31", taskStatus: "done" }))).toStrictEqual([
+			"closed feature needs exactly one Disposition line: completed, cancelled or superseded",
+		]);
+	});
 });

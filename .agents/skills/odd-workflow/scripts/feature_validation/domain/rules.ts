@@ -39,6 +39,24 @@ const DISPOSITION_RE = /^> \*\*Disposition:\*\* (completed|cancelled|superseded)
 const SUPERSEDED_BY_RE = /^> \*\*Superseded-by:\*\* \S/u;
 const OBSOLESCENCE_RE = /\bobsolet\w*/iu;
 const CANCELLATION_AUTHORIZATION_RE = /user[-\s]authori[sz]/iu;
+
+/**
+ * Parses a `YYYY-MM-DD` value to its UTC midnight, or `null` when it is not a real calendar date.
+ *
+ * A shaped but impossible value such as `2026-02-31` is not a readable closure date, so it must
+ * not be treated as one: doing so would let a record escape a date-gated obligation.
+ */
+function parseCalendarDay(value: string): number | null {
+	const year = Number(value.slice(0, 4));
+	const month = Number(value.slice(5, 7));
+	const day = Number(value.slice(8, 10));
+	const time = Date.UTC(year, month - 1, day);
+	const parsed = new Date(time);
+	if (parsed.getUTCFullYear() !== year || parsed.getUTCMonth() !== month - 1 || parsed.getUTCDate() !== day) {
+		return null;
+	}
+	return time;
+}
 const PLACEHOLDER_RE = /<[^>]+>/u;
 const CODE_SPAN_RE = /`[^`]*`/gu;
 const FENCED_BLOCK_RE = /```[\s\S]*?```/gu;
@@ -432,9 +450,14 @@ export function validateFeature(text: string): string[] {
 
 	const closedLine = lines.map((line) => line.trim()).find((line) => line.startsWith("> **Closed:**"));
 	const closedValue = CLOSED_DATE_VALUE_RE.exec(closedLine ?? "")?.[1];
-	// A closed record whose closure date cannot be read is treated as in scope, so a
-	// malformed or missing date cannot be used to escape the disposition obligation.
-	const dispositionApplies = isClosed && (closedValue === undefined || closedValue >= DISPOSITION_EFFECTIVE_FROM);
+	// A closed record whose closure date is absent or is not a real calendar date is treated as
+	// in scope, so a shaped but impossible value such as `2026-02-31` cannot escape the
+	// disposition obligation either.
+	const dispositionApplies =
+		isClosed &&
+		(closedValue === undefined ||
+			parseCalendarDay(closedValue) === null ||
+			closedValue >= DISPOSITION_EFFECTIVE_FROM);
 	const dispositionLines = lines.map((line) => line.trim()).filter((line) => line.startsWith("> **Disposition:**"));
 	let disposition: string | undefined;
 	if (dispositionApplies) {
