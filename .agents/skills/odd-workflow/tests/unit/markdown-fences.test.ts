@@ -71,12 +71,30 @@ describe("readFenceStructure container geometry", () => {
 		];
 		expect(unclosedLines(lines)).toStrictEqual([]);
 		expect(visibleEntries(lines)).toStrictEqual(["- L1 — a", "- L2 — b"]);
+		// The block-quote markers at the nested container's column must be consumed, so the
+		// three quoted lines are code rather than document text.
+		expect(readFenceStructure(lines).unfencedLines.slice(3, 7)).toStrictEqual(["    > quote", "", "", ""]);
+	});
+
+	it("rejects an unbalanced fence inside a blockquote nested in a list item", () => {
+		// A quote marker past column 3 is a quote relative to its container, not literal text.
+		const lines = ["- L1 — a", "    > ```text", "    > swallowed", "- L2 — b"];
+		expect(unclosedLines(lines)).toStrictEqual([2]);
+		expect(visibleEntries(lines)).toStrictEqual(["- L1 — a", "- L2 — b"]);
+	});
+
+	it("accepts a balanced fence inside a blockquote nested in a list item", () => {
+		const lines = ["- L1 — a", "    > ```text", "    > inside", "    > ```", "- L2 — b"];
+		expect(unclosedLines(lines)).toStrictEqual([]);
+		expect(visibleEntries(lines)).toStrictEqual(["- L1 — a", "- L2 — b"]);
 	});
 
 	it("closes a fence only when the closer is within three columns of the opener's container", () => {
 		// A fence-like line four columns past the opener's container is indented code, so it
-		// is content and the fence stays open.
+		// is content and the fence stays open; three columns past it is still a closer.
 		expect(unclosedLines(["- a", "  ```", "  x", "      ```", "- L1 — b"])).toStrictEqual([2]);
+		expect(unclosedLines(["- a", "  ```", "  x", "     ```", "- L1 — b"])).toStrictEqual([]);
+		expect(unclosedLines(["- a", "  ```", "  x", "    ```", "- L1 — b"])).toStrictEqual([]);
 		expect(unclosedLines(["- a", "  ```", "  x", "   ```", "- L1 — b"])).toStrictEqual([]);
 	});
 

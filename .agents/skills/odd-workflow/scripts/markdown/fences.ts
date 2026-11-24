@@ -82,33 +82,35 @@ function leadingWhitespace(text: string): string {
 	return match === null ? "" : match[0];
 }
 
-function stripBlockquoteMarkers(line: string): string {
-	let rest = line;
-	for (;;) {
-		const marker = BLOCKQUOTE_PREFIX.exec(rest);
-		if (marker === null) return rest;
-		rest = rest.slice(marker[0].length);
+/** Consumes up to `columns` columns of leading spaces and tabs, returning the column reached. */
+function columnsOfLeadingWhitespace(text: string, limit: number): { readonly index: number; readonly columns: number } {
+	let index = 0;
+	let columns = 0;
+	while (index < text.length && columns < limit) {
+		const character = text[index];
+		if (character === " ") columns += 1;
+		else if (character === "\t") columns += 4 - (columns % 4);
+		else break;
+		index += 1;
 	}
+	return { index, columns };
 }
 
-function quoteDepthOf(line: string): number {
-	let depth = 0;
-	let rest = line;
+function shapeOf(line: string, containerColumn: number): LineShape {
+	// A block quote inside a list item carries that item's indentation, so its markers are
+	// matched from the container's content column rather than from the line's absolute start.
+	const prefix = columnsOfLeadingWhitespace(line, containerColumn);
+	let rest = line.slice(prefix.index);
+	let quoteDepth = 0;
 	for (;;) {
 		const marker = BLOCKQUOTE_PREFIX.exec(rest);
-		if (marker === null) return depth;
+		if (marker === null) break;
 		rest = rest.slice(marker[0].length);
-		depth += 1;
+		quoteDepth += 1;
 	}
-}
-
-function shapeOf(line: string): LineShape {
-	const rest = stripBlockquoteMarkers(line);
-	const quoteDepth = quoteDepthOf(line);
 	const indentation = leadingWhitespace(rest);
-	const indentColumns = countColumns(indentation);
-	const afterIndent = rest.slice(indentation.length);
-	const content = afterIndent;
+	const indentColumns = prefix.columns + countColumns(indentation, prefix.columns);
+	const content = rest.slice(indentation.length);
 	const item = LIST_ITEM_MARKER.exec(content);
 	if (item === null) {
 		return {
@@ -160,7 +162,7 @@ export function readFenceStructure(lines: readonly string[]): FenceStructure {
 
 		while (pending) {
 			pending = false;
-			const shape = shapeOf(raw);
+			const shape = shapeOf(raw, innermostColumn());
 
 			if (shape.body.length === 0) {
 				unfencedLines.push(open === null && !inComment ? raw : "");
