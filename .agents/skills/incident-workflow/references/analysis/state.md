@@ -30,12 +30,12 @@ For each delegated handoff, record the outgoing/incoming instance, accepted inpu
 
 ## Step index
 
-| Step        | File                | Owner                            | Status |
-| ----------- | ------------------- | -------------------------------- | ------ |
-| identify    | `01-identify.md`    | Cipher 🔓 (Lead Orchestrator)    | ⬜     |
-| investigate | `02-investigate.md` | assigned investigate-step writer | ⬜     |
-| synthesize  | `03-synthesize.md`  | Cipher 🔓 (Lead Orchestrator)    | ⬜     |
-| respond     | `response-draft.md` | the assigned response author     | ⬜     |
+| Step        | File                | Owner                                                                    | Status |
+| ----------- | ------------------- | ------------------------------------------------------------------------ | ------ |
+| identify    | `01-identify.md`    | Cipher 🔓 (Lead Orchestrator)                                            | ⬜     |
+| investigate | `02-investigate.md` | Cipher 🔓 (Lead Orchestrator), or its assigned writer in a delegated run | ⬜     |
+| synthesize  | `03-synthesize.md`  | Cipher 🔓 (Lead Orchestrator)                                            | ⬜     |
+| respond     | `response-draft.md` | Cipher 🔓 (Lead Orchestrator), or its assigned author in a delegated run | ⬜     |
 
 ## Kill-switch status
 
