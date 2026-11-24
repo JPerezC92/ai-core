@@ -60,12 +60,12 @@ type OpenFence = {
 	readonly length: number;
 	readonly quoteDepth: number;
 	readonly containerColumn: number;
-	/** The column at which the opening line's own content begins, in its quote's space. */
-	readonly bodyColumn: number;
 };
 
 const QUOTE_MARKER = /^ {0,3}>[ \t]?/u;
 const LIST_MARKER = /^( {0,3})(?:[-*+]|\d{1,9}[.)])([ \t]+)/u;
+/** A thematic break such as `* * *`, `- - -` or `___`, which never opens a container. */
+const THEMATIC_BREAK = /^ {0,3}(?:(?:\*[ \t]*){3,}|(?:-[ \t]*){3,}|(?:_[ \t]*){3,})$/u;
 const DELIMITER = /^(`{3,}|~{3,})(.*)$/u;
 const LEADING_WHITESPACE = /^[ \t]*/u;
 const COMMENT_OPEN = "<!--";
@@ -146,6 +146,9 @@ function shapeOf(line: string, baseContainerColumn: number): LineShape {
 
 		const item = LIST_MARKER.exec(remaining);
 		if (item === null) break;
+		// `* * *` and `- - -` are thematic breaks, not list items: treating them as items
+		// would open a phantom container that then constrains every following line.
+		if (THEMATIC_BREAK.test(remaining)) break;
 		const markerIndent = item[1]!.length;
 		const markerWidth = item[0].length - item[1]!.length - item[2]!.length;
 		const markerColumn = column + markerIndent;
@@ -245,7 +248,8 @@ export function readFenceStructure(lines: readonly string[]): FenceStructure {
 					continue;
 				}
 				// Inside a fence every line is literal, so a closer must be a fence line in the
-				// opener's own container: a list marker there is content, never a delimiter.
+				// opener's own container, within three columns of that container's content: a
+				// marker there is content, and a closer indented past that is indented code.
 				const delimiter = shape.opensListItem ? null : DELIMITER.exec(shape.rest);
 				const closes =
 					delimiter !== null &&
@@ -253,7 +257,7 @@ export function readFenceStructure(lines: readonly string[]): FenceStructure {
 					delimiter[1]![0] === current.marker &&
 					delimiter[1]!.length >= current.length &&
 					delimiter[2]!.trim().length === 0 &&
-					shape.bodyColumn - current.bodyColumn <= MAX_OPENER_INDENT;
+					shape.bodyColumn - current.containerColumn <= MAX_OPENER_INDENT;
 				unfencedLines.push("");
 				if (closes) open = null;
 				emitted = true;
@@ -293,7 +297,6 @@ export function readFenceStructure(lines: readonly string[]): FenceStructure {
 						length: delimiter[1]!.length,
 						quoteDepth: shape.quoteDepth,
 						containerColumn: contentColumn,
-						bodyColumn: shape.bodyColumn,
 					};
 					unfencedLines.push("");
 					emitted = true;

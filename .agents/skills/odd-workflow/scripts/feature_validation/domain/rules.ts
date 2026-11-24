@@ -336,7 +336,7 @@ export function validateFeature(text: string): string[] {
 	for (const field of ["Status", "Owner", "Created"]) {
 		if (!headerFields.has(field)) findings.push(`header must include ${field}`);
 	}
-	if (text.includes("> **Created:** date")) {
+	if (lines.some((line) => line.trim() === "> **Created:** date")) {
 		findings.push("Created must be a real date, not the template placeholder");
 	}
 	const createdFields = lines.filter((line) => line.trim().startsWith("> **Created:**")).length;

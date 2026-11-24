@@ -52,6 +52,11 @@ describe("validateFeature structural interpretation of fenced content", () => {
 		expect(validateFeature(fenced)).toContain("Specs needs at least one '- S# — ...' entry");
 	});
 
+	it("does not accept a fenced Created placeholder as the template placeholder", () => {
+		const text = makeFeatureWithLog({ log: ["- L1 — a", "", ...FENCED(["> **Created:** date"])] });
+		expect(validateFeature(text)).toStrictEqual([]);
+	});
+
 	it("does not accept a fenced user authorization as cancellation evidence", () => {
 		const text = [
 			"# Sample feature",

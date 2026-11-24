@@ -6,6 +6,7 @@ import {
 	ValidFeatureFile,
 } from "#scripts/feature_file_validation/domain/records.ts";
 import type { PathComparisonPolicy } from "#scripts/feature_file_validation/domain/rules.ts";
+import { validateFeatureFile } from "#scripts/feature_file_validation/domain/rules.ts";
 import {
 	FeatureFileSourceFake,
 	featureFileApostropheFixture,
@@ -92,5 +93,90 @@ describe("ValidateFeatureFiles.execute", () => {
 		const sensitiveResults = [...new ValidateFeatureFiles(sensitive, caseSensitivePolicy).execute("features")];
 		expect(sensitiveResults).toHaveLength(2);
 		expect(sensitive.reads).toEqual(["features/B.md", "features/a.md"]);
+	});
+});
+
+describe("durable feature-file validation of fenced content", () => {
+	/** A fully ticked feature file: its derived status is "achieved". */
+	function achieved(): string {
+		return [
+			"# Sample feature",
+			"",
+			"The feature states what it is in one paragraph.",
+			"",
+			"**Status:** achieved",
+			"",
+			"## Requirements",
+			"",
+			"- [x] R1 — the requirement remains true.",
+			"",
+		].join("\n");
+	}
+
+	it("does not derive status from a fenced requirement line", () => {
+		const text = achieved().replace(
+			"- [x] R1 — the requirement remains true.",
+			["- [x] R1 — the requirement remains true.", "```text", "- [ ] R2 — a quoted example", "```"].join("\n"),
+		);
+		expect(validateFeatureFile(text)).toStrictEqual([]);
+	});
+
+	it("does not let a fenced requirement satisfy the requirement obligation", () => {
+		const text = [
+			"# Sample feature",
+			"",
+			"The feature states what it is in one paragraph.",
+			"",
+			"**Status:** not started",
+			"",
+			"## Requirements",
+			"",
+			"```text",
+			"- [ ] R1 — a quoted example",
+			"```",
+			"",
+		].join("\n");
+		expect(validateFeatureFile(text)).toContain(
+			"feature-file-requirements: '## Requirements' needs at least one '- [ ] R<n> — <requirement>' line",
+		);
+	});
+
+	it("reports no unknown mark for a fenced example", () => {
+		const text = achieved().replace(
+			"- [x] R1 — the requirement remains true.",
+			[
+				"- [x] R1 — the requirement remains true.",
+				"```text",
+				"- [x] R2 `bogus mark` — a quoted example",
+				"```",
+			].join("\n"),
+		);
+		expect(validateFeatureFile(text)).toStrictEqual([]);
+	});
+
+	it("reports no duplicate requirements heading for a fenced example", () => {
+		const text = achieved().replace(
+			"## Requirements",
+			["```text", "## Requirements", "```", "", "## Requirements"].join("\n"),
+		);
+		expect(validateFeatureFile(text)).toStrictEqual([]);
+	});
+
+	it("does not report the completion sheet for a fenced example", () => {
+		const text = achieved().replace(
+			"- [x] R1 — the requirement remains true.",
+			["- [x] R1 — the requirement remains true.", "```text", "## Completion", "```"].join("\n"),
+		);
+		expect(validateFeatureFile(text)).toStrictEqual([]);
+	});
+
+	it("rejects a feature file whose fence never closes", () => {
+		const text = achieved().replace(
+			"- [x] R1 — the requirement remains true.",
+			["- [x] R1 — the requirement remains true.", "```text", "quoted"].join("\n"),
+		);
+		expect(validateFeatureFile(text)).toStrictEqual([
+			"feature-file-unclosed-fence: unclosed code fence opened at line 10 with 3 backtick character(s); add the closing fence",
+		]);
 	});
 });

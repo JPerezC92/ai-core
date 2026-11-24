@@ -12,7 +12,10 @@ import { REQUIRED_COMPLETE_DAYS } from "#scripts/retirement_check/domain/records
 import type { RetirementDecision } from "#scripts/retirement_check/domain/records.ts";
 
 const STATUS_CLOSED_RE = /^> \*\*Status:\*\* closed$/u;
+const STATUS_ANY_RE = /^> \*\*Status:\*\* (.*)$/u;
 const CLOSED_DATE_RE = /^> \*\*Closed:\*\* ?(.*)$/u;
+/** Header metadata sits at column zero; an indented copy is a quoted example, not the header. */
+const HEADER_AT_COLUMN_ZERO = /^> /u;
 const CALENDAR_DATE_RE = /^\d{4}-\d{2}-\d{2}$/u;
 const DAY_MS = 86_400_000;
 
@@ -55,11 +58,22 @@ export function evaluateRetirement(text: string, asOfDate: string): RetirementDe
 	// eligible for deletion.
 	const lines = structure.unfencedLines;
 
-	if (!lines.some((line) => STATUS_CLOSED_RE.test(line.trim()))) {
+	// Header metadata sits at column zero. An indented copy is quoted content — an indented
+	// code block is not part of the fenced projection — so it cannot state closure.
+	const headerLines = lines.filter((line) => HEADER_AT_COLUMN_ZERO.test(line));
+
+	const statusValues = headerLines
+		.map((line) => STATUS_ANY_RE.exec(line.trim()))
+		.filter((match) => match !== null)
+		.map((match) => match[1]?.trim() ?? "");
+	if (statusValues.length > 1) {
+		return { kind: "excluded", reason: "ambiguous closure metadata" };
+	}
+	if (!headerLines.some((line) => STATUS_CLOSED_RE.test(line.trim()))) {
 		return { kind: "excluded", reason: "status is not closed" };
 	}
 
-	const closedValues = lines
+	const closedValues = headerLines
 		.map((line) => CLOSED_DATE_RE.exec(line.trim()))
 		.filter((match) => match !== null)
 		.map((match) => match[1]?.trim() ?? "");

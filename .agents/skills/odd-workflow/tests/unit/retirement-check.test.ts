@@ -80,6 +80,26 @@ describe("CheckRetirements.execute fenced content", () => {
 			ageDays: 7,
 		});
 	});
+
+	it("ignores closed metadata quoted in an indented code block", () => {
+		// Column-zero header metadata is genuine; an indented copy is a quoted example, so an
+		// active record stays excluded even though its prose shows a closed header.
+		const record = makeTaskRecord({ status: "active", closedOn: null });
+		const text = record.replace(
+			"- L1 — original request",
+			["- L1 — original request", "", "    > **Status:** closed", "    > **Closed:** 2025-01-02"].join("\n"),
+		);
+		expect(decisionFor(text, "2026-11-14")).toStrictEqual({ kind: "excluded", reason: "status is not closed" });
+	});
+
+	it("excludes a record whose status metadata is contradictory", () => {
+		const record = makeTaskRecord({ closedOn: "2026-11-01" });
+		const text = record.replace(
+			"> **Status:** closed",
+			["> **Status:** closed", "> **Status:** active"].join("\n"),
+		);
+		expect(decisionFor(text, AS_OF)).toStrictEqual({ kind: "excluded", reason: "ambiguous closure metadata" });
+	});
 });
 
 describe("CheckRetirements.execute", () => {

@@ -47,6 +47,36 @@ describe("readFenceStructure list markers that are not containers", () => {
 	});
 });
 
+describe("readFenceStructure closer and break handling", () => {
+	it("rejects a closer indented past the opener's container as content", () => {
+		// The opener sits five columns past its container, so the container is column zero and a
+		// closer eight columns in is indented code: the fence stays open and its content is
+		// hidden rather than leaking into the document view.
+		const lines = ["- L1 — a", "     ```text", "        ```", "     - L2 — Close: quoted", "     tail"];
+		expect(unclosedLines(lines)).toStrictEqual([2]);
+	});
+
+	it("accepts a closer three columns past the container and rejects four", () => {
+		// The item's content column is two, so five columns is three past it — a closer — and
+		// six columns is four past it, which is indented code.
+		expect(unclosedLines(["- L1 — a", "     ```text", "     x", "     ```"])).toStrictEqual([]);
+		expect(unclosedLines(["- L1 — a", "     ```text", "     x", "      ```"])).toStrictEqual([2]);
+	});
+
+	it("does not treat a thematic break as a list item", () => {
+		// `* * *` opens no container, so the fence that follows is a top-level fence at two
+		// columns and the column-zero line closes it.
+		const lines = ["* * *", "  ```", "  x", "```", "- L1 — b"];
+		expect(unclosedLines(lines)).toStrictEqual([]);
+		expect(visibleEntries(lines)).toStrictEqual(["- L1 — b"]);
+	});
+
+	it("does not treat dash and underscore thematic breaks as list items", () => {
+		expect(unclosedLines(["- - -", "  ```", "  x", "```", "- L1 — b"])).toStrictEqual([]);
+		expect(unclosedLines(["___", "  ```", "  x", "```", "- L1 — b"])).toStrictEqual([]);
+	});
+});
+
 describe("readFenceStructure container geometry", () => {
 	it("treats fence-like lines inside a top-level indented code block as code, not fences", () => {
 		const lines = [

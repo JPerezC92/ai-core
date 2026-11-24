@@ -255,9 +255,9 @@ function numberingFindings(lines: readonly string[]): string[] {
 	return [];
 }
 
-export function readRequirements(text: string): FeatureRequirement[] {
+export function readRequirements(lines: readonly string[]): FeatureRequirement[] {
 	const requirements: FeatureRequirement[] = [];
-	for (const line of requirementLines(splitLines(text))) {
+	for (const line of requirementLines(lines)) {
 		const groups = REQUIREMENT_RE.exec(line)?.groups;
 		if (groups === undefined) continue;
 		requirements.push(
@@ -267,8 +267,8 @@ export function readRequirements(text: string): FeatureRequirement[] {
 	return requirements;
 }
 
-function markFindings(text: string): string[] {
-	return readRequirements(text)
+function markFindings(lines: readonly string[]): string[] {
+	return readRequirements(lines)
 		.filter((requirement) => requirement.mark !== "" && !MARKS.includes(requirement.mark as (typeof MARKS)[number]))
 		.map(
 			(requirement) =>
@@ -321,10 +321,10 @@ export function deriveFeatureStatus(requirements: readonly FeatureRequirement[])
 	return NOT_STARTED;
 }
 
-function derivationFindings(text: string): string[] {
-	const values = statusValues(splitLines(text));
+function derivationFindings(lines: readonly string[]): string[] {
+	const values = statusValues(lines);
 	if (values.length !== 1 || !STATUSES.includes(values[0] as FeatureStatus)) return [];
-	const derived = deriveFeatureStatus(readRequirements(text));
+	const derived = deriveFeatureStatus(readRequirements(lines));
 	if (derived === null || derived === values[0]) return [];
 	return [
 		`feature-file-status-derivation: declared status ${quoteDiagnosticValue(values[0]!)} does not match the status derived from the ticks ${quoteDiagnosticValue(derived)}`,
@@ -345,8 +345,8 @@ function findings(text: string): string[] {
 		...requirementsFindings(lines),
 		...entryFindings(lines),
 		...numberingFindings(lines),
-		...markFindings(text),
-		...derivationFindings(text),
+		...markFindings(lines),
+		...derivationFindings(lines),
 		...supersededFindings(lines),
 		...placeholderFindings(lines),
 		...guidanceFindings(lines),
@@ -354,7 +354,8 @@ function findings(text: string): string[] {
 }
 
 export function assessFeatureFile(text: string): FeatureFileAssessment {
-	return new FeatureFileAssessment(findings(text), deriveFeatureStatus(readRequirements(text)));
+	const lines = readFenceStructure(splitLines(text)).unfencedLines;
+	return new FeatureFileAssessment(findings(text), deriveFeatureStatus(readRequirements(lines)));
 }
 
 export function validateFeatureFile(text: string): string[] {
