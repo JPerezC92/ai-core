@@ -554,6 +554,10 @@ export function validateFeature(text: string): string[] {
 		const match = LOG_ENTRY_RE.exec(line);
 		const digits = match?.[1];
 		if (digits === undefined) continue;
+		if (/[^\u0030-\u0039]/u.test(digits)) {
+			findings.push(`Log entry identifier must use ASCII digits: ${line.trim()}`);
+			continue;
+		}
 		if (Array.from(digits).length > MAX_LOG_IDENTIFIER_DIGITS) {
 			findings.push(`Log entry identifier is not a valid L number: ${line.trim()}`);
 			continue;
