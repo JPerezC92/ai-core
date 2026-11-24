@@ -430,10 +430,11 @@ export function validateFeature(text: string): string[] {
 		findings.push("closed feature needs a Closed date");
 	}
 
-	const closedValue = CLOSED_DATE_VALUE_RE.exec(
-		lines.map((line) => line.trim()).find((line) => line.startsWith("> **Closed:**")) ?? "",
-	)?.[1];
-	const dispositionApplies = isClosed && closedValue !== undefined && closedValue >= DISPOSITION_EFFECTIVE_FROM;
+	const closedLine = lines.map((line) => line.trim()).find((line) => line.startsWith("> **Closed:**"));
+	const closedValue = CLOSED_DATE_VALUE_RE.exec(closedLine ?? "")?.[1];
+	// A closed record whose closure date cannot be read is treated as in scope, so a
+	// malformed or missing date cannot be used to escape the disposition obligation.
+	const dispositionApplies = isClosed && (closedValue === undefined || closedValue >= DISPOSITION_EFFECTIVE_FROM);
 	const dispositionLines = lines.map((line) => line.trim()).filter((line) => line.startsWith("> **Disposition:**"));
 	let disposition: string | undefined;
 	if (dispositionApplies) {

@@ -131,4 +131,10 @@ describe("ValidateFeatures.execute closure disposition", () => {
 	it("does not require a disposition from a record closed before the effective date", () => {
 		expect(findingsFor(closedRecord({ closed: "2026-11-23", taskStatus: "done" }))).toStrictEqual([]);
 	});
+
+	it("requires a disposition from a closed record whose closure date cannot be read", () => {
+		expect(findingsFor(closedRecord({ closed: "2026-11-24T00:00:00Z", taskStatus: "done" }))).toStrictEqual([
+			"closed feature needs exactly one Disposition line: completed, cancelled or superseded",
+		]);
+	});
 });
