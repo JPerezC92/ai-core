@@ -206,7 +206,7 @@ This project's canonical checks, which are the forms the permission model treats
 - `node .agents/skills/odd-workflow/scripts/validate_feature.ts odd/tasks` and `node .agents/skills/odd-workflow/scripts/validate_feature_file.ts odd/features` — the ODD validators.
 - `pnpm aicore apply|check|init` — the Core Sync lifecycle.
 
-`pnpm format` and `pnpm lint:fix` are the autofix counterparts; autofix is ordinary work, not verification. Any dependency installation or mutation prompts for authorization at execution time — there is no permanent blocker and no silent path.
+`pnpm format` and `pnpm lint:fix` are the autofix counterparts; autofix is ordinary work, not verification. Dependency installation and mutation under this agent prompt for authorization at execution time, so an authorized install always has a route. That prompt is a **build-scoped guard, not a global control**: it matches `pnpm` command text only, it does not bind `herald`, `plan`, another runtime context or a destination's own agent configuration, and an alternate package manager, an absolute-path invocation or a script that shells out is outside it. The instructional rule — installation requires explicit user authorization — is what governs every route the configuration does not match, and it is an instruction, not enforcement.
 
 ### System 1 execution contract
 
