@@ -1,6 +1,9 @@
 # git-pr implementation and test-architecture remediation
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-11-24
+> **Disposition:** superseded
+> **Superseded-by:** pull request #206, squash commit `e6c5257`
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-17
 > **Objective:** Correct the confirmed application-responsibility defect in the `git-pr` skill's review-content preparation, then align its unit, integration and end-to-end coverage so the package genuinely satisfies the canonical test distribution without losing any regression protection — delivered in exactly one pull request.
@@ -357,3 +360,4 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
 - L10 — 2026-11-17 — Full-feature mirror: **pending recovery**, not synchronized. The project's recorded binding states that the first source-contract slice authorized no real feature mirror, that exact-mirror acceptance was retired, and that runtime adoption of full mirroring remains unverified, while the backend lacks exact-key upsert and compare-and-swap. The authoritative record is therefore this repository file, and the next bounded recovery action is a separately authorized mirror probe within the documented tool limits.
 - L11 — 2026-11-17 — Delivery state, not closure. Commits `fd870a9` (production) and `aabea75` (tests) carry the reviewed slice; this record is committed with the delivery evidence as a third work unit. `T5` and `T6` are `in progress` and `T7` and `T8` are `open`, so this record stays `active`: the records audit, the push, the single pull request and the independent verdict at its immutable head are still outstanding. Closing this record is not delivery, and merging the pull request remains the user's decision.
 - L13 — Blocked: 2026-11-18 — The premature closure claim added by unmerged commit `1122b09454a859fdbf9768b3a45f43c1d09970f6` is superseded and remains in Git history. PR #196's head-bound PASS and merge are not disputed; its published evidence and available audit do not establish independent whole-feature semantic acceptance by a non-author. Cipher 🔓 (Lead Orchestrator) owns obtaining that acceptance before closure; do not reopen the merged PR. Mirror recovery remains pending as in L10: verify exact project/feature identity and full payload before any replacement; do not claim synchronization.
+- L14 — Close: 2026-11-24 — Superseded by a later delivery. PR #196 (`2d7be82`) merged this work, and the `pr_content` input and CLI contract it delivered was then replaced by PR #206 (`e6c5257`, `feat(git-pr): publish PR descriptions from one JSON input`), which states the JSON publication input as the sole PR-content source. The Markdown-authoring modules this record's requirements name (`initialize_working_body.ts`, `validate_final_body.ts`) no longer exist in the tree, so `S1`–`S15` have no current subject; they are superseded, never met, and no acceptance is claimed for them. The completed task rows and their commits `fd870a9`, `aabea75`, `409fd48` and `2c7761b` are preserved unchanged.
