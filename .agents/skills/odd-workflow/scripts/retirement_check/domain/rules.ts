@@ -6,12 +6,16 @@
  * not depend on the host time zone or on the current clock.
  */
 
+import { readFenceStructure } from "#scripts/markdown/fences.ts";
 import { splitLines } from "#scripts/feature_validation/domain/rules.ts";
 import { REQUIRED_COMPLETE_DAYS } from "#scripts/retirement_check/domain/records.ts";
 import type { RetirementDecision } from "#scripts/retirement_check/domain/records.ts";
 
 const STATUS_CLOSED_RE = /^> \*\*Status:\*\* closed$/u;
+const STATUS_ANY_RE = /^> \*\*Status:\*\* (.*)$/u;
 const CLOSED_DATE_RE = /^> \*\*Closed:\*\* ?(.*)$/u;
+/** Header metadata sits at column zero; an indented copy is a quoted example, not the header. */
+const HEADER_AT_COLUMN_ZERO = /^> /u;
 const CALENDAR_DATE_RE = /^\d{4}-\d{2}-\d{2}$/u;
 const DAY_MS = 86_400_000;
 
@@ -37,21 +41,50 @@ export function calendarDaysBetween(fromMs: number, toMs: number): number {
 /**
  * Decides whether one record is a deletion candidate as of `asOfDate`.
  *
- * The policy has exactly two conditions: the status is `closed`, and at least
- * `REQUIRED_COMPLETE_DAYS` complete calendar days have passed since the recorded
- * closure date. Nothing else is an eligibility criterion. An unreadable record, a
- * record whose status is not `closed`, a record with no recorded closure date and a
- * record whose closure date is not a real calendar date are never candidates.
+ * Eligibility is the status `closed` plus at least `REQUIRED_COMPLETE_DAYS` complete calendar
+ * days since the recorded closure date. Status and closure date are read only from
+ * column-zero header lines and only from text outside fenced blocks, so a quoted example can
+ * neither state closure nor shorten the retention period. A record that an unclosed fence,
+ * ambiguous metadata or a non-calendar date makes untrustworthy is never a candidate.
  */
 export function evaluateRetirement(text: string, asOfDate: string): RetirementDecision {
-	const lines = splitLines(text);
+	const structure = readFenceStructure(splitLines(text));
+	// A document whose fence never closes has no trustworthy structure, so it is never a
+	// deletion candidate: the code after the opening fence may be prose the reader cannot see.
+	if (structure.unclosed.length > 0) {
+		return { kind: "excluded", reason: "unbalanced code fence" };
+	}
+	// Only text outside fenced blocks states closure: a quoted example cannot make a record
+	// eligible for deletion.
+	const lines = structure.unfencedLines;
 
-	if (!lines.some((line) => STATUS_CLOSED_RE.test(line.trim()))) {
+	// Header metadata sits at column zero in the record's own header region — every line before
+	// the first second-level heading. An indented copy is quoted content, and a column-zero copy
+	// inside Specs, Tasks or the Log is body text, so neither can state closure.
+	const firstHeading = lines.findIndex((line) => line.startsWith("## "));
+	const preamble = firstHeading < 0 ? lines : lines.slice(0, firstHeading);
+	const headerLines = preamble.filter((line) => HEADER_AT_COLUMN_ZERO.test(line));
+
+	const statusValues = headerLines
+		.map((line) => STATUS_ANY_RE.exec(line))
+		.filter((match) => match !== null)
+		.map((match) => match[1]?.trim() ?? "");
+	if (statusValues.length > 1) {
+		return { kind: "excluded", reason: "ambiguous closure metadata" };
+	}
+	if (!headerLines.some((line) => STATUS_CLOSED_RE.test(line))) {
 		return { kind: "excluded", reason: "status is not closed" };
 	}
 
-	const closedField = lines.map((line) => CLOSED_DATE_RE.exec(line.trim())).find((match) => match !== null);
-	const closedOn = closedField?.[1]?.trim() ?? "";
+	const closedValues = headerLines
+		.map((line) => CLOSED_DATE_RE.exec(line))
+		.filter((match) => match !== null)
+		.map((match) => match[1]?.trim() ?? "");
+	const distinct = [...new Set(closedValues)];
+	if (distinct.length > 1) {
+		return { kind: "excluded", reason: "ambiguous closure metadata" };
+	}
+	const closedOn = distinct[0] ?? "";
 	if (closedOn.length === 0) {
 		return { kind: "excluded", reason: "no recorded closure date" };
 	}

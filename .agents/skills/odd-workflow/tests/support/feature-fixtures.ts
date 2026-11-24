@@ -221,8 +221,51 @@ export function makeCompletedFeature(
 	].join("\n");
 }
 
-/** A closed feature document that still carries an unfinished task. */
-export function makeClosedFeatureWithUnfinishedTask(): string {
+/**
+ * A feature document whose Log holds exactly the supplied lines.
+ *
+ * The record is created before every date-gated rule took effect and, when closed, carries
+ * the closure shape that rule set expects for such a record, so the only finding a case can
+ * produce is the one under test.
+ */
+export function makeFeatureWithLog(options: {
+	readonly status?: "active" | "closed";
+	readonly taskStatus?: "open" | "done";
+	readonly log: readonly string[];
+	readonly specsBeforeLog?: readonly string[];
+	readonly created?: string;
+}): string {
+	const status = options.status ?? "active";
+	const taskStatus = options.taskStatus ?? (status === "closed" ? "done" : "open");
+	const commit = taskStatus === "done" ? "abc1234" : "pending";
+	const header = [
+		"> **Status:** " + status,
+		"> **Owner:** Cipher (Lead Orchestrator)",
+		`> **Created:** ${options.created ?? "2026-11-14"}`,
+	];
+	if (status === "closed") header.push("> **Closed:** 2026-11-01");
+	return [
+		"# Sample feature",
+		"",
+		...header,
+		"",
+		"## Specs",
+		"",
+		"- S1 — A requirement.",
+		"",
+		...(options.specsBeforeLog ?? []),
+		"## Tasks",
+		"",
+		`- T1 | S1 | route | ${taskStatus} | commit: ${commit}`,
+		"",
+		"## Log",
+		"",
+		...options.log,
+		"",
+	].join("\n");
+}
+
+/** A closed feature document that still carries an unfinished task. */ export function makeClosedFeatureWithUnfinishedTask(): string {
 	return [
 		"# Sample feature",
 		"",

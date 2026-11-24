@@ -11,7 +11,7 @@
 - [ ] Reject anatomically valid but conversation-only Specs such as `approved` or `ok analyze how to achieve it please`. For mixed requirement/approval messages, check the exact requirement plus behavior/check in Specs and the full message/approval context in Log.
 - [ ] The record's requirement wording, acceptance clauses and task rows check the verbatim-requirement, one-action acceptance and task-row rules against skill `### Write meaningful specifications` and `### Create a feature document`; evidenced uncertainty and no invented scope still apply, and the rule text is not restated here.
 - [ ] Verify forecast, running authored count, generated-file exclusion, strategy/slices and before-next-commit trigger against skill `### Delivery forecast`; keep the advisory task-size distinction intact.
-- [ ] `## Log` starts with `L1` = the original request verbatim; each later user correction is its own dated, verbatim entry, and its evidence and rationale may accompany it in that entry.
+- [ ] `## Log` starts with `L1` = the original request verbatim; each later user correction is its own dated, verbatim entry, and its evidence and rationale may accompany it in that entry. Verbatim text sits in a column-zero fenced block with a delimiter longer than any run inside it, and the block's content is treated as opaque.
 
 ## Before the first write
 

@@ -1,6 +1,7 @@
 /** Pure durable feature-file rules, status derivation, and path ordering. */
 
 import { basename, normalize, parse, sep } from "node:path";
+import { readFenceStructure } from "#scripts/markdown/fences.ts";
 import { FeatureFileAssessment, FeatureRequirement } from "./records.ts";
 import type { FeatureStatus } from "./records.ts";
 
@@ -20,7 +21,6 @@ const REQUIREMENT_RE = /^- \[(?<tick>[x ])\] R(?<number>\p{Nd}+) (?:`(?<mark>[^`
 const STATE_FIELD_RE = /(?:\*\*|__)?[ \t]*State[ \t]*(?:\*\*|__)?[ \t]*:/u;
 const PLACEHOLDER_RE = /<[^>]+>/u;
 const CODE_SPAN_RE = /`[^`]*`/gu;
-const FENCED_BLOCK_RE = /```[\s\S]*?```/gu;
 // Deliberate: the validator must treat every Unicode line terminator as a break.
 // oxlint-disable-next-line no-control-regex
 const LINE_BREAK_RE = /\r\n|[\n\r\v\f\x1c-\x1e\x85\u2028\u2029]/u;
@@ -255,9 +255,16 @@ function numberingFindings(lines: readonly string[]): string[] {
 	return [];
 }
 
-export function readRequirements(text: string): FeatureRequirement[] {
+/**
+ * The requirement entries the projection states.
+ *
+ * It takes the fence-aware projection, never raw text: a caller that passes raw lines would
+ * silently count a fenced requirement, so the projection is computed here where it cannot be
+ * mixed up with the raw document.
+ */
+function readRequirements(lines: readonly string[]): FeatureRequirement[] {
 	const requirements: FeatureRequirement[] = [];
-	for (const line of requirementLines(splitLines(text))) {
+	for (const line of requirementLines(lines)) {
 		const groups = REQUIREMENT_RE.exec(line)?.groups;
 		if (groups === undefined) continue;
 		requirements.push(
@@ -267,8 +274,8 @@ export function readRequirements(text: string): FeatureRequirement[] {
 	return requirements;
 }
 
-function markFindings(text: string): string[] {
-	return readRequirements(text)
+function markFindings(lines: readonly string[]): string[] {
+	return readRequirements(lines)
 		.filter((requirement) => requirement.mark !== "" && !MARKS.includes(requirement.mark as (typeof MARKS)[number]))
 		.map(
 			(requirement) =>
@@ -293,10 +300,17 @@ function supersededFindings(lines: readonly string[]): string[] {
 	return findings;
 }
 
-function placeholderFindings(text: string): string[] {
-	return splitLines(text.replace(FENCED_BLOCK_RE, ""))
+function placeholderFindings(unfencedLines: readonly string[]): string[] {
+	return unfencedLines
 		.filter((line) => PLACEHOLDER_RE.test(stripCode(line)))
 		.map((line) => `feature-file-unfilled-placeholder: unfilled placeholder: ${line.trim()}`);
+}
+
+function fenceFindings(unclosed: readonly { line: number; marker: string; length: number }[]): string[] {
+	return unclosed.map(
+		(fence) =>
+			`feature-file-unclosed-fence: unclosed code fence opened at line ${fence.line} with ${fence.length} ${fence.marker === "`" ? "backtick" : "tilde"} character(s); add the closing fence`,
+	);
 }
 
 function guidanceFindings(lines: readonly string[]): string[] {
@@ -314,10 +328,10 @@ export function deriveFeatureStatus(requirements: readonly FeatureRequirement[])
 	return NOT_STARTED;
 }
 
-function derivationFindings(text: string): string[] {
-	const values = statusValues(splitLines(text));
+function derivationFindings(lines: readonly string[]): string[] {
+	const values = statusValues(lines);
 	if (values.length !== 1 || !STATUSES.includes(values[0] as FeatureStatus)) return [];
-	const derived = deriveFeatureStatus(readRequirements(text));
+	const derived = deriveFeatureStatus(readRequirements(lines));
 	if (derived === null || derived === values[0]) return [];
 	return [
 		`feature-file-status-derivation: declared status ${quoteDiagnosticValue(values[0]!)} does not match the status derived from the ticks ${quoteDiagnosticValue(derived)}`,
@@ -325,24 +339,30 @@ function derivationFindings(text: string): string[] {
 }
 
 function findings(text: string): string[] {
-	const lines = splitLines(text);
+	// One structural view serves every rule below: fenced content is removed before any
+	// heading, status, requirement, placeholder or guidance rule reads the document, so a
+	// quoted example can never stand in for durable structure.
+	const fenceStructure = readFenceStructure(splitLines(text));
+	const lines = fenceStructure.unfencedLines;
 	return [
+		...fenceFindings(fenceStructure.unclosed),
 		...titleFindings(lines),
 		...descriptionFindings(lines),
 		...statusFindings(lines),
 		...requirementsFindings(lines),
 		...entryFindings(lines),
 		...numberingFindings(lines),
-		...markFindings(text),
-		...derivationFindings(text),
+		...markFindings(lines),
+		...derivationFindings(lines),
 		...supersededFindings(lines),
-		...placeholderFindings(text),
+		...placeholderFindings(lines),
 		...guidanceFindings(lines),
 	];
 }
 
 export function assessFeatureFile(text: string): FeatureFileAssessment {
-	return new FeatureFileAssessment(findings(text), deriveFeatureStatus(readRequirements(text)));
+	const lines = readFenceStructure(splitLines(text)).unfencedLines;
+	return new FeatureFileAssessment(findings(text), deriveFeatureStatus(readRequirements(lines)));
 }
 
 export function validateFeatureFile(text: string): string[] {

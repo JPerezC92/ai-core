@@ -1,6 +1,7 @@
 /** Pure feature-document rules, path ordering, and an injected path-comparison policy. */
 
 import { basename, normalize, parse, sep } from "node:path";
+import { misplacedDelimiter, readFenceStructure } from "#scripts/markdown/fences.ts";
 
 const REQUIRED_HEADINGS = ["## Specs", "## Tasks", "## Log"] as const;
 const SPEC_RE = /^- (?:\*\*)?S\p{Nd}+ — .+(?:\*\*)?$/u;
@@ -59,7 +60,6 @@ function parseCalendarDay(value: string): number | null {
 }
 const PLACEHOLDER_RE = /<[^>]+>/u;
 const CODE_SPAN_RE = /`[^`]*`/gu;
-const FENCED_BLOCK_RE = /```[\s\S]*?```/gu;
 // Deliberate: the validator must treat every Unicode line terminator as a break.
 // oxlint-disable-next-line no-control-regex
 const LINE_BREAK_RE = /\r\n|[\n\r\v\f\x1c-\x1e\x85\u2028\u2029]/u;
@@ -132,6 +132,18 @@ export function sortFeatureReferences(references: readonly string[], policy: Pat
 	return [...references].sort((left, right) => comparePath(left, right, policy));
 }
 
+/**
+ * The record's header region: every line before the first second-level heading.
+ *
+ * Header metadata belongs here. A quotation inside Specs, Tasks or the Log is document body, so
+ * it can never state the record's status, dates, disposition or replacement, and it can never
+ * make the record retirement-eligible.
+ */
+function headerRegion(lines: readonly string[]): string[] {
+	const end = lines.findIndex((line) => line.startsWith("## "));
+	return end < 0 ? [...lines] : lines.slice(0, end);
+}
+
 export function section(lines: readonly string[], heading: string): string[] {
 	const start = lines.findIndex((line) => line.trim() === heading);
 	if (start < 0) return [];
@@ -202,6 +214,19 @@ export function quoteDiagnosticValue(value: string): string {
 }
 
 /**
+ * Whether a prospective rule applies, by the record's declared creation date.
+ *
+ * A record with no readable creation date is in scope, so a new record cannot escape the rule by
+ * omitting the field.
+ */
+function createdOnOrAfter(lines: readonly string[], effectiveFrom: string): boolean {
+	const header = headerRegion(lines);
+	const created = header.map((line) => CREATED_DATE_RE.exec(line.trim())).filter((match) => match !== null);
+	if (created.length !== 1) return true;
+	return created[0]![1]! >= effectiveFrom;
+}
+
+/**
  * Whether the completed-but-active rule applies to a record.
  *
  * The rule is prospective, so a record created before the effective date is exempt
@@ -210,11 +235,7 @@ export function quoteDiagnosticValue(value: string): string {
  * the field.
  */
 function closureConsistencyApplies(lines: readonly string[]): boolean {
-	const headerEnd = lines.findIndex((line) => line.startsWith("## "));
-	const header = headerEnd < 0 ? lines : lines.slice(0, headerEnd);
-	const created = header.map((line) => CREATED_DATE_RE.exec(line.trim())).filter((match) => match !== null);
-	if (created.length !== 1) return true;
-	return created[0]![1]! >= CLOSURE_CONSISTENCY_EFFECTIVE_FROM;
+	return createdOnOrAfter(lines, CLOSURE_CONSISTENCY_EFFECTIVE_FROM);
 }
 
 /**
@@ -300,9 +321,43 @@ function closureEvidenceFindings(logLines: readonly string[]): string[] {
 	return findings;
 }
 
+/**
+ * The date from which a fence delimiter must start at column zero.
+ *
+ * The ODD record format is controlled: verbatim content is a fenced block opened at column zero
+ * with a delimiter longer than any run inside it. Records created before this date use indented
+ * and quoted fences in historical quotations, so they are read as text and never rewritten.
+ */
+export const FENCE_CONTRACT_EFFECTIVE_FROM = "2026-11-25";
+
 export function validateFeature(text: string): string[] {
 	const findings: string[] = [];
-	const lines = splitLines(text);
+	const rawLines = splitLines(text);
+	// One structural view serves every rule below: the unfenced projection is the document with
+	// fenced lines removed, so a quoted example can never stand in for record structure — not a
+	// heading or section boundary, not header metadata, not a Specs, Tasks or Log entry, not a
+	// Close entry, an identifier, a cancellation authorization or a placeholder.
+	const fenceStructure = readFenceStructure(rawLines);
+	const lines = fenceStructure.unfencedLines;
+	const log = section(lines, "## Log");
+	// Header metadata is read only from the record's own header region.
+	const header = headerRegion(lines);
+
+	for (const fence of fenceStructure.unclosed) {
+		findings.push(
+			`unclosed Markdown code fence opened at line ${fence.line} with ${fence.length} ${fence.marker === "`" ? "backtick" : "tilde"} character(s); add the closing fence`,
+		);
+	}
+
+	// The authoring contract places a delimiter at column zero. Reporting a misplaced one keeps
+	// this reader small: the contract removes the ambiguity instead of the reader resolving it.
+	// Only lines the reader treated as delimiters are checked, so content stays opaque.
+	if (createdOnOrAfter(lines, FENCE_CONTRACT_EFFECTIVE_FROM)) {
+		for (const lineNumber of fenceStructure.delimiterLines) {
+			const line = rawLines[lineNumber - 1] ?? "";
+			if (misplacedDelimiter(line)) findings.push(`fence delimiter must start at column 0: ${line.trim()}`);
+		}
+	}
 
 	const headings = lines.filter((line) => line.startsWith("## ")).map((line) => line.trim());
 	for (const heading of REQUIRED_HEADINGS) {
@@ -317,35 +372,37 @@ export function validateFeature(text: string): string[] {
 	}
 
 	const headerFields = new Set<string>();
-	for (const line of lines) {
+	for (const line of header) {
 		const match = HEADER_RE.exec(line);
 		if (match?.[1] !== undefined) headerFields.add(match[1]);
 	}
 	for (const field of ["Status", "Owner", "Created"]) {
 		if (!headerFields.has(field)) findings.push(`header must include ${field}`);
 	}
-	if (text.includes("> **Created:** date")) {
+	if (header.some((line) => line.trim() === "> **Created:** date")) {
 		findings.push("Created must be a real date, not the template placeholder");
 	}
-	const createdFields = lines.filter((line) => line.trim().startsWith("> **Created:**")).length;
+	const createdFields = header.filter((line) => line.trim().startsWith("> **Created:**")).length;
 	if (createdFields !== 1) {
 		findings.push(`header must include exactly one Created line; found ${createdFields}`);
 	}
 
-	const log = section(lines, "## Log");
-	const statusLines = lines.map((line) => line.trim()).filter((line) => line.startsWith("> **Status:**"));
+	const statusLines = header.filter((line) => line.trim().startsWith("> **Status:**"));
 	if (statusLines.length !== 1) {
 		findings.push("header must include exactly one Status line");
 	} else if (!STATUS_RE.test(statusLines[0]!)) {
+		// The status must be exactly `> **Status:** active|closed`. A trailing space or an
+		// indented copy is not the status the closure rules read, so report it rather than
+		// accepting a line that the closure gate would treat as not closed.
 		findings.push("Status must be active or closed");
 	}
 
-	const isClosed = lines.some((line) => STATUS_CLOSED_RE.test(line));
-	if (isClosed && !lines.some((line) => CLOSED_RE.test(line.trim()))) {
+	const isClosed = header.some((line) => STATUS_CLOSED_RE.test(line));
+	if (isClosed && !header.some((line) => CLOSED_RE.test(line.trim()))) {
 		findings.push("closed feature needs a Closed date");
 	}
 
-	const closedLine = lines.map((line) => line.trim()).find((line) => line.startsWith("> **Closed:**"));
+	const closedLine = header.map((line) => line.trim()).find((line) => line.startsWith("> **Closed:**"));
 	const closedValue = CLOSED_DATE_VALUE_RE.exec(closedLine ?? "")?.[1];
 	// A closed record whose closure date is absent or is not a real calendar date is treated as
 	// in scope, so a shaped but impossible value such as `2026-02-31` cannot escape the
@@ -355,7 +412,7 @@ export function validateFeature(text: string): string[] {
 		(closedValue === undefined ||
 			parseCalendarDay(closedValue) === null ||
 			closedValue >= DISPOSITION_EFFECTIVE_FROM);
-	const dispositionLines = lines.map((line) => line.trim()).filter((line) => line.startsWith("> **Disposition:**"));
+	const dispositionLines = header.map((line) => line.trim()).filter((line) => line.startsWith("> **Disposition:**"));
 	let disposition: string | undefined;
 	if (dispositionApplies) {
 		if (dispositionLines.length !== 1) {
@@ -369,7 +426,7 @@ export function validateFeature(text: string): string[] {
 			}
 		}
 		if (disposition === "superseded") {
-			const hasReplacement = lines.some((line) => SUPERSEDED_BY_RE.test(line.trim()));
+			const hasReplacement = header.some((line) => SUPERSEDED_BY_RE.test(line.trim()));
 			const hasObsolescenceExplanation = log.some(
 				(line) => CLOSE_LOG_RE.test(line) && OBSOLESCENCE_RE.test(line),
 			);
@@ -447,9 +504,6 @@ export function validateFeature(text: string): string[] {
 
 	if (!log.some((line) => LOG_RE.test(line))) findings.push("Log needs an L1 entry");
 
-	const unfencedLines = splitLines(text.replace(FENCED_BLOCK_RE, ""));
-	const unfencedLog = section(unfencedLines, "## Log");
-
 	const taskStatuses = taskEntries
 		.map((line) => TASK_RE.exec(line)?.groups?.status)
 		.filter((status) => status !== undefined);
@@ -459,7 +513,7 @@ export function validateFeature(text: string): string[] {
 		taskEntries.length > 0 &&
 		taskStatuses.length === taskEntries.length &&
 		taskStatuses.every((status) => status === "done") &&
-		!namesOpenClosurePrerequisite(unfencedLog)
+		!namesOpenClosurePrerequisite(log)
 	) {
 		findings.push(
 			"active record has every task done: close the record or record the open closure prerequisite as a Log entry",
@@ -467,11 +521,11 @@ export function validateFeature(text: string): string[] {
 	}
 
 	if (isClosed && claimsCompletion && closureEvidenceApplies(lines)) {
-		findings.push(...closureEvidenceFindings(unfencedLog));
+		findings.push(...closureEvidenceFindings(log));
 	}
 
 	const logIdentifiers: bigint[] = [];
-	for (const line of unfencedLog) {
+	for (const line of log) {
 		const match = LOG_ENTRY_RE.exec(line);
 		const digits = match?.[1];
 		if (digits === undefined) continue;
@@ -509,7 +563,7 @@ export function validateFeature(text: string): string[] {
 		findings.push(`first Log entry must be L1: L${logIdentifiers[0]}`);
 	}
 
-	for (const line of unfencedLines) {
+	for (const line of lines) {
 		if (PLACEHOLDER_RE.test(stripCode(line))) {
 			findings.push(`unfilled placeholder: ${line.trim()}`);
 		}

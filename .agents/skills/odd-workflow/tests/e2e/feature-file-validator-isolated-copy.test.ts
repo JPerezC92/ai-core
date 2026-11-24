@@ -9,6 +9,7 @@ import { makeApostropheFeatureFile, makeFeatureFile } from "#tests/support/featu
 const skillRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const runtimeFiles = [
 	"scripts/validate_feature_file.ts",
+	"scripts/markdown/fences.ts",
 	"scripts/feature_file_validation/domain/records.ts",
 	"scripts/feature_file_validation/domain/ports.ts",
 	"scripts/feature_file_validation/domain/rules.ts",
