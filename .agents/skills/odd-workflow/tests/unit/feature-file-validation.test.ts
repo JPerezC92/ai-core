@@ -159,6 +159,14 @@ describe("durable feature-file validation of fenced content", () => {
 		]);
 	});
 
+	it("ignores a placeholder-shaped value inside a code span", () => {
+		const text = achieved().replace(
+			"- [x] R1 — the requirement remains true.",
+			"- [x] R1 — the command rejects a malformed `<id>` value.",
+		);
+		expect(validateFeatureFile(text)).toStrictEqual([]);
+	});
+
 	it("does not let a fenced requirement satisfy the requirement obligation", () => {
 		const text = [
 			"# Sample feature",

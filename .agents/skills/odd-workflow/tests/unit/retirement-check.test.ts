@@ -100,6 +100,16 @@ describe("CheckRetirements.execute fenced content", () => {
 		);
 		expect(decisionFor(text, AS_OF)).toStrictEqual({ kind: "excluded", reason: "ambiguous closure metadata" });
 	});
+
+	it("excludes a record whose status line carries a trailing space", () => {
+		// The status must be exactly `> **Status:** closed`; a stray space is not that line,
+		// and the validator reports the same record rather than accepting it silently.
+		const text = makeTaskRecord({ closedOn: "2026-11-01" }).replace(
+			"> **Status:** closed",
+			"> **Status:** closed ",
+		);
+		expect(decisionFor(text, "2026-12-31")).toStrictEqual({ kind: "excluded", reason: "status is not closed" });
+	});
 });
 
 describe("CheckRetirements.execute", () => {

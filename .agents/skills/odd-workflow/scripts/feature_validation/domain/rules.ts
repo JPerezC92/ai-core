@@ -344,10 +344,13 @@ export function validateFeature(text: string): string[] {
 		findings.push(`header must include exactly one Created line; found ${createdFields}`);
 	}
 
-	const statusLines = lines.map((line) => line.trim()).filter((line) => line.startsWith("> **Status:**"));
+	const statusLines = lines.filter((line) => line.trim().startsWith("> **Status:**"));
 	if (statusLines.length !== 1) {
 		findings.push("header must include exactly one Status line");
 	} else if (!STATUS_RE.test(statusLines[0]!)) {
+		// The status must be exactly `> **Status:** active|closed`. A trailing space or an
+		// indented copy is not the status the closure rules read, so report it rather than
+		// accepting a line that the closure gate would treat as not closed.
 		findings.push("Status must be active or closed");
 	}
 

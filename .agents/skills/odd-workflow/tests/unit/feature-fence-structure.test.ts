@@ -52,6 +52,13 @@ describe("validateFeature structural interpretation of fenced content", () => {
 		expect(validateFeature(fenced)).toContain("Specs needs at least one '- S# — ...' entry");
 	});
 
+	it("reports a status line that is not exactly the documented form", () => {
+		// The closure rules read the exact line, so a trailing space is reported rather than
+		// accepted as a status the record does not actually carry.
+		const text = makeFeatureWithLog({ log: ["- L1 — a"] }).replace("> **Status:** active", "> **Status:** active ");
+		expect(validateFeature(text)).toContain("Status must be active or closed");
+	});
+
 	it("does not accept a fenced Created placeholder as the template placeholder", () => {
 		const text = makeFeatureWithLog({ log: ["- L1 — a", "", ...FENCED(["> **Created:** date"])] });
 		expect(validateFeature(text)).toStrictEqual([]);
