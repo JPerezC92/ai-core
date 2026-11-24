@@ -22,7 +22,7 @@ An agent implementing or reviewing work reads the architecture owner and applies
 1. **Research** — evidence is recorded first. A decision without recorded evidence is a preference, not a decision.
 2. **Propose** — the record states the decision, its alternatives, and its `## Propagation` target. Status stays `Proposed`.
 3. **Propagate** — the operative rule is written into its architecture owner in the same work unit.
-4. **Check** — an independent reviewer reads the owner text and confirms it enforces the decision.
+4. **Check** — the author reads the named owner text and confirms it enforces the decision. An independent review of that confirmation may be requested by the user and is never a precondition.
 5. **Accept** — only then does the status become `Accepted`, and the approval is recorded verbatim in the governing feature `## Log`.
 6. **Conform** — conformance is measured by an audit or a mechanical check and reported as adoption evidence, not asserted from the record.
 
@@ -43,7 +43,7 @@ A record may be `Accepted` only when all three hold:
 
 - its normative owner is updated in the same work unit — a follow-up task is not propagation;
 - its `## Propagation` section names the exact owner files and sections carrying the rule;
-- an independent reviewer verified that the owner text enforces the decision, not that the record claims it does.
+- the named owner text is read and verified to enforce the decision, rather than the record merely claiming it does. The author performs that verification; an independent review may be requested and is never a precondition of acceptance, and no separate acceptance ceremony is created in its place.
 
 A record that changes no rule states `no normative change — reason` in `## Propagation`; that is a valid target, an empty or missing section is not. Acceptance without propagation evidence is a finding against the change, not a pending item.
 
@@ -53,10 +53,10 @@ An architecture owner states the current rule only, so it cannot also carry why 
 
 ### Ownership
 
-- Scribe ✍️ (Docs & Problems Manager) authors decision records.
-- Sentinel 🛡️ (Quality Guardian) audits the corpus for lifecycle and propagation compliance.
-- The applicable architecture owner gates the affected owner document: Bastion 🧱 (Backend & Scripts Architect) for the common contract, backend and scripts shapes, and implementation guides; Atrium 🏛️ (Frontend Architect) for the frontend shape and React guide; Crucible 🔥 (Test Architect) for the testing contract and testing guides.
-- Cipher 🔓 (Lead Orchestrator) routes the work; the user accepts the decision.
+- The authoring agent writes decision records and performs the propagation verification against the named owner text.
+- The architecture owner for an affected document is the document itself: `.aicore/core/architecture/implementation/architecture.md` for the common contract, the applicable shape documents, and the implementation guides; `.aicore/core/architecture/testing/architecture.md` and its stack guides for testing. The verification reads that owner text; it does not require a separate reviewing role.
+- An independent review of a decision record may be requested by the user and is never required for acceptance.
+- The user accepts the decision.
 
 ### Discoverability
 
