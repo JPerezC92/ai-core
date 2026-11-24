@@ -68,7 +68,7 @@ pnpm verify:full     # verify, then every package's test suite and the CLI end-t
 
 **Markdown stays formatted everywhere else.** `odd/features/`, `docs/`, the skills and every other Markdown surface remain in the formatter's scope and are checked by `format:check`. A durable feature file states requirements in its own words rather than quoting a request, so it carries no verbatim content for the formatter to damage.
 
-**Change records are validated structurally instead.** Because the formatter no longer touches `odd/tasks/`, the ODD validator is the structural gate on those documents: it rejects an unbalanced code fence and reads Close entries and Log identifiers outside fenced blocks. A record whose fence never closes fails validation rather than rendering its Log as code. See `.agents/skills/odd-workflow/SKILL.md` for the validator's contract.
+**Change records are validated structurally instead.** Because the formatter no longer touches `odd/tasks/`, the ODD validator is the structural gate on those documents: it rejects an unbalanced code fence and reads Close entries, the ordered Log-identifier checks and a superseded record's obsolescence explanation outside fenced blocks, while the heading-count, status, task, L1-presence and cancellation-authorization checks keep their raw-line contract. A record whose fence never closes fails validation rather than rendering its Log as code. See `.agents/skills/odd-workflow/SKILL.md` for the validator's contract.
 
 **These files are not distributed.** `.editorconfig`, `biome.json` and `.oxlintrc.json` sit outside `distribution-clearance.json`, so a destination never receives them. A destination chooses its own tooling; this is intentional, not an omission.
 

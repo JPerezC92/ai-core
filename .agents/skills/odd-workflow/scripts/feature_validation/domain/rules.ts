@@ -305,8 +305,9 @@ export function validateFeature(text: string): string[] {
 	const lines = splitLines(text);
 	// One fence interpretation feeds the consumers that must tell code from structure: the
 	// unfenced projection is the document with fenced lines removed, so quoted code cannot
-	// supply a Close entry, a Log identifier or an obsolescence explanation. The heading,
-	// task and L1-presence checks keep their pre-existing raw-line contract.
+	// supply a Close entry, an ordered Log identifier or an obsolescence explanation. The
+	// heading-count, status, task, L1-presence and cancellation-authorization checks keep
+	// their pre-existing raw-line contract.
 	const fenceStructure = readFenceStructure(lines);
 	const unfencedLines = fenceStructure.unfencedLines;
 	const unfencedLog = section(unfencedLines, "## Log");
