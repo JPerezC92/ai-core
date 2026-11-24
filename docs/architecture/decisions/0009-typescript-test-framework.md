@@ -2,7 +2,8 @@
 
 - **Status:** Accepted
 - **Date:** 2026-11-12
-- **Accepted:** 2026-11-24 — explicit user approval, verbatim: "ADR 0009: ACCEPT." Propagation: **no normative change**, per `## Propagation` below — the TypeScript testing guide already enforces the rule, and the repository binding lives in this repository's own package configuration. The migration evidence and the independent owner check are recorded in `odd/tasks/2026-11-12-typescript-vitest-migration.md` L10 and L12.
+- **Accepted:** 2026-11-24 — explicit user approval, verbatim: "ADR 0009: ACCEPT." Propagation: **no normative change**, per `## Propagation` below — the TypeScript testing guide already enforces the rule, and the repository binding lives in this repository's own package configuration. The migration evidence and the independent owner check are recorded in the change record that performed the migration, delivered as PR #179 (squash commit `1d7c891`).
+- **Amended:** 2026-11-24 — the live citation of the migration evidence was replaced by its delivery provenance, PR #179 (squash commit `1d7c891`), so the evidence and the independent owner check it names stay recoverable after the temporary change record is retired. The decision text and history are unchanged.
 
 ## Context
 
@@ -55,4 +56,4 @@ The reasoning, read from the owner text:
 - `## Applicability and ownership` already states that the guide's tools are "reference choices, not destination-wide bindings" and that "A destination owns its package manager, runner, and framework configuration in project-owned files", so AICore's own binding of Vitest belongs in AICore's own package configuration and needs no shared text.
 - `architecture/testing/architecture.md` is the language-agnostic contract and stays framework-neutral; it is not a propagation target and was not modified.
 
-The binding itself is project-owned content: the CLI package's own manifest, runner configuration and test scripts. The independent owner check that this owner text enforces the decision is recorded in the change record that performs the migration.
+The binding itself is project-owned content: the CLI package's own manifest, runner configuration and test scripts. The independent owner check that this owner text enforces the decision was recorded in the change record that performed the migration, delivered as PR #179 (squash commit `1d7c891`).
