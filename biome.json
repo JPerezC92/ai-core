@@ -10,7 +10,6 @@
       "**",
       "!**/pnpm-lock.yaml",
       "!**/pnpm-workspace.yaml",
-      "!odd/tasks/2026-11-12-verification-reuse.md",
       "!odd/tasks/2026-11-14-root-contract-suite-retirement.md"
     ]
   },
