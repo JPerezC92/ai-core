@@ -45,5 +45,13 @@ Each entry MUST include:
 - **Explicit deferral decision:** User instruction on 2026-11-17, verbatim: "Do not build a new Markdown validation framework or expand the tooling implementation merely to resolve this issue now." and "Recording them as debt does not satisfy or close the underlying issue." Deferred, not waived.
 - **State as of 2026-11-20:** The documented malformed case reproduced in the existing skill suite (1 failed, 93 passed). A proposed scanner was withdrawn after independent review found it mishandled list and blockquote containers and HTML comments. No dependency-free runtime parser was identified in the bounded skill and lockfile search; this is not a repository-wide absence claim. The defect and the original resolution criteria remain open; no corrected implementation or passing regression is claimed.
 
-**ID to use for the next new debt:** `DEBT-065`. This is an allocation counter, not an open debt.
+## DEBT-065 — Fenced Close entries affect feature-record validation
+
+- **Date:** 2026-11-11
+- **Description:** F8 defers the feature validator's use of the raw Log for Close-entry detection while Log-identifier checks use fence-stripped text. A Close entry inside a balanced code fence can satisfy the closed-record Close presence check or trigger the active-record Close diagnostic. Status, task and other evidence checks remain independent. **Impact:** quoted content can be mistaken for a real Close entry; the Close presence check alone does not establish valid closure.
+- **Direct evidence:** In `.agents/skills/odd-workflow/scripts/feature_validation/domain/rules.ts`, the Log is extracted from raw lines at line 420 and Close detection uses it at lines 469–475, while lines 529–530 and 552–565 use a fence-stripped Log for identifier checks. A balanced fenced Close can therefore satisfy the closed-record presence check or trigger the active-record diagnostic; status, task and other evidence checks still apply independently. DEBT-054 concerns detection of unbalanced fences and is distinct. Historical provenance supplied by Herald: PR #176, reviewed head `4446a77987a2ded3f94a04d7e10daf5407e659b3`, merge `8bfee9cfc95dee95e2800f1e16b7ca52e12c80de`.
+- **Resolution criteria:** Close-entry detection ignores entries inside balanced fenced blocks, while preserving the validator's other existing contracts. Verify ordinary Close entries and Close-shaped text inside balanced fences for both closed and active records, including the corresponding presence and diagnostic outcomes.
+- **Explicit deferral decision:** The user deferred F8 on 2026-11-11, originally naming the feature record as the destination. The user subsequently authorized this narrowly scoped debt-register entry; the underlying fix remains deferred, not waived.
+
+**ID to use for the next new debt:** `DEBT-066`. This is an allocation counter, not an open debt.
 <!-- project:end -->
