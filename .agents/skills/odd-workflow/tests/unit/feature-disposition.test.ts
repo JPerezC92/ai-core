@@ -96,10 +96,24 @@ describe("ValidateFeatures.execute closure disposition", () => {
 		]);
 	});
 
-	it("requires a replacement delivery for a superseded closure", () => {
+	it("requires a replacement delivery or an obsolescence explanation for a superseded closure", () => {
 		expect(
 			findingsFor(closedRecord({ closed: "2026-11-24", disposition: "superseded", taskStatus: "done" })),
-		).toStrictEqual(["superseded feature needs a Superseded-by delivery reference"]);
+		).toStrictEqual([
+			"superseded feature needs a Superseded-by delivery reference or a Close entry explaining why its requirements are obsolete",
+		]);
+	});
+
+	it("accepts a superseded closure that explains obsolescence instead of naming a replacement", () => {
+		expect(
+			findingsFor(
+				closedRecord({
+					closed: "2026-11-24",
+					disposition: "superseded",
+					authorization: "The requirement is obsolete: the surface it governed no longer exists.",
+				}),
+			),
+		).toStrictEqual([]);
 	});
 
 	it("accepts a superseded closure that names its replacement and leaves a requirement incomplete", () => {

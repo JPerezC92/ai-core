@@ -37,6 +37,7 @@ const CLOSED_DATE_VALUE_RE = /^> \*\*Closed:\*\* (\d{4}-\d{2}-\d{2})$/u;
 export const DISPOSITION_EFFECTIVE_FROM = "2026-11-24";
 const DISPOSITION_RE = /^> \*\*Disposition:\*\* (completed|cancelled|superseded)$/u;
 const SUPERSEDED_BY_RE = /^> \*\*Superseded-by:\*\* \S/u;
+const OBSOLESCENCE_RE = /\bobsolet\w*/iu;
 const CANCELLATION_AUTHORIZATION_RE = /user[-\s]authori[sz]/iu;
 const PLACEHOLDER_RE = /<[^>]+>/u;
 const CODE_SPAN_RE = /`[^`]*`/gu;
@@ -446,8 +447,16 @@ export function validateFeature(text: string): string[] {
 				disposition = match[1];
 			}
 		}
-		if (disposition === "superseded" && !lines.some((line) => SUPERSEDED_BY_RE.test(line.trim()))) {
-			findings.push("superseded feature needs a Superseded-by delivery reference");
+		if (disposition === "superseded") {
+			const hasReplacement = lines.some((line) => SUPERSEDED_BY_RE.test(line.trim()));
+			const hasObsolescenceExplanation = log.some(
+				(line) => CLOSE_LOG_RE.test(line) && OBSOLESCENCE_RE.test(line),
+			);
+			if (!hasReplacement && !hasObsolescenceExplanation) {
+				findings.push(
+					"superseded feature needs a Superseded-by delivery reference or a Close entry explaining why its requirements are obsolete",
+				);
+			}
 		}
 		if (disposition === "cancelled" && !CANCELLATION_AUTHORIZATION_RE.test(log.join("\n"))) {
 			findings.push(
