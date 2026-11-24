@@ -1,6 +1,8 @@
 # Feature name
 
 > **Status:** active
+> **Disposition:** completed | cancelled | superseded (state one on closure and delete the alternatives; `completed` is the only one that claims delivery)
+> **Superseded-by:** replacement delivery identity (a `superseded` closure only)
 > **Owner:** Name Emoji (Role)
 > **Created:** date
 > **Objective:** one-line outcome, or `N/A — reason`

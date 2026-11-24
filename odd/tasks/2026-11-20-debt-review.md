@@ -2,6 +2,7 @@
 
 > **Status:** closed
 > **Closed:** 2026-11-24
+> **Disposition:** completed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-20
 > **Objective:** Review open debts against current evidence, remove obsolete entries when justified, cancel the unwanted deletion-control proposal, and identify easy fixes.

@@ -2,6 +2,7 @@
 
 > **Status:** closed
 > **Closed:** 2026-11-24
+> **Disposition:** completed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-14
 > **Objective:** Remove the four ordering and permission defects that made a routine package-specific dependency decision unreachable — repository-wide bootstrap gating, a mandatory non-security outdated check, an un-preparable lockfile evidence cycle, and Warden's required commands disagreeing with its effective permissions — without weakening any severity, provenance, integrity, independent-approval or BLOCK obligation.

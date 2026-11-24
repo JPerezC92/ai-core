@@ -2,6 +2,7 @@
 
 > **Status:** closed
 > **Closed:** 2026-11-24
+> **Disposition:** completed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-14
 > **Objective:** Retire the redundant root `tests/` workspace, its hardcoded registries and duplicated helpers, and the obsolete first-party Python artifacts, while leaving synchronization semantics and the CLI's own coverage unchanged.

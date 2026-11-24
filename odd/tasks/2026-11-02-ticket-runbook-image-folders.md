@@ -2,6 +2,7 @@
 
 > **Status:** closed
 > **Closed:** 2026-11-24
+> **Disposition:** completed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-02
 > **Objective:** Separate downloaded ticket images from response-used images, and keep each response's images in its own folder so they cannot be mixed.
