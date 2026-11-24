@@ -11,8 +11,8 @@
 ## Specs
 
 - S1 — Completed historical records are reconciled against verified delivery evidence rather than against stale Log assertions. Exact requirement: "Correct stale task rows and discharged blockers." Acceptance: read every reconciled record's task rows; each row names the commit that actually carries its work, and no reconciled record retains a `commit: pending` row for work that merged.
-- S2 — Existing acceptance evidence is recovered before any new review is dispatched. Exact requirement: "Recover existing acceptance evidence before dispatching any new reviews." Acceptance: read the reconciliation Log; every record's acceptance entry cites either a pre-existing verdict (with its identity and commit) or a newly obtained content-authority verdict, and no dispatch was issued before the pre-existing search was recorded.
-- S3 — Any missing content-authority acceptance is obtained and independently attributable per record. Exact requirement: "Obtain only the missing content-authority acceptance required by the lifecycle." Acceptance: inspect the per-record acceptance entries; each names its own record, one reviewer identity, one commit and one verdict, and no verdict is shared between records.
+- S2 — Existing acceptance evidence is recovered before a new historical acceptance review is dispatched, and the four later user-cancelled historical verification efforts are not resumed. Exact requirement: "Recover existing acceptance evidence before dispatching any new reviews." Acceptance: read the reconciliation Log and the record dispositions; each completed record cites its applicable acceptance, each cancelled record preserves existing evidence without claiming missing acceptance, and no historical review was dispatched before the pre-existing search was recorded.
+- S3 — A historical completion claim has independently attributable content-authority acceptance; cancellation of the four named historical verification efforts claims no such acceptance. Exact requirement: "Obtain only the missing content-authority acceptance required by the lifecycle." Acceptance: inspect each completed record's own acceptance entry for its reviewer, commit and verdict, with no verdict shared between records, and inspect each cancelled record for the user authorization and an explicit statement that outstanding acceptance was not obtained.
 - S4 — Superseded and discontinued work is never presented as successfully delivered or accepted. Exact requirement: "Cancellation must never falsely imply successful implementation or acceptance." Acceptance: read the disposition of superseded and discontinued records; each names its replacement delivery or states that its requirements are obsolete, and none records an implementation acceptance it does not hold.
 - S5 — Architecture decision records keep resolvable main-line delivery identities. Exact requirement: "Ensure that live references remain resolvable after task retirement." Acceptance: read the amended decision-record lines; each live reference cites a delivery reachable from `origin/main`, and no live decision-record reference resolves to a retired task record path.
 - S6 — DEBT-052 and DEBT-054 carry their technical evidence directly, without another temporary record. Exact requirement: "Do not make durable documentation depend on another task record scheduled for eventual retirement." Acceptance: read both debt entries; each states its own measurements, reproduction evidence and delivery provenance, and neither cites any `odd/tasks/` path.
@@ -20,7 +20,7 @@
 - S8 — Retention deletions follow the documented two-condition policy and the dependency safeguard. Exact requirement: "Delete all records that satisfy the documented retention policy and dependency safeguard." Acceptance: run the retirement check at the execution date; every deleted record was reported a candidate, and every candidate still relied on as the sole home of required evidence is retained and reported.
 - S9 — The retention check runs at exactly one invocation point, inside the stage-6 closure work unit. Exact requirement: "I approve integrating the existing retention check into the stage-6 closure work unit." Acceptance: read the skill's retirement section and its closure stage; both name the same single invocation point, and no other surface restates the obligation.
 - S10 — Historical Log content is preserved, not rewritten. Exact requirement: "Do not rewrite historical Log entries merely to remove references to retired records." Acceptance: compare each reconciled record's pre-existing Log entries against their committed bytes; no pre-existing entry's text is altered, and all changes are additions.
-- S11 — The change performs no implementation, test execution or unrelated improvement. Exact requirement: "Do not introduce unrelated improvements." Acceptance: inspect the changed-path list at the delivering commit; it contains no production source path, no test suite is executed, and every changed path is a record, decision document, debt register, tooling document, formatter exclusion, agent specification or the ODD skill.
+- S11 — The change introduces no unrelated improvement; the subsequently authorized F7 correction rejects non-ASCII identifiers while preserving ASCII behavior, ordering and uniqueness and reporting a named finding. Exact requirement: "Do not introduce unrelated improvements." Subsequent authorization: "Implement the proposed ASCII Log identifier correction in feature_validation/domain/rules.ts"; "Preserve ASCII identifier behavior"; "Preserve ordering and uniqueness validation"; "Use a clear named finding"; "Verify the complete existing identifier contract"; "Add only the necessary focused regression test." Acceptance: inspect the changed-path list at the delivering commit; it contains no production source path beyond the authorized F7 correction in the feature validator, no test suite is executed beyond the authorized focused regression test and the authorized verification components, every changed path is a record, decision document, debt register, tooling document, formatter exclusion, agent specification, the ODD skill, or the authorized F7 validator and its focused test file, and the recorded verification evidence demonstrates the authorized F7 behavior and its identifier-contract safeguards.
 
 ## Tasks
 
@@ -68,3 +68,140 @@
 - L17 — 2026-11-24 — Both reserved decisions applied, and three records closed. **ADR 0009 is `Accepted`** on the user's explicit approval, quoted verbatim in the decision record, with propagation unchanged. **The System One source-only distribution exception is accepted**, matching the existing binding that `mcp-servers/system-one/` is omitted from destination merges. `2026-11-12-typescript-vitest-migration` closed as `completed`: both prerequisites are discharged and the L10 gate verdicts are its acceptance evidence. `2026-11-18-p7-system-one-odd-adviser-test-remediation` closed as `completed`: the exception is accepted and PR #203 records all seven test-plan checks executed independently by Crucible 🔥 at `5807180`. `2026-11-18-core-sync-test-proportionality-remediation` closed as completion **carrying accepted residual risks**, never as clean completion or `[PASS]`, with F6 and F7 preserved and unrelabelled.
 
 - L18 — 2026-11-24 — Combined verification and the Python-baseline finding. One shared execution satisfied the authorized components: `pnpm typecheck` across all packages exit 0; `pnpm -r test` 651 passed with 1 platform skip across seven packages (odd-workflow 104, op-model 22, git-pr 50, incident-workflow 128, op-skill-creator 53, git-pr-workflow 80, cli/aicore 214 of 215); `pnpm --dir mcp-servers/system-one test` 40 passed over 9 files, which runs the real MCP entry point. `pnpm lint` already exited 0. `pnpm verify:full` remains **not** satisfied literally and is not reported as passed: it includes `format:check`, which exits 1 on two pre-existing records inside their verbatim quoted text. Herald 📯 recovered the Python evidence for `2026-11-13-independent-skill-utilities-typescript`: the deleted blobs are retrievable at `65ec578^`, but PR #183's `## Test evidence` table contains **no** parity row, and no commit claims one — the only comparison claim is a Summary sentence.
+
+- L19 — 2026-11-24 — User instruction and authorization, verbatim: "The original S11 predates the subsequent explicitly authorized F7 implementation and test execution." / "Reconcile the governing specification and acceptance criteria with that authorization." / "I authorize the minimum necessary specification amendment to accurately represent the already authorized scope." Coordinator rationale: S11 now reflects the later F7 and verification authorizations rather than forbidding them; the original request at L1, later F7 evidence at L16 and the prohibition on unrelated work remain unchanged. This amendment authorizes no further implementation scope. The clause-by-clause accounting of the original S11 acceptance is at L26. Independent acceptance remains pending.
+
+- L20 — 2026-11-24 — User direction, verbatim: "I approve the four proposed closure entries and their cancelled dispositions." / "Preserve existing implementation evidence, task rows, historical verdicts, accepted risks and unresolved findings." Coordinator rationale: the four named records' remaining historical verification and administrative closure work is cancelled, not the delivered implementations, and no historical verification or diff regeneration resumes. S2 and S3 now distinguish cancelled work from a completed claim. The governing reconciliation's own independent semantic acceptance, stage-6 retention safeguard and separately authorized PR remain required; F8's present state and durable ownership are being evaluated without adding a debt or a fix. Full feature-mirror verification remains pending; no synchronized mirror is claimed.
+
+- L21 — 2026-11-24 — F8 bounded current-state assessment: the validator scans raw Log lines for `Close:` even inside a balanced fence; independent status and task checks still apply. The historical user-deferred issue remains unresolved, not fixed or obsolete. DEBT-054 covers unbalanced-fence detection and does not necessarily resolve this balanced-fence behavior; no open DEBT-049 or existing F8 owner appears in the current complete debt register. No debt or fix is added. Preserve `2026-11-11-odd-core-simplification.md` as its recorded evidence home when it becomes retirement-eligible unless its dependency is resolved through an authorized durable owner; this record is closed today and is not yet eligible. The four authorized cancellation closures preserve their historical task rows and verdicts; the validator reported `ok` for all 32 records, an anatomy result only.
+
+- L22 — 2026-11-24 — The user authorized one narrowly scoped debt entry for the already-deferred F8 issue, without changing DEBT-054 or implementing a fix: "Authorize F8 entry". This supersedes the no-new-debt restriction only for F8; registration and independent review remain pending, and F8 is not fixed or accepted as resolved.
+
+- L23 — 2026-11-24 — F8 is recorded as open DEBT-065 in the existing debt register, with its original user deferral, direct current-source evidence, impact, historical delivery provenance and resolution criteria; DEBT-054 is unchanged and no fix is claimed. The new durable entry carries its evidence without depending on the historical task record. The permitted future retirement of that record remains subject to the full dependency safeguard, not just this one issue.
+
+- L24 — 2026-11-24 — User authorization, verbatim: "I authorize one narrowly scoped debt entry for the existing F8 deferral.
+
+  Preserve its original evidence, scope, technical impact and resolution criteria.
+
+  Do not modify DEBT-054, implement the F8 fix, reopen historical verification or introduce additional debts.
+
+  Complete the independent acceptance, close the governing record, execute the mandatory seven-day retirement cleanup, and publish the authorized PR.
+
+  No further authorization is required for these already approved actions."
+
+- L25 — 2026-11-24 — Earlier F7 and verification authorization, verbatim:
+
+  "Continue the existing reconciliation on chore/odd/reconcile-record-state.
+
+  The retirement cleanup is satisfactory. We must now finish the remaining historical records without creating unnecessary additional work.
+
+  ## 1. Direct F7 correction — authorized
+
+  Implement the proposed ASCII Log identifier correction in feature_validation/domain/rules.ts.
+
+  I explicitly authorize the behavior change whereby non-ASCII decimal identifiers are rejected rather than silently normalized.
+
+  Requirements:
+
+  - Preserve ASCII identifier behavior.
+  - Preserve ordering and uniqueness validation.
+  - Use a clear named finding.
+  - Verify the complete existing identifier contract.
+  - Add only the necessary focused regression test.
+  - Do not register DEBT-065.
+
+  F9 remains under the existing DEBT-054. Do not duplicate or expand that debt.
+
+  ## 2. Accepted-advisory closure semantics
+
+  I agree that the current rules contain a contradiction between user-accepted advisory delivery and feature closure.
+
+  I authorize a minimal correction subject to these requirements:
+
+  - Blocking findings cannot be bypassed.
+  - Unaccepted or merely deferred findings remain unresolved.
+  - Explicitly user-accepted residual risks may satisfy the applicable closure gate.
+  - Preserve the original finding, its risk, its disposition and the deciding authority.
+  - An accepted advisory is not a fixed finding.
+  - A user-accepted ADVISORY must not be relabelled PASS.
+  - Clean completion and completion with explicitly accepted residual risks must remain distinguishable.
+  - Do not introduce another lifecycle status or disposition unless separately authorized.
+
+  Verify the interaction between the closure rule, validator, acceptance evidence, Herald and Inquisitor before implementing the minimum consistent correction.
+
+  Apply the corrected rule to core-sync-test-proportionality only if its existing user acceptance satisfies the documented requirements.
+
+  ## 3. Recover the remaining historical Python evidence
+
+  For independent-skill-utilities-typescript, verify through Herald whether the deleted Python baseline and its comparison evidence remain recoverable from Git history or the original delivery commits.
+
+  Do not assume that deletion from the working tree means the historical baseline is irrecoverable.
+
+  Do not reconstruct the historical implementation, repeat the entire migration or introduce new tooling.
+
+  If the original comparison evidence genuinely cannot be recovered, present the exact remaining verification obligation and the minimum legitimate terminal disposition for my approval.
+
+  Do not fabricate independent acceptance.
+
+  ## 4. Combined verification for DEBT-050 and DEBT-051
+
+  I authorize the combined non-destructive verification components identified in your report:
+
+  - Typechecking.
+  - Relevant package test suites.
+  - Runtime entry-load verification.
+  - The targeted two-tree diff.
+  - Existing lint verification.
+
+  Use one shared execution wherever possible.
+
+  Do not run a command against external services, databases or credentials.
+
+  The two pre-existing formatting failures must be reported separately.
+
+  Do not rewrite verbatim historical user requests or introduce permanent formatter exclusions merely to obtain a green result.
+
+  Do not claim pnpm verify:full passed if it did not.
+
+  Determine whether the historical requirements can be legitimately reconciled using the recovered delivery evidence, current component results and the documented pre-existing formatting failures.
+
+  If a literal requirement remains unsatisfied, identify the exact remaining decision instead of fabricating a PASS.
+
+  ## 5. Reserved architectural decisions
+
+  ADR 0009 and the System One distribution exception remain reserved for my explicit approval.
+
+  Do not approve either on my behalf.
+
+  Continue all other authorized work without waiting for these two decisions.
+
+  ## 6. Mandatory retirement cleanup
+
+  Before final closure and PR publication:
+
+  - Run the existing retirement check again.
+  - Delete every eligible closed task plan older than the documented retention threshold.
+  - Apply the dependency safeguard before deletion.
+  - Include completed, cancelled and superseded records.
+  - Preserve recently closed plans until their actual retention date.
+  - Do not backdate closures.
+  - Preserve all durable feature specifications.
+  - Confirm zero overdue retirement candidates.
+
+  The retention procedure must remain integrated into stage 6.
+
+  ## 7. Completion boundaries
+
+  Continue using the existing branch and governing record.
+
+  Herald remains the exclusive authority for Git and GitHub operations.
+
+  Do not create new debt entries, historical implementation tasks, additional tools or unrelated changes.
+
+  Do not publish, merge, tag or delete branches yet.
+
+  Return the consolidated final inventory, exact changes, verification results, retirement results and only the decisions that genuinely still require my authorization.
+
+  Avoid another general audit cycle. Complete the authorized remediation and report the remaining blockers precisely."
+
+- L26 — 2026-11-24 — Obligation accounting for the S11 rewrite, required before acceptance. The original S11 acceptance carried three clauses. **(a) "inspect the changed-path list at the delivering commit"** — retained, and the pinned-commit qualifier restored verbatim. **(b) "it contains no production source path, no test suite is executed"** — translated, narrowed by the user's own F7 authorization quoted at L25 to the authorized F7 correction and its focused regression test and the authorized verification components, under the quoted "Implement the proposed ASCII Log identifier correction in feature_validation/domain/rules.ts" and "Add only the necessary focused regression test."; no other production path or test suite is admitted. **(c) "every changed path is a record, decision document, debt register, tooling document, formatter exclusion, agent specification or the ODD skill"** — retained and extended by the two authorized F7 paths, the feature validator and its focused test file, so the allow-list now admits exactly the F7 correction the user authorized and nothing else. The original exact requirement "Do not introduce unrelated improvements" is retained unchanged. No original obligation is retired, and no implementation scope beyond the authorized F7 correction is admitted by this amendment.
