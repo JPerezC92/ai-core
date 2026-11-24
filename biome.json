@@ -6,12 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": [
-      "**",
-      "!**/pnpm-lock.yaml",
-      "!**/pnpm-workspace.yaml",
-      "!odd/tasks/2026-11-14-root-contract-suite-retirement.md"
-    ]
+    "includes": ["**"]
   },
   "formatter": {
     "enabled": true,
@@ -33,6 +28,16 @@
       "proseWrap": "preserve"
     }
   },
+  "overrides": [
+    {
+      "includes": ["odd/tasks/**/*.md"],
+      "markdown": {
+        "formatter": {
+          "enabled": false
+        }
+      }
+    }
+  ],
   "linter": {
     "enabled": false
   },
