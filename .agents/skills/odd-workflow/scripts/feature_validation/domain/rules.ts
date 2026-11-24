@@ -303,8 +303,10 @@ function closureEvidenceFindings(logLines: readonly string[]): string[] {
 export function validateFeature(text: string): string[] {
 	const findings: string[] = [];
 	const lines = splitLines(text);
-	// One fence interpretation feeds every consumer below: the unfenced projection is the
-	// document with fenced lines removed, so quoted code can never be read as structure.
+	// One fence interpretation feeds the consumers that must tell code from structure: the
+	// unfenced projection is the document with fenced lines removed, so quoted code cannot
+	// supply a Close entry, a Log identifier or an obsolescence explanation. The heading,
+	// task and L1-presence checks keep their pre-existing raw-line contract.
 	const fenceStructure = readFenceStructure(lines);
 	const unfencedLines = fenceStructure.unfencedLines;
 	const unfencedLog = section(unfencedLines, "## Log");

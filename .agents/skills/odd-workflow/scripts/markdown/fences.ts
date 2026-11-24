@@ -41,7 +41,7 @@ type OpenFence = {
 };
 
 type LineShape = {
-	/** The line with every leading block-quote marker removed. */
+	/** The line from the container's content column, with every leading block-quote marker removed. */
 	readonly rest: string;
 	/** How many block-quote markers were removed. */
 	readonly quoteDepth: number;
