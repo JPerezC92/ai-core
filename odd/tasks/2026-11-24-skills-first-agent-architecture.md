@@ -1,6 +1,8 @@
 # Skills-first agent architecture
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-11-24
+> **Disposition:** completed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-24
 > **Objective:** Replace mandatory multi-agent orchestration with direct primary-agent execution plus on-demand skills, keeping Herald's Git boundary and the seven ODD steps intact.
@@ -35,15 +37,15 @@
 
 ## Tasks
 
-- T1 | S12, S15 | inline (governing record and decision record are the bootstrap artifacts) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T2 | S6, S7, S8, S9, S10, S11 | inline (shared rule and workflow simplification is one coupled edit surface) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T3 | S4, S5 | inline (knowledge preservation must precede any deletion) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T4 | S17 | inline (validator and its own suite change together) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T5 | S18 | inline (publication evidence documentation only) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T6 | S1, S2, S15, S16, S21 | inline (root runtime rewrite plus remaining de-roster) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T7 | S13, S14 | inline (permission and clearance registration is configuration only) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T8 | S3, S4, S14, S19 | inline (high-risk unit: deletions, block removal and fixture repair in one revertible commit) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T9 | S15, S19, S20, S22 | inline (documentation, records and full verification) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
+- T1 | S12, S15 | inline (governing record and decision record are the bootstrap artifacts) — Cipher 🔓 (Lead Orchestrator) | done | commit: 2f406c3fffa9327946341c37d66705b05cef1558
+- T2 | S6, S7, S8, S9, S10, S11 | inline (shared rule and workflow simplification is one coupled edit surface) — Cipher 🔓 (Lead Orchestrator) | done | commit: 03be8d56b8c3167860c2e08a4ee7db070ecbfa8f
+- T3 | S4, S5 | inline (knowledge preservation must precede any deletion) — Cipher 🔓 (Lead Orchestrator) | done | commit: 3a4e7355edf67ba86fccee4e9b91c75301a3804b
+- T4 | S17 | inline (validator and its own suite change together) — Cipher 🔓 (Lead Orchestrator) | done | commit: 1fd864680a75cb71d5b3e68cda4e49cf29558957
+- T5 | S18 | inline (publication evidence documentation only) — Cipher 🔓 (Lead Orchestrator) | done | commit: 606f54b582e87d5baa1d827c712eae45d1cbcdc7
+- T6 | S1, S2, S15, S16, S21 | inline (root runtime rewrite plus remaining de-roster) — Cipher 🔓 (Lead Orchestrator) | done | commit: f4b8d36017e7d976dc84999029041e0cac20af6a
+- T7 | S13, S14 | inline (permission and clearance registration is configuration only) — Cipher 🔓 (Lead Orchestrator) | done | commit: 2ca1301909ae4232faeee88efec12b5deb9fac26
+- T8 | S3, S4, S14, S19 | inline (high-risk unit: deletions, block removal and fixture repair in one revertible commit) — Cipher 🔓 (Lead Orchestrator) | done | commit: e14cf184560699cd7d9125b1d6f91356c344872c
+- T9 | S15, S19, S20, S22 | inline (documentation, records and full verification) — Cipher 🔓 (Lead Orchestrator) | done | commit: 47e3cc0bc805fc7e60afdf35660f6137f6c6d06f
 
 ## Log
 
@@ -176,3 +178,11 @@
 >
 > ## 8. Final delivery report
 > Once implementation and applicable verification are complete, report: PR URL and exact final head SHA; exact changed-file inventory and change counts; removed custom subagents; new and updated skills; canonical documentation updated; existing verification commands and observed results; ODD alignment and documented local departures; permission and editor compatibility implications; destination migration instructions; remaining risks, failures, or pending checks; any scope decisions requiring my attention. Do not claim independent review when none occurred. Do not make the absence of an independent reviewer a delivery blocker. Finish with an explicit FINALIZED status when the authorized work is complete, and await my merge decision.
+
+- L5 — 2026-11-24 — implementation delivered in nine work units C1–C9 on `feat/core/skills-first-architecture`, cut from `origin/main` at `ae4247988a9c3f82a11257bd57a8f55bb34e6c78`. Measured by the release executor: `git diff --shortstat origin/main...HEAD` → 61 files changed, 1080 insertions(+), 3748 deletions(-); statuses 13 deleted, 6 added, 42 modified, no renames. The forecast was 500–800 authored additions against ~3,100 deletions; the delivered 1080/3748 reflects the added skills, the rewritten root runtime and the retired procedure. Outcome and per-path detail live in the commits themselves.
+
+- L6 — 2026-11-24 — verification, literal commands and observed results: `pnpm --dir .agents/skills/odd-workflow exec vitest run` → 16 files, 105 tests passed; `pnpm --dir .agents/skills/git-pr exec vitest run` → 9 files, 50 passed; `pnpm --dir .agents/skills/git-pr-workflow exec vitest run` → 19 files, 80 passed; `pnpm --dir .agents/skills/incident-workflow exec vitest run` → 21 files, 128 passed; `pnpm --dir mcp-servers/system-one exec vitest run` → 9 files, 40 passed; `pnpm --dir cli/aicore test` → 28 files, 214 passed and 1 skipped; `pnpm --dir cli/aicore test:e2e` → 17 files, 26 passed; `node .agents/skills/odd-workflow/scripts/validate_feature.ts odd/tasks` → every record reported ok, including all 33 historical records unchanged; `pnpm lint` → no findings; `pnpm typecheck` → seven workspace packages plus the System One project completed.
+
+- L7 — 2026-11-24 — `pnpm format:check` reports two paths needing formatting: `odd/tasks/2026-11-20-debt-review.md` and `odd/tasks/2026-11-20-odd-work-unit-commit-policy.md`. Both are historical change records that the authorized scope forbids modifying, and neither is in this delivery's diff, so the condition is pre-existing and reported rather than repaired; every changed path was formatted with `biome format --write` and now passes. No applicable executable failure: every suite and gate listed at L6 ran and passed.
+
+- L8 — Close: delivered by user authorization under a bounded transitional exception, with Cipher performing the implementation directly. `S1` pass · `S2` pass · `S3` pass · `S4` pass · `S5` pass · `S6` pass · `S7` pass · `S8` pass · `S9` pass · `S10` pass · `S11` pass · `S12` pass (authorization quoted verbatim at L4) · `S13` pass · `S14` pass · `S15` pass · `S16` pass · `S17` pass · `S18` pass · `S19` pass · `S20` pass · `S21` pass · `S22` pass with the L7 exception reported. **No independent review ran and none is claimed**; verification is the automated evidence at L6 plus self-review. Local departures are recorded in `docs/architecture/odd-adoption-status.md` and ADR-0011. Closure edit delivered by its own commit; the pull request follows it.
