@@ -138,13 +138,20 @@ function shapeOf(line: string): LineShape {
 export function readFenceStructure(lines: readonly string[]): FenceStructure {
 	const unclosed: UnclosedFence[] = [];
 	const unfencedLines: string[] = [];
-	/** Content columns of the list items currently open, outermost first. */
-	const containerColumns: number[] = [];
+	/**
+	 * The list items currently open, outermost first. Each entry carries its content column
+	 * and the block-quote depth it belongs to, because a list inside a block quote ends with
+	 * that block quote and must not keep constraining a fence outside it.
+	 */
+	const containers: { readonly column: number; readonly quoteDepth: number }[] = [];
 	let open: OpenFence | null = null;
 	let inComment = false;
 
-	const innermostColumn = (): number =>
-		containerColumns.length > 0 ? containerColumns[containerColumns.length - 1]! : 0;
+	const innermostColumn = (): number => (containers.length > 0 ? containers[containers.length - 1]!.column : 0);
+	/** Drops every open list item that lived inside a block quote this line has left. */
+	const closeDeeperQuotes = (quoteDepth: number): void => {
+		while (containers.length > 0 && containers[containers.length - 1]!.quoteDepth > quoteDepth) containers.pop();
+	};
 
 	for (let index = 0; index < lines.length; index += 1) {
 		const raw = lines[index]!;
@@ -200,21 +207,16 @@ export function readFenceStructure(lines: readonly string[]): FenceStructure {
 
 			// A fenced block or an HTML comment is literal content, so its lines never move
 			// the container state: a list marker there is text, not structure.
+			closeDeeperQuotes(shape.quoteDepth);
 			if (shape.startsListItem) {
 				const itemContentColumn = shape.itemContentColumn!;
-				while (
-					containerColumns.length > 0 &&
-					containerColumns[containerColumns.length - 1]! >= itemContentColumn
-				) {
-					containerColumns.pop();
+				while (containers.length > 0 && containers[containers.length - 1]!.column >= itemContentColumn) {
+					containers.pop();
 				}
-				containerColumns.push(itemContentColumn);
+				containers.push({ column: itemContentColumn, quoteDepth: shape.quoteDepth });
 			} else {
-				while (
-					containerColumns.length > 0 &&
-					shape.indentColumns < containerColumns[containerColumns.length - 1]!
-				) {
-					containerColumns.pop();
+				while (containers.length > 0 && shape.indentColumns < containers[containers.length - 1]!.column) {
+					containers.pop();
 				}
 			}
 			const contentColumn = innermostColumn();

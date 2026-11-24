@@ -73,6 +73,25 @@ describe("readFenceStructure container geometry", () => {
 		expect(visibleEntries(lines)).toStrictEqual(["- L1 — a", "- L2 — b"]);
 	});
 
+	it("closes a fence only when the closer is within three columns of the opener's container", () => {
+		// A fence-like line four columns past the opener's container is indented code, so it
+		// is content and the fence stays open.
+		expect(unclosedLines(["- a", "  ```", "  x", "      ```", "- L1 — b"])).toStrictEqual([2]);
+		expect(unclosedLines(["- a", "  ```", "  x", "   ```", "- L1 — b"])).toStrictEqual([]);
+	});
+
+	it("does not keep a list container alive past the end of its blockquote", () => {
+		// The block quote ends at line 2, so the fence that follows is top level: both its
+		// delimiters and its content are read at absolute indentation, not the list's column.
+		const lines = ["> - a", "  ```", "code", "  ```", "- L1 — b"];
+		expect(unclosedLines(lines)).toStrictEqual([]);
+		expect(visibleEntries(lines)).toStrictEqual(["- L1 — b"]);
+	});
+
+	it("treats a fence-like line 4+ columns past its container as content, not a closer", () => {
+		expect(unclosedLines(["```text", "    ```", "```", "- L1 — a"])).toStrictEqual([]);
+	});
+
 	it("keeps sibling list items independent across container transitions", () => {
 		const lines = ["- a", "  ```text", "  one", "  ```", "- b", "  ```text", "  two", "  ```", "- L1 — c"];
 		expect(unclosedLines(lines)).toStrictEqual([]);
