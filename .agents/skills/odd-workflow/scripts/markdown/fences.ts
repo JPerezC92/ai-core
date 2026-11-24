@@ -41,6 +41,8 @@ type Delimiter = {
 	readonly length: number;
 	/** True when the delimiter was not written at column zero. */
 	readonly misplaced: boolean;
+	/** The container prefix the delimiter was written after; empty at column zero. */
+	readonly prefix: string;
 	/** Text after the delimiter run, used to recognise a closer. */
 	readonly rest: string;
 };
@@ -60,6 +62,7 @@ function delimiterOf(line: string): Delimiter | null {
 			marker: atColumnZero[1]![0] as "`" | "~",
 			length: atColumnZero[1]!.length,
 			misplaced: false,
+			prefix: "",
 			rest: atColumnZero[2]!,
 		};
 	}
@@ -71,6 +74,7 @@ function delimiterOf(line: string): Delimiter | null {
 		marker: afterPrefix[1]![0] as "`" | "~",
 		length: afterPrefix[1]!.length,
 		misplaced: prefixed !== line,
+		prefix: line.slice(0, line.length - prefixed.length),
 		rest: afterPrefix[2]!,
 	};
 }
@@ -99,19 +103,20 @@ export function readFenceStructure(lines: readonly string[]): FenceStructure {
 		readonly line: number;
 		readonly marker: "`" | "~";
 		readonly length: number;
-		readonly misplaced: boolean;
+		readonly prefix: string;
 	} | null = null;
 
 	for (let index = 0; index < lines.length; index += 1) {
 		const line = lines[index]!;
 
 		if (open !== null) {
-			// Inside a block every line is opaque content. Only a delimiter at the opener's own level
-			// ends it, so a delimiter-shaped line inside a column-zero block stays content.
+			// Inside a block every line is opaque content. Only a delimiter carrying the opener's own
+			// container prefix ends it, so a delimiter-shaped line inside a column-zero block stays
+			// content, and a legacy prefixed block cannot be closed by a differently placed one.
 			const closer = delimiterOf(line);
 			const closes =
 				closer !== null &&
-				closer.misplaced === open.misplaced &&
+				closer.prefix === open.prefix &&
 				closer.marker === open.marker &&
 				closer.length >= open.length &&
 				closer.rest.trim().length === 0;
@@ -126,7 +131,7 @@ export function readFenceStructure(lines: readonly string[]): FenceStructure {
 		const opener = delimiterOf(line);
 		if (opener !== null) {
 			delimiterLines.push(index + 1);
-			open = { line: index + 1, marker: opener.marker, length: opener.length, misplaced: opener.misplaced };
+			open = { line: index + 1, marker: opener.marker, length: opener.length, prefix: opener.prefix };
 			unfencedLines.push("");
 			continue;
 		}
