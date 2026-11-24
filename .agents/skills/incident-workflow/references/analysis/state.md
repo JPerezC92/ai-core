@@ -30,12 +30,12 @@ For each handoff, record the outgoing/incoming instance, accepted inputs/outputs
 
 ## Step index
 
-| Step        | File                | Owner                                   | Status |
-| ----------- | ------------------- | --------------------------------------- | ------ |
-| identify    | `01-identify.md`    | Cipher 🔓 (Lead Orchestrator)           | ⬜     |
-| investigate | `02-investigate.md` | Investigator 🔍 (Incident Investigator) | ⬜     |
-| synthesize  | `03-synthesize.md`  | Cipher 🔓 (Lead Orchestrator)           | ⬜     |
-| respond     | `response-draft.md` | Quill 🪶 (Note Drafter)                 | ⬜     |
+| Step        | File                | Owner                            | Status |
+| ----------- | ------------------- | -------------------------------- | ------ |
+| identify    | `01-identify.md`    | Cipher 🔓 (Lead Orchestrator)    | ⬜     |
+| investigate | `02-investigate.md` | assigned investigate-step writer | ⬜     |
+| synthesize  | `03-synthesize.md`  | Cipher 🔓 (Lead Orchestrator)    | ⬜     |
+| respond     | `response-draft.md` | the assigned response author     | ⬜     |
 
 ## Kill-switch status
 

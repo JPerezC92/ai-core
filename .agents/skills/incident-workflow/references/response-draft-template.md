@@ -33,4 +33,4 @@
 
 ## Self-audit
 
-<Quill 🪶 (Note Drafter) writes PASS/FAIL block on every draft return>
+<The response author writes PASS/FAIL block on every draft return>

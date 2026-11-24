@@ -34,7 +34,7 @@ From the user's request, extract:
 
 #### Coordination preflight (every assignment and handoff)
 
-Apply `.aicore/core/knowledge/agents.md` `### Safe parallel task coordination (HARD RULE)`. Cipher 🔓 (Lead Orchestrator) owns dispatch, acceptance, capacity and authoritative incident-budget accounting. Record the workflow/ticket, task/instance, responsible role, accepted predecessor results and input identities, exact permitted writes and other resource access, allocated output destination, required gates, continuation/join owner and capacity/accounting owner in existing state/step Markdown or the dispatch. Add neither YAML fields nor analysis files. Owning a working file grants no shell command: Cipher 🔓 (Lead Orchestrator) runs analysis-directory validation, and Ledger 📒 (Record Keeper) retains ticket-record validation after record edits.
+Ownership follows `.aicore/core/knowledge/agents.md`: one active writer owns a canonical mutable resource at a time. The coordinator owns dispatch, acceptance, capacity and authoritative incident-budget accounting. Record the workflow/ticket, task/instance, accepted predecessor results and input identities, exact permitted writes and other resource access, allocated output destination, and continuation/join owner in existing state/step Markdown or the assignment. Add neither YAML fields nor analysis files. Owning a working file grants no shell command: the coordinator runs analysis-directory validation and ticket-record validation after record edits.
 
 - Keep one current authorized step instance as sole writer of `state.md`, its step artifact and recorded counters until a coordinator-controlled handoff. Supporting evidence instances return bounded, attributed results to allocated destinations; they never write state/counters, issue identification verdicts, frame competing hypotheses or execute incident queries. Independent ready evidence work may run concurrently only against stable accepted inputs and compatible resources within declared capacity.
 - Before dispatch, reject overlapping whole-file/directory/alias access unless isolation is verified. Allocate inbound `downloads/` and response screenshot destinations as distinct paths, plus report and session-validation destinations, without overwrites; canonical fixed paths stay exclusively owned and serialized. Symptom/problem registers, durable records, response drafts, browser/auth sessions (including refresh), adapters and external capacity are separately declared resources, not implied grants. Unknown capacity or isolation blocks the affected operation.
@@ -64,7 +64,7 @@ If this invocation carried the `scaffold` argument (see **Arguments**), run only
 2. Before any creation or write, check for an existing working set: if present, stop and report it without overwriting. Check that the mandatory ticket context is available; a missing mandatory value is a reported blocker — never a guessed SLA, system, or module. Then perform only step 3.1–3.3 (create the ticket folder, inbound downloads directory, screenshots directory, validations directory, ticket record, response-draft file, and the analysis working set) using only evidenced values. Populate the ticket identity, record metadata and symptom summary, and the identify-step `Pre` with this ticket's evidenced context before validation. Skip step 3.4: matching, discriminator/exclusion evaluation and the identification result remain explicitly not performed, with the verdict pending and step gates unchecked.
 3. Initialize the state header with `identification_verdict: pending` and unchanged counters (`Hypotheses-outstanding 3/3`, `Query-budget 0/6`, `Same-query-reruns 0/2`).
 4. Run step 4 (scaffold validation) and the complete post-write self-verification loop, including semantic comparison with the supplied context; structural exit 0 alone is not sufficient. Report the created set and the actual verification result.
-5. **STOP.** Do not run step 2 identification, do not record a verdict, do not frame hypotheses, execute queries, or dispatch Investigator 🔍 (Incident Investigator) (step 5). Hand control back to the user; the normal invocation continues the standard flow.
+5. **STOP.** Do not run step 2 identification, do not record a verdict, do not frame hypotheses, or execute queries. Hand control back to the user; the normal invocation continues the standard flow.
 
 **Refuse to overwrite:** if the ticket folder already holds a working set, stop and report the existing set instead of replacing it.
 
@@ -101,9 +101,9 @@ Always scaffold, whatever the verdict — `exact`, `structural`, and `no_match` 
 3. Initialize the analysis state-file header (see **Working-set and record schema**): `Phase` (`identify`), `SLA-due` (from ticket), `Updated` (current timestamp), `Hypotheses-outstanding` (`3/3`), `Query-budget` (`0/6`, used/limit, default limit 6), `identification_verdict` (`pending`), `Same-query-reruns` (`0/2`). **Query-budget (HARD):** exhausted means used equals the current limit; halt-and-ask at that point unless the user already raised the denominator. Raise the denominator first (`14/14`); never write used greater than limit; never write `14/6`.
 4. Record the identification result in the identify-step artifact (see **Working-set and record templates**): system, module, matched `S-xx`, matched incident `P-NNN` (if any), discriminator/exclusion evaluation, verdict, and rationale.
 
-**Screenshot naming convention:** files placed in the project's screenshots directory must follow the project's screenshot naming convention (see **Screenshot naming convention**). Forbidden initial names: `image1.png`, `screenshot.png`, or any name without the project's required prefix (see **Screenshot naming convention**). Investigator 🔍 (Incident Investigator) + Quill 🪶 (Note Drafter) dispatch prompts MUST reference final filenames; renaming at close-out is a process violation. Downloaded incident-image content is stored only under inbound `downloads/`, never in the screenshots tree.
+**Screenshot naming convention:** files placed in the project's screenshots directory must follow the project's screenshot naming convention (see **Screenshot naming convention**). Forbidden initial names: `image1.png`, `screenshot.png`, or any name without the project's required prefix (see **Screenshot naming convention**). A response draft MUST reference final filenames; renaming at close-out is a process violation. Downloaded incident-image content is stored only under inbound `downloads/`, never in the screenshots tree.
 
-**Pre-stage rule:** files for the response being drafted (query images and browser captures) MUST exist on disk under that response's screenshot destination (see **Screenshot naming convention**) BEFORE Quill 🪶 (Note Drafter) is dispatched for the response phase. Dispatching Quill against not-yet-created image paths causes a guaranteed self-audit FAIL (`image_path_invalid`).
+**Pre-stage rule:** files for the response being drafted (query images and browser captures) MUST exist on disk under that response's screenshot destination (see **Screenshot naming convention**) BEFORE the response draft is written.
 
 **Image location rule:** every used image records its local `path:` as a ticket-folder-relative file (the project's screenshot path spelling; see **Screenshot naming convention**) and, when the ticket system returned one, its remote `url:` (ticket-system location). Never record a remote `url:` that does not exist, never fabricate a local `path:`, never spell the local path repo-relative (see **Screenshot naming convention**), and never point a response `path:` at `downloads/`.
 
@@ -121,14 +121,14 @@ Validator success is not semantic coordination proof. Header advancement also re
 
 After the analysis scaffolds and validates:
 
-1. If the verdict is `exact` or `structural`: notify Cipher 🔓 (Lead Orchestrator) of the matched `P-NNN` and verdict so it dispatches Investigator 🔍 (Incident Investigator) for the investigate step.
+1. If the verdict is `exact` or `structural`: record the matched `P-NNN` and verdict, then proceed to the investigate step.
 2. If the verdict is `no_match`: notify Cipher 🔓 (Lead Orchestrator) that the register yielded no match and the investigate step starts from fresh hypotheses.
 
-**HARD RULE — dispatch enforcement:** Cipher 🔓 (Lead Orchestrator) MUST dispatch Investigator 🔍 (Incident Investigator) to execute the investigate step. Cipher 🔓 (Lead Orchestrator) MUST NOT execute that step inline. Cipher 🔓 (Lead Orchestrator) owns all dispatch decisions. This skill does NOT dispatch agents directly.
+**HARD RULE — investigate-step ownership:** the investigate step is executed under `references/analysis/02-investigate.md` by the assigned writer, who records its outcome in `state.md`. The coordinator owns the assignment and accepts the result; this skill does not dispatch agents on its own.
 
 #### 6. Register admission (confirmed root cause; non-destructive)
 
-Preparation starts as soon as the root cause is confirmed — it does not wait for the close-out authorization (see **Working-set and record schema**). Cipher 🔓 (Lead Orchestrator) dispatches Scribe ✍️ (Docs & Problems Manager) to prepare an evidence-backed register draft. Scribe ✍️ (Docs & Problems Manager) presents it for exact user approval (`approved` or `aprobado`); only after that approval does Cipher 🔓 (Lead Orchestrator) apply the mutation through the destination's gated tool. If the destination workflow or tool is unavailable, stop and report; do not improvise. Complete the approved register mutation before destructive collapse:
+Preparation starts as soon as the root cause is confirmed — it does not wait for the close-out authorization (see **Working-set and record schema**). The coordinator prepares an evidence-backed register draft and presents it for exact user approval (`approved` or `aprobado`); only after that approval is the mutation applied through the destination's gated tool. If the destination workflow or tool is unavailable, stop and report; do not improvise. Complete the approved register mutation before destructive collapse:
 
 1. Create the missing class in the project's own symptom catalog (see **Register paths**) using the `LOCAL:S-xx` namespace when no baseline or project class matches the confirmed failure signature.
 2. Admit a novel cause as a `candidate` `P-NNN` row in the project's problem register (see **Register paths**) when no eligible problem exists.
@@ -171,8 +171,8 @@ The validator script is a helper, not the authority — it catches repetitive me
 - Ticket: system X, module Y, region Z, period P; error matches `S-02`
 - Register: no incident `P-NNN` for `S-02` + system X + module Y (register empty)
 - Verdict: `identification_verdict: no_match`
-- Result: analysis working set scaffolded (see **Working-set and record schema**); validator exits 0; Cipher 🔓 (Lead Orchestrator) dispatches Investigator 🔍 (Incident Investigator) to frame hypotheses.
-- After the root cause is confirmed: Scribe ✍️ (Docs & Problems Manager) prepares the draft and does not wait for close-out authorization. After exact `approved` / `aprobado`, Cipher 🔓 (Lead Orchestrator) applies the gated mutation. Collapse still waits for close-out authorization.
+- Result: analysis working set scaffolded (see **Working-set and record schema**); validator exits 0; the investigate step proceeds to frame hypotheses.
+- After the root cause is confirmed: the register draft is prepared without waiting for close-out authorization. After exact `approved` / `aprobado`, the gated mutation is applied. Collapse still waits for close-out authorization.
 
 **Example 2 — structural match**
 
@@ -180,7 +180,7 @@ The validator script is a helper, not the authority — it catches repetitive me
 - Ticket: system W, module V, region U, period T; error matches `S-03`
 - Register: one `candidate` incident `P-NNN` on `Symptom` + `System` + `Module`; discriminators partially evidenced
 - Verdict: `identification_verdict: structural` — cited source: the project's problem register (see **Register paths**) (P-NNN)
-- Result: analysis working set scaffolded (see **Working-set and record schema**); Investigator 🔍 (Incident Investigator) validates the inherited hypothesis against the current ticket.
+- Result: analysis working set scaffolded (see **Working-set and record schema**); the assigned writer validates the inherited hypothesis against the current ticket.
 
 **Example 3 — exact match**
 
