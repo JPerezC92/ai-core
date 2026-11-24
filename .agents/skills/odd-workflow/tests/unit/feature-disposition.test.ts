@@ -51,7 +51,9 @@ function closedRecord(options: ClosedRecordOptions): string {
 /** Runs the feature validation over one document and returns the findings it reports. */
 function findingsFor(text: string): readonly string[] {
 	const source = new FeatureSourceFake([REFERENCE], new Map([[REFERENCE, text]]));
-	const [result]: FeatureValidationResult[] = [...new ValidateFeatures(source, caseSensitivePolicy).execute("features")];
+	const [result]: FeatureValidationResult[] = [
+		...new ValidateFeatures(source, caseSensitivePolicy).execute("features"),
+	];
 	if (result instanceof InvalidFeatureError) return result.findings;
 	if (result instanceof ValidFeature) return [];
 	throw new Error(`unexpected feature validation result: ${result?.constructor.name ?? "no result"}`);
@@ -59,7 +61,9 @@ function findingsFor(text: string): readonly string[] {
 
 describe("ValidateFeatures.execute closure disposition", () => {
 	it("accepts a completed closure on the effective date", () => {
-		expect(findingsFor(closedRecord({ closed: "2026-11-24", disposition: "completed", taskStatus: "done" }))).toStrictEqual([]);
+		expect(
+			findingsFor(closedRecord({ closed: "2026-11-24", disposition: "completed", taskStatus: "done" })),
+		).toStrictEqual([]);
 	});
 
 	it("requires a disposition on a record closed on the effective date", () => {
@@ -69,9 +73,9 @@ describe("ValidateFeatures.execute closure disposition", () => {
 	});
 
 	it("rejects a disposition value outside the three permitted ones", () => {
-		expect(findingsFor(closedRecord({ closed: "2026-11-24", disposition: "done", taskStatus: "done" }))).toStrictEqual([
-			"Disposition must be completed, cancelled or superseded",
-		]);
+		expect(
+			findingsFor(closedRecord({ closed: "2026-11-24", disposition: "done", taskStatus: "done" })),
+		).toStrictEqual(["Disposition must be completed, cancelled or superseded"]);
 	});
 
 	it("accepts a cancelled closure whose tasks are only partially complete, when the user authorized it", () => {
@@ -93,9 +97,9 @@ describe("ValidateFeatures.execute closure disposition", () => {
 	});
 
 	it("requires a replacement delivery for a superseded closure", () => {
-		expect(findingsFor(closedRecord({ closed: "2026-11-24", disposition: "superseded", taskStatus: "done" }))).toStrictEqual([
-			"superseded feature needs a Superseded-by delivery reference",
-		]);
+		expect(
+			findingsFor(closedRecord({ closed: "2026-11-24", disposition: "superseded", taskStatus: "done" })),
+		).toStrictEqual(["superseded feature needs a Superseded-by delivery reference"]);
 	});
 
 	it("accepts a superseded closure that names its replacement and leaves a requirement incomplete", () => {

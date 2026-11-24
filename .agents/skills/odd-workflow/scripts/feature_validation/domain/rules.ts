@@ -450,7 +450,9 @@ export function validateFeature(text: string): string[] {
 			findings.push("superseded feature needs a Superseded-by delivery reference");
 		}
 		if (disposition === "cancelled" && !CANCELLATION_AUTHORIZATION_RE.test(log.join("\n"))) {
-			findings.push("cancelled feature needs a Log entry recording explicit user authorization for the cancellation");
+			findings.push(
+				"cancelled feature needs a Log entry recording explicit user authorization for the cancellation",
+			);
 		}
 	}
 	const claimsCompletion = disposition === undefined || disposition === "completed";
