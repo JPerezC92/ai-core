@@ -64,11 +64,17 @@ export const ROOT_CANDIDATES: readonly string[] = ["AGENTS.md"];
  * The cleared sources a destination may never opt out of.
  *
  * They are the baseline an enrollment exists to deliver: the root runtime file
- * that carries the permanent two-region rule and the reconciliation blocker, and
- * the harness configuration the profile merges. Declaring either as excluded is
- * refused rather than honored.
+ * that carries the permanent two-region rule and the reconciliation blocker, the
+ * harness configuration the profile merges, and the shared tooling standard the
+ * distributed TypeScript-bearing skills resolve their compiler configuration
+ * from. Declaring one as excluded — or naming a path that contains it, or a path
+ * it contains — is refused rather than honored.
  */
-export const PROTECTED_EXCLUSION_SOURCES: readonly string[] = ["AGENTS.md", ".opencode/opencode.jsonc"];
+export const PROTECTED_EXCLUSION_SOURCES: readonly string[] = [
+	"AGENTS.md",
+	".opencode/opencode.jsonc",
+	".aicore/core/tooling/",
+];
 
 /** The action words an `init` reconciliation entry can carry. */
 export const ACTION_INITIALIZED = "initialized";

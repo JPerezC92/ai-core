@@ -39,8 +39,26 @@ const KEPT_FILE = ".agents/skills/incident-workflow/references/local-problems-te
 /** A skill file the destination keeps. */
 const KEPT_SKILL_FILE = ".agents/skills/git-commit/SKILL.md";
 
+/** The protected tooling directory: the shared standard the skills resolve against. */
+const PROTECTED_TOOLING_ROOT = ".aicore/core/tooling/";
+
+/**
+ * Opt-out shapes that all resolve to the protected tooling directory.
+ *
+ * A protected directory is defended in both directions: one of its own files or
+ * descendant directories, and a directory root that contains it.
+ */
+const TOOLING_PROTECTION_SHAPES = [
+	`${PROTECTED_TOOLING_ROOT}tsconfig.base.json`,
+	`${PROTECTED_TOOLING_ROOT}tsconfig.node-direct.json`,
+	`${PROTECTED_TOOLING_ROOT}README.md`,
+	`${PROTECTED_TOOLING_ROOT}nested/`,
+	".aicore/core/",
+	".aicore/",
+];
+
 /** The baselines a destination may never opt out of. */
-const PROTECTED_SOURCES = ["AGENTS.md", ".opencode/opencode.jsonc"];
+const PROTECTED_SOURCES = ["AGENTS.md", ".opencode/opencode.jsonc", PROTECTED_TOOLING_ROOT];
 
 let fixture: RepresentativeFixture | undefined;
 
@@ -288,6 +306,33 @@ describe("durable destination opt-outs", () => {
 		bindings = await readBindings(destination);
 		expect(boundSources(bindings)).toContain(EXCLUDED_SKILL_FILE);
 		expect((await stat(join(destination, EXCLUDED_SKILL_FILE))).isFile()).toBe(true);
+	});
+
+	test("an opt-out naming a protected directory's file, descendant directory or ancestor is refused by name", async () => {
+		for (const shape of TOOLING_PROTECTION_SHAPES) {
+			const created = await createRepresentativeFixture();
+			try {
+				const { destination } = created;
+				await seedBindings(destination, freshBindings([shape]));
+
+				const commands = [
+					{ label: "init", run: enroll },
+					{ label: "apply", run: apply },
+					{ label: "check", run: check },
+				];
+				for (const { label, run } of commands) {
+					const refused = await run(created);
+					expect(refused.status, `${shape} was not refused by ${label}`).toBe(2);
+					expect(refused.stderr).toContain("protected exclusion");
+					expect(refused.stderr).toContain(PROTECTED_TOOLING_ROOT);
+				}
+
+				expect(await readBindings(destination)).toBe(freshBindings([shape]));
+				expect(await readFile(join(destination, "AGENTS.md"), "utf8")).toContain("# Fixture project");
+			} finally {
+				await created.dispose();
+			}
+		}
 	});
 
 	test("an opt-out naming a baseline resource is refused by name and writes nothing", async () => {

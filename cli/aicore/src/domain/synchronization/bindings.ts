@@ -366,15 +366,38 @@ export function withRestoredOptOuts(
 }
 
 /**
+ * Return whether one declared opt-out overlaps a protected source.
+ *
+ * An entry always covers its own source and, when it is a directory root, every
+ * source under it; a protected directory root additionally covers itself and
+ * everything beneath it, so naming one of its files — or one of its own
+ * descendant directories — is refused as surely as naming the root. This is a
+ * separate predicate because `isExcludedSource` answers only the first two
+ * directions, and its callers depend on that narrower meaning.
+ */
+function coversProtectedSource(entry: string, protectedSource: string): boolean {
+	if (entry === protectedSource) {
+		return true;
+	}
+	if (protectedSource.endsWith("/") && entry.startsWith(protectedSource)) {
+		return true;
+	}
+	return entry.endsWith("/") && protectedSource.startsWith(entry);
+}
+
+/**
  * Return the refusal a declared opt-out earns when it names a protected source.
  *
- * The root runtime file and the harness configuration are the destination's
- * baseline: disabling either would remove the rule set or the configuration the
- * enrollment exists to deliver, so the request is malformed and nothing is
- * written.
+ * The root runtime file, the harness configuration and the shared tooling
+ * standard are the destination's baseline: disabling any of them would remove
+ * the rule set, the configuration the enrollment merges, or the configuration
+ * the distributed skills resolve against, so the request is malformed and
+ * nothing is written.
  */
 export function protectedExclusionFailure(document: BindingsDocument): SynchronizationFailure | null {
-	const named = PROTECTED_EXCLUSION_SOURCES.filter((source) => isExcludedSource(source, document.exclude));
+	const named = PROTECTED_EXCLUSION_SOURCES.filter((source) =>
+		document.exclude.some((entry) => coversProtectedSource(entry, source)),
+	);
 	if (named.length === 0) {
 		return null;
 	}

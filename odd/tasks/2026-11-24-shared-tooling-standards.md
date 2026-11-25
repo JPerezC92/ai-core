@@ -1,0 +1,100 @@
+# shared-tooling-standards
+
+> **Status:** active
+> **Owner:** Cipher 🔓 (Lead Orchestrator)
+> **Created:** 2026-11-24
+> **Objective:** Make AICore the canonical source of reusable development tooling standards — distributing the formatter, linter and compiler configurations it already uses, documenting their authorized adoption for destination agents, and consuming the identical standards itself.
+> **Branch:** `feat/shared-tooling-standards`
+> **Delivery:** Strategy `single-pr` with four cumulative work units. Authored additions + deletions forecast ≈600–660 lines (generated files excluded): WU1 protected-exclusion semantics in Core Sync; WU2 canonical tooling resources, clearance row and AICore's Biome/Oxlint consumption; WU3 the TypeScript baseline/profile layers and the eight consumers; WU4 adoption documentation, ADR, discovery rows, registry-contract corrections and the checkout expansion test. Rollback is cumulative (reverse unit order) and no unit claims independent revertibility.
+> **Runner:** `pnpm verify`; `pnpm --dir cli/aicore test`; `pnpm --dir cli/aicore test:e2e`; `node .agents/skills/odd-workflow/scripts/validate_feature.ts odd/tasks`; `node .agents/skills/odd-workflow/scripts/validate_feature_file.ts odd/features`
+
+## Specs
+
+- S1 — A canonical tooling directory is cleared for distribution and carries the six approved shared resources. Exact requirement: "Create the approved shared resources under `.aicore/core/tooling/`: `README.md`, `editorconfig`, `biome.base.json`, `oxlint.base.json`, `tsconfig.base.json`, `tsconfig.node-direct.json`". Acceptance: read the repository clearance registry and expand the tooling row; exactly those six files resolve, each a regular file.
+- S2 — AICore consumes the same canonical standards it distributes. Exact requirement: "AICore itself must consume the same canonical standards that it distributes." Acceptance: read AICore's own formatter, linter and compiler configuration entry points; each resolves its rules through the canonical resources and declares no competing copy.
+- S3 — EditorConfig remains the authority for whitespace, Biome's editorconfig integration is preserved, and AICore's operational copy equals the distributed template byte for byte. Exact requirement: "Preserve: EditorConfig as the authority for whitespace and indentation. Biome's EditorConfig integration." Acceptance: compare the two EditorConfig files byte for byte; the digests are identical and the formatter configuration declares no indentation override.
+- S4 — Type-aware linting is a mandatory standard for applicable TypeScript projects and is documented with its required project-local declaration and dependency. Exact requirement: "Type-aware linting as a mandatory standard for applicable TypeScript projects." Acceptance: read the adoption contract; it states the requirement, the project-local setting, and the dependency, and does not present the setting as optional.
+- S5 — Two TypeScript configuration layers exist and all eight existing consumers extend the shared profile while retaining only their own inclusion settings. Exact requirement: "All eight existing TypeScript consumers must extend the shared direct-execution profile and retain only genuinely component-specific configuration." Acceptance: read the effective compiler configuration of each of the eight consumers; each reports the same effective options and resolves its inclusion paths from its own file.
+- S6 — A protected distribution resource cannot be excluded by naming it, a descendant of it, or an ancestor directory containing it, and the existing protected files and unrelated exclusions keep their behavior. Exact requirement: "The tooling directory must be protected against: Exclusion of the directory itself. Exclusion of individual descendant files. Exclusion of descendant directories. Ancestor-directory exclusions covering the tooling root." Acceptance: declare each of the four exclusion shapes over the tooling directory and run a synchronization command; each is refused before any write with the protected-exclusion failure, while an exclusion of an entry naming an existing protected file and an exclusion of an unrelated source keep their current outcomes.
+- S7 — The distribution documentation states that an update enrolls newly cleared raw resources, and keeps raw enrollment distinct from region reconciliation. Exact requirement: "Correct the existing documentation to accurately describe automatic enrollment of newly cleared raw resources during apply. Preserve the distinction between raw enrollment and region reconciliation." Acceptance: read the corrected statements; each names raw enrollment as occurring during an update and keeps markerless region enrollment as an initializing operation, and no statement claims an update performs region enrollment.
+- S8 — Partial synchronization recovery is documented as the implementation provides it, with no transactional or rollback claim. Exact requirement: "Document partial synchronization recovery accurately" — payload writes precede bindings persistence, a failed run may leave partially updated files and unbound new resources, and retrying completes synchronization. Acceptance: read the recovery text; it states the write order, the unbound outcome, the drift signal and the retry path, and claims no rollback or transactional guarantee.
+- S9 — The distributed adoption contract is self-contained, discoverable through the existing agent guidance, and never authorizes installation, project-configuration edits or code changes by virtue of receipt. Exact requirement: "The distributed README must be self-contained, actionable, and discoverable through the existing agent guidance." Acceptance: start from the root runtime's mandatory reading and follow the pointers; the adoption contract is reached, and it separates receiving, adopting, mandatory standards, project-local settings, authorized exceptions, dependency updates and code updates.
+- S10 — A proposed architecture decision record captures the rationale and the rejected alternatives. Exact requirement: "Creation of ADR 0012 with Proposed status." Acceptance: read the decision record; its status is `Proposed`, and it states the decision, the alternatives and the propagation target.
+- S11 — Verification compares effective configuration and coverage before and after relocation using native tooling, and Core Sync does not interpret configuration inheritance. Exact requirement: "Do not make Core Sync responsible for interpreting TypeScript, Biome, or Oxlint inheritance." Acceptance: inspect the Core Sync test suite; its new assertions cover registry and distribution contracts only, and the equivalence evidence comes from the tools' own configured-output and coverage commands.
+- S12 — No formatting rule, linting rule, compiler behavior, file coverage or exclusion changes, beyond the authorized protected-exclusion behavior. Exact requirement: "Do not introduce new formatting or linting rules. Do not perform repository-wide formatting." Acceptance: compare the tools' effective rule sets and processed-file sets before and after; the only differences are the newly introduced canonical resources and the authorized refusal behavior.
+
+## Tasks
+
+- T1 | S6 | inline (behaviour change confined to the existing protected-exclusion mechanism and its existing owner suite) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
+- T2 | S1, S2, S4, S12 | inline (canonical resources plus the two configuration entry points that must consume them) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
+- T3 | S5, S12 | inline (two compiler layers and the eight consumers that extend them) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
+- T4 | S7, S8, S9, S10 | inline (documentation, decision record and discovery surface for the delivered standards) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
+- T5 | S3, S11, S12 | inline (equivalence evidence, checkout expansion test, durable-feature accounting and closure) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
+
+## Log
+
+- L1 — 2026-11-24 — Original request. The investigation brief that opened this change defined the objective, the strict AICore-only repository scope, the current-state investigation, the canonical ownership model, the distribution strategy, the adoption documentation, agent discoverability, the AICore-only verification strategy and the constraints that no implementation, branch, commit or PR was then authorized. Requirement-bearing text quoted exactly:
+
+```text
+Establish AICore as the single source of truth for shared development tooling standards.
+
+AICore is the only repository authorized for investigation and subsequent implementation.
+
+Do not introduce new distribution mechanisms unless an evidenced limitation makes them necessary.
+
+Prefer extending existing canonical documentation and discovery mechanisms.
+
+Do not introduce a new skill, subagent, hook, custom validator, or enforcement mechanism unless an evidenced gap justifies it.
+
+Do not use actual destination repositories for verification. Do not introduce unnecessary synthetic projects or additional end-to-end testing infrastructure.
+
+Investigation and design only.
+
+Do not implement changes, create branches, create commits, or publish a PR.
+```
+
+- L2 — 2026-11-24 — First user correction, which withdrew three of my proposals. Requirement-bearing text quoted exactly:
+
+```text
+I do not agree with disabling Biome's EditorConfig integration merely because EditorConfig lacks native configuration inheritance.
+
+Evaluate a distributable canonical EditorConfig template under `.aicore/core/tooling/`, while preserving `useEditorconfig: true`.
+
+Evaluate whether the existing consumers justify two configuration layers: A general TypeScript baseline containing genuinely reusable standards. A shared direct-execution TypeScript profile extending the general baseline and containing the common execution-model settings.
+
+Distinguish technical inheritance limitations from normative tooling requirements.
+
+Successful linting, formatting, and type-checking alone do not prove that effective configurations and coverage remain unchanged.
+
+Do not introduce artificial failures solely to manufacture RED evidence.
+```
+
+- L3 — 2026-11-24 — Second user correction, which withdrew the documented-broken-combination answer and corrected two implementation claims. Requirement-bearing text quoted exactly:
+
+```text
+I do not accept documenting a known broken distribution combination as the final solution.
+
+Evaluate the smallest correct adjustment to the existing protected-exclusion mechanism so that a protected directory also protects its descendants.
+
+Therefore, a failure during payload writes does not necessarily leave newly introduced resources bound in the persisted bindings document.
+
+Include exact equality verification between AICore's root `.editorconfig` and its canonical distributed template, rather than relying exclusively on successful formatting.
+
+However, general tooling policy verification, EditorConfig equality, adoption documentation examples, and agent instruction discoverability must not be assigned to Core Sync merely for convenience.
+
+Core Sync must not become responsible for interpreting the configuration inheritance semantics of TypeScript, Biome, or Oxlint.
+```
+
+- L4 — 2026-11-24 — Third user correction, which resolved the protected-directory defect precisely. Requirement-bearing text quoted exactly:
+
+```text
+The current `isExcludedSource()` checks whether a declared exclusion contains or exactly matches the supplied source.
+
+Consequently, protecting `.aicore/core/tooling/` does not necessarily reject an individual exclusion of: `.aicore/core/tooling/tsconfig.base.json`, `.aicore/core/tooling/tsconfig.node-direct.json`, `.aicore/core/tooling/README.md`.
+
+Furthermore, the current bindings parser accepts safe relative exclusion paths. Do not assume exclusions are restricted to exact registry rows without demonstrating that restriction in the actual implementation.
+
+Keep `isExcludedSource()` unchanged.
+```
+
+- L5 — 2026-11-24 — Implementation authorization and baseline. The user authorized D1, D2, D3″, D4′, D5′, D6, D8‴, D10, D11 and D12, and required a Herald-verified baseline before any branch. Herald 📯 (Release Manager) reported local HEAD, `origin/main` and the pinned investigated revision as one commit `328f7c6f4372b86dc18f9f078bd51e459cd8558f` on `main` with a clean tree and no intervening commit, then created `feat/shared-tooling-standards` from `origin/main`. Investigation and design provenance: the four preceding turns, whose decisive text is quoted at `L1`–`L4`. D9 (unifying the React/NestJS alias wording) remains outside scope.
