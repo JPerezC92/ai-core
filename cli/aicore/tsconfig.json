@@ -1,24 +1,4 @@
 {
-  "compilerOptions": {
-    "target": "ES2024",
-    "lib": ["ES2024"],
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "types": ["node"],
-
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "noImplicitOverride": true,
-    "noFallthroughCasesInSwitch": true,
-
-    "noEmit": true,
-    "allowImportingTsExtensions": true,
-    "erasableSyntaxOnly": true,
-    "verbatimModuleSyntax": true,
-
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
-  },
+  "extends": "../../.aicore/core/tooling/tsconfig.node-direct.json",
   "include": ["src/**/*.ts", "tests/**/*.ts", "vitest.config.ts", "vitest.e2e.config.ts"]
 }
