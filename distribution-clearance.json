@@ -47,6 +47,9 @@
     ".aicore/core/architecture/": {
       "mode": "raw"
     },
+    ".aicore/core/tooling/": {
+      "mode": "raw"
+    },
     ".agents/skills/git-branch-name/": {
       "mode": "raw"
     },
