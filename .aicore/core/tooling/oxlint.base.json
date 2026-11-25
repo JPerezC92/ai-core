@@ -1,0 +1,14 @@
+{
+  "plugins": ["typescript", "unicorn", "oxc", "import", "promise"],
+  "rules": {
+    "import/no-relative-parent-imports": "error"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "**/*.spec.ts", "**/tests/**"],
+      "rules": {
+        "typescript/unbound-method": "off"
+      }
+    }
+  ]
+}
