@@ -56,7 +56,7 @@ Three native inheritance mechanisms, no loader and no generator.
 ```json
 {
   "$schema": "https://biomejs.dev/schemas/2.6.8/schema.json",
-  "extends": ["./<path-to-distributed>/.aicore/core/tooling/biome.base.json"],
+  "extends": ["./.aicore/core/tooling/biome.base.json"],
   "files": { "includes": ["**"] }
 }
 ```
@@ -66,7 +66,7 @@ Three native inheritance mechanisms, no loader and no generator.
 ```json
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "extends": ["./<path-to-distributed>/.aicore/core/tooling/oxlint.base.json"],
+  "extends": ["./.aicore/core/tooling/oxlint.base.json"],
   "options": { "typeAware": true },
   "env": { "node": true },
   "plugins": ["node"],
@@ -74,29 +74,37 @@ Three native inheritance mechanisms, no loader and no generator.
 }
 ```
 
+Those paths assume the project root, where the distributed directory sits. A configuration in a nested package adjusts the prefix for its own depth — `../../.aicore/core/tooling/…` from two levels down — and a project that relocates the distributed directory adjusts it to the new location. Nothing else changes.
+
 `rules`, `plugins` and `overrides` are inherited. `options`, `env`, `globals` and `ignorePatterns` are **not** — Oxlint extends only those three keys — so a project declares its own, and that duplication is a property of the tool, not of this standard. `env`, `plugins` additions and `ignorePatterns` are project-owned: a browser project sets its own environment and drops the `node` plugin.
 
-**Compiler.** The project's `tsconfig.json` extends the profile and keeps only its own inclusion:
+**Compiler.** The project's `tsconfig.json` extends the profile and declares only its own inclusion — the profile already supplies every execution-model option, so redeclaring or overriding one is a defect rather than a project setting:
 
 ```json
 {
-  "extends": "./<path-to-distributed>/.aicore/core/tooling/tsconfig.node-direct.json",
-  "compilerOptions": {
-    "target": "ES2024",
-    "lib": ["ES2024"],
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "types": ["node"],
-    "noEmit": true,
-    "allowImportingTsExtensions": true,
-    "erasableSyntaxOnly": true,
-    "verbatimModuleSyntax": true
-  },
+  "extends": "./.aicore/core/tooling/tsconfig.node-direct.json",
   "include": ["src/**/*.ts", "tests/**/*.ts"]
 }
 ```
 
-The profile's keys are the direct-execution tier: TypeScript runs under Node's type stripping with no build step. A project that bundles or compiles instead selects its own `target`, `module`, `moduleResolution` and `jsx` and extends `tsconfig.base.json` directly; the language-level standards are inherited either way, and the project's own settings are the only ones it states.
+Those keys are the direct-execution tier: TypeScript runs under Node's type stripping with no build step. A project that bundles or compiles instead extends the general baseline and declares its own execution model:
+
+```json
+{
+  "extends": "./.aicore/core/tooling/tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}
+```
+
+The language-level standards are inherited in both cases, and the second form's execution model is its own binding rather than an override of a profile it does not extend.
 
 **EditorConfig.** EditorConfig has no include or extend directive, so the canonical file is a template rather than an inherited configuration. Create the project's root `.editorconfig` from it, then add the project's own sections after it:
 
@@ -110,7 +118,7 @@ indent_size = 4
 
 Keep `root = true` in the copy. Every section the canonical template states stays as written: indentation and line endings are the contract the formatter reads, and a project overrides them only as an authorized exception. After the copy, the formatter's own configuration must declare no indentation setting, because the formatter reads it from this file.
 
-**Commands and verification.** Expose the standard entry points in the project's package scripts and compose them into one verification command that never writes:
+**Commands and verification.** Expose the standard entry points for the standards the project applies and compose them into one verification command that never writes. The example is a single-package TypeScript project using pnpm:
 
 ```json
 {
@@ -124,6 +132,8 @@ Keep `root = true` in the copy. Every section the canonical template states stay
   }
 }
 ```
+
+A project includes only the commands its stack applies: one without TypeScript declares no `typecheck`, one with no JS/TS declares no lint command, and one that formats only Markdown keeps the formatter and drops the rest. A workspace verification command must reach every applicable package, whether through the orchestrator's recursive form or an explicit command per package. The package manager and the verification orchestration are project-owned; the entries above name the standards, not a required runner.
 
 **Work layouts.** A single-package project places one configuration of each kind at its root. A workspace places the same files at the workspace root, and a package that needs different rules adds its own configuration that extends the workspace root through the tool's native mechanism: Biome resolves a nested `biome.json` with `"extends": ["//"]`, and Oxlint reads a nested `.oxlintrc.json` that extends `"../../.oxlintrc.json"`. A nested configuration narrows scope or adds rules; it never disables a canonical rule.
 
@@ -156,12 +166,12 @@ Duplicated or conflicting rules are resolved by deleting the local copy, not by 
 
 These stay project-owned and need no authorization. They are the design, not an exception:
 
-| Tool         | Project-owned settings                                                                                                                                                                                                                            |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Biome        | `files.includes` and any `overrides` for the project's own paths; `vcs` settings beyond the inherited defaults                                                                                                                                    |
-| Oxlint       | `env`, `globals`, `options` (including `typeAware`), `ignorePatterns`, and additional `plugins`                                                                                                                                                   |
-| TypeScript   | `target`, `lib`, `module`, `moduleResolution`, `jsx`, `types`, `noEmit`, `allowImportingTsExtensions`, `erasableSyntaxOnly`, `verbatimModuleSyntax`, `rootDir`, `outDir`, `paths` where the build pipeline resolves them, and `include`/`exclude` |
-| EditorConfig | Sections for languages the canonical template does not cover, and the project's own trailing-whitespace choices outside the inherited sections                                                                                                    |
+| Tool         | Project-owned settings                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Biome        | `files.includes` and any `overrides` for the project's own paths; `vcs` settings beyond the inherited defaults                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Oxlint       | `env`, `globals`, `options` (including `typeAware`), `ignorePatterns`, and additional `plugins`                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| TypeScript   | A project extending the general baseline declares its own execution model — `target`, `lib`, `module`, `moduleResolution`, `jsx`, `types`, `noEmit`, `allowImportingTsExtensions`, `erasableSyntaxOnly`, `verbatimModuleSyntax`, `rootDir`, `outDir`, `paths` where the build pipeline resolves them — plus `include`/`exclude`. A project adopting the Node direct-execution profile declares only its inclusion: that profile owns those options, and redeclaring or silently overriding one is a defect rather than a project setting. |
+| EditorConfig | Sections for languages the canonical template does not cover, and the project's own trailing-whitespace choices outside the inherited sections                                                                                                                                                                                                                                                                                                                                                                                            |
 
 ## Authorized exceptions
 
