@@ -86,4 +86,4 @@ Five duties follow:
 
 The sole testing documents are `.aicore/core/architecture/testing/architecture.md` and `.aicore/core/architecture/testing/stacks/{_template,typescript,python}.md`. The obsolete root compatibility files and their clearance rows are removed. Testing decisions, reviewed guide status, parity, and project-owned selections are preserved; relocation is not a new testing decision or implementation-conformance claim.
 
-New architecture paths arrive with their consumers as one applicable set and require destination-authorized `core-sync init --bind-cleared` enrollment at the selected revision; `apply` alone does not enroll missing or markerless paths.
+New architecture paths arrive with their consumers as one applicable set and require destination-authorized `core-sync init --bind-cleared` enrollment at the selected revision. An `apply` also binds a newly cleared `raw` source and creates its absent target; a missing or markerless **region** path is enrolled by `init` alone.

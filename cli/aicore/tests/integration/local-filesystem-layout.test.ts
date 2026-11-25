@@ -27,6 +27,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 import { LocalFilesystemLayout } from "#infrastructure/synchronization/local-filesystem-layout.ts";
+import { parseClearanceDocument } from "#domain/synchronization/clearance.ts";
 import { removeFile, writeBytesFile, writeTextFile } from "#infrastructure/synchronization/local-files.ts";
 import { syncReconciliationBlocker } from "#domain/synchronization/reconciliation.ts";
 import { createTemporaryRoot, disposeTemporaryRoot } from "#support/disposable-root.ts";
@@ -88,6 +89,19 @@ const CHECKOUT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", ".
 /** The skill root the checkout-level assertion reads. */
 const SKILL_ROOT = join(CHECKOUT, ".agents", "skills", "op-skill-creator");
 
+/** The cleared directory root that carries the shared tooling standards. */
+const TOOLING_ROOT = ".aicore/core/tooling/";
+
+/** The resources that root must deliver, as clearance expansion names them. */
+const TOOLING_RESOURCES = [
+	"README.md",
+	"biome.base.json",
+	"editorconfig",
+	"oxlint.base.json",
+	"tsconfig.base.json",
+	"tsconfig.node-direct.json",
+];
+
 let root: string;
 let rootPrefix: string;
 const layout = new LocalFilesystemLayout();
@@ -146,6 +160,28 @@ describe("directory enumeration", () => {
 		expect(enumerated.filter((path) => path.includes("node_modules/"))).toEqual([]);
 		for (const path of enumerated) {
 			const observed = await lstat(join(SKILL_ROOT, path));
+			expect(observed.isFile(), `${path} is not a regular file`).toBe(true);
+			expect(observed.isSymbolicLink(), `${path} is a link`).toBe(false);
+		}
+	});
+
+	test("the checkout's own registry clears the shared tooling directory, and every resource it delivers is a regular file", async () => {
+		const parsed = parseClearanceDocument(
+			JSON.parse(await readFile(join(CHECKOUT, "distribution-clearance.json"), "utf8")),
+		);
+		expect(parsed.ok, parsed.ok ? "" : parsed.reason).toBe(true);
+		if (!parsed.ok) {
+			return;
+		}
+
+		const entry = parsed.entries.get(TOOLING_ROOT);
+		expect(entry?.kind).toBe("directory-root");
+		expect(entry?.mode).toBe("raw");
+
+		const enumerated = await layout.enumerateFilesUnder(join(CHECKOUT, TOOLING_ROOT));
+		expect([...enumerated].sort()).toEqual([...TOOLING_RESOURCES].sort());
+		for (const path of enumerated) {
+			const observed = await lstat(join(CHECKOUT, TOOLING_ROOT, path));
 			expect(observed.isFile(), `${path} is not a regular file`).toBe(true);
 			expect(observed.isSymbolicLink(), `${path} is a link`).toBe(false);
 		}
