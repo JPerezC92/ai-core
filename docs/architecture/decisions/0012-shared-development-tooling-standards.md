@@ -7,7 +7,7 @@
 
 AICore has used one formatter, one linter and one compiler policy since the code-style adoption, and carried an explicit decision that those configuration files are **not** distributed: `docs/tooling.md` recorded that a destination "chooses its own tooling; this is intentional, not an omission".
 
-That stance produced a measured cost. Eight TypeScript projects in this repository carried byte-identical `compilerOptions` blocks — the same twenty effective options copied eight times — and nothing in the distributed corpus mentioned a formatter or a linter at all: a destination agent received shared rules, workflows, architecture, skills and agents, and no tooling standard whatsoever. Every destination therefore had to re-derive formatting and linting policy, or invent one.
+That stance produced a measured cost. Eight TypeScript projects in this repository carried byte-identical `compilerOptions` blocks — the same nineteen effective options copied eight times — and nothing in the distributed corpus mentioned a formatter or a linter at all: a destination agent received shared rules, workflows, architecture, skills and agents, and no tooling standard whatsoever. Every destination therefore had to re-derive formatting and linting policy, or invent one.
 
 Two tool facts bound the design, both verified against the tools' own documentation rather than inferred:
 

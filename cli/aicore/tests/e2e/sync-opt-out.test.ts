@@ -49,6 +49,7 @@ const PROTECTED_TOOLING_ROOT = ".aicore/core/tooling/";
  * descendant directories, and a directory root that contains it.
  */
 const TOOLING_PROTECTION_SHAPES = [
+	PROTECTED_TOOLING_ROOT,
 	`${PROTECTED_TOOLING_ROOT}tsconfig.base.json`,
 	`${PROTECTED_TOOLING_ROOT}tsconfig.node-direct.json`,
 	`${PROTECTED_TOOLING_ROOT}README.md`,
