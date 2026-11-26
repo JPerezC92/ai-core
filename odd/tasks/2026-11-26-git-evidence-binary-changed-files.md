@@ -1,8 +1,10 @@
 # Git evidence preparation for binary changed files
 
-> **Status:** active
+> **Status:** closed
+> **Disposition:** completed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-26
+> **Closed:** 2026-11-26
 > **Objective:** Correct the distributed `git-pr-workflow` evidence preparation so a legitimate binary changed file no longer fails textual processing, while every changed path remains in the changed-file inventory.
 > **Branch:** fix/git-pr-workflow-binary-changed-files
 > **Delivery:** single inline unit; forecast ~150 authored additions + deletions (generated files excluded); slice boundaries: (1) Git classification and inventory correction plus its input reference, (2) regression fixtures and tests, (3) verification, review and delivery evidence.
@@ -19,9 +21,9 @@
 
 ## Tasks
 
-- T1 | S1, S2, S3, S4, S6 | inline (single contained defect in one skill's infrastructure and application layers) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T2 | S1, S2, S3, S4, S5, S6 | inline (regression coverage for the corrected behavior) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
-- T3 | S5 | inline (verification, requested independent review and delivery evidence) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
+- T1 | S1, S2, S3, S4, S6 | inline (single contained defect in one skill's infrastructure and application layers) — Cipher 🔓 (Lead Orchestrator) | done | commit: 77ff6c3a7b062303260644023f06317e196348d8
+- T2 | S1, S2, S3, S4, S5, S6 | inline (regression coverage for the corrected behavior) — Cipher 🔓 (Lead Orchestrator) | done | commit: 77ff6c3a7b062303260644023f06317e196348d8
+- T3 | S1, S3, S6 | inline (review-driven regression coverage for the corner cases the requested independent review raised) — Cipher 🔓 (Lead Orchestrator) | done | commit: 4b0777e1ec4ac21d6f82c931614ec4ea34815e67
 
 ## Log
 
@@ -214,3 +216,6 @@ Proceed.
 ````
 
 - L2 — Investigation outcome: confirmed root cause is `GitReader.readFile` (`git show <commit>:<path>`), whose captured stdout is decoded with a fatal UTF-8 `TextDecoder`; `CollectLocalInventory` calls it for every non-deleted changed path, so one binary blob aborts `prepare-local` with `git read failure: git output was not valid UTF-8`. Git already classifies a change as binary in `git diff --numstat` (two `-` fields), which honours `.gitattributes`; the snapshot path takes an already-decoded JSON input and needs no change. Correction: read that classification and skip only the body read for a path Git reports as binary, keeping the path in the inventory with empty content (the same representation already used for deleted paths), so no schema, field, dependency or abstraction is added. Detail: this record, `## Specs`.
+- L3 — Implementation and regression coverage delivered in commit `77ff6c3`; first failure: a changeset that adds a binary path made `prepare-local` exit 2 with `git read failure: git output was not valid UTF-8`, and the new binary-only end-to-end case reproduced it as `expected 2 to be +0` before the correction, then passed. Observed after the correction: `pnpm --dir .agents/skills/git-pr-workflow exec vitest run` 19 files / 86 tests passed; `pnpm --dir .agents/skills/git-pr-workflow typecheck`, `pnpm lint`, `pnpm format:check` (456 files) and `pnpm typecheck` all exited 0. Detail: the committed diff and tests.
+- L4 — Requested independent review (Mode B, fresh context) judged candidate `77ff6c3` and returned `[ADVISORY]` with one finding and four INFO notes. Finding 1 (mode-only change to a binary path might stay unclassified) is ✖ REJECTED as a defect: commit `4b0777e` adds the fixture that stages only a permission change on a committed binary path, and the reader classifies it binary, so the hypothesised escape does not occur. INFO 1 (attribution scanning now covers Git-textual content only) is the authorized consequence of classifying by Git's own signal; INFO 2 (binary rename) is closed by the same commit's rename fixture, which also shows the deleted source is classified binary and harmlessly carried with its empty deleted body; INFO 3 and INFO 4 need no action. No production change followed from the review. Counts: fixed 0 · open 0 · deferred 0 · rejected 1 (of 1).
+- L5 — Close: every `S#` is verified at the delivered commits — S1 and S2 by the binary-only and mixed end-to-end runs (exit 0, binary path present with an empty body), S3 and S4 by the malformed-text repository (the non-UTF-8 text path is not classified binary and the run still exits 2 with the boundary message), S5 by the unchanged attribution and persisted-body suites plus the scan of a prepared snapshot carrying a binary path, S6 by the mixed changeset retaining the rename destination, the deleted path and the modified content. Durable feature `odd/features/pr-publication.md` R11 added and ticked; no requirement was reworded or retired. Full feature mirror: synchronization is recorded in the delivery handoff, not asserted here.
