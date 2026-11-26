@@ -287,6 +287,7 @@ export function createLocalSnapshot(): Snapshot {
 export const GIT_SOURCE_PATH = "src/current.py";
 export const GIT_BINARY_PATH = "src/binary.bin";
 export const GIT_CHANGED_BINARY_PATH = "assets/evidence.png";
+export const GIT_RENAMED_BINARY_PATH = "assets/renamed-evidence.png";
 export const GIT_MALFORMED_TEXT_PATH = "src/latin1.txt";
 export const GIT_REMOVED_PATH = "src/deleted.py";
 export const GIT_METACHARACTER_PATH = "src/evil;touch injected.txt";
@@ -509,6 +510,43 @@ export function createMalformedTextRepository(directory: string): GitRangeFixtur
 		head,
 		changedPaths: [GIT_CHANGED_BINARY_PATH, GIT_MALFORMED_TEXT_PATH],
 		binaryPaths: [GIT_CHANGED_BINARY_PATH],
+	};
+}
+
+/** Build two commits whose second change only changes the mode of a committed binary path. */
+export function createModeOnlyBinaryRepository(directory: string): GitRangeFixture {
+	mkdirSync(join(directory, "assets"), { recursive: true });
+	runFixtureGit(directory, "init", "--quiet");
+	writeFileSync(join(directory, GIT_CHANGED_BINARY_PATH), GIT_CHANGED_BINARY_CONTENT);
+	runFixtureGit(directory, "add", "--all");
+	const base = commitFixtureTree(directory, GIT_BASE_MESSAGE);
+	runFixtureGit(directory, "update-index", "--chmod=+x", GIT_CHANGED_BINARY_PATH);
+	const head = commitFixtureTree(directory, GIT_CHANGED_MESSAGE);
+	return {
+		directory,
+		base,
+		head,
+		changedPaths: [GIT_CHANGED_BINARY_PATH],
+		binaryPaths: [GIT_CHANGED_BINARY_PATH],
+	};
+}
+
+/** Build two commits whose second change renames a committed binary path. */
+export function createBinaryRenameRepository(directory: string): GitRangeFixture {
+	mkdirSync(join(directory, "assets"), { recursive: true });
+	runFixtureGit(directory, "init", "--quiet");
+	writeFileSync(join(directory, GIT_CHANGED_BINARY_PATH), GIT_CHANGED_BINARY_CONTENT);
+	runFixtureGit(directory, "add", "--all");
+	const base = commitFixtureTree(directory, GIT_BASE_MESSAGE);
+	runFixtureGit(directory, "mv", GIT_CHANGED_BINARY_PATH, GIT_RENAMED_BINARY_PATH);
+	runFixtureGit(directory, "add", "--all");
+	const head = commitFixtureTree(directory, GIT_CHANGED_MESSAGE);
+	return {
+		directory,
+		base,
+		head,
+		changedPaths: [GIT_RENAMED_BINARY_PATH],
+		binaryPaths: [GIT_CHANGED_BINARY_PATH, GIT_RENAMED_BINARY_PATH],
 	};
 }
 

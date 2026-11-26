@@ -4,13 +4,16 @@ import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { GitBoundaryError, GitReader } from "#scripts/pr_review/infrastructure/git_reader.ts";
 import {
+	createBinaryRenameRepository,
 	createCommittedRepository,
 	createMalformedTextRepository,
+	createModeOnlyBinaryRepository,
 	GIT_BINARY_PATH,
 	GIT_CHANGED_BINARY_PATH,
 	GIT_MALFORMED_TEXT_PATH,
 	GIT_METACHARACTER_PATH,
 	GIT_REMOVED_PATH,
+	GIT_RENAMED_BINARY_PATH,
 	GIT_RENAMED_FROM_PATH,
 	GIT_RENAMED_TO_PATH,
 	GIT_SIDE_EFFECT_NAME,
@@ -125,6 +128,43 @@ describe("the Git reader against a real repository", () => {
 			expect(() => reader.readFile(malformed.head, GIT_MALFORMED_TEXT_PATH)).toThrow(
 				"git output was not valid UTF-8",
 			);
+		});
+	});
+
+	describe("a mode-only binary change", () => {
+		let modeOnly: GitRangeFixture;
+
+		beforeAll(() => {
+			const root = makeDirectory();
+			limitRepositorySearch(root);
+			modeOnly = createModeOnlyBinaryRepository(join(root, "mode-only"));
+		}, 30_000);
+
+		it("still classifies the changed binary path as binary", () => {
+			const reader = new GitReader({ cwd: modeOnly.directory });
+
+			expect(reader.listChangedPaths(modeOnly.base, modeOnly.head)).toEqual(modeOnly.changedPaths);
+			expect(reader.listBinaryPaths(modeOnly.base, modeOnly.head)).toEqual(modeOnly.binaryPaths);
+		});
+	});
+
+	describe("a binary rename", () => {
+		let renamed: GitRangeFixture;
+
+		beforeAll(() => {
+			const root = makeDirectory();
+			limitRepositorySearch(root);
+			renamed = createBinaryRenameRepository(join(root, "renamed-binary"));
+		}, 30_000);
+
+		it("classifies the rename destination as binary without listing the source path", () => {
+			const reader = new GitReader({ cwd: renamed.directory });
+
+			expect(reader.listChangedPaths(renamed.base, renamed.head)).toEqual(renamed.changedPaths);
+			// Rename detection is off, so the deleted source is compared as an all-binary
+			// removal too; it is already carried with an empty body as a deleted path.
+			expect(reader.listBinaryPaths(renamed.base, renamed.head)).toEqual(renamed.binaryPaths);
+			expect(reader.listBinaryPaths(renamed.base, renamed.head)).toContain(GIT_RENAMED_BINARY_PATH);
 		});
 	});
 }, 30_000);
