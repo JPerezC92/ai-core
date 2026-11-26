@@ -4,7 +4,7 @@ Release is a distinct workflow from ODD. This file is its home. Do not copy Hera
 
 ### PR release readiness
 
-Before opening a PR, the coordinator assembles and verifies one release-readiness packet: the exact test-plan actions or commands with their observed results; every applicable check's status; the open-or-closed status of each task and of the feature; excluded or unrelated paths; unverified user-only controls; and each body claim against its evidence. Missing, contradictory, or stale evidence blocks PR creation until resolved — a partially verified packet is never an acceptable substitute. This applies to every PR, including docs-only changes, and introduces no tracker, no second approval ritual, and no change to existing authorizations or gates.
+Before opening a PR, the coordinator assembles and verifies one release-readiness packet: the exact test-plan actions or commands with their observed results; every applicable check's status, and for a check that could not execute, the guarantee it exists to establish together with the permitted alternative procedure that established it; the open-or-closed status of each task and of the feature; excluded or unrelated paths; unverified user-only controls; and each body claim against its evidence. Missing, contradictory, or stale evidence blocks PR creation until resolved — a partially verified packet is never an acceptable substitute. This applies to every PR, including docs-only changes, and introduces no tracker, no second approval ritual, and no change to existing authorizations or gates.
 
 The governing ODD record's closure is a precondition of the packet, not an item inside it: the record is closed and its closure committed, and the release executor proves that from committed state before any pull-request route begins. A packet cannot substitute for that proof, and reporting readiness covers only the pull request itself — its required checks and their evidence.
 
@@ -17,7 +17,7 @@ The PR body carries the delivery evidence: `## Summary`, a `## Test plan` of `- 
 - Every required test-plan item is checked with the observed result that verifies it. An unchecked required item means the delivery is **not ready**.
 - Every finding carries its ID, severity, status and evidence. An open `BLOCK` finding means **not ready**.
 - The trailing verdict line (`[PASS] — basis`, `[ADVISORY] — basis`, `[BLOCK] — basis`) states delivery readiness and the evidence it rests on. Its basis names whether an independent review ran. **The line is optional**: a delivery with no requested review is valid and the body ends without a verdict line.
-- **The absence of a verdict never hides a failure.** A missing verdict is never grounds for readiness, and a failed or unresolved required check, an unchecked item, or an open `BLOCK` finding keeps the delivery not ready whether or not a verdict line is present.
+- **The absence of a verdict never hides a failure.** A missing verdict is never grounds for readiness, and a failed required check, an applicable guarantee that remains unestablished, an unchecked item, or an open `BLOCK` finding keeps the delivery not ready whether or not a verdict line is present.
 - Verification evidence is attributed truthfully: the executor, the exact command and the observed result. An author's self-review is described as self-review and never as independent verification.
 
 ### Finding actions
