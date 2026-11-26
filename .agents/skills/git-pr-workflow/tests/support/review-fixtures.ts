@@ -286,6 +286,9 @@ export function createLocalSnapshot(): Snapshot {
 
 export const GIT_SOURCE_PATH = "src/current.py";
 export const GIT_BINARY_PATH = "src/binary.bin";
+export const GIT_CHANGED_BINARY_PATH = "assets/evidence.png";
+export const GIT_RENAMED_BINARY_PATH = "assets/renamed-evidence.png";
+export const GIT_MALFORMED_TEXT_PATH = "src/latin1.txt";
 export const GIT_REMOVED_PATH = "src/deleted.py";
 export const GIT_METACHARACTER_PATH = "src/evil;touch injected.txt";
 export const GIT_SIDE_EFFECT_NAME = "injected.txt";
@@ -306,6 +309,11 @@ export const GIT_ORPHAN_MESSAGE = "feat: an unrelated history";
 export const GIT_SIDE_BRANCH = "feature/base-side";
 export const GIT_HEAD_BRANCH = "feature/head-side";
 export const GIT_BINARY_CONTENT = Buffer.from([0xff, 0xfe, 0x00, 0x6e, 0x6f, 0x74, 0x20, 0x74, 0x65, 0x78, 0x74, 0x0a]);
+export const GIT_CHANGED_BINARY_CONTENT = Buffer.from([
+	0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
+]);
+// No NUL byte, so Git still classifies this invalid UTF-8 body as text.
+export const GIT_MALFORMED_TEXT_CONTENT = Buffer.from([0x66, 0x6f, 0x6f, 0x20, 0x80, 0x0a]);
 export const GIT_REDIRECTING_VARIABLES = ["GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"];
 
 /** One isolated two-commit repository and the values its readers must return. */
@@ -317,7 +325,17 @@ export type GitRepositoryFixture = {
 	readonly message: string;
 	readonly changedPaths: string[];
 	readonly deletedPaths: string[];
+	readonly binaryPaths: string[];
 	readonly bodies: Record<string, string>;
+};
+
+/** One isolated two-commit repository whose head changes only named paths. */
+export type GitRangeFixture = {
+	readonly directory: string;
+	readonly base: string;
+	readonly head: string;
+	readonly changedPaths: string[];
+	readonly binaryPaths: string[];
 };
 
 /** One repository whose base line holds a commit unreachable from its head. */
@@ -422,6 +440,8 @@ export function createCommittedRepository(directory: string): GitRepositoryFixtu
 	writeFileSync(join(directory, GIT_BINARY_PATH), GIT_BINARY_CONTENT);
 	runFixtureGit(directory, "add", "--all");
 	const base = commitFixtureTree(directory, GIT_BASE_MESSAGE);
+	mkdirSync(join(directory, "assets"), { recursive: true });
+	writeFileSync(join(directory, GIT_CHANGED_BINARY_PATH), GIT_CHANGED_BINARY_CONTENT);
 	writeFileSync(join(directory, GIT_SOURCE_PATH), GIT_CHANGED_CONTENT, "utf8");
 	runFixtureGit(directory, "rm", "--quiet", GIT_REMOVED_PATH);
 	writeFileSync(join(directory, GIT_METACHARACTER_PATH), GIT_METACHARACTER_CONTENT, "utf8");
@@ -435,8 +455,15 @@ export function createCommittedRepository(directory: string): GitRepositoryFixtu
 		head,
 		orphanHead,
 		message: GIT_CHANGED_MESSAGE,
-		changedPaths: [GIT_SOURCE_PATH, GIT_REMOVED_PATH, GIT_METACHARACTER_PATH, GIT_RENAMED_TO_PATH],
+		changedPaths: [
+			GIT_CHANGED_BINARY_PATH,
+			GIT_SOURCE_PATH,
+			GIT_REMOVED_PATH,
+			GIT_METACHARACTER_PATH,
+			GIT_RENAMED_TO_PATH,
+		],
 		deletedPaths: [GIT_REMOVED_PATH],
+		binaryPaths: [GIT_CHANGED_BINARY_PATH],
 		bodies: {
 			[GIT_SOURCE_PATH]: GIT_CHANGED_CONTENT,
 			[GIT_METACHARACTER_PATH]: GIT_METACHARACTER_CONTENT,
@@ -445,9 +472,92 @@ export function createCommittedRepository(directory: string): GitRepositoryFixtu
 	};
 }
 
+/** Build two commits whose second change adds one binary path only. */
+export function createBinaryOnlyRepository(directory: string): GitRangeFixture {
+	mkdirSync(join(directory, "src"), { recursive: true });
+	runFixtureGit(directory, "init", "--quiet");
+	writeFileSync(join(directory, GIT_SOURCE_PATH), GIT_BASE_CONTENT, "utf8");
+	runFixtureGit(directory, "add", "--all");
+	const base = commitFixtureTree(directory, GIT_BASE_MESSAGE);
+	mkdirSync(join(directory, "assets"), { recursive: true });
+	writeFileSync(join(directory, GIT_CHANGED_BINARY_PATH), GIT_CHANGED_BINARY_CONTENT);
+	runFixtureGit(directory, "add", "--all");
+	const head = commitFixtureTree(directory, GIT_CHANGED_MESSAGE);
+	return {
+		directory,
+		base,
+		head,
+		changedPaths: [GIT_CHANGED_BINARY_PATH],
+		binaryPaths: [GIT_CHANGED_BINARY_PATH],
+	};
+}
+
+/** Build two commits whose second change adds a binary path beside a non-UTF-8 text body. */
+export function createMalformedTextRepository(directory: string): GitRangeFixture {
+	mkdirSync(join(directory, "src"), { recursive: true });
+	runFixtureGit(directory, "init", "--quiet");
+	writeFileSync(join(directory, GIT_SOURCE_PATH), GIT_BASE_CONTENT, "utf8");
+	runFixtureGit(directory, "add", "--all");
+	const base = commitFixtureTree(directory, GIT_BASE_MESSAGE);
+	mkdirSync(join(directory, "assets"), { recursive: true });
+	writeFileSync(join(directory, GIT_CHANGED_BINARY_PATH), GIT_CHANGED_BINARY_CONTENT);
+	writeFileSync(join(directory, GIT_MALFORMED_TEXT_PATH), GIT_MALFORMED_TEXT_CONTENT);
+	runFixtureGit(directory, "add", "--all");
+	const head = commitFixtureTree(directory, GIT_CHANGED_MESSAGE);
+	return {
+		directory,
+		base,
+		head,
+		changedPaths: [GIT_CHANGED_BINARY_PATH, GIT_MALFORMED_TEXT_PATH],
+		binaryPaths: [GIT_CHANGED_BINARY_PATH],
+	};
+}
+
+/** Build two commits whose second change only changes the mode of a committed binary path. */
+export function createModeOnlyBinaryRepository(directory: string): GitRangeFixture {
+	mkdirSync(join(directory, "assets"), { recursive: true });
+	runFixtureGit(directory, "init", "--quiet");
+	writeFileSync(join(directory, GIT_CHANGED_BINARY_PATH), GIT_CHANGED_BINARY_CONTENT);
+	runFixtureGit(directory, "add", "--all");
+	const base = commitFixtureTree(directory, GIT_BASE_MESSAGE);
+	runFixtureGit(directory, "update-index", "--chmod=+x", GIT_CHANGED_BINARY_PATH);
+	const head = commitFixtureTree(directory, GIT_CHANGED_MESSAGE);
+	return {
+		directory,
+		base,
+		head,
+		changedPaths: [GIT_CHANGED_BINARY_PATH],
+		binaryPaths: [GIT_CHANGED_BINARY_PATH],
+	};
+}
+
+/** Build two commits whose second change renames a committed binary path. */
+export function createBinaryRenameRepository(directory: string): GitRangeFixture {
+	mkdirSync(join(directory, "assets"), { recursive: true });
+	runFixtureGit(directory, "init", "--quiet");
+	writeFileSync(join(directory, GIT_CHANGED_BINARY_PATH), GIT_CHANGED_BINARY_CONTENT);
+	runFixtureGit(directory, "add", "--all");
+	const base = commitFixtureTree(directory, GIT_BASE_MESSAGE);
+	runFixtureGit(directory, "mv", GIT_CHANGED_BINARY_PATH, GIT_RENAMED_BINARY_PATH);
+	runFixtureGit(directory, "add", "--all");
+	const head = commitFixtureTree(directory, GIT_CHANGED_MESSAGE);
+	return {
+		directory,
+		base,
+		head,
+		changedPaths: [GIT_RENAMED_BINARY_PATH],
+		binaryPaths: [GIT_CHANGED_BINARY_PATH, GIT_RENAMED_BINARY_PATH],
+	};
+}
+
 /** Return one NUL-separated rename entry whose destination field is missing. */
 export function createTruncatedStatusPayload(): string {
 	return `R100\0${GIT_RENAMED_FROM_PATH}\0`;
+}
+
+/** Return one NUL-separated numstat entry whose deleted-line field is missing. */
+export function createTruncatedNumstatPayload(): string {
+	return `-\t${GIT_CHANGED_BINARY_PATH}\0`;
 }
 
 /** Build a head line and a base line that diverge after their shared ancestor. */

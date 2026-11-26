@@ -14,6 +14,8 @@ export interface GitInventoryPort {
 	listChangedPaths(ancestor: string, head: string): readonly string[];
 	/** Return the paths the range deletes, so no body is read for them. */
 	listDeletedPaths(ancestor: string, head: string): readonly string[];
+	/** Return the paths the range changes as binary, so no body is read for them. */
+	listBinaryPaths(ancestor: string, head: string): readonly string[];
 	/** Return one file body as committed at the supplied commit. */
 	readFile(commit: string, path: string): string;
 }
