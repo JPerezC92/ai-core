@@ -51,9 +51,10 @@ export class CollectLocalInventory {
 				"deleted paths must belong to the changed path inventory",
 			);
 		}
+		const binary = new Set(this.reader.listBinaryPaths(ancestor, head));
 		const changedFiles: ChangedFile[] = paths.map((path) => ({
 			path,
-			content: deleted.has(path) ? "" : this.reader.readFile(head, path),
+			content: deleted.has(path) || binary.has(path) ? "" : this.reader.readFile(head, path),
 		}));
 		const commitMessages: Artifact[] = commits.map((commit) => ({
 			surface: "commit-message",

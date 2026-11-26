@@ -22,11 +22,13 @@ class RecordingReader implements GitInventoryPort {
 	readonly mergeBaseArguments: Array<[string, string]> = [];
 	readonly commitRanges: Array<[string, string]> = [];
 	readonly pathRanges: Array<[string, string]> = [];
+	readonly readPaths: string[] = [];
 	private readonly revisions: Map<string, string | null>;
 	private readonly ancestor: string | null;
 	private readonly commits: string[];
 	private readonly changedPaths: string[];
 	private readonly deletedPaths: string[];
+	private readonly binaryPaths: string[];
 	private readonly messages: Map<string, string>;
 	private readonly bodies: Map<string, string>;
 
@@ -36,6 +38,7 @@ class RecordingReader implements GitInventoryPort {
 		commits: string[];
 		changedPaths: string[];
 		deletedPaths: string[];
+		binaryPaths?: string[];
 		messages: Map<string, string>;
 		bodies: Map<string, string>;
 	}) {
@@ -44,6 +47,7 @@ class RecordingReader implements GitInventoryPort {
 		this.commits = options.commits;
 		this.changedPaths = options.changedPaths;
 		this.deletedPaths = options.deletedPaths;
+		this.binaryPaths = options.binaryPaths ?? [];
 		this.messages = options.messages;
 		this.bodies = options.bodies;
 	}
@@ -77,7 +81,12 @@ class RecordingReader implements GitInventoryPort {
 		return [...this.deletedPaths];
 	}
 
+	listBinaryPaths(): string[] {
+		return [...this.binaryPaths];
+	}
+
 	readFile(_commit: string, path: string): string {
+		this.readPaths.push(path);
 		const body = this.bodies.get(path);
 		if (body === undefined) throw new Error(`no configured body for ${path}`);
 		return body;
@@ -185,5 +194,38 @@ describe("CollectLocalInventory.execute", () => {
 
 		expect(result).toBeInstanceOf(ReviewPreparationError);
 		expect(result).toMatchObject({ code: "SNAPSHOT_PATHS_MISMATCH" });
+	});
+
+	it("retains a binary path with an empty body and never reads its text", () => {
+		const snapshot = createSnapshot();
+		const commit = snapshot.artifacts[2];
+		if (commit === undefined) throw new Error("the snapshot fixture carries no commit artifact");
+		const binaryPath = "assets/evidence.png";
+		const reader = new RecordingReader({
+			revisions: new Map<string, string | null>([
+				[HEAD_REVISION, snapshot.head_sha],
+				[snapshot.base, RESOLVED_BASE_COMMIT],
+			]),
+			ancestor: ANCESTOR_COMMIT,
+			commits: [commit.source],
+			changedPaths: ["src/current.py", binaryPath],
+			deletedPaths: [],
+			binaryPaths: [binaryPath],
+			messages: new Map([[commit.source, commit.content]]),
+			bodies: new Map([["src/current.py", "value = 1\n"]]),
+		});
+
+		const result = new CollectLocalInventory(reader).execute(snapshot.pr_number, snapshot.base);
+
+		expect(result).toMatchObject({
+			inventory: {
+				changed_files: [
+					{ path: "src/current.py", content: "value = 1\n" },
+					{ path: binaryPath, content: "" },
+				],
+			},
+			paths: ["src/current.py", binaryPath],
+		});
+		expect(reader.readPaths).toEqual(["src/current.py"]);
 	});
 });

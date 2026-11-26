@@ -7,12 +7,14 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import {
+	createBinaryOnlyRepository,
 	createBody,
 	createCommittedRepository,
 	createCreationPublicationDocument,
 	createFixtureEnvironment,
 	createLocalInventory,
 	createLocalSnapshot,
+	createMalformedTextRepository,
 	createMetadata,
 	createPaths,
 	createPolicy,
@@ -24,6 +26,9 @@ import {
 	createReceiptWithUndeclaredField,
 	createUndecodablePublicationText,
 	createUnexactPathInventory,
+	GIT_CHANGED_BINARY_PATH,
+	GIT_CHANGED_CONTENT,
+	GIT_SOURCE_PATH,
 } from "#tests/support/review-fixtures.ts";
 
 const skillRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -225,11 +230,93 @@ describe("prepare_pr_evidence as a spawned process", () => {
 		const snapshot = JSON.parse(readFileSync(output, "utf8")) as {
 			head_sha: string;
 			base: string;
-			changed_files: Array<{ path: string }>;
+			changed_files: Array<{ path: string; content: string }>;
 		};
 		expect(snapshot.head_sha).toBe(repository.head);
 		expect(snapshot.base).toBe(repository.base);
 		expect(snapshot.changed_files.map((file) => file.path)).toEqual(repository.changedPaths);
+		expect(snapshot.changed_files.find((file) => file.path === GIT_CHANGED_BINARY_PATH)?.content).toBe("");
+		expect(snapshot.changed_files.find((file) => file.path === GIT_SOURCE_PATH)?.content).toBe(GIT_CHANGED_CONTENT);
+	}, 30_000);
+
+	it("prepares and scans a binary-only local inventory", () => {
+		const directory = makeDirectory();
+		const handoff = createPublicationHandoff();
+		const repository = createBinaryOnlyRepository(join(directory, "repository"));
+		const receipt = join(directory, "receipt.json");
+		const body = join(directory, "pr-working-body.md");
+		const output = join(directory, "snapshot.json");
+		const policy = join(directory, "policy.json");
+		writeFileSync(receipt, handoff.receipt, "utf8");
+		writeFileSync(body, handoff.body, "utf8");
+		writeFileSync(policy, JSON.stringify(createPolicy()), "utf8");
+
+		const run = runCli(
+			[
+				"prepare-local",
+				"--pr",
+				"80",
+				"--base",
+				repository.base,
+				"--receipt",
+				receipt,
+				"--body",
+				body,
+				"--output",
+				output,
+			],
+			repository.directory,
+			createFixtureEnvironment(),
+		);
+
+		expect(run.status).toBe(0);
+		expect(run.stdout).toBe('{"status": "prepared", "command": "prepare-local"}\n');
+		const snapshot = JSON.parse(readFileSync(output, "utf8")) as {
+			changed_files: Array<{ path: string; content: string }>;
+		};
+		expect(snapshot.changed_files).toEqual([{ path: GIT_CHANGED_BINARY_PATH, content: "" }]);
+
+		const scan = spawnSync(
+			process.execPath,
+			[join(skillRoot, "scripts", "scan_attribution.ts"), "--policy", policy, "--snapshot", output],
+			{ cwd: directory, encoding: "utf8" },
+		);
+		expect(scan.status).toBe(0);
+		expect(JSON.parse(scan.stdout)).toMatchObject({ matches: [] });
+	}, 30_000);
+
+	it("refuses a text change whose committed body is not valid UTF-8", () => {
+		const directory = makeDirectory();
+		const handoff = createPublicationHandoff();
+		const repository = createMalformedTextRepository(join(directory, "repository"));
+		const receipt = join(directory, "receipt.json");
+		const body = join(directory, "pr-working-body.md");
+		const output = join(directory, "snapshot.json");
+		writeFileSync(receipt, handoff.receipt, "utf8");
+		writeFileSync(body, handoff.body, "utf8");
+
+		const run = runCli(
+			[
+				"prepare-local",
+				"--pr",
+				"80",
+				"--base",
+				repository.base,
+				"--receipt",
+				receipt,
+				"--body",
+				body,
+				"--output",
+				output,
+			],
+			repository.directory,
+			createFixtureEnvironment(),
+		);
+
+		expect(run.status).toBe(2);
+		expect(run.stdout).toBe("");
+		expect(run.stderr).toBe("git read failure: git output was not valid UTF-8\n");
+		expect(existsSync(output)).toBe(false);
 	}, 30_000);
 
 	it("rejects a path inventory that is not the exact diff inventory", () => {

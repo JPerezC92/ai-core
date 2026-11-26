@@ -5,7 +5,10 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { GitBoundaryError, GitReader } from "#scripts/pr_review/infrastructure/git_reader.ts";
 import {
 	createCommittedRepository,
+	createMalformedTextRepository,
 	GIT_BINARY_PATH,
+	GIT_CHANGED_BINARY_PATH,
+	GIT_MALFORMED_TEXT_PATH,
 	GIT_METACHARACTER_PATH,
 	GIT_REMOVED_PATH,
 	GIT_RENAMED_FROM_PATH,
@@ -14,7 +17,7 @@ import {
 	GIT_SOURCE_PATH,
 	limitRepositorySearch,
 } from "#tests/support/review-fixtures.ts";
-import type { GitRepositoryFixture } from "#tests/support/review-fixtures.ts";
+import type { GitRangeFixture, GitRepositoryFixture } from "#tests/support/review-fixtures.ts";
 
 const temporaryDirectories: string[] = [];
 
@@ -49,6 +52,7 @@ describe("the Git reader against a real repository", () => {
 			expect(reader.readMessage(repository.head)).toBe(repository.message);
 			expect(reader.listChangedPaths(repository.base, repository.head)).toEqual(repository.changedPaths);
 			expect(reader.listDeletedPaths(repository.base, repository.head)).toEqual(repository.deletedPaths);
+			expect(reader.listBinaryPaths(repository.base, repository.head)).toEqual(repository.binaryPaths);
 
 			expect(reader.listChangedPaths(repository.base, repository.head)).not.toContain(GIT_RENAMED_FROM_PATH);
 			expect(reader.listChangedPaths(repository.base, repository.head)).toContain(GIT_RENAMED_TO_PATH);
@@ -65,6 +69,7 @@ describe("the Git reader against a real repository", () => {
 			expect(reader.listCommits(repository.base, repository.base)).toEqual([]);
 			expect(reader.listChangedPaths(repository.base, repository.base)).toEqual([]);
 			expect(reader.listDeletedPaths(repository.base, repository.base)).toEqual([]);
+			expect(reader.listBinaryPaths(repository.base, repository.base)).toEqual([]);
 		});
 	});
 
@@ -92,6 +97,34 @@ describe("the Git reader against a real repository", () => {
 
 			expect(() => reader.readFile(repository.head, GIT_BINARY_PATH)).toThrow(GitBoundaryError);
 			expect(() => reader.readFile(repository.head, GIT_BINARY_PATH)).toThrow("git output was not valid UTF-8");
+			expect(() => reader.readFile(repository.head, GIT_CHANGED_BINARY_PATH)).toThrow(
+				"git output was not valid UTF-8",
+			);
+		});
+	});
+
+	describe("binary classification", () => {
+		let malformed: GitRangeFixture;
+
+		beforeAll(() => {
+			const root = makeDirectory();
+			limitRepositorySearch(root);
+			malformed = createMalformedTextRepository(join(root, "malformed"));
+		}, 30_000);
+
+		it("classifies a binary change as binary and leaves a non-UTF-8 text change unclassified", () => {
+			const reader = new GitReader({ cwd: malformed.directory });
+
+			expect(reader.listBinaryPaths(malformed.base, malformed.head)).toEqual(malformed.binaryPaths);
+			expect(reader.listChangedPaths(malformed.base, malformed.head)).toEqual(malformed.changedPaths);
+		});
+
+		it("keeps strict UTF-8 validation for a text path whose body is malformed", () => {
+			const reader = new GitReader({ cwd: malformed.directory });
+
+			expect(() => reader.readFile(malformed.head, GIT_MALFORMED_TEXT_PATH)).toThrow(
+				"git output was not valid UTF-8",
+			);
 		});
 	});
 }, 30_000);

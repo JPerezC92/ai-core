@@ -57,6 +57,31 @@ export function parseStatusEntries(text: string): Array<[string, string]> {
 	return entries;
 }
 
+/** The field Git writes instead of a line count for a binary change. */
+const BINARY_NUMSTAT_FIELD = "-";
+
+/** Map NUL-separated numstat entries to the paths Git reports as binary. */
+export function parseBinaryNumstat(text: string): string[] {
+	const paths: string[] = [];
+	for (const entry of text.split("\0")) {
+		if (entry === "") continue;
+		const addedEnd = entry.indexOf("\t");
+		const deletedEnd = entry.indexOf("\t", addedEnd + 1);
+		if (addedEnd <= 0 || deletedEnd <= addedEnd) {
+			throw new GitBoundaryError("git numstat output was malformed");
+		}
+		const path = entry.slice(deletedEnd + 1);
+		if (path === "") {
+			throw new GitBoundaryError("git numstat output was malformed");
+		}
+		const binary =
+			entry.slice(0, addedEnd) === BINARY_NUMSTAT_FIELD &&
+			entry.slice(addedEnd + 1, deletedEnd) === BINARY_NUMSTAT_FIELD;
+		if (binary) paths.push(path);
+	}
+	return paths;
+}
+
 /** Compose the revision range one inventory read covers. */
 function revisionRange(ancestor: string, head: string): string {
 	return `${ancestor}..${head}`;
@@ -114,6 +139,12 @@ export class GitReader implements GitInventoryPort {
 		const completed = this.run(["diff", "--name-status", "-z", revisionRange(ancestor, head)]);
 		const entries = parseStatusEntries(decodeGitOutput(completed.stdout));
 		return entries.filter(([status]) => status.endsWith("D")).map(([, path]) => path);
+	}
+
+	/** Return the paths the range changes as binary, so no body is read for them. */
+	listBinaryPaths(ancestor: string, head: string): string[] {
+		const completed = this.run(["diff", "--numstat", "-z", "--no-renames", revisionRange(ancestor, head)]);
+		return parseBinaryNumstat(decodeGitOutput(completed.stdout));
 	}
 
 	/** Return one file body as committed at the supplied commit. */

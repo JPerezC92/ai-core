@@ -2,7 +2,7 @@
 
 Pull request publication turns one structured input into the GitHub pull request description, so agents provide data and the utility generates the presentation.
 
-**Status:** achieved
+**Status:** partial
 
 ## Requirements
 
@@ -16,3 +16,4 @@ Pull request publication turns one structured input into the GitHub pull request
 - [x] R8 — The content owner, the review evidence writer and the GitHub executor keep their distinct responsibilities.
 - [x] R9 — Attribution scanning covers the published title and body, and the persisted description is confirmed byte-identical to the generated body.
 - [x] R10 — The content and workflow utilities remain independently distributable and executable, with one authoritative validator and renderer.
+- [ ] R11 — Evidence preparation keeps every changed path in its inventory and processes a path as text only when Git does not classify that change as binary, while malformed textual content is still refused.
