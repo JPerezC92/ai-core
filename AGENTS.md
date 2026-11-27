@@ -71,7 +71,7 @@ Always loaded in full: this runtime spec, `.aicore/core/knowledge/agent-workflow
 
 Every other owner is reached by reading it **before** the named action:
 
-- **Any delivery action** — assembling a release-readiness packet, writing a delivery-evidence body, or making any pre-publication readiness statement → `.aicore/core/knowledge/release.md`, read in full.
+- **Any delivery action** — assembling a release-readiness packet, writing a delivery-evidence body, making any pre-publication readiness statement, or reporting a merge outcome after it lands → `.aicore/core/knowledge/release.md`, read in full. The trigger covers that owner's whole lifecycle, including its post-merge reporting clause.
 - **Writing, checking or accepting an architecture decision record**, or changing an architecture owner's rule → `.aicore/core/knowledge/architecture-decision-workflow.md`, read in full.
 - **Creating, revising or closing an `odd/tasks/` record or an `odd/features/` file** → the `odd-workflow` skill.
 - **Implementing application source, repository tooling, schemas or configuration** → `.aicore/core/knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`, then `.aicore/core/architecture/README.md`.
@@ -81,7 +81,7 @@ Every other owner is reached by reading it **before** the named action:
 - **Reviewing a change candidate** → the `code-review`, `dependency-review` or `visual-review` skill matching the surface.
 - **Preparing or publishing a pull request** → the `git-pr` and `git-pr-workflow` skills.
 
-**These triggers are cooperative instructions, not runtime loading.** A harness does not resolve a path reference on its own, no trigger here is enforcement, and an unreached owner fails silently. A trigger is honored by reading the owner, not by the reference existing. No owner listed here is restated in this runtime spec.
+**These triggers are cooperative instructions, not runtime loading.** A harness does not resolve a path reference on its own, no trigger here is enforcement, and an unreached owner fails silently. A trigger is honored by reading the owner, not by the reference existing. No listed owner's procedure is restated here; a universally binding rule that an owner also states is repeated deliberately, as defense in depth, not duplicated by accident.
 
 - The single feature record is `odd/tasks/<YYYY-MM-DD>-<feature-name>.md` (creation date, matching its `Created:` header; existing undated documents are not renamed), created from `.aicore/core/odd/tasks/_template.md` with the `odd-workflow` skill.
 - Apply `.aicore/core/knowledge/agents.md` `### Applicable analysis tools (HARD RULE)` during applicable exploration and review. Project bindings select tools, not execution authority; require attributable real-use evidence or justified non-use.
