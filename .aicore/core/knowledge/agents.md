@@ -1,4 +1,6 @@
 <!-- core:begin -->
+# Shared Agent Rules
+
 ## Mandatory core
 
 ### Core and project ownership (HARD RULE)

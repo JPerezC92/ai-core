@@ -204,12 +204,15 @@
       ]
     }
   },
-  "instructions": [
-    ".aicore/core/knowledge/agent-workflow.md",
-    ".aicore/core/knowledge/agents.md",
-    ".aicore/core/knowledge/release.md",
-    ".aicore/core/knowledge/architecture-decision-workflow.md"
-  ],
+  // What loads before any action, and what is reached by reading its owner.
+  // Only the workflow entry and the shared rules bind every request; the
+  // release workflow and the decision lifecycle are read before their own
+  // actions, triggered from AGENTS.md -> `### Instruction routing`. Each stays
+  // cleared at its existing path and mode, so this list is the only thing a
+  // loading change touches: destinations receive it core-wins and owe no
+  // reconciliation. A Cursor destination receives no `instructions` at all
+  // and reaches every deferred owner through those same triggers.
+  "instructions": [".aicore/core/knowledge/agent-workflow.md", ".aicore/core/knowledge/agents.md"],
   "permissions": [
     { "action": "read", "resource": "*", "effect": "allow" },
     { "action": "read", "resource": "*.env", "effect": "deny" },
