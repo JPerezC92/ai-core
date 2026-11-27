@@ -65,16 +65,27 @@ Roster changes are a user decision.
 
 - Apply `.aicore/core/knowledge/agent-workflow.md` `### ODD protocol` before acting, including read-only work and before the first write. This heading does not restate that protocol.
 
-### Shared agent rules
+### Instruction routing
 
-See `.aicore/core/knowledge/agent-workflow.md` — required entry for the ODD protocol, the feature document, conflict routing, and workflow-guideline organization (`### Keep files small`).
-See `.aicore/core/knowledge/release.md` — the release workflow (readiness packet, delivery evidence, post-merge routing). This runtime does not restate that workflow.
-See `.aicore/core/tooling/README.md` — the canonical formatting, linting and compiler standards and their adoption contract. Read it before creating, changing or replacing a formatter, linter, compiler or whitespace configuration, and before defining a rule that would duplicate one it states.
-See `### Stop and next-step reporting` below for step reporting, continuation and stopping.
-See `odd/tasks/<YYYY-MM-DD>-<feature-name>.md` (creation date, matching its `Created:` header; existing undated documents are not renamed) — the single feature record; create it from `.aicore/core/odd/tasks/_template.md` with the `odd-workflow` skill.
-See `.aicore/core/knowledge/agents.md` — evidence discipline (facts vs hypotheses, never assumptions), report discipline, clean architecture, register-first identification, the User-Authority-Only rule, and message presentation.
+Always loaded in full under OpenCode's configured instruction list: this runtime spec, `.aicore/core/knowledge/agent-workflow.md` (the workflow entry — the ODD protocol, the feature document, conflict routing and `### Keep files small`), and `.aicore/core/knowledge/agents.md` (evidence discipline, report discipline, clean architecture, register-first identification, the User-Authority-Only rule and message presentation). A Cursor destination receives no configured instruction list, so it reaches those two documents by reading their paths, and the references below carry every other owner.
 
-Apply `.aicore/core/knowledge/agents.md` `### Applicable analysis tools (HARD RULE)` during applicable exploration and review. Project bindings select tools, not execution authority; require attributable real-use evidence or justified non-use.
+Every other owner is reached by reading it **before** the named action:
+
+- **Any delivery action** — assembling a release-readiness packet, writing a delivery-evidence body, making any pre-publication readiness statement, or reporting a merge outcome after it lands → `.aicore/core/knowledge/release.md`, read in full. The trigger covers that owner's whole lifecycle, including its post-merge reporting clause.
+- **Writing, checking or accepting an architecture decision record**, or changing an architecture owner's rule → `.aicore/core/knowledge/architecture-decision-workflow.md`, read in full.
+- **Creating, revising or closing an `odd/tasks/` record or an `odd/features/` file** → the `odd-workflow` skill.
+- **Implementing application source, repository tooling, schemas or configuration** → `.aicore/core/knowledge/agents.md` `### Clean architecture (language-agnostic) (HARD RULE)`, then `.aicore/core/architecture/README.md`.
+- **Creating, changing or replacing a formatter, linter, compiler or whitespace configuration**, or defining a rule one already states → `.aicore/core/tooling/README.md`.
+- **Identifying an incident** → `.aicore/core/knowledge/agents.md` `### Register-first identification`, then the `incident-workflow` skill.
+- **Creating or changing a skill, agent or agent model** → the `op-skill-creator`, `op-agent-creator` or `op-model` skill.
+- **Reviewing a change candidate** → the `code-review`, `dependency-review` or `visual-review` skill matching the surface.
+- **Preparing or publishing a pull request** → the `git-pr` and `git-pr-workflow` skills.
+
+**These triggers are cooperative instructions, not runtime loading.** A harness does not resolve a path reference on its own, no trigger here is enforcement, and an unreached owner fails silently. A trigger is honored by reading the owner, not by the reference existing. Each listed owner remains the authority for its own procedure; where a binding rule or an evidence standard it also states is repeated here, the repetition is deliberate defense in depth, not a duplicate to delete.
+
+- The single feature record is `odd/tasks/<YYYY-MM-DD>-<feature-name>.md` (creation date, matching its `Created:` header; existing undated documents are not renamed), created from `.aicore/core/odd/tasks/_template.md` with the `odd-workflow` skill.
+- Apply `.aicore/core/knowledge/agents.md` `### Applicable analysis tools (HARD RULE)` during applicable exploration and review. Project bindings select tools, not execution authority; require attributable real-use evidence or justified non-use.
+- Step reporting, continuation and stopping follow `### Stop and next-step reporting` below.
 
 ### Memory system
 
@@ -138,37 +149,11 @@ This project standing-authorizes Herald 📯 (Release Manager) to delete a merge
 
 ### Project identity
 
-This repository is **AICore** — a reusable, agnostic orchestration core distributed to destination projects. Its registry and reuse guidance are this project's own.
+This repository is **AICore** — a reusable, agnostic orchestration core distributed to destination projects. Its registry and adoption guidance are this project's own.
 
-### Reuse guide (adopting this core)
+### Contributor guidance
 
-AICore is a **reusable, agnostic core**: another project adopts it as a complete, versioned set and customizes it there. Adoption is **atomic** — a project accepts exactly one AICore revision for its whole applicable content, never a hand-picked subset, and never a mix of revisions. To adopt the core into another project:
-
-1. **Run `core-sync init --bind-cleared` from an AICore checkout against a clean, saved destination.** Verifying that the destination is clean and saved is an operator pre-flight. Inspect the selected revision's clearance and all applicable target preconditions in `.opencode/skills/core-sync/SKILL.md`; enroll the complete applicable unit set at that one revision using its cleared modes. Region enrollment installs shared core, preserves a markerless target's previous body in project, and records pending reconciliation; raw references and merge configuration retain their own transport rules. Review every `.aicore/reconciliation/` report under the core-wins rule, resolve the destination-root reconciliation blocker, and clear `pending` only after genuine local reconciliation. `core-sync check` must exit `0` before enrollment is accepted. Do not hand-copy individual files. Recurring updates run `core-sync apply` then `core-sync check`; new or markerless region paths require enrollment first, and a failed `check` blocks acceptance.
-2. **Keep the shared infrastructure** the agent references:
-   - `.aicore/core/knowledge/agents.md` (shared rules), `.aicore/core/knowledge/agent-workflow.md` (shared workflow entry), `.aicore/core/knowledge/release.md` (release workflow), and `.aicore/core/knowledge/debt.md` (accepted-debt register)
-   - `.aicore/core/tooling/` — the canonical formatter, linter, compiler and whitespace standards, and the adoption contract that governs them
-   - `.aicore/core/knowledge/diagnostics/symptoms.md`, `.aicore/core/knowledge/diagnostics/problems.md` and `incidents/diagnostics/`
-   - `.aicore/core/architecture/README.md` — architecture navigation and selection; `.aicore/core/architecture/implementation/architecture.md` — the common contract; `.aicore/core/architecture/implementation/shapes/`; `.aicore/core/architecture/implementation/stacks/`
-   - `.aicore/core/architecture/testing/` — the language-agnostic test contract, stack-guide template, and reviewed stack guides
-   - `.agents/skills/` — the shared skills, including the three review skills
-   - `odd/tasks/` — ODD change records, one file per change; `odd/features/` — durable feature files; `incidents/` — incident cases and `incidents/diagnostics/`
-   - `output/` for temporal artifacts (audits, research, design — gitignored; create it on first write)
-3. **Select the applicable architecture guides** if your stack differs:
-   - `.aicore/core/architecture/README.md` — common-contract, shape, implementation-guide, and testing-guide selection and ownership
-   - `.aicore/core/architecture/implementation/stacks/` — implementation guides plus the template for a destination-owned implementation guide
-   - `.aicore/core/architecture/testing/stacks/` — reviewed TypeScript/Python testing guides plus the template for a destination-owned testing guide
-     These are reference architectures. The review rubrics live in the `code-review`, `dependency-review` and `visual-review` skills; if your stack differs, add a destination-owned stack guide from the applicable template. Architecture documents ship whole-file and a destination never edits one in place. Do not replace the mandatory rulebook body. New architecture paths require enrollment with their consumers as one applicable set; an `apply` also binds a newly cleared `raw` path and creates its absent target, while a missing or markerless region path needs `init --bind-cleared`. Documentation approval does not establish implementation conformance.
-4. **Point the tokens to your project** — substitute your real tooling only in destination-owned project extensions or destination configuration. Do not edit protected mandatory text to retokenize it. The core ships neutral on purpose.
-5. **The `incident-workflow` skill** scaffolds a per-ticket working analysis and collapses it to one ticket record at close; adapt its template paths and validator to your project.
-6. **Retired agent definitions require destination-side reconciliation.** A previous AICore revision distributed fourteen specialist agent runtimes under `.opencode/agents/` (and `.cursor/agents/` for a Cursor destination). Thirteen were retired in this revision. `.opencode/agents/` is a **region-mode** cleared root, so a destination's copies of the retired files are **preserved, never deleted automatically**: each becomes a `pending` entry and `core-sync check` exits non-zero until that destination reconciles them itself. To reconcile: if a retired runtime carries destination-owned `project`-region content you want to keep, move that content into your own skill or documentation first; then delete the obsolete file; then remove the matching `pending:` entry from `.aicore/core.yaml`. Only an exclusively Core-owned `raw` file is ever removed automatically.
-7. **Do not bump synced spec versions locally** — copies of synced surfaces keep the AICore ancestor's version. Record destination-local changes in the destination's git history and the feature document `## Log`, never in the spec version field. Each destination root runtime spec adds a visible `> **Local version:** MAJOR.MINOR.PATCH` marker and each destination-derived agent spec adds frontmatter `local-version: MAJOR.MINOR.PATCH`; AICore ancestor surfaces omit `local-version`. Initialize local-version at `1.0.0` when adopting the matching AICore version, and advance only that surface's local SemVer for a local edit. An AICore sync never resets local-version; Git diff against the ancestor, not a version field, selects token-bearing merge behavior.
-
-A destination's **active runtime** carries destination-only identity: its root runtime spec names the destination project and its own version markers, with no AICore identity, repository, management-tool, reuse-guide, provenance, or lineage reference. Source identity stays authoritative in the adopter's `.aicore/core.yaml` bindings, which are the provenance record.
-
-### Destination bindings
-
-Each destination records its bound source files and the pinned core revision in its own `.aicore/core.yaml` bindings file, with its reconciliation reports under `.aicore/reconciliation/`. AICore keeps no adopter registry and no cross-destination verification checker — destination bindings are destination-owned state. Every other shipped AICore surface stays neutral and names no adopter (gitignored temporal output is not shipped).
+Adoption, destination-binding and version-marker procedure is documentation, not a runtime obligation. It lives in `README.md` → `## Using it in another project`: read the applicable subsection there before adopting this core into a destination, enrolling or reconciling a destination, or changing a synced spec version or its local-version marker. `### Destination modification boundary (HARD RULE)` below still binds this runtime during a synchronization.
 
 ### Destination modification boundary (HARD RULE)
 
@@ -212,22 +197,16 @@ This project's canonical checks, which are the forms the permission model treats
 
 ### System 1 execution contract
 
-System One is an **MCP-based execution-directive provider** — not an advisor and not an OpenCode plugin. The MCP protocol injects nothing into an agent's execution: a directive block reaches a model only because that turn called the tool and the result is in its context.
+System One is an **MCP-based execution-directive provider** — not an advisor and not an OpenCode plugin. The MCP protocol injects nothing into an agent's execution: a directive block reaches a model only because that turn called the tool and the result is in its context. The `system-one` server (`mcp-servers/system-one/`, registered at `.opencode/opencode.jsonc` under `mcp.servers["system-one"]`) advertises one tool, `evaluate_odd_evidence`.
 
-**Invoking it.** The `system-one` MCP server (`mcp-servers/system-one/`, registered at `.opencode/opencode.jsonc` under `mcp.servers["system-one"]`) advertises one tool, `evaluate_odd_evidence`; call it with `{ text, images, expectedModel? }`.
+**Invocation is optional.** ODD execution, verification, resumption and closure never depend on this server or its availability. When it is not invoked, it yields no block and no footer line. Call it with `{ text, images, expectedModel? }`.
 
-**Invocation is optional.** ODD execution, verification, resumption and closure never depend on this server or its availability. When it is not invoked, it yields no block and no footer line.
-
-**What comes back.** Both branches carry `evaluationId` and `directives`; `directives` is `{ block, items }`, and each item is `{ questionId, choice, figure, action }`. Success adds `ok: true` plus `profileId`, `profileVersion` and `answers`; rejection adds `ok: false` plus a stable `code` and a fixed, bounded `reason` that never echoes supplied text. `block` is the rendered text, marked by `=== SYSTEM 1 | EXECUTION DIRECTIVES ===`, `=== SYSTEM 1 | UNAVAILABLE ===` and `=== END SYSTEM 1 ===`. An **empty** `block` means nothing is directed, so there is no block to apply.
+**What comes back.** Both branches carry `evaluationId` and `directives`; `directives` is `{ block, items }`, and each item is `{ questionId, choice, figure, action }`. Success adds `ok: true` plus `profileId`, `profileVersion` and `answers`; rejection adds `ok: false` plus a stable `code` and a fixed, bounded `reason` that never echoes supplied text. `block` is the rendered text, marked by `=== SYSTEM 1 | EXECUTION DIRECTIVES ===`, `=== SYSTEM 1 | UNAVAILABLE ===` and `=== END SYSTEM 1 ===`; an **empty** `block` means nothing is directed.
 
 When this turn's assembled context contains a non-empty `=== SYSTEM 1 | EXECUTION DIRECTIVES ===` block returned by `evaluate_odd_evidence`:
 
 1. **Execute.** Apply each applicable System 1 directive in that block to planning and execution as default workflow guidance — not as optional commentary, and not only as something to report. Stronger evidence, actual user intent, and governing constraints take precedence. An `absent` finding never bypasses authorization or a user-only decision. No new permissions are granted.
 2. **Observe.** End the user-facing reply with exactly one diagnostic line describing how the applicable findings were actually handled. This is a **required final element** of every user-facing reply while the block is present — ordinary answers, Progress, Findings or blocked, Completion, and the ready message. Place it after that format's last required field.
 
-**When the server is unavailable.** A transport failure, an unusable result, or a rejection branch yields no applicable directive. Continue under existing authority, do not infer or fabricate directives, and emit no footer line; an `=== SYSTEM 1 | UNAVAILABLE ===` block is that fixed notice, not a directive to apply.
-
-**How the flow stays observable.** The server writes one JSON line per evaluation to `output/system1/events.jsonl`, with image bytes content-addressed under `output/system1/images`; both are gitignored and both are relocated by `SYSTEM_ONE_TRACE_PATH` and `SYSTEM_ONE_IMAGE_DIR`. The trace is operational metadata: an unwritable trace path loses the record, never the evaluation.
-
-Never claim a directive was applied if its effect cannot be established. Never emit that line when no valid EXECUTION DIRECTIVES block was returned for this turn. The line is an observable clue, not proof of compliance. See `.aicore/core/knowledge/agents.md` project region `### Message presentation — System 1 footer`.
+Never claim a directive was applied if its effect cannot be established, and never emit that line when no valid EXECUTION DIRECTIVES block was returned for this turn. A transport failure, an unusable result or a rejection branch yields no applicable directive: continue under existing authority, infer and fabricate nothing, and emit no footer line, because an `=== SYSTEM 1 | UNAVAILABLE ===` block is that fixed notice rather than a directive to apply. The line is an observable clue, not proof of compliance. See `.aicore/core/knowledge/agents.md` project region `### Message presentation — System 1 footer`; provisioning, launch configuration, the operational trace and its degradation behaviour are documented in `docs/tooling.md`.
 <!-- project:end -->
