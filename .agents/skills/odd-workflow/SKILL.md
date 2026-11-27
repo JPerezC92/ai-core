@@ -145,7 +145,7 @@ Read and apply `.aicore/core/knowledge/agent-workflow.md` `### ODD protocol`, st
 
 **Closure consistency.** The stages and each stage's precondition are stated in `### Completion stages`. A record whose task rows are all `done` is either closed with its closure evidence — the verified outcome and the delivery evidence it asserts — or active with the open closure prerequisite named in its Log by an entry that begins `Blocked:`. Completion is never fabricated and a feature with missing evidence is never closed automatically: the missing evidence is named, not assumed. The validator detects this only for records created on or after the rule's effective date, so a historical record's status, Log and Specs are left exactly as written rather than rewritten to satisfy a later convention.
 
-Record actual RED/GREEN evidence where applicable; no fixed first-failure phrase or reviewer verdict is required. A structural validator cannot prove that evidence is truthful or a capability is achieved.
+Record the first failure that existed, or why an executable failure cannot apply, and actual RED/GREEN evidence where applicable. No fixed first-failure phrase or reviewer verdict is required. A structural validator cannot prove that evidence is truthful or a capability is achieved.
 
 A `Blocked:` entry — the open-closure-prerequisite entry a completed-but-active record requires — reports a prerequisite, not an accepted result.
 

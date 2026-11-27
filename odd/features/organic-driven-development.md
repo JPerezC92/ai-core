@@ -13,7 +13,7 @@ Organic Driven Development governs every request. Read-only and small work leave
 - [x] R5 `upstream · local detail` — every task names its requirement, route, owner and status.
 - [x] R6 `upstream · local detail` — the check that ran is recorded, and a verdict alone does not substitute for it.
 - [x] R7 `local` — each verdict states the evidence it rests on, and a passing claim without its check is not a verdict.
-- [x] R8 `upstream · narrowed` — applicable RED/GREEN evidence is recorded truthfully without a fixed first-failure phrase.
+- [x] R8 `upstream · local detail` — the first failure or why an executable failure cannot apply is recorded, together with applicable RED/GREEN evidence, without requiring a fixed phrase.
 - [x] R9 `upstream` — what was not verified is named.
 - [x] R10 `local` — every requirement the change affects is accounted as met, restated or retired, and requirements the change did not affect are left alone.
 - [x] R11 `local` — evidence invalidated by a change is voided, never carried forward: a reviewer re-invoked for a related change reuses reference material only while that material and its dependencies are unchanged, always produces a new verdict for changed inputs, and states the reused material, the re-read inputs and the content identity its verdict binds to.
