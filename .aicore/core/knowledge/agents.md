@@ -55,7 +55,7 @@ A report delivered to a user or to a delegate is written in the format its assig
 
 - A **finding** is a rule-grounded defect or gap needing disposition. **Severity** is text (`BLOCK` / `ADVISORY`) attached to a finding. An observation that requires no action is an INFO note, not a finding.
 - **Fix first.** For every real finding: if it is in scope, local and reversible, has one correct answer, changes no behavior, API, security, data, dependency, or permission, and is verifiable now — fix it and record the fix without asking. Otherwise stop the affected work and report exact evidence, impact, bounded options, and a recommendation. Never use "ignore" as a disposition; deferred work requires explicit authority. The coordinator documents a user decision but cannot accept the risk itself. Fixing under this rule uses only existing authority, never expands scope, and is the user-authorized disposition for review findings — not a workaround under the User-Authority-Only rule.
-- **An unresolved finding never becomes a clean readiness claim.** A required check that failed or is unresolved, and any open `BLOCK` finding, keeps the work not ready until it is fixed or the user decides otherwise. A missing independent reviewer is not such a finding and never by itself withholds readiness.
+- **An unresolved finding never becomes a clean readiness claim.** A required check that failed, any applicable guarantee that remains unestablished, and any open `BLOCK` finding keep the work not ready until each is fixed or the user decides otherwise. A missing independent reviewer is not such a finding and never by itself withholds readiness.
 - **An independent review is optional.** When one is requested and returns findings, the same disposition rules apply; when none was requested, the absence of a verdict is not a gap to be recorded, and no stand-in verdict document or additional report is created to fill it.
 
 ### Clean architecture (language-agnostic) (HARD RULE)
@@ -130,7 +130,7 @@ Name a business artifact for the predicate or use case it expresses, not for the
 
 ### Delivery readiness and findings
 
-A delivery is **ready** when every applicable required check has passed and no `BLOCK` finding is open. It is **not ready** when any required check failed or is unresolved, any required test-plan item is unchecked, or any `BLOCK` finding is open. An independent review is not a required check; a delivery without one can be ready, and the absence of a verdict never blocks.
+A delivery is **ready** when every applicable guarantee is established — by its required check having passed, or by an alternative procedure that establishes it when that check could not execute, under `.aicore/core/knowledge/agent-workflow.md` → `### Verification contingency` — and no `BLOCK` finding is open. It is **not ready** when any required check failed, any applicable guarantee remains unestablished, any required test-plan item is unchecked, or any `BLOCK` finding is open. Availability never decides readiness, and an instrument that did not execute is never reported as passed. An independent review is not a required check; a delivery without one can be ready, and the absence of a verdict never blocks.
 
 - **Findings require disposition.** For every finding a review returns, record its ID, severity, status and evidence. Status vocabulary: `🔴 OPEN` · `✅ FIXED (round <N>)` · `⏸ DEFERRED → <destination>` · `✖ REJECTED (not a defect)`.
 - **Fix first, then decide.** Applying `### Finding disposition` decides whether a finding is fixed now or stops the affected work. A deferral requires explicit user authority and a named durable destination (for example `.aicore/core/knowledge/debt.md`); it is never silently dropped and never becomes "ignore".
@@ -147,14 +147,14 @@ Three message types cover every user-facing status report:
 
 **Round summary** — one combined message when a review ran or findings exist: first line + the findings table + `Counts:` line + readiness verdict + PR state + concrete next action + `Needs your decision: none | <items>`. Render tables directly, never inside code fences.
 
-- **First line:** `Unresolved findings: <U> of <M> — open <O>, deferred <D>; <readiness state>` — a reader who reads only this line knows whether anything is unresolved or blocking, including failed or pending checks even when `U` is zero.
+- **First line:** `Unresolved findings: <U> of <M> — open <O>, deferred <D>; <readiness state>` — a reader who reads only this line knows whether anything is unresolved or blocking, including failed, pending or unavailable checks even when `U` is zero.
 - **Findings table columns, exactly:** `ID | Finding | Severity | Status | Evidence | Owner / next action | Needs your decision?`.
 - **Evidence:** cite concrete head-bound evidence. `FIXED` identifies the remediation; `DEFERRED` identifies its durable destination and the user authority; `REJECTED` preserves the refutation evidence and carries the literal command output that settles it, so the user can audit the judgement.
 
-**Ready message** — only when every required check is verified, zero findings are open, and the only outstanding decision is delivery:
+**Ready message** — only when every applicable guarantee is established, zero findings are open, and the only outstanding decision is delivery:
 
 - `Review: <PASS> — 0 open findings` when a review ran, or `Review: none requested — verification is automated plus self-review`
-- `Required checks: all verified`
+- `Required checks: all verified — naming any guarantee an alternative procedure established`
 - `Blockers: none`
 - `Needs your decision: <merge / publish / stop>`
 
@@ -162,7 +162,7 @@ Do not show an empty findings table. If findings existed, an optional `Fixed: <N
 
 **Decision consultation.** A significant technical decision that reaches the user carries one compact block; it creates no new message type, no new tracker, and no new gate. The block names, in this order, what was decided, why, the alternatives considered and why they lost, the cited evidence, the remaining risk, and whether the user must decide: `Decision` · `Why` · `Alternatives considered` · `Evidence` · `Residual risk` · `Your decision needed`. The final field states the gate outcome and reads `no — proceeding` or `yes — affected work stopped pending your answer`. The block rides inside the Progress format only when the outcome is `no — proceeding`; when the outcome is `yes` it accompanies the authorization request, which is a blocking interaction rather than a status report.
 
-**Distinct concepts.** A **finding** is a rule-grounded defect or gap needing disposition. **Severity** is text (`BLOCK`/`ADVISORY`) attached to a finding. A **blocker** is an unmet prerequisite preventing the affected operation. Name its resolution owner and next action: agent-resolvable blockers are resolved within existing authority, not automatically escalated to the user; user-only blockers name the exact required user action. A **check** is verification evidence that is passed, failed, or pending. A **decision** is a user-only choice. Findings, checks, and decisions are separate: zero findings never means ready while a required check is pending or a decision is outstanding. A missing independent reviewer is none of these.
+**Distinct concepts.** A **finding** is a rule-grounded defect or gap needing disposition. **Severity** is text (`BLOCK`/`ADVISORY`) attached to a finding. A **blocker** is an unmet prerequisite preventing the affected operation. Name its resolution owner and next action: agent-resolvable blockers are resolved within existing authority, not automatically escalated to the user; user-only blockers name the exact required user action. A **check** is verification evidence that is passed, failed, or unavailable; unavailable means it did not execute, so it establishes nothing by itself and stays distinct from a check not yet attempted. A **decision** is a user-only choice. Findings, checks, and decisions are separate: zero findings never means ready while a required check is pending or a decision is outstanding. A missing independent reviewer is none of these.
 
 **Delivery stage.** A status report states which stage the work actually reached; the stages themselves and their order are owned by `.agents/skills/odd-workflow/SKILL.md` `### Completion stages`. Planning, analysis, a plan or a stated intent is not a stage, and a report that cannot name the stage it reached names the stage it did not reach and why.
 

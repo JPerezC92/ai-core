@@ -130,9 +130,9 @@ The same `[<VERDICT>] — basis` shape applies to all three tokens; an `[ADVISOR
 
 **The verdict line is optional.** It states delivery readiness and the evidence it rests on, and it is present only when the publication input carries a `review.verdict`. A delivery with no requested independent review carries none, and its body simply ends without this line — that is a valid published body, not a missing field.
 
-- `[PASS]` — zero open findings: `No findings.`, or every finding row is `FIXED` or `REJECTED`; every required (non-N/A) test-plan item is checked with a passing row; no required verification is unresolved.
-- `[ADVISORY]` — every open finding is nonblocking `ADVISORY` severity (including a `DEFERRED` row the user accepted for release), the user's documented acceptance is named in the line, and all required verification is resolved.
-- `[BLOCK]` — any open `BLOCK` severity finding; any unresolved required verification; any missing, invalid, or stale evidence; any unchecked required item; or an open nonblocking finding whose required user acceptance is not yet documented (the body is not release-ready until then).
+- `[PASS]` — zero open findings: `No findings.`, or every finding row is `FIXED` or `REJECTED`; every required (non-N/A) test-plan item is checked with a passing row; no applicable guarantee remains unestablished.
+- `[ADVISORY]` — every open finding is nonblocking `ADVISORY` severity (including a `DEFERRED` row the user accepted for release), the user's documented acceptance is named in the line, and every applicable guarantee is established.
+- `[BLOCK]` — any open `BLOCK` severity finding; any applicable guarantee that remains unestablished after any permitted alternative procedure; any missing, invalid, or stale evidence; any unchecked required item; or an open nonblocking finding whose required user acceptance is not yet documented (the body is not release-ready until then).
 
 Rules:
 

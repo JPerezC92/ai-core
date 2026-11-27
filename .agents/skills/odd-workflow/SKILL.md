@@ -195,7 +195,7 @@ A change reaches completion in stages. Each stage has its own precondition; thei
 
 1. **Work units planned** — the delivery forecast records the strategy, each unit's slice boundary, rollback boundary and focused check, and which tasks share which unit.
 2. **Implementation delivered** — the authorized work is committed in work-unit commits, every affected task row is `done` and carries the commit that actually carries its work, and each unit ships its own tests and documentation.
-3. **Verification complete** — the applicable automated checks have run against the delivered content and are recorded with their result. These are inputs to completion, never a substitute for it.
+3. **Verification complete** — the applicable automated checks have run against the delivered content and are recorded with their result, or a check that could not execute is recorded with the guarantee an alternative procedure established under `.aicore/core/knowledge/agent-workflow.md` → `### Verification contingency`. These are inputs to completion, never a substitute for it.
 4. **Optional independent review** — only when the user requested one, or accepted a recommendation. Its findings are disposed and recorded; its absence changes nothing in the stages below and is never a missing prerequisite.
 5. **Record closed** — `Status: closed`, the `> **Closed:**` date, the final `L# — Close:` entry and the closure evidence are set.
 6. **Closure committed** — Herald 📯 (Release Manager) commits the closure edit on the feature branch, together with the retention deletions this stage performs per `### Retire a task record`, after that section's dependency safeguard has been applied to every candidate. **Pull-request management may not begin before this stage is satisfied.**
