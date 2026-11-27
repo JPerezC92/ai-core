@@ -12,5 +12,5 @@ What an agent holds in context before it acts, and how a specialized owner is re
 - [x] R4 — changing which documents are loaded never changes a cleared path or its distribution mode, so no destination owes a reconciliation for it.
 - [x] R5 — a conditionally loaded procedure keeps its authority and acceptance boundaries: delivery work reaches the release workflow before any delivery action, and architecture decision records keep their statuses and acceptance gate.
 - [x] R6 — the root runtime spec carries runtime obligation only; contributor adoption, destination-binding and maintenance guidance live in the project's documentation owner.
-- [x] R7 — the editor asymmetry is explicit: one editor injects the configured instruction documents and the other reaches every conditional owner through the routing references in the always-loaded entry.
+- [x] R7 — destination-owned instructions in the shared rulebook are available before action in both editors, while action-specific owners are reached through explicit portable triggers.
 - [x] R8 — the root runtime spec and the shared behavioral rulebook are distinguishable from their titles alone, so a bare filename reference between them is never ambiguous.
