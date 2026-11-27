@@ -1,6 +1,8 @@
 # Skill authoring context efficiency
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-11-27
+> **Disposition:** completed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-27
 > **Objective:** Improve skill-authoring context efficiency while preserving valid obligations.
@@ -20,7 +22,7 @@
 ## Tasks
 
 - T1 | S1, S2, S3, S4, S6 | inline (bounded skill documentation rewrite) — Cipher 🔓 (Lead Orchestrator) | done | commit: 96742cd6a0b8c5cd16e8aaa578c5e2b9923103a9
-- T2 | S5 | inline (F2 operation-specific comparison) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
+- T2 | S5 | inline (F2 operation-specific comparison) — Cipher 🔓 (Lead Orchestrator) | done | commit: 7cdea1ee215ee5e3ca0488d279d0253385e8ce5c
 
 ## Log
 
@@ -353,3 +355,4 @@ Report only the remaining operation's outcome and the final completion status.
 - L14 — 2026-11-27 — Herald committed skill-authoring implementation as `96742cd6a0b8c5cd16e8aaa578c5e2b9923103a9` on `refactor/odd/workflow-efficiency`; the ODD implementation is `85441acb04b1d7a482686ac40180d3c3a696ba20`. Closure is blocked on the retirement-policy conflict described in `odd/tasks/2026-11-27-odd-workflow-efficiency.md` L9; user prohibited unrelated historical cleanup, and the existing policy prescribes deletion of eligible old records during closure. No mirror synchronization, closure, independent review or publication is claimed.
 - L15 — 2026-11-27 — Prior closure at `b13e7a4482c494d1fa5f8e52250bbec059b922a7` assessed S1–S6 against `96742cd6a0b8c5cd16e8aaa578c5e2b9923103a9`; the independent review found S5's operation-specific comparison missing and the record is reopened at L16. No mirror synchronization or adoption on main was claimed.
 - L16 — 2026-11-27 — Independent review F2 against `b13e7a4482c494d1fa5f8e52250bbec059b922a7` found the required S5 size comparison absent. Herald measured base Git blobs: original `SKILL.md` 15,915 bytes and 103 lines (current 92 lines plus 22 deletions minus 11 additions), original `_quality-checklist.md` 7,790 bytes and 54 lines; the current `SKILL.md` is 14,285 bytes/92 lines and `_specialized-operations.md` is 2,754 bytes/20 lines. Before, ordinary creation, modification, rename, migration, declined cleanup and optional integrity checking required the 23,705-byte main-plus-checklist baseline. After, ordinary creation and modification require the 14,285-byte main file; rename, migration, declined cleanup and optional integrity checking require the applicable specialized reference too, at most 17,039 bytes total when loaded in full. A crude bytes/4 estimate is roughly 5,926 tokens before, 3,571 after for ordinary operations, and 4,260 after for specialized operations; these are not tokenizer or runtime measurements, and bounded section reads may load less. Prior source is base blob `61987b1bb864f313cc165fa23f07020202ae1fea`, checklist blob `9f63e9b75e39d5ff8c6555d31db0e067adc9f65e`; current blobs are `2dc58f188bac02657bb00c9ce9f038fe5d42e75e` and `d3408b315e6c73628bcecfc9ab803df7922dd0cc`. This comparison corrects the unsupported S5 closure claim; it does not assert measured runtime savings.
+- L17 — Close: S1–S4 and S6 are verified against `96742cd6a0b8c5cd16e8aaa578c5e2b9923103a9` using the accounting and walkthroughs at L6–L10; S5 is supported by the measured comparison committed at `7cdea1ee215ee5e3ca0488d279d0253385e8ce5c` and reported at L16. No applicable executable failure applies to the prose-only skill rewrite. The user-authorized ODD candidate removes the mandatory mirror prerequisite; no mirror synchronization or adoption on main is claimed. Final-head independent review remains pending.

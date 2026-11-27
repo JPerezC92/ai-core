@@ -1,6 +1,8 @@
 # ODD workflow efficiency
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-11-27
+> **Disposition:** completed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-27
 > **Objective:** Simplify ODD while preserving task and durable feature semantics, safety, verification and retirement.
@@ -22,7 +24,7 @@
 - T1 | S1, S2, S3, S5, S6 | inline (bounded policy and existing templates) — Cipher 🔓 (Lead Orchestrator) | done | commit: 85441acb04b1d7a482686ac40180d3c3a696ba20
 - T2 | S4, S5 | inline (existing validator and focused regression) — Cipher 🔓 (Lead Orchestrator) | done | commit: 85441acb04b1d7a482686ac40180d3c3a696ba20
 - T3 | S1, S2, S3, S4, S5, S6 | inline (verification and source-local alignment) — Cipher 🔓 (Lead Orchestrator) | done | commit: 85441acb04b1d7a482686ac40180d3c3a696ba20
-- T4 | S5 | inline (F1 evidence-obligation correction) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
+- T4 | S5 | inline (F1 evidence-obligation correction) — Cipher 🔓 (Lead Orchestrator) | done | commit: 7cdea1ee215ee5e3ca0488d279d0253385e8ce5c
 
 ## Log
 
@@ -202,3 +204,4 @@ Do not automatically resume or close the previous mirror-blocked task.
 - L11 — 2026-11-27 — Prior closure at `b13e7a4482c494d1fa5f8e52250bbec059b922a7`: S1–S6 were assessed against implementation commit `85441acb04b1d7a482686ac40180d3c3a696ba20` by L3–L8; no memory synchronization or adoption on main was claimed. Reopened at L12 for the independent-review finding.
 - L12 — 2026-11-27 — Independent review at `b13e7a4482c494d1fa5f8e52250bbec059b922a7` returned BLOCK: F1 found that retiring a mandatory first-failure phrase did not authorize retiring the first-failure evidence obligation itself. In-scope correction restores recording the first failure or why executable failure cannot apply while retaining the approved removal of fixed phrases and the existing conditional RED/GREEN duty. R8 in the ODD durable feature is corrected accordingly. The review also found F2 in the skill-authoring task: its operation-specific size comparison was not recorded. The reviewer could not establish complete byte coverage of the supplied diff because one long diff line was truncated; the corresponding task was read in full. No later review verdict is claimed for the corrected candidate.
 - L13 — 2026-11-27 — F1 correction self-verified: the skill now preserves both first-failure evidence and applicable RED/GREEN without requiring a stock phrase; R8 states the same enduring rule. `pnpm --dir .agents/skills/odd-workflow exec vitest run` reports 177 passed; `pnpm format:check` and both ODD validators pass. F1's original review remains BLOCK for its named head; final-candidate review remains pending.
+- L14 — Close: S1–S6 are verified against `85441acb04b1d7a482686ac40180d3c3a696ba20` and F1's correction `7cdea1ee215ee5e3ca0488d279d0253385e8ce5c`; the first executable failure was the expected no-phrase validator regression at L3. F1 is fixed in the latter commit, and F2 is addressed in the skill-authoring record. Seven old records remain retained under the safeguard at L10. No mirror synchronization or adoption on main is claimed; final-head independent review remains pending.
