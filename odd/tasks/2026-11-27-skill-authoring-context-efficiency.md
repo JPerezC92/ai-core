@@ -1,6 +1,8 @@
 # Skill authoring context efficiency
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-11-27
+> **Disposition:** completed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-27
 > **Objective:** Improve skill-authoring context efficiency while preserving valid obligations.
@@ -20,7 +22,7 @@
 ## Tasks
 
 - T1 | S1, S2, S3, S4, S6 | inline (bounded skill documentation rewrite) — Cipher 🔓 (Lead Orchestrator) | done | commit: 96742cd6a0b8c5cd16e8aaa578c5e2b9923103a9
-- T2 | S5 | inline (F2 operation-specific comparison) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
+- T2 | S5 | inline (F2 operation-specific comparison) — Cipher 🔓 (Lead Orchestrator) | done | commit: 709ab0fbdd3fd0f797d42c1c6c1298f4de190084
 
 ## Log
 
@@ -355,3 +357,4 @@ Report only the remaining operation's outcome and the final completion status.
 - L16 — 2026-11-27 — Independent review F2 against `b13e7a4482c494d1fa5f8e52250bbec059b922a7` found the required S5 size comparison absent. Herald measured base Git blobs: original `SKILL.md` 15,915 bytes and 103 lines (current 92 lines plus 22 deletions minus 11 additions), original `_quality-checklist.md` 7,790 bytes and 54 lines; the current `SKILL.md` is 14,285 bytes/92 lines and `_specialized-operations.md` is 2,754 bytes/20 lines. Before, ordinary creation, modification, rename, migration, declined cleanup and optional integrity checking required the 23,705-byte main-plus-checklist baseline. After, ordinary creation and modification require the 14,285-byte main file; rename, migration, declined cleanup and optional integrity checking require the applicable specialized reference too, at most 17,039 bytes total when loaded in full. A crude bytes/4 estimate is roughly 5,926 tokens before, 3,571 after for ordinary operations, and 4,260 after for specialized operations; these are not tokenizer or runtime measurements, and bounded section reads may load less. Prior source is base blob `61987b1bb864f313cc165fa23f07020202ae1fea`, checklist blob `9f63e9b75e39d5ff8c6555d31db0e067adc9f65e`; current blobs are `2dc58f188bac02657bb00c9ce9f038fe5d42e75e` and `d3408b315e6c73628bcecfc9ab803df7922dd0cc`. This comparison corrects the unsupported S5 closure claim; it does not assert measured runtime savings.
 - L17 — 2026-11-27 — Prior closure at `b2b3f8e99dc303f16a5fab2ee7b9299edb4a0c63` is reopened: independent review confirmed L16 omitted the optional integrity checker's required source and conditional project policy. No applicable executable failure applies to the prose-only skill rewrite; no mirror synchronization or adoption on main is claimed.
 - L18 — 2026-11-27 — F2 correction: L16's six-operation comparison covers only skill-instruction files and is not a complete optional integrity-check total. That operation explicitly reads `scripts/check_markdown_text.ts` (674 bytes, unchanged baseline/current blob `aba568431dfa46e8f02257fe1f5185a57acf0a63`) and the caller-supplied project policy when present. In this checkout the policy is 5,493 bytes, unchanged baseline/current blob `e93eefde0c65b793a0672222ef90b32ad24053d9`; that path is a project example, never a required destination default. Including these two inputs gives this checkout 29,872 bytes before and at most 23,206 after for optional integrity checking, approximately 7,468 and 5,802 tokens respectively at the crude bytes/4 heuristic. If no project policy is present, subtract its 5,493 bytes; a different supplied policy changes the total. These are static file-size estimates, not runtime tokens or costs. The checker entry point imports its own implementation; L16/L18 measure documents explicitly required to be read, not implementation modules loaded by executing the checker.
+- L19 — Close: S1–S4 and S6 rest on the accounting and walkthroughs at L6–L10 against `96742cd6a0b8c5cd16e8aaa578c5e2b9923103a9`; S5 rests on the bounded static comparison committed at `709ab0fbdd3fd0f797d42c1c6c1298f4de190084` and reported at L16/L18, including the optional checker and conditional policy. No applicable executable failure applies to the prose-only rewrite. The user-authorized ODD candidate removes the mandatory mirror prerequisite; no mirror synchronization or adoption on main is claimed. Final-head independent review remains pending.
