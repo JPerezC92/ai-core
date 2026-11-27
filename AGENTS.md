@@ -67,7 +67,7 @@ Roster changes are a user decision.
 
 ### Instruction routing
 
-Always loaded in full: this runtime spec, `.aicore/core/knowledge/agent-workflow.md` (the workflow entry — the ODD protocol, the feature document, conflict routing and `### Keep files small`), and `.aicore/core/knowledge/agents.md` (evidence discipline, report discipline, clean architecture, register-first identification, the User-Authority-Only rule and message presentation).
+Always loaded in full under OpenCode's configured instruction list: this runtime spec, `.aicore/core/knowledge/agent-workflow.md` (the workflow entry — the ODD protocol, the feature document, conflict routing and `### Keep files small`), and `.aicore/core/knowledge/agents.md` (evidence discipline, report discipline, clean architecture, register-first identification, the User-Authority-Only rule and message presentation). A Cursor destination receives no configured instruction list, so it reaches those two documents by reading their paths, and the references below carry every other owner.
 
 Every other owner is reached by reading it **before** the named action:
 
