@@ -1,6 +1,8 @@
 # Advanced selective instruction loading
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-11-27
+> **Disposition:** completed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-27
 > **Objective:** Reduce cumulative instruction consumption without weakening safety or destination-owned instruction availability.
@@ -19,8 +21,8 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
 
 ## Tasks
 
-- T1 | S1, S2, S4 | inline (instruction routing and destination compatibility are the primary agent's scope) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T2 | S1, S2, S3, S4 | inline (candidate measurements and focused verification) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
+- T1 | S1, S2, S4 | inline (instruction routing and destination compatibility are the primary agent's scope) — Cipher 🔓 (Lead Orchestrator) | done | commit: 73595b6857a1227689ecee40b54fc071dd5844fb
+- T2 | S1, S2, S3, S4 | inline (candidate measurements and focused verification) — Cipher 🔓 (Lead Orchestrator) | done | commit: 73595b6857a1227689ecee40b54fc071dd5844fb
 
 ## Log
 
@@ -39,3 +41,5 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
 - L13 — 2026-11-27 — Measurement correction: the first bounded-read calculation searched for heading text without anchoring it to the start of a Markdown line, and stopped at inline references within the preceding section. Recomputed using newline-prefixed headings and the actual next heading: protocol 9,456 units / 9,520 bytes and behavioral verification 3,552 / 3,560; L10 now states the corrected totals. Whole-document identities and measurements are unchanged. The originally reported small, tracked and tracked-skill totals were 79,523, 134,093 and 148,344 respectively; those are superseded by L10. This changes no instructional candidate content.
 - L14 — 2026-11-27 — User accepted author verification, `agents.md` startup retention, action-triggered workflow loading and the modeled 1,151-unit PR regression, and authorized scoped branch and commits, closure, focused independent review of the final published head, corrections and one PR. Merge, tag, branch deletion, new optimization, skill changes, destination changes, synchronization, permissions and System One remain prohibited. Herald 📯 (Release Manager) verified fresh `origin/main` and PR #224 merge at `bef626c55523970bc788288ad5936be2e73bde40`, then created `refactor/core/selective-instruction-loading` there, preserving the six scoped working-tree paths.
 - L15 — 2026-11-27 — Retirement report `node .agents/skills/odd-workflow/scripts/retirement_check.ts odd/tasks` reported seven candidates; these are the seven retained in `odd/tasks/2026-11-27-initial-instruction-context.md` L6 and L13 because the durable-evidence safeguard was not established. No material new evidence establishes that safeguard; all seven remain retained. No history is transferred or rewritten to permit deletion. This feature record itself remains active and ineligible.
+- L16 — 2026-11-27 — The authorized work unit is committed at `73595b6857a1227689ecee40b54fc071dd5844fb`; Herald 📯 (Release Manager) verified its six-path diff and clean status. On those candidate instruction bytes Cipher reran `node .agents/skills/odd-workflow/scripts/validate_feature.ts odd/tasks` and `node .agents/skills/odd-workflow/scripts/validate_feature_file.ts odd/features`, both reporting all records `ok` with `instruction-context` achieved; `pnpm format:check` reported 459 files checked with no fixes; `pnpm lint` reported no diagnostics. Each completed without a reported failure status. A fresh Node UTF-8 length read reproduced `AGENTS.md` 32,337 / 32,498, `agents.md` 32,715 / 32,864 and workflow 46,165 / 46,294 (UTF-16 units / UTF-8 bytes). No runtime token or Cursor saving is claimed. The authorized independent review has not yet run and will examine the closure commit as well as the implementation; its result belongs to delivery evidence, not a fabricated conclusion here.
+- L17 — Close: completed. The observable outcomes are the OpenCode instruction list and Cursor before-action shared-rule route (S1), the static adverse ODD and retirement walks in L9 and L15 (S2), the corrected static scenario measurement model in L10 and L13 (S3), and the instruction obligation accounting in L8 with unchanged project regions (S4). The work unit and its required evidence are committed at `73595b6857a1227689ecee40b54fc071dd5844fb`; the feature requirements and verification are recorded in L9. Closure does not assert independent review or publication. The seven previously retained retirement candidates remain retained under L15.
