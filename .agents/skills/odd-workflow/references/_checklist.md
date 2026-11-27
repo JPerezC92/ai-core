@@ -27,7 +27,7 @@
 ## Implement and verify
 
 - [ ] Verify dependency order, concurrency prerequisites and any applicable authorization gate against workflow `### ODD protocol` step 6.
-- [ ] For findings exposing related impact or escaped coverage, apply workflow `#### Finding-triggered impact reassessment and escape tracing`; check the existing Log and the durable source that carries the trace detail against skill `### Implement and verify` and `### Log evidence`, without expanding scope or creating another tracker.
+- [ ] For findings exposing related impact or escaped coverage, apply workflow `#### Finding-triggered impact reassessment`; check the existing Log and the durable source that carries the trace detail against skill `### Implement and verify` and `### Log evidence`, without expanding scope or creating another tracker.
 - [ ] Verify step 6's conditional RED/GREEN/refactor evidence or actual exception/proportionate checks; carry the actual runner to workers under skill `### Implement and verify`.
 - [ ] Check step 6 task acceptance evidence and accompanying tests/documentation during delivery, not only PR preparation.
 - [ ] Check that required evidence exists — the outcome, the verdict, and a pointer identifying the durable source that carries the detail — and that the durable source is a committed artifact, the pull-request body, the record itself, or, for reproducible detail only, a gitignored `output/` artifact; evidence required for future verification or acceptance never rests only in temporary output. Original execution provenance is preserved under whichever durable home holds it.

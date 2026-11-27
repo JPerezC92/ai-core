@@ -94,7 +94,7 @@ Read and apply `.aicore/core/knowledge/agent-workflow.md` `### Scope changes and
 
 ### Implement and verify
 
-Read and apply `.aicore/core/knowledge/agent-workflow.md` `### ODD protocol`, step 6, for dependency order, task acceptance checks, tests/documentation, conditional RED/GREEN/refactor, actual exceptions and the runner obligations; apply `##### Behavioral verification and runner selection` in that same file for the per-spec and command-regression evidence. Carry the actual applicable runner and evidence with the work. Step reports and continuation follow the workflow's `#### Step reporting and transitions`.
+Read and apply `.aicore/core/knowledge/agent-workflow.md` `### ODD protocol`, step 6, for dependency order, task acceptance checks, tests/documentation, conditional RED/GREEN/refactor, actual exceptions and the runner obligations; apply `### Behavioral verification and runner selection` in that same file for the per-spec and command-regression evidence. Carry the actual applicable runner and evidence with the work. Step reports and continuation follow the workflow's `#### Step reporting and transitions`.
 
 A work unit ships the tests and documentation it needs. A unit that changes behaviour carries or updates the tests that verify it; a unit that changes a user-visible rule carries the documentation that explains it. Never defer that material to a later unit to keep a diff small.
 
