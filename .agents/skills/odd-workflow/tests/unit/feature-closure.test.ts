@@ -2,10 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ValidateFeatures } from "#scripts/feature_validation/application/validate_features.ts";
 import { InvalidFeatureError, ValidFeature } from "#scripts/feature_validation/domain/records.ts";
 import type { FeatureValidationResult } from "#scripts/feature_validation/domain/records.ts";
-import {
-	CLOSURE_CONSISTENCY_EFFECTIVE_FROM,
-	CLOSURE_EVIDENCE_EFFECTIVE_FROM,
-} from "#scripts/feature_validation/domain/rules.ts";
+import { CLOSURE_CONSISTENCY_EFFECTIVE_FROM } from "#scripts/feature_validation/domain/rules.ts";
 import type { PathComparisonPolicy } from "#scripts/feature_validation/domain/rules.ts";
 import {
 	FeatureSourceFake,
@@ -16,6 +13,7 @@ import {
 import { COMPLETED_BUT_ACTIVE_FINDING } from "#tests/support/retirement-fixtures.ts";
 
 const EFFECTIVE_FROM = CLOSURE_CONSISTENCY_EFFECTIVE_FROM;
+const CLOSURE_EVIDENCE_EFFECTIVE_FROM = "2026-11-19";
 const REFERENCE = "features/a.md";
 const caseSensitivePolicy: PathComparisonPolicy = { caseSensitive: true };
 
@@ -138,7 +136,7 @@ describe("ValidateFeatures.execute closure evidence", () => {
 		expect(findings.some((finding) => finding.includes("name the commit it ran against"))).toBe(false);
 	});
 
-	it("requires the first failure or a stated reason it cannot apply", () => {
+	it("accepts a closed record without a fixed first-failure phrase", () => {
 		const findings = findingsFor(
 			makeCompletedFeature({
 				created: CLOSURE_EVIDENCE_EFFECTIVE_FROM,
@@ -147,9 +145,7 @@ describe("ValidateFeatures.execute closure evidence", () => {
 			}),
 		);
 
-		expect(findings).toContain(
-			"closed feature needs the first failure recorded or the reason an executable failure cannot apply",
-		);
+		expect(findings).toStrictEqual([]);
 	});
 
 	it("accepts a stated reason when no executable failure applies", () => {

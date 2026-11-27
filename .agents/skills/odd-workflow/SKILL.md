@@ -14,29 +14,31 @@ metadata:
 
 ### What I do
 
-Create, read, update, and close the single authoritative feature document for a feature, and create or update the feature's durable file in `odd/features/` that states what the feature is and the requirements it must satisfy. Its subordinate full mirror follows `.aicore/core/knowledge/agent-workflow.md` → `### Full feature mirror and resume`; it is not a second tracker or a context-injection mechanism. The durable file derives its status from its own ticks; it is never a second task record. This skill owns record mechanics, not a duplicate mirror protocol.
+Create, maintain and close the authoritative temporary task record for a change, and maintain the capability's durable feature file in `odd/features/`. The task records execution; the feature records the enduring functional contract. Its status follows its requirement ticks, not task progress.
 
 ### Create a feature document
 
 - Copy `.aicore/core/odd/tasks/_template.md` to `odd/tasks/<YYYY-MM-DD>-<feature-name>.md`, using the document's creation date, which must equal its `Created:` header value; never reconstruct the format by research.
 - Keep that creation-date prefix unchanged afterwards. Existing undated feature documents keep their names; `.aicore/core/odd/tasks/_template.md` stays undated. The date prefix provides chronological filename sorting without changing other folders' ordering.
-- Fill the short header with `Status`, `Owner`, and `Created` and always show all four context fields: `Objective`, `Branch`, `Delivery`, and `Runner`. Fill each field with the actual value or `N/A — reason`; do not silently omit a field, and never invent a branch or runner. Existing closed feature documents are not retrofitted. `Delivery` carries the chosen strategy, authored-line forecast, and slice boundaries; `Runner` is the literal applicable command.
+- Fill the short header with `Status`, `Owner`, and `Created` and always show all four context fields: `Objective`, `Branch`, `Delivery`, and `Runner`. Fill each field with the actual value or `N/A — reason`; do not silently omit a field, and never invent a branch or runner. Existing closed feature documents are not retrofitted. `Delivery` carries the chosen strategy and relevant unit boundaries; `Runner` is the literal applicable command.
 - Fill `## Specs` using the specification procedure below.
 - Fill `## Tasks` with one line per task: stable ID, linked `S#`, route (`inline` or `delegated`) with the reason/trigger that decided it — responsible owner, status (`open`, `in progress`, `done`), and commit. Record the route and its trigger evidence, not the route label alone. Use `commit: pending` only while status is `open` or `in progress`; `done` requires a 7–64 character hexadecimal commit identifier. One authorized coherent work-unit commit may evidence several tasks; do not require one commit per task. Every task names the commit that actually carries its work, and a shared reference is valid only when that commit contains each task's own work. A high-risk unit must carry its own commit, so a high-risk change is never mixed with unrelated tasks and remains revertible and reviewable alone. A commit represents one deliverable behaviour, fix, migration or documentation outcome rather than a file type, and its message states the outcome rather than listing paths.
-- Fill `## Log` with `L1` = the original request verbatim; record each later user correction as its own entry dated and quoted verbatim, and its evidence and rationale may accompany it in that entry. Record verbatim text in a fenced block that opens at column zero, with a delimiter longer than any delimiter run inside it, placed between Log entries rather than inside one; a short quotation may stay on the entry's own line. The block's content is opaque: a heading, a Log entry, a comment or a fence marker inside it is quoted text, never record structure.
-- After bootstrap, apply the workflow's `### Full feature mirror and resume`. Keep verified project/feature identity, document locator, backend ID, exact verified content revision and comparison evidence, or explicit pending recovery, compactly in the existing Log. Respect project/task backend-write restrictions; record preparation does not itself establish runtime synchronization.
+- Preserve verbatim wording that materially determines authorization, prohibitions, safety, scope, acceptance, corrections, approvals or rejected alternatives; summarize nonessential conversation. Preserve a material quotation once and reference it from the relevant spec when needed. The active record and its accessible evidence must let a fresh session recover approved scope, state, unresolved decisions and next action without the conversation. Date material corrections. `L1` starts the Log; verbatim blocks follow `### Log evidence`.
 
 ### Create or update the feature file
 
 - Every non-small feature owns one durable file at `odd/features/<feature>.md`, named for the capability it describes and never dated, created from `.aicore/core/odd/features/_template.md`; the template is the only feature-file template and the format is never reconstructed by research. Create the file the first time the feature is worked, and read and update it on every later change.
 - **Name it for the capability, not the change.** The file name states what the system provides, in the words a reader would use to find it. The name survives a change of implementation: if replacing the mechanism would leave the name wrong, the name describes the mechanism rather than the capability. A name that must change whenever the implementation changes describes a change record, not a contract.
 - **Update before creating.** Before creating a durable file, read `odd/features/` and decide whether the capability already belongs to an existing file. When it does, update that file; a new file is created only for a genuinely distinct, enduring capability with its own observable rules. One change may affect several durable files, and each affected file records the requirements that change touched.
-- The file is not a second tracker. The record in `odd/tasks/` stays the single authoritative intent, task and status record for one change; the file states what the feature is and lists the requirements it must satisfy. The file lists no change records and holds no work-in-progress state. A requirement states only what must remain true and appends no pointer to implementation or history: no file path, heading reference, line number, command, or record of when or how it was checked is added to it, and no change record, its Log, or a line in one is cited. Where a specific path, component or artifact is itself part of the required behavior, the requirement names it as the behavior it guarantees rather than as evidence that the behavior exists. The evidence that a requirement was checked belongs in the change record that affected it.
+- The file describes an enduring capability, not a change plan, activity checklist, file list, progress report, history, review findings, conversation, temporary authorization, tests performed or PR operations. Each requirement states a meaningful, verifiable property, behavior, guarantee or constraint that remains useful independently of the task. A tick means the enduring requirement holds, not that an activity finished. Do not add requirements for individual implementation steps, files, tests or findings. An authoritative documentation reference may supplement a self-contained requirement if accessible after task retirement; it must not replace it with an opaque link or duplicate another owner's normative text. A path or component that is itself required behavior may be named. Evidence belongs in the task or another appropriate durable owner.
+
+Example: task acceptance: “Run the export and observe a PDF download.” Incorrect durable requirement: “Implement the export button.” Correct durable requirement: “A user can export a receipt as a PDF.”
+
 - The shape is fixed: a title for the feature, one paragraph saying what it is, one status line, and the requirement list, where each requirement is one `R#` line in the form `- [ ] R# — <what must be true for this feature to count as complete>`.
 - The status line follows the ticks rather than an independent claim: every requirement ticked is `achieved`, some ticked is `partial`, none ticked is `not started`. The validator computes and reports that derived status.
 - A tick asserts that the requirement currently holds. A change re-verifies only the requirements it affects: when verification confirms the requirement, the tick stands; when a regression is established, the tick is removed and the failure and its cause are recorded in the change's own record; when verification could not be completed and the change demonstrably could have affected the requirement, the tick is removed and the uncertainty and its reason are recorded in the change's own record. Only the change that delivers or re-verifies a requirement may set its tick.
 - A requirement carries a mark only when the feature adopts a standard that already exists, recording where this repository departs from it: `upstream` unchanged, `upstream · local detail` sharpened here, `upstream · narrowed` relaxed here, `local` added here, `local · conflicts` contradicting the standard. A feature explicit from this repository carries no mark.
-- Every change reads the affected durable file and records what it changed in it: which requirements it added, reworded or retired, and the verification outcome for each affected requirement. Requirements the change did not affect are left alone and are not re-verified.
+- Every change reads the affected durable file and records in the task which requirements it added, reworded or retired, and the verification outcome for each affected requirement. If implementation changes without changing the enduring contract or verified status, no feature-file edit is required. Unaffected requirements are left alone and are not re-verified.
 - Validate the file with the skill's validator, pointed at the file or the directory that holds the feature's files: `node .agents/skills/odd-workflow/scripts/validate_feature_file.ts <feature-file-or-directory>`. It reports the derived status. The script is **mechanical anatomy only**; exit 0 proves the shape, the requirement lines, the ticks, the placeholders and that every code fence closes explicitly. It does not prove that a requirement holds or that the feature is complete — the completion judgement in `### Close` owns that. The record's own validation stays in `### Validate`.
 - The mark vocabulary and the filling rules live in the template's `## Guidance` section, and each requirement's upstream source and local owner live where that requirement cites them. This skill owns the mechanics, not that analysis.
 
@@ -44,9 +46,9 @@ Create, read, update, and close the single authoritative feature document for a 
 
 Derive numbered `S#` behavioral clauses, constraints and acceptance checks from the request, corrections and approved proposal. Each entry states the required observable behavior and how it will be checked.
 
-Every entry carries four parts: the `S#` identifier; an observable behavior or constraint statement; the requirement-defining wording preserved verbatim; and an acceptance clause. This shape illustrates one entry:
+Every entry carries an `S#` identifier, an observable behavior or constraint, and an acceptance clause. Preserve material exact wording once in the record under `### Create a feature document`, with a reference where needed. This shape illustrates one entry:
 
-- `S# — <observable behavior or constraint statement>. Exact requirement: <requirement-defining wording, verbatim>. Acceptance: <one action> and <one observable result>.`
+- `S# — <observable behavior or constraint statement>. Acceptance: <one action> and <one observable result>.`
 
 Those labels are illustrative, not required syntax: the mechanical validator accepts any `- S# — …` entry, so the shape proves anatomy only, never meaning.
 
@@ -54,13 +56,13 @@ One `S#` per independently verifiable outcome. Split when no single check covers
 
 An entry states what must remain true, not how it was implemented: it carries no file path, command, commit or architecture narration, except where the path, component or artifact is itself the required behaviour, which is then named as the behaviour it guarantees rather than as evidence that the behaviour exists. A requirement is stated once; an entry that repeats a requirement another entry already states is deleted rather than retained beside it.
 
-A symptom report is not yet a requirement: state the behavior you are committing to, and keep the symptom verbatim. The quoted report says what was observed; the entry says what becomes true and how it is checked.
+A symptom report is not yet a requirement: state the behavior you are committing to and preserve exact symptoms where they materially determine scope or acceptance.
 
 Acceptance names one action and one observable result. `Works correctly` is not acceptable: it names neither.
 
-Preserve the user's exact requirements, strings, errors, commands and examples verbatim alongside that meaning; do not paraphrase or normalize requirement-defining wording, replace it with a summary, or add unrequested scope. Record genuine uncertainty as evidence or a focused question, never an unsupported assumption.
+Preserve exact strings, errors, commands and examples where their wording materially determines the requirement; do not add unrequested scope. Record genuine uncertainty as evidence or a focused question, never an unsupported assumption.
 
-Separate requirements from conversation: directions to analyze and words of approval are authorization/history in `## Log`, not feature capabilities. For a mixed requirement/approval message, retain the exact requirement in Specs with its behavioral clause and check, and preserve the full message and approval context in Log. Do not discard a requirement merely because the same message approves work.
+Separate requirements from conversation: approvals and directions are authorization/history, not feature capabilities. For a mixed message preserve its material requirement and approval context without duplicating the full message. Do not discard a requirement merely because the same message approves work.
 
 Illustrative authoring examples only, not execution evidence. This invented multi-part request reports a symptom, asks for a capability, adds a constraint and approves work:
 
@@ -74,17 +76,13 @@ Correct — one entry per independently verifiable outcome:
 
 Bad: `S1 — approved` or `S2 — ok analyze how to achieve it please`. These are conversation-only entries, rejected because they state no observable behavior and carry no check, even if anatomy validation passes.
 
-Mixed message: the request above ends with `approved`. Its requirements live in S1–S3; the complete message and approval context go in Log. The approval neither removes a requirement nor becomes one.
+Mixed message: the request above ends with `approved`. Its requirements live in S1–S3; the material approval context goes in Log. The approval neither removes a requirement nor becomes one.
 
 Whether an entry is meaningful is owned by the completion judgement in `### Close`, not by the validator.
 
-### Delivery forecast
+### Delivery planning
 
-Forecast authored additions plus deletions, excluding generated files, and record the chosen delivery strategy and slice boundaries compactly in the existing document. Maintain a running count from work-unit commits; when the forecast OR the running count exceeds about 400 authored changed lines, apply the chosen strategy before the next commit. Keep the ~400-line task size advisory — not a hard cap, classification input, automatic review trigger, or delivery-slice boundary — separate from that feature-level strategy trigger, and add no second tracker.
-
-The budget is a review signal, never a reason to shrink evidence: never delete or compress tests, documentation, comments or blank lines to fit it. Slice by work unit instead, or report the overage. A feature of roughly 100 authored changed lines or fewer stays inline as one unit; splitting it manufactures commits without creating an independent review boundary.
-
-Every planned work unit records its rollback boundary — the exact files and behaviour revertible without unwinding unrelated work — together with the unit's own focused check and its observed result.
+Plan coherent, reviewable work units and focused checks; plan the files and behavior of a rollback boundary when risk warrants it. High-risk work retains its own reviewable commit. Never shrink tests, documentation, comments or evidence to fit a size target. Warn before large-scale or costly work, explain material alternatives and obtain any required authorization before proceeding.
 
 ### Before the first write
 
@@ -96,13 +94,13 @@ Read and apply `.aicore/core/knowledge/agent-workflow.md` `### Scope changes and
 
 ### Implement and verify
 
-Read and apply `.aicore/core/knowledge/agent-workflow.md` `### ODD protocol`, step 6, for dependency order, task acceptance checks, tests/documentation, conditional RED/GREEN/refactor, actual exceptions and the runner obligations; apply `##### Behavioral verification and runner selection` in that same file for the per-spec and command-regression evidence. Carry the actual applicable runner and evidence with the work. Step reports and continuation follow the workflow's `#### Step reporting and transitions`.
+Read and apply `.aicore/core/knowledge/agent-workflow.md` `### ODD protocol`, step 6, for dependency order, task acceptance checks, tests/documentation, conditional RED/GREEN/refactor, actual exceptions and the runner obligations; apply `### Behavioral verification and runner selection` in that same file for the per-spec and command-regression evidence. Carry the actual applicable runner and evidence with the work. Step reports and continuation follow the workflow's `#### Step reporting and transitions`.
 
 A work unit ships the tests and documentation it needs. A unit that changes behaviour carries or updates the tests that verify it; a unit that changes a user-visible rule carries the documentation that explains it. Never defer that material to a later unit to keep a diff small.
 
 For findings exposing related impact, read and apply the workflow's `#### Finding-triggered impact reassessment`. Record the trace through the existing Log and the durable source that carries its detail, not a separate tracker. This pointer grants no additional read or write scope.
 
-After material record changes, work-unit commits, resume and closure, apply the workflow's `### Full feature mirror and resume`; retain the exact verified record revision or pending recovery in the existing Log, never a separate status tracker or a claim based only on a summary.
+Resume from the active task and relevant current evidence under the workflow's `### Resume active work`; no memory synchronization is required.
 
 Delivered coverage traces to the governing `S#` entries at the boundary the testing contract assigns, and the record states that trace. A historical example becomes a requirement only when a governing specification or an accepted user decision states it as one; no coverage obligation arises from a count, and no one-to-one requirement-to-test mapping is required.
 
@@ -115,11 +113,11 @@ For instruction changes, identify original and candidate inputs and preserve com
 
 ### Log evidence
 
-The `## Log` is a brief logbook, not an execution diary. `L1` holds the original request verbatim; each later user correction is its own dated entry, quoted verbatim, and its evidence and rationale may accompany it in that entry. The rationale for a meaningful accepted change, the observed outcomes, the progress and the next step are appended as the work proceeds. Routine corrections stay brief: there is no exhaustive decision journal, and a command, an inspected file, a delegation, a reviewer response, a repeated successful test or a routine progress update earns no entry of its own.
+The `## Log` is a brief logbook, not an execution diary. Preserve material wording under `### Create a feature document`; summarize nonessential conversation. Record meaningful decisions, observed outcomes, current state, blockers and next action. Routine progress does not earn an entry of its own.
 
 A Log entry carries the outcome, the verdict and a pointer identifying the durable source that holds the detail: a commit id, a path, or a pull-request number and head. It does not reproduce an enumerated review finding list, an investigation narrative, a raw command-output dump, or a copy of a pull-request body — those live in the durable source that already carries them — and the entry keeps one line naming what happened, the result, and where the detail lives.
 
-Evidence for a feature falls into three classes. **Decisive** — requests, corrections, approvals and their labels, decisions, obligations, acceptance limits and commits — is permanent. It lives in the record while the record is live, and it must reach a durable owner — a durable feature file, an architecture decision record, the debt register, or the owning instruction file — before the record may be retired under `### Retire a task record`.
+Evidence for a feature falls into three classes. **Decisive** — material requests, corrections, approvals, decisions, obligations, acceptance limits and commits — lives in the record while it is active. Enduring requirements, decisions, constraints and required attestations must reach the appropriate durable owner before retirement. Distinguish enduring architectural decisions from temporary execution decisions; do not indiscriminately transfer task-specific authorizations, logs or evidence into feature files.
 **Reproducible** — content a reader can regenerate or re-read from Git, a committed artifact or a gitignored `output/` artifact — is referenced by pointer only. **Attestational** — obligation accounting, verification verdicts and identities, input and candidate identities, literal commands with observed results, and preservation mappings — lives in the durable source that already carries it: the committed diff, the test, a committed artifact, the pull-request body, or the record itself.
 A gitignored `output/` artifact may hold reproducible detail only; it never becomes the sole home of evidence required for future verification or acceptance. Record the provenance in the Log only when no durable source carries it.
 
@@ -129,11 +127,11 @@ There is no separate evidence artifact, directory, index or service. The record'
 
 When a finding-triggered trace is retained, identify the finding and available baseline, implementation and remediation candidates; retain inspected/changed evidence and coverage limitations, with defect origin separate from escape point and `unknown` valid where evidence is missing. Keep the validated conclusions in the existing Log; the supporting detail stays in the durable source that carries it. Before disposing of supporting detail, retain decisive classifications, limitations and lessons in the Log. Small/read-only work keeps its trace in the existing conversation, diff or report without a mandatory feature artifact.
 
-**Close-time reconciliation** is part of closure. Before `Status: closed`, every decisive conclusion the change produced is either in the record or in the durable owner it belongs to, and the record names where it went. Git history is the recovery archive for what a committed artifact already carried.
+**Close-time reconciliation** is part of closure. Before `Status: closed`, every decisive conclusion is in the record or its appropriate durable owner, and the record names where it went. Before retirement ensure required enduring information and attestations survive in their appropriate owners and references remain accessible after deletion. Git history is a recovery archive only for committed content.
 
 ### Close
 
-Before completion, verify the delivered work against the record's own `S#` requirements at the commit that carries it, not against an uncommitted working tree. Compare the actual original request and corrections, Specs, delivered content, obligation accounting and evidence; account for every valid original obligation as retained, translated, or explicitly retired with authority and rationale. Check unresolved requirements, durable evidence at its proper owner (not essential evidence available only in temporary output), shared/local ownership, source neutrality, and precise execution provenance. A green suite or a validator pass is an input, never completion.
+Before completion, verify the delivered work against the record's own `S#` requirements at the commit that carries it, not against an uncommitted working tree. Compare the recorded material requests and corrections, Specs, delivered content, obligation accounting and evidence; account for every valid original obligation as retained, translated, or explicitly retired with authority and rationale. Check unresolved requirements, durable evidence at its proper owner (not essential evidence available only in temporary output), shared/local ownership, source neutrality, and precise execution provenance. A green suite or a validator pass is an input, never completion.
 
 **An independent review is optional and is never an acceptance prerequisite.** The user may request one, and a declared high-risk item may justify recommending one. When a review runs, its findings are disposed under `.aicore/core/knowledge/agents.md` `### Finding disposition` and its verdict, if any, is recorded in the Log with the candidate it judged. When no review was requested, the record states that plainly: no verdict, acceptance statement or reviewer identity is invented, and the absence of a reviewer is not an open finding, not a pending check, and never a reason to keep an otherwise complete record open.
 
@@ -147,13 +145,11 @@ Read and apply `.aicore/core/knowledge/agent-workflow.md` `### ODD protocol`, st
 
 **Closure consistency.** The stages and each stage's precondition are stated in `### Completion stages`. A record whose task rows are all `done` is either closed with its closure evidence — the verified outcome and the delivery evidence it asserts — or active with the open closure prerequisite named in its Log by an entry that begins `Blocked:`. Completion is never fabricated and a feature with missing evidence is never closed automatically: the missing evidence is named, not assumed. The validator detects this only for records created on or after the rule's effective date, so a historical record's status, Log and Specs are left exactly as written rather than rewritten to satisfy a later convention.
 
-**Closure evidence the validator observes.** For a record created on or after the closure-evidence effective date `2026-11-19`, a closed record's `## Log` must state **the first failure, or the reason none applies**, and the existing validator checks only that: the Log states the failure that existed first in a form containing `first failure`, `first failing` or `first failed`; or it states, in one of these phrasings, why an executable failure cannot apply: `no applicable executable failure`, `executable failure cannot apply`, or `no executable failure applies`.
-
-The per-requirement reviewer-verdict entry and the commit-binding of those entries were retired with the multi-agent acceptance model. A record is no longer closed by a second agent's verdict, so requiring one would be an obligation with no owner; the validator no longer checks for it, and a record that carries no reviewer verdict is valid. The first-failure rule survives because it is an evidence-honesty obligation about the delivered work, not about a reviewer.
+Record the first failure that existed, or why an executable failure cannot apply, and actual RED/GREEN evidence where applicable. No fixed first-failure phrase or reviewer verdict is required. A structural validator cannot prove that evidence is truthful or a capability is achieved.
 
 A `Blocked:` entry — the open-closure-prerequisite entry a completed-but-active record requires — reports a prerequisite, not an accepted result.
 
-These checks observe documentary structure only: they prove that the shape exists, never that the evidence is true. Records created before `2026-11-19` keep their existing status, Log and Specs and are never re-validated against these rules.
+These checks observe documentary structure only: they prove that the shape exists, never that the evidence is true.
 
 ### Retire a task record
 
@@ -193,7 +189,7 @@ Closing the feature document is not delivery. Explicit authorization may be supp
 
 A change reaches completion in stages. Each stage has its own precondition; their ordering dependencies are stated below.
 
-1. **Work units planned** — the delivery forecast records the strategy, each unit's slice boundary, rollback boundary and focused check, and which tasks share which unit.
+1. **Work units planned** — the delivery strategy identifies coherent units and focused checks; rollback boundaries are planned where risk warrants them.
 2. **Implementation delivered** — the authorized work is committed in work-unit commits, every affected task row is `done` and carries the commit that actually carries its work, and each unit ships its own tests and documentation.
 3. **Verification complete** — the applicable automated checks have run against the delivered content and are recorded with their result, or a check that could not execute is recorded with the guarantee an alternative procedure established under `.aicore/core/knowledge/agent-workflow.md` → `### Verification contingency`. These are inputs to completion, never a substitute for it.
 4. **Optional independent review** — only when the user requested one, or accepted a recommendation. Its findings are disposed and recorded; its absence changes nothing in the stages below and is never a missing prerequisite.
@@ -227,7 +223,7 @@ Apply `.aicore/core/knowledge/release.md` before opening any PR and after every 
 
 The validator runs natively on Node.js `>=24.12.0` with no runtime dependency, no build step and no bundle; a destination runs it as it stands, with nothing installed.
 
-Run `node .agents/skills/odd-workflow/scripts/validate_feature.ts odd/tasks` before closing. The script is **mechanical anatomy only**; exit 0 proves the headings, `S#`/`T#`/`L1`, the Log's `L#` identifiers ascend with `L1` first, task status, 7-64 character hexadecimal commit references, placeholders, the closure-consistency precondition, and — for a record created on or after `2026-11-19` — the first-failure evidence stated in `### Close`. A present but unreadable `Created` date fails closed. It also proves the record's fenced structure: every fenced block closes with a matching delimiter of the same level, an opener with no matching closer is reported as unclosed, and — for a record created on or after `2026-11-25` — every delimiter starts at column zero, because a record outside that controlled format is rejected rather than interpreted. Every rule that reads the record — its title and header metadata, its Specs, Tasks and Log entries, its Log-identifier ordering, its Close entry, its user-cancellation authorization, its superseded-record obsolescence explanation, its placeholders and its retirement eligibility — reads only text outside fenced blocks, so fenced content can neither satisfy an obligation nor trigger a diagnostic. It does not prove verbatim fidelity, that a spec is meaningful, that a runner applies or ran, that a task is complete, or that the evidence is true — the completion judgement in `### Close` owns that.
+Run `node .agents/skills/odd-workflow/scripts/validate_feature.ts odd/tasks` before closing. The script checks mechanical anatomy: headings, `S#`/`T#`/`L1`, ascending Log identifiers, task status and commit references, placeholders, closure consistency and fenced structure. Record rules read only outside fenced blocks; newer records require column-zero fence delimiters. It does not establish semantic correctness, verbatim fidelity, truthful evidence or functional achievement; the completion judgement owns those checks.
 
 Alongside the two validators, the retirement check `node .agents/skills/odd-workflow/scripts/retirement_check.ts <tasks-directory>` is a read-only report: it lists the records that satisfy the routine eligibility gate and the reason each excluded record is excluded, and it deletes nothing.
 

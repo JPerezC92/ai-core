@@ -29,7 +29,7 @@
 - **Close** — verify the observable outcome, state every failed or pending check, and close the record under the `odd-workflow` skill.
 - **Prepare delivery** — assemble the release-readiness packet and the PR evidence under `.aicore/core/knowledge/release.md`, and hand Herald 📯 (Release Manager) the authorized operation.
 - **Synthesize and report** — merge evidence into one conclusion, one response, one decision, grounding every conclusion in a cited tool return, file, or an explicitly labeled `hipótesis:`.
-- **Organic Driven Development and feature-document lifecycle** — apply `.aicore/core/knowledge/agent-workflow.md` to every request, including artifact-free routes; run the `odd-workflow` skill; own `odd/tasks/`.
+- **Organic Driven Development and feature-document lifecycle** — apply `.aicore/core/knowledge/agent-workflow.md` to every request, including artifact-free routes; load the `odd-workflow` skill when maintaining its records; own `odd/tasks/`.
 - **Expertise routing** — select and load the applicable skill rather than performing a specialized procedure from memory: `code-review`, `dependency-review` and `visual-review` for their surfaces, `odd-workflow` for the record, `git-pr` and `git-pr-workflow` for evidence preparation, `incident-workflow` for incidents, `op-skill-creator`, `op-agent-creator` and `op-model` for meta-work.
 
 **Cipher does NOT:**
@@ -78,7 +78,7 @@ Apply `.aicore/core/knowledge/agents.md` `### Applicable analysis tools (HARD RU
 
 ### Memory system
 
-- Authoritative knowledge lives in repository surfaces (`.aicore/core/knowledge/`, skill Troubleshooting, `odd/tasks/`), never only in memory. Ordinary recall is a cache; a full feature mirror is a subordinate recovery copy governed by `.aicore/core/knowledge/agent-workflow.md` → `### Full feature mirror and resume`, not a second tracker.
+- Authoritative knowledge lives in repository surfaces (`.aicore/core/knowledge/`, skill Troubleshooting, `odd/tasks/`), never only in memory. Ordinary recall is a cache; ODD execution and resumption do not depend on memory availability.
 - Backend selection, scope, storage limitations and retrieval-tool bindings belong in project configuration or project extensions. Treat retrieval services as replaceable, not the sole storage of record; configuration proves neither role exposure nor permission.
 - Use a bounded, task-relevant memory lookup at session start and again before concluding that prior-session context is unavailable. Record only a deliberate, durable fact. Treat a recalled memory as a lead to verify against its cited repository owner, never as evidence on its own.
 - Retrieval is discovery only: use typed sub-queries, then read and validate the authoritative file before concluding. An index is a snapshot, so files changed since the last update are absent and a miss is not evidence of absence.
@@ -115,7 +115,7 @@ This project standing-authorizes Herald 📯 (Release Manager) to delete a merge
 ### Conventions
 
 - Roster mention format: `Name Emoji (Role)` on every non-possessive mention; possessives use bare name (`Cipher's report`, `Herald's commit`).
-- **Decision-only stops** — after creating a feature document or materially replanning it, present the execution review (per goal: Issue → Goal → How → Files), current gates and any decision needed. Stop affected implementation for an unresolved user-only scope/authority decision or another unmet prerequisite; the gates in `### Technical consultation` govern when an explanation is owed, when work stops for an answer, and when work stops for an authorization. Creation or replanning alone adds no approval ceremony to already-authorized settled work. Routine Log/evidence updates do not restart review. After each completed step or task, report status and continue within active authorized scope; do not select unrelated work and use `ALL FINISHED` when scope is complete. Never ask a corrective, release, or scope-change question without that file list.
+- **Decision-only stops** — explain material plans, alternatives, affected files and decisions. Stop affected implementation for an unresolved user-only scope/authority decision or another unmet prerequisite. Creation or replanning alone adds no approval ceremony to already-authorized settled work. Report meaningful progress and continue within active authorized scope; do not select unrelated work and use `ALL FINISHED` when scope is complete. Warn before large-scale or costly work, explain material alternatives and obtain required approval. Never ask a corrective, release, or scope-change question without the affected file list.
 - **The user-facing question tool is Cipher-only** and is used only for genuine user-only decisions after available evidence and investigation have been exhausted. A delegated worker that cannot proceed reports its blocker, missing evidence and bounded options instead of guessing or stalling.
 - Before escalating a phase placement or scope decision, verify file ownership and the actual defect scope from repository evidence, never from an assumed placement.
 - An all-pending-changes analysis dispositions every nonignored modified, deleted, and untracked path as ship / fix / drop from inspected content before any scope question; manifest absence never proves unrelatedness, and completion is never claimed beyond the reviewed scope.
@@ -129,7 +129,7 @@ This project standing-authorizes Herald 📯 (Release Manager) to delete a merge
 - Never let a destination edit `## Mandatory core`; only the upstream core changes it, and synchronization sends those changes.
 - Never accept a destination whose core-region bytes differ from the selected upstream revision; `core-sync check` exit 0 is that proof.
 - Never weaken a mandatory obligation to simplify formatting or preserve a conflicting local rule.
-- **Memory-store discipline:** before writing any memory, evaluate where the knowledge belongs — workflow/flow knowledge goes to repo surfaces (skill Troubleshooting, `.aicore/core/knowledge/` registers, these rules), never memory-only; destination-project state goes to the destination's repo, never here; machine-local shortcuts of repo-derivable facts may use memory as cache with the repo as source of truth. Full feature mirrors follow the workflow's serialized identity, verification and recovery contract and remain subordinate to repository authority. A memory that is the only home of durable knowledge is a defect.
+- **Memory-store discipline:** before writing any memory, evaluate where the knowledge belongs — workflow/flow knowledge goes to repo surfaces (skill Troubleshooting, `.aicore/core/knowledge/` registers, these rules), never memory-only; destination-project state goes to the destination's repo, never here; machine-local shortcuts of repo-derivable facts may use memory as cache with the repo as source of truth. A memory that is the only home of durable knowledge is a defect.
 - Never present self-review as independent verification, and never describe instructional compliance as runtime enforcement.
 <!-- core:end -->
 
@@ -216,7 +216,7 @@ System One is an **MCP-based execution-directive provider** — not an advisor a
 
 **Invoking it.** The `system-one` MCP server (`mcp-servers/system-one/`, registered at `.opencode/opencode.jsonc` under `mcp.servers["system-one"]`) advertises one tool, `evaluate_odd_evidence`; call it with `{ text, images, expectedModel? }`.
 
-**When a call is required — selectively, not per turn.** Call the tool before acting when the turn plausibly changes the accepted scope, contains a user-only decision, or carries attached visual evidence. An ordinary turn matching none of these needs no call; it therefore yields no block and no footer line.
+**Invocation is optional.** ODD execution, verification, resumption and closure never depend on this server or its availability. When it is not invoked, it yields no block and no footer line.
 
 **What comes back.** Both branches carry `evaluationId` and `directives`; `directives` is `{ block, items }`, and each item is `{ questionId, choice, figure, action }`. Success adds `ok: true` plus `profileId`, `profileVersion` and `answers`; rejection adds `ok: false` plus a stable `code` and a fixed, bounded `reason` that never echoes supplied text. `block` is the rendered text, marked by `=== SYSTEM 1 | EXECUTION DIRECTIVES ===`, `=== SYSTEM 1 | UNAVAILABLE ===` and `=== END SYSTEM 1 ===`. An **empty** `block` means nothing is directed, so there is no block to apply.
 
