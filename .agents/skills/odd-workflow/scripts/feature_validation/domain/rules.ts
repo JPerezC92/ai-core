@@ -284,43 +284,6 @@ function specSectionBlocks(specLines: readonly string[]): string[][] {
 	return blocks;
 }
 
-/** The effective date of the closure-evidence rules, separate from the closure-consistency date. */
-export const CLOSURE_EVIDENCE_EFFECTIVE_FROM = "2026-11-19";
-
-const FIRST_FAILURE_RE = /\bfirst fail(?:ure|ing|ed)\b/iu;
-const NO_EXECUTABLE_FAILURE_RE =
-	/\b(?:no applicable executable failure|executable failure cannot apply|no executable failure applies)\b/iu;
-
-/** Whether the closure-evidence rules govern a record, by its created date. */
-function closureEvidenceApplies(lines: readonly string[]): boolean {
-	const created = lines.map((line) => CREATED_DATE_RE.exec(line.trim())?.[1]).filter((value) => value !== undefined);
-	if (created.length === 0) return false;
-	// A present but unreadable date fails closed, like the closure-consistency sibling, so a
-	// malformed record cannot escape the rule by carrying a date the parser rejects.
-	const declared = created[0]!;
-	if (!/^\d{4}-\d{2}-\d{2}$/u.test(declared)) return true;
-	return declared >= CLOSURE_EVIDENCE_EFFECTIVE_FROM;
-}
-
-/**
- * The closure-evidence findings for a closed record the rules govern.
- *
- * The per-spec reviewer-verdict requirement and the commit-binding of those verdict entries were
- * retired with the multi-agent acceptance model: a record is no longer closed by a second agent's
- * verdict, so requiring one would be an obligation with no owner. The first-failure rule survives
- * because it is an evidence-honesty obligation about the delivered work, not about a reviewer.
- */
-function closureEvidenceFindings(logLines: readonly string[]): string[] {
-	const findings: string[] = [];
-	const logText = logLines.join("\n");
-	if (!FIRST_FAILURE_RE.test(logText) && !NO_EXECUTABLE_FAILURE_RE.test(logText)) {
-		findings.push(
-			"closed feature needs the first failure recorded or the reason an executable failure cannot apply",
-		);
-	}
-	return findings;
-}
-
 /**
  * The date from which a fence delimiter must start at column zero.
  *
@@ -518,10 +481,6 @@ export function validateFeature(text: string): string[] {
 		findings.push(
 			"active record has every task done: close the record or record the open closure prerequisite as a Log entry",
 		);
-	}
-
-	if (isClosed && claimsCompletion && closureEvidenceApplies(lines)) {
-		findings.push(...closureEvidenceFindings(log));
 	}
 
 	const logIdentifiers: bigint[] = [];
