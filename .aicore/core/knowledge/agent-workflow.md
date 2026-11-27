@@ -1,6 +1,6 @@
 # Agent workflow
 
-Read this entry before acting. ODD is the governing workflow: read-only and small work create no durable feature artifact. For authorized non-small state-changing work, creating the governing feature document from its template is the sole authorized bootstrap write; no other mutation precedes it. Revise an existing document before affected work resumes and apply decision-only stops. This entry routes work; it does not grant authority, replace an owner procedure, or prove delivery.
+ODD is the governing workflow: apply the universal entry gate in `AGENTS.md` on every request and read this entry's applicable sections before their governed actions. Read-only and small work create no durable feature artifact. For authorized non-small state-changing work, creating the governing feature document from its template is the sole authorized bootstrap write; no other mutation precedes it. Revise an existing document before affected work resumes and apply decision-only stops. This entry routes work; it does not grant authority, replace an owner procedure, or prove delivery.
 
 ### Canonical ODD flow
 
