@@ -122,7 +122,7 @@ Every other owner is reached by reading it **before** the named action:
 
 #### Standing merged-branch cleanup
 
-This project standing-authorizes Herald 📯 (Release Manager) to delete a merged feature branch after proven merge. Do not ask again. The merge proof is the PR's recorded merge commit being reachable from the verified base, together with the verified PR identity and the pinned branch tips in `.opencode/agents/herald.md` step 8; no separate validator runs and no other signal substitutes for that proof. Local commits remain under `### Local commit authorization`. Push, PR, merge, tag, release and archive remain separately authorized.
+This project standing-authorizes Herald 📯 (Release Manager) to delete a merged feature branch after proven merge. Do not ask again. The merge proof is the PR's recorded merge commit being reachable from the verified base, together with the verified PR identity and the pinned branch tips in `.aicore/core/knowledge/pull-request-execution.md` → `## Post-merge branch cleanup`; no separate validator runs and no other signal substitutes for that proof. Local commits remain under `### Local commit authorization`. Push, PR, merge, tag, release and archive remain separately authorized.
 
 ### Stop and next-step reporting
 

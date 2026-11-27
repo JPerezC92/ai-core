@@ -14,3 +14,4 @@ What an agent holds in context before it acts, and how a specialized owner is re
 - [x] R6 — the root runtime spec carries runtime obligation only; contributor adoption, destination-binding and maintenance guidance live in the project's documentation owner.
 - [x] R7 — destination-owned instructions in the shared rulebook are available before action in both editors, while action-specific owners are reached through explicit portable triggers.
 - [x] R8 — the root runtime spec and the shared behavioral rulebook are distinguishable from their titles alone, so a bare filename reference between them is never ambiguous.
+- [x] R9 — the release executor's always-loaded specification carries the universal safeguards, the authority boundaries and the refusal duties, and every specialized procedure is reached through a named owner and the operation that triggers its read.

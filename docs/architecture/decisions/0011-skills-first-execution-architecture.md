@@ -46,5 +46,5 @@ Two documented facts bounded the decision:
 - `.aicore/core/knowledge/release.md` → `### PR release readiness`, `### Post-review finding actions`, `### Execution owners`.
 - `.aicore/core/knowledge/architecture-decision-workflow.md` → `### Acceptance gate`, `### Ownership`.
 - `.agents/skills/odd-workflow/SKILL.md` → `### Close`, `### Completion stages`, `### Handoff`, `### Validate`.
-- `.opencode/agents/herald.md` → `### Your Role`, `#### Upstream trigger`, `#### Execution steps` 7–8, `### Output Format`, `### Hard Rules`.
+- `.opencode/agents/herald.md` → `### Your Role`, `#### Upstream trigger`, `#### Deferred procedures`, `### Output Format`, `### Hard Rules`; `.aicore/core/knowledge/git-execution.md` and `.aicore/core/knowledge/pull-request-execution.md` carry the procedures those pointers reach.
 - `docs/architecture/odd-adoption-status.md` → `## Explicit local deviations`.

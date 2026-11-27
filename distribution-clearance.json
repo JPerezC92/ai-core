@@ -26,6 +26,12 @@
     ".aicore/core/knowledge/release.md": {
       "mode": "raw"
     },
+    ".aicore/core/knowledge/git-execution.md": {
+      "mode": "raw"
+    },
+    ".aicore/core/knowledge/pull-request-execution.md": {
+      "mode": "raw"
+    },
     ".aicore/core/knowledge/escalation.md": {
       "mode": "region"
     },
