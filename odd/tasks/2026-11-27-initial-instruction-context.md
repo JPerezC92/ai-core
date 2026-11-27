@@ -1,11 +1,13 @@
 # Initial instruction context
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-11-27
+> **Disposition:** completed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-27
 > **Objective:** Reduce always-loaded instruction context by deferring two specialized owners behind explicit read-before-action triggers, relocating contributor guidance out of the root runtime spec, and preserving every accepted safeguard.
-> **Branch:** `main` — no feature branch created; branch creation is a separate Git authorization.
-> **Delivery:** One bounded documentation and configuration unit across `AGENTS.md`, `.opencode/opencode.jsonc`, `README.md` and `.aicore/core/knowledge/agents.md`, plus this record and the durable feature file. No commits until separately authorized, so task rows stay `in progress` and the record remains active.
+> **Branch:** `refactor/instruction-context`, based on `d7433d28639db69a720081839912e3432733c3c4`.
+> **Delivery:** Two work units: the change itself across seven files, then the closure edit carrying the record's closure and the retirement check's authorized deletions. Commit, push and PR publication authorized; merge, tag and branch deletion are not.
 > **Runner:** `node .agents/skills/odd-workflow/scripts/validate_feature.ts odd/tasks`
 
 ## Specs
@@ -21,11 +23,11 @@
 
 ## Tasks
 
-- T1 | S1 | inline (configuration and clearance verification) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T2 | S2, S5 | inline (routing section authoring) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T3 | S3, S4 | inline (contributor guidance relocation and System One condensation) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T4 | S6 | inline (rulebook heading) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T5 | S7, S8 | inline (measurement reconciliation and harness walkthroughs) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
+- T1 | S1 | inline (configuration and clearance verification) — Cipher 🔓 (Lead Orchestrator) | done | commit: 105344cc224132bbf4e021c5846f793e3ddf0394
+- T2 | S2, S5 | inline (routing section authoring) — Cipher 🔓 (Lead Orchestrator) | done | commit: 105344cc224132bbf4e021c5846f793e3ddf0394
+- T3 | S3, S4 | inline (contributor guidance relocation and System One condensation) — Cipher 🔓 (Lead Orchestrator) | done | commit: 105344cc224132bbf4e021c5846f793e3ddf0394
+- T4 | S6 | inline (rulebook heading) — Cipher 🔓 (Lead Orchestrator) | done | commit: 105344cc224132bbf4e021c5846f793e3ddf0394
+- T5 | S7, S8 | inline (measurement reconciliation and harness walkthroughs) — Cipher 🔓 (Lead Orchestrator) | done | commit: 105344cc224132bbf4e021c5846f793e3ddf0394
 
 ## Log
 
@@ -147,3 +149,5 @@ Do not create commits, push, open a PR, or dispatch independent review until sep
 - L4 — 2026-11-27 — Verification: `node .agents/skills/odd-workflow/scripts/validate_feature.ts odd/tasks` and `validate_feature_file.ts odd/features` exit 0 with every record `ok`; `pnpm lint` completes with no diagnostic; `pnpm format:check` reports `Checked 459 files … No fixes applied` after one `pnpm format` pass. Candidate-measured always-on instructions are 109,630 characters / 109,972 UTF-8 bytes, against 126,239 / 126,745 before, a reduction of 16,609 characters (13.16%) reconciled exactly across the six changes; all 17 conditional owners named in the routing section resolve to existing paths; both clearance rows for the deferred documents are unchanged (`raw` and `region`). Static reachability walkthroughs recorded for OpenCode (four configured sources) and Cursor (AGENTS.md only). No runtime token measurement was performed and no API saving is claimed.
 
 - L5 — 2026-11-27 — Authorized refinement and feature-semantics correction. The System One trace-resilience clause moved from `AGENTS.md` into `docs/tooling.md`'s existing Operational trace paragraph, which now owns the degradation behaviour; `AGENTS.md` keeps only the pointer. `odd/features/instruction-context.md` R1 was corrected — the always-loaded set is the root spec plus every document it configures, not one file — and R8 was restated as a title-distinguishability guarantee rather than an editorial act; both stayed `achieved` on re-verification. Requirement evidence: R1 the `AGENTS.md` core keeps the universal sections and the routing section names the always-loaded set; R2 `.opencode/opencode.jsonc` configures two sources and the routing list carries one trigger per conditional owner; R3 the routing section's non-enforcement paragraph; R4 `distribution-clearance.json` rows for both deferred documents unchanged (`raw` and `region`); R5 the delivery-action and decision-record rows, with both owner files unmodified; R6 the `### Contributor guidance` pointer and the `README.md` sections; R7 the configuration comment and `README.md:118`; R8 `.aicore/core/knowledge/agents.md:2`. Final candidate measurements supersede L4: always-on **109,557 characters / 109,999 UTF-8 bytes** against 126,239 / 126,745, a reduction of **16,682 characters (13.21%)**, reconciled exactly as A1 −5,122, A2 −6,260, A3 −6,267, A4 −337, A5 +1,279, D5 +22 and identity wording +3.
+
+- L6 — Close: delivered and closed with `Disposition: completed`. Every `S#` is verified against commit `105344cc224132bbf4e021c5846f793e3ddf0394` — two configured instruction documents instead of four, one trigger per conditional owner with delivery actions and decision records covered, contributor guidance relocated to `README.md`, System One trace documentation owned by `docs/tooling.md`, `# Shared Agent Rules` present in the core region, and the final measurement reconciled to the character. No cleared path or distribution mode changed, so no destination owes a reconciliation. The retirement check reported 7 eligible records of 41, and the dependency safeguard found no durable surface citing any of them, so their deletion rides the closure work unit under the standing procedure. Not established and not claimed: runtime token consumption, and Cursor behaviour beyond its documented AGENTS.md loading. An independent review was requested by the user against the final branch head; this entry is not its verdict.
