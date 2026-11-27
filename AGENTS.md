@@ -81,7 +81,7 @@ Every other owner is reached by reading it **before** the named action:
 - **Reviewing a change candidate** → the `code-review`, `dependency-review` or `visual-review` skill matching the surface.
 - **Preparing or publishing a pull request** → the `git-pr` and `git-pr-workflow` skills.
 
-**These triggers are cooperative instructions, not runtime loading.** A harness does not resolve a path reference on its own, no trigger here is enforcement, and an unreached owner fails silently. A trigger is honored by reading the owner, not by the reference existing. No listed owner's procedure is restated here; a universally binding rule that an owner also states is repeated deliberately, as defense in depth, not duplicated by accident.
+**These triggers are cooperative instructions, not runtime loading.** A harness does not resolve a path reference on its own, no trigger here is enforcement, and an unreached owner fails silently. A trigger is honored by reading the owner, not by the reference existing. Each listed owner remains the authority for its own procedure; where a binding rule or an evidence standard it also states is repeated here, the repetition is deliberate defense in depth, not a duplicate to delete.
 
 - The single feature record is `odd/tasks/<YYYY-MM-DD>-<feature-name>.md` (creation date, matching its `Created:` header; existing undated documents are not renamed), created from `.aicore/core/odd/tasks/_template.md` with the `odd-workflow` skill.
 - Apply `.aicore/core/knowledge/agents.md` `### Applicable analysis tools (HARD RULE)` during applicable exploration and review. Project bindings select tools, not execution authority; require attributable real-use evidence or justified non-use.
