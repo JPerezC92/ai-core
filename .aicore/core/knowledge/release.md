@@ -26,13 +26,13 @@ After a review round, or when a user report or failed check produces findings, a
 
 ### Post-merge reporting
 
-After merge, verify and report the outcome; do not automatically edit tracked files or create bookkeeping commits solely to record merge or cleanup facts. A separately requested post-merge documentation change remains authorized through the normal task-branch route, subject to existing authority and gates. Commit and cleanup mechanics remain with Herald 📯 (Release Manager) in `.opencode/agents/herald.md`; this timing rule changes no cleanup authorization or safeguard.
+After merge, verify and report the outcome; do not automatically edit tracked files or create bookkeeping commits solely to record merge or cleanup facts. A separately requested post-merge documentation change remains authorized through the normal task-branch route, subject to existing authority and gates. Commit and cleanup mechanics remain with Herald 📯 (Release Manager): the authority and safeguards in `.opencode/agents/herald.md`, the procedures in `.aicore/core/knowledge/git-execution.md` and `.aicore/core/knowledge/pull-request-execution.md`; this timing rule changes no cleanup authorization or safeguard.
 
 ### Execution owners
 
 - Git and GitHub operations of every kind — repository inspection, branch, worktree, staging, commit, push, PR creation, PR-body publication, delete — are executed by Herald 📯 (Release Manager) alone. Every other agent obtains Git- and GitHub-derived evidence from Herald 📯 (Release Manager) and never runs the command.
 - PR publication procedure: `.agents/skills/git-pr-workflow/SKILL.md` (content preparation stays in `.agents/skills/git-pr/SKILL.md`)
 - PR body format: `.agents/skills/git-pr/SKILL.md` and `.agents/skills/git-pr/references/_pr-evidence-format.md`; the presentation standard is `git-pr`'s reference
-- Cleanup proof: the native merge-proof procedure in `.opencode/agents/herald.md` step 8 — the PR's recorded merge commit reachable from the verified base, together with the verified PR identity and the pinned local and remote branch tips. It is evidence only, never authorization, and no separate validator runs.
+- Cleanup proof: the native merge-proof procedure in `.aicore/core/knowledge/pull-request-execution.md` → `## Post-merge branch cleanup` — the PR's recorded merge commit reachable from the verified base, together with the verified PR identity and the pinned local and remote branch tips. It is evidence only, never authorization, and no separate validator runs.
 - A pull-request merge is never an agent operation. Merging is the user's alone under every instruction.
 - Finding presentation: `.aicore/core/knowledge/agents.md` `### Delivery readiness and findings`
