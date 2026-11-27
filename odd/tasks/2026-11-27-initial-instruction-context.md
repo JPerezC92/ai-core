@@ -7,7 +7,7 @@
 > **Created:** 2026-11-27
 > **Objective:** Reduce always-loaded instruction context by deferring two specialized owners behind explicit read-before-action triggers, relocating contributor guidance out of the root runtime spec, and preserving every accepted safeguard.
 > **Branch:** `refactor/instruction-context`, based on `d7433d28639db69a720081839912e3432733c3c4`.
-> **Delivery:** Four work units: the change across seven files, the closure, the review remediation that restored seven task records and corrected two routing statements, and the re-closure carrying the final record state. Commit, push and PR publication authorized; merge, tag and branch deletion are not.
+> **Delivery:** Six work units: the change across seven files; the closure; the review remediation that restored seven task records and corrected two routing statements; the re-closure; the size-evidence re-baseline; and the routing qualification with its evidence restatement. Commit, push and PR publication authorized; merge, tag and branch deletion are not.
 > **Runner:** `node .agents/skills/odd-workflow/scripts/validate_feature.ts odd/tasks`
 
 ## Specs
