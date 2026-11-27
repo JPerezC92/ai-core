@@ -1,6 +1,8 @@
 # Skill authoring context efficiency
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-11-27
+> **Disposition:** completed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-27
 > **Objective:** Improve skill-authoring context efficiency while preserving valid obligations.
@@ -19,7 +21,7 @@
 
 ## Tasks
 
-- T1 | S1, S2, S3, S4, S5, S6 | inline (bounded skill documentation rewrite) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
+- T1 | S1, S2, S3, S4, S5, S6 | inline (bounded skill documentation rewrite) — Cipher 🔓 (Lead Orchestrator) | done | commit: 96742cd6a0b8c5cd16e8aaa578c5e2b9923103a9
 
 ## Log
 
@@ -349,3 +351,5 @@ Report only the remaining operation's outcome and the final completion status.
 ````
 - L12 — 2026-11-27 — Mirror identity remains unresolved: searches for the feature title and locator returned no matches but the exposed full-text search has neither exact identity nor explicit project-scope filters; those results alone do not prove absence of an existing mirror. No full payload was written or read back and no backend error occurred. The project is `github.com-personal/JPerezC92/ai-core`, the feature is `skill-authoring-context-efficiency`, and the intended locator is this record. Preserve this pending state rather than claim synchronization or create an unverified duplicate.
 - L13 — 2026-11-27 — The user authorized combined delivery with the ODD workflow efficiency candidate and explicitly authorized applying its revised policy to both tasks. That candidate retires the mandatory mirror prerequisite; L8, L10 and L12 remain historical facts, no synchronization is claimed and adoption on main is not claimed. User authorized commit-bound verification, closure and one PR, plus focused independent review; merge, tags, branch deletion, System One and destination synchronization remain unauthorized. The feature stays active until its implementation commit, verification and closure evidence exist.
+- L14 — 2026-11-27 — Herald committed skill-authoring implementation as `96742cd6a0b8c5cd16e8aaa578c5e2b9923103a9` on `refactor/odd/workflow-efficiency`; the ODD implementation is `85441acb04b1d7a482686ac40180d3c3a696ba20`. Closure is blocked on the retirement-policy conflict described in `odd/tasks/2026-11-27-odd-workflow-efficiency.md` L9; user prohibited unrelated historical cleanup, and the existing policy prescribes deletion of eligible old records during closure. No mirror synchronization, closure, independent review or publication is claimed.
+- L15 — Close: S1–S6 are verified against implementation commit `96742cd6a0b8c5cd16e8aaa578c5e2b9923103a9` by the obligation accounting and static scenarios at L6–L10. The user-authorized ODD candidate removes the mandatory mirror prerequisite; L8, L10 and L12 remain historical, no mirror synchronization occurred, and adoption on main is not claimed. The user subsequently authorized the bounded retirement procedure, resolving L14's conflict. The independent review of the final committed candidate follows this closure unit; no verdict is asserted here.
