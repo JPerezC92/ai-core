@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 metadata:
   author: Philip Perez Castro
-  version: 2.1.0
+  version: 2.1.1
   domain: git
 ---
 
@@ -37,20 +37,24 @@ metadata:
 
 ## Sequence
 
+The protocol has two stages over one content command. **Initial creation** publishes the generated creation body. **Evidence publication** then replaces that body once with the generated evidence body. Steps 5 to 9 belong to the evidence-publication stage: `prepare_pr_evidence.ts` and the scanner snapshot are bound to the pull request's number, so before step 3 creates the pull request there is no live number for them to bind to, and this sequence defines no snapshot and no scan of a creation body.
+
 1. The content owner authors the publication input — `output/pr-publication.json` — through `git-pr`, in the shape of `.agents/skills/git-pr/references/_pr-publication-input.md`. No Markdown is authored.
-2. Herald 📯 (Release Manager) establishes the immutable head identity — PR number, URL, head OID, base branch and state — from the authenticated live capture, and pins them for the whole flow.
-3. The writer generates the body and its receipt: `prepare_pr_review.ts --input output/pr-publication.json --output output/pr-working-body.md`. The command creates the body exclusively, writes `output/pr-working-body.md.receipt.json` beside it and prints the receipt `{"status":"prepared","title":"<title>"}`. This is the one authoritative rejection point for an invalid input. The same command serves the creation stage and a review update: the writer records the review findings, evidence and verdict in the publication input and generates a fresh body into a fresh path.
-4. Herald 📯 (Release Manager) prepares the immutable review evidence: `prepare_pr_evidence.ts prepare-local --pr <number> --base $BASE --receipt output/pr-working-body.md.receipt.json --body output/pr-working-body.md --output SNAPSHOT`. `prepare-snapshot` and `snapshot` are the supplied-inventory and supplied-scanner-shape alternatives; reuse `scripts/scan_attribution.ts` through its existing authorized route. The receipt supplies the generated title; this workflow never reads the publication input and never compares the supplied artifacts with an earlier state.
-5. The writer scans the exact bytes it will publish: run the attribution scanner over the prepared snapshot, whose title and body artifacts are the generated title and the generated body. Any attribution match blocks the upload.
-6. Herald 📯 (Release Manager) executes the ONE publication write against the exact generated body file, and returns the persisted capture.
-7. The writer verifies persistence: `prepare_pr_evidence.ts verify --baseline BASELINE --current PERSISTED --body output/pr-working-body.md`, then scans the actual persisted body for attribution and completes the final live reread. `BASELINE` is the intended capture the writer holds for this publication — the authenticated live observation of the pull request it is publishing against — and `PERSISTED` is the fresh capture Herald 📯 (Release Manager) returns after the write; both are supplied in the same seven-field form. The writer — not the executor — performs these steps. The persisted capture must carry exactly the intended capture's field set and values, and its body must equal the published body bytes.
+2. The writer generates the creation body and its receipt: `prepare_pr_review.ts --input output/pr-publication.json --output output/pr-working-body.md`. The command creates the body exclusively, writes `output/pr-working-body.md.receipt.json` beside it and prints the receipt `{"status":"prepared","title":"<title>"}`. This is the one authoritative rejection point for an invalid input.
+3. **Initial creation.** The writer inspects the exact bytes of the generated creation body for attribution. That inspection is the always-on attribution prohibition of `.opencode/agents/herald.md` `#### PR lifecycle`; it is not the step 7 scan, and it is never reported as one. Herald 📯 (Release Manager) then creates the pull request from that creation body and the title recorded in its receipt, and returns the persisted capture. The creation body keeps the canonical creation shape, including the `No review findings yet.` findings placeholder, and carries no evidence-stage result.
+4. Herald 📯 (Release Manager) establishes the immutable head identity — PR number, URL, head OID, base branch and state — from the authenticated live capture of the pull request created at step 3, and pins them for the whole flow.
+5. The writer generates the evidence body into a fresh body path from the current publication input, by the same command as step 2: the writer records the review findings, evidence and verdict in the publication input and generates a fresh body with its own receipt. The creation body and its receipt remain as history.
+6. Herald 📯 (Release Manager) prepares the immutable review evidence: `prepare_pr_evidence.ts prepare-local --pr <number> --base $BASE --receipt <evidence body>.receipt.json --body <evidence body> --output SNAPSHOT`, where `<number>` is the number pinned at step 4 and the receipt and body are the step 5 pair. `prepare-snapshot` and `snapshot` are the supplied-inventory and supplied-scanner-shape alternatives; reuse `scripts/scan_attribution.ts` through its existing authorized route. The receipt supplies the generated title; this workflow never reads the publication input and never compares the supplied artifacts with an earlier state.
+7. The writer scans the exact bytes it will publish: run the attribution scanner over the prepared snapshot, whose title and body artifacts are the generated title and the generated evidence body. Any attribution match blocks the upload.
+8. Herald 📯 (Release Manager) executes the ONE evidence-publication write against the exact generated evidence-body file, and returns the persisted capture. The initial `gh pr create` at step 3 is a separate creation operation and is not a second publication write.
+9. The writer verifies persistence: `prepare_pr_evidence.ts verify --baseline BASELINE --current PERSISTED --body <evidence body>`, then scans the actual persisted body for attribution and completes the final live reread. `BASELINE` is the intended capture the writer holds for this publication — the authenticated live observation of the pull request it is publishing against — and `PERSISTED` is the fresh capture Herald 📯 (Release Manager) returns after the write; both are supplied in the same seven-field form. The writer — not the executor — performs these steps. The persisted capture must carry exactly the intended capture's field set and values, and its body must equal the published body bytes.
 
 ## Required properties
 
-- Exactly one publication write happens; there is never an intermediate body upload.
+- Exactly one evidence-publication write happens; initial creation is a separate `gh pr create`, and there is never an intermediate body upload.
 - A changed head, a divergent body, a failed upload or a failed reread blocks acceptance.
 - A missing or partial evidence record leaves the item pending.
-- The attribution scan of the generated body and the attribution scan of the persisted body are both mandatory before any gate; neither replaces the other.
+- The attribution scan of the evidence body before its publication and the attribution scan of the persisted body after it are both mandatory; neither replaces the other, and a delivery whose evidence body has not passed both is never reported ready. A generated creation body is covered by the always-on attribution prohibition it is inspected under at step 3, not by this scan, because the scanner snapshot is bound to the pull request's number, which creation has not yet produced.
 - The persisted description must equal the intended body bytes exactly. That check confirms GitHub persisted the content of this publication; it is not a comparison against an earlier body.
 - The publication input remains the authoritative content and the generated body is its artifact; GitHub is the publication destination, not a source for reconstructing prose.
 

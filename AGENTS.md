@@ -183,7 +183,7 @@ Running a synchronization is the _entire_ operator action for a destination: run
 - The `memories` MCP server (`npx -y @memories.sh/cli@0.7.9 serve`) supplies this project's memory backend; `qmd` (`npx -y @tobilu/qmd@2.8.3`) supplies read-only repository retrieval. The memory database is `~/.config/memories/local.db`, outside Git, with no recorded backup procedure.
 - `qmd` indexes this repository as `ai-core`; the merge-mode server entry in `.opencode/opencode.jsonc` names that index.
 - Project memory scope derives from the checkout's git remote. This repository's SSH alias yields `github.com-personal/JPerezC92/ai-core`, which is not the `github.com` form, so pass `project_id` explicitly whenever a call must be unambiguous.
-- Retrieval collections are `tasks`, `knowledge`, `architecture` and `research`.
+- Retrieval collections are `tasks`, `knowledge`, `architecture` and `research`, rooted at `odd/tasks`, `.aicore/core/knowledge`, `.aicore/core/architecture` and `docs/research`.
 - Keep `SEMGREP_SEND_METRICS=off` and `OTEL_SDK_DISABLED=true`. The auto-config scan failed with metrics off; do not enable metrics to make it work, and do not invoke platform findings or supply-chain scanning under this binding.
 
 ### Reviewed verification commands
