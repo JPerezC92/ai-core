@@ -37,7 +37,7 @@ metadata:
 
 ## Sequence
 
-The protocol has two stages over one content command. **Initial creation** publishes the generated creation body. **Evidence publication** then replaces that body once with the generated evidence body. Steps 5 to 9 belong to the evidence-publication stage: `prepare_pr_evidence.ts` and the scanner snapshot both require a positive `pr_number`, so no snapshot and no snapshot scan of the creation body is possible before step 3 creates the pull request, and none is implied by this sequence.
+The protocol has two stages over one content command. **Initial creation** publishes the generated creation body. **Evidence publication** then replaces that body once with the generated evidence body. Steps 5 to 9 belong to the evidence-publication stage: `prepare_pr_evidence.ts` and the scanner snapshot are bound to the pull request's number, so before step 3 creates the pull request there is no live number for them to bind to, and this sequence defines no snapshot and no scan of a creation body.
 
 1. The content owner authors the publication input — `output/pr-publication.json` — through `git-pr`, in the shape of `.agents/skills/git-pr/references/_pr-publication-input.md`. No Markdown is authored.
 2. The writer generates the creation body and its receipt: `prepare_pr_review.ts --input output/pr-publication.json --output output/pr-working-body.md`. The command creates the body exclusively, writes `output/pr-working-body.md.receipt.json` beside it and prints the receipt `{"status":"prepared","title":"<title>"}`. This is the one authoritative rejection point for an invalid input.
@@ -54,7 +54,7 @@ The protocol has two stages over one content command. **Initial creation** publi
 - Exactly one evidence-publication write happens; initial creation is a separate `gh pr create`, and there is never an intermediate body upload.
 - A changed head, a divergent body, a failed upload or a failed reread blocks acceptance.
 - A missing or partial evidence record leaves the item pending.
-- The attribution scan of the evidence body before its publication and the attribution scan of the persisted body after it are both mandatory; neither replaces the other, and a delivery whose evidence body has not passed both is never reported ready. A generated creation body is covered by the always-on attribution prohibition it is inspected under at step 3, not by this scan, because the scanner snapshot requires a PR number that creation has not yet produced.
+- The attribution scan of the evidence body before its publication and the attribution scan of the persisted body after it are both mandatory; neither replaces the other, and a delivery whose evidence body has not passed both is never reported ready. A generated creation body is covered by the always-on attribution prohibition it is inspected under at step 3, not by this scan, because the scanner snapshot is bound to the pull request's number, which creation has not yet produced.
 - The persisted description must equal the intended body bytes exactly. That check confirms GitHub persisted the content of this publication; it is not a comparison against an earlier body.
 - The publication input remains the authoritative content and the generated body is its artifact; GitHub is the publication destination, not a source for reconstructing prose.
 
