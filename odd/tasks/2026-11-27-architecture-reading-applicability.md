@@ -1,6 +1,8 @@
 # Architecture reading applicability
 
-> **Status:** active
+> **Status:** closed
+> **Closed:** 2026-11-27
+> **Disposition:** completed
 > **Owner:** Cipher 🔓 (Lead Orchestrator)
 > **Created:** 2026-11-27
 > **Objective:** Make architecture reading proportionate to actual responsibilities without weakening architecture or testing.
@@ -20,8 +22,8 @@ Load and read the `odd-workflow` skill (`.agents/skills/odd-workflow/SKILL.md`) 
 
 ## Tasks
 
-- T1 | S1, S2, S3, S4 | inline (shared normative owners require coordinated edits) — Cipher 🔓 (Lead Orchestrator) | in progress | commit: pending
-- T2 | S4, S5 | inline (author verification and measured route accounting) — Cipher 🔓 (Lead Orchestrator) | open | commit: pending
+- T1 | S1, S2, S3, S4 | inline (shared normative owners require coordinated edits) — Cipher 🔓 (Lead Orchestrator) | done | commit: 9fd7f31ac5e5c248e5edad802473f5ec8c489c4e
+- T2 | S4, S5 | inline (author verification and measured route accounting) — Cipher 🔓 (Lead Orchestrator) | done | commit: 999f3bd8be7370deaed700db57972dc91d2364c8
 
 ## Log
 
@@ -55,3 +57,6 @@ No commits, pushes, PR publication or independent review are authorized yet.
 - `implementation/shapes/backend.md`, `frontend.md` and `scripts.md` applicability: read common before shape translated to README Purpose and selection, which retains common-before-shape order and expands by actual responsibility. Backend/frontend content-model pointer and each shape's existing L1/L2/L3 applicability, scope, and all B/F/P sections remain.
 - `implementation/stacks/python.md` applicability: read common, scripts shape and backend shape for backend applications translated to the README route while retaining both shape selections; Python scope, P3 boundary, Pydantic references, destination bindings, execution authority and conformance distinction remain. `typescript/scripts.md` applicability: common then scripts-shape read translated to the route; dual backend selection, frontend exclusion, Node/TypeScript references, destination binding, no additional tooling selection, authorization and conformance distinction remain. `typescript/nestjs.md` and `typescript/react.md` applicability: common and corresponding shape reads translated to the route; stack scope, reference selections, destination bindings and conformance distinction remain. Guide mappings, testing pointers, imports, examples and authoring requirements were not edited.
 - `odd/features/instruction-context.md`: R1–R9 retained unchanged; R10 added to describe the enduring responsibility-based reading capability, including expansion and full/fresh-read safeguards. `odd/tasks/2026-11-27-architecture-reading-applicability.md` is the new change record, not an original instruction owner. The common C1–C14 rules, shape B/F/P requirements, T rules, diagrams and their paths were not edited.
+
+- L13 — F1 and F2 fixed in `999f3bd8be7370deaed700db57972dc91d2364c8`; Cipher verified the itemized accounting and explicitly disclosed the referenced filename table as excluded from the measured subtotals. Both originated in the initial implementation evidence and escaped author review; no production architecture rules changed. `pnpm format:check` and `node .agents/skills/odd-workflow/scripts/validate_feature.ts odd/tasks` passed after correction; the earlier `pnpm lint`, `pnpm typecheck` and durable-feature validation remain applicable. The final committed head requires the user-authorized focused independent review. Retirement candidates were reported by the existing read-only check; existing dispositions remain unchanged because durable-evidence safeguards were not re-established.
+- L14 — Close: S1–S4 are supported by the changed owner text, the L5 walkthroughs and L12 accounting; S5 by L9 with L12's disclosed cross-reference exclusion. The user accepted the four conservative comparisons, not runtime token or cost claims. `instruction-context.md` R10 is added and verified against the routing; R1–R9 are unchanged. `architecture-contract.md` R1–R29 are unchanged and R17 remains unchecked. The implementation and review-evidence corrections are committed at the task references above; the final independent review will assess the closure commit without claiming that an earlier verdict covered it.
