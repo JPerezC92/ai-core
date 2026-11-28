@@ -5,7 +5,7 @@
 
 ## Applicability and ownership
 
-Applies to Python backend tooling packages, standalone ticket tooling, and exactly assigned feature-scoped skill scripts; not an inferred browser/UI or web-framework architecture (P3). Read `.aicore/core/architecture/implementation/architecture.md`, `.aicore/core/architecture/implementation/shapes/scripts.md`, and, for backend applications, `.aicore/core/architecture/implementation/shapes/backend.md`. Pydantic v2 and client examples below preserve existing reference choices, not destination tool bindings (`.aicore/core/architecture/README.md` → `## Contract boundaries`). Exact-path execution/edit authorization remains runtime-owned. Documentation review does not prove code conformance.
+Applies to Python backend tooling packages, standalone ticket tooling, and exactly assigned feature-scoped skill scripts; not an inferred browser/UI or web-framework architecture (P3). Read the common contract, scripts shape and, for backend applications, backend shape under `.aicore/core/architecture/README.md` → `## Purpose and selection`. Pydantic v2 and client examples below preserve existing reference choices, not destination tool bindings (`.aicore/core/architecture/README.md` → `## Contract boundaries`). Exact-path execution/edit authorization remains runtime-owned. Documentation review does not prove code conformance.
 
 ## Structure and dependency mapping
 

@@ -5,7 +5,7 @@
 
 ## Applicability and ownership
 
-Applies to TypeScript/TSX React feature code and its imports in source/tests (F1, F2, C3). Read `.aicore/core/architecture/implementation/architecture.md` and `.aicore/core/architecture/implementation/shapes/frontend.md`. React Query, sonner, Zod, Tailwind, and API-client names are the preserved reference architecture, not destination tool bindings. Other UI stacks require their own mapping. Documentation review does not establish code conformance.
+Applies to TypeScript/TSX React feature code and its imports in source/tests (F1, F2, C3). Read the common contract and frontend shape under `.aicore/core/architecture/README.md` → `## Purpose and selection`. React Query, sonner, Zod, Tailwind, and API-client names are the preserved reference architecture, not destination tool bindings. Other UI stacks require their own mapping. Documentation review does not establish code conformance.
 
 ## Structure and dependency mapping
 

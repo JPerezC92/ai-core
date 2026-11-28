@@ -5,7 +5,7 @@
 
 ## Applicability and ownership
 
-Applies to TypeScript/TSX backend application source using the NestJS reference architecture and import conventions for its tests (B1). Read `.aicore/core/architecture/implementation/architecture.md` and `.aicore/core/architecture/implementation/shapes/backend.md`. NestJS, database, Zod, and JSend names are preserved reference mappings, not destination bindings; the JSend envelope shape is the published contract (`C14`), and the library that implements it stays a reference mapping. Other frameworks/languages require their own mapping. Documentation review is not code-conformance evidence.
+Applies to TypeScript/TSX backend application source using the NestJS reference architecture and import conventions for its tests (B1). Read the common contract and backend shape under `.aicore/core/architecture/README.md` → `## Purpose and selection`. NestJS, database, Zod, and JSend names are preserved reference mappings, not destination bindings; the JSend envelope shape is the published contract (`C14`), and the library that implements it stays a reference mapping. Other frameworks/languages require their own mapping. Documentation review is not code-conformance evidence.
 
 ## Structure and dependency mapping
 

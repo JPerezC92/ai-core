@@ -2,7 +2,7 @@
 
 ## Applicability
 
-Backend business applications. Read `.aicore/core/architecture/implementation/architecture.md` first. Statement-layer ownership is defined in `.aicore/core/architecture/README.md` → `## Content model`. The layout and operation obligations below bind at L3 (`C11`); at L1 and L2 no layer folder and no operation form is imposed, and each obligation binds only where its responsibility exists.
+Backend business applications. Read the common contract first under `.aicore/core/architecture/README.md` → `## Purpose and selection`. Statement-layer ownership is defined in its `## Content model`. The layout and operation obligations below bind at L3 (`C11`); at L1 and L2 no layer folder and no operation form is imposed, and each obligation binds only where its responsibility exists.
 
 ## B1 — Layout and domain
 
