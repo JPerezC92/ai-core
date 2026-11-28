@@ -2,7 +2,7 @@
 
 ## Applicability
 
-Scripts, CLIs, and tooling operations, including independently deployed tooling packages. Read `.aicore/core/architecture/implementation/architecture.md` first. A smaller executable does not suspend the common contract. The layout and operation obligations below bind at L3 (`C11`); at L1 and L2 a script keeps its own organization, needs no layer folder and no operation class, and may orchestrate external effects directly (`C12`).
+Scripts, CLIs, and tooling operations, including independently deployed tooling packages. Read the common contract first under `.aicore/core/architecture/README.md` → `## Purpose and selection`. A smaller executable does not suspend the common contract. The layout and operation obligations below bind at L3 (`C11`); at L1 and L2 a script keeps its own organization, needs no layer folder and no operation class, and may orchestrate external effects directly (`C12`).
 
 ## P1 — Responsibilities
 

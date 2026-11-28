@@ -2,7 +2,7 @@
 
 ## Applicability
 
-Feature-oriented frontend applications. Read `.aicore/core/architecture/implementation/architecture.md` first. Statement-layer ownership is defined in `.aicore/core/architecture/README.md` → `## Content model`. The feature layout below binds at L3 (`C11`); at L1 and L2 no feature layer folder is required, while the presentation and data-access separation of `F2` and `F3` binds wherever those responsibilities exist.
+Feature-oriented frontend applications. Read the common contract first under `.aicore/core/architecture/README.md` → `## Purpose and selection`. Statement-layer ownership is defined in its `## Content model`. The feature layout below binds at L3 (`C11`); at L1 and L2 no feature layer folder is required, while the presentation and data-access separation of `F2` and `F3` binds wherever those responsibilities exist.
 
 ## F1 — Feature layout and domain
 
